@@ -1,0 +1,30 @@
+{
+  "name": "new-growth",
+  "version": "0.0.1",
+  "description": "Garden Automation Managment",
+  "main": "index.js",
+  "scripts": {
+    "build": "rimraf ./dist && tsc",
+    "start:dev": "npx nodemon",
+    "start": "npm run build && node dist/index.js",
+    "test": "npm run build && mocha"
+  },
+  "author": "Ben Steele",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.5.9",
+    "@types/sinon": "^10.0.16",
+    "chai": "^4.3.8",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.0.1",
+    "rimraf": "^5.0.1",
+    "sinon": "^15.2.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.0"
+  }
+}
