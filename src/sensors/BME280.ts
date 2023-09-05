@@ -24,7 +24,7 @@ class BME280 extends SensorBase {
   }
 
   async getReading(): Promise<void> {
-    let reading = await this.bme280.read();
+    const reading = await this.bme280.read();
     this.lastReading[ReadingType.temperature] = String(reading.temperature);
     this.lastReading[ReadingType.humidity] = String(reading.humidity);
     this.lastReading[ReadingType.pressure] = String(reading.pressure);

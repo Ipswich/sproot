@@ -18,7 +18,7 @@ class GrowthDB {
   }
 
   async addSensorReading(sensor: SensorBase){
-    for (let readingType in sensor.lastReading){
+    for (const readingType in sensor.lastReading){
       await this.#connection.execute('INSERT INTO sensor_data (sensor_id, metric, data, unit) VALUES (?, ?, ?, ?)', [sensor.id, readingType, sensor.lastReading[readingType as ReadingType], sensor.getUnits(readingType as ReadingType)]);
     }
   }

@@ -14,9 +14,9 @@ class SensorList {
   }
 
   async initialize(): Promise<void> {
-    let sensorsFromDatabase = await this.#growthDB.getSensors();
-    let promises: Promise<void>[] = [];
-    for (let sensor of sensorsFromDatabase) {
+    const sensorsFromDatabase = await this.#growthDB.getSensors();
+    const promises: Promise<void>[] = [];
+    for (const sensor of sensorsFromDatabase) {
       promises.push(this.#buildSensor(sensor));
       await this.#buildSensor(sensor);
     }
@@ -32,9 +32,9 @@ class SensorList {
   }
 
   async regenerate(): Promise<void> {
-    let sensorsFromDatabase = await this.#growthDB.getSensors();
-    let promises: Promise<void>[] = [];
-    for (let sensor of sensorsFromDatabase) {
+    const sensorsFromDatabase = await this.#growthDB.getSensors();
+    const promises: Promise<void>[] = [];
+    for (const sensor of sensorsFromDatabase) {
       if (this.#sensors.some((s) => s.id === sensor.id)) {
         continue;
       }
@@ -54,8 +54,8 @@ class SensorList {
   }
 
   async dispose(): Promise<void> {
-    let promises: Promise<void>[] = [];
-    for (let sensor of this.#sensors) {
+    const promises: Promise<void>[] = [];
+    for (const sensor of this.#sensors) {
       if (sensor instanceof DisposableSensorBase) {
         promises.push(sensor.dispose());
       }
@@ -64,16 +64,16 @@ class SensorList {
   }
 
   async getReadings(): Promise<void> {
-    let promises: Promise<void>[] = [];
-    for (let sensor of this.#sensors) {
+    const promises: Promise<void>[] = [];
+    for (const sensor of this.#sensors) {
       promises.push(sensor.getReading())
     }
     await Promise.all(promises);
   }
 
   async addReadingsToDatabase(): Promise<void> {
-    let promises: Promise<void>[] = [];
-    for (let sensor of this.#sensors) {
+    const promises: Promise<void>[] = [];
+    for (const sensor of this.#sensors) {
       promises.push(sensor.addLastReadingToDatabase())
       await sensor.addLastReadingToDatabase();
     }
