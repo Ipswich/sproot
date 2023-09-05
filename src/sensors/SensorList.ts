@@ -1,10 +1,9 @@
-
 import { BME280 } from './BME280';
+import { DS18B20 } from './DS18B20';
 
 import { DisposableSensorBase, SensorBase } from '../types/SensorBase';
 import { GDBSensor } from '../types/database-objects/GDBSensor';
 import { GrowthDB } from '../GrowthDB';
-import { DS18B20 } from './DS18B20';
 
 class SensorList {
   #growthDB: GrowthDB;

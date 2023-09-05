@@ -17,6 +17,11 @@ class GrowthDB {
     return rows;
   }
 
+  async getDS1B20Addresses() : Promise<GDBSensor[]>{
+    const [rows] = await this.#connection.execute<GDBSensor[]>('SELECT address FROM sensors WHERE model = "DS18B20"');
+    return rows;
+  }
+
   async addSensorReading(sensor: SensorBase){
     for (const readingType in sensor.lastReading){
       await this.#connection.execute('INSERT INTO sensor_data (sensor_id, metric, data, unit) VALUES (?, ?, ?, ?)', [sensor.id, readingType, sensor.lastReading[readingType as ReadingType], sensor.getUnits(readingType as ReadingType)]);
