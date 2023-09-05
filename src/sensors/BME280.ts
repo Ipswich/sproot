@@ -1,12 +1,10 @@
-import bme280 from 'bme280';
-
-import { Bme280 } from 'bme280';
+import bme280, { Bme280 } from 'bme280';
 import { GDBSensor } from '../types/database-objects/GDBSensor';
 import { GrowthDB } from '../GrowthDB';
-import { SensorBase, ReadingType } from '../types/SensorBase';
+import { DisposableSensorBase, ReadingType } from '../types/SensorBase';
 
 
-class BME280 extends SensorBase {
+class BME280 extends DisposableSensorBase {
   bme280: Bme280;
 
   constructor(gdbSensor: GDBSensor, growthDB: GrowthDB) {
@@ -19,11 +17,11 @@ class BME280 extends SensorBase {
     return this;
   }
 
-  async dispose(): Promise<void> {
+  override async dispose(): Promise<void> {
     await this.bme280.close();
   }
 
-  async getReading(): Promise<void> {
+  override async getReading(): Promise<void> {
     const reading = await this.bme280.read();
     this.lastReading[ReadingType.temperature] = String(reading.temperature);
     this.lastReading[ReadingType.humidity] = String(reading.humidity);
@@ -31,11 +29,11 @@ class BME280 extends SensorBase {
     this.lastReadingTime = new Date();
   }
 
-  async addLastReadingToDatabase(): Promise<void> {
+  override async addLastReadingToDatabase(): Promise<void> {
     this.growthDB.addSensorReading(this);
   }
 
-  getUnits(readingType: ReadingType): string {
+  override getUnits(readingType: ReadingType): string {
       switch (readingType){
         case ReadingType.temperature:
           return '°C';
