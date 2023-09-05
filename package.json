@@ -12,6 +12,7 @@
   "author": "Ben Steele",
   "license": "ISC",
   "devDependencies": {
+    "@types/ds18b20": "^0.1.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.5.9",
@@ -27,6 +28,7 @@
   "dependencies": {
     "bme280": "github:jhoffi/bme280-typings",
     "dotenv": "^16.3.1",
+    "ds18b20": "^0.1.0",
     "mysql2": "^3.6.0"
   }
 }

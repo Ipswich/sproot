@@ -4,10 +4,11 @@ import { BME280 } from './BME280';
 import { DisposableSensorBase, SensorBase } from '../types/SensorBase';
 import { GDBSensor } from '../types/database-objects/GDBSensor';
 import { GrowthDB } from '../GrowthDB';
+import { DS18B20 } from './DS18B20';
 
 class SensorList {
   #growthDB: GrowthDB;
-  #sensors: SensorBase[] | DisposableSensorBase[] = [];
+  #sensors: (SensorBase | DisposableSensorBase)[] = [];
 
   constructor(growthDB: GrowthDB) {
     this.#growthDB = growthDB;
@@ -82,6 +83,9 @@ class SensorList {
     switch (sensor.model.toLowerCase()){
       case "bme280":
         this.#sensors.push(await new BME280(sensor, this.#growthDB).init());
+        break;
+      case "ds18b20":
+        this.#sensors.push(new DS18B20(sensor, this.#growthDB));
         break;
       default:
         throw new UnknownSensorError(`Unrecognized sensor model: ${sensor.model}`);
