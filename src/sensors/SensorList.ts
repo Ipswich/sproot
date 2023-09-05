@@ -33,7 +33,9 @@ class SensorList {
     await this.#addUnreconizedDS18B20sToGDB();
     const sensorsFromDatabase = await this.#growthDB.getSensors();
     for (const sensor of sensorsFromDatabase) {
-      if (this.#sensors.some((s) => s.id === sensor.id)) {
+      const filteredResults = this.#sensors.filter((s) => s.id === sensor.id);
+      if (filteredResults[0]) {
+        filteredResults[0].description = sensor.description;
         continue;
       } else {
         try {
