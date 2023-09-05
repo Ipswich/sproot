@@ -31,7 +31,7 @@ class DS18B20 extends SensorBase {
         return ' - ';
     }
   }
-  
+
   static getAddresses(): Promise<string[]> {
     return util.promisify(ds18b20.sensors)();
   }

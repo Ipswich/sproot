@@ -2,7 +2,7 @@ import { RowDataPacket } from "mysql2";
 
 interface GDBSensor extends RowDataPacket {
   id: number;
-  description: string;
+  description: string | null;
   model: string;
   address: string | null;
 }
