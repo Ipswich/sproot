@@ -7,6 +7,18 @@ import { SensorBase, ReadingType } from '../types/SensorBase';
 
 class DS18B20 extends SensorBase {
 
+  constructor(gdbSensor: GDBSensor, growthDB: GrowthDB) {
+    super(gdbSensor, growthDB);
+  }
+  
+  override async getReading(): Promise<void> {
+    this.lastReading[ReadingType.temperature] = String(await util.promisify(ds18b20.temperature)(this.address!));
+  }
+  
+  override async addLastReadingToDatabase(): Promise<void> {
+    this.growthDB.addSensorReading(this);
+  }
+
   override getUnits(readingType: ReadingType): string {
     switch (readingType){
       case ReadingType.temperature:
@@ -14,17 +26,6 @@ class DS18B20 extends SensorBase {
       default:
         return ' - ';
     }
-  }
-
-  override async getReading(): Promise<void> {
-    this.lastReading[ReadingType.temperature] = String(await util.promisify(ds18b20.temperature)(this.address!));
-  }
-  override async addLastReadingToDatabase(): Promise<void> {
-    this.growthDB.addSensorReading(this);
-  }
-
-  constructor(gdbSensor: GDBSensor, growthDB: GrowthDB) {
-    super(gdbSensor, growthDB);
   }
 }
 
