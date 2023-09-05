@@ -74,7 +74,6 @@ class SensorList {
     const promises: Promise<void>[] = [];
     for (const sensor of this.#sensors) {
       promises.push(sensor.addLastReadingToDatabase())
-      await sensor.addLastReadingToDatabase();
     }
     await Promise.all(promises);
   }
