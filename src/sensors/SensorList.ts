@@ -16,7 +16,7 @@ class SensorList {
   async initialize(): Promise<void> {
     await this.#addUnreconizedDS18B20sToGDB();
     const sensorsFromDatabase = await this.#growthDB.getSensors();
-    for (const sensor of sensorsFromDatabase) {
+    sensorsFromDatabase.forEach(async (sensor) => {
       try {
         await this.#buildSensor(sensor);
       } catch (e) {
@@ -26,19 +26,19 @@ class SensorList {
           throw e;
         }
       }
-    }
+    });
   }
 
   async regenerate(): Promise<void> {
     await this.#addUnreconizedDS18B20sToGDB();
     const sensorsFromDatabase = await this.#growthDB.getSensors();
-    sensorsFromDatabase.forEach((sensor) => {
-      let key = Object.keys(this.#sensors).find(key => key === sensor.id.toString());
+    sensorsFromDatabase.forEach(async (sensor) => {
+      const key = Object.keys(this.#sensors).find(key => key === sensor.id.toString());
       if (key) {
         this.#sensors[key]!.description = sensor.description;
       } else {
         try {
-          this.#buildSensor(sensor);        
+          await this.#buildSensor(sensor);        
         } catch (e) {
           if (e instanceof UnknownSensorModelError || e instanceof MissingSensorIdError || e instanceof MissingSensorAddressError) {
             // console.log(e.message);
@@ -48,14 +48,13 @@ class SensorList {
         }
       }
     });
-    let sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
+    const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
     for (const key in this.#sensors) {
       if (!sensorIdsFromDatabase.includes(key)) {
         delete this.#sensors[key];
       }
     }
   }
-
 
   async dispose(): Promise<void> {
     const promises: Promise<void>[] = [];
