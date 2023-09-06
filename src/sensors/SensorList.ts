@@ -7,7 +7,7 @@ import { GrowthDB } from '../GrowthDB';
 
 class SensorList {
   #growthDB: GrowthDB;
-  #sensors: (SensorBase | DisposableSensorBase)[] = [];
+  #sensors: Record<string, (SensorBase | DisposableSensorBase)> = {};
 
   constructor(growthDB: GrowthDB) {
     this.#growthDB = growthDB;
@@ -16,46 +16,51 @@ class SensorList {
   async initialize(): Promise<void> {
     await this.#addUnreconizedDS18B20sToGDB();
     const sensorsFromDatabase = await this.#growthDB.getSensors();
-    for (const sensor of sensorsFromDatabase) {
+    sensorsFromDatabase.forEach(async (sensor) => {
       try {
         await this.#buildSensor(sensor);
       } catch (e) {
-        if (e instanceof UnknownSensorModelError || e instanceof MissingSensorAddressError) {
-          console.log(e.message);
+        if (e instanceof UnknownSensorModelError || e instanceof MissingSensorIdError || e instanceof MissingSensorAddressError) {
+          // console.log(e.message);
         } else {
           throw e;
         }
       }
-    }
+    });
   }
 
   async regenerate(): Promise<void> {
     await this.#addUnreconizedDS18B20sToGDB();
     const sensorsFromDatabase = await this.#growthDB.getSensors();
-    for (const sensor of sensorsFromDatabase) {
-      const filteredResults = this.#sensors.filter((s) => s.id === sensor.id);
-      if (filteredResults[0]) {
-        filteredResults[0].description = sensor.description;
-        continue;
+    sensorsFromDatabase.forEach(async (sensor) => {
+      const key = Object.keys(this.#sensors).find(key => key === sensor.id.toString());
+      if (key) {
+        this.#sensors[key]!.description = sensor.description;
       } else {
         try {
-          this.#buildSensor(sensor);        
+          await this.#buildSensor(sensor);        
         } catch (e) {
-          if (e instanceof UnknownSensorModelError || e instanceof MissingSensorAddressError) {
-            console.log(e.message);
+          if (e instanceof UnknownSensorModelError || e instanceof MissingSensorIdError || e instanceof MissingSensorAddressError) {
+            // console.log(e.message);
           } else {
             throw e;
           }
         }
       }
-    } 
+    });
+    const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
+    for (const key in this.#sensors) {
+      if (!sensorIdsFromDatabase.includes(key)) {
+        delete this.#sensors[key];
+      }
+    }
   }
 
   async dispose(): Promise<void> {
     const promises: Promise<void>[] = [];
-    for (const sensor of this.#sensors) {
-      if (sensor instanceof DisposableSensorBase) {
-        promises.push(sensor.dispose());
+    for (const key in this.#sensors) {
+      if (this.#sensors[key] instanceof DisposableSensorBase) {
+        promises.push((this.#sensors[key] as DisposableSensorBase).dispose());
       }
     }
     await Promise.all(promises);
@@ -63,33 +68,40 @@ class SensorList {
 
   async getReadings(): Promise<void> {
     const promises: Promise<void>[] = [];
-    for (const sensor of this.#sensors) {
-      promises.push(sensor.getReading())
+    for (const key in this.#sensors) {
+      if (this.#sensors[key] instanceof SensorBase) {
+        promises.push((this.#sensors[key] as SensorBase).getReading());
+      }
     }
     await Promise.all(promises);
   }
-
+  
   async addReadingsToDatabase(): Promise<void> {
     const promises: Promise<void>[] = [];
-    for (const sensor of this.#sensors) {
-      promises.push(sensor.addLastReadingToDatabase())
+    for (const key in this.#sensors) {
+      if (this.#sensors[key] instanceof SensorBase) {
+        promises.push((this.#sensors[key] as SensorBase).addLastReadingToDatabase());
+      }
     }
     await Promise.all(promises);
   }
 
   async #buildSensor(sensor: GDBSensor): Promise<void> {
+    if (!sensor.id){
+      throw new MissingSensorIdError('Sensor ID cannot be 0/\'\'/undefined/null! Sensor could not be added.');
+    }
     switch (sensor.model.toLowerCase()){
       case "bme280":
         if (!sensor.address) {
-          throw new MissingSensorAddressError('BME280 sensor address cannot be null! Sensor failed to be added.');
+          throw new MissingSensorAddressError('BME280 sensor address cannot be null! Sensor could not be added.');
         }
-        this.#sensors.push(await new BME280(sensor, this.#growthDB).init());
+        this.#sensors[sensor.id] = await new BME280(sensor, this.#growthDB).init();
         break;
       case "ds18b20":
         if (!sensor.address) {
-          throw new MissingSensorAddressError('DS18B20 sensor address cannot be null! Sensor failed to be added.');
+          throw new MissingSensorAddressError('DS18B20 sensor address cannot be null! Sensor could not be added.');
         }
-        this.#sensors.push(new DS18B20(sensor, this.#growthDB));
+        this.#sensors[sensor.id] = new DS18B20(sensor, this.#growthDB);
         break;
       default:
         throw new UnknownSensorModelError(`Unrecognized sensor model: ${sensor.model}`);
@@ -110,7 +122,6 @@ class SensorList {
     }
     await Promise.all(promises);
   }
-
 }
 
 class UnknownSensorModelError extends Error {
@@ -124,6 +135,13 @@ class MissingSensorAddressError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'MissingSensorAddressError';
+  }
+}
+
+class MissingSensorIdError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MissingSensorIdError';
   }
 }
 
