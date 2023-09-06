@@ -17,5 +17,15 @@ async function main(){
   await sensorList.initialize();
   await sensorList.getReadings();
   await sensorList.addReadingsToDatabase();
+  setInterval(async () => {
+    await sensorList.regenerate();
+    await sensorList.getReadings();
+    }, 1000
+  );
+  
+  setInterval(async () => {
+    await sensorList.addReadingsToDatabase();
+    }, 20000
+  );
   
 }
