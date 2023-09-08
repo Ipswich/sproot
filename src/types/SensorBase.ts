@@ -1,5 +1,5 @@
 import { GDBSensor } from "./database-objects/GDBSensor";
-import { GrowthDB } from "../GrowthDB";
+import { IGrowthDB } from "../types/database-objects/IGrowthDB";
 
 enum ReadingType {
   temperature = "temperature",
@@ -14,9 +14,10 @@ abstract class SensorBase {
   address: string | null;
   lastReading:  Record<ReadingType, string>;
   lastReadingTime: Date | null;
-  growthDB: GrowthDB;
+  growthDB: IGrowthDB;
+  units: Record<ReadingType, string>;
 
-  constructor(gdbSensor: GDBSensor, growthDB: GrowthDB) {
+  constructor(gdbSensor: GDBSensor, growthDB: IGrowthDB) {
     this.id = gdbSensor.id;
     this.description = gdbSensor.description;
     this.model = gdbSensor.model;
@@ -24,15 +25,17 @@ abstract class SensorBase {
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.growthDB = growthDB;
+    this.units = {} as Record<ReadingType, string>;
   }
 
-  abstract getUnits(readingType: ReadingType): string;
-  abstract getReading(): Promise<void>;
-  abstract addLastReadingToDatabase(): Promise<void>;
+  abstract getReadingAsync(): Promise<void>;
+
+  addLastReadingToDatabaseAsync = async (): Promise<void> => await this.growthDB.addSensorReading(this);
+  getUnits = (readingType: ReadingType): string => this.units[readingType] ?? ' - ';
 }
 
 abstract class DisposableSensorBase extends SensorBase {
-  abstract dispose(): Promise<void>;
+  abstract disposeAsync(): Promise<void>;
 }
 
 export { SensorBase, DisposableSensorBase, ReadingType };
