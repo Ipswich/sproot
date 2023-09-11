@@ -2,6 +2,7 @@ import mysql2 from 'mysql2/promise';
 
 import { GDBUser } from './types/database-objects/GDBUser';
 import { GDBSensor } from './types/database-objects/GDBSensor';
+import { GDBOutput } from './types/database-objects/GDBOutput';
 import { IGrowthDB } from './types/database-objects/IGrowthDB';
 import { SensorBase, ReadingType } from './types/SensorBase';
 
@@ -16,13 +17,18 @@ class GrowthDB implements IGrowthDB {
     const [rows] = await this.#connection.execute<GDBSensor[]>('SELECT * FROM sensors');
     return rows;
   }
+  
+  async getDS18B20Addresses() : Promise<GDBSensor[]> {
+    const [rows] = await this.#connection.execute<GDBSensor[]>('SELECT address FROM sensors WHERE model = "DS18B20"');
+    return rows;
+  }
 
   async addSensor(sensor: GDBSensor) : Promise<void> {
     await this.#connection.execute('INSERT INTO sensors (description, model, address) VALUES (?, ?, ?)', [sensor.description, sensor.model, sensor.address]);
   }
 
-  async getDS18B20Addresses() : Promise<GDBSensor[]> {
-    const [rows] = await this.#connection.execute<GDBSensor[]>('SELECT address FROM sensors WHERE model = "DS18B20"');
+  async getOutputs() : Promise<GDBOutput[]> {
+    const [rows] = await this.#connection.execute<GDBOutput[]>('SELECT * FROM outputs');
     return rows;
   }
 
