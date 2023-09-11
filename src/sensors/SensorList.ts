@@ -24,9 +24,11 @@ class SensorList {
     sensorsFromDatabase.forEach(async (sensor) => {
       const key = Object.keys(this.#sensors).find(key => key === sensor.id.toString());
       if (key) {
+        //Update if it exists
         this.#sensors[key]!.description = sensor.description;
       } else {
         try {
+          //Create if it doesn't
           await this.#buildSensorAsync(sensor);        
         } catch (e) {
           if (e instanceof UnknownSensorModelError || e instanceof MissingSensorIdError || e instanceof MissingSensorAddressError) {
@@ -37,6 +39,7 @@ class SensorList {
         }
       }
     });
+    //Delete ones that don't exist
     const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
     for (const key in this.#sensors) {
       if (!sensorIdsFromDatabase.includes(key)) {
