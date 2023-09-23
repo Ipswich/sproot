@@ -110,6 +110,7 @@ describe('SensorList.ts tests', function() {
       {address: '28-00000'} as GDBSensor
     ]);
     getAddressesStub.resolves(['28-00000']);
+    sandbox.stub(BME280.prototype, 'initAsync').resolves(new BME280(mockBME280Data, mockGrowthDB));
     await expect(sensorList.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith('DS18B20 sensor address cannot be null! Sensor could not be added.');
     
     mockDS18B20Data['address'] = '28-00000';
