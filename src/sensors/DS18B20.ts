@@ -1,9 +1,9 @@
 import ds18b20 from 'ds18b20';
 import util from 'util';
 
-import { GDBSensor } from '../types/database-objects/GDBSensor';
-import { IGrowthDB } from '../types/database-objects/IGrowthDB';
-import { SensorBase, ReadingType } from '../types/SensorBase';
+import { GDBSensor } from '../database/types/GDBSensor';
+import { IGrowthDB } from '../database/types/IGrowthDB';
+import { SensorBase, ReadingType } from './types/SensorBase';
 
 class DS18B20 extends SensorBase {
 
@@ -14,6 +14,7 @@ class DS18B20 extends SensorBase {
   
   override async getReadingAsync(): Promise<void> {
     this.lastReading[ReadingType.temperature] = String(await util.promisify(ds18b20.temperature)(this.address!));
+    this.lastReadingTime = new Date();
   }
 
   static async getAddressesAsync(): Promise<string[]> {
