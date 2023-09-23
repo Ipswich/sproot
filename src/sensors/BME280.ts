@@ -1,8 +1,7 @@
 import bme280, { Bme280 } from 'bme280';
-import { GDBSensor } from '../types/database-objects/GDBSensor';
-import { IGrowthDB } from '../types/database-objects/IGrowthDB';
-import { DisposableSensorBase, ReadingType } from '../types/SensorBase';
-
+import { GDBSensor } from '../database/types/GDBSensor';
+import { IGrowthDB } from '../database/types/IGrowthDB';
+import { DisposableSensorBase, ReadingType } from './types/SensorBase';
 
 class BME280 extends DisposableSensorBase {
   #bme280: Bme280;

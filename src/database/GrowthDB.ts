@@ -1,10 +1,10 @@
 import mysql2 from 'mysql2/promise';
 
-import { GDBUser } from './types/database-objects/GDBUser';
-import { GDBSensor } from './types/database-objects/GDBSensor';
-import { GDBOutput } from './types/database-objects/GDBOutput';
-import { IGrowthDB } from './types/database-objects/IGrowthDB';
-import { SensorBase, ReadingType } from './types/SensorBase';
+import { GDBUser } from './types/GDBUser';
+import { GDBSensor } from './types/GDBSensor';
+import { GDBOutput } from './types/GDBOutput';
+import { IGrowthDB } from './types/IGrowthDB';
+import { SensorBase, ReadingType } from '../sensors/types/SensorBase';
 
 class GrowthDB implements IGrowthDB {
   #connection: mysql2.Connection;
@@ -13,34 +13,38 @@ class GrowthDB implements IGrowthDB {
     this.#connection = connection;
   }
 
-  async getSensors() : Promise<GDBSensor[]> {
+  async getSensorsAsync() : Promise<GDBSensor[]> {
     const [rows] = await this.#connection.execute<GDBSensor[]>('SELECT * FROM sensors');
     return rows;
   }
   
-  async getDS18B20Addresses() : Promise<GDBSensor[]> {
+  async getDS18B20AddressesAsync() : Promise<GDBSensor[]> {
     const [rows] = await this.#connection.execute<GDBSensor[]>('SELECT address FROM sensors WHERE model = "DS18B20"');
     return rows;
   }
 
-  async addSensor(sensor: GDBSensor) : Promise<void> {
+  async addSensorAsync(sensor: GDBSensor) : Promise<void> {
     await this.#connection.execute('INSERT INTO sensors (description, model, address) VALUES (?, ?, ?)', [sensor.description, sensor.model, sensor.address]);
   }
 
-  async getOutputs() : Promise<GDBOutput[]> {
+  async getOutputsAsync() : Promise<GDBOutput[]> {
     const [rows] = await this.#connection.execute<GDBOutput[]>('SELECT * FROM outputs');
     return rows;
   }
 
-  async addSensorReading(sensor: SensorBase) : Promise<void> {
+  async addSensorReadingAsync(sensor: SensorBase) : Promise<void> {
     for (const readingType in sensor.lastReading){
-      await this.#connection.execute('INSERT INTO sensor_data (sensor_id, metric, data, unit) VALUES (?, ?, ?, ?)', [sensor.id, readingType, sensor.lastReading[readingType as ReadingType], sensor.getUnits(readingType as ReadingType)]);
+      await this.#connection.execute('INSERT INTO sensor_data (sensor_id, metric, data, unit) VALUES (?, ?, ?, ?)', [sensor.id, readingType, sensor.lastReading[readingType as ReadingType], sensor.units[readingType as ReadingType]]);
     }
   }
 
-  async getUser(username: string) : Promise<GDBUser[]> {
+  async getUserAsync(username: string) : Promise<GDBUser[]> {
     const [rows] = await this.#connection.execute<GDBUser[]>('SELECT * FROM users WHERE username = ?', [username]);
     return rows;
+  }
+
+  async disposeAsync() : Promise<void> {
+    await this.#connection.end();
   }
 }
 
