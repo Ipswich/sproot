@@ -99,11 +99,9 @@ describe('SensorList.ts tests', function() {
     const mockDS18B20Data = { id: 2, description: 'test sensor 2', model: 'DS18B20', address: null } as GDBSensor;
     const mockSensorData = { id: 3, description: 'test sensor 3', model: 'not a recognized model', address: null } as GDBSensor;
     
-    sandbox.createStubInstance(DS18B20);
-    const getAddressesStub = sandbox.stub(DS18B20, 'getAddressesAsync').resolves([]);
     const getSensorsStub = sandbox.stub(MockGrowthDB.prototype, 'getSensorsAsync').resolves([ mockBME280Data ]);
+    const getAddressesStub = sandbox.stub(DS18B20, 'getAddressesAsync').resolves([]);
     const sensorList = new SensorList(mockGrowthDB);
-    
     await expect(sensorList.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith('BME280 sensor address cannot be null! Sensor could not be added.');
 
     mockBME280Data['address'] = '0x76';
@@ -111,9 +109,9 @@ describe('SensorList.ts tests', function() {
     sandbox.stub(MockGrowthDB.prototype, 'getDS18B20AddressesAsync').resolves([
       {address: '28-00000'} as GDBSensor
     ]);
-
+    getAddressesStub.resolves(['28-00000']);
     await expect(sensorList.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith('DS18B20 sensor address cannot be null! Sensor could not be added.');
-
+    
     mockDS18B20Data['address'] = '28-00000';
     getSensorsStub.resolves([ mockBME280Data, mockDS18B20Data, mockSensorData ]);
     await expect(sensorList.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith('Unrecognized sensor model: not a recognized model');
