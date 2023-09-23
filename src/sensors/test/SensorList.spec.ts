@@ -100,6 +100,7 @@ describe('SensorList.ts tests', function() {
     const mockSensorData = { id: 3, description: 'test sensor 3', model: 'not a recognized model', address: null } as GDBSensor;
     
     sandbox.createStubInstance(DS18B20);
+    const getAddressesStub = sandbox.stub(DS18B20, 'getAddressesAsync').resolves([]);
     const getSensorsStub = sandbox.stub(MockGrowthDB.prototype, 'getSensorsAsync').resolves([ mockBME280Data ]);
     const sensorList = new SensorList(mockGrowthDB);
     
