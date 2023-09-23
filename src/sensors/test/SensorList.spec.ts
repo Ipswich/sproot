@@ -98,7 +98,8 @@ describe('SensorList.ts tests', function() {
     const mockBME280Data = { id: 1, description: 'test sensor 1', model: 'BME280', address: null } as GDBSensor;
     const mockDS18B20Data = { id: 2, description: 'test sensor 2', model: 'DS18B20', address: null } as GDBSensor;
     const mockSensorData = { id: 3, description: 'test sensor 3', model: 'not a recognized model', address: null } as GDBSensor;
-
+    
+    sandbox.createStubInstance(DS18B20);
     const getSensorsStub = sandbox.stub(MockGrowthDB.prototype, 'getSensorsAsync').resolves([ mockBME280Data ]);
     const sensorList = new SensorList(mockGrowthDB);
     
@@ -106,7 +107,6 @@ describe('SensorList.ts tests', function() {
 
     mockBME280Data['address'] = '0x76';
     getSensorsStub.resolves([ mockBME280Data, mockDS18B20Data ]);
-    sandbox.createStubInstance(DS18B20);
     sandbox.stub(MockGrowthDB.prototype, 'getDS18B20AddressesAsync').resolves([
       {address: '28-00000'} as GDBSensor
     ]);
