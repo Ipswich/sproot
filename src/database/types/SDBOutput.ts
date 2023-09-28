@@ -1,6 +1,6 @@
 import { RowDataPacket } from "mysql2";
 
-interface GDBOutput extends RowDataPacket {
+interface SDBOutput extends RowDataPacket {
   id: number;
   description: string | null;
   pin: number;
@@ -8,4 +8,4 @@ interface GDBOutput extends RowDataPacket {
   isInvertedPwm: boolean;
 }
 
-export { GDBOutput };
+export { SDBOutput };

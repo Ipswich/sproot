@@ -1,0 +1,411 @@
+
+openapi: "3.0.1"
+
+info: 
+  title: "sproot"
+  version: "0.0.1"
+  description: "Sproot API documentation"  
+
+security: 
+  - bearerAuth: []
+
+paths:
+  /api/v1/authenticate:
+    post:
+      tags: 
+        - "Authenticate"
+      summary: "Login"
+      description: "Login"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Authentication successful"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  JWTtoken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNjk1NjkyMTA3LCJleHAiOjE2OTU2OTIzNjZ9.KgJ0mWBVUNyN4io2TrHZf-zxPlt-PZh4Hc7ysYAXipE"
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Missing username or password"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "Invalid credentials"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                    
+  /api/v1/sensors:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+      description: "Get information for all sensors."
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sensor information successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  sensors:
+                    $ref : "#/components/schemas/Sensors"
+
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion: 
+                    type: string
+  /api/v1/sensors/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+      description: "Get information for a single sensor."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The sensor's id.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sensor information successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  sensor:
+                    $ref : "#/components/schemas/Sensor"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion: 
+                    type: string
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "No sensor found with that Id"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+
+  /api/v1/outputs:
+   get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Outputs"
+      description: "Get information for all outputs."
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Output information successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  outputs:
+                    $ref : "#/components/schemas/Outputs"
+
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion: 
+                    type: string
+  /api/v1/outputs/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Outputs"
+      description: "Get information for a single output."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The output's id.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Output information successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  sensor:
+                    $ref : "#/components/schemas/Output"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion: 
+                    type: string
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "No output found with that Id"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+  # /api/v1/outputs/set-state:
+
+
+                    
+components: 
+  schemas:
+    Sensors:
+      type: object
+      additionalProperties:
+        $ref : "#/components/schemas/Sensor"
+
+    Sensor:
+      type: object
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+          nullable: true
+        model:
+          type: string
+          example: "BME280"
+        address:
+          type: string
+          example: "0x76"
+          nullable: true
+        lastReading:
+          type: object
+          properties:
+            temperature:
+              type: string
+              example: "25.0"
+            humidity:
+              type: string
+              example: "50.0"
+            pressure:
+              type: string
+              example: "1000.0"
+        lastReadingTime:
+          type: string
+          example: "Mon, 25 Sep 2023 02:17:58 GMT"
+        units:
+          type: object
+          properties:
+            temperature:
+              type: string
+              example: "°C"
+            humidity:
+              type: string
+              example: "%rH"
+            pressure:
+              type: string
+              example: "hPa"
+
+    Outputs:
+      type: object
+      additionalProperties:
+        $ref : "#/components/schemas/Output"
+
+    Output:
+      type: object
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+          nullable: true
+        pin:
+          type: integer
+          example: 1
+        isPwm:
+          type: boolean
+          example: true
+        isInvertedPwm:
+          type: boolean
+          example: false
+        manualState:
+          $ref: "#/components/schemas/State"
+        scheduleState:
+          $ref: "#/components/schemas/State"
+        controlMode:
+          type: string
+          enum: 
+            - "manual"
+            - "schedule"
+          example: "manual"
+
+    State:
+      type: object
+      properties:
+        isOn:
+          type: boolean
+          example: true
+        value:
+          type: integer
+          example: 100
+
+  securitySchemes: 
+    bearerAuth: 
+      type: "http"
+      scheme : "bearer"
+      bearerFormat: "JWT"

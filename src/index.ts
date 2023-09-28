@@ -1,25 +1,36 @@
 import 'dotenv/config';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import mysql2 from 'mysql2/promise';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
 
-import { GrowthDB } from './database/GrowthDB';
+import { SprootDB } from './database/SprootDB';
 import { PCA9685 } from './outputs/PCA9685';
-import { SensorController } from './controllers/SensorController';
 import { SensorList } from './sensors/SensorList';
 
+import login, {authenticate} from './api/v1/middleware/Authentication';
+import sensorRouter from './api/v1/SensorRouter';
+import outputRouter from './api/v1/OutputRouter';
+
+const mysqlConfig = {
+  host: process.env['DATABASE_HOST']!,
+  user: process.env['DATABASE_USER']!,
+  password: process.env['DATABASE_PASSWORD']!,
+  database: process.env['DATABASE_NAME']!
+};
+
+const swaggerOptions = YAML.load('./openapi.yml');
+swaggerOptions.defaultModelsExpandDepth = -1;
 const app = express();
 
 (async () => {
-  const growthDB = new GrowthDB(await mysql2.createConnection({
-    host: process.env['DATABASE_HOST']!,
-    user: process.env['DATABASE_USER']!,
-    password: process.env['DATABASE_PASSWORD']!,
-    database: process.env['DATABASE_NAME']!
-  }));
+  const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
+  app.set('sprootDB', sprootDB);
 
-  const sensorList = new SensorList(growthDB);
+  const sensorList = new SensorList(sprootDB);
   app.set('sensorList', sensorList);
-  const pca9685 = await new PCA9685(growthDB).initializeOrRegenerateAsync();
+  const pca9685 = await new PCA9685(sprootDB).initializeOrRegenerateAsync();
   app.set('pca9685', pca9685);
 
   await sensorList.initializeOrRegenerateAsync();
@@ -38,9 +49,18 @@ const app = express();
     }, parseInt(process.env['DATABASE_UPDATE_INTERVAL']!)
   );
 
-  app.get('/sensor/:sensorId', SensorController.getSensor);
-  app.get('/sensors', SensorController.getAllSensorData);
+  app.use(cookieParser());
+  app.use(express.json());
+  app.use(express.urlencoded({
+    extended: true
+  }));
 
+  app.use('/api/v1/authenticate', login);
+  app.use('/api/v1/sensors', authenticate, sensorRouter)
+  app.use('/api/v1/outputs', authenticate, outputRouter)
+  
+  app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerOptions, {swaggerOptions : { defaultModelsExpandDepth: -1 }}));
+  
   const server = app.listen(process.env['APPLICATION_PORT']!, () => {
     console.log(`sproot is listening at http://localhost:${process.env['APPLICATION_PORT']!}`)
   });
@@ -60,7 +80,7 @@ const app = express();
         await app.get('sensorList').disposeAsync();
         app.get("pca9685").dispose()
         // Close database connection
-        await growthDB.disposeAsync();
+        await sprootDB.disposeAsync();
       } catch (err) {
         //Dgaf, swallow anything, we're shutting down anyway.
       } finally {

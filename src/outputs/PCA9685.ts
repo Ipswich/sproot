@@ -1,18 +1,18 @@
 import {Pca9685Driver } from 'pca9685';
 import { openSync } from 'i2c-bus';
-import { OutputBase, ControlMode, State } from './types/OutputBase';
-import { GDBOutput } from '../database/types/GDBOutput';
-import { IGrowthDB } from '../database/types/IGrowthDB';
+import { IOutputBase, OutputBase, ControlMode, State } from './types/OutputBase';
+import { SDBOutput } from '../database/types/SDBOutput';
+import { ISprootDB } from '../database/types/ISprootDB';
 
 class PCA9685 {
   #pca9685 : Pca9685Driver | undefined;
-  #outputs: Record<string, (PCA9685Output)>;
-  #growthDB: IGrowthDB;
+  #outputs: Record<string, PCA9685Output>;
+  #sprootDB: ISprootDB;
   #address: number;
   #frequency: number;
   #usedPins: number[] = [];
-  constructor(growthDB: IGrowthDB, address = 0x40) {
-    this.#growthDB = growthDB;
+  constructor(sprootDB: ISprootDB, address = 0x40) {
+    this.#sprootDB = sprootDB;
     this.#outputs = {};
     this.#address = address;
     this.#frequency = 50;
@@ -27,7 +27,7 @@ class PCA9685 {
         debug: false
       }, ()=>{});
     }
-    const outputsFromDatabase = await this.#growthDB.getOutputsAsync();
+    const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
 
     //Update old ones
     outputsFromDatabase.forEach(async (output) => {
@@ -43,7 +43,7 @@ class PCA9685 {
     let filteredOutputsFromDatabase = outputsFromDatabase.filter((output) => !Object.keys(this.#outputs).includes(String(output.id)))
     for (const output of filteredOutputsFromDatabase) {
       if (output.pin >= 0 && output.pin <= 15 && !this.#usedPins.includes(output.pin)){
-        this.#outputs[output.id] = (new PCA9685Output(this.#pca9685, output, this.#growthDB));
+        this.#outputs[output.id] = (new PCA9685Output(this.#pca9685, output, this.#sprootDB));
         this.#usedPins.push(output.pin);
       } else {
         throw new UsedOrInvalidPinError(`Pin ${output.pin} is already in use or is invalid`);
@@ -62,8 +62,14 @@ class PCA9685 {
     return this;
   }
 
-  get outputs(): Record<string, (PCA9685Output)> {
-    return this.#outputs;
+  get outputs(): Record<string, PCA9685Output> {return this.#outputs}
+
+  get outputData(): Record<string, IOutputBase> {
+    const { ...cleanObject } = this.#outputs as any
+    for (const key in cleanObject) {
+      delete cleanObject[key]?.pca9685;
+    }
+    return cleanObject as Record<string, PCA9685Output>;
   }
 
   updateControlMode = (outputId: string, controlMode: ControlMode) => this.#outputs[outputId]?.updateControlMode(controlMode);
@@ -75,8 +81,8 @@ class PCA9685 {
 class PCA9685Output extends OutputBase {
   pca9685: Pca9685Driver;
 
-  constructor(pca9685: Pca9685Driver, output: GDBOutput, growthDB: IGrowthDB){
-    super(output, growthDB);
+  constructor(pca9685: Pca9685Driver, output: SDBOutput, sprootDB: ISprootDB){
+    super(output, sprootDB);
     this.pca9685 = pca9685;
   }
 
