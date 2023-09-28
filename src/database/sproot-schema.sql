@@ -3,16 +3,13 @@
 SET NAMES utf8;
 SET time_zone = '+00:00';
 SET foreign_key_checks = 0;
-SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 SET NAMES utf8mb4;
 
-DROP DATABASE IF EXISTS `sproot`;
-CREATE DATABASE `sproot` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+CREATE DATABASE IF NOT EXISTS `sproot` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
 USE `sproot`;
 
-DROP TABLE IF EXISTS `outputs`;
-CREATE TABLE `outputs` (
+CREATE TABLE IF NOT EXISTS `outputs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `description` varchar(64) DEFAULT NULL,
   `pin` int(11) NOT NULL,
@@ -22,8 +19,7 @@ CREATE TABLE `outputs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-DROP TABLE IF EXISTS `sensors`;
-CREATE TABLE `sensors` (
+CREATE TABLE IF NOT EXISTS `sensors` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `description` varchar(64) DEFAULT NULL,
   `model` varchar(64) NOT NULL,
@@ -32,8 +28,7 @@ CREATE TABLE `sensors` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-DROP TABLE IF EXISTS `sensor_data`;
-CREATE TABLE `sensor_data` (
+CREATE TABLE IF NOT EXISTS `sensor_data` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `sensor_id` int(11) NOT NULL,
   `metric` varchar(32) NOT NULL,
@@ -46,10 +41,12 @@ CREATE TABLE `sensor_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `username` varchar(32) NOT NULL,
   `hash` char(60) NOT NULL,
   `email` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- 2023-09-28 02:59:45

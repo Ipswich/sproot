@@ -68,6 +68,7 @@ class PCA9685 {
     const { ...cleanObject } = this.#outputs as any
     for (const key in cleanObject) {
       delete cleanObject[key]?.pca9685;
+      delete cleanObject[key]?.sprootDB;
     }
     return cleanObject as Record<string, PCA9685Output>;
   }

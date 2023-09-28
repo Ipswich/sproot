@@ -4,7 +4,7 @@ import { SensorList } from "../../sensors/SensorList"
 const router = express.Router();
 
 router.get('/', async (req: Request, res: Response) => {
-  const result = (req.app.get('sensorList') as SensorList)?.sensors;
+  const result = (req.app.get('sensorList') as SensorList)?.sensorData;
   res.status(200).json({
     message: "Sensor information successfully retrieved",
     statusCode: 200,
@@ -14,7 +14,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 router.get('/:id', async (req: Request, res: Response) => {
-    const result = (req.app.get('sensorList') as SensorList)?.sensors[String(req.params["id"])]
+    const result = (req.app.get('sensorList') as SensorList)?.sensorData[String(req.params["id"])]
     if (!result) {
       res.status(404).json({
         message: "No sensor found with that Id",
