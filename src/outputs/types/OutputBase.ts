@@ -1,29 +1,40 @@
-import { GDBOutput } from "../../database/types/GDBOutput";
-import { IGrowthDB } from "../../database/types/IGrowthDB";
+import { SDBOutput } from "../../database/types/SDBOutput";
+import { ISprootDB } from "../../database/types/ISprootDB";
 
 enum ControlMode { 
   manual = 'manual',
   schedule = 'schedule'
 };
 
-abstract class OutputBase {
+interface IOutputBase {
   id: number;
   description: string | null;
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
-  growthDB: IGrowthDB;
+  manualState: State;
+  scheduleState: State;
+  controlMode: ControlMode;
+}
+
+abstract class OutputBase implements IOutputBase{
+  id: number;
+  description: string | null;
+  pin: number;
+  isPwm: boolean;
+  isInvertedPwm: boolean;
+  sprootDB: ISprootDB;
   manualState: State;
   scheduleState: State;
   controlMode: ControlMode;
 
-  constructor(gdbOutput: GDBOutput, growthDB: IGrowthDB) {
+  constructor(gdbOutput: SDBOutput, sprootDB: ISprootDB) {
     this.id = gdbOutput.id;
     this.description = gdbOutput.description;
     this.pin = gdbOutput.pin;
     this.isPwm = gdbOutput.isPwm;
     this.isInvertedPwm = gdbOutput.isPwm ? gdbOutput.isInvertedPwm : false;
-    this.growthDB = growthDB;
+    this.sprootDB = sprootDB;
     this.manualState = { isOn: false, value: 0 }
     this.scheduleState = { isOn: false, value: 0 }
     this.controlMode = ControlMode.schedule;
@@ -68,4 +79,4 @@ interface State {
   value: number;
 }
 
-export { OutputBase, ControlMode, State };
+export { IOutputBase, OutputBase, ControlMode, State };

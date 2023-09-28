@@ -1,23 +1,24 @@
 import { BME280 } from './BME280';
 import { DS18B20 } from './DS18B20';
 import { DisposableSensorBase, SensorBase } from './types/SensorBase';
-import { GDBSensor } from '../database/types/GDBSensor';
-import { IGrowthDB } from '../database/types/IGrowthDB';
+import { SDBSensor } from '../database/types/SDBSensor';
+import { ISprootDB } from '../database/types/ISprootDB';
 
 class SensorList {
-  #growthDB: IGrowthDB;
+  #sprootDB: ISprootDB;
   #sensors: Record<string, (SensorBase | DisposableSensorBase)> = {};
 
-  constructor(growthDB: IGrowthDB) {
-    this.#growthDB = growthDB;
+  constructor(sprootDB: ISprootDB) {
+    this.#sprootDB = sprootDB;
   }
 
-  get sensors(): Record<string, (SensorBase | DisposableSensorBase)> {
-    let res: Record<string, (SensorBase | DisposableSensorBase)> = {} 
+  get sensors(): Record<string, (SensorBase | DisposableSensorBase)> { return this.#sensors; }
+
+  get sensorData(): Record<string, SensorBase> {const res: Record<string, (SensorBase | DisposableSensorBase)> = {} 
     for (const key in this.#sensors) {
       const cleanObject = JSON.parse(JSON.stringify(this.#sensors[key]));
       cleanObject["lastReadingTime"] = new Date(cleanObject["lastReadingTime"]).toUTCString();
-      delete cleanObject["growthDB"];
+      delete cleanObject["sprootDB"];
       res[cleanObject.id] = cleanObject as (SensorBase | DisposableSensorBase);
     }
     return res;
@@ -25,7 +26,7 @@ class SensorList {
 
   async initializeOrRegenerateAsync(): Promise<void> {
     await this.#addUnreconizedDS18B20sToGDBAsync();
-    const sensorsFromDatabase = await this.#growthDB.getSensorsAsync();
+    const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
     for (const sensor of sensorsFromDatabase) {
       const key = Object.keys(this.#sensors).find(key => key === sensor.id.toString());
       if (key) {
@@ -49,29 +50,30 @@ class SensorList {
   disposeAsync = async () => this.#touchAllSensorsAsync(async (sensor) => await this.#disposeSensorAsync(sensor));
   getReadingsAsync = async () => this.#touchAllSensorsAsync(async (sensor) => await sensor.getReadingAsync());
 
-
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
-    const promises: Promise<void>[] = [];
     for (const key in this.#sensors) {
-      promises.push(fn(this.#sensors[key] as SensorBase));      
+      try{
+        await (fn(this.#sensors[key] as SensorBase));
+      } catch (err) {
+        console.error(err);
+      }
     }
-    await Promise.all(promises);
   }
 
-  async #buildSensorAsync(sensor: GDBSensor): Promise<void> {
+  async #buildSensorAsync(sensor: SDBSensor): Promise<void> {
     switch (sensor.model.toLowerCase()){
       case "bme280":
         if (!sensor.address) {
           throw new BuildSensorError('BME280 sensor address cannot be null! Sensor could not be added.');
         }
-        this.#sensors[sensor.id] = await new BME280(sensor, this.#growthDB).initAsync();
+        this.#sensors[sensor.id] = await new BME280(sensor, this.#sprootDB).initAsync();
         break;
 
       case "ds18b20":
         if (!sensor.address) {
           throw new BuildSensorError('DS18B20 sensor address cannot be null! Sensor could not be added.');
         }
-        this.#sensors[sensor.id] = new DS18B20(sensor, this.#growthDB);
+        this.#sensors[sensor.id] = new DS18B20(sensor, this.#sprootDB);
         break;
 
       default:
@@ -81,14 +83,14 @@ class SensorList {
 
   async #addUnreconizedDS18B20sToGDBAsync() {
     const deviceAddresses = await DS18B20.getAddressesAsync();
-    const sensorsFromDatabase = await this.#growthDB.getDS18B20AddressesAsync();
+    const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
     const promises: Promise<void>[] = [];
     for (const address of deviceAddresses) {
       if (sensorsFromDatabase.some((s) => s.address === address)) {
         continue;
       }
       else {
-        promises.push(this.#growthDB.addSensorAsync({description: null, model: 'DS18B20', address: address} as GDBSensor));
+        promises.push(this.#sprootDB.addSensorAsync({description: null, model: 'DS18B20', address: address} as SDBSensor));
       }
     }
     await Promise.all(promises);

@@ -1,13 +1,13 @@
 import bme280, { Bme280 } from 'bme280';
-import { GDBSensor } from '../database/types/GDBSensor';
-import { IGrowthDB } from '../database/types/IGrowthDB';
+import { SDBSensor } from '../database/types/SDBSensor';
+import { ISprootDB } from '../database/types/ISprootDB';
 import { DisposableSensorBase, ReadingType } from './types/SensorBase';
 
 class BME280 extends DisposableSensorBase {
   #bme280: Bme280;
 
-  constructor(gdbSensor: GDBSensor, growthDB: IGrowthDB) {
-    super(gdbSensor, growthDB);
+  constructor(gdbSensor: SDBSensor, sprootDB: ISprootDB) {
+    super(gdbSensor, sprootDB);
     this.#bme280 = {} as Bme280;
     this.units[ReadingType.temperature] = '°C';
     this.units[ReadingType.humidity] = '%rH';

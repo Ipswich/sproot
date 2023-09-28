@@ -1,14 +1,14 @@
 import ds18b20 from 'ds18b20';
 import util from 'util';
 
-import { GDBSensor } from '../database/types/GDBSensor';
-import { IGrowthDB } from '../database/types/IGrowthDB';
+import { SDBSensor } from '../database/types/SDBSensor';
+import { ISprootDB } from '../database/types/ISprootDB';
 import { SensorBase, ReadingType } from './types/SensorBase';
 
 class DS18B20 extends SensorBase {
 
-  constructor(gdbSensor: GDBSensor, growthDB: IGrowthDB) {
-    super(gdbSensor, growthDB);
+  constructor(gdbSensor: SDBSensor, sprootDB: ISprootDB) {
+    super(gdbSensor, sprootDB);
     this.units[ReadingType.temperature] = '°C';
   }
   
