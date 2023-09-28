@@ -114,7 +114,7 @@ describe('SensorList.ts tests', function() {
     const sensorList = new SensorList(mockSprootDB);
     await sensorList.initializeOrRegenerateAsync();
     await sensorList.getReadingsAsync();
-    
+
     assert.equal(Object.keys(sensorList.sensors).length, 2);
     assert.equal(getBME280ReadingStub.callCount + getDS18B20ReadingStub.callCount, 2);
 
@@ -139,7 +139,7 @@ describe('SensorList.ts tests', function() {
     getAddressesStub.resolves(['28-00000']);
     sandbox.stub(BME280.prototype, 'initAsync').resolves(new BME280(mockBME280Data, mockSprootDB));
     await expect(sensorList.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith('DS18B20 sensor address cannot be null! Sensor could not be added.');
-    
+
     mockDS18B20Data['address'] = '28-00000';
     getSensorsStub.resolves([ mockBME280Data, mockDS18B20Data, mockSensorData ]);
     await expect(sensorList.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith('Unrecognized sensor model: not a recognized model');
@@ -147,16 +147,19 @@ describe('SensorList.ts tests', function() {
     sandbox.restore();
   });
 
-  it('should throw errors when reading sensors', async function() {
+  it('should handle errors when reading sensors', async function() {
     const mockDS18B20Data = { id: 1, description: 'test sensor 2', model: 'DS18B20', address: '28-00000' } as SDBSensor;
     sandbox.stub(MockSprootDB.prototype, 'getSensorsAsync').resolves([ mockDS18B20Data ]);
     sandbox.stub(DS18B20, 'getAddressesAsync').resolves(['28-00000']);
-    sandbox.stub(DS18B20.prototype, "getReadingAsync").throws('DS18B20 reading error');
+    sandbox.stub(DS18B20.prototype, "getReadingAsync").rejects();
+    const consoleStub = sandbox.stub(console, "error");
 
     const sensorList = new SensorList(mockSprootDB);
     await sensorList.initializeOrRegenerateAsync();
-    
-    await expect(sensorList.getReadingsAsync()).to.eventually.be.rejectedWith('DS18B20 reading error');
+    await sensorList.getReadingsAsync();
+
+    assert.isTrue(consoleStub.calledOnce);
+
     sandbox.restore();
   });
 });

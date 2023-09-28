@@ -32,8 +32,4 @@ router.get('/:id', async (req: Request, res: Response) => {
   return;
 });
 
-// router.post('/:id/set-state', async (req: Request, res: Response) => {
-
-// });
-
 export default router;
