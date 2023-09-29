@@ -1,4 +1,4 @@
-import  {Pca9685Driver } from 'pca9685';
+import { Pca9685Driver } from 'pca9685';
 import { openSync } from 'i2c-bus';
 import { IOutputBase, OutputBase, ControlMode, State } from './types/OutputBase';
 import { SDBOutput } from '../database/types/SDBOutput';
