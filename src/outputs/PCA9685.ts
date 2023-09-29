@@ -1,4 +1,4 @@
-import {Pca9685Driver } from 'pca9685';
+import  {Pca9685Driver } from 'pca9685';
 import { openSync } from 'i2c-bus';
 import { IOutputBase, OutputBase, ControlMode, State } from './types/OutputBase';
 import { SDBOutput } from '../database/types/SDBOutput';
@@ -75,7 +75,7 @@ class PCA9685 {
 
   updateControlMode = (outputId: string, controlMode: ControlMode) => this.#outputs[outputId]?.updateControlMode(controlMode);
   setNewOutputState = (outputId: string, newState: State, targetControlMode: ControlMode) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
-  executeOutputState = (outputId?: string) => !!outputId ? this.#outputs[outputId]?.executeState() : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
+  executeOutputState = (outputId?: string) => outputId ? this.#outputs[outputId]?.executeState() : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => this.#pca9685?.dispose();
 }
 
