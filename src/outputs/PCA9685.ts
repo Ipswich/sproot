@@ -1,4 +1,4 @@
-import {Pca9685Driver } from 'pca9685';
+import { Pca9685Driver } from 'pca9685';
 import { openSync } from 'i2c-bus';
 import { IOutputBase, OutputBase, ControlMode, State } from './types/OutputBase';
 import { SDBOutput } from '../database/types/SDBOutput';
@@ -65,16 +65,17 @@ class PCA9685 {
   get outputs(): Record<string, PCA9685Output> {return this.#outputs}
 
   get outputData(): Record<string, IOutputBase> {
-    const { ...cleanObject } = this.#outputs as any
-    for (const key in cleanObject) {
-      delete cleanObject[key]?.pca9685;
+    const cleanObject: Record<string, IOutputBase> = {};
+    for (const key in this.#outputs) {
+      const {id, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode} = this.#outputs[key] as IOutputBase;
+      cleanObject[key] = {id, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode};
     }
-    return cleanObject as Record<string, PCA9685Output>;
+    return cleanObject;
   }
 
   updateControlMode = (outputId: string, controlMode: ControlMode) => this.#outputs[outputId]?.updateControlMode(controlMode);
   setNewOutputState = (outputId: string, newState: State, targetControlMode: ControlMode) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
-  executeOutputState = (outputId?: string) => !!outputId ? this.#outputs[outputId]?.executeState() : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
+  executeOutputState = (outputId?: string) => outputId ? this.#outputs[outputId]?.executeState() : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => this.#pca9685?.dispose();
 }
 

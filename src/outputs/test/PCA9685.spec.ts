@@ -48,6 +48,8 @@ describe('PCA9685.ts tests', function() {
     assert.equal(outputData['1']!['pin'], 0);
     assert.equal(outputData['1']!['isPwm'], true);
     assert.equal(outputData['1']!['isInvertedPwm'], false);
+    assert.exists(pca9685.outputs['1']!['pca9685']);
+    assert.exists(pca9685.outputs['1']!['sprootDB']);
     sandbox.restore();
   });
 

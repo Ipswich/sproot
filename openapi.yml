@@ -14,8 +14,7 @@ paths:
     post:
       tags: 
         - "Authenticate"
-      summary: "Login"
-      description: "Login"
+      description: "Generate a token for authentication. Sent as both a cookie and in the response body."
       requestBody:
         content:
           application/json:
@@ -307,8 +306,146 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-  # /api/v1/outputs/set-state:
-
+  /api/v1/outputs/{id}/control-mode:
+    post:
+      tags: 
+        - "Outputs"
+      description: "Update an output's control mode, updating physical output states accordingly."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The output's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                controlMode:
+                  type: string
+                  enum: 
+                    - "manual"
+                    - "schedule"
+              required:
+                - controlMode
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Control mode successfully updated"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid control mode"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "Invalid credentials"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+  /api/v1/outputs/{id}/manual-state:
+    post:
+      tags: 
+        - "Outputs"
+      description: "Update an output's manual state. Does not change control mode."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The output's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/State"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Manual state successfully updated"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid state data"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: 
+                    type: string
+                    example: "Invalid credentials"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
 
                     
 components: 
@@ -402,7 +539,10 @@ components:
           example: true
         value:
           type: integer
-          example: 100
+          example: 75
+      required:
+        - "isOn"
+        - "value"
 
   securitySchemes: 
     bearerAuth: 

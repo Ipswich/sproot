@@ -17,7 +17,7 @@ interface IOutputBase {
   controlMode: ControlMode;
 }
 
-abstract class OutputBase implements IOutputBase{
+abstract class OutputBase implements IOutputBase {
   id: number;
   description: string | null;
   pin: number;

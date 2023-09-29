@@ -17,7 +17,8 @@ const mysqlConfig = {
   host: process.env['DATABASE_HOST']!,
   user: process.env['DATABASE_USER']!,
   password: process.env['DATABASE_PASSWORD']!,
-  database: process.env['DATABASE_NAME']!
+  database: process.env['DATABASE_NAME']!,
+  port: parseInt(process.env['DATABASE_PORT']!)
 };
 
 const swaggerOptions = YAML.load('./openapi.yml');
@@ -37,13 +38,19 @@ const app = express();
   await sensorList.getReadingsAsync();
   await sensorList.addReadingsToDatabaseAsync();
 
+  //State update loop
   const updateStateLoop = setInterval(async () => {
     await sensorList.initializeOrRegenerateAsync();
-    await sensorList.getReadingsAsync();
     await pca9685.initializeOrRegenerateAsync()
+    await sensorList.getReadingsAsync();
+    //Add triggers and shit here.
+
+    //Execute any changes made to state.
+    pca9685.executeOutputState();
     }, parseInt(process.env['STATE_UPDATE_INTERVAL']!)
   );
   
+  // Database update loop
   const updateDatabaseLoop = setInterval(async () => {
     await sensorList.addReadingsToDatabaseAsync();
     }, parseInt(process.env['DATABASE_UPDATE_INTERVAL']!)
