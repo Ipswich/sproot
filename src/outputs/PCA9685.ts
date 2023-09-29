@@ -65,12 +65,12 @@ class PCA9685 {
   get outputs(): Record<string, PCA9685Output> {return this.#outputs}
 
   get outputData(): Record<string, IOutputBase> {
-    const { ...cleanObject } = this.#outputs as any
-    for (const key in cleanObject) {
-      delete cleanObject[key]?.pca9685;
-      delete cleanObject[key]?.sprootDB;
+    const cleanObject: Record<string, IOutputBase> = {};
+    for (const key in this.#outputs) {
+      const {id, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode} = this.#outputs[key] as IOutputBase;
+      cleanObject[key] = {id, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode};
     }
-    return cleanObject as Record<string, PCA9685Output>;
+    return cleanObject;
   }
 
   updateControlMode = (outputId: string, controlMode: ControlMode) => this.#outputs[outputId]?.updateControlMode(controlMode);

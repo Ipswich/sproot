@@ -38,13 +38,19 @@ const app = express();
   await sensorList.getReadingsAsync();
   await sensorList.addReadingsToDatabaseAsync();
 
+  //State update loop
   const updateStateLoop = setInterval(async () => {
     await sensorList.initializeOrRegenerateAsync();
-    await sensorList.getReadingsAsync();
     await pca9685.initializeOrRegenerateAsync()
+    await sensorList.getReadingsAsync();
+    //Add triggers and shit here.
+
+    //Execute any changes made to state.
+    pca9685.executeOutputState();
     }, parseInt(process.env['STATE_UPDATE_INTERVAL']!)
   );
   
+  // Database update loop
   const updateDatabaseLoop = setInterval(async () => {
     await sensorList.addReadingsToDatabaseAsync();
     }, parseInt(process.env['DATABASE_UPDATE_INTERVAL']!)

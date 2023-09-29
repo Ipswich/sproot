@@ -63,8 +63,9 @@ router.post('/:id/manual-state', async (req: Request, res: Response) => {
       isOn: req.body.isOn,
       value: req.body.value
     } as State;
-
+    
     (req.app.get('pca9685') as PCA9685).setNewOutputState(String(req.params["id"]), state, ControlMode.manual);
+    (req.app.get('pca9685') as PCA9685).executeOutputState(String(req.params["id"]));
     res.status(200).json({
       message: "Manual state successfully updated",
       statusCode: 200,
