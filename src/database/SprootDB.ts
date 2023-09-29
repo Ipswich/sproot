@@ -11,7 +11,6 @@ class SprootDB implements ISprootDB {
 
   constructor(connection: mysql2.Connection) {
     this.#connection = connection;
-    
   }
 
   async getSensorsAsync() : Promise<SDBSensor[]> {
