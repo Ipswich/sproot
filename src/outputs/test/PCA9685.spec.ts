@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PCA9685 } from '../PCA9685';
+import { PCA9685, PCA9685State } from '../PCA9685';
 import { Pca9685Driver } from 'pca9685';
 import { SDBOutput } from '../../database/types/SDBOutput';
 import { MockSprootDB } from '../../database/types/ISprootDB';
@@ -8,7 +8,7 @@ import chai, { assert, expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from 'sinon';
-import { ControlMode, State } from '../types/OutputBase';
+import { ControlMode } from '../types/OutputBase';
 const sandbox = sinon.createSandbox(); 
 const mockSprootDB = new MockSprootDB();
 
@@ -63,18 +63,16 @@ describe('PCA9685.ts tests', function() {
     await pca9685.initializeOrRegenerateAsync();
 
     //Schedule High
-    pca9685.setNewOutputState('1', <State>{ isOn: true, value: 100 }, ControlMode.schedule);
+    pca9685.setNewOutputState('1', <PCA9685State>{ isOn: true, value: 100 }, ControlMode.schedule);
     assert.equal(pca9685.outputs['1']?.scheduleState.value, 100);
-    assert.isTrue(pca9685.outputs['1']?.scheduleState.isOn);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 1);
     assert.equal(setDutyCycleStub.getCall(0).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(0).args[1], 1);
 
     //Schedule Low
-    pca9685.setNewOutputState('1', <State>{ isOn: false, value: 0 }, ControlMode.schedule);
+    pca9685.setNewOutputState('1', <PCA9685State>{ isOn: false, value: 0 }, ControlMode.schedule);
     assert.equal(pca9685.outputs['1']?.scheduleState.value, 0);
-    assert.isFalse(pca9685.outputs['1']?.scheduleState.isOn);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 2);
     assert.equal(setDutyCycleStub.getCall(1).args[0], 0);
@@ -84,18 +82,16 @@ describe('PCA9685.ts tests', function() {
     pca9685.updateControlMode('1', ControlMode.manual);
 
     //Manual Low
-    pca9685.setNewOutputState('1', <State>{ isOn: false, value: 0 }, ControlMode.manual);
+    pca9685.setNewOutputState('1', <PCA9685State>{ isOn: false, value: 0 }, ControlMode.manual);
     assert.equal(pca9685.outputs['1']?.manualState.value, 0);
-    assert.isFalse(pca9685.outputs['1']?.manualState.isOn);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 3);
     assert.equal(setDutyCycleStub.getCall(2).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(2).args[1], 0);
 
     //Manual High
-    pca9685.setNewOutputState('1', <State>{ isOn: true, value: 100 }, ControlMode.manual);
+    pca9685.setNewOutputState('1', <PCA9685State>{ isOn: true, value: 100 }, ControlMode.manual);
     assert.equal(pca9685.outputs['1']?.manualState.value, 100);
-    assert.isTrue(pca9685.outputs['1']?.manualState.isOn);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 4);
     assert.equal(setDutyCycleStub.getCall(3).args[0], 0);
@@ -114,9 +110,8 @@ describe('PCA9685.ts tests', function() {
     getOutputsAsyncStub.resolves([{ id: 1, description: 'test output 1', pin: 0, isPwm: true, isInvertedPwm: true } as SDBOutput]);
     await pca9685.initializeOrRegenerateAsync();
 
-    pca9685.setNewOutputState('1', <State>{ isOn: true, value: 100 }, ControlMode.schedule);
+    pca9685.setNewOutputState('1', <PCA9685State>{ isOn: true, value: 100 }, ControlMode.schedule);
     assert.equal(pca9685.outputs['1']?.scheduleState.value, 100);
-    assert.isTrue(pca9685.outputs['1']?.scheduleState.isOn);
     pca9685.executeOutputState('1'); //Receives individual output id as well.
     assert.equal(setDutyCycleStub.callCount, 6);
     assert.equal(setDutyCycleStub.getCall(5).args[0], 0);
@@ -133,14 +128,14 @@ describe('PCA9685.ts tests', function() {
     ]);
     const pca9685 = new PCA9685(mockSprootDB);
     await pca9685.initializeOrRegenerateAsync();
-    pca9685.setNewOutputState('1', <State>{ isOn: true, value: 50 }, ControlMode.schedule);
+    pca9685.setNewOutputState('1', <PCA9685State>{ isOn: true, value: 50 }, ControlMode.schedule);
     assert.throws(() => pca9685.executeOutputState(), 'Output is not a PWM output');
 
     getOutputsAsyncStub.resolves([
       { id: 1, description: 'test output 1', pin: 0, isPwm: true, isInvertedPwm: false } as SDBOutput,
     ]);
     await pca9685.initializeOrRegenerateAsync();
-    pca9685.setNewOutputState('1', <State>{ isOn: true, value: 101 }, ControlMode.schedule);
+    pca9685.setNewOutputState('1', <PCA9685State>{ isOn: true, value: 101 }, ControlMode.schedule);
     assert.throws(() => pca9685.executeOutputState(), 'PWM value must be between 0 and 100');
 
     getOutputsAsyncStub.resolves([

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express"
-import { PCA9685 } from "../../outputs/PCA9685";
-import { ControlMode, State } from "../../outputs/types/OutputBase";
+import { PCA9685, PCA9685State } from "../../outputs/PCA9685";
+import { ControlMode } from "../../outputs/types/OutputBase";
 
 const router = express.Router();
 
@@ -58,25 +58,31 @@ router.post('/:id/control-mode', async (req: Request, res: Response) => {
 });
 
 router.post('/:id/manual-state', async (req: Request, res: Response) => {
-  if (typeof(req.body.isOn) == "boolean" && typeof(req.body.value) == "number" && req.body.value >= 0 && req.body.value <= 100) {
-    const state = {
-      isOn: req.body.isOn,
-      value: req.body.value
-    } as State;
-    
-    (req.app.get('pca9685') as PCA9685).setNewOutputState(String(req.params["id"]), state, ControlMode.manual);
-    (req.app.get('pca9685') as PCA9685).executeOutputState(String(req.params["id"]));
-    res.status(200).json({
-      message: "Manual state successfully updated",
-      statusCode: 200,
-      timestamp: new Date().toISOString()
-    });
-    return;
+  const pca9685 = req.app.get('pca9685') as PCA9685;
+  let suggestion = "Value must be between 0 and 100.";
+  if (typeof(req.body.value) == "number" && req.body.value >= 0 && req.body.value <= 100){
+    if (pca9685.outputs[String(req.params["id"])]?.isPwm == false) {
+      suggestion = "Output is not a PWM output, value must be 0 or 100.";
+    } else {
+      const state = {
+        value: req.body.value
+      } as PCA9685State;
+      pca9685.setNewOutputState(String(req.params["id"]), state, ControlMode.manual);
+      pca9685.executeOutputState(String(req.params["id"]));
+
+      res.status(200).json({
+        message: "Manual state successfully updated",
+        statusCode: 200,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
   }
   res.status(400).json({
     message: "Invalid state data",
     statusCode: 400,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    suggestion: suggestion
   });
   return;
 });

@@ -423,13 +423,16 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Invalid state data"
+                    example: "Invalid state data."
                   statusCode:
                     type: integer
                     example: 400
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
+                  suggestion:
+                    type: string
+                    example: "Value must be between 0 and 100."
         401:
           description: "Unauthorized"
           content:
@@ -534,14 +537,13 @@ components:
     State:
       type: object
       properties:
-        isOn:
-          type: boolean
-          example: true
         value:
           type: integer
           example: 75
+          minimum: 0
+          maximum: 100
+          multipleOf: 1
       required:
-        - "isOn"
         - "value"
 
   securitySchemes: 
