@@ -1,6 +1,6 @@
 import { Pca9685Driver } from 'pca9685';
 import { openSync } from 'i2c-bus';
-import { IOutputBase, OutputBase, ControlMode, State } from './types/OutputBase';
+import { IOutputBase, OutputBase, ControlMode, IState } from './types/OutputBase';
 import { SDBOutput } from '../database/types/SDBOutput';
 import { ISprootDB } from '../database/types/ISprootDB';
 
@@ -74,17 +74,21 @@ class PCA9685 {
   }
 
   updateControlMode = (outputId: string, controlMode: ControlMode) => this.#outputs[outputId]?.updateControlMode(controlMode);
-  setNewOutputState = (outputId: string, newState: State, targetControlMode: ControlMode) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
+  setNewOutputState = (outputId: string, newState: PCA9685State, targetControlMode: ControlMode) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
   executeOutputState = (outputId?: string) => outputId ? this.#outputs[outputId]?.executeState() : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => this.#pca9685?.dispose();
 }
 
 class PCA9685Output extends OutputBase {
   pca9685: Pca9685Driver;
+  override manualState: PCA9685State;
+  override scheduleState: PCA9685State;
 
   constructor(pca9685: Pca9685Driver, output: SDBOutput, sprootDB: ISprootDB){
     super(output, sprootDB);
     this.pca9685 = pca9685;
+    this.manualState = {value: 0};
+    this.scheduleState = {value: 0};
   }
 
   executeState(): void {
@@ -134,4 +138,8 @@ class OutputValueOutOfRange extends Error {
   }
 }
 
-export { PCA9685, PCA9685Output };
+interface PCA9685State extends IState {
+  value: number;
+};
+
+export { PCA9685, PCA9685Output, PCA9685State };

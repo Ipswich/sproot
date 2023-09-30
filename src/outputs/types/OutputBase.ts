@@ -12,20 +12,20 @@ interface IOutputBase {
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
-  manualState: State;
-  scheduleState: State;
+  manualState: IState;
+  scheduleState: IState;
   controlMode: ControlMode;
 }
 
 abstract class OutputBase implements IOutputBase {
-  id: number;
+  readonly id: number;
   description: string | null;
-  pin: number;
+  readonly pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
-  sprootDB: ISprootDB;
-  manualState: State;
-  scheduleState: State;
+  readonly sprootDB: ISprootDB;
+  manualState: IState;
+  scheduleState: IState;
   controlMode: ControlMode;
 
   constructor(gdbOutput: SDBOutput, sprootDB: ISprootDB) {
@@ -35,15 +35,14 @@ abstract class OutputBase implements IOutputBase {
     this.isPwm = gdbOutput.isPwm;
     this.isInvertedPwm = gdbOutput.isPwm ? gdbOutput.isInvertedPwm : false;
     this.sprootDB = sprootDB;
-    this.manualState = { isOn: false, value: 0 }
-    this.scheduleState = { isOn: false, value: 0 }
+    this.manualState = {}
+    this.scheduleState = {}
     this.controlMode = ControlMode.schedule;
   }
 
   /**
    * Updates the control mode for the output; used to switch between manual and schedule modes
-   * @param controlMode 
-   * @returns 
+   * @param controlMode Mode to give system control to.
    */
   updateControlMode = (controlMode: ControlMode) => this.controlMode = controlMode;
 
@@ -54,7 +53,7 @@ abstract class OutputBase implements IOutputBase {
    * @param newState New state to set
    * @param targetControlMode Determines which state will be overwritten
    */
-  setNewState(newState: State, targetControlMode: ControlMode){
+  setNewState(newState: IState, targetControlMode: ControlMode){
     switch (targetControlMode) {
       case ControlMode.manual:
         this.manualState = newState;
@@ -74,9 +73,6 @@ abstract class OutputBase implements IOutputBase {
   abstract dispose(): void;
 }
 
-interface State {
-  isOn: boolean;
-  value: number;
-}
+interface IState {}
 
-export { IOutputBase, OutputBase, ControlMode, State };
+export { IOutputBase, OutputBase, ControlMode, IState };
