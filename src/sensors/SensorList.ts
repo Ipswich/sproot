@@ -1,6 +1,6 @@
 import { BME280 } from './BME280';
 import { DS18B20 } from './DS18B20';
-import { DisposableSensorBase, SensorBase } from './types/SensorBase';
+import { DisposableSensorBase, ISensorBase, SensorBase } from './types/SensorBase';
 import { SDBSensor } from '../database/types/SDBSensor';
 import { ISprootDB } from '../database/types/ISprootDB';
 
@@ -14,18 +14,17 @@ class SensorList {
 
   get sensors(): Record<string, (SensorBase | DisposableSensorBase)> { return this.#sensors; }
 
-  get sensorData(): Record<string, SensorBase> {const res: Record<string, (SensorBase | DisposableSensorBase)> = {} 
+  get sensorData(): Record<string, ISensorBase> {
+    const cleanObject : Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const cleanObject = JSON.parse(JSON.stringify(this.#sensors[key]));
-      cleanObject["lastReadingTime"] = new Date(cleanObject["lastReadingTime"]).toUTCString();
-      delete cleanObject["sprootDB"];
-      res[cleanObject.id] = cleanObject as (SensorBase | DisposableSensorBase);
+      const {id, description, model, address, lastReading, lastReadingTime, units} = this.#sensors[key] as ISensorBase;
+      cleanObject[key] = {id, description, model, address, lastReading, lastReadingTime, units};
     }
-    return res;
+    return cleanObject;
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
-    await this.#addUnreconizedDS18B20sToGDBAsync();
+    await this.#addUnreconizedDS18B20sToSDBAsync();
     const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
     for (const sensor of sensorsFromDatabase) {
       const key = Object.keys(this.#sensors).find(key => key === sensor.id.toString());
@@ -81,7 +80,7 @@ class SensorList {
     }
   }
 
-  async #addUnreconizedDS18B20sToGDBAsync() {
+  async #addUnreconizedDS18B20sToSDBAsync() {
     const deviceAddresses = await DS18B20.getAddressesAsync();
     const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
     const promises: Promise<void>[] = [];

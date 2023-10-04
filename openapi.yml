@@ -432,7 +432,7 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
                   suggestion:
                     type: string
-                    example: "Value must be between 0 and 100."
+                    example: "Value must be a number between 0 and 100."
         401:
           description: "Unauthorized"
           content:
@@ -511,6 +511,12 @@ components:
       properties:
         id:
           type: integer
+        model:
+          type: string
+          example: pca9685
+        address:
+          type: string
+          example: "0x40"
         description:
           type: string
           nullable: true

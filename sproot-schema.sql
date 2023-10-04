@@ -11,6 +11,8 @@ USE `sproot`;
 
 CREATE TABLE IF NOT EXISTS `outputs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `model` varchar(64) NOT NULL,
+  `address` varchar(64) NOT NULL,
   `description` varchar(64) DEFAULT NULL,
   `pin` int(11) NOT NULL,
   `isPwm` tinyint(1) NOT NULL,

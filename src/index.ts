@@ -6,8 +6,8 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 
 import { SprootDB } from './database/SprootDB';
-import { PCA9685 } from './outputs/PCA9685';
 import { SensorList } from './sensors/SensorList';
+import { OutputList } from './outputs/OutputList';
 
 import login, {authenticate} from './api/v1/middleware/Authentication';
 import sensorRouter from './api/v1/SensorRouter';
@@ -31,22 +31,23 @@ const app = express();
 
   const sensorList = new SensorList(sprootDB);
   app.set('sensorList', sensorList);
-  const pca9685 = await new PCA9685(sprootDB).initializeOrRegenerateAsync();
-  app.set('pca9685', pca9685);
+  const outputList = new OutputList(sprootDB);
+  app.set('outputList', outputList);
 
   await sensorList.initializeOrRegenerateAsync();
   await sensorList.getReadingsAsync();
+  await outputList.initializeOrRegenerateAsync();
   await sensorList.addReadingsToDatabaseAsync();
 
   //State update loop
   const updateStateLoop = setInterval(async () => {
     await sensorList.initializeOrRegenerateAsync();
-    await pca9685.initializeOrRegenerateAsync()
     await sensorList.getReadingsAsync();
+    await outputList.initializeOrRegenerateAsync();
     //Add triggers and shit here.
 
     //Execute any changes made to state.
-    pca9685.executeOutputState();
+    outputList.executeOutputState();
     }, parseInt(process.env['STATE_UPDATE_INTERVAL']!)
   );
   

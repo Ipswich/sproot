@@ -7,8 +7,8 @@ import { SensorBase, ReadingType } from './types/SensorBase';
 
 class DS18B20 extends SensorBase {
 
-  constructor(gdbSensor: SDBSensor, sprootDB: ISprootDB) {
-    super(gdbSensor, sprootDB);
+  constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB) {
+    super(sdbSensor, sprootDB);
     this.units[ReadingType.temperature] = '°C';
   }
   

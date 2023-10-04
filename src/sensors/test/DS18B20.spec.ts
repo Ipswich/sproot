@@ -1,18 +1,20 @@
 import ds18b20 from "ds18b20";
 import { DS18B20 } from "../DS18B20";
 import { ReadingType } from "../types/SensorBase";
-
-import chai, { assert } from "chai";
-import chaiAsPromised from "chai-as-promised";
-chai.use(chaiAsPromised);
-import * as sinon from 'sinon';
 import { MockSprootDB } from "../../database/types/ISprootDB";
 import { SDBSensor } from "../../database/types/SDBSensor";
+
+import { assert } from "chai";
+import * as sinon from 'sinon';
 const sandbox = sinon.createSandbox();
+const mockSprootDB = new MockSprootDB();
 
 describe('DS18B20.ts tests', function() {
+  this.afterEach(() => {
+    sandbox.restore();
+  });
+
   it('should initialize a DS18B20 sensor', async () => {
-    const mockSprootDB = new MockSprootDB();
     const mockDS18B20Data = { id: 1, description: 'test sensor 1', model: 'DS18B20', address: '28-00000' } as SDBSensor;
 
     const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB);
@@ -23,11 +25,9 @@ describe('DS18B20.ts tests', function() {
     assert.equal(ds18b20Sensor.model, mockDS18B20Data.model);
     assert.equal(ds18b20Sensor.address, mockDS18B20Data.address);
     assert.equal(ds18b20Sensor.units[ReadingType.temperature], '°C');
-    sandbox.restore();
   });
 
   it('should get a reading from a DS18B20 sensor', async () => {
-    const mockSprootDB = new MockSprootDB();
     const mockDS18B20Data = { id: 1, description: 'test sensor 1', model: 'DS18B20', address: '28-00000' } as SDBSensor;
     const mockReading = 21.2;
     sandbox.stub(ds18b20, "temperature").yields(null, mockReading);
@@ -36,7 +36,6 @@ describe('DS18B20.ts tests', function() {
     await ds18b20Sensor.getReadingAsync();
 
     assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(mockReading));
-    sandbox.restore();
   });
 
   it('should get all DS18B20 addresses', async () => {
@@ -48,6 +47,5 @@ describe('DS18B20.ts tests', function() {
     assert.equal(addresses[0], '28-00000');
     assert.equal(addresses[1], '28-00001');
     assert.equal(addresses[2], '28-00002');
-    sandbox.restore();
   });
 });
