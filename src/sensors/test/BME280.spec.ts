@@ -46,7 +46,7 @@ describe('BME280.ts tests', function() {
     const mockReading = { temperature: 21.2, humidity: 45.6, pressure: 1013.2 };
     const readStub = sandbox.stub().resolves(mockReading as bme280.data);
     sandbox.stub(bme280, "open").resolves({read: readStub as Bme280['read']} as Bme280); // Don't create a real sensor - needs I2C bus
-    
+
     const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB).initAsync();
     await bme280Sensor.getReadingAsync();
 

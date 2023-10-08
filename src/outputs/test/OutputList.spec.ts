@@ -35,7 +35,25 @@ describe('OutputList.ts tests', function() {
     assert.equal(Object.keys(outputList.outputs).length, 1);
   });
 
-  it('should clean up output controllers (pca9685) when they no longer have associated outputs.', async function() {
+  it('should delete pca9685 objects if there are no outputs left on the object', async function () {
+    sandbox.createStubInstance(Pca9685Driver);
+    sandbox.stub(Pca9685Driver.prototype, 'dispose').callsFake(() => {});
+    
+    const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, 'getOutputsAsync').resolves([
+      { id: 1, model: "pca9685", address: "0x40", description: 'test output 1', pin: 0, isPwm: true, isInvertedPwm: false } as SDBOutput,
+      { id: 2, model: "pca9685", address: "0x40", description: 'test output 2', pin: 1, isPwm: false, isInvertedPwm: false } as SDBOutput,
+      { id: 3, model: "pca9685", address: "0x40", description: 'test output 3', pin: 2, isPwm: true, isInvertedPwm: true} as SDBOutput,
+      { id: 4, model: "pca9685", address: "0x40", description: 'test output 4', pin: 3, isPwm: false, isInvertedPwm: true } as SDBOutput,
+    ]);
+    const outputList = new OutputList(mockSprootDB);
+    
+    // Create
+    await outputList.initializeOrRegenerateAsync();
+
+    // Delete all PCA9685s
+    getOutputsAsyncStub.resolves([]);
+    await outputList.initializeOrRegenerateAsync();
+    assert.isEmpty(outputList.pca9685Record);
   });
 
   it('should return output data (no functions)', async function() {
@@ -56,5 +74,21 @@ describe('OutputList.ts tests', function() {
   });
 
   it('should dispose of all outputs', async function() {
+    sandbox.createStubInstance(Pca9685Driver);
+    sandbox.stub(Pca9685Driver.prototype, 'dispose').callsFake(() => {});
+
+    sandbox.stub(MockSprootDB.prototype, 'getOutputsAsync').resolves([
+      { id: 1, model: "pca9685", address: "0x40", description: 'test output 1', pin: 0, isPwm: true, isInvertedPwm: false } as SDBOutput,
+      { id: 2, model: "pca9685", address: "0x40", description: 'test output 2', pin: 1, isPwm: false, isInvertedPwm: false } as SDBOutput,
+      { id: 3, model: "pca9685", address: "0x40", description: 'test output 3', pin: 2, isPwm: true, isInvertedPwm: true} as SDBOutput,
+      { id: 4, model: "pca9685", address: "0x40", description: 'test output 4', pin: 3, isPwm: false, isInvertedPwm: true } as SDBOutput,
+    ]);
+    const outputList = new OutputList(mockSprootDB);
+    
+    // Create
+    await outputList.initializeOrRegenerateAsync();
+    outputList.dispose();
+    assert.isEmpty(outputList.outputs)
+    assert.isEmpty(outputList.pca9685Record)
   });
 });

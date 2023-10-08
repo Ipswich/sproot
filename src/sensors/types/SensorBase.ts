@@ -38,7 +38,7 @@ abstract class SensorBase implements ISensorBase {
     this.units = {} as Record<ReadingType, string>;
   }
   abstract getReadingAsync(): Promise<void>;
-  
+
   addLastReadingToDatabaseAsync = async (): Promise<void> => await this.sprootDB.addSensorReadingAsync(this);
 }
 

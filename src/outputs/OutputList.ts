@@ -28,18 +28,16 @@ class OutputList {
   setNewOutputState = (outputId: string, newState: IState, targetControlMode: ControlMode) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
   executeOutputState = (outputId?: string) => outputId ? this.#outputs[outputId]?.executeState() : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => {
-    for (const key in this.#outputs) 
-      {
-        this.#outputs[key]?.dispose();
-      }
-     for (const key in this.#pca9685Record) 
-      {
-        this.#pca9685Record[key]?.dispose();
-      }
-      this.#pca9685Record = {};
-      this.#outputs = {};
-      this.#usedAddresses = [];
-     }
+    for (const key in this.#outputs) {
+      this.#outputs[key]?.dispose();
+    }
+    for (const key in this.#pca9685Record) {
+      this.#pca9685Record[key]?.dispose();
+    }
+    this.#pca9685Record = {};
+    this.#outputs = {};
+    this.#usedAddresses = [];
+  }
 
 
   async initializeOrRegenerateAsync(): Promise<void> {

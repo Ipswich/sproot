@@ -28,7 +28,7 @@ class PCA9685 {
       }, ()=>{});
     }
     const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
-
+    
     //Update old ones
     outputsFromDatabase.forEach(async (output) => {
       const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
@@ -103,7 +103,7 @@ class PCA9685Output extends OutputBase {
     }
   }
 
-  dispose = () => {};
+  dispose = () => {this.#setPwm};
 
   #setPwm (value: number): void {
     if (!this.isPwm && value != 0 && value != 100) {

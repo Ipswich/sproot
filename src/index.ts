@@ -9,7 +9,7 @@ import { SprootDB } from './database/SprootDB';
 import { SensorList } from './sensors/SensorList';
 import { OutputList } from './outputs/OutputList';
 
-import login, {authenticate} from './api/v1/middleware/Authentication';
+import login, { authenticate } from './api/v1/middleware/Authentication';
 import sensorRouter from './api/v1/SensorRouter';
 import outputRouter from './api/v1/OutputRouter';
 
@@ -50,7 +50,7 @@ const app = express();
     outputList.executeOutputState();
     }, parseInt(process.env['STATE_UPDATE_INTERVAL']!)
   );
-  
+
   // Database update loop
   const updateDatabaseLoop = setInterval(async () => {
     await sensorList.addReadingsToDatabaseAsync();
@@ -66,9 +66,9 @@ const app = express();
   app.use('/api/v1/authenticate', login);
   app.use('/api/v1/sensors', authenticate, sensorRouter)
   app.use('/api/v1/outputs', authenticate, outputRouter)
-  
+
   app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerOptions, {swaggerOptions : { defaultModelsExpandDepth: -1 }}));
-  
+
   const server = app.listen(process.env['APPLICATION_PORT']!, () => {
     console.log(`sproot is listening at http://localhost:${process.env['APPLICATION_PORT']!}`)
   });

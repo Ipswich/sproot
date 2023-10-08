@@ -7,7 +7,7 @@
     "build": "rimraf ./dist && tsc",
     "start:dev": "npx nodemon",
     "start": "npm run build && node dist/index.js",
-    "test": "npm run build && mocha -r ts-node/register ./src/**/*.spec.ts",
+    "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts",
     "coverage": "nyc npm run test"
   },
   "author": "Ben Steele",
