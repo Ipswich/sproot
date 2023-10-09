@@ -1,0 +1,52 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - APPLICATION_PORT=3000
+      - JWT_SECRET=a12jf8sdc-mc82ncod8blf86kjsd
+      - JWT_EXPIRATION=3d
+      - DATABASE_HOST=mariadb
+      - DATABASE_PORT=3306
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=sproot
+      - STATE_UPDATE_INTERVAL=1000
+      - DATABASE_UPDATE_INTERVAL=60000
+    volumes:
+      - /Users/benjaminsteele/development/sproot/app/data:/home/sproot
+    networks: 
+      - sproot-network
+    ports:
+      - 3000:3000
+    privileged: true
+    command: ["sleep", "infinity"]
+
+  mariadb:
+    image: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - /Users/benjaminsteele/development/sproot/mariadb-docker/data:/var/lib/mysql
+      - ./sproot.sql:/docker-entrypoint-initdb.d/sproot.sql
+    networks:
+      - sproot-network
+    ports:
+      - 3306:3306
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    networks:
+      - sproot-network
+    ports:
+      - 8080:8080
+
+networks:
+  sproot-network:
+    driver: bridge
+
