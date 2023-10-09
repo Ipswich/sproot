@@ -14,7 +14,7 @@ describe('DS18B20.ts tests', function() {
     sandbox.restore();
   });
 
-  it('should initialize a DS18B20 sensor', async () => {
+  it('should initialize a DS18B20 sensor', async function() {
     const mockDS18B20Data = { id: 1, description: 'test sensor 1', model: 'DS18B20', address: '28-00000' } as SDBSensor;
 
     const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB);
@@ -27,7 +27,7 @@ describe('DS18B20.ts tests', function() {
     assert.equal(ds18b20Sensor.units[ReadingType.temperature], '°C');
   });
 
-  it('should get a reading from a DS18B20 sensor', async () => {
+  it('should get a reading from a DS18B20 sensor', async function() {
     const mockDS18B20Data = { id: 1, description: 'test sensor 1', model: 'DS18B20', address: '28-00000' } as SDBSensor;
     const mockReading = 21.2;
     sandbox.stub(ds18b20, "temperature").yields(null, mockReading);
@@ -38,7 +38,7 @@ describe('DS18B20.ts tests', function() {
     assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(mockReading));
   });
 
-  it('should get all DS18B20 addresses', async () => {
+  it('should get all DS18B20 addresses', async function () {
     sandbox.stub(ds18b20, "sensors").yields(null, ['28-00000', '28-00001', '28-00002']);
     
     const addresses = await DS18B20.getAddressesAsync();
@@ -47,5 +47,22 @@ describe('DS18B20.ts tests', function() {
     assert.equal(addresses[0], '28-00000');
     assert.equal(addresses[1], '28-00001');
     assert.equal(addresses[2], '28-00002');
+  });
+
+  it('should log errors on getting addresses and readings, ', async function () {
+    sandbox.stub(ds18b20, "sensors").yields(new Error('test error'), null);
+    sandbox.stub(ds18b20, "temperature").yields(new Error('ENOENT: no such file or directory, open \'/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves\''), null);
+    const consoleErrorStub = sandbox.stub(console, "error");
+    
+    await DS18B20.getAddressesAsync();
+    const addresses = await DS18B20.getAddressesAsync();
+    const mockDS18B20Data = { id: 1, description: 'test sensor 1', model: 'DS18B20', address: '28-00000' } as SDBSensor;
+    const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB);
+    await ds18b20Sensor.getReadingAsync();
+    await ds18b20Sensor.getReadingAsync();
+
+    assert.equal(addresses.length, 0);
+    assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], undefined);
+    assert.isTrue(consoleErrorStub.calledTwice);
   });
 });

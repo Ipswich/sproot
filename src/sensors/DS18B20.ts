@@ -6,9 +6,7 @@ import { ISprootDB } from '../database/types/ISprootDB';
 import { SensorBase, ReadingType } from './types/SensorBase';
 
 let lastStaticError: string | undefined = undefined;
-class DS18B20 extends SensorBase {
-  lastError: string | undefined = undefined;
-  
+class DS18B20 extends SensorBase {  
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB) {
     super(sdbSensor, sprootDB);
     this.units[ReadingType.temperature] = '°C';
@@ -19,27 +17,27 @@ class DS18B20 extends SensorBase {
       this.lastReading[ReadingType.temperature] = String(await util.promisify(ds18b20.temperature)(this.address!));
       this.lastReadingTime = new Date();
     } catch (err) {
-      if (err instanceof Error) {
-        if (err.message !== this.lastError){
-          this.lastError = err.message;
-          console.error(err);
-        }
-      }
+      handleError(err);
     }
   }
 
   static async getAddressesAsync(): Promise<string[]> {
     try {
       return await util.promisify(ds18b20.sensors)();
+    } catch (err) {
+      handleError(err);
     }
-    catch (err) {
-      if (err instanceof Error) {
-        if (err.message !== lastStaticError){
-          lastStaticError = err.message;
-          console.error(err);
-        }
-      }
-      return [];
+    return [];
+  }
+}
+
+function handleError(err: any) {
+  if (err?.message !== lastStaticError){
+    lastStaticError = err.message;
+    if(err.message === 'ENOENT: no such file or directory, open \'/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves\''){
+      console.error('Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.');
+    } else {
+      console.error(err);
     }
   }
 }
