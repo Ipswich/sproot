@@ -17,8 +17,12 @@ services:
       - STATE_UPDATE_INTERVAL=1000
       - DATABASE_UPDATE_INTERVAL=60000
     volumes:
+<<<<<<< Updated upstream
       - ./docker_volumes/sproot/data:/home/sproot
       - /sys/:/sys/
+=======
+      - ./docker_volumes/sproot/data:/sproot
+>>>>>>> Stashed changes
     networks: 
       - sproot-network
     ports:
