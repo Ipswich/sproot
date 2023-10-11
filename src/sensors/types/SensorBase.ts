@@ -7,7 +7,17 @@ enum ReadingType {
   pressure = "pressure"
 }
 
-abstract class SensorBase {
+interface ISensorBase {
+  id: number;
+  description: string | null;
+  model: string;
+  address: string | null;
+  lastReading:  Record<ReadingType, string>;
+  lastReadingTime: Date | null;
+  readonly units: Record<ReadingType, string>;
+}
+
+abstract class SensorBase implements ISensorBase {
   id: number;
   description: string | null;
   model: string;
@@ -17,18 +27,18 @@ abstract class SensorBase {
   sprootDB: ISprootDB;
   readonly units: Record<ReadingType, string>;
 
-  constructor(gdbSensor: SDBSensor, sprootDB: ISprootDB) {
-    this.id = gdbSensor.id;
-    this.description = gdbSensor.description;
-    this.model = gdbSensor.model;
-    this.address = gdbSensor.address;
+  constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB) {
+    this.id = sdbSensor.id;
+    this.description = sdbSensor.description;
+    this.model = sdbSensor.model;
+    this.address = sdbSensor.address;
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.sprootDB = sprootDB;
     this.units = {} as Record<ReadingType, string>;
   }
   abstract getReadingAsync(): Promise<void>;
-  
+
   addLastReadingToDatabaseAsync = async (): Promise<void> => await this.sprootDB.addSensorReadingAsync(this);
 }
 
@@ -36,4 +46,4 @@ abstract class DisposableSensorBase extends SensorBase {
   abstract disposeAsync(): Promise<void>;
 }
 
-export { SensorBase, DisposableSensorBase, ReadingType };
+export { ISensorBase, SensorBase, DisposableSensorBase, ReadingType };

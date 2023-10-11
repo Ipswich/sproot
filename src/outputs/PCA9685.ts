@@ -28,7 +28,7 @@ class PCA9685 {
       }, ()=>{});
     }
     const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
-
+    
     //Update old ones
     outputsFromDatabase.forEach(async (output) => {
       const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
@@ -67,8 +67,8 @@ class PCA9685 {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const {id, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode} = this.#outputs[key] as IOutputBase;
-      cleanObject[key] = {id, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode};
+      const {id, model, address, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode} = this.#outputs[key] as IOutputBase;
+      cleanObject[key] = {id, model, address, description, pin, isPwm, isInvertedPwm, manualState, scheduleState, controlMode};
     }
     return cleanObject;
   }
@@ -103,7 +103,7 @@ class PCA9685Output extends OutputBase {
     }
   }
 
-  dispose = () => {};
+  dispose = () => {this.#setPwm};
 
   #setPwm (value: number): void {
     if (!this.isPwm && value != 0 && value != 100) {

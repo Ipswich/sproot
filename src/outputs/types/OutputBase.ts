@@ -8,6 +8,8 @@ enum ControlMode {
 
 interface IOutputBase {
   id: number;
+  model: string;
+  address: string;
   description: string | null;
   pin: number;
   isPwm: boolean;
@@ -19,6 +21,8 @@ interface IOutputBase {
 
 abstract class OutputBase implements IOutputBase {
   readonly id: number;
+  readonly model: string;
+  readonly address: string;
   description: string | null;
   readonly pin: number;
   isPwm: boolean;
@@ -28,12 +32,14 @@ abstract class OutputBase implements IOutputBase {
   scheduleState: IState;
   controlMode: ControlMode;
 
-  constructor(gdbOutput: SDBOutput, sprootDB: ISprootDB) {
-    this.id = gdbOutput.id;
-    this.description = gdbOutput.description;
-    this.pin = gdbOutput.pin;
-    this.isPwm = gdbOutput.isPwm;
-    this.isInvertedPwm = gdbOutput.isPwm ? gdbOutput.isInvertedPwm : false;
+  constructor(sdbOutput: SDBOutput, sprootDB: ISprootDB) {
+    this.id = sdbOutput.id;
+    this.model = sdbOutput.model;
+    this.address = sdbOutput.address;
+    this.description = sdbOutput.description;
+    this.pin = sdbOutput.pin;
+    this.isPwm = sdbOutput.isPwm;
+    this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
     this.sprootDB = sprootDB;
     this.manualState = {}
     this.scheduleState = {}
@@ -73,6 +79,6 @@ abstract class OutputBase implements IOutputBase {
   abstract dispose(): void;
 }
 
-interface IState {}
+interface IState { }
 
 export { IOutputBase, OutputBase, ControlMode, IState };

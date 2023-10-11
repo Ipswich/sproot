@@ -2,8 +2,8 @@ import 'dotenv/config';
 import bme280, { Bme280 } from 'bme280';
 import { BME280 } from '../../sensors/BME280';
 import { DS18B20 } from '../../sensors/DS18B20';
-import { SDBSensor } from '../../database/types/SDBSensor';
 import { MockSprootDB} from '../../database/types/ISprootDB';
+import { SDBSensor } from '../../database/types/SDBSensor';
 import { SensorList } from '../../sensors/SensorList';
 
 import chai, { assert, expect } from "chai";
@@ -15,6 +15,10 @@ const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
 describe('SensorList.ts tests', function() {
+  this.afterEach(() => {
+    sandbox.restore();
+  });
+
   it('should create, update, and delete sensors, adding a DS18B20 to MockSprootDB', async function() {
     const getSensorsAsyncStub = sandbox.stub(MockSprootDB.prototype, 'getSensorsAsync').resolves([
       { id: 1, description: 'test sensor 1', model: 'BME280', address: '0x76' } as SDBSensor,
@@ -42,8 +46,6 @@ describe('SensorList.ts tests', function() {
     await sensorList.initializeOrRegenerateAsync();
     assert.equal(Object.keys(sensorList.sensors).length, 2);
     assert.equal(sensorList.sensors['2']!.description, '2 rosnes tset');
-
-    sandbox.restore();
   });
 
   it('should return sensor data (no functions)', async function() {
@@ -68,8 +70,7 @@ describe('SensorList.ts tests', function() {
     assert.equal(sensorData['2']!['description'], 'test sensor 2');
     assert.equal(sensorData['2']!['model'], 'DS18B20');
     assert.equal(sensorData['2']!['address'], '28-00000');
-
-    sandbox.restore();
+    assert.exists(sensorList.sensors['1']!['sprootDB']);
   });
 
   it('should call dispose on DisposableSensorBase sensors', async function() {
@@ -92,8 +93,6 @@ describe('SensorList.ts tests', function() {
     
     assert.equal(Object.keys(sensorList.sensors).length, 0);
     assert.equal(disposeStub.callCount, 1);
-
-    sandbox.restore();
   });
 
   it('should call getReading on all sensors', async function() {
@@ -117,8 +116,6 @@ describe('SensorList.ts tests', function() {
 
     assert.equal(Object.keys(sensorList.sensors).length, 2);
     assert.equal(getBME280ReadingStub.callCount + getDS18B20ReadingStub.callCount, 2);
-
-    sandbox.restore();
   });
 
   it('should throw errors when building sensors', async function() {
@@ -143,8 +140,6 @@ describe('SensorList.ts tests', function() {
     mockDS18B20Data['address'] = '28-00000';
     getSensorsStub.resolves([ mockBME280Data, mockDS18B20Data, mockSensorData ]);
     await expect(sensorList.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith('Unrecognized sensor model: not a recognized model');
-
-    sandbox.restore();
   });
 
   it('should handle errors when reading sensors', async function() {
@@ -159,7 +154,5 @@ describe('SensorList.ts tests', function() {
     await sensorList.getReadingsAsync();
 
     assert.isTrue(consoleStub.calledOnce);
-
-    sandbox.restore();
   });
 });

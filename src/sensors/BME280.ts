@@ -6,8 +6,8 @@ import { DisposableSensorBase, ReadingType } from './types/SensorBase';
 class BME280 extends DisposableSensorBase {
   #bme280: Bme280;
 
-  constructor(gdbSensor: SDBSensor, sprootDB: ISprootDB) {
-    super(gdbSensor, sprootDB);
+  constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB) {
+    super(sdbsensor, sprootDB);
     this.#bme280 = {} as Bme280;
     this.units[ReadingType.temperature] = '°C';
     this.units[ReadingType.humidity] = '%rH';
