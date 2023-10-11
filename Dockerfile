@@ -20,6 +20,6 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/g
 RUN apt update && apt install -y gh;
 
 # Copy project
-COPY . .
-
+COPY . ./sproot
+RUN cd ./sproot && npm install
 EXPOSE 3000

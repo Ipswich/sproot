@@ -4,7 +4,8 @@
   "description": "Garden Automation Managment",
   "main": "index.js",
   "scripts": {
-    "build": "rimraf ./dist && tsc",
+    "clean": "rimraf ./dist",
+    "build": "npm run clean && tsc",
     "start:dev": "npx nodemon",
     "start": "npm run build && node dist/index.js",
     "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts",
