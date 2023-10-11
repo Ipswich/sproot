@@ -14,7 +14,7 @@ class DS18B20 extends SensorBase {
   
   override async getReadingAsync(): Promise<void> {
     try {
-      this.lastReading[ReadingType.temperature] = String(await util.promisify(ds18b20.temperature)(this.address!));
+      this.lastReading[ReadingType.temperature] = String(ds18b20.temperatureSync(this.address!));
       this.lastReadingTime = new Date();
     } catch (err) {
       handleError(err);
