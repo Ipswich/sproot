@@ -7,7 +7,7 @@ services:
     environment:
       - NODE_ENV=development
       - APPLICATION_PORT=3000
-      - JWT_SECRET=a12jf8sdc-mc82ncod8blf86kjsd
+      - "JWT_SECRET=CHANGE ME" #Change this to something long and unique
       - JWT_EXPIRATION=3d
       - DATABASE_HOST=mariadb
       - DATABASE_PORT=3306

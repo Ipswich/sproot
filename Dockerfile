@@ -21,5 +21,7 @@ RUN apt update && apt install -y gh;
 
 # Copy project
 COPY . ./sproot
-RUN cd ./sproot && npm install
+RUN cd ./sproot && npm install && npm run build
+
+# Expose app port
 EXPOSE 3000
