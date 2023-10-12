@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   app:
     build:
@@ -19,7 +19,7 @@ services:
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/data:/home/sproot
-    networks: 
+    networks:
       - sproot-network
     ports:
       - 3000:3000
@@ -50,4 +50,3 @@ services:
 networks:
   sproot-network:
     driver: bridge
-

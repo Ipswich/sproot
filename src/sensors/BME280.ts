@@ -1,7 +1,7 @@
-import bme280, { Bme280 } from 'bme280';
-import { SDBSensor } from '../database/types/SDBSensor';
-import { ISprootDB } from '../database/types/ISprootDB';
-import { DisposableSensorBase, ReadingType } from './types/SensorBase';
+import bme280, { Bme280 } from "bme280";
+import { SDBSensor } from "../database/types/SDBSensor";
+import { ISprootDB } from "../database/types/ISprootDB";
+import { DisposableSensorBase, ReadingType } from "./types/SensorBase";
 
 class BME280 extends DisposableSensorBase {
   #bme280: Bme280;
@@ -9,13 +9,16 @@ class BME280 extends DisposableSensorBase {
   constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB) {
     super(sdbsensor, sprootDB);
     this.#bme280 = {} as Bme280;
-    this.units[ReadingType.temperature] = '°C';
-    this.units[ReadingType.humidity] = '%rH';
-    this.units[ReadingType.pressure] = 'hPa';
+    this.units[ReadingType.temperature] = "°C";
+    this.units[ReadingType.humidity] = "%rH";
+    this.units[ReadingType.pressure] = "hPa";
   }
 
   async initAsync(): Promise<BME280> {
-    this.#bme280 = await bme280.open({ i2cBusNumber: 1, i2cAddress: Number(this.address) });
+    this.#bme280 = await bme280.open({
+      i2cBusNumber: 1,
+      i2cAddress: Number(this.address),
+    });
     return this;
   }
 

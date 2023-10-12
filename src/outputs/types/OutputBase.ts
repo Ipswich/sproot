@@ -1,10 +1,10 @@
 import { SDBOutput } from "../../database/types/SDBOutput";
 import { ISprootDB } from "../../database/types/ISprootDB";
 
-enum ControlMode { 
-  manual = 'manual',
-  schedule = 'schedule'
-};
+enum ControlMode {
+  manual = "manual",
+  schedule = "schedule",
+}
 
 interface IOutputBase {
   id: number;
@@ -41,8 +41,8 @@ abstract class OutputBase implements IOutputBase {
     this.isPwm = sdbOutput.isPwm;
     this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
     this.sprootDB = sprootDB;
-    this.manualState = {}
-    this.scheduleState = {}
+    this.manualState = {};
+    this.scheduleState = {};
     this.controlMode = ControlMode.schedule;
   }
 
@@ -50,7 +50,8 @@ abstract class OutputBase implements IOutputBase {
    * Updates the control mode for the output; used to switch between manual and schedule modes
    * @param controlMode Mode to give system control to.
    */
-  updateControlMode = (controlMode: ControlMode) => this.controlMode = controlMode;
+  updateControlMode = (controlMode: ControlMode) =>
+    (this.controlMode = controlMode);
 
   /**
    * Applies a new state to the object. This does NOT immediately execute the state, but merely updates the state object.
@@ -59,7 +60,7 @@ abstract class OutputBase implements IOutputBase {
    * @param newState New state to set
    * @param targetControlMode Determines which state will be overwritten
    */
-  setNewState(newState: IState, targetControlMode: ControlMode){
+  setNewState(newState: IState, targetControlMode: ControlMode) {
     switch (targetControlMode) {
       case ControlMode.manual:
         this.manualState = newState;
@@ -79,6 +80,6 @@ abstract class OutputBase implements IOutputBase {
   abstract dispose(): void;
 }
 
-interface IState { }
+interface IState {}
 
 export { IOutputBase, OutputBase, ControlMode, IState };

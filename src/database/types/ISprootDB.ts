@@ -1,7 +1,7 @@
-import { SDBUser } from './SDBUser';
-import { SDBSensor } from './SDBSensor';
-import { SensorBase } from '../../sensors/types/SensorBase';
-import { SDBOutput } from './SDBOutput';
+import { SDBUser } from "./SDBUser";
+import { SDBSensor } from "./SDBSensor";
+import { SensorBase } from "../../sensors/types/SensorBase";
+import { SDBOutput } from "./SDBOutput";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -18,23 +18,26 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async getSensorsAsync() : Promise<SDBSensor[]>{
+  async getSensorsAsync(): Promise<SDBSensor[]> {
     return [];
   }
 
-  async addSensorAsync(_sensor: SDBSensor) : Promise<void>{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async addSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
 
-  async getDS18B20AddressesAsync() : Promise<SDBSensor[]>{
+  async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     return [];
   }
 
-  async addSensorReadingAsync(_sensor: SensorBase) : Promise<void>{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async addSensorReadingAsync(_sensor: SensorBase): Promise<void> {
     return;
   }
 
-  async getUserAsync(_username: string) : Promise<SDBUser[]>{
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getUserAsync(_username: string): Promise<SDBUser[]> {
     return [];
   }
 }

@@ -4,7 +4,7 @@ import { ISprootDB } from "../../database/types/ISprootDB";
 enum ReadingType {
   temperature = "temperature",
   humidity = "humidity",
-  pressure = "pressure"
+  pressure = "pressure",
 }
 
 interface ISensorBase {
@@ -12,7 +12,7 @@ interface ISensorBase {
   description: string | null;
   model: string;
   address: string | null;
-  lastReading:  Record<ReadingType, string>;
+  lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
   readonly units: Record<ReadingType, string>;
 }
@@ -22,7 +22,7 @@ abstract class SensorBase implements ISensorBase {
   description: string | null;
   model: string;
   address: string | null;
-  lastReading:  Record<ReadingType, string>;
+  lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
   sprootDB: ISprootDB;
   readonly units: Record<ReadingType, string>;
@@ -39,7 +39,8 @@ abstract class SensorBase implements ISensorBase {
   }
   abstract getReadingAsync(): Promise<void>;
 
-  addLastReadingToDatabaseAsync = async (): Promise<void> => await this.sprootDB.addSensorReadingAsync(this);
+  addLastReadingToDatabaseAsync = async (): Promise<void> =>
+    await this.sprootDB.addSensorReadingAsync(this);
 }
 
 abstract class DisposableSensorBase extends SensorBase {

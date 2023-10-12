@@ -1,18 +1,17 @@
-
 openapi: "3.0.1"
 
-info: 
+info:
   title: "sproot"
   version: "0.0.1"
-  description: "Sproot API documentation"  
+  description: "Sproot API documentation"
 
-security: 
+security:
   - bearerAuth: []
 
 paths:
   /api/v1/authenticate:
     post:
-      tags: 
+      tags:
         - "Authenticate"
       description: "Generate a token for authentication. Sent as both a cookie and in the response body."
       requestBody:
@@ -71,7 +70,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "Invalid credentials"
                   statusCode:
@@ -80,7 +79,7 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                    
+
   /api/v1/sensors:
     get:
       security:
@@ -89,7 +88,7 @@ paths:
         - "Sensors"
       description: "Get information for all sensors."
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -106,16 +105,16 @@ paths:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
                   sensors:
-                    $ref : "#/components/schemas/Sensors"
+                    $ref: "#/components/schemas/Sensors"
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "Invalid or Missing JWT"
                   statusCode:
@@ -124,7 +123,7 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                  suggestion: 
+                  suggestion:
                     type: string
   /api/v1/sensors/{id}:
     get:
@@ -141,7 +140,7 @@ paths:
             type: integer
           description: The sensor's id.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -158,15 +157,15 @@ paths:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
                   sensor:
-                    $ref : "#/components/schemas/Sensor"
-        '401':
+                    $ref: "#/components/schemas/Sensor"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "Invalid or Missing JWT"
                   statusCode:
@@ -175,16 +174,16 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                  suggestion: 
+                  suggestion:
                     type: string
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "No sensor found with that Id"
                   statusCode:
@@ -195,14 +194,14 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
 
   /api/v1/outputs:
-   get:
+    get:
       security:
         - bearerAuth: []
       tags:
         - "Outputs"
       description: "Get information for all outputs."
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -219,16 +218,16 @@ paths:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
                   outputs:
-                    $ref : "#/components/schemas/Outputs"
+                    $ref: "#/components/schemas/Outputs"
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "Invalid or Missing JWT"
                   statusCode:
@@ -237,7 +236,7 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                  suggestion: 
+                  suggestion:
                     type: string
   /api/v1/outputs/{id}:
     get:
@@ -254,7 +253,7 @@ paths:
             type: integer
           description: The output's id.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -271,15 +270,15 @@ paths:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
                   sensor:
-                    $ref : "#/components/schemas/Output"
-        '401':
+                    $ref: "#/components/schemas/Output"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "Invalid or Missing JWT"
                   statusCode:
@@ -288,16 +287,16 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                  suggestion: 
+                  suggestion:
                     type: string
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "No output found with that Id"
                   statusCode:
@@ -308,7 +307,7 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
   /api/v1/outputs/{id}/control-mode:
     post:
-      tags: 
+      tags:
         - "Outputs"
       description: "Update an output's control mode, updating physical output states accordingly."
       parameters:
@@ -326,7 +325,7 @@ paths:
               properties:
                 controlMode:
                   type: string
-                  enum: 
+                  enum:
                     - "manual"
                     - "schedule"
               required:
@@ -371,7 +370,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "Invalid credentials"
                   statusCode:
@@ -382,7 +381,7 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
   /api/v1/outputs/{id}/manual-state:
     post:
-      tags: 
+      tags:
         - "Outputs"
       description: "Update an output's manual state. Does not change control mode."
       parameters:
@@ -440,7 +439,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: 
+                  message:
                     type: string
                     example: "Invalid credentials"
                   statusCode:
@@ -450,12 +449,12 @@ paths:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
 
-components: 
+components:
   schemas:
     Sensors:
       type: object
       additionalProperties:
-        $ref : "#/components/schemas/Sensor"
+        $ref: "#/components/schemas/Sensor"
 
     Sensor:
       type: object
@@ -503,7 +502,7 @@ components:
     Outputs:
       type: object
       additionalProperties:
-        $ref : "#/components/schemas/Output"
+        $ref: "#/components/schemas/Output"
 
     Output:
       type: object
@@ -534,7 +533,7 @@ components:
           $ref: "#/components/schemas/State"
         controlMode:
           type: string
-          enum: 
+          enum:
             - "manual"
             - "schedule"
           example: "manual"
@@ -551,8 +550,8 @@ components:
       required:
         - "value"
 
-  securitySchemes: 
-    bearerAuth: 
+  securitySchemes:
+    bearerAuth:
       type: "http"
-      scheme : "bearer"
+      scheme: "bearer"
       bearerFormat: "JWT"
