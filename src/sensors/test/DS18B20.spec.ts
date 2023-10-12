@@ -47,7 +47,7 @@ describe("DS18B20.ts tests", function () {
 
     assert.equal(
       ds18b20Sensor.lastReading[ReadingType.temperature],
-      String(mockReading)
+      String(mockReading),
     );
   });
 
@@ -71,7 +71,7 @@ describe("DS18B20.ts tests", function () {
       .throws(
         new Error(
           "ENOENT: no such file or directory, open '/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves'",
-        )
+        ),
       );
     const consoleErrorStub = sandbox.stub(console, "error");
 
