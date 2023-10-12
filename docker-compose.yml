@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   app:
     build:
@@ -9,7 +9,7 @@ services:
       - APPLICATION_PORT=3000
       - "JWT_SECRET=CHANGE ME" #Change this to something long and unique
       - JWT_EXPIRATION=3d
-      - DATABASE_HOST=mariadb
+      - DATABASE_HOST=db
       - DATABASE_PORT=3306
       - DATABASE_USER=root
       - DATABASE_PASSWORD=root
@@ -17,15 +17,16 @@ services:
       - STATE_UPDATE_INTERVAL=1000
       - DATABASE_UPDATE_INTERVAL=60000
     volumes:
+      - /sys:/sys
       - ./docker_volumes/sproot/data:/home/sproot
-    networks: 
+    networks:
       - sproot-network
     ports:
       - 3000:3000
     privileged: true
     command: ["sleep", "infinity"]
 
-  mariadb:
+  db:
     image: mariadb
     restart: unless-stopped
     environment:
@@ -49,4 +50,3 @@ services:
 networks:
   sproot-network:
     driver: bridge
-

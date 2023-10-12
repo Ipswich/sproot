@@ -1,4 +1,4 @@
-import { RowDataPacket } from 'mysql2/promise';
+import { RowDataPacket } from "mysql2/promise";
 
 interface SDBUser extends RowDataPacket {
   username: string;
