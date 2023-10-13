@@ -17,7 +17,13 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  if(!req.body?.model || !req.body?.address || req.body?.pin || req.body?.isPwm || req.body?.isInverted) {
+  if (
+    !req.body?.model ||
+    !req.body?.address ||
+    !req.body?.pin ||
+    !req.body?.isPwm == null ||
+    !req.body?.isInvertedPwm == null
+  ) {
     res.status(400).json({
       message: "Missing output property",
       statusCode: 400,
@@ -25,6 +31,7 @@ router.post("/", async (req: Request, res: Response) => {
     });
     return;
   }
+
   let description, model, address, pin, isPwm, isInvertedPwm;
   try {
     description = req.body.description ? String(req.body.description) : null;
@@ -32,29 +39,29 @@ router.post("/", async (req: Request, res: Response) => {
     address = String(req.body.address);
     pin = Number(req.body.pin);
     isPwm = Boolean(req.body.isPwm);
-    isInvertedPwm = Boolean(req.body.isInverted);
-  } catch(e) {
+    isInvertedPwm = Boolean(req.body.isInvertedPwm);
+  } catch (e) {
     res.status(400).json({
       message: "Invalid output property",
       timestamp: new Date().toISOString(),
     });
     return;
   }
-  
+
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
-  
+
   const newOutput = {
     description,
     model,
     address,
     pin,
     isPwm,
-    isInvertedPwm
+    isInvertedPwm,
   } as SDBOutput;
 
   try {
     sprootDB.addOutputAsync(newOutput);
-  } catch(e) {
+  } catch (e) {
     res.status(400).json({
       message: "Failed to add output to database, invalid request",
       statusCode: 400,

@@ -16,7 +16,7 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  if(!req.body?.model || !req.body?.address) {
+  if (!req.body?.model || !req.body?.address) {
     res.status(400).json({
       message: "Missing model or address",
       statusCode: 400,
@@ -29,7 +29,7 @@ router.post("/", async (req: Request, res: Response) => {
     description = req.body.description ? String(req.body.description) : null;
     model = String(req.body.model);
     address = String(req.body.address);
-  } catch(e) {
+  } catch (e) {
     res.status(400).json({
       message: "Invalid model or address",
       statusCode: 400,
@@ -37,7 +37,7 @@ router.post("/", async (req: Request, res: Response) => {
     });
     return;
   }
-  
+
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
   const newSensor = {
     description,
@@ -47,7 +47,7 @@ router.post("/", async (req: Request, res: Response) => {
 
   try {
     sprootDB.addSensorAsync(newSensor);
-  } catch(e) {
+  } catch (e) {
     res.status(400).json({
       message: "Failed to add sensor to database, invalid request",
       statusCode: 400,

@@ -77,9 +77,9 @@ class SprootDB implements ISprootDB {
     return rows;
   }
 
-  async addUserAsync(credentials : SDBUser): Promise<void> {
+  async addUserAsync(credentials: SDBUser): Promise<void> {
     await this.#connection.execute(
-      "INSERT INTO users (username, hash) VALUES (?, ?, ?)",
+      "INSERT INTO users (username, hash, email) VALUES (?, ?, ?)",
       [credentials.username, credentials.hash, credentials.email],
     );
   }

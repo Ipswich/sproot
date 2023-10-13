@@ -105,10 +105,10 @@ class SensorList {
             "BME280 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        this.#sensors[sensor.id] = await new BME280(
-          sensor,
-          this.#sprootDB,
-        ).initAsync();
+        const newBME280 = await new BME280(sensor, this.#sprootDB).initAsync();
+        if (newBME280) {
+          this.#sensors[sensor.id] = newBME280;
+        }
         break;
 
       case "ds18b20":

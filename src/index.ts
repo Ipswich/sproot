@@ -121,11 +121,11 @@ const app = express();
   }
 })();
 
-async function defaultUserCheck(sprootDB : ISprootDB){
+async function defaultUserCheck(sprootDB: ISprootDB) {
   const defaultUser = {
     username: process.env["DEFAULT_USER"]!,
-    hash: process.env["DEFAULT_PASSWORD"]!,
-    email: process.env["DEFAULT_EMAIL"]!,
+    hash: process.env["DEFAULT_USER_PASSWORD"]!,
+    email: process.env["DEFAULT_USER_EMAIL"]!,
   } as SDBUser;
 
   const user = await sprootDB.getUserAsync(defaultUser.username);

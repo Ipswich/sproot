@@ -28,11 +28,11 @@ class MockSprootDB implements ISprootDB {
   async addSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
-  
+
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     return [];
   }
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addOutputAsync(_output: SDBOutput): Promise<void> {
     return;
