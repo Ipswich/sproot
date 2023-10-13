@@ -73,7 +73,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     return;
   }
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
-  
+
   try {
     const id = Number(req.params["id"]);
     await sprootDB.deleteSensorAsync(id);
@@ -92,7 +92,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
-
 
 router.get("/:id", async (req: Request, res: Response) => {
   const result = (req.app.get("sensorList") as SensorList)?.sensorData[

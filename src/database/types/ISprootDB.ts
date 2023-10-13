@@ -30,7 +30,7 @@ class MockSprootDB implements ISprootDB {
   async addSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteSensorAsync(_id: number): Promise<void> {
     return;
@@ -44,7 +44,7 @@ class MockSprootDB implements ISprootDB {
   async addOutputAsync(_output: SDBOutput): Promise<void> {
     return;
   }
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteOutputAsync(_id: number): Promise<void> {
     return;

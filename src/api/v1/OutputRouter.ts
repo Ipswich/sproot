@@ -87,7 +87,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     return;
   }
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
-  
+
   try {
     const id = Number(req.params["id"]);
     await sprootDB.deleteOutputAsync(id);

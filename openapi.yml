@@ -266,69 +266,69 @@ paths:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
     delete:
-          security:
-            - bearerAuth: []
-          tags:
-            - "Sensors"
-          description: "Delete a sensor."
-          parameters:
-            - in: path
-              name: id
-              required: true
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+      description: "Delete a sensor."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: The sensor's id.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
               schema:
-                type: integer
-                example: 1
-              description: The sensor's id.
-          responses:
-            "200":
-              description: OK
-              content:
-                application/json:
-                  schema:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "Sensor successfully deleted"
-                      statusCode:
-                        type: integer
-                        example: 200
-                      timeStamp:
-                        type: string
-                        example: "2021-01-01T00:00:00.000Z"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sensor successfully deleted"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
 
-            "401":
-              description: Unauthorized
-              content:
-                application/json:
-                  schema:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "Invalid or Missing JWT"
-                      statusCode:
-                        type: integer
-                        example: 401
-                      timeStamp:
-                        type: string
-                        example: "2021-01-01T00:00:00.000Z"
-            "404":
-              description: Not Found
-              content:
-                application/json:
-                  schema:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "No sensor found with that Id"
-                      statusCode:
-                        type: integer
-                        example: 404
-                      timeStamp:
-                        type: string
-                        example: "2021-01-01T00:00:00.000Z"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No sensor found with that Id"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
   /api/v1/outputs:
     get:
       security:
@@ -527,69 +527,69 @@ paths:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
     delete:
-          security:
-            - bearerAuth: []
-          tags:
-            - "Outputs"
-          description: "Delete an output."
-          parameters:
-            - in: path
-              name: id
-              required: true
+      security:
+        - bearerAuth: []
+      tags:
+        - "Outputs"
+      description: "Delete an output."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: The output's id.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
               schema:
-                type: integer
-                example: 1
-              description: The output's id.
-          responses:
-            "200":
-              description: OK
-              content:
-                application/json:
-                  schema:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "Output successfully deleted"
-                      statusCode:
-                        type: integer
-                        example: 200
-                      timeStamp:
-                        type: string
-                        example: "2021-01-01T00:00:00.000Z"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Output successfully deleted"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
 
-            "401":
-              description: Unauthorized
-              content:
-                application/json:
-                  schema:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "Invalid or Missing JWT"
-                      statusCode:
-                        type: integer
-                        example: 401
-                      timeStamp:
-                        type: string
-                        example: "2021-01-01T00:00:00.000Z"
-            "404":
-              description: Not Found
-              content:
-                application/json:
-                  schema:
-                    type: object
-                    properties:
-                      message:
-                        type: string
-                        example: "No output found with that Id"
-                      statusCode:
-                        type: integer
-                        example: 404
-                      timeStamp:
-                        type: string
-                        example: "2021-01-01T00:00:00.000Z"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No output found with that Id"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
   /api/v1/outputs/{id}/control-mode:
     post:
       tags:
