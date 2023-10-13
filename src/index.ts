@@ -1,10 +1,12 @@
 import "dotenv/config";
 import cookieParser from "cookie-parser";
+import bcrypt from "bcrypt";
 import express from "express";
 import mysql2 from "mysql2/promise";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 
+import { ISprootDB } from "./database/types/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
 import { SensorList } from "./sensors/SensorList";
 import { OutputList } from "./outputs/OutputList";
@@ -12,6 +14,7 @@ import { OutputList } from "./outputs/OutputList";
 import login, { authenticate } from "./api/v1/middleware/Authentication";
 import sensorRouter from "./api/v1/SensorRouter";
 import outputRouter from "./api/v1/OutputRouter";
+import { SDBUser } from "./database/types/SDBUser";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
@@ -28,6 +31,8 @@ const app = express();
 (async () => {
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
+
+  await defaultUserCheck(sprootDB);
 
   const sensorList = new SensorList(sprootDB);
   app.set("sensorList", sensorList);
@@ -115,3 +120,19 @@ const app = express();
     });
   }
 })();
+
+async function defaultUserCheck(sprootDB : ISprootDB){
+  const defaultUser = {
+    username: process.env["DEFAULT_USER"]!,
+    hash: process.env["DEFAULT_PASSWORD"]!,
+    email: process.env["DEFAULT_EMAIL"]!,
+  } as SDBUser;
+
+  const user = await sprootDB.getUserAsync(defaultUser.username);
+  if (user?.length == 0) {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(defaultUser.hash, salt);
+    defaultUser.hash = hash;
+    await sprootDB.addUserAsync(defaultUser);
+  }
+}

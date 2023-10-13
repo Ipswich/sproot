@@ -175,7 +175,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Invalid description, model, or address"
+                    example: "Invalid model or address"
                   statusCode:
                     type: integer
                     example: 400
@@ -329,6 +329,9 @@ paths:
                 address:
                   type: string
                   example: "0x40"
+                description:
+                  type: string
+                  nullable: true
                 pin:
                   type: integer
                   example: 1
@@ -338,9 +341,6 @@ paths:
                 isInvertedPwm:
                   type: boolean
                   example: false
-                description:
-                  type: string
-                  nullable: true
       responses:
         "201":
           description: Created

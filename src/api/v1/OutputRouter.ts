@@ -1,6 +1,8 @@
 import express, { Request, Response } from "express";
 import { OutputList } from "../../outputs/OutputList";
 import { IState, ControlMode } from "../../outputs/types/OutputBase";
+import { SDBOutput } from "../../database/types/SDBOutput";
+import { ISprootDB } from "../../database/types/ISprootDB";
 
 const router = express.Router();
 
@@ -10,6 +12,60 @@ router.get("/", async (req: Request, res: Response) => {
     message: "Output information successfully retrieved",
     statusCode: 200,
     outputs: result,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+router.post("/", async (req: Request, res: Response) => {
+  if(!req.body?.model || !req.body?.address || req.body?.pin || req.body?.isPwm || req.body?.isInverted) {
+    res.status(400).json({
+      message: "Missing output property",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  let description, model, address, pin, isPwm, isInvertedPwm;
+  try {
+    description = req.body.description ? String(req.body.description) : null;
+    model = String(req.body.model);
+    address = String(req.body.address);
+    pin = Number(req.body.pin);
+    isPwm = Boolean(req.body.isPwm);
+    isInvertedPwm = Boolean(req.body.isInverted);
+  } catch(e) {
+    res.status(400).json({
+      message: "Invalid output property",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  
+  const sprootDB = req.app.get("sprootDB") as ISprootDB;
+  
+  const newOutput = {
+    description,
+    model,
+    address,
+    pin,
+    isPwm,
+    isInvertedPwm
+  } as SDBOutput;
+
+  try {
+    sprootDB.addOutputAsync(newOutput);
+  } catch(e) {
+    res.status(400).json({
+      message: "Failed to add output to database, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  res.status(201).json({
+    message: "Output successfully added",
+    statusCode: 201,
     timestamp: new Date().toISOString(),
   });
 });
