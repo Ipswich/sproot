@@ -34,6 +34,10 @@ class SprootDB implements ISprootDB {
     );
   }
 
+  async deleteSensorAsync(id: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM sensors WHERE id = ?", [id]);
+  }
+
   async getOutputsAsync(): Promise<SDBOutput[]> {
     const [rows] = await this.#connection.execute<SDBOutput[]>(
       "SELECT * FROM outputs",
@@ -53,6 +57,10 @@ class SprootDB implements ISprootDB {
         output.isInvertedPwm,
       ],
     );
+  }
+
+  async deleteOutputAsync(id: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM outputs WHERE id = ?", [id]);
   }
 
   async addSensorReadingAsync(sensor: SensorBase): Promise<void> {

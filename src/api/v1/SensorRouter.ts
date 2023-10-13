@@ -63,6 +63,37 @@ router.post("/", async (req: Request, res: Response) => {
   });
 });
 
+router.delete("/:id", async (req: Request, res: Response) => {
+  if (!req.params["id"]) {
+    res.status(400).json({
+      message: "Missing sensor id",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  const sprootDB = req.app.get("sprootDB") as ISprootDB;
+  
+  try {
+    const id = Number(req.params["id"]);
+    await sprootDB.deleteSensorAsync(id);
+  } catch (e) {
+    res.status(400).json({
+      message: "Failed to delete sensor, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  res.status(200).json({
+    message: "Sensor successfully deleted",
+    statusCode: 200,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+
 router.get("/:id", async (req: Request, res: Response) => {
   const result = (req.app.get("sensorList") as SensorList)?.sensorData[
     String(req.params["id"])

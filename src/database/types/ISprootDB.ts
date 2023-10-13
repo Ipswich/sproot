@@ -7,9 +7,11 @@ interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
   getDS18B20AddressesAsync(): Promise<SDBSensor[]>;
   addSensorAsync(sensor: SDBSensor): Promise<void>;
+  deleteSensorAsync(id: number): Promise<void>;
   getOutputsAsync(): Promise<SDBOutput[]>;
   addSensorReadingAsync(sensor: SensorBase): Promise<void>;
   addOutputAsync(output: SDBOutput): Promise<void>;
+  deleteOutputAsync(id: number): Promise<void>;
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
 }
@@ -28,6 +30,11 @@ class MockSprootDB implements ISprootDB {
   async addSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deleteSensorAsync(_id: number): Promise<void> {
+    return;
+  }
 
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     return [];
@@ -35,6 +42,11 @@ class MockSprootDB implements ISprootDB {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addOutputAsync(_output: SDBOutput): Promise<void> {
+    return;
+  }
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deleteOutputAsync(_id: number): Promise<void> {
     return;
   }
 
