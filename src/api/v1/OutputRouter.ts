@@ -77,6 +77,36 @@ router.post("/", async (req: Request, res: Response) => {
   });
 });
 
+router.delete("/:id", async (req: Request, res: Response) => {
+  if (!req.params?.["id"]) {
+    res.status(400).json({
+      message: "Missing output id",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  const sprootDB = req.app.get("sprootDB") as ISprootDB;
+
+  try {
+    const id = Number(req.params["id"]);
+    await sprootDB.deleteOutputAsync(id);
+  } catch (e) {
+    res.status(400).json({
+      message: "Failed to delete output, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  res.status(200).json({
+    message: "Output successfully deleted",
+    statusCode: 200,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
   const result = (req.app.get("outputList") as OutputList)?.outputData[
     String(req.params["id"])
