@@ -175,16 +175,13 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Invalid sensor data."
+                    example: "Invalid description, model, or address"
                   statusCode:
                     type: integer
                     example: 400
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                  suggestion:
-                    type: string
-                    example: "Address must be a string."
         "401":
           description: Unauthorized
           content:
@@ -373,7 +370,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Invalid output data."
+                    example: "Invalid output data"
                   statusCode:
                     type: integer
                     example: 400
