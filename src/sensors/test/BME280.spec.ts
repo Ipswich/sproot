@@ -31,13 +31,13 @@ describe("BME280.ts tests", function () {
     ).initAsync();
 
     assert.isTrue(bme280Sensor instanceof BME280);
-    assert.equal(bme280Sensor.id, mockBME280Data.id);
-    assert.equal(bme280Sensor.description, mockBME280Data.description);
-    assert.equal(bme280Sensor.model, mockBME280Data.model);
-    assert.equal(bme280Sensor.address, mockBME280Data.address);
-    assert.equal(bme280Sensor.units[ReadingType.temperature], "°C");
-    assert.equal(bme280Sensor.units[ReadingType.humidity], "%rH");
-    assert.equal(bme280Sensor.units[ReadingType.pressure], "hPa");
+    assert.equal(bme280Sensor!.id, mockBME280Data.id);
+    assert.equal(bme280Sensor!.description, mockBME280Data.description);
+    assert.equal(bme280Sensor!.model, mockBME280Data.model);
+    assert.equal(bme280Sensor!.address, mockBME280Data.address);
+    assert.equal(bme280Sensor!.units[ReadingType.temperature], "°C");
+    assert.equal(bme280Sensor!.units[ReadingType.humidity], "%rH");
+    assert.equal(bme280Sensor!.units[ReadingType.pressure], "hPa");
   });
 
   it("should dispose of a BME280 sensor", async () => {
@@ -56,7 +56,7 @@ describe("BME280.ts tests", function () {
       mockBME280Data,
       mockSprootDB,
     ).initAsync();
-    await bme280Sensor.disposeAsync();
+    await bme280Sensor!.disposeAsync();
 
     assert.isTrue(closeStub.calledOnce);
   });
@@ -78,19 +78,19 @@ describe("BME280.ts tests", function () {
       mockBME280Data,
       mockSprootDB,
     ).initAsync();
-    await bme280Sensor.getReadingAsync();
+    await bme280Sensor!.getReadingAsync();
 
     assert.isTrue(readStub.calledOnce);
     assert.equal(
-      bme280Sensor.lastReading[ReadingType.temperature],
+      bme280Sensor!.lastReading[ReadingType.temperature],
       String(mockReading.temperature),
     );
     assert.equal(
-      bme280Sensor.lastReading[ReadingType.humidity],
+      bme280Sensor!.lastReading[ReadingType.humidity],
       String(mockReading.humidity),
     );
     assert.equal(
-      bme280Sensor.lastReading[ReadingType.pressure],
+      bme280Sensor!.lastReading[ReadingType.pressure],
       String(mockReading.pressure),
     );
   });
