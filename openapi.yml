@@ -125,6 +125,79 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
                   suggestion:
                     type: string
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+      description: "Add a new sensor."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  nullable: true
+                model:
+                  type: string
+                  example: "BME280"
+                address:
+                  type: string
+                  example: "0x76"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sensor successfully added"
+                  statusCode:
+                    type: integer
+                    example: 201
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  sensorId:
+                    type: integer
+                    example: 1
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid model or address"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
   /api/v1/sensors/{id}:
     get:
       security:
@@ -238,6 +311,91 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
                   suggestion:
                     type: string
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Outputs"
+      description: "Add a new output."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  example: "pca9685"
+                address:
+                  type: string
+                  example: "0x40"
+                description:
+                  type: string
+                  nullable: true
+                pin:
+                  type: integer
+                  example: 1
+                isPwm:
+                  type: boolean
+                  example: true
+                isInvertedPwm:
+                  type: boolean
+                  example: false
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Output successfully added"
+                  statusCode:
+                    type: integer
+                    example: 201
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  outputId:
+                    type: integer
+                    example: 1
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid output data"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion:
+                    type: string
+                    example: "Address must be a string."
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
   /api/v1/outputs/{id}:
     get:
       security:

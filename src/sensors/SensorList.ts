@@ -98,6 +98,7 @@ class SensorList {
   }
 
   async #buildSensorAsync(sensor: SDBSensor): Promise<void> {
+    let newSensor: SensorBase | null = null;
     switch (sensor.model.toLowerCase()) {
       case "bme280":
         if (!sensor.address) {
@@ -105,10 +106,10 @@ class SensorList {
             "BME280 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        this.#sensors[sensor.id] = await new BME280(
-          sensor,
-          this.#sprootDB,
-        ).initAsync();
+        newSensor = await new BME280(sensor, this.#sprootDB).initAsync();
+        if (newSensor) {
+          this.#sensors[sensor.id] = newSensor;
+        }
         break;
 
       case "ds18b20":
@@ -117,7 +118,8 @@ class SensorList {
             "DS18B20 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        this.#sensors[sensor.id] = new DS18B20(sensor, this.#sprootDB);
+        newSensor = new DS18B20(sensor, this.#sprootDB);
+        this.#sensors[sensor.id] = newSensor;
         break;
 
       default:

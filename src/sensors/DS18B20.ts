@@ -36,10 +36,7 @@ class DS18B20 extends SensorBase {
 function handleError(err: Error) {
   if (err?.message !== lastStaticError) {
     lastStaticError = err.message;
-    if (
-      err.message ===
-      "ENOENT: no such file or directory, open '/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves'"
-    ) {
+    if (err.message.includes("ENOENT: no such file or directory, open ")) {
       console.error(
         "Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.",
       );
