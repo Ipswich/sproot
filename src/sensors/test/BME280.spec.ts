@@ -68,7 +68,11 @@ describe("BME280.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
-    const mockReading = { temperature: 21.2, humidity: 45.6, pressure: 1013.2 };
+    const mockReading = {
+      temperature: 21.2,
+      humidity: 45.6,
+      pressure: 1013.2,
+    };
     const readStub = sandbox.stub().resolves(mockReading as bme280.data);
     sandbox
       .stub(bme280, "open")

@@ -109,13 +109,17 @@ class OutputList {
             );
             this.#usedAddresses.push(output.address);
           }
-          const pca9685Outputs = (
-            await this.#pca9685Record[
-              output.address
-            ]?.initializeOrRegenerateAsync()
-          )?.outputs;
-          for (const key in pca9685Outputs) {
-            this.#outputs[key] = pca9685Outputs[key]!;
+          try {
+            const pca9685Outputs = (
+              await this.#pca9685Record[
+                output.address
+              ]?.initializeOrRegenerateAsync()
+            )?.outputs;
+            for (const key in pca9685Outputs) {
+              this.#outputs[key] = pca9685Outputs[key]!;
+            }
+          } catch (e) {
+            console.error(e);
           }
           break;
         }
