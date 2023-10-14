@@ -1,5 +1,6 @@
 import { SDBOutput } from "../../database/types/SDBOutput";
 import { ISprootDB } from "../../database/types/ISprootDB";
+import winston from "winston";
 
 enum ControlMode {
   manual = "manual",
@@ -31,8 +32,13 @@ abstract class OutputBase implements IOutputBase {
   manualState: IState;
   scheduleState: IState;
   controlMode: ControlMode;
+  logger: winston.Logger;
 
-  constructor(sdbOutput: SDBOutput, sprootDB: ISprootDB) {
+  constructor(
+    sdbOutput: SDBOutput,
+    sprootDB: ISprootDB,
+    logger: winston.Logger,
+  ) {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
     this.address = sdbOutput.address;
@@ -44,14 +50,19 @@ abstract class OutputBase implements IOutputBase {
     this.manualState = {};
     this.scheduleState = {};
     this.controlMode = ControlMode.schedule;
+    this.logger = logger;
   }
 
   /**
    * Updates the control mode for the output; used to switch between manual and schedule modes
    * @param controlMode Mode to give system control to.
    */
-  updateControlMode = (controlMode: ControlMode) =>
-    (this.controlMode = controlMode);
+  updateControlMode = (controlMode: ControlMode) => {
+    this.logger.info(
+      `Output ${this.id} control mode changed to ${controlMode}`,
+    );
+    this.controlMode = controlMode;
+  };
 
   /**
    * Applies a new state to the object. This does NOT immediately execute the state, but merely updates the state object.

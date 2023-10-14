@@ -1,5 +1,6 @@
 import { SDBSensor } from "../../database/types/SDBSensor";
 import { ISprootDB } from "../../database/types/ISprootDB";
+import winston from "winston";
 
 enum ReadingType {
   temperature = "temperature",
@@ -25,9 +26,14 @@ abstract class SensorBase implements ISensorBase {
   lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
   sprootDB: ISprootDB;
+  logger: winston.Logger;
   readonly units: Record<ReadingType, string>;
 
-  constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB) {
+  constructor(
+    sdbSensor: SDBSensor,
+    sprootDB: ISprootDB,
+    logger: winston.Logger,
+  ) {
     this.id = sdbSensor.id;
     this.description = sdbSensor.description;
     this.model = sdbSensor.model;
@@ -35,6 +41,7 @@ abstract class SensorBase implements ISensorBase {
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.sprootDB = sprootDB;
+    this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
   }
   abstract getReadingAsync(): Promise<void>;

@@ -6,15 +6,18 @@ import {
   IState,
   ControlMode,
 } from "./types/OutputBase";
+import winston from "winston";
 
 class OutputList {
   #sprootDB: ISprootDB;
   #pca9685Record: Record<string, PCA9685> = {};
   #outputs: Record<string, OutputBase> = {};
   #usedAddresses: string[] = [];
+  #logger: winston.Logger;
 
-  constructor(sprootDB: ISprootDB) {
+  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
+    this.#logger = logger;
   }
 
   get outputs(): Record<string, OutputBase> {
@@ -105,17 +108,22 @@ class OutputList {
           if (!this.#pca9685Record[output.address]) {
             this.#pca9685Record[output.address] = new PCA9685(
               this.#sprootDB,
+              this.#logger,
               parseInt(output.address),
             );
             this.#usedAddresses.push(output.address);
           }
-          const pca9685Outputs = (
-            await this.#pca9685Record[
-              output.address
-            ]?.initializeOrRegenerateAsync()
-          )?.outputs;
-          for (const key in pca9685Outputs) {
-            this.#outputs[key] = pca9685Outputs[key]!;
+          try {
+            const pca9685Outputs = (
+              await this.#pca9685Record[
+                output.address
+              ]?.initializeOrRegenerateAsync()
+            )?.outputs;
+            for (const key in pca9685Outputs) {
+              this.#outputs[key] = pca9685Outputs[key]!;
+            }
+          } catch (err) {
+            this.#logger.error(err);
           }
           break;
         }

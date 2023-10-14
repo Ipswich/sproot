@@ -5,6 +5,7 @@ import express from "express";
 import mysql2 from "mysql2/promise";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
+import winston from "winston";
 
 import { ISprootDB } from "./database/types/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
@@ -26,17 +27,39 @@ const mysqlConfig = {
 
 const swaggerOptions = YAML.load("./openapi.yml");
 swaggerOptions.defaultModelsExpandDepth = -1;
+
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),
+  ),
+  transports: [
+    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
+    new winston.transports.File({ filename: "logs/combined.log" }),
+  ],
+});
+
+if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+  );
+}
+
 const app = express();
 
 (async () => {
+  console.log("Initializing sproot app. . .");
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
-
+  app.set("logger", logger);
   await defaultUserCheck(sprootDB);
 
-  const sensorList = new SensorList(sprootDB);
+  const sensorList = new SensorList(sprootDB, logger);
   app.set("sensorList", sensorList);
-  const outputList = new OutputList(sprootDB);
+  const outputList = new OutputList(sprootDB, logger);
   app.set("outputList", outputList);
 
   await sensorList.initializeOrRegenerateAsync();
@@ -109,6 +132,7 @@ const app = express();
         // Close database connection
         await sprootDB.disposeAsync();
       } catch (err) {
+        logger.error(err);
         //Dgaf, swallow anything, we're shutting down anyway.
       } finally {
         // Give everything a hot sec to finish whatever it's up to - call backs really mess with just calling process.exit.
