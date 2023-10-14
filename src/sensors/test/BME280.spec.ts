@@ -6,6 +6,7 @@ import { SDBSensor } from "../../database/types/SDBSensor";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
+import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
@@ -25,9 +26,18 @@ describe("BME280.ts tests", function () {
       .stub(bme280, "open")
       .resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
 
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+
     const bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
+      logger,
     ).initAsync();
 
     assert.isTrue(bme280Sensor instanceof BME280);
@@ -47,6 +57,13 @@ describe("BME280.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
     const closeStub = sandbox.stub().resolves();
     sandbox
       .stub(bme280, "open")
@@ -55,6 +72,7 @@ describe("BME280.ts tests", function () {
     const bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
+      logger,
     ).initAsync();
     await bme280Sensor!.disposeAsync();
 
@@ -73,6 +91,13 @@ describe("BME280.ts tests", function () {
       humidity: 45.6,
       pressure: 1013.2,
     };
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
     const readStub = sandbox.stub().resolves(mockReading as bme280.data);
     sandbox
       .stub(bme280, "open")
@@ -81,6 +106,7 @@ describe("BME280.ts tests", function () {
     const bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
+      logger,
     ).initAsync();
     await bme280Sensor!.getReadingAsync();
 

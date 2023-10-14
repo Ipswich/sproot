@@ -9,6 +9,7 @@ import chai, { assert, expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
+import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
@@ -59,8 +60,15 @@ describe("PCA9685.ts tests", function () {
           isInvertedPwm: true,
         } as SDBOutput,
       ]);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB);
+    const pca9685 = new PCA9685(mockSprootDB, logger);
     await pca9685.initializeOrRegenerateAsync();
     assert.equal(Object.keys(pca9685.outputs).length, 4);
 
@@ -89,8 +97,15 @@ describe("PCA9685.ts tests", function () {
         isInvertedPwm: false,
       } as SDBOutput,
     ]);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB);
+    const pca9685 = new PCA9685(mockSprootDB, logger);
     await pca9685.initializeOrRegenerateAsync();
     const outputData = pca9685.outputData;
 
@@ -114,11 +129,18 @@ describe("PCA9685.ts tests", function () {
           isInvertedPwm: false,
         } as SDBOutput,
       ]);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
     sandbox.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sandbox
       .stub(Pca9685Driver.prototype, "setDutyCycle")
       .returns();
-    const pca9685 = new PCA9685(mockSprootDB);
+    const pca9685 = new PCA9685(mockSprootDB, logger);
     await pca9685.initializeOrRegenerateAsync();
 
     //Schedule High
@@ -219,7 +241,14 @@ describe("PCA9685.ts tests", function () {
           isInvertedPwm: false,
         } as SDBOutput,
       ]);
-    const pca9685 = new PCA9685(mockSprootDB);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    const pca9685 = new PCA9685(mockSprootDB, logger);
     await pca9685.initializeOrRegenerateAsync();
     pca9685.setNewOutputState(
       "1",

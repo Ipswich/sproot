@@ -7,13 +7,16 @@ import {
 } from "./types/SensorBase";
 import { SDBSensor } from "../database/types/SDBSensor";
 import { ISprootDB } from "../database/types/ISprootDB";
+import winston from "winston";
 
 class SensorList {
   #sprootDB: ISprootDB;
   #sensors: Record<string, SensorBase | DisposableSensorBase> = {};
+  #logger: winston.Logger;
 
-  constructor(sprootDB: ISprootDB) {
+  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
+    this.#logger = logger;
   }
 
   get sensors(): Record<string, SensorBase | DisposableSensorBase> {
@@ -57,7 +60,11 @@ class SensorList {
         this.#sensors[key]!.description = sensor.description;
       } else {
         //Create if it doesn't
-        await this.#buildSensorAsync(sensor);
+        try {
+          await this.#buildSensorAsync(sensor);
+        } catch (err) {
+          this.#logger.error(err);
+        }
       }
     }
 
@@ -92,7 +99,7 @@ class SensorList {
       try {
         await fn(this.#sensors[key] as SensorBase);
       } catch (err) {
-        console.error(err);
+        this.#logger.error(err);
       }
     }
   }
@@ -106,7 +113,11 @@ class SensorList {
             "BME280 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        newSensor = await new BME280(sensor, this.#sprootDB).initAsync();
+        newSensor = await new BME280(
+          sensor,
+          this.#sprootDB,
+          this.#logger,
+        ).initAsync();
         if (newSensor) {
           this.#sensors[sensor.id] = newSensor;
         }
@@ -118,7 +129,7 @@ class SensorList {
             "DS18B20 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        newSensor = new DS18B20(sensor, this.#sprootDB);
+        newSensor = new DS18B20(sensor, this.#sprootDB, this.#logger);
         this.#sensors[sensor.id] = newSensor;
         break;
 
@@ -130,7 +141,7 @@ class SensorList {
   }
 
   async #addUnreconizedDS18B20sToSDBAsync() {
-    const deviceAddresses = await DS18B20.getAddressesAsync();
+    const deviceAddresses = await DS18B20.getAddressesAsync(this.#logger);
     const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
     const promises: Promise<void>[] = [];
     for (const address of deviceAddresses) {

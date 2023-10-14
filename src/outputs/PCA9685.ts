@@ -8,6 +8,7 @@ import {
 } from "./types/OutputBase";
 import { SDBOutput } from "../database/types/SDBOutput";
 import { ISprootDB } from "../database/types/ISprootDB";
+import winston from "winston";
 
 class PCA9685 {
   #pca9685: Pca9685Driver | undefined;
@@ -16,11 +17,13 @@ class PCA9685 {
   #address: number;
   #frequency: number;
   #usedPins: number[] = [];
-  constructor(sprootDB: ISprootDB, address = 0x40) {
+  #logger: winston.Logger;
+  constructor(sprootDB: ISprootDB, logger: winston.Logger, address = 0x40) {
     this.#sprootDB = sprootDB;
     this.#outputs = {};
     this.#address = address;
     this.#frequency = 50;
+    this.#logger = logger;
   }
 
   async initializeOrRegenerateAsync(): Promise<PCA9685> {
@@ -63,6 +66,7 @@ class PCA9685 {
           this.#pca9685,
           output,
           this.#sprootDB,
+          this.#logger,
         );
         this.#usedPins.push(output.pin);
       } else {
@@ -145,8 +149,13 @@ class PCA9685Output extends OutputBase {
   override manualState: PCA9685State;
   override scheduleState: PCA9685State;
 
-  constructor(pca9685: Pca9685Driver, output: SDBOutput, sprootDB: ISprootDB) {
-    super(output, sprootDB);
+  constructor(
+    pca9685: Pca9685Driver,
+    output: SDBOutput,
+    sprootDB: ISprootDB,
+    logger: winston.Logger,
+  ) {
+    super(output, sprootDB, logger);
     this.pca9685 = pca9685;
     this.manualState = { value: 0 };
     this.scheduleState = { value: 0 };

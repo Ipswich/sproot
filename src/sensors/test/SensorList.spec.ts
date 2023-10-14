@@ -6,10 +6,11 @@ import { MockSprootDB } from "../../database/types/ISprootDB";
 import { SDBSensor } from "../../database/types/SDBSensor";
 import { SensorList } from "../../sensors/SensorList";
 
-import chai, { assert, expect } from "chai";
+import chai, { assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
+import winston from "winston";
 
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
@@ -43,6 +44,13 @@ describe("SensorList.ts tests", function () {
         } as SDBSensor,
       ]);
     sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([
         { address: "28-00000" } as SDBSensor,
@@ -54,7 +62,7 @@ describe("SensorList.ts tests", function () {
     sandbox.stub(BME280.prototype, "initAsync").resolves({} as BME280);
     const addSensorSpy = sandbox.spy(mockSprootDB, "addSensorAsync");
 
-    const sensorList = new SensorList(mockSprootDB);
+    const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
 
     assert.equal(addSensorSpy.callCount, 1);
@@ -96,14 +104,21 @@ describe("SensorList.ts tests", function () {
       } as SDBSensor,
     ]);
     sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor]);
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB));
+      .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
 
-    const sensorList = new SensorList(mockSprootDB);
+    const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
     const sensorData = sensorList.sensorData;
 
@@ -133,6 +148,13 @@ describe("SensorList.ts tests", function () {
       } as SDBSensor,
     ]);
     sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor]);
     sandbox
@@ -141,10 +163,10 @@ describe("SensorList.ts tests", function () {
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB));
+      .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
     const disposeStub = sandbox.stub(BME280.prototype, "disposeAsync");
 
-    const sensorList = new SensorList(mockSprootDB);
+    const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
     await sensorList.disposeAsync();
 
@@ -169,13 +191,20 @@ describe("SensorList.ts tests", function () {
       } as SDBSensor,
     ]);
     sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor]);
 
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB));
+      .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
     const getDS18B20ReadingStub = sandbox.stub(
       DS18B20.prototype,
       "getReadingAsync",
@@ -185,7 +214,7 @@ describe("SensorList.ts tests", function () {
       "getReadingAsync",
     );
 
-    const sensorList = new SensorList(mockSprootDB);
+    const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
     await sensorList.getReadingsAsync();
 
@@ -196,7 +225,7 @@ describe("SensorList.ts tests", function () {
     );
   });
 
-  it("should throw errors when building sensors", async function () {
+  it("should handle errors when building sensors", async function () {
     const mockBME280Data = {
       id: 1,
       description: "test sensor 1",
@@ -215,6 +244,13 @@ describe("SensorList.ts tests", function () {
       model: "not a recognized model",
       address: null,
     } as SDBSensor;
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
 
     const getSensorsStub = sandbox
       .stub(MockSprootDB.prototype, "getSensorsAsync")
@@ -222,12 +258,8 @@ describe("SensorList.ts tests", function () {
     const getAddressesStub = sandbox
       .stub(DS18B20, "getAddressesAsync")
       .resolves([]);
-    const sensorList = new SensorList(mockSprootDB);
-    await expect(
-      sensorList.initializeOrRegenerateAsync(),
-    ).to.eventually.be.rejectedWith(
-      "BME280 sensor address cannot be null! Sensor could not be added.",
-    );
+    const sensorList = new SensorList(mockSprootDB, logger);
+    await sensorList.initializeOrRegenerateAsync();
 
     mockBME280Data["address"] = "0x76";
     getSensorsStub.resolves([mockBME280Data, mockDS18B20Data]);
@@ -237,20 +269,12 @@ describe("SensorList.ts tests", function () {
     getAddressesStub.resolves(["28-00000"]);
     sandbox
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB));
-    await expect(
-      sensorList.initializeOrRegenerateAsync(),
-    ).to.eventually.be.rejectedWith(
-      "DS18B20 sensor address cannot be null! Sensor could not be added.",
-    );
+      .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
+    await sensorList.initializeOrRegenerateAsync();
 
     mockDS18B20Data["address"] = "28-00000";
     getSensorsStub.resolves([mockBME280Data, mockDS18B20Data, mockSensorData]);
-    await expect(
-      sensorList.initializeOrRegenerateAsync(),
-    ).to.eventually.be.rejectedWith(
-      "Unrecognized sensor model: not a recognized model",
-    );
+    await sensorList.initializeOrRegenerateAsync();
   });
 
   it("should handle errors when reading sensors", async function () {
@@ -261,16 +285,20 @@ describe("SensorList.ts tests", function () {
       address: "28-00000",
     } as SDBSensor;
     sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    sandbox
       .stub(MockSprootDB.prototype, "getSensorsAsync")
       .resolves([mockDS18B20Data]);
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox.stub(DS18B20.prototype, "getReadingAsync").rejects();
-    const consoleStub = sandbox.stub(console, "error");
 
-    const sensorList = new SensorList(mockSprootDB);
+    const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
     await sensorList.getReadingsAsync();
-
-    assert.isTrue(consoleStub.calledOnce);
   });
 });

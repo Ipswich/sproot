@@ -6,6 +6,7 @@ import Pca9685Driver from "pca9685";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
+import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
@@ -56,8 +57,15 @@ describe("OutputList.ts tests", function () {
           isInvertedPwm: true,
         } as SDBOutput,
       ]);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
 
-    const outputList = new OutputList(mockSprootDB);
+    const outputList = new OutputList(mockSprootDB, logger);
     // Create
     await outputList.initializeOrRegenerateAsync();
     assert.equal(Object.keys(outputList.outputs).length, 4);
@@ -123,7 +131,14 @@ describe("OutputList.ts tests", function () {
           isInvertedPwm: true,
         } as SDBOutput,
       ]);
-    const outputList = new OutputList(mockSprootDB);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    const outputList = new OutputList(mockSprootDB, logger);
 
     // Create
     await outputList.initializeOrRegenerateAsync();
@@ -147,8 +162,15 @@ describe("OutputList.ts tests", function () {
         isInvertedPwm: false,
       } as SDBOutput,
     ]);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
 
-    const outputList = new OutputList(mockSprootDB);
+    const outputList = new OutputList(mockSprootDB, logger);
     await outputList.initializeOrRegenerateAsync();
     const outputData = outputList.outputData;
 
@@ -201,7 +223,14 @@ describe("OutputList.ts tests", function () {
         isInvertedPwm: true,
       } as SDBOutput,
     ]);
-    const outputList = new OutputList(mockSprootDB);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    const outputList = new OutputList(mockSprootDB, logger);
 
     // Create
     await outputList.initializeOrRegenerateAsync();

@@ -30,23 +30,17 @@ swaggerOptions.defaultModelsExpandDepth = -1;
 
 const logger = winston.createLogger({
   level: "info",
-  format: winston.format.json(),
-  defaultMeta: { service: "user-service" },
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),
+  ),
   transports: [
-    //
-    // - Write all logs with importance level of `error` or less to `error.log`
-    // - Write all logs with importance level of `info` or less to `combined.log`
-    //
-    new winston.transports.File({ filename: "error.log", level: "error" }),
-    new winston.transports.File({ filename: "combined.log" }),
+    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
+    new winston.transports.File({ filename: "logs/combined.log" }),
   ],
 });
 
-//
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
-//
-if (process.env["NODE_ENV"] !== "production") {
+if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   logger.add(
     new winston.transports.Console({
       format: winston.format.simple(),
@@ -57,14 +51,15 @@ if (process.env["NODE_ENV"] !== "production") {
 const app = express();
 
 (async () => {
+  console.log("Initializing sproot app. . .");
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
-
+  app.set("logger", logger);
   await defaultUserCheck(sprootDB);
 
-  const sensorList = new SensorList(sprootDB);
+  const sensorList = new SensorList(sprootDB, logger);
   app.set("sensorList", sensorList);
-  const outputList = new OutputList(sprootDB);
+  const outputList = new OutputList(sprootDB, logger);
   app.set("outputList", outputList);
 
   await sensorList.initializeOrRegenerateAsync();
@@ -137,6 +132,7 @@ const app = express();
         // Close database connection
         await sprootDB.disposeAsync();
       } catch (err) {
+        logger.error(err);
         //Dgaf, swallow anything, we're shutting down anyway.
       } finally {
         // Give everything a hot sec to finish whatever it's up to - call backs really mess with just calling process.exit.
