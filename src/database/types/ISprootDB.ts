@@ -1,7 +1,8 @@
-import { SDBUser } from "./SDBUser";
 import { SDBSensor } from "./SDBSensor";
-import { SensorBase } from "../../sensors/types/SensorBase";
 import { SDBOutput } from "./SDBOutput";
+import { SDBReading } from "./SDBReading";
+import { SDBUser } from "./SDBUser";
+import { SensorBase } from "../../sensors/types/SensorBase";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -11,6 +12,11 @@ interface ISprootDB {
   updateSensorAsync(sensor: SDBSensor): Promise<void>;
   deleteSensorAsync(id: number): Promise<void>;
   addSensorReadingAsync(sensor: SensorBase): Promise<void>;
+  getSensorReadingsAsync(
+    sensor: SensorBase,
+    since: Date,
+    minutes?: number,
+  ): Promise<SDBReading[]>;
   getOutputsAsync(): Promise<SDBOutput[]>;
   getOutputAsync(id: number): Promise<SDBOutput[]>;
   addOutputAsync(output: SDBOutput): Promise<void>;
@@ -73,6 +79,16 @@ class MockSprootDB implements ISprootDB {
   async deleteOutputAsync(_id: number): Promise<void> {
     return;
   }
+
+  /* eslint-disable */
+  async getSensorReadingsAsync(
+    _sensor: SensorBase,
+    _since: Date,
+    _minutes?: number,
+  ): Promise<SDBReading[]> {
+    return [];
+  }
+  /* eslint-enable */
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addSensorReadingAsync(_sensor: SensorBase): Promise<void> {

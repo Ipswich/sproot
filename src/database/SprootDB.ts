@@ -5,6 +5,7 @@ import { SDBSensor } from "./types/SDBSensor";
 import { SDBOutput } from "./types/SDBOutput";
 import { ISprootDB } from "./types/ISprootDB";
 import { SensorBase, ReadingType } from "../sensors/types/SensorBase";
+import { SDBReading } from "./types/SDBReading";
 
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
@@ -113,6 +114,27 @@ class SprootDB implements ISprootDB {
         ],
       );
     }
+  }
+
+  async getSensorReadingsAsync(
+    sensor: SensorBase,
+    since: Date,
+    minutes: number = 120,
+  ): Promise<SDBReading[]> {
+    const [rows] = await this.#connection.execute<SDBReading[]>(
+      `
+    SELECT metric, data, unit, logTime
+      FROM Sensors s
+      JOIN (
+        SELECT *
+        FROM sensor_data
+        WHERE logTime > DATE_SUB(?, INTERVAL ? MINUTE)
+      ) AS d ON s.id=d.sensor_id
+      WHERE sensor_id = ?
+      ORDER BY logTime ASC`,
+      [since.toISOString(), minutes, sensor.id],
+    );
+    return rows;
   }
 
   async getUserAsync(username: string): Promise<SDBUser[]> {

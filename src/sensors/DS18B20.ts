@@ -1,10 +1,11 @@
 import ds18b20 from "ds18b20";
 import util from "util";
+import winston from "winston";
 
 import { SDBSensor } from "../database/types/SDBSensor";
+import { SDBReading } from "../database/types/SDBReading";
 import { ISprootDB } from "../database/types/ISprootDB";
 import { SensorBase, ReadingType } from "./types/SensorBase";
-import winston from "winston";
 
 let lastStaticError: Error | undefined = undefined;
 class DS18B20 extends SensorBase {
@@ -20,13 +21,21 @@ class DS18B20 extends SensorBase {
 
   override async getReadingAsync(): Promise<void> {
     try {
-      this.lastReading[ReadingType.temperature] = String(
-        ds18b20.temperatureSync(this.address!),
-      );
+      const reading = String(ds18b20.temperatureSync(this.address!));
+      this.lastReading[ReadingType.temperature] = reading;
       this.lastReadingTime = new Date();
+
+      if (this.cachedReadings[ReadingType.temperature].length > 0) {
+        this.cachedReadings[ReadingType.temperature].shift();
+        this.cachedReadings[ReadingType.temperature].push({metric: ReadingType.temperature, data: reading, unit: this.units[ReadingType.temperature], logTime: new Date().toUTCString()} as SDBReading);
+      }
     } catch (err) {
       this.#lastError = handleError(err as Error, this.logger, this.#lastError);
     }
+  }
+
+  protected override loadCachedReadingsAsync(): Promise<void> {
+    throw new Error("Method not implemented.");
   }
 
   static async getAddressesAsync(logger: winston.Logger): Promise<string[]> {
