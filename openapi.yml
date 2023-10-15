@@ -163,9 +163,6 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                  sensorId:
-                    type: integer
-                    example: 1
         "400":
           description: Bad Request
           content:
@@ -329,6 +326,103 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+      description: "Update a sensor."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: The sensor's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  nullable: true
+                model:
+                  type: string
+                  example: "BME280"
+                  nullable: true
+                address:
+                  type: string
+                  example: "0x76"
+                  nullable: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sensor successfully updated
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Failed to update sensor, invalid request"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid or Missing JWT
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "404":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No sensor found with that Id
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        
   /api/v1/outputs:
     get:
       security:
@@ -421,9 +515,6 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-                  outputId:
-                    type: integer
-                    example: 1
         "400":
           description: Bad Request
           content:
@@ -568,6 +659,114 @@ paths:
                   message:
                     type: string
                     example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No output found with that Id"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Outputs"
+      description: "Update an output."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: The output's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  nullable: true
+                model:
+                  type: string
+                  example: "pca9685"
+                  nullable: true
+                address:
+                  type: string
+                  example: "0x40"
+                  nullable: true
+                pin:
+                  type: integer
+                  example: 1
+                  nullable: true
+                isPwm:
+                  type: boolean
+                  example: true
+                  nullable: true
+                isInvertedPwm:
+                  type: boolean
+                  example: false
+                  nullable: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Output successfully updated
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Failed to update output, invalid request"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid or Missing JWT
                   statusCode:
                     type: integer
                     example: 401

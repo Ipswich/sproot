@@ -7,7 +7,7 @@ services:
     environment:
       - NODE_ENV=development
       - APPLICATION_PORT=3000
-      - "JWT_SECRET=CHANGE ME" #Change this to something long and unique
+      - JWT_SECRET="CHANGE ME" #Change this to something long and unique
       - JWT_EXPIRATION=3d
       - DATABASE_HOST=db
       - DATABASE_PORT=3306
@@ -16,9 +16,9 @@ services:
       - DATABASE_NAME=sproot
       - STATE_UPDATE_INTERVAL=1000
       - DATABASE_UPDATE_INTERVAL=60000
-      - "DEFAULT_USER=dev-test" #Change this to something long and unique
-      - "DEFAULT_USER_EMAIL=dev-test@example.com" #Change this to something long and unique
-      - "DEFAULT_USER_PASSWORD=password" #Change this to something long and unique
+      - DEFAULT_USER="dev-test" #Change this to something long and unique
+      - DEFAULT_USER_EMAIL="dev-test@example.com" #Change this to something long and unique
+      - DEFAULT_USER_PASSWORD="password" #Change this to something long and unique
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/data:/home/sproot

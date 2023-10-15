@@ -20,6 +20,14 @@ class SprootDB implements ISprootDB {
     return rows;
   }
 
+  async getSensorAsync(id: number): Promise<SDBSensor[]> {
+    const [rows] = await this.#connection.execute<SDBSensor[]>(
+      "SELECT * FROM sensors WHERE id = ?",
+      [id],
+    );
+    return rows;
+  }
+
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     const [rows] = await this.#connection.execute<SDBSensor[]>(
       'SELECT address FROM sensors WHERE model = "DS18B20"',
@@ -34,6 +42,13 @@ class SprootDB implements ISprootDB {
     );
   }
 
+  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
+    await this.#connection.execute(
+      "UPDATE sensors SET description = ?, model = ?, address = ? WHERE id = ?",
+      [sensor.description, sensor.model, sensor.address, sensor.id],
+    );
+  }
+
   async deleteSensorAsync(id: number): Promise<void> {
     await this.#connection.execute("DELETE FROM sensors WHERE id = ?", [id]);
   }
@@ -41,6 +56,14 @@ class SprootDB implements ISprootDB {
   async getOutputsAsync(): Promise<SDBOutput[]> {
     const [rows] = await this.#connection.execute<SDBOutput[]>(
       "SELECT * FROM outputs",
+    );
+    return rows;
+  }
+
+  async getOutputAsync(id: number): Promise<SDBOutput[]> {
+    const [rows] = await this.#connection.execute<SDBOutput[]>(
+      "SELECT * FROM outputs WHERE id = ?",
+      [id],
     );
     return rows;
   }
@@ -55,6 +78,21 @@ class SprootDB implements ISprootDB {
         output.pin,
         output.isPwm,
         output.isInvertedPwm,
+      ],
+    );
+  }
+
+  async updateOutputAsync(output: SDBOutput): Promise<void> {
+    await this.#connection.execute(
+      "UPDATE outputs SET description = ?, model = ?, address = ?, pin = ?, isPwm = ?, isInvertedPwm = ? WHERE id = ?",
+      [
+        output.description,
+        output.model,
+        output.address,
+        output.pin,
+        output.isPwm,
+        output.isInvertedPwm,
+        output.id,
       ],
     );
   }
