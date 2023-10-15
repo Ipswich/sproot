@@ -6,8 +6,9 @@ import { ISprootDB } from "../database/types/ISprootDB";
 import { SensorBase, ReadingType } from "./types/SensorBase";
 import winston from "winston";
 
-let lastStaticError: string | undefined = undefined;
+let lastStaticError: Error | undefined = undefined;
 class DS18B20 extends SensorBase {
+  #lastError: Error | undefined;
   constructor(
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
@@ -24,7 +25,7 @@ class DS18B20 extends SensorBase {
       );
       this.lastReadingTime = new Date();
     } catch (err) {
-      handleError(err as Error, this.logger);
+      this.#lastError = handleError(err as Error, this.logger, this.#lastError);
     }
   }
 
@@ -32,15 +33,19 @@ class DS18B20 extends SensorBase {
     try {
       return await util.promisify(ds18b20.sensors)();
     } catch (err) {
-      handleError(err as Error, logger);
+      lastStaticError = handleError(err as Error, logger, lastStaticError);
     }
     return [];
   }
 }
 
-function handleError(err: Error, logger: winston.Logger) {
-  if (err?.message !== lastStaticError) {
-    lastStaticError = err.message;
+function handleError(
+  err: Error,
+  logger: winston.Logger,
+  lastError?: Error,
+): Error {
+  if (err.message !== lastError?.message) {
+    lastError = err;
     if (err.message.includes("ENOENT: no such file or directory, open ")) {
       logger.error(
         "Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.",
@@ -49,6 +54,7 @@ function handleError(err: Error, logger: winston.Logger) {
       logger.error(err);
     }
   }
+  return err;
 }
 
 export { DS18B20 };
