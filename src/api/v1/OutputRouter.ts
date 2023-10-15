@@ -77,6 +77,83 @@ router.post("/", async (req: Request, res: Response) => {
   });
 });
 
+router.get("/:id", async (req: Request, res: Response) => {
+  const result = (req.app.get("outputList") as OutputList)?.outputData[
+    String(req.params["id"])
+  ];
+  if (!result) {
+    res.status(404).json({
+      message: "No output found with that Id",
+      statusCode: 404,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  res.status(200).json({
+    message: "Output information successfully retrieved",
+    statusCode: 200,
+    output: result,
+    timestamp: new Date().toISOString(),
+  });
+  return;
+});
+
+router.put("/:id", async (req: Request, res: Response) => {
+  if (!req.params["id"]) {
+    res.status(400).json({
+      message: "Missing output id",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  const sprootDB = req.app.get("sprootDB") as ISprootDB;
+  try {
+    const id = Number(req.params["id"]);
+    const [output] = await sprootDB.getOutputAsync(id);
+    if (!output) {
+      res.status(404).json({
+        message: "No sensor found with that Id",
+        statusCode: 404,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    if (req.body.description) {
+      output.description = String(req.body.description);
+    }
+    if (req.body.model) {
+      output.model = String(req.body.model);
+    }
+    if (req.body.address) {
+      output.address = String(req.body.address);
+    }
+    if (req.body.pin) {
+      output.pin = Number(req.body.pin);
+    }
+    if (req.body.isPwm != null) {
+      output.isPwm = Boolean(req.body.isPwm);
+    }
+    if (req.body.isInvertedPwm != null) {
+      output.isInvertedPwm = Boolean(req.body.isInvertedPwm);
+    }
+    await sprootDB.updateOutputAsync(output);
+  } catch (err) {
+    res.status(400).json({
+      message: "Failed to update output, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  res.status(200).json({
+    message: "Sensor successfully updated",
+    statusCode: 200,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 router.delete("/:id", async (req: Request, res: Response) => {
   if (!req.params?.["id"]) {
     res.status(400).json({
@@ -105,27 +182,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
     statusCode: 200,
     timestamp: new Date().toISOString(),
   });
-});
-
-router.get("/:id", async (req: Request, res: Response) => {
-  const result = (req.app.get("outputList") as OutputList)?.outputData[
-    String(req.params["id"])
-  ];
-  if (!result) {
-    res.status(404).json({
-      message: "No output found with that Id",
-      statusCode: 404,
-      timestamp: new Date().toISOString(),
-    });
-    return;
-  }
-  res.status(200).json({
-    message: "Output information successfully retrieved",
-    statusCode: 200,
-    output: result,
-    timestamp: new Date().toISOString(),
-  });
-  return;
 });
 
 router.post("/:id/control-mode", async (req: Request, res: Response) => {
