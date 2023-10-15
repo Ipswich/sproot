@@ -110,7 +110,8 @@ router.put("/:id", async (req: Request, res: Response) => {
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
   try {
     const id = Number(req.params["id"]);
-    const [ output ] = await sprootDB.getOutputAsync(id);if (!output) {
+    const [output] = await sprootDB.getOutputAsync(id);
+    if (!output) {
       res.status(404).json({
         message: "No sensor found with that Id",
         statusCode: 404,
@@ -118,22 +119,22 @@ router.put("/:id", async (req: Request, res: Response) => {
       });
       return;
     }
-    if(req.body.description) {
+    if (req.body.description) {
       output.description = String(req.body.description);
     }
-    if(req.body.model) {
+    if (req.body.model) {
       output.model = String(req.body.model);
     }
-    if(req.body.address) {
+    if (req.body.address) {
       output.address = String(req.body.address);
     }
-    if(req.body.pin) {
+    if (req.body.pin) {
       output.pin = Number(req.body.pin);
     }
-    if(req.body.isPwm != null) {
+    if (req.body.isPwm != null) {
       output.isPwm = Boolean(req.body.isPwm);
     }
-    if(req.body.isInvertedPwm != null) {
+    if (req.body.isInvertedPwm != null) {
       output.isInvertedPwm = Boolean(req.body.isInvertedPwm);
     }
     await sprootDB.updateOutputAsync(output);

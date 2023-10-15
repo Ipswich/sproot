@@ -97,7 +97,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 
   try {
     const id = Number(req.params["id"]);
-    const  [ sensor ] = await sprootDB.getSensorAsync(id);
+    const [sensor] = await sprootDB.getSensorAsync(id);
     if (!sensor) {
       res.status(404).json({
         message: "No sensor found with that Id",
@@ -161,6 +161,5 @@ router.delete("/:id", async (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
-
 
 export default router;

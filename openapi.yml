@@ -422,7 +422,7 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
-        
+
   /api/v1/outputs:
     get:
       security:
