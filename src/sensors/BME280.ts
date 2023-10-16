@@ -25,7 +25,7 @@ class BME280 extends DisposableSensorBase {
   async initAsync(): Promise<BME280 | null> {
     try {
       await this.loadCachedReadingsFromDatabaseAsync(
-        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!),
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
       );
       this.#bme280 = await bme280.open({
         i2cBusNumber: 1,
@@ -72,28 +72,25 @@ class BME280 extends DisposableSensorBase {
 
       if (
         this.cachedReadings[ReadingType.temperature].length >
-        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!)
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
       ) {
         this.cachedReadings[ReadingType.temperature].shift();
       }
       if (
         this.cachedReadings[ReadingType.humidity].length >
-        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!)
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
       ) {
         this.cachedReadings[ReadingType.humidity].shift();
       }
       if (
         this.cachedReadings[ReadingType.pressure].length >
-        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!)
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
       ) {
         this.cachedReadings[ReadingType.pressure].shift();
       }
     } catch (err) {
-      this.logger.error(`Failed to cache readings for sensor ${this.id}`);
       this.logger.error(
-        `${this.cachedReadings[ReadingType.temperature].length} ${
-          this.cachedReadings[ReadingType.humidity].length
-        } ${this.cachedReadings[ReadingType.pressure].length}`,
+        `Failed to update cache readings for sensor ${this.id}`,
       );
       this.logger.error(err);
     }

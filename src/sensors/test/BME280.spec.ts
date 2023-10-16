@@ -154,7 +154,7 @@ describe("BME280.ts tests", function () {
   });
 
   it("should get a reading from a BME280 sensor, updating the cache", async () => {
-    process.env["MAX_SENSOR_READINGS_CACHE_SIZE"] = "2";
+    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
       description: "test sensor 1",
