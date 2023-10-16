@@ -124,7 +124,7 @@ class SprootDB implements ISprootDB {
     const [rows] = await this.#connection.execute<SDBReading[]>(
       `
     SELECT metric, data, unit, logTime
-      FROM Sensors s
+      FROM sensors s
       JOIN (
         SELECT *
         FROM sensor_data

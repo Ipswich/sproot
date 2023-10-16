@@ -24,7 +24,9 @@ class BME280 extends DisposableSensorBase {
 
   async initAsync(): Promise<BME280 | null> {
     try {
-      await this.loadCachedReadingsAsync();
+      await this.loadCachedReadingsFromDatabaseAsync(
+        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!),
+      );
       this.#bme280 = await bme280.open({
         i2cBusNumber: 1,
         i2cAddress: Number(this.address),
@@ -48,32 +50,90 @@ class BME280 extends DisposableSensorBase {
     this.lastReading[ReadingType.pressure] = String(reading.pressure);
     this.lastReadingTime = new Date();
 
-    
-    if (this.cachedReadings[ReadingType.temperature].length > 0) {
-      this.cachedReadings[ReadingType.temperature].shift();
-      this.cachedReadings[ReadingType.temperature].push({metric: ReadingType.temperature, data: String(reading.temperature), unit: this.units[ReadingType.temperature], logTime: new Date().toUTCString()} as SDBReading);
-    }
-    if(this.cachedReadings[ReadingType.humidity].length > 0){
-      this.cachedReadings[ReadingType.humidity].shift();
-      this.cachedReadings[ReadingType.humidity].push({metric: ReadingType.humidity, data: String(reading.humidity), unit: this.units[ReadingType.humidity], logTime: new Date().toUTCString()} as SDBReading);
-    }
-    if(this.cachedReadings[ReadingType.pressure].length > 0){
-      this.cachedReadings[ReadingType.pressure].shift();
-      this.cachedReadings[ReadingType.pressure].push({metric: ReadingType.pressure, data: String(reading.pressure), unit: this.units[ReadingType.pressure], logTime: new Date().toUTCString()} as SDBReading);
+    try {
+      this.cachedReadings[ReadingType.temperature].push({
+        metric: ReadingType.temperature,
+        data: String(reading.temperature),
+        unit: this.units[ReadingType.temperature],
+        logTime: new Date().toUTCString(),
+      } as SDBReading);
+      this.cachedReadings[ReadingType.humidity].push({
+        metric: ReadingType.humidity,
+        data: String(reading.humidity),
+        unit: this.units[ReadingType.humidity],
+        logTime: new Date().toUTCString(),
+      } as SDBReading);
+      this.cachedReadings[ReadingType.pressure].push({
+        metric: ReadingType.pressure,
+        data: String(reading.pressure),
+        unit: this.units[ReadingType.pressure],
+        logTime: new Date().toUTCString(),
+      } as SDBReading);
+
+      if (
+        this.cachedReadings[ReadingType.temperature].length >
+        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!)
+      ) {
+        this.cachedReadings[ReadingType.temperature].shift();
+      }
+      if (
+        this.cachedReadings[ReadingType.humidity].length >
+        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!)
+      ) {
+        this.cachedReadings[ReadingType.humidity].shift();
+      }
+      if (
+        this.cachedReadings[ReadingType.pressure].length >
+        Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!)
+      ) {
+        this.cachedReadings[ReadingType.pressure].shift();
+      }
+    } catch (err) {
+      this.logger.error(`Failed to cache readings for sensor ${this.id}`);
+      this.logger.error(
+        `${this.cachedReadings[ReadingType.temperature].length} ${
+          this.cachedReadings[ReadingType.humidity].length
+        } ${this.cachedReadings[ReadingType.pressure].length}`,
+      );
+      this.logger.error(err);
     }
   }
 
-  protected override async loadCachedReadingsAsync(): Promise<void> {
+  public override async loadCachedReadingsFromDatabaseAsync(
+    count: number,
+  ): Promise<void> {
+    const loadedReadingsCount = {} as Record<string, number>;
     try {
       //Fill cached readings with readings from database
-      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), Number(process.env["MAX_SENSOR_READINGS_CACHE_SIZE"]!));
+      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
+        this,
+        new Date(),
+        count,
+      );
       for (const sdbReading of sdbReadings) {
-        const newReading = {metric: sdbReading.metric as ReadingType, data: sdbReading.data, unit: sdbReading.unit, logTime: sdbReading.logTime} as SDBReading;
+        const newReading = {
+          metric: sdbReading.metric as ReadingType,
+          data: sdbReading.data,
+          unit: sdbReading.unit,
+          logTime: sdbReading.logTime,
+        } as SDBReading;
         if (!this.cachedReadings[sdbReading.metric as ReadingType]) {
           this.cachedReadings[sdbReading.metric as ReadingType] = [];
         }
         this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
+        loadedReadingsCount[sdbReading.metric as ReadingType] =
+          (loadedReadingsCount[sdbReading.metric as ReadingType] ?? 0) + 1;
       }
+
+      this.logger.info(
+        `Loaded cached readings for {BME280, id: ${
+          this.id
+        }}. Readings loaded: temperature: ${
+          loadedReadingsCount[ReadingType.temperature] ?? 0
+        }, humidity: ${
+          loadedReadingsCount[ReadingType.humidity] ?? 0
+        }, pressure: ${loadedReadingsCount[ReadingType.pressure] ?? 0}`,
+      );
     } catch (err) {
       this.logger.error(`Failed to load cached readings for sensor ${this.id}`);
       this.logger.error(err);

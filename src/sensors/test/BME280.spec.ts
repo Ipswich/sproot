@@ -3,16 +3,19 @@ import { BME280 } from "../BME280";
 import { MockSprootDB } from "../../database/types/ISprootDB";
 import { ReadingType } from "../types/SensorBase";
 import { SDBSensor } from "../../database/types/SDBSensor";
+import { SDBReading } from "../../database/types/SDBReading";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
+const env = process.env;
 
 describe("BME280.ts tests", function () {
   this.afterEach(() => {
     sandbox.restore();
+    process.env = env;
   });
 
   it("should initialize a BME280 sensor", async () => {
@@ -50,6 +53,79 @@ describe("BME280.ts tests", function () {
     assert.equal(bme280Sensor!.units[ReadingType.pressure], "hPa");
   });
 
+  it("should load cached readings from the database", async () => {
+    const recordsToLoad = 2;
+    const mockBME280Data = {
+      id: 1,
+      description: "test sensor 1",
+      model: "BME280",
+      address: "0x76",
+    } as SDBSensor;
+    sandbox
+      .stub(mockSprootDB, "getSensorReadingsAsync")
+      .resolves([
+        {
+          data: "1",
+          metric: ReadingType.temperature,
+          unit: "°C",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "2",
+          metric: ReadingType.temperature,
+          unit: "°C",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "1",
+          metric: ReadingType.humidity,
+          unit: "%rH",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "2",
+          metric: ReadingType.humidity,
+          unit: "%rH",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "1",
+          metric: ReadingType.pressure,
+          unit: "hPa",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "2",
+          metric: ReadingType.pressure,
+          unit: "hPa",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+      ]);
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    const bme280Sensor = new BME280(mockBME280Data, mockSprootDB, logger);
+
+    await bme280Sensor.loadCachedReadingsFromDatabaseAsync(recordsToLoad);
+
+    assert.lengthOf(
+      bme280Sensor.cachedReadings[ReadingType.temperature],
+      recordsToLoad,
+    );
+    assert.lengthOf(
+      bme280Sensor.cachedReadings[ReadingType.humidity],
+      recordsToLoad,
+    );
+    assert.lengthOf(
+      bme280Sensor.cachedReadings[ReadingType.pressure],
+      recordsToLoad,
+    );
+  });
+
   it("should dispose of a BME280 sensor", async () => {
     const mockBME280Data = {
       id: 1,
@@ -79,7 +155,8 @@ describe("BME280.ts tests", function () {
     assert.isTrue(closeStub.calledOnce);
   });
 
-  it("should get a reading from a BME280 sensor", async () => {
+  it("should get a reading from a BME280 sensor, updating the cache", async () => {
+    process.env["MAX_SENSOR_READINGS_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
       description: "test sensor 1",
@@ -103,12 +180,66 @@ describe("BME280.ts tests", function () {
       .stub(bme280, "open")
       .resolves({ read: readStub as Bme280["read"] } as Bme280); // Don't create a real sensor - needs I2C bus
 
+    sandbox
+      .stub(mockSprootDB, "getSensorReadingsAsync")
+      .resolves([
+        {
+          data: "1",
+          metric: ReadingType.temperature,
+          unit: "°C",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "2",
+          metric: ReadingType.temperature,
+          unit: "°C",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "1",
+          metric: ReadingType.humidity,
+          unit: "%rH",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "2",
+          metric: ReadingType.humidity,
+          unit: "%rH",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "1",
+          metric: ReadingType.pressure,
+          unit: "hPa",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "2",
+          metric: ReadingType.pressure,
+          unit: "hPa",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+      ]);
     const bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
       logger,
     ).initAsync();
+
+    assert.equal(
+      bme280Sensor!.cachedReadings[ReadingType.temperature].length,
+      2,
+    );
+    assert.equal(bme280Sensor!.cachedReadings[ReadingType.humidity].length, 2);
+    assert.equal(bme280Sensor!.cachedReadings[ReadingType.pressure].length, 2);
     await bme280Sensor!.getReadingAsync();
+
+    assert.equal(
+      bme280Sensor!.cachedReadings[ReadingType.temperature].length,
+      2,
+    );
+    assert.equal(bme280Sensor!.cachedReadings[ReadingType.humidity].length, 2);
+    assert.equal(bme280Sensor!.cachedReadings[ReadingType.pressure].length, 2);
 
     assert.isTrue(readStub.calledOnce);
     assert.equal(

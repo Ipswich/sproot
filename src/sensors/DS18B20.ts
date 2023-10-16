@@ -27,14 +27,19 @@ class DS18B20 extends SensorBase {
 
       if (this.cachedReadings[ReadingType.temperature].length > 0) {
         this.cachedReadings[ReadingType.temperature].shift();
-        this.cachedReadings[ReadingType.temperature].push({metric: ReadingType.temperature, data: reading, unit: this.units[ReadingType.temperature], logTime: new Date().toUTCString()} as SDBReading);
+        this.cachedReadings[ReadingType.temperature].push({
+          metric: ReadingType.temperature,
+          data: reading,
+          unit: this.units[ReadingType.temperature],
+          logTime: new Date().toUTCString(),
+        } as SDBReading);
       }
     } catch (err) {
       this.#lastError = handleError(err as Error, this.logger, this.#lastError);
     }
   }
 
-  protected override loadCachedReadingsAsync(): Promise<void> {
+  protected override loadCachedReadingsFromDatabaseAsync(): Promise<void> {
     throw new Error("Method not implemented.");
   }
 
