@@ -61,46 +61,44 @@ describe("BME280.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
-    sandbox
-      .stub(mockSprootDB, "getSensorReadingsAsync")
-      .resolves([
-        {
-          data: "1",
-          metric: ReadingType.temperature,
-          unit: "°C",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.temperature,
-          unit: "°C",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "1",
-          metric: ReadingType.humidity,
-          unit: "%rH",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.humidity,
-          unit: "%rH",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "1",
-          metric: ReadingType.pressure,
-          unit: "hPa",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.pressure,
-          unit: "hPa",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-      ]);
+    sandbox.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+      {
+        data: "1",
+        metric: ReadingType.temperature,
+        unit: "°C",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.temperature,
+        unit: "°C",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "1",
+        metric: ReadingType.humidity,
+        unit: "%rH",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.humidity,
+        unit: "%rH",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "1",
+        metric: ReadingType.pressure,
+        unit: "hPa",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.pressure,
+        unit: "hPa",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+    ]);
     sandbox
       .stub(winston, "createLogger")
       .callsFake(
@@ -180,46 +178,44 @@ describe("BME280.ts tests", function () {
       .stub(bme280, "open")
       .resolves({ read: readStub as Bme280["read"] } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    sandbox
-      .stub(mockSprootDB, "getSensorReadingsAsync")
-      .resolves([
-        {
-          data: "1",
-          metric: ReadingType.temperature,
-          unit: "°C",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.temperature,
-          unit: "°C",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "1",
-          metric: ReadingType.humidity,
-          unit: "%rH",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.humidity,
-          unit: "%rH",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "1",
-          metric: ReadingType.pressure,
-          unit: "hPa",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.pressure,
-          unit: "hPa",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-      ]);
+    sandbox.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+      {
+        data: "1",
+        metric: ReadingType.temperature,
+        unit: "°C",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.temperature,
+        unit: "°C",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "1",
+        metric: ReadingType.humidity,
+        unit: "%rH",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.humidity,
+        unit: "%rH",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "1",
+        metric: ReadingType.pressure,
+        unit: "hPa",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.pressure,
+        unit: "hPa",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+    ]);
     const bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
