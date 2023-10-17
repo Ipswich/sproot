@@ -72,19 +72,19 @@ class BME280 extends DisposableSensorBase {
         logTime: new Date().toUTCString(),
       } as SDBReading);
 
-      if (
+      while (
         this.cachedReadings[ReadingType.temperature].length >
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
       ) {
         this.cachedReadings[ReadingType.temperature].shift();
       }
-      if (
+      while (
         this.cachedReadings[ReadingType.humidity].length >
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
       ) {
         this.cachedReadings[ReadingType.humidity].shift();
       }
-      if (
+      while (
         this.cachedReadings[ReadingType.pressure].length >
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
       ) {

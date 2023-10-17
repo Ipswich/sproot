@@ -40,11 +40,64 @@ class DS18B20 extends SensorBase {
   }
 
   protected override updateCachedReadings(): void {
-    throw new Error("Method not implemented.");
+    try {
+      this.cachedReadings[ReadingType.temperature].push({
+        metric: ReadingType.temperature,
+        data: this.lastReading[ReadingType.temperature],
+        unit: this.units[ReadingType.temperature],
+        logTime: new Date().toUTCString(),
+      } as SDBReading);
+      while (
+        this.cachedReadings[ReadingType.temperature].length >
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+      ) {
+        this.cachedReadings[ReadingType.temperature].shift();
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to update cache readings for sensor ${this.id}`,
+      );
+      this.logger.error(err);
+    }
   }
 
-  protected override loadCachedReadingsFromDatabaseAsync(): Promise<void> {
-    throw new Error("Method not implemented.");
+  protected override async loadCachedReadingsFromDatabaseAsync(
+    count: number,
+  ): Promise<void> {
+    const loadedReadingsCount = {} as Record<string, number>;
+    try {
+      //Fill cached readings with readings from database
+      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
+        this,
+        new Date(),
+        count,
+      );
+      for (const sdbReading of sdbReadings) {
+        const newReading = {
+          metric: sdbReading.metric as ReadingType,
+          data: sdbReading.data,
+          unit: sdbReading.unit,
+          logTime: sdbReading.logTime,
+        } as SDBReading;
+        if (!this.cachedReadings[sdbReading.metric as ReadingType]) {
+          this.cachedReadings[sdbReading.metric as ReadingType] = [];
+        }
+        this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
+        loadedReadingsCount[sdbReading.metric as ReadingType] =
+          (loadedReadingsCount[sdbReading.metric as ReadingType] ?? 0) + 1;
+      }
+
+      this.logger.info(
+        `Loaded cached readings for {DS18B20, id: ${
+          this.id
+        }}. Readings loaded: temperature: ${
+          loadedReadingsCount[ReadingType.temperature] ?? 0
+        }`,
+      );
+    } catch (err) {
+      this.logger.error(`Failed to load cached readings for sensor ${this.id}`);
+      this.logger.error(err);
+    }
   }
 
   static async getAddressesAsync(logger: winston.Logger): Promise<string[]> {
