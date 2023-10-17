@@ -19,12 +19,51 @@ describe("BME280.ts tests", function () {
   });
 
   it("should initialize a BME280 sensor", async () => {
+    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
       description: "test sensor 1",
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
+    sandbox.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+      {
+        data: "1",
+        metric: ReadingType.temperature,
+        unit: "°C",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.temperature,
+        unit: "°C",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "1",
+        metric: ReadingType.humidity,
+        unit: "%rH",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.humidity,
+        unit: "%rH",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "1",
+        metric: ReadingType.pressure,
+        unit: "hPa",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.pressure,
+        unit: "hPa",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+    ]);
     sandbox
       .stub(bme280, "open")
       .resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
@@ -43,6 +82,10 @@ describe("BME280.ts tests", function () {
       logger,
     ).initAsync();
 
+    assert.equal(
+      bme280Sensor!.cachedReadings[ReadingType.temperature].length,
+      2,
+    );
     assert.isTrue(bme280Sensor instanceof BME280);
     assert.equal(bme280Sensor!.id, mockBME280Data.id);
     assert.equal(bme280Sensor!.description, mockBME280Data.description);
@@ -153,8 +196,7 @@ describe("BME280.ts tests", function () {
     assert.isTrue(closeStub.calledOnce);
   });
 
-  it("should get a reading from a BME280 sensor, updating the cache", async () => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
+  it("should get a reading from a BME280 sensor", async () => {
     const mockBME280Data = {
       id: 1,
       description: "test sensor 1",
@@ -178,64 +220,13 @@ describe("BME280.ts tests", function () {
       .stub(bme280, "open")
       .resolves({ read: readStub as Bme280["read"] } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    sandbox.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
-      {
-        data: "1",
-        metric: ReadingType.temperature,
-        unit: "°C",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "2",
-        metric: ReadingType.temperature,
-        unit: "°C",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "1",
-        metric: ReadingType.humidity,
-        unit: "%rH",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "2",
-        metric: ReadingType.humidity,
-        unit: "%rH",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "1",
-        metric: ReadingType.pressure,
-        unit: "hPa",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "2",
-        metric: ReadingType.pressure,
-        unit: "hPa",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-    ]);
     const bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
       logger,
     ).initAsync();
 
-    assert.equal(
-      bme280Sensor!.cachedReadings[ReadingType.temperature].length,
-      2,
-    );
-    assert.equal(bme280Sensor!.cachedReadings[ReadingType.humidity].length, 2);
-    assert.equal(bme280Sensor!.cachedReadings[ReadingType.pressure].length, 2);
     await bme280Sensor!.getReadingAsync();
-
-    assert.equal(
-      bme280Sensor!.cachedReadings[ReadingType.temperature].length,
-      2,
-    );
-    assert.equal(bme280Sensor!.cachedReadings[ReadingType.humidity].length, 2);
-    assert.equal(bme280Sensor!.cachedReadings[ReadingType.pressure].length, 2);
 
     assert.isTrue(readStub.calledOnce);
     assert.equal(

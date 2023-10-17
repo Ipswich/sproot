@@ -49,23 +49,25 @@ class BME280 extends DisposableSensorBase {
     this.lastReading[ReadingType.humidity] = String(reading.humidity);
     this.lastReading[ReadingType.pressure] = String(reading.pressure);
     this.lastReadingTime = new Date();
+  }
 
+  protected override updateCachedReadings() {
     try {
       this.cachedReadings[ReadingType.temperature].push({
         metric: ReadingType.temperature,
-        data: String(reading.temperature),
+        data: this.lastReading[ReadingType.temperature],
         unit: this.units[ReadingType.temperature],
         logTime: new Date().toUTCString(),
       } as SDBReading);
       this.cachedReadings[ReadingType.humidity].push({
         metric: ReadingType.humidity,
-        data: String(reading.humidity),
+        data: this.lastReading[ReadingType.humidity],
         unit: this.units[ReadingType.humidity],
         logTime: new Date().toUTCString(),
       } as SDBReading);
       this.cachedReadings[ReadingType.pressure].push({
         metric: ReadingType.pressure,
-        data: String(reading.pressure),
+        data: this.lastReading[ReadingType.pressure],
         unit: this.units[ReadingType.pressure],
         logTime: new Date().toUTCString(),
       } as SDBReading);

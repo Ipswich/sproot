@@ -48,12 +48,15 @@ abstract class SensorBase implements ISensorBase {
     this.cachedReadings = {} as Record<ReadingType, SDBReading[]>;
   }
   abstract getReadingAsync(): Promise<void>;
+  protected abstract updateCachedReadings(): void;
   protected abstract loadCachedReadingsFromDatabaseAsync(
     count: number,
   ): Promise<void>;
 
-  addLastReadingToDatabaseAsync = async (): Promise<void> =>
+  addLastReadingToDatabaseAsync = async (): Promise<void> => {
+    this.updateCachedReadings();
     await this.sprootDB.addSensorReadingAsync(this);
+  };
 }
 
 abstract class DisposableSensorBase extends SensorBase {

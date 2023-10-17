@@ -39,6 +39,10 @@ class DS18B20 extends SensorBase {
     }
   }
 
+  protected override updateCachedReadings(): void {
+    throw new Error("Method not implemented.");
+  }
+
   protected override loadCachedReadingsFromDatabaseAsync(): Promise<void> {
     throw new Error("Method not implemented.");
   }
