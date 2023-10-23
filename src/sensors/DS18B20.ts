@@ -15,9 +15,11 @@ class DS18B20 extends SensorBase {
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
     logger: winston.Logger,
+
   ) {
     super(sdbSensor, sprootDB, logger);
     this.units[ReadingType.temperature] = "°C";
+    this.cachedReadings[ReadingType.temperature] = [];
   }
 
   override async getReadingAsync(): Promise<void> {
@@ -80,9 +82,6 @@ class DS18B20 extends SensorBase {
           unit: sdbReading.unit,
           logTime: sdbReading.logTime,
         } as SDBReading;
-        if (!this.cachedReadings[sdbReading.metric as ReadingType]) {
-          this.cachedReadings[sdbReading.metric as ReadingType] = [];
-        }
         this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
         loadedReadingsCount = loadedReadingsCount + 1;
       }

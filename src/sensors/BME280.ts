@@ -20,6 +20,9 @@ class BME280 extends DisposableSensorBase {
     this.units[ReadingType.temperature] = "°C";
     this.units[ReadingType.humidity] = "%rH";
     this.units[ReadingType.pressure] = "hPa";
+    this.cachedReadings[ReadingType.temperature] = [];
+    this.cachedReadings[ReadingType.humidity] = [];
+    this.cachedReadings[ReadingType.pressure] = [];
   }
 
   async initAsync(): Promise<BME280 | null> {
@@ -116,9 +119,6 @@ class BME280 extends DisposableSensorBase {
           unit: sdbReading.unit,
           logTime: sdbReading.logTime,
         } as SDBReading;
-        if (!this.cachedReadings[sdbReading.metric as ReadingType]) {
-          this.cachedReadings[sdbReading.metric as ReadingType] = [];
-        }
         this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
         loadedReadingsCount[sdbReading.metric as ReadingType] =
           (loadedReadingsCount[sdbReading.metric as ReadingType] ?? 0) + 1;
