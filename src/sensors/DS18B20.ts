@@ -1,3 +1,4 @@
+import "dotenv/config";
 import ds18b20 from "ds18b20";
 import util from "util";
 import winston from "winston";
@@ -95,7 +96,9 @@ class DS18B20 extends SensorBase {
         }`,
       );
     } catch (err) {
-      this.logger.error(`Failed to load cached readings for sensor ${this.id}`);
+      this.logger.error(`Failed to load cached readings for sensor {DS18B20, id: ${
+        this.id
+      }}`);
       this.logger.error(err);
     }
   }
