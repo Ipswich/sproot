@@ -15,11 +15,22 @@ class DS18B20 extends SensorBase {
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
     logger: winston.Logger,
-
   ) {
     super(sdbSensor, sprootDB, logger);
     this.units[ReadingType.temperature] = "°C";
     this.cachedReadings[ReadingType.temperature] = [];
+  }
+
+  async initAsync(): Promise<DS18B20 | null> {
+    try {
+      await this.loadCachedReadingsFromDatabaseAsync(
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
+      );
+    } catch (err) {
+      this.#lastError = handleError(err as Error, this.logger);
+      return null;
+    }
+    return this;
   }
 
   override async getReadingAsync(): Promise<void> {
@@ -87,16 +98,12 @@ class DS18B20 extends SensorBase {
       }
 
       this.logger.info(
-        `Loaded cached readings for {DS18B20, id: ${
-          this.id
-        }}. Readings loaded: temperature: ${
-          loadedReadingsCount
-        }`,
+        `Loaded cached readings for {DS18B20, id: ${this.id}}. Readings loaded: temperature: ${loadedReadingsCount}`,
       );
     } catch (err) {
-      this.logger.error(`Failed to load cached readings for sensor {DS18B20, id: ${
-        this.id
-      }}`);
+      this.logger.error(
+        `Failed to load cached readings for sensor {DS18B20, id: ${this.id}}`,
+      );
       this.logger.error("DS18B20: " + err);
     }
   }
