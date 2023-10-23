@@ -69,7 +69,7 @@ class DS18B20 extends SensorBase {
       }
     } catch (err) {
       this.logger.error(
-        `Failed to update cache readings for sensor ${this.id}`,
+        `Failed to update cached readings for sensor ${this.id}`,
       );
       this.logger.error("DS18B20: " + err);
     }
