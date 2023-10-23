@@ -134,8 +134,8 @@ class BME280 extends DisposableSensorBase {
         }, pressure: ${loadedReadingsCount[ReadingType.pressure] ?? 0}`,
       );
     } catch (err) {
-      this.logger.error(`Failed to load cached readings for sensor ${this.id}`);
-      this.logger.error("DS18B20:" + err);
+      this.logger.error(`Failed to load cached readings for sensor {BME280, id:${this.id}}`);
+      this.logger.error("BME280: " + err);
     }
   }
 }

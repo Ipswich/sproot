@@ -65,7 +65,7 @@ class DS18B20 extends SensorBase {
   protected override async loadCachedReadingsFromDatabaseAsync(
     count: number,
   ): Promise<void> {
-    const loadedReadingsCount = {} as Record<string, number>;
+    let loadedReadingsCount = 0;
     try {
       //Fill cached readings with readings from database
       const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
@@ -84,15 +84,14 @@ class DS18B20 extends SensorBase {
           this.cachedReadings[sdbReading.metric as ReadingType] = [];
         }
         this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
-        loadedReadingsCount[sdbReading.metric as ReadingType] =
-          (loadedReadingsCount[sdbReading.metric as ReadingType] ?? 0) + 1;
+        loadedReadingsCount = loadedReadingsCount + 1;
       }
 
       this.logger.info(
         `Loaded cached readings for {DS18B20, id: ${
           this.id
         }}. Readings loaded: temperature: ${
-          loadedReadingsCount[ReadingType.temperature] ?? 0
+          loadedReadingsCount
         }`,
       );
     } catch (err) {
