@@ -94,7 +94,7 @@ class BME280 extends DisposableSensorBase {
       this.logger.error(
         `Failed to update cache readings for sensor ${this.id}`,
       );
-      this.logger.error(err);
+      this.logger.error("BME280: " + err);
     }
   }
 
@@ -135,7 +135,7 @@ class BME280 extends DisposableSensorBase {
       );
     } catch (err) {
       this.logger.error(`Failed to load cached readings for sensor ${this.id}`);
-      this.logger.error(err);
+      this.logger.error("DS18B20:" + err);
     }
   }
 }
