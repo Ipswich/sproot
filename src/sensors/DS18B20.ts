@@ -124,7 +124,7 @@ function handleError(
         "Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.",
       );
     } else {
-      logger.error(err);
+      logger.error("DS18B20: " + err);
     }
   }
   return err;

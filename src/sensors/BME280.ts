@@ -148,7 +148,7 @@ function handleError(err: Error, logger: winston.Logger) {
         "Unable to connect to I2C driver. Please ensure your system has I2C support enabled.",
       );
     } else {
-      logger.error(err);
+      logger.error("BME280: " + err);
     }
   }
 }
