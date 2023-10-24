@@ -105,9 +105,7 @@ const app = express();
 
   const server = app.listen(process.env["APPLICATION_PORT"]!, () => {
     logger.info(
-      `sproot is now listening on port ${process.env[
-        "APPLICATION_PORT"
-      ]}!`,
+      `sproot is now listening on port ${process.env["APPLICATION_PORT"]}!`,
     );
   });
 
