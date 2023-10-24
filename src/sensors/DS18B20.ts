@@ -67,6 +67,7 @@ class DS18B20 extends SensorBase {
       ) {
         this.cachedReadings[ReadingType.temperature].shift();
       }
+      this.logger.info(`Updated cached readings for {DS18B20, id: ${this.id}}. Readings updated - temperature: ${this.cachedReadings[ReadingType.temperature].length}`)
     } catch (err) {
       this.logger.error(
         `Failed to update cached readings for {DS18B20, id: ${this.id}}`,
@@ -99,7 +100,7 @@ class DS18B20 extends SensorBase {
       this.logger.info(
         `Loaded cached readings for {DS18B20, id: ${
           this.id
-        }}. Readings loaded: temperature: ${
+        }}. Readings loaded - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }`,
       );

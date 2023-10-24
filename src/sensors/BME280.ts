@@ -93,6 +93,15 @@ class BME280 extends DisposableSensorBase {
       ) {
         this.cachedReadings[ReadingType.pressure].shift();
       }
+      this.logger.info(
+        `Updated cached readings for {BME280, id: ${
+          this.id
+        }}. Readings updated - temperature: ${
+          this.cachedReadings[ReadingType.temperature].length
+        }, humidity: ${
+          this.cachedReadings[ReadingType.humidity].length
+        }, pressure: ${this.cachedReadings[ReadingType.pressure].length}`,
+      );
     } catch (err) {
       this.logger.error(
         `Failed to update cache readings for {BME280, id: ${this.id}}`,
@@ -130,7 +139,7 @@ class BME280 extends DisposableSensorBase {
       this.logger.info(
         `Loaded cached readings for {BME280, id: ${
           this.id
-        }}. Readings loaded: temperature: ${
+        }}. Readings loaded - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }, humidity: ${
           this.cachedReadings[ReadingType.humidity].length
