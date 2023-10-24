@@ -4,7 +4,7 @@ import { ReadingType } from "../../sensors/types/SensorBase";
 interface SDBReading extends RowDataPacket {
   metric: ReadingType;
   data: string;
-  unit: string;
+  units: string;
   logTime: string;
 }
 

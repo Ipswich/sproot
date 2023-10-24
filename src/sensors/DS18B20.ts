@@ -44,7 +44,7 @@ class DS18B20 extends SensorBase {
         this.cachedReadings[ReadingType.temperature].push({
           metric: ReadingType.temperature,
           data: reading,
-          unit: this.units[ReadingType.temperature],
+          units: this.units[ReadingType.temperature],
           logTime: new Date().toUTCString(),
         } as SDBReading);
       }
@@ -58,7 +58,7 @@ class DS18B20 extends SensorBase {
       this.cachedReadings[ReadingType.temperature].push({
         metric: ReadingType.temperature,
         data: this.lastReading[ReadingType.temperature],
-        unit: this.units[ReadingType.temperature],
+        units: this.units[ReadingType.temperature],
         logTime: new Date().toUTCString(),
       } as SDBReading);
       while (
@@ -97,7 +97,7 @@ class DS18B20 extends SensorBase {
         const newReading = {
           metric: sdbReading.metric as ReadingType,
           data: sdbReading.data,
-          unit: sdbReading.unit,
+          units: sdbReading.units,
           logTime: sdbReading.logTime,
         } as SDBReading;
         this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);

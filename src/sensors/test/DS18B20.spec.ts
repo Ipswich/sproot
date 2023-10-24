@@ -104,13 +104,13 @@ describe("DS18B20.ts tests", function () {
         {
           data: "1",
           metric: ReadingType.temperature,
-          unit: "°C",
+          units: "°C",
           logTime: new Date().toISOString(),
         } as SDBReading,
         {
           data: "2",
           metric: ReadingType.temperature,
-          unit: "°C",
+          units: "°C",
           logTime: new Date().toISOString(),
         } as SDBReading,
       ]);
@@ -147,7 +147,7 @@ describe("DS18B20.ts tests", function () {
       {
         data: "1",
         metric: ReadingType.temperature,
-        unit: "°C",
+        units: "°C",
         logTime: new Date().toISOString(),
       } as SDBReading,
     ]);

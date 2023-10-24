@@ -162,4 +162,41 @@ router.delete("/:id", async (req: Request, res: Response) => {
   });
 });
 
+router.get("/:id/readings", async (req: Request, res: Response) => {
+  if (!req.params["id"]) {
+    res.status(404).json({
+      message: "No sensor found with that Id",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  const sensorList = req.app.get("sensorList") as SensorList;
+  try {
+    const id = Number(req.params["id"]);
+    const sensor = sensorList.sensors[id];
+    if (!sensor) {
+      res.status(404).json({
+        message: "No sensor found with that Id",
+        statusCode: 404,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "Sensor readings successfully retrieved",
+      statusCode: 200,
+      readings: sensor?.getCachedReadings(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (e) {
+    res.status(400).json({
+      message: "Failed to retrieve sensor readings, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+});
+
 export default router;

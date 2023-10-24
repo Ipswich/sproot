@@ -59,19 +59,19 @@ class BME280 extends DisposableSensorBase {
       this.cachedReadings[ReadingType.temperature].push({
         metric: ReadingType.temperature,
         data: this.lastReading[ReadingType.temperature],
-        unit: this.units[ReadingType.temperature],
+        units: this.units[ReadingType.temperature],
         logTime: new Date().toUTCString(),
       } as SDBReading);
       this.cachedReadings[ReadingType.humidity].push({
         metric: ReadingType.humidity,
         data: this.lastReading[ReadingType.humidity],
-        unit: this.units[ReadingType.humidity],
+        units: this.units[ReadingType.humidity],
         logTime: new Date().toUTCString(),
       } as SDBReading);
       this.cachedReadings[ReadingType.pressure].push({
         metric: ReadingType.pressure,
         data: this.lastReading[ReadingType.pressure],
-        unit: this.units[ReadingType.pressure],
+        units: this.units[ReadingType.pressure],
         logTime: new Date().toUTCString(),
       } as SDBReading);
 
@@ -128,7 +128,7 @@ class BME280 extends DisposableSensorBase {
         const newReading = {
           metric: sdbReading.metric as ReadingType,
           data: sdbReading.data,
-          unit: sdbReading.unit,
+          units: sdbReading.units,
           logTime: sdbReading.logTime,
         } as SDBReading;
         this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
