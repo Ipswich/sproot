@@ -123,7 +123,7 @@ class SprootDB implements ISprootDB {
     minutes: number = 120,
   ): Promise<SDBReading[]> {
     const [rows] = await this.#connection.execute<SDBReading[]>(
-      `SELECT metric, data, unit, logTime
+      `SELECT metric, data, units, logTime
       FROM sensors s
       JOIN (
         SELECT *
