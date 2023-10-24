@@ -105,7 +105,7 @@ class SprootDB implements ISprootDB {
   async addSensorReadingAsync(sensor: SensorBase): Promise<void> {
     for (const readingType in sensor.lastReading) {
       await this.#connection.execute(
-        "INSERT INTO sensor_data (sensor_id, metric, data, unit, logTime) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO sensor_data (sensor_id, metric, data, units, logTime) VALUES (?, ?, ?, ?, ?)",
         [
           sensor.id,
           readingType,
