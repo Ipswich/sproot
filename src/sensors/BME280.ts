@@ -95,15 +95,18 @@ class BME280 extends DisposableSensorBase {
       }
     } catch (err) {
       this.logger.error(
-        `Failed to update cache readings for sensor ${this.id}`,
+        `Failed to update cache readings for {BME280, id: ${this.id}}`,
       );
       this.logger.error("BME280: " + err);
     }
   }
 
-  public override async loadCachedReadingsFromDatabaseAsync(
+  protected override async loadCachedReadingsFromDatabaseAsync(
     count: number,
   ): Promise<void> {
+    this.cachedReadings[ReadingType.temperature] = [];
+    this.cachedReadings[ReadingType.humidity] = [];
+    this.cachedReadings[ReadingType.pressure] = [];
     const loadedReadingsCount = {} as Record<string, number>;
     try {
       //Fill cached readings with readings from database
@@ -128,10 +131,10 @@ class BME280 extends DisposableSensorBase {
         `Loaded cached readings for {BME280, id: ${
           this.id
         }}. Readings loaded: temperature: ${
-          loadedReadingsCount[ReadingType.temperature] ?? 0
+          this.cachedReadings[ReadingType.temperature].length
         }, humidity: ${
-          loadedReadingsCount[ReadingType.humidity] ?? 0
-        }, pressure: ${loadedReadingsCount[ReadingType.pressure] ?? 0}`,
+          this.cachedReadings[ReadingType.humidity].length
+        }, pressure: ${this.cachedReadings[ReadingType.pressure].length}`,
       );
     } catch (err) {
       this.logger.error(

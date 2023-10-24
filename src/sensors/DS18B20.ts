@@ -69,7 +69,7 @@ class DS18B20 extends SensorBase {
       }
     } catch (err) {
       this.logger.error(
-        `Failed to update cached readings for sensor ${this.id}`,
+        `Failed to update cached readings for {DS18B20, id: ${this.id}}`,
       );
       this.logger.error("DS18B20: " + err);
     }
@@ -78,7 +78,7 @@ class DS18B20 extends SensorBase {
   protected override async loadCachedReadingsFromDatabaseAsync(
     count: number,
   ): Promise<void> {
-    let loadedReadingsCount = 0;
+    this.cachedReadings[ReadingType.temperature] = [];
     try {
       //Fill cached readings with readings from database
       const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
@@ -94,11 +94,14 @@ class DS18B20 extends SensorBase {
           logTime: sdbReading.logTime,
         } as SDBReading;
         this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
-        loadedReadingsCount = loadedReadingsCount + 1;
       }
 
       this.logger.info(
-        `Loaded cached readings for {DS18B20, id: ${this.id}}. Readings loaded: temperature: ${loadedReadingsCount}`,
+        `Loaded cached readings for {DS18B20, id: ${
+          this.id
+        }}. Readings loaded: temperature: ${
+          this.cachedReadings[ReadingType.temperature].length
+        }`,
       );
     } catch (err) {
       this.logger.error(
