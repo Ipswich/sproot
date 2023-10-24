@@ -7,11 +7,14 @@ import { SDBSensor } from "../../database/types/SDBSensor";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
+import { SDBReading } from "../../database/types/SDBReading";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
+const env = process.env;
 
 describe("DS18B20.ts tests", function () {
   this.afterEach(() => {
+    process.env = env;
     sandbox.restore();
   });
 
@@ -85,6 +88,132 @@ describe("DS18B20.ts tests", function () {
     assert.equal(addresses[0], "28-00000");
     assert.equal(addresses[1], "28-00001");
     assert.equal(addresses[2], "28-00002");
+  });
+
+  it("should load cached readings from the database, clearing any old ones", async function () {
+    const mockDS18B20Data = {
+      id: 1,
+      description: "test sensor 1",
+      model: "DS18B20",
+      address: "28-00000",
+    } as SDBSensor;
+    let recordsToLoad = 2;
+    const getSensorReadingsAsyncStub = sandbox
+      .stub(mockSprootDB, "getSensorReadingsAsync")
+      .resolves([
+        {
+          data: "1",
+          metric: ReadingType.temperature,
+          unit: "°C",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+        {
+          data: "2",
+          metric: ReadingType.temperature,
+          unit: "°C",
+          logTime: new Date().toISOString(),
+        } as SDBReading,
+      ]);
+
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+
+    const ds18b20Sensor = await new DS18B20(
+      mockDS18B20Data,
+      mockSprootDB,
+      logger,
+    ).initAsync();
+
+    assert.equal(
+      ds18b20Sensor?.cachedReadings[ReadingType.temperature].length,
+      recordsToLoad,
+    );
+    assert.equal(
+      ds18b20Sensor?.cachedReadings[ReadingType.temperature][0]?.data,
+      "1",
+    );
+    assert.equal(
+      ds18b20Sensor?.cachedReadings[ReadingType.temperature][1]?.data,
+      "2",
+    );
+
+    recordsToLoad = 1;
+    getSensorReadingsAsyncStub.resolves([
+      {
+        data: "1",
+        metric: ReadingType.temperature,
+        unit: "°C",
+        logTime: new Date().toISOString(),
+      } as SDBReading,
+    ]);
+    await ds18b20Sensor?.initAsync();
+    assert.equal(
+      ds18b20Sensor?.cachedReadings[ReadingType.temperature].length,
+      recordsToLoad,
+    );
+    assert.equal(
+      ds18b20Sensor?.cachedReadings[ReadingType.temperature][0]?.data,
+      "1",
+    );
+  });
+
+  it("should update cached readings with the last reading", async () => {
+    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "1";
+    const mockDS18B20Data = {
+      id: 1,
+      description: "test sensor 1",
+      model: "ds18b20",
+      address: "28-00000",
+    } as SDBSensor;
+    let mockReading = {
+      temperature: 21.2,
+    };
+    sandbox
+      .stub(winston, "createLogger")
+      .callsFake(
+        () =>
+          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+    const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, logger);
+    ds18b20Sensor.lastReading[ReadingType.temperature] = String(
+      mockReading.temperature,
+    );
+
+    ds18b20Sensor.addLastReadingToDatabaseAsync();
+
+    assert.equal(
+      ds18b20Sensor.cachedReadings[ReadingType.temperature][0]?.data,
+      String(mockReading.temperature),
+    );
+    assert.equal(
+      ds18b20Sensor.cachedReadings[ReadingType.temperature].length,
+      1,
+    );
+
+    //Add another reading to make sure it gets shifted out
+    mockReading = {
+      temperature: 21.3,
+    };
+    ds18b20Sensor.lastReading[ReadingType.temperature] = String(
+      mockReading.temperature,
+    );
+
+    ds18b20Sensor.addLastReadingToDatabaseAsync();
+
+    assert.equal(
+      ds18b20Sensor.cachedReadings[ReadingType.temperature][0]?.data,
+      String(mockReading.temperature),
+    );
+    assert.equal(
+      ds18b20Sensor.cachedReadings[ReadingType.temperature].length,
+      1,
+    );
   });
 
   it("should log errors on getting addresses and readings, ", async function () {

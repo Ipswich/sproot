@@ -63,6 +63,9 @@ class SensorList {
         try {
           await this.#buildSensorAsync(sensor);
         } catch (err) {
+          this.#logger.error(
+            `Could not build sensor ${sensor.model} ${sensor.id}}`,
+          );
           this.#logger.error(err);
         }
       }
@@ -129,8 +132,14 @@ class SensorList {
             "DS18B20 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        newSensor = new DS18B20(sensor, this.#sprootDB, this.#logger);
-        this.#sensors[sensor.id] = newSensor;
+        newSensor = await new DS18B20(
+          sensor,
+          this.#sprootDB,
+          this.#logger,
+        ).initAsync();
+        if (newSensor) {
+          this.#sensors[sensor.id] = newSensor;
+        }
         break;
 
       default:

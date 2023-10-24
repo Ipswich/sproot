@@ -1,4 +1,5 @@
 import { SDBSensor } from "../../database/types/SDBSensor";
+import { SDBReading } from "../../database/types/SDBReading";
 import { ISprootDB } from "../../database/types/ISprootDB";
 import winston from "winston";
 
@@ -28,6 +29,7 @@ abstract class SensorBase implements ISensorBase {
   sprootDB: ISprootDB;
   logger: winston.Logger;
   readonly units: Record<ReadingType, string>;
+  cachedReadings: Record<ReadingType, SDBReading[]>;
 
   constructor(
     sdbSensor: SDBSensor,
@@ -43,11 +45,18 @@ abstract class SensorBase implements ISensorBase {
     this.sprootDB = sprootDB;
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
+    this.cachedReadings = {} as Record<ReadingType, SDBReading[]>;
   }
   abstract getReadingAsync(): Promise<void>;
+  protected abstract updateCachedReadings(): void;
+  protected abstract loadCachedReadingsFromDatabaseAsync(
+    count: number,
+  ): Promise<void>;
 
-  addLastReadingToDatabaseAsync = async (): Promise<void> =>
+  addLastReadingToDatabaseAsync = async (): Promise<void> => {
+    this.updateCachedReadings();
     await this.sprootDB.addSensorReadingAsync(this);
+  };
 }
 
 abstract class DisposableSensorBase extends SensorBase {

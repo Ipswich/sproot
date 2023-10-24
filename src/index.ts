@@ -104,7 +104,7 @@ const app = express();
   );
 
   const server = app.listen(process.env["APPLICATION_PORT"]!, () => {
-    console.log(
+    logger.info(
       `sproot is listening at http://localhost:${process.env[
         "APPLICATION_PORT"
       ]!}`,
@@ -132,8 +132,8 @@ const app = express();
         // Close database connection
         await sprootDB.disposeAsync();
       } catch (err) {
-        logger.error(err);
         //Dgaf, swallow anything, we're shutting down anyway.
+        logger.error(err);
       } finally {
         // Give everything a hot sec to finish whatever it's up to - call backs really mess with just calling process.exit.
         setTimeout(() => {

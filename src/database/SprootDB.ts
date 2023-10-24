@@ -5,6 +5,7 @@ import { SDBSensor } from "./types/SDBSensor";
 import { SDBOutput } from "./types/SDBOutput";
 import { ISprootDB } from "./types/ISprootDB";
 import { SensorBase, ReadingType } from "../sensors/types/SensorBase";
+import { SDBReading } from "./types/SDBReading";
 
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
@@ -104,15 +105,36 @@ class SprootDB implements ISprootDB {
   async addSensorReadingAsync(sensor: SensorBase): Promise<void> {
     for (const readingType in sensor.lastReading) {
       await this.#connection.execute(
-        "INSERT INTO sensor_data (sensor_id, metric, data, unit) VALUES (?, ?, ?, ?)",
+        "INSERT INTO sensor_data (sensor_id, metric, data, unit, logTime) VALUES (?, ?, ?, ?, ?)",
         [
           sensor.id,
           readingType,
           sensor.lastReading[readingType as ReadingType],
           sensor.units[readingType as ReadingType],
+          sensor.lastReadingTime?.toISOString().slice(0, 19).replace("T", " "),
         ],
       );
     }
+  }
+
+  async getSensorReadingsAsync(
+    sensor: SensorBase,
+    since: Date,
+    minutes: number = 120,
+  ): Promise<SDBReading[]> {
+    const [rows] = await this.#connection.execute<SDBReading[]>(
+      `SELECT metric, data, unit, logTime
+      FROM sensors s
+      JOIN (
+        SELECT *
+        FROM sensor_data
+        WHERE logTime > DATE_SUB(?, INTERVAL ? MINUTE)
+      ) AS d ON s.id=d.sensor_id
+      WHERE sensor_id = ?
+      ORDER BY logTime ASC`,
+      [since.toISOString(), minutes, sensor.id],
+    );
+    return rows;
   }
 
   async getUserAsync(username: string): Promise<SDBUser[]> {
