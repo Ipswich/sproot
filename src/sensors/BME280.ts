@@ -96,7 +96,7 @@ class BME280 extends DisposableSensorBase {
       this.logger.info(
         `Updated cached readings for {BME280, id: ${
           this.id
-        }}. Readings updated - temperature: ${
+        }}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }, humidity: ${
           this.cachedReadings[ReadingType.humidity].length
@@ -139,7 +139,7 @@ class BME280 extends DisposableSensorBase {
       this.logger.info(
         `Loaded cached readings for {BME280, id: ${
           this.id
-        }}. Readings loaded - temperature: ${
+        }}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }, humidity: ${
           this.cachedReadings[ReadingType.humidity].length

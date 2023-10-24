@@ -70,7 +70,7 @@ class DS18B20 extends SensorBase {
       this.logger.info(
         `Updated cached readings for {DS18B20, id: ${
           this.id
-        }}. Readings updated - temperature: ${
+        }}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }`,
       );
@@ -106,7 +106,7 @@ class DS18B20 extends SensorBase {
       this.logger.info(
         `Loaded cached readings for {DS18B20, id: ${
           this.id
-        }}. Readings loaded - temperature: ${
+        }}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }`,
       );
