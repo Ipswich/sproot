@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
-import { SensorList } from "../../sensors/SensorList";
 import { ISprootDB } from "../../database/types/ISprootDB";
+import { ReadingType } from "../../sensors/types/SensorBase";
+import { SensorList } from "../../sensors/SensorList";
 import { SDBSensor } from "../../database/types/SDBSensor";
 import winston from "winston";
 
@@ -201,23 +202,31 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
       return;
     }
     logger.http("GET /api/v1/sensors/:id/readings - 200, Success");
-    if (offset && limit) {
+    if (!!offset && !!limit) {
+      const readings = sensor.getCachedReadings(offset, limit)
+      let moreReadingsAvailable = false;
+      for (const key in readings) {
+        if (readings[key as ReadingType]!.length === limit) {
+          moreReadingsAvailable = true;
+          break;
+        }
+      }
       res.status(200).json({
         message: "Sensor readings successfully retrieved",
         statusCode: 200,
-        readings: sensor?.getCachedReadings(offset, limit),
-        timestamp: new Date().toISOString(),
-        // TODO ADD PAGINATION DATA
+        readings,
+        moreReadingsAvailable,
+        timestamp: new Date().toISOString()
       });
       return;
     }
     res.status(200).json({
       message: "Sensor readings successfully retrieved",
       statusCode: 200,
-      readings: sensor?.getCachedReadings(),
+      readings: sensor.getCachedReadings(),
       timestamp: new Date().toISOString(),
-      // TODO ADD PAGINATION DATA
     });
+    return;
   } catch (e) {
     logger.http("GET /api/v1/sensors/:id/readings - 400, Invalid request");
     res.status(400).json({
@@ -225,7 +234,6 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
       statusCode: 400,
       timestamp: new Date().toISOString(),
     });
-    return;
   }
 });
 
