@@ -27,10 +27,7 @@ describe("DS18B20.ts tests", function () {
     } as SDBSensor;
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, logger);
@@ -52,10 +49,7 @@ describe("DS18B20.ts tests", function () {
     } as SDBSensor;
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const mockReading = 21.2;
     sandbox.stub(ds18b20, "temperatureSync").returns(mockReading);
@@ -63,23 +57,15 @@ describe("DS18B20.ts tests", function () {
     const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, logger);
     await ds18b20Sensor.getReadingAsync();
 
-    assert.equal(
-      ds18b20Sensor.lastReading[ReadingType.temperature],
-      String(mockReading),
-    );
+    assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(mockReading));
   });
 
   it("should get all DS18B20 addresses", async function () {
-    sandbox
-      .stub(ds18b20, "sensors")
-      .yields(null, ["28-00000", "28-00001", "28-00002"]);
+    sandbox.stub(ds18b20, "sensors").yields(null, ["28-00000", "28-00001", "28-00002"]);
 
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const addresses = await DS18B20.getAddressesAsync(logger);
@@ -117,30 +103,14 @@ describe("DS18B20.ts tests", function () {
 
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const ds18b20Sensor = await new DS18B20(
-      mockDS18B20Data,
-      mockSprootDB,
-      logger,
-    ).initAsync();
+    const ds18b20Sensor = await new DS18B20(mockDS18B20Data, mockSprootDB, logger).initAsync();
 
-    assert.equal(
-      ds18b20Sensor?.cachedReadings[ReadingType.temperature].length,
-      recordsToLoad,
-    );
-    assert.equal(
-      ds18b20Sensor?.cachedReadings[ReadingType.temperature][0]?.data,
-      "1",
-    );
-    assert.equal(
-      ds18b20Sensor?.cachedReadings[ReadingType.temperature][1]?.data,
-      "2",
-    );
+    assert.equal(ds18b20Sensor?.cachedReadings[ReadingType.temperature].length, recordsToLoad);
+    assert.equal(ds18b20Sensor?.cachedReadings[ReadingType.temperature][0]?.data, "1");
+    assert.equal(ds18b20Sensor?.cachedReadings[ReadingType.temperature][1]?.data, "2");
 
     recordsToLoad = 1;
     getSensorReadingsAsyncStub.resolves([
@@ -152,14 +122,8 @@ describe("DS18B20.ts tests", function () {
       } as SDBReading,
     ]);
     await ds18b20Sensor?.initAsync();
-    assert.equal(
-      ds18b20Sensor?.cachedReadings[ReadingType.temperature].length,
-      recordsToLoad,
-    );
-    assert.equal(
-      ds18b20Sensor?.cachedReadings[ReadingType.temperature][0]?.data,
-      "1",
-    );
+    assert.equal(ds18b20Sensor?.cachedReadings[ReadingType.temperature].length, recordsToLoad);
+    assert.equal(ds18b20Sensor?.cachedReadings[ReadingType.temperature][0]?.data, "1");
   });
 
   it("should update cached readings with the last reading", async () => {
@@ -175,15 +139,10 @@ describe("DS18B20.ts tests", function () {
     };
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, logger);
-    ds18b20Sensor.lastReading[ReadingType.temperature] = String(
-      mockReading.temperature,
-    );
+    ds18b20Sensor.lastReading[ReadingType.temperature] = String(mockReading.temperature);
 
     ds18b20Sensor.addLastReadingToDatabaseAsync();
 
@@ -191,18 +150,13 @@ describe("DS18B20.ts tests", function () {
       ds18b20Sensor.cachedReadings[ReadingType.temperature][0]?.data,
       String(mockReading.temperature),
     );
-    assert.equal(
-      ds18b20Sensor.cachedReadings[ReadingType.temperature].length,
-      1,
-    );
+    assert.equal(ds18b20Sensor.cachedReadings[ReadingType.temperature].length, 1);
 
     //Add another reading to make sure it gets shifted out
     mockReading = {
       temperature: 21.3,
     };
-    ds18b20Sensor.lastReading[ReadingType.temperature] = String(
-      mockReading.temperature,
-    );
+    ds18b20Sensor.lastReading[ReadingType.temperature] = String(mockReading.temperature);
 
     ds18b20Sensor.addLastReadingToDatabaseAsync();
 
@@ -210,10 +164,7 @@ describe("DS18B20.ts tests", function () {
       ds18b20Sensor.cachedReadings[ReadingType.temperature][0]?.data,
       String(mockReading.temperature),
     );
-    assert.equal(
-      ds18b20Sensor.cachedReadings[ReadingType.temperature].length,
-      1,
-    );
+    assert.equal(ds18b20Sensor.cachedReadings[ReadingType.temperature].length, 1);
   });
 
   it("should log errors on getting addresses and readings, ", async function () {
@@ -228,10 +179,7 @@ describe("DS18B20.ts tests", function () {
 
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     await DS18B20.getAddressesAsync(logger);

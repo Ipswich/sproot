@@ -15,9 +15,7 @@ class SprootDB implements ISprootDB {
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    const [rows] = await this.#connection.execute<SDBSensor[]>(
-      "SELECT * FROM sensors",
-    );
+    const [rows] = await this.#connection.execute<SDBSensor[]>("SELECT * FROM sensors");
     return rows;
   }
 
@@ -55,9 +53,7 @@ class SprootDB implements ISprootDB {
   }
 
   async getOutputsAsync(): Promise<SDBOutput[]> {
-    const [rows] = await this.#connection.execute<SDBOutput[]>(
-      "SELECT * FROM outputs",
-    );
+    const [rows] = await this.#connection.execute<SDBOutput[]>("SELECT * FROM outputs");
     return rows;
   }
 
@@ -146,10 +142,11 @@ class SprootDB implements ISprootDB {
   }
 
   async addUserAsync(credentials: SDBUser): Promise<void> {
-    await this.#connection.execute(
-      "INSERT INTO users (username, hash, email) VALUES (?, ?, ?)",
-      [credentials.username, credentials.hash, credentials.email],
-    );
+    await this.#connection.execute("INSERT INTO users (username, hash, email) VALUES (?, ?, ?)", [
+      credentials.username,
+      credentials.hash,
+      credentials.email,
+    ]);
   }
 
   async disposeAsync(): Promise<void> {

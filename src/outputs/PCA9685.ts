@@ -1,11 +1,6 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
-import {
-  IOutputBase,
-  OutputBase,
-  ControlMode,
-  IState,
-} from "./types/OutputBase";
+import { IOutputBase, OutputBase, ControlMode, IState } from "./types/OutputBase";
 import { SDBOutput } from "../database/types/SDBOutput";
 import { ISprootDB } from "../database/types/ISprootDB";
 import winston from "winston";
@@ -42,9 +37,7 @@ class PCA9685 {
 
     //Update old ones
     outputsFromDatabase.forEach(async (output) => {
-      const key = Object.keys(this.#outputs).find(
-        (key) => key === output.id.toString(),
-      );
+      const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
       if (key) {
         this.#outputs[key]!.description = output.description;
         this.#outputs[key]!.isPwm = output.isPwm;
@@ -57,11 +50,7 @@ class PCA9685 {
       (output) => !Object.keys(this.#outputs).includes(String(output.id)),
     );
     for (const output of filteredOutputsFromDatabase) {
-      if (
-        output.pin >= 0 &&
-        output.pin <= 15 &&
-        !this.#usedPins.includes(output.pin)
-      ) {
+      if (output.pin >= 0 && output.pin <= 15 && !this.#usedPins.includes(output.pin)) {
         this.#outputs[output.id] = new PCA9685Output(
           this.#pca9685,
           output,
@@ -70,22 +59,15 @@ class PCA9685 {
         );
         this.#usedPins.push(output.pin);
       } else {
-        throw new UsedOrInvalidPinError(
-          `Pin ${output.pin} is already in use or is invalid`,
-        );
+        throw new UsedOrInvalidPinError(`Pin ${output.pin} is already in use or is invalid`);
       }
     }
 
     //Remove deleted ones
-    const outputIdsFromDatabase = outputsFromDatabase.map((output) =>
-      output.id.toString(),
-    );
+    const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
     for (const key in this.#outputs) {
       if (!outputIdsFromDatabase.includes(key)) {
-        this.#usedPins.splice(
-          this.#usedPins.indexOf(this.#outputs[key]!.pin),
-          1,
-        );
+        this.#usedPins.splice(this.#usedPins.indexOf(this.#outputs[key]!.pin), 1);
         this.#outputs[key]?.dispose();
         delete this.#outputs[key];
       }
@@ -130,17 +112,12 @@ class PCA9685 {
 
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
     this.#outputs[outputId]?.updateControlMode(controlMode);
-  setNewOutputState = (
-    outputId: string,
-    newState: PCA9685State,
-    targetControlMode: ControlMode,
-  ) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
+  setNewOutputState = (outputId: string, newState: PCA9685State, targetControlMode: ControlMode) =>
+    this.#outputs[outputId]?.setNewState(newState, targetControlMode);
   executeOutputState = (outputId?: string) =>
     outputId
       ? this.#outputs[outputId]?.executeState()
-      : Object.keys(this.#outputs).forEach(
-          (key) => this.#outputs[key]?.executeState(),
-        );
+      : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => this.#pca9685?.dispose();
 }
 
@@ -184,8 +161,7 @@ class PCA9685Output extends OutputBase {
     if (value < 0 || value > 100) {
       throw new OutputValueOutOfRange("PWM value must be between 0 and 100");
     }
-    const calculatedOutputValue =
-      (this.isInvertedPwm ? 100 - value : value) / 100;
+    const calculatedOutputValue = (this.isInvertedPwm ? 100 - value : value) / 100;
     this.pca9685.setDutyCycle(this.pin, calculatedOutputValue);
   }
 }

@@ -11,11 +11,7 @@ import { SensorBase, ReadingType } from "./types/SensorBase";
 let lastStaticError: Error | undefined = undefined;
 class DS18B20 extends SensorBase {
   #lastError: Error | undefined;
-  constructor(
-    sdbSensor: SDBSensor,
-    sprootDB: ISprootDB,
-    logger: winston.Logger,
-  ) {
+  constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     super(sdbSensor, sprootDB, logger);
     this.units[ReadingType.temperature] = "°C";
     this.cachedReadings[ReadingType.temperature] = [];
@@ -68,31 +64,21 @@ class DS18B20 extends SensorBase {
         this.cachedReadings[ReadingType.temperature].shift();
       }
       this.logger.info(
-        `Updated cached readings for {DS18B20, id: ${
-          this.id
-        }}. Cache Size - temperature: ${
+        `Updated cached readings for {DS18B20, id: ${this.id}}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }`,
       );
     } catch (err) {
-      this.logger.error(
-        `Failed to update cached readings for {DS18B20, id: ${this.id}}`,
-      );
+      this.logger.error(`Failed to update cached readings for {DS18B20, id: ${this.id}}`);
       this.logger.error("DS18B20: " + err);
     }
   }
 
-  protected override async loadCachedReadingsFromDatabaseAsync(
-    count: number,
-  ): Promise<void> {
+  protected override async loadCachedReadingsFromDatabaseAsync(count: number): Promise<void> {
     this.cachedReadings[ReadingType.temperature] = [];
     try {
       //Fill cached readings with readings from database
-      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
-        this,
-        new Date(),
-        count,
-      );
+      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), count);
       for (const sdbReading of sdbReadings) {
         const newReading = {
           metric: sdbReading.metric as ReadingType,
@@ -104,16 +90,12 @@ class DS18B20 extends SensorBase {
       }
 
       this.logger.info(
-        `Loaded cached readings for {DS18B20, id: ${
-          this.id
-        }}. Cache Size - temperature: ${
+        `Loaded cached readings for {DS18B20, id: ${this.id}}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
         }`,
       );
     } catch (err) {
-      this.logger.error(
-        `Failed to load cached readings for sensor {DS18B20, id: ${this.id}}`,
-      );
+      this.logger.error(`Failed to load cached readings for sensor {DS18B20, id: ${this.id}}`);
       this.logger.error("DS18B20: " + err);
     }
   }
@@ -128,11 +110,7 @@ class DS18B20 extends SensorBase {
   }
 }
 
-function handleError(
-  err: Error,
-  logger: winston.Logger,
-  lastError?: Error,
-): Error {
+function handleError(err: Error, logger: winston.Logger, lastError?: Error): Error {
   if (err.message !== lastError?.message) {
     lastError = err;
     if (err.message.includes("ENOENT: no such file or directory, open ")) {

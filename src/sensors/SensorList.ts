@@ -1,10 +1,6 @@
 import { BME280 } from "./BME280";
 import { DS18B20 } from "./DS18B20";
-import {
-  DisposableSensorBase,
-  ISensorBase,
-  SensorBase,
-} from "./types/SensorBase";
+import { DisposableSensorBase, ISensorBase, SensorBase } from "./types/SensorBase";
 import { SDBSensor } from "../database/types/SDBSensor";
 import { ISprootDB } from "../database/types/ISprootDB";
 import winston from "winston";
@@ -26,15 +22,8 @@ class SensorList {
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const {
-        id,
-        description,
-        model,
-        address,
-        lastReading,
-        lastReadingTime,
-        units,
-      } = this.#sensors[key] as ISensorBase;
+      const { id, description, model, address, lastReading, lastReadingTime, units } = this
+        .#sensors[key] as ISensorBase;
       cleanObject[key] = {
         id,
         description,
@@ -52,9 +41,7 @@ class SensorList {
     await this.#addUnreconizedDS18B20sToSDBAsync();
     const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
     for (const sensor of sensorsFromDatabase) {
-      const key = Object.keys(this.#sensors).find(
-        (key) => key === sensor.id.toString(),
-      );
+      const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
         //Update if it exists
         this.#sensors[key]!.description = sensor.description;
@@ -63,18 +50,14 @@ class SensorList {
         try {
           await this.#buildSensorAsync(sensor);
         } catch (err) {
-          this.#logger.error(
-            `Could not build sensor ${sensor.model} ${sensor.id}}`,
-          );
+          this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}`);
           this.#logger.error(err);
         }
       }
     }
 
     //Delete ones that don't exist
-    const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) =>
-      sensor.id.toString(),
-    );
+    const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
     for (const key in this.#sensors) {
       if (!sensorIdsFromDatabase.includes(key)) {
         delete this.#sensors[key];
@@ -83,21 +66,13 @@ class SensorList {
   }
 
   addReadingsToDatabaseAsync = async () =>
-    this.#touchAllSensorsAsync(
-      async (sensor) => await sensor.addLastReadingToDatabaseAsync(),
-    );
+    this.#touchAllSensorsAsync(async (sensor) => await sensor.addLastReadingToDatabaseAsync());
   disposeAsync = async () =>
-    this.#touchAllSensorsAsync(
-      async (sensor) => await this.#disposeSensorAsync(sensor),
-    );
+    this.#touchAllSensorsAsync(async (sensor) => await this.#disposeSensorAsync(sensor));
   getReadingsAsync = async () =>
-    this.#touchAllSensorsAsync(
-      async (sensor) => await sensor.getReadingAsync(),
-    );
+    this.#touchAllSensorsAsync(async (sensor) => await sensor.getReadingAsync());
 
-  async #touchAllSensorsAsync(
-    fn: (arg0: SensorBase) => Promise<void>,
-  ): Promise<void> {
+  async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     for (const key in this.#sensors) {
       try {
         await fn(this.#sensors[key] as SensorBase);
@@ -116,11 +91,7 @@ class SensorList {
             "BME280 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        newSensor = await new BME280(
-          sensor,
-          this.#sprootDB,
-          this.#logger,
-        ).initAsync();
+        newSensor = await new BME280(sensor, this.#sprootDB, this.#logger).initAsync();
         if (newSensor) {
           this.#sensors[sensor.id] = newSensor;
         }
@@ -132,20 +103,14 @@ class SensorList {
             "DS18B20 sensor address cannot be null! Sensor could not be added.",
           );
         }
-        newSensor = await new DS18B20(
-          sensor,
-          this.#sprootDB,
-          this.#logger,
-        ).initAsync();
+        newSensor = await new DS18B20(sensor, this.#sprootDB, this.#logger).initAsync();
         if (newSensor) {
           this.#sensors[sensor.id] = newSensor;
         }
         break;
 
       default:
-        throw new BuildSensorError(
-          `Unrecognized sensor model: ${sensor.model}`,
-        );
+        throw new BuildSensorError(`Unrecognized sensor model: ${sensor.model}`);
     }
   }
 

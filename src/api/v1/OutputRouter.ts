@@ -78,9 +78,7 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.get("/:id", async (req: Request, res: Response) => {
-  const result = (req.app.get("outputList") as OutputList)?.outputData[
-    String(req.params["id"])
-  ];
+  const result = (req.app.get("outputList") as OutputList)?.outputData[String(req.params["id"])];
   if (!result) {
     res.status(404).json({
       message: "No output found with that Id",
@@ -206,9 +204,7 @@ router.post("/:id/control-mode", async (req: Request, res: Response) => {
       });
       return;
   }
-  (req.app.get("outputList") as OutputList).executeOutputState(
-    String(req.params["id"]),
-  );
+  (req.app.get("outputList") as OutputList).executeOutputState(String(req.params["id"]));
   res.status(200).json({
     message: "Control mode successfully updated",
     statusCode: 200,
@@ -219,22 +215,14 @@ router.post("/:id/control-mode", async (req: Request, res: Response) => {
 router.post("/:id/manual-state", async (req: Request, res: Response) => {
   const outputList = req.app.get("outputList") as OutputList;
   let suggestion = "Value must be a number between 0 and 100.";
-  if (
-    typeof req.body.value == "number" &&
-    req.body.value >= 0 &&
-    req.body.value <= 100
-  ) {
+  if (typeof req.body.value == "number" && req.body.value >= 0 && req.body.value <= 100) {
     if (outputList.outputs[String(req.params["id"])]?.isPwm == false) {
       suggestion = "Output is not a PWM output, value must be 0 or 100.";
     } else {
       const state = {
         value: req.body.value,
       } as IState;
-      outputList.setNewOutputState(
-        String(req.params["id"]),
-        state,
-        ControlMode.manual,
-      );
+      outputList.setNewOutputState(String(req.params["id"]), state, ControlMode.manual);
       outputList.executeOutputState(String(req.params["id"]));
 
       res.status(200).json({

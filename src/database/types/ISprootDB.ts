@@ -12,11 +12,7 @@ interface ISprootDB {
   updateSensorAsync(sensor: SDBSensor): Promise<void>;
   deleteSensorAsync(id: number): Promise<void>;
   addSensorReadingAsync(sensor: SensorBase): Promise<void>;
-  getSensorReadingsAsync(
-    sensor: SensorBase,
-    since: Date,
-    minutes?: number,
-  ): Promise<SDBReading[]>;
+  getSensorReadingsAsync(sensor: SensorBase, since: Date, minutes?: number): Promise<SDBReading[]>;
   getOutputsAsync(): Promise<SDBOutput[]>;
   getOutputAsync(id: number): Promise<SDBOutput[]>;
   addOutputAsync(output: SDBOutput): Promise<void>;

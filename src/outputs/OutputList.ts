@@ -1,11 +1,6 @@
 import { PCA9685 } from "./PCA9685";
 import { ISprootDB } from "../database/types/ISprootDB";
-import {
-  OutputBase,
-  IOutputBase,
-  IState,
-  ControlMode,
-} from "./types/OutputBase";
+import { OutputBase, IOutputBase, IState, ControlMode } from "./types/OutputBase";
 import winston from "winston";
 
 class OutputList {
@@ -60,17 +55,12 @@ class OutputList {
 
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
     this.#outputs[outputId]?.updateControlMode(controlMode);
-  setNewOutputState = (
-    outputId: string,
-    newState: IState,
-    targetControlMode: ControlMode,
-  ) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
+  setNewOutputState = (outputId: string, newState: IState, targetControlMode: ControlMode) =>
+    this.#outputs[outputId]?.setNewState(newState, targetControlMode);
   executeOutputState = (outputId?: string) =>
     outputId
       ? this.#outputs[outputId]?.executeState()
-      : Object.keys(this.#outputs).forEach(
-          (key) => this.#outputs[key]?.executeState(),
-        );
+      : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => {
     for (const key in this.#outputs) {
       this.#outputs[key]?.dispose();
@@ -88,9 +78,7 @@ class OutputList {
 
     //Update old ones
     for (const output of outputsFromDatabase) {
-      const key = Object.keys(this.#outputs).find(
-        (key) => key === output.id.toString(),
-      );
+      const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
       if (key) {
         this.#outputs[key]!.description = output.description;
         this.#outputs[key]!.isPwm = output.isPwm;
@@ -115,9 +103,7 @@ class OutputList {
           }
           try {
             const pca9685Outputs = (
-              await this.#pca9685Record[
-                output.address
-              ]?.initializeOrRegenerateAsync()
+              await this.#pca9685Record[output.address]?.initializeOrRegenerateAsync()
             )?.outputs;
             for (const key in pca9685Outputs) {
               this.#outputs[key] = pca9685Outputs[key]!;
@@ -131,9 +117,7 @@ class OutputList {
     }
 
     //Remove deleted ones
-    const outputIdsFromDatabase = outputsFromDatabase.map((output) =>
-      output.id.toString(),
-    );
+    const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
     for (const key in this.#outputs) {
       if (!outputIdsFromDatabase.includes(key)) {
         this.#outputs[key]?.dispose();
@@ -141,17 +125,10 @@ class OutputList {
       }
     }
     for (const key in this.#usedAddresses) {
-      if (
-        !outputsFromDatabase.find(
-          (output) => output.address === this.#usedAddresses[key],
-        )
-      ) {
+      if (!outputsFromDatabase.find((output) => output.address === this.#usedAddresses[key])) {
         this.#pca9685Record[this.#usedAddresses[key]!]?.dispose();
         delete this.#pca9685Record[this.#usedAddresses[key]!];
-        this.#usedAddresses.splice(
-          this.#usedAddresses.indexOf(this.#usedAddresses[key]!),
-          1,
-        );
+        this.#usedAddresses.splice(this.#usedAddresses.indexOf(this.#usedAddresses[key]!), 1);
       }
     }
   }

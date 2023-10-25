@@ -21,44 +21,34 @@ describe("SensorList.ts tests", function () {
   });
 
   it("should create, update, and delete sensors, adding a DS18B20 to MockSprootDB", async function () {
-    const getSensorsAsyncStub = sandbox
-      .stub(MockSprootDB.prototype, "getSensorsAsync")
-      .resolves([
-        {
-          id: 1,
-          description: "test sensor 1",
-          model: "BME280",
-          address: "0x76",
-        } as SDBSensor,
-        {
-          id: 2,
-          description: "test sensor 2",
-          model: "DS18B20",
-          address: "28-00000",
-        } as SDBSensor,
-        {
-          id: 3,
-          description: "test sensor 3",
-          model: "DS18B20",
-          address: "28-00001",
-        } as SDBSensor,
-      ]);
+    const getSensorsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
+      {
+        id: 1,
+        description: "test sensor 1",
+        model: "BME280",
+        address: "0x76",
+      } as SDBSensor,
+      {
+        id: 2,
+        description: "test sensor 2",
+        model: "DS18B20",
+        address: "28-00000",
+      } as SDBSensor,
+      {
+        id: 3,
+        description: "test sensor 3",
+        model: "DS18B20",
+        address: "28-00001",
+      } as SDBSensor,
+    ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
-      .resolves([
-        { address: "28-00000" } as SDBSensor,
-        { address: "28-00001" } as SDBSensor,
-      ]);
-    sandbox
-      .stub(DS18B20, "getAddressesAsync")
-      .resolves(["28-00000", "28-00001", "28-00002"]);
+      .resolves([{ address: "28-00000" } as SDBSensor, { address: "28-00001" } as SDBSensor]);
+    sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
     sandbox.stub(BME280.prototype, "initAsync").resolves({} as BME280);
     const addSensorSpy = sandbox.spy(mockSprootDB, "addSensorAsync");
 
@@ -105,10 +95,7 @@ describe("SensorList.ts tests", function () {
     ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
@@ -149,17 +136,12 @@ describe("SensorList.ts tests", function () {
     ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor]);
-    sandbox
-      .stub(bme280, "open")
-      .resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
+    sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox
       .stub(BME280.prototype, "initAsync")
@@ -192,10 +174,7 @@ describe("SensorList.ts tests", function () {
     ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
@@ -205,24 +184,15 @@ describe("SensorList.ts tests", function () {
     sandbox
       .stub(BME280.prototype, "initAsync")
       .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
-    const getDS18B20ReadingStub = sandbox.stub(
-      DS18B20.prototype,
-      "getReadingAsync",
-    );
-    const getBME280ReadingStub = sandbox.stub(
-      BME280.prototype,
-      "getReadingAsync",
-    );
+    const getDS18B20ReadingStub = sandbox.stub(DS18B20.prototype, "getReadingAsync");
+    const getBME280ReadingStub = sandbox.stub(BME280.prototype, "getReadingAsync");
 
     const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
     await sensorList.getReadingsAsync();
 
     assert.equal(Object.keys(sensorList.sensors).length, 2);
-    assert.equal(
-      getBME280ReadingStub.callCount + getDS18B20ReadingStub.callCount,
-      2,
-    );
+    assert.equal(getBME280ReadingStub.callCount + getDS18B20ReadingStub.callCount, 2);
   });
 
   it("should handle errors when building sensors", async function () {
@@ -246,18 +216,13 @@ describe("SensorList.ts tests", function () {
     } as SDBSensor;
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const getSensorsStub = sandbox
       .stub(MockSprootDB.prototype, "getSensorsAsync")
       .resolves([mockBME280Data]);
-    const getAddressesStub = sandbox
-      .stub(DS18B20, "getAddressesAsync")
-      .resolves([]);
+    const getAddressesStub = sandbox.stub(DS18B20, "getAddressesAsync").resolves([]);
     const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
 
@@ -286,14 +251,9 @@ describe("SensorList.ts tests", function () {
     } as SDBSensor;
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
-    sandbox
-      .stub(MockSprootDB.prototype, "getSensorsAsync")
-      .resolves([mockDS18B20Data]);
+    sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([mockDS18B20Data]);
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox.stub(DS18B20.prototype, "getReadingAsync").rejects();
 

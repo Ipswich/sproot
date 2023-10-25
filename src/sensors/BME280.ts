@@ -10,11 +10,7 @@ let lastStaticError: string | undefined = undefined;
 class BME280 extends DisposableSensorBase {
   #bme280: Bme280;
 
-  constructor(
-    sdbsensor: SDBSensor,
-    sprootDB: ISprootDB,
-    logger: winston.Logger,
-  ) {
+  constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     super(sdbsensor, sprootDB, logger);
     this.#bme280 = {} as Bme280;
     this.units[ReadingType.temperature] = "°C";
@@ -94,36 +90,26 @@ class BME280 extends DisposableSensorBase {
         this.cachedReadings[ReadingType.pressure].shift();
       }
       this.logger.info(
-        `Updated cached readings for {BME280, id: ${
-          this.id
-        }}. Cache Size - temperature: ${
+        `Updated cached readings for {BME280, id: ${this.id}}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
-        }, humidity: ${
-          this.cachedReadings[ReadingType.humidity].length
-        }, pressure: ${this.cachedReadings[ReadingType.pressure].length}`,
+        }, humidity: ${this.cachedReadings[ReadingType.humidity].length}, pressure: ${
+          this.cachedReadings[ReadingType.pressure].length
+        }`,
       );
     } catch (err) {
-      this.logger.error(
-        `Failed to update cache readings for {BME280, id: ${this.id}}`,
-      );
+      this.logger.error(`Failed to update cache readings for {BME280, id: ${this.id}}`);
       this.logger.error("BME280: " + err);
     }
   }
 
-  protected override async loadCachedReadingsFromDatabaseAsync(
-    count: number,
-  ): Promise<void> {
+  protected override async loadCachedReadingsFromDatabaseAsync(count: number): Promise<void> {
     this.cachedReadings[ReadingType.temperature] = [];
     this.cachedReadings[ReadingType.humidity] = [];
     this.cachedReadings[ReadingType.pressure] = [];
     const loadedReadingsCount = {} as Record<string, number>;
     try {
       //Fill cached readings with readings from database
-      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
-        this,
-        new Date(),
-        count,
-      );
+      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), count);
       for (const sdbReading of sdbReadings) {
         const newReading = {
           metric: sdbReading.metric as ReadingType,
@@ -137,18 +123,14 @@ class BME280 extends DisposableSensorBase {
       }
 
       this.logger.info(
-        `Loaded cached readings for {BME280, id: ${
-          this.id
-        }}. Cache Size - temperature: ${
+        `Loaded cached readings for {BME280, id: ${this.id}}. Cache Size - temperature: ${
           this.cachedReadings[ReadingType.temperature].length
-        }, humidity: ${
-          this.cachedReadings[ReadingType.humidity].length
-        }, pressure: ${this.cachedReadings[ReadingType.pressure].length}`,
+        }, humidity: ${this.cachedReadings[ReadingType.humidity].length}, pressure: ${
+          this.cachedReadings[ReadingType.pressure].length
+        }`,
       );
     } catch (err) {
-      this.logger.error(
-        `Failed to load cached readings for sensor {BME280, id:${this.id}}`,
-      );
+      this.logger.error(`Failed to load cached readings for sensor {BME280, id:${this.id}}`);
       this.logger.error("BME280: " + err);
     }
   }

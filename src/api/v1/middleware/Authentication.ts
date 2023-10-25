@@ -18,21 +18,15 @@ router.post("/", async (req: Request, res: Response) => {
 
   const sprootDB = req.app.get("sprootDB") as SprootDB;
   const user = await sprootDB.getUserAsync(req.body.username);
-  if (
-    user?.length > 0 &&
-    (await bcrypt.compare(req.body.password, user[0]!["hash"]))
-  ) {
-    const token = jwt.sign(
-      { username: req.body.username },
-      process.env["JWT_SECRET"]!,
-      { expiresIn: process.env["JWT_EXPIRATION"]! },
-    );
+  if (user?.length > 0 && (await bcrypt.compare(req.body.password, user[0]!["hash"]))) {
+    const token = jwt.sign({ username: req.body.username }, process.env["JWT_SECRET"]!, {
+      expiresIn: process.env["JWT_EXPIRATION"]!,
+    });
     res.clearCookie("token");
     res.cookie("token", token, {
       maxAge: parseInt(process.env["JWT_EXPIRATION"]!),
       httpOnly: true,
-      secure:
-        process.env["NODE_ENV"]!.toLowerCase() != "production" ? false : true,
+      secure: process.env["NODE_ENV"]!.toLowerCase() != "production" ? false : true,
       sameSite: "strict",
     });
     res.status(200).json({
