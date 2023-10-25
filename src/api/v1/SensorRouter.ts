@@ -202,8 +202,8 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
       return;
     }
     logger.http("GET /api/v1/sensors/:id/readings - 200, Success");
-    if (!!offset && !!limit) {
-      const readings = sensor.getCachedReadings(offset, limit)
+    if (offset != undefined && limit != undefined) {
+      const readings = sensor.getCachedReadings(offset, limit);
       let moreReadingsAvailable = false;
       for (const key in readings) {
         if (readings[key as ReadingType]!.length === limit) {
@@ -216,7 +216,7 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
         statusCode: 200,
         readings,
         moreReadingsAvailable,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
