@@ -167,10 +167,9 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
   const logger = req.app.get("logger") as winston.Logger;
   let offset, limit;
   if (req.query["offset"] && req.query["limit"]) {
-    try {
-      offset = Number(req.query["offset"]);
-      limit = Number(req.query["limit"]);
-    } catch (e) {
+      offset = parseInt(req.query["offset"] as string);
+      limit = parseInt(req.query["limit"] as string);
+    if (isNaN(offset) || isNaN(limit)) {
       logger.http("GET /api/v1/sensors/:id/readings - 400, Invalid request");
       res.status(400).json({
         message: "Failed to retrieve sensor readings, invalid request",
@@ -210,10 +209,10 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
       for (const key in readings) {
         result[key] = readings[key as ReadingType]!.slice(offset, offset + limit);
       }
-      let moreReadingsAvailable = false;
+      let moreReadingsAvailable = true;
       for (const key in readings) {
-        if (readings[key as ReadingType]!.length > offset + limit) {
-          moreReadingsAvailable = true;
+        if (readings[key as ReadingType]!.length <= offset + limit) {
+          moreReadingsAvailable = false;
           break;
         }
       }
