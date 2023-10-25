@@ -202,7 +202,7 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
       });
       return;
     }
-    
+
     logger.http("GET /api/v1/sensors/:id/readings - 200, Success");
     const readings = sensor.getCachedReadings();
     if (offset != undefined && offset != null && limit != undefined && limit != null) {
