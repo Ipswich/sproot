@@ -53,7 +53,7 @@ abstract class SensorBase implements ISensorBase {
   };
 
   getCachedReadings(offset?: number, limit?: number): Record<string, SDBReading[]> {
-    if (!offset || !limit) {
+    if (offset == undefined || offset == null || limit == undefined || limit == null) {
       return this.cachedReadings;
     }
     if (offset < 0 || limit < 1) {

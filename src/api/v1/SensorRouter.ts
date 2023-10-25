@@ -4,6 +4,7 @@ import { ReadingType } from "../../sensors/types/SensorBase";
 import { SensorList } from "../../sensors/SensorList";
 import { SDBSensor } from "../../database/types/SDBSensor";
 import winston from "winston";
+import { SDBReading } from "../../database/types/SDBReading";
 
 const router = express.Router();
 
@@ -201,12 +202,17 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
       });
       return;
     }
+    
     logger.http("GET /api/v1/sensors/:id/readings - 200, Success");
-    if (offset != undefined && limit != undefined) {
-      const readings = sensor.getCachedReadings(offset, limit);
+    const readings = sensor.getCachedReadings();
+    if (offset != undefined && offset != null && limit != undefined && limit != null) {
+      const result: Record<string, SDBReading[]> = {};
+      for (const key in readings) {
+        result[key] = readings[key as ReadingType]!.slice(offset, offset + limit);
+      }
       let moreReadingsAvailable = false;
       for (const key in readings) {
-        if (readings[key as ReadingType]!.length === limit) {
+        if (readings[key as ReadingType]!.length > offset + limit) {
           moreReadingsAvailable = true;
           break;
         }
@@ -214,7 +220,7 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
       res.status(200).json({
         message: "Sensor readings successfully retrieved",
         statusCode: 200,
-        readings,
+        result,
         moreReadingsAvailable,
         timestamp: new Date().toISOString(),
       });
