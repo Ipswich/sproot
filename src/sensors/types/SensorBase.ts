@@ -57,7 +57,32 @@ abstract class SensorBase implements ISensorBase {
     this.updateCachedReadings();
     await this.sprootDB.addSensorReadingAsync(this);
   };
-  getCachedReadings = (): Record<string, SDBReading[]> => this.cachedReadings;
+
+  getCachedReadings(
+    offset?: number,
+    limit?: number,
+  ): Record<string, SDBReading[]> {
+    if (!offset || !limit) {
+      return this.cachedReadings;
+    }
+
+    if (offset < 0) {
+      offset = 0;
+    }
+    if (limit < 1) {
+      limit = 1;
+    }
+    const result: Record<string, SDBReading[]> = {};
+    for (const key in this.cachedReadings) {
+      if (offset > this.cachedReadings[key as ReadingType].length) {
+        result[key] = this.cachedReadings[key as ReadingType].slice(
+          offset,
+          offset + limit,
+        );
+      }
+    }
+    return result;
+  }
 }
 
 abstract class DisposableSensorBase extends SensorBase {

@@ -436,12 +436,16 @@ paths:
           schema:
             type: integer
           description: The sensor's id.
-        # - in: query
-        #   name: readingCount
-        #   required: true
-        #   schema:
-        #     type: integer
-        #   description: Number of readings to grab.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Reading offset - how many records in to start from. Inclusive.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of readings to grab.
       responses:
         "200":
           description: OK
