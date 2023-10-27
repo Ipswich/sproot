@@ -167,8 +167,8 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
   const logger = req.app.get("logger") as winston.Logger;
   let offset, limit;
   if (req.query["offset"] && req.query["limit"]) {
-      offset = parseInt(req.query["offset"] as string);
-      limit = parseInt(req.query["limit"] as string);
+    offset = parseInt(req.query["offset"] as string);
+    limit = parseInt(req.query["limit"] as string);
     if (isNaN(offset) || isNaN(limit)) {
       logger.http("GET /api/v1/sensors/:id/readings - 400, Invalid request");
       res.status(400).json({

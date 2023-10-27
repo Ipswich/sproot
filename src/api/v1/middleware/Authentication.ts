@@ -15,7 +15,6 @@ router.post("/", async (req: Request, res: Response) => {
     });
     return;
   }
-
   const sprootDB = req.app.get("sprootDB") as SprootDB;
   const user = await sprootDB.getUserAsync(req.body.username);
   if (user?.length > 0 && (await bcrypt.compare(req.body.password, user[0]!["hash"]))) {
@@ -41,8 +40,8 @@ router.post("/", async (req: Request, res: Response) => {
       statusCode: 401,
       timestamp: new Date().toISOString(),
     });
-    return;
   }
+  return;
 });
 
 // Validates JWT tokens in either the Authorization header or cookies
