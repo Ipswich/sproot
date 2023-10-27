@@ -30,10 +30,7 @@ swaggerOptions.defaultModelsExpandDepth = -1;
 
 const logger = winston.createLogger({
   level: "info",
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json(),
-  ),
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
   transports: [
     new winston.transports.File({ filename: "logs/error.log", level: "error" }),
     new winston.transports.File({ filename: "logs/combined.log" }),
@@ -85,11 +82,7 @@ const app = express();
 
   app.use(cookieParser());
   app.use(express.json());
-  app.use(
-    express.urlencoded({
-      extended: true,
-    }),
-  );
+  app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/v1/authenticate", login);
   app.use("/api/v1/sensors", authenticate, sensorRouter);
@@ -104,11 +97,7 @@ const app = express();
   );
 
   const server = app.listen(process.env["APPLICATION_PORT"]!, () => {
-    logger.info(
-      `sproot is listening at http://localhost:${process.env[
-        "APPLICATION_PORT"
-      ]!}`,
-    );
+    logger.info(`sproot is now listening on port ${process.env["APPLICATION_PORT"]}!`);
   });
 
   // Graceful shutdown on signals

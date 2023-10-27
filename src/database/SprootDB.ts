@@ -15,9 +15,7 @@ class SprootDB implements ISprootDB {
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    const [rows] = await this.#connection.execute<SDBSensor[]>(
-      "SELECT * FROM sensors",
-    );
+    const [rows] = await this.#connection.execute<SDBSensor[]>("SELECT * FROM sensors");
     return rows;
   }
 
@@ -55,9 +53,7 @@ class SprootDB implements ISprootDB {
   }
 
   async getOutputsAsync(): Promise<SDBOutput[]> {
-    const [rows] = await this.#connection.execute<SDBOutput[]>(
-      "SELECT * FROM outputs",
-    );
+    const [rows] = await this.#connection.execute<SDBOutput[]>("SELECT * FROM outputs");
     return rows;
   }
 
@@ -105,7 +101,7 @@ class SprootDB implements ISprootDB {
   async addSensorReadingAsync(sensor: SensorBase): Promise<void> {
     for (const readingType in sensor.lastReading) {
       await this.#connection.execute(
-        "INSERT INTO sensor_data (sensor_id, metric, data, unit, logTime) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO sensor_data (sensor_id, metric, data, units, logTime) VALUES (?, ?, ?, ?, ?)",
         [
           sensor.id,
           readingType,
@@ -123,7 +119,7 @@ class SprootDB implements ISprootDB {
     minutes: number = 120,
   ): Promise<SDBReading[]> {
     const [rows] = await this.#connection.execute<SDBReading[]>(
-      `SELECT metric, data, unit, logTime
+      `SELECT metric, data, units, logTime
       FROM sensors s
       JOIN (
         SELECT *
@@ -146,10 +142,11 @@ class SprootDB implements ISprootDB {
   }
 
   async addUserAsync(credentials: SDBUser): Promise<void> {
-    await this.#connection.execute(
-      "INSERT INTO users (username, hash, email) VALUES (?, ?, ?)",
-      [credentials.username, credentials.hash, credentials.email],
-    );
+    await this.#connection.execute("INSERT INTO users (username, hash, email) VALUES (?, ?, ?)", [
+      credentials.username,
+      credentials.hash,
+      credentials.email,
+    ]);
   }
 
   async disposeAsync(): Promise<void> {

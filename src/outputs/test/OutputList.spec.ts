@@ -17,52 +17,47 @@ describe("OutputList.ts tests", function () {
 
   it("should create, update, and delete outputs.", async function () {
     sandbox.createStubInstance(Pca9685Driver);
-    const getOutputsAsyncStub = sandbox
-      .stub(MockSprootDB.prototype, "getOutputsAsync")
-      .resolves([
-        {
-          id: 1,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 1",
-          pin: 0,
-          isPwm: true,
-          isInvertedPwm: false,
-        } as SDBOutput,
-        {
-          id: 2,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 2",
-          pin: 1,
-          isPwm: false,
-          isInvertedPwm: false,
-        } as SDBOutput,
-        {
-          id: 3,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 3",
-          pin: 2,
-          isPwm: true,
-          isInvertedPwm: true,
-        } as SDBOutput,
-        {
-          id: 4,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 4",
-          pin: 3,
-          isPwm: false,
-          isInvertedPwm: true,
-        } as SDBOutput,
-      ]);
+    const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      {
+        id: 1,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 1",
+        pin: 0,
+        isPwm: true,
+        isInvertedPwm: false,
+      } as SDBOutput,
+      {
+        id: 2,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 2",
+        pin: 1,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput,
+      {
+        id: 3,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 3",
+        pin: 2,
+        isPwm: true,
+        isInvertedPwm: true,
+      } as SDBOutput,
+      {
+        id: 4,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 4",
+        pin: 3,
+        isPwm: false,
+        isInvertedPwm: true,
+      } as SDBOutput,
+    ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const outputList = new OutputList(mockSprootDB, logger);
@@ -91,52 +86,47 @@ describe("OutputList.ts tests", function () {
     sandbox.createStubInstance(Pca9685Driver);
     sandbox.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
 
-    const getOutputsAsyncStub = sandbox
-      .stub(MockSprootDB.prototype, "getOutputsAsync")
-      .resolves([
-        {
-          id: 1,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 1",
-          pin: 0,
-          isPwm: true,
-          isInvertedPwm: false,
-        } as SDBOutput,
-        {
-          id: 2,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 2",
-          pin: 1,
-          isPwm: false,
-          isInvertedPwm: false,
-        } as SDBOutput,
-        {
-          id: 3,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 3",
-          pin: 2,
-          isPwm: true,
-          isInvertedPwm: true,
-        } as SDBOutput,
-        {
-          id: 4,
-          model: "pca9685",
-          address: "0x40",
-          description: "test output 4",
-          pin: 3,
-          isPwm: false,
-          isInvertedPwm: true,
-        } as SDBOutput,
-      ]);
+    const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      {
+        id: 1,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 1",
+        pin: 0,
+        isPwm: true,
+        isInvertedPwm: false,
+      } as SDBOutput,
+      {
+        id: 2,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 2",
+        pin: 1,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput,
+      {
+        id: 3,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 3",
+        pin: 2,
+        isPwm: true,
+        isInvertedPwm: true,
+      } as SDBOutput,
+      {
+        id: 4,
+        model: "pca9685",
+        address: "0x40",
+        description: "test output 4",
+        pin: 3,
+        isPwm: false,
+        isInvertedPwm: true,
+      } as SDBOutput,
+    ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const outputList = new OutputList(mockSprootDB, logger);
 
@@ -164,10 +154,7 @@ describe("OutputList.ts tests", function () {
     ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const outputList = new OutputList(mockSprootDB, logger);
@@ -225,10 +212,7 @@ describe("OutputList.ts tests", function () {
     ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({ info: () => {}, error: () => {} }) as unknown as winston.Logger,
-      );
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const outputList = new OutputList(mockSprootDB, logger);
 

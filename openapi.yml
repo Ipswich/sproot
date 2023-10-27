@@ -422,6 +422,101 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
+  /api/v1/sensors/{id}/readings:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+      description: "Get information for a single sensor."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: The sensor's id.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Reading offset - how many records in to start from. Inclusive.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of readings to grab.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sensor readings successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  readings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Reading"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No sensor found with that Id"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Failed to retrieve sensor readings, invalid request"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
 
   /api/v1/outputs:
     get:
@@ -1033,6 +1128,22 @@ components:
           multipleOf: 1
       required:
         - "value"
+
+    Reading:
+      type: object
+      properties:
+        metric:
+          type: string
+          example: "temperature"
+        data:
+          type: string
+          example: "25.0"
+        units:
+          type: string
+          example: "°C"
+        logTime:
+          type: string
+          example: "2023-01-01 12:00:00"
 
   securitySchemes:
     bearerAuth:

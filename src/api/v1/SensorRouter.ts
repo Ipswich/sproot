@@ -1,7 +1,10 @@
 import express, { Request, Response } from "express";
-import { SensorList } from "../../sensors/SensorList";
 import { ISprootDB } from "../../database/types/ISprootDB";
+import { ReadingType } from "../../sensors/types/SensorBase";
+import { SensorList } from "../../sensors/SensorList";
 import { SDBSensor } from "../../database/types/SDBSensor";
+import winston from "winston";
+import { SDBReading } from "../../database/types/SDBReading";
 
 const router = express.Router();
 
@@ -64,9 +67,7 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.get("/:id", async (req: Request, res: Response) => {
-  const result = (req.app.get("sensorList") as SensorList)?.sensorData[
-    String(req.params["id"])
-  ];
+  const result = (req.app.get("sensorList") as SensorList)?.sensorData[String(req.params["id"])];
   if (!result) {
     res.status(404).json({
       message: "No sensor found with that Id",
@@ -160,6 +161,85 @@ router.delete("/:id", async (req: Request, res: Response) => {
     statusCode: 200,
     timestamp: new Date().toISOString(),
   });
+});
+
+router.get("/:id/readings", async (req: Request, res: Response) => {
+  const logger = req.app.get("logger") as winston.Logger;
+  let offset, limit;
+  if (req.query["offset"] && req.query["limit"]) {
+    offset = parseInt(req.query["offset"] as string);
+    limit = parseInt(req.query["limit"] as string);
+    if (isNaN(offset) || isNaN(limit)) {
+      logger.http("GET /api/v1/sensors/:id/readings - 400, Invalid request");
+      res.status(400).json({
+        message: "Failed to retrieve sensor readings, invalid request",
+        statusCode: 400,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+  }
+  if (!req.params["id"]) {
+    logger.http("GET /api/v1/sensors/:id/readings - 400, Missing sensor id");
+    res.status(400).json({
+      message: "Missing sensor id",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  const sensorList = req.app.get("sensorList") as SensorList;
+  try {
+    const id = Number(req.params["id"]);
+    const sensor = sensorList.sensors[id];
+    if (!sensor) {
+      logger.http("GET /api/v1/sensors/:id/readings - 404, No sensor found");
+      res.status(404).json({
+        message: "No sensor found with that Id",
+        statusCode: 404,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    logger.http("GET /api/v1/sensors/:id/readings - 200, Success");
+    const readings = sensor.getCachedReadings();
+    if (offset != undefined && offset != null && limit != undefined && limit != null) {
+      const result: Record<string, SDBReading[]> = {};
+      for (const key in readings) {
+        result[key] = readings[key as ReadingType]!.slice(offset, offset + limit);
+      }
+      let moreReadingsAvailable = true;
+      for (const key in readings) {
+        if (readings[key as ReadingType]!.length <= offset + limit) {
+          moreReadingsAvailable = false;
+          break;
+        }
+      }
+      res.status(200).json({
+        message: "Sensor readings successfully retrieved",
+        statusCode: 200,
+        result,
+        moreReadingsAvailable,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "Sensor readings successfully retrieved",
+      statusCode: 200,
+      readings: sensor.getCachedReadings(),
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  } catch (e) {
+    logger.http("GET /api/v1/sensors/:id/readings - 400, Invalid request");
+    res.status(400).json({
+      message: "Failed to retrieve sensor readings, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 export default router;

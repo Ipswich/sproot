@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `sensor_data` (
   `sensor_id` int(11) NOT NULL,
   `metric` varchar(32) NOT NULL,
   `data` decimal(12,7) NOT NULL,
-  `unit` varchar(16) NOT NULL,
+  `units` varchar(16) NOT NULL,
   `logTime` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `sensor_id` (`sensor_id`),

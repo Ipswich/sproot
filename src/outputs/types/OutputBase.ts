@@ -34,11 +34,7 @@ abstract class OutputBase implements IOutputBase {
   controlMode: ControlMode;
   logger: winston.Logger;
 
-  constructor(
-    sdbOutput: SDBOutput,
-    sprootDB: ISprootDB,
-    logger: winston.Logger,
-  ) {
+  constructor(sdbOutput: SDBOutput, sprootDB: ISprootDB, logger: winston.Logger) {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
     this.address = sdbOutput.address;
@@ -58,9 +54,7 @@ abstract class OutputBase implements IOutputBase {
    * @param controlMode Mode to give system control to.
    */
   updateControlMode = (controlMode: ControlMode) => {
-    this.logger.info(
-      `Output ${this.id} control mode changed to ${controlMode}`,
-    );
+    this.logger.info(`Output ${this.id} control mode changed to ${controlMode}`);
     this.controlMode = controlMode;
   };
 
