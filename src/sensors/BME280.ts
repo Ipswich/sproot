@@ -6,7 +6,6 @@ import { ISprootDB } from "../database/types/ISprootDB";
 import { DisposableSensorBase, ReadingType } from "./types/SensorBase";
 import winston from "winston";
 
-let lastStaticError: string | undefined = undefined;
 class BME280 extends DisposableSensorBase {
   #bme280: Bme280;
 
@@ -33,6 +32,7 @@ class BME280 extends DisposableSensorBase {
       return this;
     } catch (err) {
       handleError(err as Error, this.logger);
+      this.logger.error(`Failed to create BME280 sensor ${this.id}`);
     }
     return null;
   }
@@ -136,18 +136,14 @@ class BME280 extends DisposableSensorBase {
   }
 }
 
-function handleError(err: Error, logger: winston.Logger): Error {
-  if (err?.message !== lastStaticError) {
-    lastStaticError = err.message;
-    if (err.message.includes("ENOENT: no such file or directory, open ")) {
-      logger.error(
-        "Unable to connect to I2C driver. Please ensure your system has I2C support enabled.",
-      );
-    } else {
-      logger.error("BME280: " + err);
-    }
+function handleError(err: Error, logger: winston.Logger): void {
+  if (err.message.includes("ENOENT: no such file or directory, open ")) {
+    logger.error(
+      "Unable to connect to I2C driver. Please ensure your system has I2C support enabled.",
+    );
+  } else {
+    logger.error("BME280: " + err);
   }
-  return err;
 }
 
 export { BME280 };
