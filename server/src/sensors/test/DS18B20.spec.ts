@@ -2,12 +2,12 @@ import ds18b20 from "ds18b20";
 import { DS18B20 } from "../DS18B20";
 import { ReadingType } from "../types/SensorBase";
 import { MockSprootDB } from "../../database/types/ISprootDB";
-import { SDBSensor } from "../../database/types/SDBSensor";
+import { SDBSensor } from "../../../../shared/src/database/types/SDBSensor";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { SDBReading } from "../../database/types/SDBReading";
+import { SDBReading } from "../../../../shared/src/database/types/SDBReading";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 const env = process.env;

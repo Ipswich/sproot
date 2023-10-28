@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { OutputList } from "../OutputList";
-import { SDBOutput } from "../../database/types/SDBOutput";
+import { SDBOutput } from "../../../../shared/src/database/types/SDBOutput";
 import { MockSprootDB } from "../../database/types/ISprootDB";
 import Pca9685Driver from "pca9685";
 

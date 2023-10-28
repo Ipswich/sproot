@@ -3,8 +3,8 @@ import ds18b20 from "ds18b20";
 import util from "util";
 import winston from "winston";
 
-import { SDBSensor } from "../database/types/SDBSensor";
-import { SDBReading } from "../database/types/SDBReading";
+import { SDBSensor } from "../../../shared/src/database/types/SDBSensor";
+import { SDBReading } from "../../../shared/src/database/types/SDBReading";
 import { ISprootDB } from "../database/types/ISprootDB";
 import { SensorBase, ReadingType } from "./types/SensorBase";
 

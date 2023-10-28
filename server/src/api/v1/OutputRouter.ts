@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { OutputList } from "../../outputs/OutputList";
 import { IState, ControlMode } from "../../outputs/types/OutputBase";
-import { SDBOutput } from "../../database/types/SDBOutput";
+import { SDBOutput } from "../../../../shared/src/database/types/SDBOutput";
 import { ISprootDB } from "../../database/types/ISprootDB";
 
 const router = express.Router();

@@ -1,7 +1,7 @@
 import { BME280 } from "./BME280";
 import { DS18B20 } from "./DS18B20";
-import { DisposableSensorBase, ISensorBase, SensorBase } from "./types/SensorBase";
-import { SDBSensor } from "../database/types/SDBSensor";
+import { DisposableSensorBase, ISensorBase, SensorBase } from "../../../shared/src/sensors/types/SensorBase";
+import { SDBSensor } from "../../../shared/src/database/types/SDBSensor";
 import { ISprootDB } from "../database/types/ISprootDB";
 import winston from "winston";
 

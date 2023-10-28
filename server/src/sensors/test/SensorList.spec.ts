@@ -3,7 +3,7 @@ import bme280, { Bme280 } from "bme280";
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
 import { MockSprootDB } from "../../database/types/ISprootDB";
-import { SDBSensor } from "../../database/types/SDBSensor";
+import { SDBSensor } from "../../../../shared/src/database/types/SDBSensor";
 import { SensorList } from "../SensorList";
 
 import chai, { assert } from "chai";

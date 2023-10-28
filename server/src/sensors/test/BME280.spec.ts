@@ -2,8 +2,8 @@ import bme280, { Bme280 } from "bme280";
 import { BME280 } from "../BME280";
 import { MockSprootDB } from "../../database/types/ISprootDB";
 import { ReadingType } from "../types/SensorBase";
-import { SDBSensor } from "../../database/types/SDBSensor";
-import { SDBReading } from "../../database/types/SDBReading";
+import { SDBSensor } from "../../../../shared/src/database/types/SDBSensor";
+import { SDBReading } from "../../../../shared/src/database/types/SDBReading";
 
 import { assert } from "chai";
 import * as sinon from "sinon";

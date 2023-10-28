@@ -3,7 +3,7 @@ import { ControlMode } from "../types/OutputBase";
 import { MockSprootDB } from "../../database/types/ISprootDB";
 import { PCA9685, PCA9685State } from "../PCA9685";
 import { Pca9685Driver } from "pca9685";
-import { SDBOutput } from "../../database/types/SDBOutput";
+import { SDBOutput } from "../../../../shared/src/database/types/SDBOutput";
 
 import chai, { assert, expect } from "chai";
 import chaiAsPromised from "chai-as-promised";

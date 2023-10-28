@@ -2,9 +2,9 @@ import express, { Request, Response } from "express";
 import { ISprootDB } from "../../database/types/ISprootDB";
 import { ReadingType } from "../../sensors/types/SensorBase";
 import { SensorList } from "../../sensors/SensorList";
-import { SDBSensor } from "../../database/types/SDBSensor";
+import { SDBSensor } from "../../../../shared/src/database/types/SDBSensor";
 import winston from "winston";
-import { SDBReading } from "../../database/types/SDBReading";
+import { SDBReading } from "../../../../shared/src/database/types/SDBReading";
 
 const router = express.Router();
 
