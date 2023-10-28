@@ -48,7 +48,7 @@ class SensorList {
       } else {
         //Create if it doesn't
         try {
-          this.#logger.info(`Creating sensor ${sensor.model} ${sensor.id}`)
+          this.#logger.info(`Creating sensor ${sensor.model} ${sensor.id}`);
           await this.#createSensorAsync(sensor);
         } catch (err) {
           this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}`);
@@ -61,7 +61,7 @@ class SensorList {
     const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
     for (const key in this.#sensors) {
       if (!sensorIdsFromDatabase.includes(key)) {
-        this.#logger.info(`Deleting sensor ${this.#sensors[key]!.model} ${this.#sensors[key]!.id}`)
+        this.#logger.info(`Deleting sensor ${this.#sensors[key]!.model} ${this.#sensors[key]!.id}`);
         this.#disposeSensorAsync(this.#sensors[key]!);
         delete this.#sensors[key];
       }

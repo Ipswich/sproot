@@ -137,13 +137,13 @@ class BME280 extends DisposableSensorBase {
 }
 
 function handleError(err: Error, logger: winston.Logger): void {
-    if (err.message.includes("ENOENT: no such file or directory, open ")) {
-      logger.error(
-        "Unable to connect to I2C driver. Please ensure your system has I2C support enabled.",
-      );
-    } else {
-      logger.error("BME280: " + err);
-    }
+  if (err.message.includes("ENOENT: no such file or directory, open ")) {
+    logger.error(
+      "Unable to connect to I2C driver. Please ensure your system has I2C support enabled.",
+    );
+  } else {
+    logger.error("BME280: " + err);
+  }
 }
 
 export { BME280 };

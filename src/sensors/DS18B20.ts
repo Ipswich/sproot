@@ -111,13 +111,13 @@ class DS18B20 extends SensorBase {
 }
 
 function handleError(err: Error, logger: winston.Logger): void {
-    if (err.message.includes("ENOENT: no such file or directory, open ")) {
-      logger.error(
-        "Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.",
-      );
-    } else {
-      logger.error("DS18B20: " + err);
-    }
+  if (err.message.includes("ENOENT: no such file or directory, open ")) {
+    logger.error(
+      "Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.",
+    );
+  } else {
+    logger.error("DS18B20: " + err);
+  }
 }
 
 export { DS18B20 };
