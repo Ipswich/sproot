@@ -1,10 +1,10 @@
 import "dotenv/config";
 import bme280, { Bme280 } from "bme280";
-import { BME280 } from "../../sensors/BME280";
-import { DS18B20 } from "../../sensors/DS18B20";
+import { BME280 } from "../BME280";
+import { DS18B20 } from "../DS18B20";
 import { MockSprootDB } from "../../database/types/ISprootDB";
 import { SDBSensor } from "../../database/types/SDBSensor";
-import { SensorList } from "../../sensors/SensorList";
+import { SensorList } from "../SensorList";
 
 import chai, { assert } from "chai";
 import chaiAsPromised from "chai-as-promised";

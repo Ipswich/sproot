@@ -109,7 +109,7 @@ const app = express();
   });
 
   async function gracefulHalt() {
-    logger.info("\nShutting down...");
+    logger.info("Shutting down...");
     server.close(async () => {
       // Stop updating database and sensors
       clearInterval(updateDatabaseLoop);

@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./server/Dockerfile
     environment:
       - NODE_ENV=development
       - DEFAULT_USER="dev-test" #Change this to something long and unique

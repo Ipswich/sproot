@@ -10,7 +10,7 @@
     "lint": "npx eslint ./src",
     "prettier:write": "npx prettier . --write",
     "prettier:check": "npx prettier . --check",
-    "start": "npm run build && node dist/index.js",
+    "start": "npm run build && node ./dist/index.js",
     "start:dev": "npx nodemon",
     "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts && npm run prettier:check"
   },
