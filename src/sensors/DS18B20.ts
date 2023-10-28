@@ -8,9 +8,7 @@ import { SDBReading } from "../database/types/SDBReading";
 import { ISprootDB } from "../database/types/ISprootDB";
 import { SensorBase, ReadingType } from "./types/SensorBase";
 
-let lastStaticError: Error | undefined = undefined;
 class DS18B20 extends SensorBase {
-  #lastError: Error | undefined;
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     super(sdbSensor, sprootDB, logger);
     this.units[ReadingType.temperature] = "°C";
@@ -23,7 +21,7 @@ class DS18B20 extends SensorBase {
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
       );
     } catch (err) {
-      this.#lastError = handleError(err as Error, this.logger);
+      handleError(err as Error, this.logger);
       return null;
     }
     return this;
@@ -45,7 +43,8 @@ class DS18B20 extends SensorBase {
         } as SDBReading);
       }
     } catch (err) {
-      this.#lastError = handleError(err as Error, this.logger, this.#lastError);
+      handleError(err as Error, this.logger);
+      this.logger.error(`Failed to get reading for sensor {DS18B20, id: ${this.id}}`);
     }
   }
 
@@ -104,15 +103,14 @@ class DS18B20 extends SensorBase {
     try {
       return await util.promisify(ds18b20.sensors)();
     } catch (err) {
-      lastStaticError = handleError(err as Error, logger, lastStaticError);
+      handleError(err as Error, logger);
+      logger.error("Failed to get DS18B20 addresses");
     }
     return [];
   }
 }
 
-function handleError(err: Error, logger: winston.Logger, lastError?: Error): Error {
-  if (err.message !== lastError?.message) {
-    lastError = err;
+function handleError(err: Error, logger: winston.Logger): void {
     if (err.message.includes("ENOENT: no such file or directory, open ")) {
       logger.error(
         "Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.",
@@ -120,8 +118,6 @@ function handleError(err: Error, logger: winston.Logger, lastError?: Error): Err
     } else {
       logger.error("DS18B20: " + err);
     }
-  }
-  return err;
 }
 
 export { DS18B20 };

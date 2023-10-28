@@ -91,6 +91,7 @@ class OutputList {
       (output) => !Object.keys(this.#outputs).includes(String(output.id)),
     );
     for (const output of filteredOutputsFromDatabase) {
+      this.#logger.info(`Creating output ${output.model} ${output.id}`);
       switch (output.model.toLowerCase()) {
         case "pca9685": {
           if (!this.#pca9685Record[output.address]) {
@@ -121,11 +122,13 @@ class OutputList {
     for (const key in this.#outputs) {
       if (!outputIdsFromDatabase.includes(key)) {
         this.#outputs[key]?.dispose();
+        this.#logger.info(`Deleting output ${this.#outputs[key]?.model} ${this.#outputs[key]?.id}`);
         delete this.#outputs[key];
       }
     }
     for (const key in this.#usedAddresses) {
       if (!outputsFromDatabase.find((output) => output.address === this.#usedAddresses[key])) {
+        this.#logger.info(`Deleting PCA9685 Board${this.#usedAddresses[key]}`);
         this.#pca9685Record[this.#usedAddresses[key]!]?.dispose();
         delete this.#pca9685Record[this.#usedAddresses[key]!];
         this.#usedAddresses.splice(this.#usedAddresses.indexOf(this.#usedAddresses[key]!), 1);

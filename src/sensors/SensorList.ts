@@ -48,7 +48,8 @@ class SensorList {
       } else {
         //Create if it doesn't
         try {
-          await this.#buildSensorAsync(sensor);
+          this.#logger.info(`Creating sensor ${sensor.model} ${sensor.id}`)
+          await this.#createSensorAsync(sensor);
         } catch (err) {
           this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}`);
           this.#logger.error(err);
@@ -60,6 +61,8 @@ class SensorList {
     const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
     for (const key in this.#sensors) {
       if (!sensorIdsFromDatabase.includes(key)) {
+        this.#logger.info(`Deleting sensor ${this.#sensors[key]!.model} ${this.#sensors[key]!.id}`)
+        this.#disposeSensorAsync(this.#sensors[key]!);
         delete this.#sensors[key];
       }
     }
@@ -82,7 +85,7 @@ class SensorList {
     }
   }
 
-  async #buildSensorAsync(sensor: SDBSensor): Promise<void> {
+  async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
     switch (sensor.model.toLowerCase()) {
       case "bme280":
@@ -122,6 +125,7 @@ class SensorList {
       if (sensorsFromDatabase.some((s) => s.address === address)) {
         continue;
       } else {
+        this.#logger.info(`Adding unreconized DS18B20 sensor ${address} to database.`);
         promises.push(
           this.#sprootDB.addSensorAsync({
             description: null,

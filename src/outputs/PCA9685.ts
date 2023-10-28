@@ -139,6 +139,7 @@ class PCA9685Output extends OutputBase {
   }
 
   executeState(): void {
+    this.logger.info(`Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.manualState.value}`);
     switch (this.controlMode) {
       case ControlMode.manual:
         this.#setPwm(this.manualState.value);

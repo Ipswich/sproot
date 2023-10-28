@@ -48,11 +48,11 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
 const app = express();
 
 (async () => {
-  console.log("Initializing sproot app. . .");
+  logger.info("Initializing sproot app. . .");
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
   app.set("logger", logger);
-  await defaultUserCheck(sprootDB);
+  await defaultUserCheck(sprootDB, logger);
 
   const sensorList = new SensorList(sprootDB, logger);
   app.set("sensorList", sensorList);
@@ -109,7 +109,7 @@ const app = express();
   });
 
   async function gracefulHalt() {
-    console.log("\nShutting down...");
+    logger.info("\nShutting down...");
     server.close(async () => {
       // Stop updating database and sensors
       clearInterval(updateDatabaseLoop);
@@ -117,7 +117,7 @@ const app = express();
       try {
         // Cleanup sensors and turn off outputs
         await app.get("sensorList").disposeAsync();
-        app.get("pca9685").dispose();
+        await app.get("outputList").dispose();
         // Close database connection
         await sprootDB.disposeAsync();
       } catch (err) {
@@ -126,7 +126,7 @@ const app = express();
       } finally {
         // Give everything a hot sec to finish whatever it's up to - call backs really mess with just calling process.exit.
         setTimeout(() => {
-          console.log("Done! See you next time!");
+          logger.info("Done! See you next time!");
           process.exit(0);
         }, 250);
       }
@@ -134,7 +134,7 @@ const app = express();
   }
 })();
 
-async function defaultUserCheck(sprootDB: ISprootDB) {
+async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
   const defaultUser = {
     username: process.env["DEFAULT_USER"]!,
     hash: process.env["DEFAULT_USER_PASSWORD"]!,
@@ -143,6 +143,7 @@ async function defaultUserCheck(sprootDB: ISprootDB) {
 
   const user = await sprootDB.getUserAsync(defaultUser.username);
   if (user?.length == 0) {
+    logger.info("Default user not found, creating from environment variables.");
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(defaultUser.hash, salt);
     defaultUser.hash = hash;
