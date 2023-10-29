@@ -8,6 +8,7 @@
     "build:server": "npm run build --workspace=common --workspace=server",
     "clean": "npm run clean --workspaces --if-present",
     "coverage": "npm run coverage --workspaces --if-present",
+    "install:server": "npm install --workspace=common --workspace=server",
     "prettier:check": "npm run prettier:check --workspaces --if-present",
     "prettier:write": "npm run prettier:write --workspaces --if-present",
     "start": "npm run build && npm run start --workspaces --if-present",
