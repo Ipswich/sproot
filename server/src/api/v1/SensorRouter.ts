@@ -1,8 +1,8 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/types/SensorBase";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
 import { SensorList } from "../../sensors/SensorList";
-import { SDBReading } from "@sproot/sproot-common/dist/database/types/SDBReading";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/types/SDBSensor";
+import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
+import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
 import express, { Request, Response } from "express";
 import winston from "winston";
 

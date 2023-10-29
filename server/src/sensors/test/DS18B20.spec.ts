@@ -1,9 +1,9 @@
 import ds18b20 from "ds18b20";
 import { DS18B20 } from "../DS18B20";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/types/SensorBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
-import { SDBReading } from "@sproot/sproot-common/dist/database/types/SDBReading";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/types/SDBSensor";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 
 import { assert } from "chai";
 import * as sinon from "sinon";

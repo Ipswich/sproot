@@ -1,11 +1,11 @@
 import mysql2 from "mysql2/promise";
 
-import { SDBUser } from "@sproot/src/database/types/SDBUser";
-import { SDBSensor } from "@sproot/src/database/types/SDBSensor";
-import { SDBOutput } from "@sproot/src/database/types/SDBOutput";
-import { ISprootDB } from "@sproot/src/database/types/ISprootDB";
-import { SensorBase, ReadingType } from "@sproot/src/sensors/types/SensorBase";
-import { SDBReading } from "@sproot/src/database/types/SDBReading";
+import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
+import { SDBSensor } from "@sproot/src/database/SDBSensor";
+import { SDBOutput } from "@sproot/src/database/SDBOutput";
+import { ISprootDB } from "@sproot/src/database/ISprootDB";
+import { SensorBase, ReadingType } from "@sproot/src/sensors/SensorBase";
+import { SDBReading } from "@sproot/src/database/SDBReading";
 
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;

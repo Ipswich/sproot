@@ -1,5 +1,5 @@
-import { SDBOutput } from "../../database/types/SDBOutput";
-import { ISprootDB } from "../../database/types/ISprootDB";
+import { SDBOutput } from "../database/SDBOutput";
+import { ISprootDB } from "../database/ISprootDB";
 import winston from "winston";
 
 enum ControlMode {

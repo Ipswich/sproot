@@ -1,12 +1,12 @@
 import "dotenv/config";
 import bme280, { Bme280 } from "bme280";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/types/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database/types/SDBReading";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
+import { SDBSensor } from "@sproot/sproot-common/src/database//SDBSensor";
+import { SDBReading } from "@sproot/sproot-common/src/database//SDBReading";
+import { ISprootDB } from "@sproot/sproot-common/src/database//ISprootDB";
 import {
   DisposableSensorBase,
   ReadingType,
-} from "@sproot/sproot-common/dist/sensors/types/SensorBase";
+} from "@sproot/sproot-common/src/sensors/SensorBase";
 import winston from "winston";
 
 class BME280 extends DisposableSensorBase {

@@ -1,11 +1,11 @@
 import { PCA9685 } from "./PCA9685";
-import { ISprootDB } from "@sproot/sproot-common/dist//database/types/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import {
   OutputBase,
   IOutputBase,
   IState,
   ControlMode,
-} from "@sproot/sproot-common/dist//outputs/types/OutputBase";
+} from "@sproot/sproot-common/dist/outputs/OutputBase";
 import winston from "winston";
 
 class OutputList {

@@ -2,7 +2,7 @@ import { SDBSensor } from "./SDBSensor";
 import { SDBOutput } from "./SDBOutput";
 import { SDBReading } from "./SDBReading";
 import { SDBUser } from "./SDBUser";
-import { SensorBase } from "../../sensors/types/SensorBase";
+import { SensorBase } from "../sensors/SensorBase";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;

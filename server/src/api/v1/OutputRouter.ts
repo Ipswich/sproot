@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import { OutputList } from "../../outputs/OutputList";
-import { IState, ControlMode } from "@sproot/sproot-common/dist/outputs/types/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/types/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
+import { IState, ControlMode } from "@sproot/sproot-common/src/outputs/OutputBase";
+import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 
 const router = express.Router();
 

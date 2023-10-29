@@ -1,5 +1,5 @@
 import { RowDataPacket } from "mysql2";
-import { ReadingType } from "../../sensors/types/SensorBase";
+import { ReadingType } from "../sensors/SensorBase";
 
 interface SDBReading extends RowDataPacket {
   metric: ReadingType;

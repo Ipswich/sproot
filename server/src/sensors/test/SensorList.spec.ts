@@ -2,8 +2,8 @@ import "dotenv/config";
 import bme280, { Bme280 } from "bme280";
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/types/SDBSensor";
+import { MockSprootDB } from "@sproot/src/database/ISprootDB";
+import { SDBSensor } from "@sproot/src/database/SDBSensor";
 import { SensorList } from "../SensorList";
 
 import chai, { assert } from "chai";

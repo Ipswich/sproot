@@ -7,7 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import winston from "winston";
 
-import { ISprootDB } from "@sproot/src/database/types/ISprootDB";
+import { ISprootDB } from "@sproot/src/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
 import { SensorList } from "./sensors/SensorList";
 import { OutputList } from "./outputs/OutputList";
@@ -15,7 +15,7 @@ import { OutputList } from "./outputs/OutputList";
 import login, { authenticate } from "./api/v1/middleware/Authentication";
 import sensorRouter from "./api/v1/SensorRouter";
 import outputRouter from "./api/v1/OutputRouter";
-import { SDBUser } from "@sproot/src/database/types/SDBUser";
+import { SDBUser } from "@sproot/src/database/SDBUser";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,

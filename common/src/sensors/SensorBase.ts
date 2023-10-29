@@ -1,6 +1,6 @@
-import { SDBSensor } from "../../database/types/SDBSensor";
-import { SDBReading } from "../../database/types/SDBReading";
-import { ISprootDB } from "../../database/types/ISprootDB";
+import { SDBSensor } from "../database/SDBSensor";
+import { SDBReading } from "../database/SDBReading";
+import { ISprootDB } from "../database/ISprootDB";
 import winston from "winston";
 
 enum ReadingType {

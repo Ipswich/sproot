@@ -5,9 +5,9 @@ import {
   OutputBase,
   ControlMode,
   IState,
-} from "@sproot/sproot-common/dist/outputs/types/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/types/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
+} from "@sproot/sproot-common/dist/outputs/OutputBase";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
 class PCA9685 {

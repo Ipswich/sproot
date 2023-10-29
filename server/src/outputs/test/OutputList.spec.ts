@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { OutputList } from "../OutputList";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/types/SDBOutput";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
+import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
+import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import Pca9685Driver from "pca9685";
 
 import { assert } from "chai";
