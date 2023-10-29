@@ -1,5 +1,5 @@
 import { PCA9685 } from "./PCA9685";
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import {
   OutputBase,
   IOutputBase,
