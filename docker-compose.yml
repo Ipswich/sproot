@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./server/Dockerfile
+      dockerfile: ./Sproot-Server-Dockerfile
     environment:
       - NODE_ENV=development
       - DEFAULT_USER="dev-test" #Change this to something long and unique
