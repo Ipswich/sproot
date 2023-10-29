@@ -1,0 +1,12 @@
+{
+  "name": "@sproot/sproot-client",
+  "version": "0.0.1",
+  "description": "Frontend for sproot-server",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,4 +1,4 @@
-import { RowDataPacket } from "mysql2/promise";
+import { RowDataPacket } from "mysql2";
 import { ReadingType } from "../../sensors/types/SensorBase";
 
 interface SDBReading extends RowDataPacket {

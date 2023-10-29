@@ -1,8 +1,13 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
-import { IOutputBase, OutputBase, ControlMode, IState } from "./types/OutputBase";
-import { SDBOutput } from "../../../shared/src/database/types/SDBOutput";
-import { ISprootDB } from "../database/types/ISprootDB";
+import {
+  IOutputBase,
+  OutputBase,
+  ControlMode,
+  IState,
+} from "@sproot/sproot-common/dist/outputs/types/OutputBase";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/types/SDBOutput";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
 import winston from "winston";
 
 class PCA9685 {

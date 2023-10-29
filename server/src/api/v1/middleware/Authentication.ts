@@ -2,7 +2,7 @@ import "dotenv/config";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import express, { Request, Response, NextFunction } from "express";
-import { SprootDB } from "../../../database/SprootDB";
+import { SprootDB } from "@sproot/src/database/SprootDB";
 
 const router = express.Router();
 

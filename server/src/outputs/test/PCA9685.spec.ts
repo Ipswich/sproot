@@ -1,9 +1,9 @@
 import "dotenv/config";
-import { ControlMode } from "../types/OutputBase";
-import { MockSprootDB } from "../../database/types/ISprootDB";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/types/OutputBase";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
 import { PCA9685, PCA9685State } from "../PCA9685";
 import { Pca9685Driver } from "pca9685";
-import { SDBOutput } from "../../../../shared/src/database/types/SDBOutput";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/types/SDBOutput";
 
 import chai, { assert, expect } from "chai";
 import chaiAsPromised from "chai-as-promised";

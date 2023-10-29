@@ -1,18 +1,14 @@
 {
-  "name": "sproot",
+  "name": "@sproot/sproot-common",
   "version": "0.0.1",
-  "description": "Garden Automation Managment",
+  "description": "Sproot common libraries",
   "main": "index.js",
   "scripts": {
-    "build": "npm run clean && tsc",
-    "clean": "rimraf ./dist",
-    "coverage": "nyc npm run test",
+    "build": "tsc --build --verbose",
+    "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
     "lint": "npx eslint ./src",
     "prettier:write": "npx prettier . --write",
-    "prettier:check": "npx prettier . --check",
-    "start": "npm run build && node ./dist/index.js",
-    "start:dev": "npx nodemon",
-    "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts && npm run prettier:check"
+    "prettier:check": "npx prettier . --check"
   },
   "author": "Ben Steele",
   "license": "ISC",

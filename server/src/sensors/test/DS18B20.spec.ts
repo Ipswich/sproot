@@ -1,13 +1,13 @@
 import ds18b20 from "ds18b20";
 import { DS18B20 } from "../DS18B20";
-import { ReadingType } from "../types/SensorBase";
-import { MockSprootDB } from "../../database/types/ISprootDB";
-import { SDBSensor } from "../../../../shared/src/database/types/SDBSensor";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/types/SensorBase";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
+import { SDBReading } from "@sproot/sproot-common/dist/database/types/SDBReading";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/types/SDBSensor";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { SDBReading } from "../../../../shared/src/database/types/SDBReading";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 const env = process.env;

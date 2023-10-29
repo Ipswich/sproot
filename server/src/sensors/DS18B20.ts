@@ -3,10 +3,10 @@ import ds18b20 from "ds18b20";
 import util from "util";
 import winston from "winston";
 
-import { SDBSensor } from "../../../shared/src/database/types/SDBSensor";
-import { SDBReading } from "../../../shared/src/database/types/SDBReading";
-import { ISprootDB } from "../database/types/ISprootDB";
-import { SensorBase, ReadingType } from "./types/SensorBase";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/types/SDBSensor";
+import { SDBReading } from "@sproot/sproot-common/dist/database/types/SDBReading";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
+import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/types/SensorBase";
 
 class DS18B20 extends SensorBase {
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {

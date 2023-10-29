@@ -1,7 +1,7 @@
-import { SDBSensor } from "../../../../shared/src/database/types/SDBSensor";
-import { SDBOutput } from "../../../../shared/src/database/types/SDBOutput";
-import { SDBReading } from "../../../../shared/src/database/types/SDBReading";
-import { SDBUser } from "../../../../shared/src/database/types/SDBUser";
+import { SDBSensor } from "./SDBSensor";
+import { SDBOutput } from "./SDBOutput";
+import { SDBReading } from "./SDBReading";
+import { SDBUser } from "./SDBUser";
 import { SensorBase } from "../../sensors/types/SensorBase";
 
 interface ISprootDB {

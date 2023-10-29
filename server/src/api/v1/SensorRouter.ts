@@ -1,10 +1,10 @@
-import express, { Request, Response } from "express";
-import { ISprootDB } from "../../database/types/ISprootDB";
-import { ReadingType } from "../../sensors/types/SensorBase";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/types/ISprootDB";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/types/SensorBase";
 import { SensorList } from "../../sensors/SensorList";
-import { SDBSensor } from "../../../../shared/src/database/types/SDBSensor";
+import { SDBReading } from "@sproot/sproot-common/dist/database/types/SDBReading";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/types/SDBSensor";
+import express, { Request, Response } from "express";
 import winston from "winston";
-import { SDBReading } from "../../../../shared/src/database/types/SDBReading";
 
 const router = express.Router();
 
