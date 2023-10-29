@@ -1,7 +1,7 @@
 import ds18b20 from "ds18b20";
 import { DS18B20 } from "../DS18B20";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
-import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 

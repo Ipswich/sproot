@@ -1,9 +1,9 @@
 import bme280, { Bme280 } from "bme280";
 import { BME280 } from "../BME280";
-import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
-import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 
 import { assert } from "chai";
 import * as sinon from "sinon";

@@ -4,9 +4,9 @@ import {
   DisposableSensorBase,
   ISensorBase,
   SensorBase,
-} from "@sproot/sproot-common/src/sensors/SensorBase";
-import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+} from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
 class SensorList {

@@ -1,7 +1,7 @@
 {
   "name": "@sproot/sproot-server",
   "version": "0.0.1",
-  "description": "Sproot, Garden Automation Managment",
+  "description": "sproot-server, the backend for the sproot project",
   "main": "index.js",
   "scripts": {
     "build": "tsc --build --verbose",
@@ -46,6 +46,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@sproot/sproot-common": "^0.0.1",
     "bcrypt": "^5.1.1",
     "bme280": "github:jhoffi/bme280-typings",
     "cookie-parser": "^1.4.6",
