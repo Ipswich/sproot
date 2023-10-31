@@ -3,10 +3,20 @@ import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import express, { Request, Response, NextFunction } from "express";
 import { SprootDB } from "@sproot/src/database/SprootDB";
+import process from "process";
 
 const router = express.Router();
 
 router.post("/", async (req: Request, res: Response) => {
+  if (process.env["AUTHENTICATION_ENABLED"]?.toLowerCase() != "true") {
+    res.status(200).json({
+      message: "Authentication not enabled",
+      statusCode: 200,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
   if (!req.body?.username || !req.body?.password) {
     res.status(400).json({
       message: "Missing username or password",
@@ -46,6 +56,10 @@ router.post("/", async (req: Request, res: Response) => {
 
 // Validates JWT tokens in either the Authorization header or cookies
 async function authenticate(req: Request, res: Response, next: NextFunction) {
+  if (process.env["AUTHENTICATION_ENABLED"]?.toLowerCase() != "true") {
+    next();
+    return;
+  }
   const errorResponse = {
     message: "Invalid or Missing JWT",
     statusCode: 401,
@@ -66,6 +80,7 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
     const decoded = jwt.verify(token, process.env["JWT_SECRET"]!);
     res.locals["username"] = (decoded as JwtPayload)["username"];
     next();
+    return;
   } catch (err) {
     res.status(401).json(errorResponse);
     return;
