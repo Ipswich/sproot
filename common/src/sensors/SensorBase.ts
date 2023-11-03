@@ -77,4 +77,5 @@ abstract class DisposableSensorBase extends SensorBase {
   abstract disposeAsync(): Promise<void>;
 }
 
-export { ISensorBase, SensorBase, DisposableSensorBase, ReadingType };
+export { SensorBase, DisposableSensorBase, ReadingType };
+export type { ISensorBase };

@@ -13,7 +13,7 @@ const mockSprootDB = new MockSprootDB();
 const env = process.env;
 
 describe("BME280.ts tests", function () {
-  this.afterEach(() => {
+  afterEach(() => {
     sandbox.restore();
     process.env = env;
   });

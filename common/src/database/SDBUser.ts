@@ -6,4 +6,4 @@ interface SDBUser extends RowDataPacket {
   email: string;
 }
 
-export { SDBUser };
+export type { SDBUser };

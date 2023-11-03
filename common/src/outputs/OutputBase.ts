@@ -87,4 +87,5 @@ abstract class OutputBase implements IOutputBase {
 
 interface IState {}
 
-export { IOutputBase, OutputBase, ControlMode, IState };
+export { OutputBase, ControlMode };
+export type { IOutputBase, IState };

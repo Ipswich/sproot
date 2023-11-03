@@ -1,16 +1,17 @@
 {
   "name": "@sproot/sproot-server",
   "version": "0.0.1",
+  "private": true,
   "description": "sproot-server, the backend for the sproot project",
   "main": "index.js",
   "scripts": {
     "build": "tsc --build --verbose",
-    "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
+    "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
     "coverage": "nyc npm run test",
     "lint": "npx eslint ./src",
     "prettier:write": "npx prettier . --write",
     "prettier:check": "npx prettier . --check",
-    "start": "node ./dist/index.js",
+    "start": "npm run build && node ./dist/index.js",
     "start:dev": "npx nodemon",
     "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts && npm run prettier:check"
   },

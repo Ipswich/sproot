@@ -102,4 +102,5 @@ class MockSprootDB implements ISprootDB {
   }
 }
 
-export { ISprootDB, MockSprootDB };
+export { MockSprootDB };
+export type { ISprootDB };

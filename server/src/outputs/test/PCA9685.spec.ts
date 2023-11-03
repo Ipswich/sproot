@@ -14,7 +14,7 @@ const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {
-  this.afterEach(() => {
+  afterEach(() => {
     sandbox.restore();
   });
 

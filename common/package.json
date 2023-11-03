@@ -1,11 +1,12 @@
 {
   "name": "@sproot/sproot-common",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "private": true,
   "description": "Sproot common libraries",
   "main": "index.js",
   "scripts": {
     "build": "tsc --build --verbose",
-    "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
+    "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
     "lint": "npx eslint ./src",
     "prettier:write": "npx prettier . --write",
     "prettier:check": "npx prettier . --check"

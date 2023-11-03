@@ -7,4 +7,4 @@ interface SDBSensor extends RowDataPacket {
   address: string | null;
 }
 
-export { SDBSensor };
+export type { SDBSensor };

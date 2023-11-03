@@ -13,7 +13,7 @@ const mockSprootDB = new MockSprootDB();
 const env = process.env;
 
 describe("DS18B20.ts tests", function () {
-  this.afterEach(() => {
+  afterEach(() => {
     process.env = env;
     sandbox.restore();
   });

@@ -199,4 +199,5 @@ interface PCA9685State extends IState {
   value: number;
 }
 
-export { PCA9685, PCA9685Output, PCA9685State };
+export { PCA9685, PCA9685Output };
+export type { PCA9685State };

@@ -11,7 +11,7 @@ const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
 describe("OutputList.ts tests", function () {
-  this.afterEach(() => {
+  afterEach(() => {
     sandbox.restore();
   });
 

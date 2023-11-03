@@ -8,4 +8,4 @@ interface SDBReading extends RowDataPacket {
   logTime: string;
 }
 
-export { SDBReading };
+export type { SDBReading };

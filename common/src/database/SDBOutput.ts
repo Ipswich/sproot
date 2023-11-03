@@ -10,4 +10,4 @@ interface SDBOutput extends RowDataPacket {
   isInvertedPwm: boolean;
 }
 
-export { SDBOutput };
+export type { SDBOutput };
