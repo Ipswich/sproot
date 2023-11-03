@@ -28,6 +28,7 @@ services:
       - sproot-network
     ports:
       - 3000:3000
+      - 3002:3002
     privileged: true
     command: ["sleep", "infinity"]
 
