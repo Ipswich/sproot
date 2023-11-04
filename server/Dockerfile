@@ -22,6 +22,7 @@ RUN apt update && apt install -y gh;
 # Copy project
 COPY .. ./sproot
 RUN cd ./sproot && npm run install:server 
+ENTRYPOINT cd ./sproot && npm run start:server
 
 # Expose app ports
 EXPOSE 3000
