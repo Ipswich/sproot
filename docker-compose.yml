@@ -1,11 +1,13 @@
 version: "3"
 services:
   server:
+    depends_on:
+      - db
     build:
       context: ./
       dockerfile: ./server/Dockerfile
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DEFAULT_USER="dev-test" #Change this to something long and unique
       - DEFAULT_USER_EMAIL="dev-test@example.com" #Change this to something long and unique
       - DEFAULT_USER_PASSWORD="password" #Change this to something long and unique
@@ -29,21 +31,21 @@ services:
     ports:
       - 3000:3000
     privileged: true
-    command: ["sleep", "infinity"]
   
   client:
+    depends_on:
+      - db
     build:
       context: ./
       dockerfile: ./client/Dockerfile
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
       - sproot-network
     ports:
       - 3001:3000
-    command: ["sleep", "infinity"]
 
   db:
     image: mariadb
