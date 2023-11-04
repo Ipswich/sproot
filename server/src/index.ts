@@ -88,7 +88,7 @@ const app = express();
   app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/v1/authenticate", login);
-  app.use("/api/v1/", homeRouter)
+  app.use("/api/v1/", homeRouter);
   app.use("/api/v1/sensors", authenticate, sensorRouter);
   app.use("/api/v1/outputs", authenticate, outputRouter);
 
