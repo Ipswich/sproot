@@ -60,27 +60,30 @@ const app = express();
   app.set("sensorList", sensorList);
   const outputList = new OutputList(sprootDB, logger);
   app.set("outputList", outputList);
-
-  await sensorList.initializeOrRegenerateAsync();
+  console.time("initializeOrRegenerate");
+  Promise.all([sensorList.initializeOrRegenerateAsync, outputList.initializeOrRegenerateAsync]);
+  console.timeEnd("initializeOrRegenerate");
+  console.time("getReadings");
   await sensorList.getReadingsAsync();
-  await outputList.initializeOrRegenerateAsync();
+  console.timeEnd("getReadings");
+  console.time("addReadingsToDatabaseAsync");
   await sensorList.addReadingsToDatabaseAsync();
+  console.timeEnd("addReadingsToDatabaseAsync");
 
   //State update loop
-  // const updateStateLoop = setInterval(async () => {
-  //   await sensorList.initializeOrRegenerateAsync();
-  //   await sensorList.getReadingsAsync();
-  //   await outputList.initializeOrRegenerateAsync();
-  //   //Add triggers and shit here.
+  const updateStateLoop = setInterval(async () => {
+    Promise.all([sensorList.initializeOrRegenerateAsync, outputList.initializeOrRegenerateAsync]);
+    await sensorList.getReadingsAsync();
+    //Add triggers and shit here.
 
-  //   //Execute any changes made to state.
-  //   outputList.executeOutputState();
-  // }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
+    //Execute any changes made to state.
+    outputList.executeOutputState();
+  }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
 
-  // // Database update loop
-  // const updateDatabaseLoop = setInterval(async () => {
-  //   await sensorList.addReadingsToDatabaseAsync();
-  // }, parseInt(process.env["DATABASE_UPDATE_INTERVAL"]!));
+  // Database update loop
+  const updateDatabaseLoop = setInterval(async () => {
+    await sensorList.addReadingsToDatabaseAsync();
+  }, parseInt(process.env["DATABASE_UPDATE_INTERVAL"]!));
 
   app.use(cors());
   app.use(cookieParser());
@@ -116,8 +119,8 @@ const app = express();
     logger.info("Shutting down...");
     server.close(async () => {
       // Stop updating database and sensors
-      // clearInterval(updateDatabaseLoop);
-      // clearInterval(updateStateLoop);
+      clearInterval(updateDatabaseLoop);
+      clearInterval(updateStateLoop);
       try {
         // Cleanup sensors and turn off outputs
         await app.get("sensorList").disposeAsync();
