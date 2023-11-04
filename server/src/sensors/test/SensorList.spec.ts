@@ -1,5 +1,4 @@
 import "dotenv/config";
-import bme280, { Bme280 } from "bme280";
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -116,44 +115,6 @@ describe("SensorList.ts tests", function () {
     assert.equal(sensorData["2"]!["model"], "DS18B20");
     assert.equal(sensorData["2"]!["address"], "28-00000");
     assert.exists(sensorList.sensors["1"]!["sprootDB"]);
-  });
-
-  it("should call dispose on DisposableSensorBase sensors", async function () {
-    const mockBME280Data = {
-      id: 1,
-      description: "test sensor 1",
-      model: "BME280",
-      address: "0x76",
-    } as SDBSensor;
-    sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
-      mockBME280Data,
-      {
-        id: 2,
-        description: "test sensor 2",
-        model: "DS18B20",
-        address: "28-00000",
-      } as SDBSensor,
-    ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
-    const logger = winston.createLogger();
-    sandbox
-      .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
-      .resolves([{ address: "28-00000" } as SDBSensor]);
-    sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
-    sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
-    sandbox
-      .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
-    const disposeStub = sandbox.stub(BME280.prototype, "disposeAsync");
-
-    const sensorList = new SensorList(mockSprootDB, logger);
-    await sensorList.initializeOrRegenerateAsync();
-    await sensorList.disposeAsync();
-
-    assert.equal(Object.keys(sensorList.sensors).length, 0);
-    assert.equal(disposeStub.callCount, 1);
   });
 
   it("should call getReading on all sensors", async function () {

@@ -247,26 +247,6 @@ describe("BME280.ts tests", function () {
     assert.equal(bme280Sensor.cachedReadings[ReadingType.pressure].length, 1);
   });
 
-  it("should dispose of a BME280 sensor", async () => {
-    const mockBME280Data = {
-      id: 1,
-      description: "test sensor 1",
-      model: "BME280",
-      address: "0x76",
-    } as SDBSensor;
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
-    const logger = winston.createLogger();
-    const closeStub = sandbox.stub().resolves();
-    sandbox.stub(bme280, "open").resolves({ close: closeStub as Bme280["close"] } as Bme280); // Don't create a real sensor - needs I2C bus
-
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
-    await bme280Sensor!.disposeAsync();
-
-    assert.isTrue(closeStub.calledOnce);
-  });
-
   it("should get a reading from a BME280 sensor", async () => {
     const mockBME280Data = {
       id: 1,
@@ -284,7 +264,11 @@ describe("BME280.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const readStub = sandbox.stub().resolves(mockReading as bme280.data);
-    sandbox.stub(bme280, "open").resolves({ read: readStub as Bme280["read"] } as Bme280); // Don't create a real sensor - needs I2C bus
+    const closeStub = sandbox.stub().resolves();
+    sandbox.stub(bme280, "open").resolves({
+      read: readStub as Bme280["read"],
+      close: closeStub as Bme280["close"],
+    } as Bme280); // Don't create a real sensor - needs I2C bus
 
     const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
 

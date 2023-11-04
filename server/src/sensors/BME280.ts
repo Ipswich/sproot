@@ -3,10 +3,10 @@ import bme280, { Bme280 } from "bme280";
 import { SDBSensor } from "@sproot/sproot-common/dist/database//SDBSensor";
 import { SDBReading } from "@sproot/sproot-common/dist/database//SDBReading";
 import { ISprootDB } from "@sproot/sproot-common/dist/database//ISprootDB";
-import { DisposableSensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import winston from "winston";
 
-class BME280 extends DisposableSensorBase {
+class BME280 extends SensorBase {
   #bme280: Bme280;
 
   constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
@@ -25,10 +25,6 @@ class BME280 extends DisposableSensorBase {
       await this.loadCachedReadingsFromDatabaseAsync(
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
       );
-      this.#bme280 = await bme280.open({
-        i2cBusNumber: 1,
-        i2cAddress: Number(this.address),
-      });
       return this;
     } catch (err) {
       handleError(err as Error, this.logger);
@@ -37,21 +33,21 @@ class BME280 extends DisposableSensorBase {
     return null;
   }
 
-  override async disposeAsync(): Promise<void> {
-    this.logger.info(`Disposing of BME280 sensor ${this.id}`);
-    await this.#bme280.close();
-  }
-
   override async getReadingAsync(): Promise<void> {
     console.time("BMEREADINGS");
+    this.#bme280 = await bme280.open({
+      i2cBusNumber: 1,
+      i2cAddress: Number(this.address),
+    });
     const reading = await this.#bme280.read();
+    await this.#bme280.close();
     this.lastReading[ReadingType.temperature] = String(reading.temperature);
     this.lastReading[ReadingType.humidity] = String(reading.humidity);
     this.lastReading[ReadingType.pressure] = String(reading.pressure);
     this.lastReadingTime = new Date();
     console.timeEnd("BMEREADINGS");
-    console.log("MAXIMUM MEASUREMENT TIME: " + this.#bme280.maximumMeasurementTime)
-    console.log("TYPICAL MEASUREMENT TIME: " + this.#bme280.typicalMeasurementTime)
+    console.log("MAXIMUM MEASUREMENT TIME: " + this.#bme280.maximumMeasurementTime);
+    console.log("TYPICAL MEASUREMENT TIME: " + this.#bme280.typicalMeasurementTime);
   }
 
   protected override updateCachedReadings() {
