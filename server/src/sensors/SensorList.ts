@@ -80,12 +80,14 @@ class SensorList {
     this.#touchAllSensorsAsync(async (sensor) => await sensor.getReadingAsync());
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
+    const promises = [];
     for (const key in this.#sensors) {
-      try {
-        await fn(this.#sensors[key] as SensorBase);
-      } catch (err) {
-        this.#logger.error(err);
-      }
+      promises.push(fn(this.#sensors[key] as SensorBase));
+    }
+    try {
+      await Promise.allSettled(promises);
+    } catch (err) {
+      this.#logger.error(err);
     }
   }
 

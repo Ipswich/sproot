@@ -43,11 +43,13 @@ class BME280 extends DisposableSensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
+    console.time("BMEREADINGS");
     const reading = await this.#bme280.read();
     this.lastReading[ReadingType.temperature] = String(reading.temperature);
     this.lastReading[ReadingType.humidity] = String(reading.humidity);
     this.lastReading[ReadingType.pressure] = String(reading.pressure);
     this.lastReadingTime = new Date();
+    console.timeEnd("BMEREADINGS");
   }
 
   protected override updateCachedReadings() {
