@@ -1,8 +1,8 @@
 version: "3"
 services:
-  app:
+  server:
     build:
-      context: .
+      context: ./server
       dockerfile: ./Dockerfile
     environment:
       - NODE_ENV=development
@@ -23,14 +23,26 @@ services:
       - MAX_SENSOR_READING_CACHE_SIZE=10080 #7 days worth of minutes
     volumes:
       - /sys:/sys
-      - ./docker_volumes/sproot/data:/home/sproot
+      - ./docker_volumes/sproot/server/data:/sproot
     networks:
       - sproot-network
     ports:
       - 3000:3000
-      - 3002:3002
     privileged: true
     command: ["sleep", "infinity"]
+  
+  client:
+    build:
+      context: ./client
+      dockerfile: ./Dockerfile
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./docker_volumes/sproot/client/data:/sproot
+    networks:
+      - sproot-network
+    ports:
+      - 3001:3000
 
   db:
     image: mariadb
