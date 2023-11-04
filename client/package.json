@@ -10,7 +10,7 @@
     "prettier:write": "npx prettier . --write",
     "prettier:check": "npx prettier . --check",
     "preview": "vite preview",
-    "start": "npm run build && npx serve -p 3002 dist",
+    "start": "npm run build && npx serve -p 3000 dist",
     "start:dev": "vite"
   },
   "devDependencies": {

@@ -2,8 +2,8 @@ version: "3"
 services:
   server:
     build:
-      context: ./server
-      dockerfile: ./Dockerfile
+      context: ./
+      dockerfile: ./server/Dockerfile
     environment:
       - NODE_ENV=development
       - DEFAULT_USER="dev-test" #Change this to something long and unique
@@ -23,7 +23,7 @@ services:
       - MAX_SENSOR_READING_CACHE_SIZE=10080 #7 days worth of minutes
     volumes:
       - /sys:/sys
-      - ./docker_volumes/sproot/server/data:/sproot
+      - ./docker_volumes/sproot/server/logs:/sproot/server/logs
     networks:
       - sproot-network
     ports:
@@ -33,16 +33,17 @@ services:
   
   client:
     build:
-      context: ./client
-      dockerfile: ./Dockerfile
+      context: ./
+      dockerfile: ./client/Dockerfile
     environment:
       - NODE_ENV=development
     volumes:
-      - ./docker_volumes/sproot/client/data:/sproot
+      - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
       - sproot-network
     ports:
       - 3001:3000
+    command: ["sleep", "infinity"]
 
   db:
     image: mariadb
@@ -63,7 +64,7 @@ services:
     networks:
       - sproot-network
     ports:
-      - 3001:8080
+      - 3002:8080
 
 networks:
   sproot-network:
