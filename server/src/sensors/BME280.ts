@@ -31,7 +31,7 @@ class BME280 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
-    console.time("BMEREADINGS");
+    console.time("BMEREADINGS1");
 
     await bme280
       .open({
@@ -47,7 +47,20 @@ class BME280 extends SensorBase {
         await sensor.close();
       });
 
-    console.timeEnd("BMEREADINGS");
+    console.timeEnd("BMEREADINGS1");
+
+    console.time("BMEREADINGS2");
+    await bme280
+      .open({
+        i2cBusNumber: 1,
+        i2cAddress: 0x76,
+      })
+      .then(async (sensor) => {
+        const reading = await sensor.read();
+        console.log(reading);
+        await sensor.close();
+      });
+    console.timeEnd("BMEREADINGS2");
   }
 
   protected override updateCachedReadings() {
