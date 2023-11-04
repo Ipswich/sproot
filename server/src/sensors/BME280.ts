@@ -32,7 +32,6 @@ class BME280 extends SensorBase {
 
   override async getReadingAsync(): Promise<void> {
     console.time("BMEREADINGS1");
-
     await bme280
       .open({
         i2cBusNumber: 1,
@@ -46,14 +45,13 @@ class BME280 extends SensorBase {
         this.lastReadingTime = new Date();
         await sensor.close();
       });
-
     console.timeEnd("BMEREADINGS1");
 
     console.time("BMEREADINGS2");
     await bme280
       .open({
         i2cBusNumber: 1,
-        i2cAddress: 0x76,
+        i2cAddress: Number(this.address),
       })
       .then(async (sensor) => {
         const reading = await sensor.read();
@@ -64,6 +62,22 @@ class BME280 extends SensorBase {
         await sensor.close();
       });
     console.timeEnd("BMEREADINGS2");
+
+    console.time("BMEREADINGS3");
+    await bme280
+      .open({
+        i2cBusNumber: 1,
+        i2cAddress: Number(this.address),
+      })
+      .then(async (sensor) => {
+        const reading = await sensor.read();
+        this.lastReading[ReadingType.temperature] = String(reading.temperature);
+        this.lastReading[ReadingType.humidity] = String(reading.humidity);
+        this.lastReading[ReadingType.pressure] = String(reading.pressure);
+        this.lastReadingTime = new Date();
+        await sensor.close();
+      });
+    console.timeEnd("BMEREADINGS3");
   }
 
   protected override updateCachedReadings() {
