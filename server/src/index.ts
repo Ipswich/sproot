@@ -16,6 +16,7 @@ import { OutputList } from "./outputs/OutputList";
 import login, { authenticate } from "./api/v1/middleware/Authentication";
 import sensorRouter from "./api/v1/SensorRouter";
 import outputRouter from "./api/v1/OutputRouter";
+import homeRouter from "./api/v1/HomeRouter";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 
 const mysqlConfig = {
@@ -87,6 +88,7 @@ const app = express();
   app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/v1/authenticate", login);
+  app.use("/api/v1/", homeRouter)
   app.use("/api/v1/sensors", authenticate, sensorRouter);
   app.use("/api/v1/outputs", authenticate, outputRouter);
 
