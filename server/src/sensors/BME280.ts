@@ -57,7 +57,10 @@ class BME280 extends SensorBase {
       })
       .then(async (sensor) => {
         const reading = await sensor.read();
-        console.log(reading);
+        this.lastReading[ReadingType.temperature] = String(reading.temperature);
+        this.lastReading[ReadingType.humidity] = String(reading.humidity);
+        this.lastReading[ReadingType.pressure] = String(reading.pressure);
+        this.lastReadingTime = new Date();
         await sensor.close();
       });
     console.timeEnd("BMEREADINGS2");
