@@ -72,8 +72,8 @@ const app = express();
   const updateStateLoop = setInterval(async () => {
     console.time("initializeOrRegenerate");
     await Promise.all([
-      sensorList.initializeOrRegenerateAsync,
-      outputList.initializeOrRegenerateAsync,
+      sensorList.initializeOrRegenerateAsync(),
+      outputList.initializeOrRegenerateAsync(),
     ]);
     console.timeEnd("initializeOrRegenerate");
     console.time("getReadings");
