@@ -46,8 +46,8 @@ class BME280 extends SensorBase {
     this.lastReading[ReadingType.pressure] = String(reading.pressure);
     this.lastReadingTime = new Date();
     console.timeEnd("BMEREADINGS");
-    console.log("MAXIMUM MEASUREMENT TIME: " + this.#bme280.maximumMeasurementTime);
-    console.log("TYPICAL MEASUREMENT TIME: " + this.#bme280.typicalMeasurementTime);
+    console.log("MAXIMUM MEASUREMENT TIME: " + this.#bme280.maximumMeasurementTime());
+    console.log("TYPICAL MEASUREMENT TIME: " + this.#bme280.typicalMeasurementTime());
   }
 
   protected override updateCachedReadings() {
