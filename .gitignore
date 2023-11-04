@@ -133,3 +133,5 @@ dist
 
 # Docker volumes
 docker_volumes/
+
+*.local
