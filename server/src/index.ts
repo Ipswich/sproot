@@ -1,5 +1,6 @@
 import "dotenv/config";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import bcrypt from "bcrypt";
 import express from "express";
 import mysql2 from "mysql2/promise";
@@ -80,6 +81,7 @@ const app = express();
     await sensorList.addReadingsToDatabaseAsync();
   }, parseInt(process.env["DATABASE_UPDATE_INTERVAL"]!));
 
+  app.use(cors());
   app.use(cookieParser());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
