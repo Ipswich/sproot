@@ -171,7 +171,7 @@ describe("DS18B20.ts tests", function () {
     sandbox.stub(ds18b20, "sensors").yields(new Error("test error"), null);
     sandbox
       .stub(ds18b20, "temperature")
-      .throws(
+      .yields(
         new Error(
           "ENOENT: no such file or directory, open '/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves'",
         ),
