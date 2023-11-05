@@ -1,8 +1,8 @@
 {
-  "name": "client",
+  "name": "@sproot/sproot-client",
+  "version": "0.0.1",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "description": "sproot-client, the frontend for the sproot project",
   "scripts": {
     "clean": "rimraf tsconfig.node.tsbuildinfo && rimraf ./dist",
     "build": "tsc && vite build",
@@ -11,7 +11,7 @@
     "prettier:check": "npx prettier . --check",
     "preview": "vite preview",
     "start": "npm run build && npx serve -p 3000 dist",
-    "start:dev": "vite"
+    "start:dev": "vite --host"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

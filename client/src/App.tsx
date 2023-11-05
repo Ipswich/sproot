@@ -1,10 +1,16 @@
-import { useState } from "react";
+// import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
+// import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 
 function App() {
-  const [count, setCount] = useState(0);
+  // const [count, setCount] = useState(0);
+   const getSensorData = async () => {
+    fetch('http://192.168.2.166:3000/api/v1/sensors')
+    .then( response => { return response.json() })
+    .then( data => { console.log(data.sensors) });
+  }
 
   return (
     <>
@@ -18,8 +24,8 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 12)}>
-          count is {count}
+        <button onClick={async () => await getSensorData()}>
+          {/* count is {count} */}
         </button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
