@@ -74,7 +74,7 @@ const app = express();
       sensorList.initializeOrRegenerateAsync(),
       outputList.initializeOrRegenerateAsync(),
     ]);
-    await sensorList.getReadingsAsync();
+    sensorList.getReadingsAsync();
     //Add triggers and shit here.
 
     //Execute any changes made to state.

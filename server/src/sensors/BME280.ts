@@ -22,6 +22,7 @@ class BME280 extends SensorBase {
       await this.loadCachedReadingsFromDatabaseAsync(
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
       );
+      await this.getReadingAsync();
       return this;
     } catch (err) {
       handleError(err as Error, this.logger);
