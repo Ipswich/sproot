@@ -52,7 +52,7 @@ describe("DS18B20.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const mockReading = 21.2;
-    sandbox.stub(ds18b20, "temperatureSync").returns(mockReading);
+    sandbox.stub(ds18b20, "temperature").yields(null, mockReading);
 
     const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, logger);
     await ds18b20Sensor.getReadingAsync();
@@ -170,7 +170,7 @@ describe("DS18B20.ts tests", function () {
   it("should log errors on getting addresses and readings, ", async function () {
     sandbox.stub(ds18b20, "sensors").yields(new Error("test error"), null);
     sandbox
-      .stub(ds18b20, "temperatureSync")
+      .stub(ds18b20, "temperature")
       .throws(
         new Error(
           "ENOENT: no such file or directory, open '/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves'",

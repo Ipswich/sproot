@@ -30,22 +30,22 @@ class DS18B20 extends SensorBase {
   override async getReadingAsync(): Promise<void> {
     try {
       ds18b20.temperature(this.address!, (err, value) => {
-      if (err) {
-        throw err;
-      }
-      const reading = String(value);
-      this.lastReading[ReadingType.temperature] = reading;
-      this.lastReadingTime = new Date();
+        if (err) {
+          throw err;
+        }
+        const reading = String(value);
+        this.lastReading[ReadingType.temperature] = reading;
+        this.lastReadingTime = new Date();
 
-      if (this.cachedReadings[ReadingType.temperature].length > 0) {
-        this.cachedReadings[ReadingType.temperature].shift();
-        this.cachedReadings[ReadingType.temperature].push({
-          metric: ReadingType.temperature,
-          data: reading,
-          units: this.units[ReadingType.temperature],
-          logTime: new Date().toUTCString(),
-        } as SDBReading);
-      }
+        if (this.cachedReadings[ReadingType.temperature].length > 0) {
+          this.cachedReadings[ReadingType.temperature].shift();
+          this.cachedReadings[ReadingType.temperature].push({
+            metric: ReadingType.temperature,
+            data: reading,
+            units: this.units[ReadingType.temperature],
+            logTime: new Date().toUTCString(),
+          } as SDBReading);
+        }
       });
     } catch (err) {
       handleError(err as Error, this.logger);

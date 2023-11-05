@@ -32,11 +32,11 @@ class BME280 extends SensorBase {
 
   override async getReadingAsync(): Promise<void> {
     await bme280
-    .open({
-      i2cBusNumber: 1,
-      i2cAddress: Number(this.address),
-    })
-    .then(async (sensor) => {
+      .open({
+        i2cBusNumber: 1,
+        i2cAddress: Number(this.address),
+      })
+      .then(async (sensor) => {
         const reading = await sensor.read();
         this.lastReading[ReadingType.temperature] = String(reading.temperature);
         this.lastReading[ReadingType.humidity] = String(reading.humidity);
