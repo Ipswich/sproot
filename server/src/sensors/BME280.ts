@@ -22,7 +22,6 @@ class BME280 extends SensorBase {
       await this.loadCachedReadingsFromDatabaseAsync(
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
       );
-      await this.getReadingAsync();
       return this;
     } catch (err) {
       handleError(err as Error, this.logger);
@@ -32,27 +31,19 @@ class BME280 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
-    console.time("BMEREADINGS");
-    console.time("open");
     await bme280
     .open({
       i2cBusNumber: 1,
       i2cAddress: Number(this.address),
     })
     .then(async (sensor) => {
-      console.timeEnd("open");
         const reading = await sensor.read();
-        console.time("write");
         this.lastReading[ReadingType.temperature] = String(reading.temperature);
         this.lastReading[ReadingType.humidity] = String(reading.humidity);
         this.lastReading[ReadingType.pressure] = String(reading.pressure);
         this.lastReadingTime = new Date();
-        console.timeEnd("write");
-        console.time("close")
-        sensor.close();
-        console.timeEnd("close")
+        await sensor.close();
       });
-    console.timeEnd("BMEREADINGS");
   }
 
   protected override updateCachedReadings() {
