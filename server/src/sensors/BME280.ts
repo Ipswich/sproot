@@ -78,6 +78,16 @@ class BME280 extends SensorBase {
         await sensor.close();
       });
     console.timeEnd("BMEREADINGS3");
+
+    console.time("BMEREADINGS4");
+    await bme280
+      .open({ forcedMode: true })
+      .then(async (sensor) => {
+        await this.forcedRead(sensor).catch(console.log);
+        await sensor.close();
+      })
+      .catch(console.log);
+    console.timeEnd("BMEREADINGS4");
   }
 
   protected override updateCachedReadings() {
@@ -163,6 +173,12 @@ class BME280 extends SensorBase {
       this.logger.error(`Failed to load cached readings for sensor {BME280, id:${this.id}}`);
       this.logger.error("BME280: " + err);
     }
+  }
+
+  private async forcedRead(sensor: bme280.Bme280) {
+    await sensor.triggerForcedMeasurement();
+    await new Promise((resolve) => setTimeout(resolve, sensor.maximumMeasurementTime()));
+    console.log(await sensor.read());
   }
 }
 
