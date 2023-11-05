@@ -31,53 +31,23 @@ class BME280 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
-    // console.time("BMEREADINGS1");
-    // await bme280
-    //   .open({
-    //     i2cBusNumber: 1,
-    //     i2cAddress: Number(this.address),
-    //   })
-    //   .then(async (sensor) => {
-    //     const reading = await sensor.read();
-    //     this.lastReading[ReadingType.temperature] = String(reading.temperature);
-    //     this.lastReading[ReadingType.humidity] = String(reading.humidity);
-    //     this.lastReading[ReadingType.pressure] = String(reading.pressure);
-    //     this.lastReadingTime = new Date();
-    //     await sensor.close();
-    //   });
-    // console.timeEnd("BMEREADINGS1");
-
-    console.time("BMEREADINGS2");
+    console.time("BMEREADINGS");
     await bme280
-      .open({
-        i2cBusNumber: 1,
-        i2cAddress: Number(this.address),
-      })
-      .then(async (sensor) => {
+    .open({
+      i2cBusNumber: 1,
+      i2cAddress: Number(this.address),
+    })
+    .then(async (sensor) => {
+        console.time("read");
         const reading = await sensor.read();
+        console.timeEnd("read");
         this.lastReading[ReadingType.temperature] = String(reading.temperature);
         this.lastReading[ReadingType.humidity] = String(reading.humidity);
         this.lastReading[ReadingType.pressure] = String(reading.pressure);
         this.lastReadingTime = new Date();
-        await sensor.close();
+        sensor.close();
       });
-    console.timeEnd("BMEREADINGS2");
-
-    // console.time("BMEREADINGS3");
-    // await bme280
-    //   .open({
-    //     i2cBusNumber: 1,
-    //     i2cAddress: Number(this.address),
-    //   })
-    //   .then(async (sensor) => {
-    //     const reading = await sensor.read();
-    //     this.lastReading[ReadingType.temperature] = String(reading.temperature);
-    //     this.lastReading[ReadingType.humidity] = String(reading.humidity);
-    //     this.lastReading[ReadingType.pressure] = String(reading.pressure);
-    //     this.lastReadingTime = new Date();
-    //     await sensor.close();
-    //   });
-    // console.timeEnd("BMEREADINGS3");
+    console.timeEnd("BMEREADINGS");
   }
 
   protected override updateCachedReadings() {
