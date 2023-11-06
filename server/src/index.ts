@@ -70,15 +70,25 @@ const app = express();
 
   //State update loop
   const updateStateLoop = setInterval(async () => {
+    const profiler = logger.startTimer();
+
+    const initializeOrRegenerateTimer = logger.startTimer();
     await Promise.all([
       sensorList.initializeOrRegenerateAsync(),
       outputList.initializeOrRegenerateAsync(),
     ]);
+    initializeOrRegenerateTimer.done({ message: "Initialize or regenerate time" });
+
+    const readingTimer = logger.startTimer();
     await sensorList.getReadingsAsync();
+    readingTimer.done({ message: "Get readings time" });
     //Add triggers and shit here.
 
     //Execute any changes made to state.
+    const executeTimer = logger.startTimer();
     outputList.executeOutputState();
+    executeTimer.done({ message: "Execute output time" });
+    profiler.done({ message: "Update loop time" });
   }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
 
   // Database update loop

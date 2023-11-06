@@ -31,6 +31,7 @@ class BME280 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
+    const getReadingTimer = this.logger.startTimer();
     await bme280
       .open({
         i2cBusNumber: 1,
@@ -43,6 +44,9 @@ class BME280 extends SensorBase {
         this.lastReading[ReadingType.pressure] = String(reading.pressure);
         this.lastReadingTime = new Date();
         await sensor.close();
+        getReadingTimer.done({
+          message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+        });
       });
   }
 

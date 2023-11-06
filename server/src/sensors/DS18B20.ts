@@ -28,6 +28,7 @@ class DS18B20 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
+    const getReadingTimer = this.logger.startTimer();
     try {
       const result = await util.promisify(ds18b20.temperature)(this.address!);
       const reading = String(result);
@@ -48,6 +49,10 @@ class DS18B20 extends SensorBase {
       this.logger.error(
         `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
       );
+    } finally {
+      getReadingTimer.done({
+        message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+      });
     }
   }
 
