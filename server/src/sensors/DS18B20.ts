@@ -31,8 +31,11 @@ class DS18B20 extends SensorBase {
     ds18b20.temperature(this.address!, (err, value) => {
       if (err) {
         handleError(err as Error, this.logger);
-        this.logger.error(`Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`);
+        this.logger.error(
+          `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+        );
       } else {
+        try {
         const reading = String(value);
         this.lastReading[ReadingType.temperature] = reading;
         this.lastReadingTime = new Date();
@@ -46,6 +49,10 @@ class DS18B20 extends SensorBase {
             logTime: new Date().toUTCString(),
           } as SDBReading);
         }
+      } catch (e) {
+        this.logger.error(`~Failed to get reading for sensor {DS18B20, id: ${this.id}}`);
+        this.logger.error("~DS18B20: " + e);
+      }
       }
     });
   }
