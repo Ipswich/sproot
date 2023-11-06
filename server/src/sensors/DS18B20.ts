@@ -28,8 +28,8 @@ class DS18B20 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
-    ds18b20.temperature(this.address!, (err, value) => {
-      try {
+    return new Promise((resolve) => {
+      ds18b20.temperature(this.address!, (err, value) => {
         if (err != null) {
           handleError(err as Error, this.logger);
           this.logger.error(
@@ -49,11 +49,9 @@ class DS18B20 extends SensorBase {
               logTime: new Date().toUTCString(),
             } as SDBReading);
           }
+          resolve();
         }
-      } catch (e) {
-        this.logger.error(`~Failed to get reading for sensor {DS18B20, id: ${this.id}}`);
-        this.logger.error("~DS18B20: " + e);
-      }
+      }); 
     });
   }
 
