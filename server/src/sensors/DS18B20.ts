@@ -28,6 +28,7 @@ class DS18B20 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
+    console.log(this.address);
     ds18b20.temperature(this.address!, (err, value) => {
       if (err) {
         handleError(err as Error, this.logger);
