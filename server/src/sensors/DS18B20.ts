@@ -28,11 +28,10 @@ class DS18B20 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
-    console.log(this.address);
     ds18b20.temperature(this.address!, (err, value) => {
       if (err) {
         handleError(err as Error, this.logger);
-        this.logger.error(`Failed to get reading for sensor {DS18B20, id: ${this.id}}`);
+        this.logger.error(`Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`);
       } else {
         const reading = String(value);
         this.lastReading[ReadingType.temperature] = reading;
