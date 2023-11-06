@@ -29,30 +29,30 @@ class DS18B20 extends SensorBase {
 
   override async getReadingAsync(): Promise<void> {
     ds18b20.temperature(this.address!, (err, value) => {
-      if (err != null) {
-        handleError(err as Error, this.logger);
-        this.logger.error(
-          `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
-        );
-      } else {
-        try {
-        const reading = String(value);
-        this.lastReading[ReadingType.temperature] = reading;
-        this.lastReadingTime = new Date();
+      try {
+        if (err != null) {
+          handleError(err as Error, this.logger);
+          this.logger.error(
+            `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+          );
+        } else {
+          const reading = String(value);
+          this.lastReading[ReadingType.temperature] = reading;
+          this.lastReadingTime = new Date();
 
-        if (this.cachedReadings[ReadingType.temperature].length > 0) {
-          this.cachedReadings[ReadingType.temperature].shift();
-          this.cachedReadings[ReadingType.temperature].push({
-            metric: ReadingType.temperature,
-            data: reading,
-            units: this.units[ReadingType.temperature],
-            logTime: new Date().toUTCString(),
-          } as SDBReading);
+          if (this.cachedReadings[ReadingType.temperature].length > 0) {
+            this.cachedReadings[ReadingType.temperature].shift();
+            this.cachedReadings[ReadingType.temperature].push({
+              metric: ReadingType.temperature,
+              data: reading,
+              units: this.units[ReadingType.temperature],
+              logTime: new Date().toUTCString(),
+            } as SDBReading);
+          }
         }
       } catch (e) {
         this.logger.error(`~Failed to get reading for sensor {DS18B20, id: ${this.id}}`);
         this.logger.error("~DS18B20: " + e);
-      }
       }
     });
   }
