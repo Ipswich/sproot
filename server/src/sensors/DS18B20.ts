@@ -29,31 +29,6 @@ class DS18B20 extends SensorBase {
 
   override async getReadingAsync(): Promise<void> {
     const getReadingTimer = this.logger.startTimer();
-    // try {
-    //   const result = await util.promisify(ds18b20.temperature)(this.address!);
-    //   const reading = String(result);
-    //   this.lastReading[ReadingType.temperature] = reading;
-    //   this.lastReadingTime = new Date();
-
-    //   if (this.cachedReadings[ReadingType.temperature].length > 0) {
-    //     this.cachedReadings[ReadingType.temperature].shift();
-    //     this.cachedReadings[ReadingType.temperature].push({
-    //       metric: ReadingType.temperature,
-    //       data: reading,
-    //       units: this.units[ReadingType.temperature],
-    //       logTime: new Date().toUTCString(),
-    //     } as SDBReading);
-    //   }
-    // } catch (err) {
-    //   handleError(err as Error, this.logger);
-    //   this.logger.error(
-    //     `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
-    //   );
-    // } finally {
-    //   getReadingTimer.done({
-    //     message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
-    //   });
-    // }
     ds18b20.temperature(this.address!, (err, value) => {
       try {
         if (err != null) {
@@ -77,10 +52,10 @@ class DS18B20 extends SensorBase {
           }
         }
       } catch (e) {
-          handleError(err as Error, this.logger);
-          this.logger.error(
-            `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
-          );
+        handleError(err as Error, this.logger);
+        this.logger.error(
+          `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+        );
       } finally {
         getReadingTimer.done({
           message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
