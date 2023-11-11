@@ -56,15 +56,18 @@ const app = express();
   app.set("logger", logger);
   await defaultUserCheck(sprootDB, logger);
 
+  logger.info("Creating sensor and output lists. . .");
   const sensorList = new SensorList(sprootDB, logger);
   app.set("sensorList", sensorList);
   const outputList = new OutputList(sprootDB, logger);
   app.set("outputList", outputList);
 
+  logger.info("Initializing sensor and output lists. . .");
   await Promise.all([
     sensorList.initializeOrRegenerateAsync,
     outputList.initializeOrRegenerateAsync,
   ]);
+  logger.info("Taking initial readings. . .")
   await sensorList.getReadingsAsync();
   await sensorList.addReadingsToDatabaseAsync();
 
