@@ -21,6 +21,7 @@ services:
       - DATABASE_PASSWORD=root #**MATCH ME**
       - DATABASE_NAME=sproot
       - STATE_UPDATE_INTERVAL=1000
+      - SENSOR_UPDATE_INTERVAL=5000
       - DATABASE_UPDATE_INTERVAL=60000
       - MAX_SENSOR_READING_CACHE_SIZE=10080 #7 days worth of minutes
     volumes:
