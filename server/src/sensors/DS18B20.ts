@@ -77,8 +77,10 @@ class DS18B20 extends SensorBase {
           }
         }
       } catch (e) {
-        this.logger.error(`~Failed to get reading for sensor {DS18B20, id: ${this.id}}`);
-        this.logger.error("~DS18B20: " + e);
+          handleError(err as Error, this.logger);
+          this.logger.error(
+            `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+          );
       } finally {
         getReadingTimer.done({
           message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
