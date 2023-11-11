@@ -71,13 +71,10 @@ const app = express();
   //State update loop
   const updateStateLoop = setInterval(async () => {
     const profiler = logger.startTimer();
-
-    const initializeOrRegenerateTimer = logger.startTimer();
     await Promise.all([
       sensorList.initializeOrRegenerateAsync(),
       outputList.initializeOrRegenerateAsync(),
     ]);
-    initializeOrRegenerateTimer.done({ message: "Initialize or regenerate time" });
     //Add triggers and shit here.
 
     //Execute any changes made to state.

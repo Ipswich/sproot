@@ -144,7 +144,7 @@ class PCA9685Output extends OutputBase {
   }
 
   executeState(): void {
-    this.logger.info(
+    this.logger.verbose(
       `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.manualState.value}`,
     );
     switch (this.controlMode) {
