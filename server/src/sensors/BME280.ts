@@ -45,7 +45,7 @@ class BME280 extends SensorBase {
         this.lastReadingTime = new Date();
         await sensor.close();
         getReadingTimer.done({
-          message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+          message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}}`,
         });
       });
   }
