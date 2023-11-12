@@ -32,7 +32,7 @@ class DS18B20 extends SensorBase {
 
       const result = await readTemperatureFromDeviceAsync(this.address!, this.logger);
       if (result === false) {
-        throw new Error("Error reading from sensor.");
+        throw new Error("Invalid reading from sensor.");
       }
 
       
@@ -141,32 +141,23 @@ async function readTemperatureFromDeviceAsync(
   logger: winston.Logger,
 ): Promise<number | false> {
   const getReadingTimer = logger.startTimer();
-  const tickInterval = setInterval(() => {
-    logger.info("TICK FOR ADDRESS: " + address);
-  }, 250);
+  logger.info(`Reading from file: /sys/bus/w1/devices/${address}/w1_slave`);
   const data = await readFile(`/sys/bus/w1/devices/${address}/w1_slave`, "utf8");
   getReadingTimer.done({
     message: `Reading time for sensor {address: ${address}}`,
   });
-  const processingTimer = logger.startTimer();
   const lines = data.split("\n");
   if (lines[0]?.includes("YES")) {
     const output = lines[1]?.match(/t=(-?\d+)/);
     if (output) {
       const temperature = parseInt(output[1] || "");
       if (!isNaN(temperature)) {
-        clearInterval(tickInterval);
-        processingTimer.done("FINISHED NORMALLY");
         return Math.round(temperature / 100) / 10;
       }
     }
   } else if (lines[0]?.includes("NO")) {
-    processingTimer.done("FINISHED ABNORMALLY");
-    clearInterval(tickInterval);
     return false;
   }
-  processingTimer.done("FINISHED REALLY ABNORMALLY");
-  clearInterval(tickInterval);
   return false;
 }
 
