@@ -73,7 +73,6 @@ const app = express();
 
   //State update loop
   const updateStateLoop = setInterval(async () => {
-    const profiler = logger.startTimer();
     await Promise.all([
       sensorList.initializeOrRegenerateAsync(),
       outputList.initializeOrRegenerateAsync(),
@@ -82,7 +81,6 @@ const app = express();
 
     //Execute any changes made to state.
     outputList.executeOutputState();
-    profiler.done({ message: "Update loop time" });
   }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
 
   // Sensor Reading loop

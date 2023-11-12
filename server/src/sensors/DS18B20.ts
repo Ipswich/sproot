@@ -31,6 +31,7 @@ class DS18B20 extends SensorBase {
       this.logger.info("Starting read for sensor {DS18B20, id: " + this.id + "}");
 
       const result = await readTemperatureFromDeviceAsync(this.address!, this.logger);
+      this.logger.info("Finished read for sensor {DS18B20, id: " + this.id + "}. Reading - " + result);
       if (result === false) {
         throw new Error("Invalid reading from sensor.");
       }

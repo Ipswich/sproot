@@ -73,11 +73,11 @@ class SensorList {
   }
 
   addReadingsToDatabaseAsync = async () =>
-    this.#touchAllSensorsAsync(async (sensor) => sensor.addLastReadingToDatabaseAsync());
+    await this.#touchAllSensorsAsync(async (sensor) => sensor.addLastReadingToDatabaseAsync());
   disposeAsync = async () =>
-    this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
+    await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
   getReadingsAsync = async () =>
-    this.#touchAllSensorsAsync(async (sensor) => sensor.getReadingAsync());
+    await this.#touchAllSensorsAsync(async (sensor) => sensor.getReadingAsync());
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     const promises = [];
