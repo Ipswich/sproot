@@ -158,11 +158,8 @@ async function readTemperatureFromDeviceAsync(
       logger.error(`Output: ${output}`);
     }
   } else if (lines[0]?.includes("NO")) {
-    logger.error(`CRC failed for sensor {address: ${address}}`);
     return false;
   }
-  logger.error(`Invalid reading from sensor {address: ${address}}`);
-  logger.error(`Lines: ${lines}`)
   return false;
 }
 
