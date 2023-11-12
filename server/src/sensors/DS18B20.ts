@@ -30,10 +30,14 @@ class DS18B20 extends SensorBase {
     try {
       const getReadingTimer = this.logger.startTimer();
       this.logger.info("Starting read for sensor {DS18B20, id: " + this.id + "}");
+      const tickInterval = setInterval(() => {this.logger.info("TICK")}, 250);
+      
       const result = await readTemperatureFromDeviceAsync(this.address!);
       if (result === false) {
         throw new Error("Error reading from sensor.");
       }
+      
+      clearInterval(tickInterval);
       getReadingTimer.done({
         message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
       });
