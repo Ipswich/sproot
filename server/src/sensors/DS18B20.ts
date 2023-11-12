@@ -28,7 +28,6 @@ class DS18B20 extends SensorBase {
 
   override async getReadingAsync(): Promise<void> {
     try {
-      const getReadingTimer = this.logger.startTimer();
       this.logger.info("Starting read for sensor {DS18B20, id: " + this.id + "}");
 
       const result = await readTemperatureFromDeviceAsync(this.address!, this.logger);
@@ -36,9 +35,7 @@ class DS18B20 extends SensorBase {
         throw new Error("Error reading from sensor.");
       }
 
-      getReadingTimer.done({
-        message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
-      });
+      
       const reading = String(result);
       this.lastReading[ReadingType.temperature] = reading;
       this.lastReadingTime = new Date();
@@ -143,10 +140,15 @@ async function readTemperatureFromDeviceAsync(
   address: string,
   logger: winston.Logger,
 ): Promise<number | false> {
+  const getReadingTimer = logger.startTimer();
   const tickInterval = setInterval(() => {
     logger.info("TICK FOR ADDRESS: " + address);
   }, 250);
   const data = await readFile(`/sys/bus/w1/devices/${address}/w1_slave`, "utf8");
+  getReadingTimer.done({
+    message: `Reading time for sensor {address: ${address}}`,
+  });
+  const processingTimer = logger.startTimer();
   const lines = data.split("\n");
   if (lines[0]?.includes("YES")) {
     const output = lines[1]?.match(/t=(-?\d+)/);
@@ -154,13 +156,16 @@ async function readTemperatureFromDeviceAsync(
       const temperature = parseInt(output[1] || "");
       if (!isNaN(temperature)) {
         clearInterval(tickInterval);
+        processingTimer.done("FINISHED NORMALLY");
         return Math.round(temperature / 100) / 10;
       }
     }
   } else if (lines[0]?.includes("NO")) {
+    processingTimer.done("FINISHED ABNORMALLY");
     clearInterval(tickInterval);
     return false;
   }
+  processingTimer.done("FINISHED REALLY ABNORMALLY");
   clearInterval(tickInterval);
   return false;
 }
