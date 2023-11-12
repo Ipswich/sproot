@@ -37,11 +37,10 @@ class DS18B20 extends SensorBase {
 
   override async getReadingAsync(): Promise<void> {
     try {
-      const result = await readTemperatureFromDeviceAsync(this.address!, this.logger);
+      const result = await readTemperatureFromDeviceAsync(this.address!);
       if (result === false) {
         throw new Error("Invalid reading from sensor.");
       }
-
       const reading = String(result);
       this.lastReading[ReadingType.temperature] = reading;
       this.lastReadingTime = new Date();
@@ -148,14 +147,9 @@ async function getSensorAddressesAsync(): Promise<string[]> {
 }
 
 async function readTemperatureFromDeviceAsync(
-  address: string,
-  logger: winston.Logger,
+  address: string
 ): Promise<number | false> {
-  const getReadingTimer = logger.startTimer();
   const data = await readFile(`/sys/bus/w1/devices/${address}/w1_slave`, "utf8");
-  getReadingTimer.done({
-    message: `Reading time for sensor {address: ${address}}`,
-  });
   const lines = data.split("\n");
   if (lines[0]?.includes("YES")) {
     const output = lines[1]?.match(/t=(-?\d+)/);
