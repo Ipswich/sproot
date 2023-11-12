@@ -1,6 +1,5 @@
 import "dotenv/config";
-import ds18b20 from "ds18b20";
-import util from "util";
+import { readFile } from 'node:fs/promises';
 import winston from "winston";
 
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
@@ -31,7 +30,10 @@ class DS18B20 extends SensorBase {
     try {
       const getReadingTimer = this.logger.startTimer();
       this.logger.info("Starting read for sensor {DS18B20, id: " + this.id + "}");
-      const result = await util.promisify(ds18b20.temperature)(this.address!);
+      const result = await readTemperatureFromDeviceAsync(this.address!);
+      if (result === false) {
+        throw new Error("Error reading from sensor.");
+      }
       getReadingTimer.done({
         message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
       });
@@ -109,7 +111,7 @@ class DS18B20 extends SensorBase {
 
   static async getAddressesAsync(logger: winston.Logger): Promise<string[]> {
     try {
-      return await util.promisify(ds18b20.sensors)();
+      return await getSensorAddressesAsync();
     } catch (err) {
       handleError(err as Error, logger);
       logger.error("Failed to get DS18B20 addresses");
@@ -126,6 +128,33 @@ function handleError(err: Error, logger: winston.Logger): void {
   } else {
     logger.error("DS18B20: " + err);
   }
+}
+
+async function getSensorAddressesAsync(): Promise<string[]> {
+  const data = await readFile(
+    "/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves",
+    "utf8",
+  );
+  var parts = data.split("\n");
+  parts.pop();
+  return parts;
+}
+
+async function readTemperatureFromDeviceAsync(address: string): Promise<number | false> {
+  const data = await readFile(`/sys/bus/w1/devices/${address}/w1_slave`, "utf8");
+  const lines = data.split("\n");
+  if (lines[0]?.includes('YES')) {
+    const output = lines[1]?.match(/t=(-?\d+)/);
+    if (output) {
+      const temperature = parseInt(output[1] || "");
+      if (!isNaN(temperature)) {
+        return Math.round(temperature / 100) / 10;
+      }
+    }
+  } else if (lines[0]?.includes('NO')) {
+    return false;
+  }
+  return false;
 }
 
 export { DS18B20 };

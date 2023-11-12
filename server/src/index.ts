@@ -67,7 +67,7 @@ const app = express();
     sensorList.initializeOrRegenerateAsync,
     outputList.initializeOrRegenerateAsync,
   ]);
-  logger.info("Taking initial readings. . .")
+  logger.info("Taking initial readings. . .");
   await sensorList.getReadingsAsync();
   await sensorList.addReadingsToDatabaseAsync();
 
