@@ -30,6 +30,7 @@ abstract class SensorBase implements ISensorBase {
   logger: winston.Logger;
   readonly units: Record<ReadingType, string>;
   cachedReadings: Record<ReadingType, SDBReading[]>;
+  updateInterval: NodeJS.Timeout | null = null;
 
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     this.id = sdbSensor.id;
@@ -43,6 +44,8 @@ abstract class SensorBase implements ISensorBase {
     this.units = {} as Record<ReadingType, string>;
     this.cachedReadings = {} as Record<ReadingType, SDBReading[]>;
   }
+  
+  abstract disposeAsync(): Promise<void>;
   abstract getReadingAsync(): Promise<void>;
   protected abstract updateCachedReadings(): void;
   protected abstract loadCachedReadingsFromDatabaseAsync(count: number): Promise<void>;
@@ -71,11 +74,13 @@ abstract class SensorBase implements ISensorBase {
     }
     return result;
   }
+
+  protected internalDispose(){
+    if (this.updateInterval){
+      clearInterval(this.updateInterval);
+    }
+  }
 }
 
-abstract class DisposableSensorBase extends SensorBase {
-  abstract disposeAsync(): Promise<void>;
-}
-
-export { SensorBase, DisposableSensorBase, ReadingType };
+export { SensorBase, ReadingType };
 export type { ISensorBase };

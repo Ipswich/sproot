@@ -1,17 +1,13 @@
 import { BME280 } from "./BME280";
 import { DS18B20 } from "./DS18B20";
-import {
-  DisposableSensorBase,
-  ISensorBase,
-  SensorBase,
-} from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ISensorBase, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
 class SensorList {
   #sprootDB: ISprootDB;
-  #sensors: Record<string, SensorBase | DisposableSensorBase> = {};
+  #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
 
   constructor(sprootDB: ISprootDB, logger: winston.Logger) {
@@ -19,7 +15,7 @@ class SensorList {
     this.#logger = logger;
   }
 
-  get sensors(): Record<string, SensorBase | DisposableSensorBase> {
+  get sensors(): Record<string, SensorBase> {
     return this.#sensors;
   }
 
@@ -67,7 +63,6 @@ class SensorList {
       if (!sensorIdsFromDatabase.includes(key)) {
         this.#logger.info(`Deleting sensor ${this.#sensors[key]!.model} ${this.#sensors[key]!.id}`);
         this.#disposeSensorAsync(this.#sensors[key]!);
-        delete this.#sensors[key];
       }
     }
   }
@@ -76,18 +71,6 @@ class SensorList {
     await this.#touchAllSensorsAsync(async (sensor) => sensor.addLastReadingToDatabaseAsync());
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
-  async getReadingsAsync(): Promise<void> {
-    const promises = [];
-
-    for (const key in this.#sensors) {
-      promises.push((this.#sensors[key] as SensorBase).getReadingAsync());
-    }
-    try {
-      await Promise.allSettled(promises);
-    } catch (err) {
-      this.#logger.error(err);
-    }
-  }
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     const promises = [];
@@ -124,6 +107,7 @@ class SensorList {
           );
         }
         newSensor = await new DS18B20(sensor, this.#sprootDB, this.#logger).initAsync();
+        newSensor;
         if (newSensor) {
           this.#sensors[sensor.id] = newSensor;
         }
@@ -155,10 +139,8 @@ class SensorList {
     await Promise.all(promises);
   }
 
-  async #disposeSensorAsync(sensor: SensorBase | DisposableSensorBase) {
-    if (sensor instanceof DisposableSensorBase) {
-      await sensor.disposeAsync();
-    }
+  async #disposeSensorAsync(sensor: SensorBase) {
+    await this.#sensors[sensor.id]!.disposeAsync();
     delete this.#sensors[sensor.id];
   }
 }

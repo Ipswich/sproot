@@ -150,7 +150,6 @@ describe("SensorList.ts tests", function () {
 
     const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
-    await sensorList.getReadingsAsync();
 
     assert.equal(Object.keys(sensorList.sensors).length, 2);
     assert.equal(getBME280ReadingStub.callCount + getDS18B20ReadingStub.callCount, 2);
@@ -220,6 +219,5 @@ describe("SensorList.ts tests", function () {
 
     const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
-    await sensorList.getReadingsAsync();
   });
 });

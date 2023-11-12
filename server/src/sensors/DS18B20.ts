@@ -7,6 +7,8 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 
+const MAX_SENSOR_READ_TIME = 2500;
+
 class DS18B20 extends SensorBase {
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     super(sdbSensor, sprootDB, logger);
@@ -19,6 +21,13 @@ class DS18B20 extends SensorBase {
       await this.loadCachedReadingsFromDatabaseAsync(
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
       );
+      this.updateInterval = setInterval(async () => {
+        const profiler = this.logger.startTimer();
+        await this.getReadingAsync();
+        profiler.done({
+          message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+        });
+      }, MAX_SENSOR_READ_TIME);
     } catch (err) {
       handleError(err as Error, this.logger);
       return null;
@@ -31,12 +40,13 @@ class DS18B20 extends SensorBase {
       this.logger.info("Starting read for sensor {DS18B20, id: " + this.id + "}");
 
       const result = await readTemperatureFromDeviceAsync(this.address!, this.logger);
-      this.logger.info("Finished read for sensor {DS18B20, id: " + this.id + "}. Reading - " + result);
+      this.logger.info(
+        "Finished read for sensor {DS18B20, id: " + this.id + "}. Reading - " + result,
+      );
       if (result === false) {
         throw new Error("Invalid reading from sensor.");
       }
 
-      
       const reading = String(result);
       this.lastReading[ReadingType.temperature] = reading;
       this.lastReadingTime = new Date();
@@ -56,6 +66,11 @@ class DS18B20 extends SensorBase {
         `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
       );
     }
+  }
+
+  override disposeAsync(): Promise<void> {
+    this.internalDispose();
+    return Promise.resolve();
   }
 
   protected override updateCachedReadings(): void {
@@ -142,7 +157,6 @@ async function readTemperatureFromDeviceAsync(
   logger: winston.Logger,
 ): Promise<number | false> {
   const getReadingTimer = logger.startTimer();
-  logger.info(`Reading from file: /sys/bus/w1/devices/${address}/w1_slave`);
   const data = await readFile(`/sys/bus/w1/devices/${address}/w1_slave`, "utf8");
   getReadingTimer.done({
     message: `Reading time for sensor {address: ${address}}`,
@@ -155,7 +169,6 @@ async function readTemperatureFromDeviceAsync(
       if (!isNaN(temperature)) {
         return Math.round(temperature / 100) / 10;
       }
-      logger.error(`Output: ${output}`);
     }
   } else if (lines[0]?.includes("NO")) {
     return false;

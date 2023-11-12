@@ -67,9 +67,6 @@ const app = express();
     sensorList.initializeOrRegenerateAsync,
     outputList.initializeOrRegenerateAsync,
   ]);
-  logger.info("Taking initial readings. . .");
-  await sensorList.getReadingsAsync();
-  await sensorList.addReadingsToDatabaseAsync();
 
   //State update loop
   const updateStateLoop = setInterval(async () => {
@@ -82,13 +79,6 @@ const app = express();
     //Execute any changes made to state.
     outputList.executeOutputState();
   }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
-
-  // Sensor Reading loop
-  const sensorReadingLoop = setInterval(async () => {
-    const readingTimer = logger.startTimer();
-    await sensorList.getReadingsAsync();
-    readingTimer.done({ message: "Get readings time" });
-  }, parseInt(process.env["SENSOR_UPDATE_INTERVAL"]!));
 
   // Database update loop
   const updateDatabaseLoop = setInterval(async () => {
@@ -131,7 +121,6 @@ const app = express();
       // Stop updating database and sensors
       clearInterval(updateDatabaseLoop);
       clearInterval(updateStateLoop);
-      clearInterval(sensorReadingLoop);
       try {
         // Cleanup sensors and turn off outputs
         await app.get("sensorList").disposeAsync();

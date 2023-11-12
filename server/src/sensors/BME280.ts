@@ -6,6 +6,8 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database//ISprootDB";
 import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import winston from "winston";
 
+const MAX_SENSOR_READ_TIME = 1000;
+
 class BME280 extends SensorBase {
   constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     super(sdbsensor, sprootDB, logger);
@@ -22,6 +24,13 @@ class BME280 extends SensorBase {
       await this.loadCachedReadingsFromDatabaseAsync(
         Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
       );
+      this.updateInterval = setInterval(async () => {
+        const profiler = this.logger.startTimer();
+        await this.getReadingAsync();
+        profiler.done({
+          message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}}`,
+        });
+      }, MAX_SENSOR_READ_TIME);
       return this;
     } catch (err) {
       handleError(err as Error, this.logger);
@@ -48,6 +57,11 @@ class BME280 extends SensorBase {
           message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}}`,
         });
       });
+  }
+
+  override disposeAsync(): Promise<void> {
+    this.internalDispose();
+    return Promise.resolve();
   }
 
   protected override updateCachedReadings() {
