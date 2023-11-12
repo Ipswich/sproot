@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { readFile } from 'node:fs/promises';
+import { readFile } from "node:fs/promises";
 import winston from "winston";
 
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
@@ -30,14 +30,12 @@ class DS18B20 extends SensorBase {
     try {
       const getReadingTimer = this.logger.startTimer();
       this.logger.info("Starting read for sensor {DS18B20, id: " + this.id + "}");
-      const tickInterval = setInterval(() => {this.logger.info("TICK FOR ID: " + this.id)}, 250);
-      
-      const result = await readTemperatureFromDeviceAsync(this.address!);
+
+      const result = await readTemperatureFromDeviceAsync(this.address!, this.logger);
       if (result === false) {
         throw new Error("Error reading from sensor.");
       }
-      
-      clearInterval(tickInterval);
+
       getReadingTimer.done({
         message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
       });
@@ -135,29 +133,35 @@ function handleError(err: Error, logger: winston.Logger): void {
 }
 
 async function getSensorAddressesAsync(): Promise<string[]> {
-  const data = await readFile(
-    "/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves",
-    "utf8",
-  );
+  const data = await readFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves", "utf8");
   var parts = data.split("\n");
   parts.pop();
   return parts;
 }
 
-async function readTemperatureFromDeviceAsync(address: string): Promise<number | false> {
+async function readTemperatureFromDeviceAsync(
+  address: string,
+  logger: winston.Logger,
+): Promise<number | false> {
+  const tickInterval = setInterval(() => {
+    logger.info("TICK FOR ADDRESS: " + address);
+  }, 250);
   const data = await readFile(`/sys/bus/w1/devices/${address}/w1_slave`, "utf8");
   const lines = data.split("\n");
-  if (lines[0]?.includes('YES')) {
+  if (lines[0]?.includes("YES")) {
     const output = lines[1]?.match(/t=(-?\d+)/);
     if (output) {
       const temperature = parseInt(output[1] || "");
       if (!isNaN(temperature)) {
+        clearInterval(tickInterval);
         return Math.round(temperature / 100) / 10;
       }
     }
-  } else if (lines[0]?.includes('NO')) {
+  } else if (lines[0]?.includes("NO")) {
+    clearInterval(tickInterval);
     return false;
   }
+  clearInterval(tickInterval);
   return false;
 }
 
