@@ -82,7 +82,7 @@ class SensorList {
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     const promises = [];
     
-    const tickInterval = setInterval(() => {this.#logger.info("TICK")}, 500);
+    const tickInterval = setInterval(() => {this.#logger.info("TICK")}, 250);
     for (const key in this.#sensors) {
       promises.push(fn(this.#sensors[key] as SensorBase));
     }
