@@ -6,7 +6,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database//ISprootDB";
 import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import winston from "winston";
 
-const MAX_SENSOR_READ_TIME = 1000;
+const MAX_SENSOR_READ_TIME = 3500;
 
 class BME280 extends SensorBase {
   constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
@@ -28,12 +28,13 @@ class BME280 extends SensorBase {
         const profiler = this.logger.startTimer();
         await this.getReadingAsync();
         profiler.done({
-          message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}}`,
+          message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
+          level: "debug",
         });
       }, MAX_SENSOR_READ_TIME);
     } catch (err) {
       handleError(err as Error, this.logger);
-      this.logger.error(`Failed to create BME280 sensor ${this.id}`);
+      this.logger.error(`Failed to create BME280 sensor ${this.id}. ${err}`);
       return null;
     }
     return this;

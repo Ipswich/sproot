@@ -25,11 +25,12 @@ class DS18B20 extends SensorBase {
         const profiler = this.logger.startTimer();
         await this.getReadingAsync();
         profiler.done({
-          message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+          message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
+          level: "debug",
         });
       }, MAX_SENSOR_READ_TIME);
     } catch (err) {
-      this.logger.error(`Failed to create DS18B20 sensor ${this.id}. Error: ${err}`);
+      this.logger.error(`Failed to create DS18B20 sensor ${this.id}${err}`);
       return null;
     }
     return this;
