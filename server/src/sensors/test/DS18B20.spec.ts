@@ -144,7 +144,7 @@ describe("DS18B20.ts tests", function () {
     await ds18b20Sensor?.initAsync();
     assert.equal(ds18b20Sensor?.cachedReadings[ReadingType.temperature].length, recordsToLoad);
     assert.equal(ds18b20Sensor?.cachedReadings[ReadingType.temperature][0]?.data, "1");
-    
+
     //Cleanup
     await ds18b20Sensor?.disposeAsync();
   });

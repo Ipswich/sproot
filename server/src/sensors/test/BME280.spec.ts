@@ -148,7 +148,7 @@ describe("BME280.ts tests", function () {
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], recordsToLoad);
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], recordsToLoad);
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.pressure], recordsToLoad);
-    
+
     //Cleanup
     bme280Sensor?.disposeAsync();
 
