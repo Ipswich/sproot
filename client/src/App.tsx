@@ -6,11 +6,15 @@ import "./App.css";
 
 function App() {
   // const [count, setCount] = useState(0);
-   const getSensorData = async () => {
-    fetch('http://192.168.2.166:3000/api/v1/sensors')
-    .then( response => { return response.json() })
-    .then( data => { console.log(data.sensors) });
-  }
+  const getSensorData = async () => {
+    fetch("http://192.168.2.166:3000/api/v1/sensors")
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        console.log(data.sensors);
+      });
+  };
 
   return (
     <>

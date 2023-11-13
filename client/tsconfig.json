@@ -1,5 +1,5 @@
 {
-  "extends" : "../tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
@@ -15,8 +15,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "jsx": "react-jsx",
-
+    "jsx": "react-jsx"
   },
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "../common" }]
 }

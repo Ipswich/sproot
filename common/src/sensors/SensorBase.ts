@@ -44,7 +44,7 @@ abstract class SensorBase implements ISensorBase {
     this.units = {} as Record<ReadingType, string>;
     this.cachedReadings = {} as Record<ReadingType, SDBReading[]>;
   }
-  
+
   abstract disposeAsync(): Promise<void>;
   abstract getReadingAsync(): Promise<void>;
   protected abstract updateCachedReadings(): void;
@@ -75,8 +75,8 @@ abstract class SensorBase implements ISensorBase {
     return result;
   }
 
-  protected internalDispose(){
-    if (this.updateInterval){
+  protected internalDispose() {
+    if (this.updateInterval) {
       clearInterval(this.updateInterval);
     }
   }
