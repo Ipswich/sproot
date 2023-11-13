@@ -121,7 +121,9 @@ describe("PCA9685.ts tests", function () {
     ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(
+        () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
+      );
     const logger = winston.createLogger();
     sandbox.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sandbox.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
@@ -206,7 +208,9 @@ describe("PCA9685.ts tests", function () {
     ]);
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(
+        () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
+      );
     const logger = winston.createLogger();
     const pca9685 = new PCA9685(mockSprootDB, logger);
     await pca9685.initializeOrRegenerateAsync();

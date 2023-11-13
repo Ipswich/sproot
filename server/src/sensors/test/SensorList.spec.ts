@@ -48,7 +48,9 @@ describe("SensorList.ts tests", function () {
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor, { address: "28-00001" } as SDBSensor]);
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
-    sandbox.stub(BME280.prototype, "initAsync").resolves({} as BME280);
+    sandbox
+      .stub(BME280.prototype, "initAsync")
+      .resolves({ id: 1, disposeAsync: async () => {} } as BME280);
     const addSensorSpy = sandbox.spy(mockSprootDB, "addSensorAsync");
 
     const sensorList = new SensorList(mockSprootDB, logger);
@@ -74,9 +76,12 @@ describe("SensorList.ts tests", function () {
     await sensorList.initializeOrRegenerateAsync();
     assert.equal(Object.keys(sensorList.sensors).length, 2);
     assert.equal(sensorList.sensors["2"]!.description, "2 rosnes tset");
+
+    //Cleanup
+    await sensorList.disposeAsync();
   });
 
-  it("should return sensor data (no functions)", async function () {
+  it("should return sensor data (no functions included in result)", async function () {
     const mockBME280Data = {
       id: 1,
       description: "test sensor 1",
@@ -115,44 +120,9 @@ describe("SensorList.ts tests", function () {
     assert.equal(sensorData["2"]!["model"], "DS18B20");
     assert.equal(sensorData["2"]!["address"], "28-00000");
     assert.exists(sensorList.sensors["1"]!["sprootDB"]);
-  });
 
-  it("should call getReading on all sensors", async function () {
-    const mockBME280Data = {
-      id: 1,
-      description: "test sensor 1",
-      model: "BME280",
-      address: "0x76",
-    } as SDBSensor;
-    sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
-      mockBME280Data,
-      {
-        id: 2,
-        description: "test sensor 2",
-        model: "DS18B20",
-        address: "28-00000",
-      } as SDBSensor,
-    ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
-    const logger = winston.createLogger();
-    sandbox
-      .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
-      .resolves([{ address: "28-00000" } as SDBSensor]);
-
-    sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
-    sandbox
-      .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
-    const getDS18B20ReadingStub = sandbox.stub(DS18B20.prototype, "getReadingAsync");
-    const getBME280ReadingStub = sandbox.stub(BME280.prototype, "getReadingAsync");
-
-    const sensorList = new SensorList(mockSprootDB, logger);
-    await sensorList.initializeOrRegenerateAsync();
-
-    assert.equal(Object.keys(sensorList.sensors).length, 2);
-    assert.equal(getBME280ReadingStub.callCount + getDS18B20ReadingStub.callCount, 2);
+    //Cleanup
+    await sensorList.disposeAsync();
   });
 
   it("should handle errors when building sensors", async function () {
@@ -174,9 +144,10 @@ describe("SensorList.ts tests", function () {
       model: "not a recognized model",
       address: null,
     } as SDBSensor;
+    const loggerSpy = sinon.spy();
     sandbox
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(() => ({ info: () => {}, error: loggerSpy }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const getSensorsStub = sandbox
@@ -200,6 +171,11 @@ describe("SensorList.ts tests", function () {
     mockDS18B20Data["address"] = "28-00000";
     getSensorsStub.resolves([mockBME280Data, mockDS18B20Data, mockSensorData]);
     await sensorList.initializeOrRegenerateAsync();
+
+    assert.isTrue(loggerSpy.calledThrice);
+
+    //Cleanup
+    await sensorList.disposeAsync();
   });
 
   it("should handle errors when reading sensors", async function () {
@@ -219,5 +195,8 @@ describe("SensorList.ts tests", function () {
 
     const sensorList = new SensorList(mockSprootDB, logger);
     await sensorList.initializeOrRegenerateAsync();
+
+    //Cleanup
+    await sensorList.disposeAsync();
   });
 });

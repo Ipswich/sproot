@@ -51,8 +51,7 @@ class SensorList {
           this.#logger.info(`Creating sensor ${sensor.model} ${sensor.id}`);
           await this.#createSensorAsync(sensor);
         } catch (err) {
-          this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}`);
-          this.#logger.error(err);
+          this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}. Error: ${err}`);
         }
       }
     }

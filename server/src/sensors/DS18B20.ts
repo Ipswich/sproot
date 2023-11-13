@@ -7,7 +7,7 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 
-const MAX_SENSOR_READ_TIME = 2500;
+const MAX_SENSOR_READ_TIME = 3500;
 
 class DS18B20 extends SensorBase {
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
@@ -29,7 +29,7 @@ class DS18B20 extends SensorBase {
         });
       }, MAX_SENSOR_READ_TIME);
     } catch (err) {
-      handleError(err as Error, this.logger);
+      this.logger.error(`Failed to create DS18B20 sensor ${this.id}. Error: ${err}`);
       return null;
     }
     return this;
@@ -55,9 +55,8 @@ class DS18B20 extends SensorBase {
         } as SDBReading);
       }
     } catch (err) {
-      handleError(err as Error, this.logger);
       this.logger.error(
-        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
+        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. Error: ${err}`,
       );
     }
   }
@@ -113,8 +112,9 @@ class DS18B20 extends SensorBase {
         }`,
       );
     } catch (err) {
-      this.logger.error(`Failed to load cached readings for sensor {DS18B20, id: ${this.id}}`);
-      this.logger.error("DS18B20: " + err);
+      this.logger.error(
+        `Failed to load cached readings for sensor {DS18B20, id: ${this.id}}. Error: ${err}}`,
+      );
     }
   }
 
@@ -122,20 +122,9 @@ class DS18B20 extends SensorBase {
     try {
       return await getSensorAddressesAsync();
     } catch (err) {
-      handleError(err as Error, logger);
-      logger.error("Failed to get DS18B20 addresses");
+      logger.error("Failed to get DS18B20 addresses. Error: ${err}");
     }
     return [];
-  }
-}
-
-function handleError(err: Error, logger: winston.Logger): void {
-  if (err.message.includes("ENOENT: no such file or directory, open ")) {
-    logger.error(
-      "Unable to connect to DS18B20 driver. Please ensure your system has 1-wire support enabled.",
-    );
-  } else {
-    logger.error("DS18B20: " + err);
   }
 }
 
@@ -146,9 +135,7 @@ async function getSensorAddressesAsync(): Promise<string[]> {
   return parts;
 }
 
-async function readTemperatureFromDeviceAsync(
-  address: string
-): Promise<number | false> {
+async function readTemperatureFromDeviceAsync(address: string): Promise<number | false> {
   const data = await readFile(`/sys/bus/w1/devices/${address}/w1_slave`, "utf8");
   const lines = data.split("\n");
   if (lines[0]?.includes("YES")) {

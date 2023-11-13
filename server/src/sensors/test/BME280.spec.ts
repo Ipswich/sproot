@@ -82,6 +82,9 @@ describe("BME280.ts tests", function () {
     assert.equal(bme280Sensor!.units[ReadingType.temperature], "°C");
     assert.equal(bme280Sensor!.units[ReadingType.humidity], "%rH");
     assert.equal(bme280Sensor!.units[ReadingType.pressure], "hPa");
+
+    //Cleanup
+    await bme280Sensor?.disposeAsync();
   });
 
   it("should load cached readings from the database, clearing any old ones", async () => {
@@ -145,6 +148,9 @@ describe("BME280.ts tests", function () {
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], recordsToLoad);
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], recordsToLoad);
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.pressure], recordsToLoad);
+    
+    //Cleanup
+    bme280Sensor?.disposeAsync();
 
     recordsToLoad = 1;
     getSensorReadingsAsyncStub.resolves([
@@ -173,6 +179,9 @@ describe("BME280.ts tests", function () {
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], recordsToLoad);
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], recordsToLoad);
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.pressure], recordsToLoad);
+
+    //Cleanup
+    bme280Sensor?.disposeAsync();
   });
 
   it("should update cached readings with the last reading", async () => {
@@ -281,5 +290,8 @@ describe("BME280.ts tests", function () {
     );
     assert.equal(bme280Sensor!.lastReading[ReadingType.humidity], String(mockReading.humidity));
     assert.equal(bme280Sensor!.lastReading[ReadingType.pressure], String(mockReading.pressure));
+
+    //Cleanup
+    await bme280Sensor?.disposeAsync();
   });
 });

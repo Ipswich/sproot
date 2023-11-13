@@ -31,12 +31,12 @@ class BME280 extends SensorBase {
           message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}}`,
         });
       }, MAX_SENSOR_READ_TIME);
-      return this;
     } catch (err) {
       handleError(err as Error, this.logger);
       this.logger.error(`Failed to create BME280 sensor ${this.id}`);
+      return null;
     }
-    return null;
+    return this;
   }
 
   override async getReadingAsync(): Promise<void> {
@@ -107,8 +107,9 @@ class BME280 extends SensorBase {
         }`,
       );
     } catch (err) {
-      this.logger.error(`Failed to update cache readings for {BME280, id: ${this.id}}`);
-      this.logger.error("BME280: " + err);
+      this.logger.error(
+        `Failed to update cache readings for {BME280, id: ${this.id}}. Error: ${err}`,
+      );
     }
   }
 
