@@ -50,9 +50,7 @@ class PCA9685 {
       this.#usedPins[output.address]?.push(output.pin);
       return this.#outputs[output.id]!;
     } else {
-      this.#logger.error(
-        `Failed to create PCA9685 {id: ${output.id}}`,
-      );
+      this.#logger.error(`Failed to create PCA9685 {id: ${output.id}}`);
       return null;
     }
   }

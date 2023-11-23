@@ -44,6 +44,7 @@ class SensorList {
 
     const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
 
+    const promises = [];
     for (const sensor of sensorsFromDatabase) {
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
@@ -51,14 +52,17 @@ class SensorList {
         this.#sensors[key]!.description = sensor.description;
       } else {
         //Create if it doesn't
-        try {
-          this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
-          await this.#createSensorAsync(sensor);
-        } catch (err) {
-          this.#logger.error(`Could not build sensor {model: ${sensor.model}, id: ${sensor.id}}. ${err}`);
-        }
+        this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
+        promises.push(
+          this.#createSensorAsync(sensor).catch((err) =>
+            this.#logger.error(
+              `Could not build sensor {model: ${sensor.model}, id: ${sensor.id}}. ${err}`,
+            ),
+          ),
+        );
       }
     }
+    await Promise.allSettled(promises);
 
     //Delete ones that don't exist
     const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
