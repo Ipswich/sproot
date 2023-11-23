@@ -51,7 +51,7 @@ class PCA9685 {
       return this.#outputs[output.id]!;
     } else {
       this.#logger.error(
-        `Could not build pca9685 output {id: ${output.id}}. PCA9685 driver is undefined`,
+        `Failed to create PCA9685 {id: ${output.id}}`,
       );
       return null;
     }
