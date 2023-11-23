@@ -66,7 +66,13 @@ class OutputList {
       : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => {
     for (const key in this.#outputs) {
-      this.#deleteOutput(this.#outputs[key]!);
+      try {
+        this.#deleteOutput(this.#outputs[key]!);
+      } catch (err) {
+        this.#logger.error(
+          `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
+        );
+      }
     }
     this.#outputs = {};
   };
@@ -84,10 +90,10 @@ class OutputList {
       } else {
         //Add new ones
         try {
-          this.#logger.info(`Creating output ${output.model} ${output.id}`);
+          this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
           this.#createOutput(output);
         } catch (err) {
-          this.#logger.error(`Could not build output ${output.model} ${output.id}. ${err}`);
+          this.#logger.error(`Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`);
         }
       }
     }
@@ -98,13 +104,13 @@ class OutputList {
       if (!outputIdsFromDatabase.includes(key)) {
         try {
           this.#logger.info(
-            `Deleting output ${this.#outputs[key]?.model} ${this.#outputs[key]?.id}`,
+            `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
           );
           this.#deleteOutput(this.#outputs[key]!);
           delete this.#outputs[key];
         } catch (err) {
           this.#logger.error(
-            `Could not delete output ${this.#outputs[key]?.model} ${this.#outputs[key]?.id}. ${err}`,
+            `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
           );
         }
       }
