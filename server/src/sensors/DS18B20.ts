@@ -124,11 +124,9 @@ async function readTemperatureFromDeviceAsync(address: string): Promise<number |
     if (output) {
       const temperature = parseInt(output[1] || "");
       if (!isNaN(temperature)) {
-        return Math.round(temperature / 100) / 10;
+        return temperature / 100 / 10;
       }
     }
-  } else if (lines[0]?.includes("NO")) {
-    return false;
   }
   return false;
 }

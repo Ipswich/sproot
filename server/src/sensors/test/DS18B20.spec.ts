@@ -59,7 +59,7 @@ describe("DS18B20.ts tests", function () {
     let ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, logger);
     await ds18b20Sensor.getReadingAsync();
 
-    assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(20.4));
+    assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(20.437));
 
     mockReading = "47 01 55 05 7f a5 a5 66 eb : crc=eb NO\n47 01 55 05 7f a5 a5 66 eb t=20437";
     readFileStub.resolves(mockReading);
