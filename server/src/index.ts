@@ -63,7 +63,6 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
 }
 
 const app = express();
-
 (async () => {
   logger.info("Initializing sproot app. . .");
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
@@ -79,8 +78,8 @@ const app = express();
 
   logger.info("Initializing sensor and output lists. . .");
   await Promise.all([
-    sensorList.initializeOrRegenerateAsync,
-    outputList.initializeOrRegenerateAsync,
+    sensorList.initializeOrRegenerateAsync(),
+    outputList.initializeOrRegenerateAsync(),
   ]);
 
   //State update loop

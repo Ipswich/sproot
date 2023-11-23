@@ -52,10 +52,10 @@ class SensorList {
       } else {
         //Create if it doesn't
         try {
-          this.#logger.info(`Creating sensor ${sensor.model} ${sensor.id}`);
+          this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
           await this.#createSensorAsync(sensor);
         } catch (err) {
-          this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}. ${err}`);
+          this.#logger.error(`Could not build sensor {model: ${sensor.model}, id: ${sensor.id}}. ${err}`);
         }
       }
     }
@@ -66,12 +66,12 @@ class SensorList {
       if (!sensorIdsFromDatabase.includes(key)) {
         try {
           this.#logger.info(
-            `Deleting sensor ${this.#sensors[key]?.model} ${this.#sensors[key]?.id}`,
+            `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
           );
           this.#disposeSensorAsync(this.#sensors[key]!);
         } catch (err) {
           this.#logger.error(
-            `Could not delete sensor ${this.#sensors[key]?.model} ${this.#sensors[key]?.id}}. ${err}`,
+            `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}. ${err}`,
           );
         }
       }
