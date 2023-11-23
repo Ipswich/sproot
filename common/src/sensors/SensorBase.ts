@@ -1,7 +1,10 @@
+import "dotenv/config";
 import { SDBSensor } from "../database/SDBSensor";
 import { SDBReading } from "../database/SDBReading";
 import { ISprootDB } from "../database/ISprootDB";
 import winston from "winston";
+
+const INITIAL_CACHE_LOOKBACK = Number(process.env['INITIAL_CACHE_LOOKBACK']); // 7 days in minutes
 
 enum ReadingType {
   temperature = "temperature",
@@ -48,7 +51,7 @@ abstract class SensorBase implements ISensorBase {
   abstract disposeAsync(): Promise<void>;
   abstract getReadingAsync(): Promise<void>;
   protected abstract updateCachedReadings(): void;
-  protected abstract loadCachedReadingsFromDatabaseAsync(count: number): Promise<void>;
+  protected abstract loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void>;
 
   addLastReadingToDatabaseAsync = async (): Promise<void> => {
     this.updateCachedReadings();
@@ -86,5 +89,5 @@ abstract class SensorBase implements ISensorBase {
   }
 }
 
-export { SensorBase, ReadingType };
+export { SensorBase, ReadingType, INITIAL_CACHE_LOOKBACK };
 export type { ISensorBase };

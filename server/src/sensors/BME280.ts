@@ -3,12 +3,15 @@ import bme280 from "bme280";
 import { SDBSensor } from "@sproot/sproot-common/dist/database//SDBSensor";
 import { SDBReading } from "@sproot/sproot-common/dist/database//SDBReading";
 import { ISprootDB } from "@sproot/sproot-common/dist/database//ISprootDB";
-import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import {
+  ReadingType,
+  SensorBase,
+  INITIAL_CACHE_LOOKBACK,
+} from "@sproot/sproot-common/dist/sensors/SensorBase";
 import winston from "winston";
 
-const MAX_SENSOR_READ_TIME = 3500;
-
 class BME280 extends SensorBase {
+  readonly MAX_SENSOR_READ_TIME = 3500;
   constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     super(sdbsensor, sprootDB, logger);
     this.units[ReadingType.temperature] = "°C";
@@ -21,9 +24,7 @@ class BME280 extends SensorBase {
 
   async initAsync(): Promise<BME280 | null> {
     try {
-      await this.loadCachedReadingsFromDatabaseAsync(
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
-      );
+      await this.loadCachedReadingsFromDatabaseAsync(INITIAL_CACHE_LOOKBACK);
       this.updateInterval = setInterval(async () => {
         const profiler = this.logger.startTimer();
         await this.getReadingAsync();
@@ -31,7 +32,7 @@ class BME280 extends SensorBase {
           message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
           level: "debug",
         });
-      }, MAX_SENSOR_READ_TIME);
+      }, this.MAX_SENSOR_READ_TIME);
     } catch (err) {
       this.logger.error(`Failed to create BME280 sensor ${this.id}. ${err}`);
       return null;
@@ -111,14 +112,14 @@ class BME280 extends SensorBase {
     }
   }
 
-  protected override async loadCachedReadingsFromDatabaseAsync(count: number): Promise<void> {
+  protected override async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
     this.cachedReadings[ReadingType.temperature] = [];
     this.cachedReadings[ReadingType.humidity] = [];
     this.cachedReadings[ReadingType.pressure] = [];
     const loadedReadingsCount = {} as Record<string, number>;
     try {
       //Fill cached readings with readings from database
-      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), count);
+      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), minutes);
       for (const sdbReading of sdbReadings) {
         const newReading = {
           metric: sdbReading.metric as ReadingType,

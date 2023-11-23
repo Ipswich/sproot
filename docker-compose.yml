@@ -23,6 +23,7 @@ services:
       - STATE_UPDATE_INTERVAL=1000
       - DATABASE_UPDATE_INTERVAL=60000
       - MAX_SENSOR_READING_CACHE_SIZE=10080 #7 days worth of minutes
+      - INITIAL_CACHE_LOOKBACK=10080 #7 days in minutes
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs

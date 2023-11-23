@@ -5,11 +5,15 @@ import winston from "winston";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
-
-const MAX_SENSOR_READ_TIME = 3500;
+import {
+  SensorBase,
+  ReadingType,
+  INITIAL_CACHE_LOOKBACK,
+} from "@sproot/sproot-common/dist/sensors/SensorBase";
 
 class DS18B20 extends SensorBase {
+  readonly MAX_SENSOR_READ_TIME = 3500;
+
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     super(sdbSensor, sprootDB, logger);
     this.units[ReadingType.temperature] = "°C";
@@ -18,9 +22,7 @@ class DS18B20 extends SensorBase {
 
   async initAsync(): Promise<DS18B20 | null> {
     try {
-      await this.loadCachedReadingsFromDatabaseAsync(
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!),
-      );
+      await this.loadCachedReadingsFromDatabaseAsync(INITIAL_CACHE_LOOKBACK);
       this.updateInterval = setInterval(async () => {
         const profiler = this.logger.startTimer();
         await this.getReadingAsync();
@@ -28,7 +30,7 @@ class DS18B20 extends SensorBase {
           message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
           level: "debug",
         });
-      }, MAX_SENSOR_READ_TIME);
+      }, this.MAX_SENSOR_READ_TIME);
     } catch (err) {
       this.logger.error(`Failed to create DS18B20 sensor ${this.id}. ${err}`);
       return null;
@@ -81,11 +83,11 @@ class DS18B20 extends SensorBase {
     }
   }
 
-  protected override async loadCachedReadingsFromDatabaseAsync(count: number): Promise<void> {
+  protected override async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
     this.cachedReadings[ReadingType.temperature] = [];
     try {
       //Fill cached readings with readings from database
-      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), count);
+      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), minutes);
       for (const sdbReading of sdbReadings) {
         const newReading = {
           metric: sdbReading.metric as ReadingType,
