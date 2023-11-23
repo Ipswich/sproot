@@ -38,7 +38,9 @@ class SensorList {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
-    await this.#addUnreconizedDS18B20sToSDBAsync();
+    await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
+      this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
+    });
     const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
     for (const sensor of sensorsFromDatabase) {
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
@@ -51,7 +53,7 @@ class SensorList {
           this.#logger.info(`Creating sensor ${sensor.model} ${sensor.id}`);
           await this.#createSensorAsync(sensor);
         } catch (err) {
-          this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}. Error: ${err}`);
+          this.#logger.error(`Could not build sensor ${sensor.model} ${sensor.id}}. ${err}`);
         }
       }
     }
@@ -75,13 +77,13 @@ class SensorList {
     const promises = [];
 
     for (const key in this.#sensors) {
-      promises.push(fn(this.#sensors[key] as SensorBase));
+      promises.push(
+        fn(this.#sensors[key] as SensorBase).catch((err) => {
+          this.#logger.error(err);
+        }),
+      );
     }
-    try {
-      await Promise.allSettled(promises);
-    } catch (err) {
-      this.#logger.error(err);
-    }
+    await Promise.allSettled(promises);
   }
 
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
@@ -89,9 +91,7 @@ class SensorList {
     switch (sensor.model.toLowerCase()) {
       case "bme280":
         if (!sensor.address) {
-          throw new BuildSensorError(
-            "BME280 sensor address cannot be null! Sensor could not be added.",
-          );
+          throw new SensorListError("BME280 sensor address cannot be null");
         }
         newSensor = await new BME280(sensor, this.#sprootDB, this.#logger).initAsync();
         if (newSensor) {
@@ -101,9 +101,7 @@ class SensorList {
 
       case "ds18b20":
         if (!sensor.address) {
-          throw new BuildSensorError(
-            "DS18B20 sensor address cannot be null! Sensor could not be added.",
-          );
+          throw new SensorListError("DS18B20 sensor address cannot be null");
         }
         newSensor = await new DS18B20(sensor, this.#sprootDB, this.#logger).initAsync();
         newSensor;
@@ -113,19 +111,19 @@ class SensorList {
         break;
 
       default:
-        throw new BuildSensorError(`Unrecognized sensor model: ${sensor.model}`);
+        throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);
     }
   }
 
   async #addUnreconizedDS18B20sToSDBAsync() {
-    const deviceAddresses = await DS18B20.getAddressesAsync(this.#logger);
+    const deviceAddresses = await DS18B20.getAddressesAsync();
     const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
     const promises: Promise<void>[] = [];
     for (const address of deviceAddresses) {
       if (sensorsFromDatabase.some((s) => s.address === address)) {
         continue;
       } else {
-        this.#logger.info(`Adding unreconized DS18B20 sensor ${address} to database.`);
+        this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
         promises.push(
           this.#sprootDB.addSensorAsync({
             description: null,
@@ -135,7 +133,16 @@ class SensorList {
         );
       }
     }
-    await Promise.all(promises);
+
+    await Promise.allSettled(promises).then((results) => {
+      results.forEach((result) => {
+        if (result.status === "rejected") {
+          this.#logger.error(
+            `Could not add unrecognized DS18B20 sensor to database ${result.reason}`,
+          );
+        }
+      });
+    });
   }
 
   async #disposeSensorAsync(sensor: SensorBase) {
@@ -144,7 +151,7 @@ class SensorList {
   }
 }
 
-class BuildSensorError extends Error {
+class SensorListError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "BuildSensorError";

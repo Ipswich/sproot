@@ -6,25 +6,23 @@ import {
   IState,
   ControlMode,
 } from "@sproot/sproot-common/dist/outputs/OutputBase";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import winston from "winston";
 
 class OutputList {
   #sprootDB: ISprootDB;
-  #pca9685Record: Record<string, PCA9685> = {};
+  #PCA9685: PCA9685;
   #outputs: Record<string, OutputBase> = {};
-  #usedAddresses: string[] = [];
   #logger: winston.Logger;
 
   constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
     this.#logger = logger;
+    this.#PCA9685 = new PCA9685(this.#sprootDB, this.#logger);
   }
 
   get outputs(): Record<string, OutputBase> {
     return this.#outputs;
-  }
-  get pca9685Record(): Record<string, PCA9685> {
-    return this.#pca9685Record;
   }
 
   get outputData(): Record<string, IOutputBase> {
@@ -68,56 +66,27 @@ class OutputList {
       : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => {
     for (const key in this.#outputs) {
-      this.#outputs[key]?.dispose();
+      this.#deleteOutputAsync(this.#outputs[key]!);
     }
-    for (const key in this.#pca9685Record) {
-      this.#pca9685Record[key]?.dispose();
-    }
-    this.#pca9685Record = {};
     this.#outputs = {};
-    this.#usedAddresses = [];
   };
 
   async initializeOrRegenerateAsync(): Promise<void> {
     const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
 
-    //Update old ones
     for (const output of outputsFromDatabase) {
       const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
       if (key) {
+        //Update old ones
         this.#outputs[key]!.description = output.description;
         this.#outputs[key]!.isPwm = output.isPwm;
         this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
-      }
-    }
-
-    //Add new ones
-    const filteredOutputsFromDatabase = outputsFromDatabase.filter(
-      (output) => !Object.keys(this.#outputs).includes(String(output.id)),
-    );
-    for (const output of filteredOutputsFromDatabase) {
-      this.#logger.info(`Creating output ${output.model} ${output.id}`);
-      switch (output.model.toLowerCase()) {
-        case "pca9685": {
-          if (!this.#pca9685Record[output.address]) {
-            this.#pca9685Record[output.address] = new PCA9685(
-              this.#sprootDB,
-              this.#logger,
-              parseInt(output.address),
-            );
-            this.#usedAddresses.push(output.address);
-          }
-          try {
-            const pca9685Outputs = (
-              await this.#pca9685Record[output.address]?.initializeOrRegenerateAsync()
-            )?.outputs;
-            for (const key in pca9685Outputs) {
-              this.#outputs[key] = pca9685Outputs[key]!;
-            }
-          } catch (err) {
-            this.#logger.error(err);
-          }
-          break;
+      } else {
+        //Add new ones
+        try {
+          await this.#createOutputAsync(output);
+        } catch (err) {
+          this.#logger.error(`Could not build output ${output.model} ${output.id}. ${err}`);
         }
       }
     }
@@ -126,19 +95,53 @@ class OutputList {
     const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
     for (const key in this.#outputs) {
       if (!outputIdsFromDatabase.includes(key)) {
-        this.#outputs[key]?.dispose();
         this.#logger.info(`Deleting output ${this.#outputs[key]?.model} ${this.#outputs[key]?.id}`);
+        this.#deleteOutputAsync(this.#outputs[key]!);
         delete this.#outputs[key];
       }
     }
-    for (const key in this.#usedAddresses) {
-      if (!outputsFromDatabase.find((output) => output.address === this.#usedAddresses[key])) {
-        this.#logger.info(`Deleting PCA9685 Board${this.#usedAddresses[key]}`);
-        this.#pca9685Record[this.#usedAddresses[key]!]?.dispose();
-        delete this.#pca9685Record[this.#usedAddresses[key]!];
-        this.#usedAddresses.splice(this.#usedAddresses.indexOf(this.#usedAddresses[key]!), 1);
+  }
+
+  async #createOutputAsync(output: SDBOutput): Promise<void> {
+    let newOutput: OutputBase | null = null;
+    switch (output.model.toLowerCase()) {
+      case "pca9685": {
+        if (!output.address) {
+          throw new OutputListError("PCA9685 address cannot be null");
+        }
+        newOutput = await this.#PCA9685.createOutput(output);
+        if (newOutput) {
+          this.#outputs[output.id] = newOutput;
+        }
+
+        break;
+      }
+      default: {
+        throw new OutputListError(`Unrecognized output model ${output.model}`);
       }
     }
+  }
+
+  async #deleteOutputAsync(output: OutputBase): Promise<void> {
+    switch (output.model.toLowerCase()) {
+      case "pca9685": {
+        if (!output.address) {
+          throw new OutputListError("PCA9685 address cannot be null");
+        }
+        this.#PCA9685.disposeOutput(output);
+        break;
+      }
+      default: {
+        throw new OutputListError(`Unrecognized output model ${output.model}`);
+      }
+    }
+  }
+}
+
+class OutputListError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BuildOutputError";
   }
 }
 

@@ -52,7 +52,11 @@ abstract class SensorBase implements ISensorBase {
 
   addLastReadingToDatabaseAsync = async (): Promise<void> => {
     this.updateCachedReadings();
-    await this.sprootDB.addSensorReadingAsync(this);
+    try {
+      await this.sprootDB.addSensorReadingAsync(this);
+    } catch (error) {
+      this.logger.error(`Error adding reading to database for sensor ${this.id}: ${error}`);
+    }
   };
 
   getCachedReadings(offset?: number, limit?: number): Record<string, SDBReading[]> {

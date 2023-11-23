@@ -70,27 +70,14 @@ describe("DS18B20.ts tests", function () {
     assert.isTrue(loggerSpy.calledOnce);
   });
 
-  it("should get all DS18B20 addresses, gracefully handling errors", async function () {
-    const readFileStub = sandbox
-      .stub(promises, "readFile")
-      .resolves("28-00000\n28-00001\n28-00002\n");
-    const loggerSpy = sandbox.spy();
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: loggerSpy }) as unknown as winston.Logger);
-    const logger = winston.createLogger();
-
-    let addresses = await DS18B20.getAddressesAsync(logger);
+  it("should get all DS18B20 addresses", async function () {
+    sandbox.stub(promises, "readFile").resolves("28-00000\n28-00001\n28-00002\n");
+    let addresses = await DS18B20.getAddressesAsync();
 
     assert.equal(addresses.length, 3);
     assert.equal(addresses[0], "28-00000");
     assert.equal(addresses[1], "28-00001");
     assert.equal(addresses[2], "28-00002");
-
-    readFileStub.rejects();
-    addresses = await DS18B20.getAddressesAsync(logger);
-    assert.equal(addresses.length, 0);
-    assert.isTrue(loggerSpy.calledOnce);
   });
 
   it("should load cached readings from the database, clearing any old ones", async function () {

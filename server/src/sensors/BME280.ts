@@ -33,7 +33,6 @@ class BME280 extends SensorBase {
         });
       }, MAX_SENSOR_READ_TIME);
     } catch (err) {
-      handleError(err as Error, this.logger);
       this.logger.error(`Failed to create BME280 sensor ${this.id}. ${err}`);
       return null;
     }
@@ -108,9 +107,7 @@ class BME280 extends SensorBase {
         }`,
       );
     } catch (err) {
-      this.logger.error(
-        `Failed to update cache readings for {BME280, id: ${this.id}}. Error: ${err}`,
-      );
+      this.logger.error(`Failed to update cache readings for {BME280, id: ${this.id}}. ${err}`);
     }
   }
 
@@ -142,19 +139,10 @@ class BME280 extends SensorBase {
         }`,
       );
     } catch (err) {
-      this.logger.error(`Failed to load cached readings for sensor {BME280, id:${this.id}}`);
-      this.logger.error("BME280: " + err);
+      this.logger.error(
+        `Failed to load cached readings for sensor {BME280, id:${this.id}}. ${err}`,
+      );
     }
-  }
-}
-
-function handleError(err: Error, logger: winston.Logger): void {
-  if (err.message.includes("ENOENT: no such file or directory, open ")) {
-    logger.error(
-      "Unable to connect to I2C driver. Please ensure your system has I2C support enabled.",
-    );
-  } else {
-    logger.error("BME280: " + err);
   }
 }
 

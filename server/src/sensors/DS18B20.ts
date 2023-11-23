@@ -30,7 +30,7 @@ class DS18B20 extends SensorBase {
         });
       }, MAX_SENSOR_READ_TIME);
     } catch (err) {
-      this.logger.error(`Failed to create DS18B20 sensor ${this.id}${err}`);
+      this.logger.error(`Failed to create DS18B20 sensor ${this.id}. ${err}`);
       return null;
     }
     return this;
@@ -45,19 +45,9 @@ class DS18B20 extends SensorBase {
       const reading = String(result);
       this.lastReading[ReadingType.temperature] = reading;
       this.lastReadingTime = new Date();
-
-      if (this.cachedReadings[ReadingType.temperature].length > 0) {
-        this.cachedReadings[ReadingType.temperature].shift();
-        this.cachedReadings[ReadingType.temperature].push({
-          metric: ReadingType.temperature,
-          data: reading,
-          units: this.units[ReadingType.temperature],
-          logTime: new Date().toUTCString(),
-        } as SDBReading);
-      }
     } catch (err) {
       this.logger.error(
-        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. Error: ${err}`,
+        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
       );
     }
   }
@@ -87,8 +77,7 @@ class DS18B20 extends SensorBase {
         }`,
       );
     } catch (err) {
-      this.logger.error(`Failed to update cached readings for {DS18B20, id: ${this.id}}`);
-      this.logger.error("DS18B20: " + err);
+      this.logger.error(`Failed to update cached readings for {DS18B20, id: ${this.id}}. ${err}`);
     }
   }
 
@@ -114,26 +103,17 @@ class DS18B20 extends SensorBase {
       );
     } catch (err) {
       this.logger.error(
-        `Failed to load cached readings for sensor {DS18B20, id: ${this.id}}. Error: ${err}}`,
+        `Failed to load cached readings for sensor {DS18B20, id: ${this.id}}. ${err}}`,
       );
     }
   }
 
-  static async getAddressesAsync(logger: winston.Logger): Promise<string[]> {
-    try {
-      return await getSensorAddressesAsync();
-    } catch (err) {
-      logger.error("Failed to get DS18B20 addresses. Error: ${err}");
-    }
-    return [];
+  static async getAddressesAsync(): Promise<string[]> {
+    const data = await readFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves", "utf8");
+    var parts = data.split("\n");
+    parts.pop();
+    return parts;
   }
-}
-
-async function getSensorAddressesAsync(): Promise<string[]> {
-  const data = await readFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves", "utf8");
-  var parts = data.split("\n");
-  parts.pop();
-  return parts;
 }
 
 async function readTemperatureFromDeviceAsync(address: string): Promise<number | false> {

@@ -11,73 +11,50 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
 class PCA9685 {
-  #pca9685: Pca9685Driver | undefined;
+  #boardRecord: Record<string, Pca9685Driver> = {};
   #outputs: Record<string, PCA9685Output>;
   #sprootDB: ISprootDB;
-  #address: number;
   #frequency: number;
-  #usedPins: number[] = [];
+  #usedPins: Record<string, number[]> = {};
   #logger: winston.Logger;
-  constructor(sprootDB: ISprootDB, logger: winston.Logger, address = 0x40) {
+  constructor(sprootDB: ISprootDB, logger: winston.Logger, frequency: number = 50) {
     this.#sprootDB = sprootDB;
     this.#outputs = {};
-    this.#address = address;
-    this.#frequency = 50;
+    this.#frequency = frequency;
     this.#logger = logger;
   }
 
-  async initializeOrRegenerateAsync(): Promise<PCA9685> {
-    if (!this.#pca9685) {
-      this.#pca9685 = new Pca9685Driver(
+  async createOutput(output: SDBOutput): Promise<PCA9685Output | null> {
+    //Create new PCA9685 if one doesn't exist for this address.
+    if (!this.#boardRecord[output.address]) {
+      this.#boardRecord[output.address] = new Pca9685Driver(
         {
           i2c: openSync(1),
-          address: this.#address,
+          address: parseInt(output.address),
           frequency: this.#frequency,
           debug: false,
         },
         () => {},
       );
-    }
-    const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
-
-    //Update old ones
-    outputsFromDatabase.forEach(async (output) => {
-      const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
-      if (key) {
-        this.#outputs[key]!.description = output.description;
-        this.#outputs[key]!.isPwm = output.isPwm;
-        this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
-      }
-    });
-
-    //Add new ones
-    const filteredOutputsFromDatabase = outputsFromDatabase.filter(
-      (output) => !Object.keys(this.#outputs).includes(String(output.id)),
-    );
-    for (const output of filteredOutputsFromDatabase) {
-      if (output.pin >= 0 && output.pin <= 15 && !this.#usedPins.includes(output.pin)) {
-        this.#outputs[output.id] = new PCA9685Output(
-          this.#pca9685,
-          output,
-          this.#sprootDB,
-          this.#logger,
-        );
-        this.#usedPins.push(output.pin);
-      } else {
-        throw new UsedOrInvalidPinError(`Pin ${output.pin} is already in use or is invalid`);
-      }
+      this.#usedPins[output.address] = [];
     }
 
-    //Remove deleted ones
-    const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
-    for (const key in this.#outputs) {
-      if (!outputIdsFromDatabase.includes(key)) {
-        this.#usedPins.splice(this.#usedPins.indexOf(this.#outputs[key]!.pin), 1);
-        this.#outputs[key]?.dispose();
-        delete this.#outputs[key];
-      }
+    const pca9685Driver = this.#boardRecord[output.address];
+    if (pca9685Driver) {
+      this.#outputs[output.id] = new PCA9685Output(
+        pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
+        output,
+        this.#sprootDB,
+        this.#logger,
+      );
+      this.#usedPins[output.address]?.push(output.pin);
+      return this.#outputs[output.id]!;
+    } else {
+      this.#logger.error(
+        `Could not build pca9685 output {id: ${output.id}}. PCA9685 driver is undefined`,
+      );
+      return null;
     }
-    return this;
   }
 
   get outputs(): Record<string, PCA9685Output> {
@@ -115,6 +92,23 @@ class PCA9685 {
     return cleanObject;
   }
 
+  disposeOutput(output: OutputBase) {
+    const usedPins = this.#usedPins[output.address];
+    if (usedPins) {
+      const index = usedPins.indexOf(this.#outputs[output.id]!.pin);
+      if (index !== -1) {
+        usedPins.splice(index, 1);
+        this.#outputs[output.id]!.dispose();
+        delete this.#outputs[output.id];
+        if (usedPins.length === 0) {
+          this.#boardRecord[output.address]?.dispose();
+          delete this.#boardRecord[output.address];
+          delete this.#usedPins[output.address];
+        }
+      }
+    }
+  }
+
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
     this.#outputs[outputId]?.updateControlMode(controlMode);
   setNewOutputState = (outputId: string, newState: PCA9685State, targetControlMode: ControlMode) =>
@@ -123,7 +117,6 @@ class PCA9685 {
     outputId
       ? this.#outputs[outputId]?.executeState()
       : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
-  dispose = () => this.#pca9685?.dispose();
 }
 
 class PCA9685Output extends OutputBase {
@@ -158,40 +151,24 @@ class PCA9685Output extends OutputBase {
     }
   }
 
+  // Power down pin
   dispose = () => {
-    this.#setPwm;
+    this.pca9685.setDutyCycle(this.pin, 0);
   };
 
   #setPwm(value: number): void {
     if (!this.isPwm && value != 0 && value != 100) {
-      throw new OutputNotPWMError("Output is not a PWM output");
+      this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
+      return;
     }
     if (value < 0 || value > 100) {
-      throw new OutputValueOutOfRange("PWM value must be between 0 and 100");
+      this.logger.error(
+        `Invalid PWM value for Output ${this.id}. PWM value must be between 0 and 100`,
+      );
+      return;
     }
     const calculatedOutputValue = (this.isInvertedPwm ? 100 - value : value) / 100;
     this.pca9685.setDutyCycle(this.pin, calculatedOutputValue);
-  }
-}
-
-class OutputNotPWMError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "OutputNotPWMError";
-  }
-}
-
-class UsedOrInvalidPinError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UsedOrInvalidPinError";
-  }
-}
-
-class OutputValueOutOfRange extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "OutputValueOutOfRange";
   }
 }
 

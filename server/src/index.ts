@@ -6,7 +6,8 @@ import express from "express";
 import mysql2 from "mysql2/promise";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
-import winston from "winston";
+import * as winston from "winston";
+import "winston-daily-rotate-file";
 
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
@@ -32,19 +33,33 @@ swaggerOptions.defaultModelsExpandDepth = -1;
 
 const logger = winston.createLogger({
   level: "info",
-  format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+  format: winston.format.combine(
+    winston.format.errors({ stack: true }),
+    winston.format.timestamp(),
+    winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`),
+  ),
   transports: [
-    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
-    new winston.transports.File({ filename: "logs/combined.log" }),
+    new winston.transports.DailyRotateFile({
+      filename: "logs/sproot-server-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      maxSize: "10m",
+      maxFiles: "30d",
+    }),
   ],
 });
 
 if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   logger.add(
     new winston.transports.Console({
-      format: winston.format.simple(),
+      format: winston.format.combine(
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`),
+      ),
     }),
   );
+  logger.add(new winston.transports.File({ filename: "logs/debug.log", level: "debug" }));
 }
 
 const app = express();

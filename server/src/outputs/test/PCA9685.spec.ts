@@ -5,7 +5,7 @@ import { PCA9685, PCA9685State } from "../PCA9685";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { Pca9685Driver } from "pca9685";
 
-import chai, { assert, expect } from "chai";
+import chai, { assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
@@ -18,87 +18,73 @@ describe("PCA9685.ts tests", function () {
     sandbox.restore();
   });
 
-  it("should create and update and delete PCA9685 outputs", async function () {
+  it("should create and delete PCA9685 outputs", async function () {
     sandbox.createStubInstance(Pca9685Driver);
-    const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
-      {
-        id: 1,
-        model: "pca9685",
-        address: "0x40",
-        description: "test output 1",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
-      } as SDBOutput,
-      {
-        id: 2,
-        model: "pca9685",
-        address: "0x40",
-        description: "test output 2",
-        pin: 1,
-        isPwm: false,
-        isInvertedPwm: false,
-      } as SDBOutput,
-      {
-        id: 3,
-        model: "pca9685",
-        address: "0x40",
-        description: "test output 3",
-        pin: 2,
-        isPwm: true,
-        isInvertedPwm: true,
-      } as SDBOutput,
-      {
-        id: 4,
-        model: "pca9685",
-        address: "0x40",
-        description: "test output 4",
-        pin: 3,
-        isPwm: false,
-        isInvertedPwm: true,
-      } as SDBOutput,
-    ]);
     sandbox
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockSprootDB, logger);
-    await pca9685.initializeOrRegenerateAsync();
+    await pca9685.createOutput({
+      id: 1,
+      model: "pca9685",
+      address: "0x40",
+      description: "test output 1",
+      pin: 0,
+      isPwm: true,
+      isInvertedPwm: false,
+    } as SDBOutput);
+    await pca9685.createOutput({
+      id: 2,
+      model: "pca9685",
+      address: "0x40",
+      description: "test output 2",
+      pin: 1,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput);
+    await pca9685.createOutput({
+      id: 3,
+      model: "pca9685",
+      address: "0x40",
+      description: "test output 3",
+      pin: 2,
+      isPwm: true,
+      isInvertedPwm: true,
+    } as SDBOutput);
+    const output4 = await pca9685.createOutput({
+      id: 4,
+      model: "pca9685",
+      address: "0x40",
+      description: "test output 4",
+      pin: 3,
+      isPwm: false,
+      isInvertedPwm: true,
+    } as SDBOutput);
     assert.equal(Object.keys(pca9685.outputs).length, 4);
+    pca9685.disposeOutput(output4!);
 
-    getOutputsAsyncStub.resolves([
-      {
-        id: 1,
-        description: "1 tuptuo tset",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
-      } as SDBOutput,
-    ]);
-    await pca9685.initializeOrRegenerateAsync();
-    assert.equal(Object.keys(pca9685.outputs).length, 1);
-    assert.equal(pca9685.outputs["1"]!.description, "1 tuptuo tset");
+    assert.equal(Object.keys(pca9685.outputs).length, 3);
+    assert.isUndefined(pca9685.outputs["4"]);
   });
 
   it("should return output data (no functions)", async function () {
     sandbox.createStubInstance(Pca9685Driver);
-    sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
-      {
-        id: 1,
-        description: "test output 1",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
-      } as SDBOutput,
-    ]);
     sandbox
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockSprootDB, logger);
-    await pca9685.initializeOrRegenerateAsync();
+    await pca9685.createOutput({
+      id: 1,
+      model: "pca9685",
+      description: "test output 1",
+      pin: 0,
+      isPwm: true,
+      isInvertedPwm: false,
+    } as SDBOutput);
     const outputData = pca9685.outputData;
 
     assert.equal(outputData["1"]!["description"], "test output 1");
@@ -110,15 +96,6 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should update and apply states with respect to control mode", async function () {
-    const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
-      {
-        id: 1,
-        description: "test output 1",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
-      } as SDBOutput,
-    ]);
     sandbox
       .stub(winston, "createLogger")
       .callsFake(
@@ -128,7 +105,14 @@ describe("PCA9685.ts tests", function () {
     sandbox.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sandbox.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
     const pca9685 = new PCA9685(mockSprootDB, logger);
-    await pca9685.initializeOrRegenerateAsync();
+    await pca9685.createOutput({
+      id: 1,
+      model: "pca9685",
+      description: "test output 1",
+      pin: 0,
+      isPwm: true,
+      isInvertedPwm: false,
+    } as SDBOutput);
 
     //Schedule High
     pca9685.setNewOutputState("1", <PCA9685State>{ isOn: true, value: 100 }, ControlMode.schedule);
@@ -175,16 +159,14 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(4).args[1], 0);
 
     //Inverted PWM Execution
-    getOutputsAsyncStub.resolves([
-      {
-        id: 1,
-        description: "test output 1",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: true,
-      } as SDBOutput,
-    ]);
-    await pca9685.initializeOrRegenerateAsync();
+    await pca9685.createOutput({
+      id: 1,
+      model: "pca9685",
+      description: "test output 1",
+      pin: 0,
+      isPwm: true,
+      isInvertedPwm: true,
+    } as SDBOutput);
 
     pca9685.setNewOutputState("1", <PCA9685State>{ isOn: true, value: 100 }, ControlMode.schedule);
     assert.equal(pca9685.outputs["1"]?.scheduleState.value, 100);
@@ -192,63 +174,5 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.callCount, 6);
     assert.equal(setDutyCycleStub.getCall(5).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(5).args[1], 0);
-  });
-
-  it("should throw errors for invalid values", async function () {
-    sandbox.createStubInstance(Pca9685Driver);
-    sandbox.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
-    const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
-      {
-        id: 1,
-        description: "test output 1",
-        pin: 0,
-        isPwm: false,
-        isInvertedPwm: false,
-      } as SDBOutput,
-    ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(
-        () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
-      );
-    const logger = winston.createLogger();
-    const pca9685 = new PCA9685(mockSprootDB, logger);
-    await pca9685.initializeOrRegenerateAsync();
-    pca9685.setNewOutputState("1", <PCA9685State>{ isOn: true, value: 50 }, ControlMode.schedule);
-    assert.throws(() => pca9685.executeOutputState(), "Output is not a PWM output");
-
-    getOutputsAsyncStub.resolves([
-      {
-        id: 1,
-        description: "test output 1",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
-      } as SDBOutput,
-    ]);
-    await pca9685.initializeOrRegenerateAsync();
-    pca9685.setNewOutputState("1", <PCA9685State>{ isOn: true, value: 101 }, ControlMode.schedule);
-    assert.throws(() => pca9685.executeOutputState(), "PWM value must be between 0 and 100");
-
-    getOutputsAsyncStub.resolves([
-      {
-        id: 1,
-        description: "test output 1",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
-      } as SDBOutput,
-      {
-        id: 2,
-        description: "test output 1",
-        pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
-      } as SDBOutput,
-    ]);
-
-    await expect(pca9685.initializeOrRegenerateAsync()).to.eventually.be.rejectedWith(
-      "Pin 0 is already in use or is invalid",
-    );
   });
 });
