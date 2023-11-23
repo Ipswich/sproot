@@ -24,7 +24,7 @@ class PCA9685 {
     this.#logger = logger;
   }
 
-  async createOutput(output: SDBOutput): Promise<PCA9685Output | null> {
+  createOutput(output: SDBOutput): PCA9685Output | null {
     //Create new PCA9685 if one doesn't exist for this address.
     if (!this.#boardRecord[output.address]) {
       this.#boardRecord[output.address] = new Pca9685Driver(
@@ -57,8 +57,14 @@ class PCA9685 {
     }
   }
 
+  get boardRecord(): Record<string, Pca9685Driver> {
+    return this.#boardRecord;
+  }
   get outputs(): Record<string, PCA9685Output> {
     return this.#outputs;
+  }
+  get usedPins(): Record<string, number[]> {
+    return this.#usedPins;
   }
 
   get outputData(): Record<string, IOutputBase> {

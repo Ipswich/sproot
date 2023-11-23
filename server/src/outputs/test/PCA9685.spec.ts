@@ -18,7 +18,7 @@ describe("PCA9685.ts tests", function () {
     sandbox.restore();
   });
 
-  it("should create and delete PCA9685 outputs", async function () {
+  it("should create and delete PCA9685 outputs", function () {
     sandbox.createStubInstance(Pca9685Driver);
     sandbox
       .stub(winston, "createLogger")
@@ -26,7 +26,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockSprootDB, logger);
-    await pca9685.createOutput({
+    const output1 = pca9685.createOutput({
       id: 1,
       model: "pca9685",
       address: "0x40",
@@ -35,7 +35,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: true,
       isInvertedPwm: false,
     } as SDBOutput);
-    await pca9685.createOutput({
+    const output2 = pca9685.createOutput({
       id: 2,
       model: "pca9685",
       address: "0x40",
@@ -44,7 +44,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
-    await pca9685.createOutput({
+    const output3 = pca9685.createOutput({
       id: 3,
       model: "pca9685",
       address: "0x40",
@@ -53,7 +53,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: true,
       isInvertedPwm: true,
     } as SDBOutput);
-    const output4 = await pca9685.createOutput({
+    const output4 = pca9685.createOutput({
       id: 4,
       model: "pca9685",
       address: "0x40",
@@ -63,13 +63,26 @@ describe("PCA9685.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
     assert.equal(Object.keys(pca9685.outputs).length, 4);
-    pca9685.disposeOutput(output4!);
+    assert.exists(pca9685.outputs["4"]);
+    assert.equal(pca9685.usedPins["0x40"]!.length, 4);
+    assert.exists(pca9685.boardRecord["0x40"]);
 
+    // Dispose 1 output
+    pca9685.disposeOutput(output4!);
     assert.equal(Object.keys(pca9685.outputs).length, 3);
+    assert.equal(pca9685.usedPins["0x40"]!.length, 3);
     assert.isUndefined(pca9685.outputs["4"]);
+
+    // Dispose the rest
+    pca9685.disposeOutput(output1!);
+    pca9685.disposeOutput(output2!);
+    pca9685.disposeOutput(output3!);
+    assert.equal(Object.keys(pca9685.outputs).length, 0);
+    assert.isUndefined(pca9685.usedPins["0x40"]);
+    assert.isUndefined(pca9685.boardRecord["0x40"]);
   });
 
-  it("should return output data (no functions)", async function () {
+  it("should return output data (no functions)", function () {
     sandbox.createStubInstance(Pca9685Driver);
     sandbox
       .stub(winston, "createLogger")
@@ -77,7 +90,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockSprootDB, logger);
-    await pca9685.createOutput({
+    pca9685.createOutput({
       id: 1,
       model: "pca9685",
       description: "test output 1",
@@ -95,7 +108,7 @@ describe("PCA9685.ts tests", function () {
     assert.exists(pca9685.outputs["1"]!["sprootDB"]);
   });
 
-  it("should update and apply states with respect to control mode", async function () {
+  it("should update and apply states with respect to control mode", function () {
     sandbox
       .stub(winston, "createLogger")
       .callsFake(
@@ -105,7 +118,7 @@ describe("PCA9685.ts tests", function () {
     sandbox.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sandbox.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
     const pca9685 = new PCA9685(mockSprootDB, logger);
-    await pca9685.createOutput({
+    pca9685.createOutput({
       id: 1,
       model: "pca9685",
       description: "test output 1",
@@ -159,7 +172,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(4).args[1], 0);
 
     //Inverted PWM Execution
-    await pca9685.createOutput({
+    pca9685.createOutput({
       id: 1,
       model: "pca9685",
       description: "test output 1",

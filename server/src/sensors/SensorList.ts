@@ -41,7 +41,9 @@ class SensorList {
     await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
       this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
     });
+
     const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
+
     for (const sensor of sensorsFromDatabase) {
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
@@ -62,8 +64,16 @@ class SensorList {
     const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
     for (const key in this.#sensors) {
       if (!sensorIdsFromDatabase.includes(key)) {
-        this.#logger.info(`Deleting sensor ${this.#sensors[key]!.model} ${this.#sensors[key]!.id}`);
-        this.#disposeSensorAsync(this.#sensors[key]!);
+        try {
+          this.#logger.info(
+            `Deleting sensor ${this.#sensors[key]?.model} ${this.#sensors[key]?.id}`,
+          );
+          this.#disposeSensorAsync(this.#sensors[key]!);
+        } catch (err) {
+          this.#logger.error(
+            `Could not delete sensor ${this.#sensors[key]?.model} ${this.#sensors[key]?.id}}. ${err}`,
+          );
+        }
       }
     }
   }

@@ -66,7 +66,7 @@ class OutputList {
       : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
   dispose = () => {
     for (const key in this.#outputs) {
-      this.#deleteOutputAsync(this.#outputs[key]!);
+      this.#deleteOutput(this.#outputs[key]!);
     }
     this.#outputs = {};
   };
@@ -84,7 +84,8 @@ class OutputList {
       } else {
         //Add new ones
         try {
-          await this.#createOutputAsync(output);
+          this.#logger.info(`Creating output ${output.model} ${output.id}`);
+          this.#createOutput(output);
         } catch (err) {
           this.#logger.error(`Could not build output ${output.model} ${output.id}. ${err}`);
         }
@@ -95,21 +96,29 @@ class OutputList {
     const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
     for (const key in this.#outputs) {
       if (!outputIdsFromDatabase.includes(key)) {
-        this.#logger.info(`Deleting output ${this.#outputs[key]?.model} ${this.#outputs[key]?.id}`);
-        this.#deleteOutputAsync(this.#outputs[key]!);
-        delete this.#outputs[key];
+        try {
+          this.#logger.info(
+            `Deleting output ${this.#outputs[key]?.model} ${this.#outputs[key]?.id}`,
+          );
+          this.#deleteOutput(this.#outputs[key]!);
+          delete this.#outputs[key];
+        } catch (err) {
+          this.#logger.error(
+            `Could not delete output ${this.#outputs[key]?.model} ${this.#outputs[key]?.id}. ${err}`,
+          );
+        }
       }
     }
   }
 
-  async #createOutputAsync(output: SDBOutput): Promise<void> {
+  #createOutput(output: SDBOutput): void {
     let newOutput: OutputBase | null = null;
     switch (output.model.toLowerCase()) {
       case "pca9685": {
         if (!output.address) {
           throw new OutputListError("PCA9685 address cannot be null");
         }
-        newOutput = await this.#PCA9685.createOutput(output);
+        newOutput = this.#PCA9685.createOutput(output);
         if (newOutput) {
           this.#outputs[output.id] = newOutput;
         }
@@ -122,13 +131,14 @@ class OutputList {
     }
   }
 
-  async #deleteOutputAsync(output: OutputBase): Promise<void> {
+  #deleteOutput(output: OutputBase): void {
     switch (output.model.toLowerCase()) {
       case "pca9685": {
         if (!output.address) {
           throw new OutputListError("PCA9685 address cannot be null");
         }
         this.#PCA9685.disposeOutput(output);
+        delete this.#outputs[output.id];
         break;
       }
       default: {
