@@ -1,20 +1,13 @@
+import 'dotenv/config'
 // import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-// import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+
+import { getSensorData } from "./requests";
 
 function App() {
   // const [count, setCount] = useState(0);
-  const getSensorData = async () => {
-    fetch("http://192.168.2.166:3000/api/v1/sensors")
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        console.log(data.sensors);
-      });
-  };
 
   return (
     <>

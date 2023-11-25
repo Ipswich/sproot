@@ -1,5 +1,23 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  /* MY SHIT STARTS HERE */
+  
+  --platinum: #e6e8e6ff;
+  --timberwolf: #ced0ceff;
+  --ash-gray: #9fb8adff;
+  --feldgrau: #475841ff;
+  --onyx: #3f403fff;
+
+
+  --dark-green: #1b3022ff;
+  --dark-slate-gray: #395756ff;
+  --cadet-gray: #99a1a6ff;
+  --celadon: #a8c69fff;
+  --tea-green: #cce2a3ff;
+  
+  /* MY SHIT STOPS HERE */
+
+  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -52,7 +70,7 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 4px auto -webkit-focus-ring-color; */
 }
 
 @media (prefers-color-scheme: light) {
@@ -60,10 +78,10 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
-  a:hover {
+  /* a:hover {
     color: #747bff;
   }
   button {
     background-color: #f9f9f9;
-  }
+  } */
 }

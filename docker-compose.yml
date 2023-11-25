@@ -39,6 +39,7 @@ services:
       dockerfile: ./client/Dockerfile
     environment:
       - NODE_ENV=production
+      - REACT_APP_SPROOT_SERVER_URL="http://localhost:3000" #Match me to your api server
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
