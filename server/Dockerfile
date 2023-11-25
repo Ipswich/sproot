@@ -20,9 +20,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/g
 RUN apt update && apt install -y gh;
 
 # Copy project
-COPY . ./sproot
-RUN cd ./sproot && npm install
+COPY .. ./sproot
+RUN cd ./sproot && npm run install:server 
+ENTRYPOINT cd ./sproot && npm run start:server
 
 # Expose app ports
 EXPOSE 3000
-EXPOSE 3002

@@ -1,15 +1,18 @@
 version: "3"
 services:
-  app:
+  server:
+    depends_on:
+      - db
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./server/Dockerfile
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DEFAULT_USER="dev-test" #Change this to something long and unique
       - DEFAULT_USER_EMAIL="dev-test@example.com" #Change this to something long and unique
       - DEFAULT_USER_PASSWORD="password" #Change this to something long and unique
       - APPLICATION_PORT=3000
+      - AUTHENTICATION_ENABLED=true
       - JWT_SECRET="CHANGE ME" #Change this to something long and unique
       - JWT_EXPIRATION=3d
       - DATABASE_HOST=db
@@ -20,15 +23,30 @@ services:
       - STATE_UPDATE_INTERVAL=1000
       - DATABASE_UPDATE_INTERVAL=60000
       - MAX_SENSOR_READING_CACHE_SIZE=10080 #7 days worth of minutes
+      - INITIAL_CACHE_LOOKBACK=10080 #7 days in minutes
     volumes:
       - /sys:/sys
-      - ./docker_volumes/sproot/data:/home/sproot
+      - ./docker_volumes/sproot/server/logs:/sproot/server/logs
     networks:
       - sproot-network
     ports:
       - 3000:3000
     privileged: true
-    command: ["sleep", "infinity"]
+  
+  client:
+    depends_on:
+      - db
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./docker_volumes/sproot/client/logs:/sproot/logs
+    networks:
+      - sproot-network
+    ports:
+      - 3001:3000
 
   db:
     image: mariadb
@@ -49,7 +67,7 @@ services:
     networks:
       - sproot-network
     ports:
-      - 3001:8080
+      - 3002:8080
 
 networks:
   sproot-network:

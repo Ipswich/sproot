@@ -1,24 +1,19 @@
 {
-  "name": "sproot",
-  "version": "0.1.0",
+  "name": "@sproot/sproot-server",
+  "version": "0.0.1",
   "private": true,
-  "description": "Garden Automation Managment",
+  "description": "sproot-server, the backend for the sproot project",
   "main": "index.js",
   "scripts": {
-    "build": "tsc --build --verbose tsconfig.build.json",
-    "build:client": "npm run build --workspace=common --workspace=client",
-    "build:server": "npm run build --workspace=common --workspace=server",
-    "clean": "npm run clean --workspaces --if-present",
-    "coverage": "npm run coverage --workspaces --if-present",
-    "install:client": "npm install --workspace=common --workspace=client",
-    "install:server": "npm install --workspace=common --workspace=server",
-    "prettier:check": "npm run prettier:check --workspaces --if-present",
-    "prettier:write": "npm run prettier:write --workspaces --if-present",
-    "start": "npm run build && npm run start:server & npm run start:client",
-    "start:client": "npm run start --workspace=client",
-    "start:dev": "npm run start:dev --workspace=server & npm run start:dev --workspace=client",
-    "start:server": "npm run start --workspace=server",
-    "test": "npm run test --workspaces --if-present"
+    "build": "tsc --build --verbose",
+    "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
+    "coverage": "nyc npm run test",
+    "lint": "npx eslint ./src",
+    "prettier:write": "npx prettier . --write",
+    "prettier:check": "npx prettier . --check",
+    "start": "npm run build && node ./dist/index.js",
+    "start:dev": "npx nodemon",
+    "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts && npm run prettier:check"
   },
   "author": "Ben Steele",
   "license": "ISC",
@@ -28,6 +23,7 @@
     "@types/chai": "^4.3.5",
     "@types/chai-as-promised": "^7.1.6",
     "@types/cookie-parser": "^1.4.4",
+    "@types/cors": "^2.8.15",
     "@types/ds18b20": "^0.1.0",
     "@types/express": "^4.17.17",
     "@types/jsonwebtoken": "^9.0.3",
@@ -56,6 +52,7 @@
     "bcrypt": "^5.1.1",
     "bme280": "github:jhoffi/bme280-typings",
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
@@ -65,11 +62,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1",
     "yamljs": "^0.3.0"
-  },
-  "workspaces": [
-    "common",
-    "server",
-    "client"
-  ]
+  }
 }
