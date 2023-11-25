@@ -21,6 +21,7 @@ class DS18B20 extends SensorBase {
   }
 
   async initAsync(): Promise<DS18B20 | null> {
+    const profiler = this.logger.startTimer();
     try {
       await this.loadCachedReadingsFromDatabaseAsync(INITIAL_CACHE_LOOKBACK);
       this.updateInterval = setInterval(async () => {
@@ -34,6 +35,11 @@ class DS18B20 extends SensorBase {
     } catch (err) {
       this.logger.error(`Failed to create DS18B20 sensor ${this.id}. ${err}`);
       return null;
+    } finally {
+      profiler.done({
+        message: `Initialization time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
+        level: "debug",
+      });
     }
     return this;
   }

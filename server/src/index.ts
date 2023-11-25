@@ -1,8 +1,9 @@
-import "dotenv/config";
+import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import bcrypt from "bcrypt";
+import "dotenv/config";
 import express from "express";
+import morgan from "morgan";
 import mysql2 from "mysql2/promise";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -28,6 +29,8 @@ const mysqlConfig = {
   port: parseInt(process.env["DATABASE_PORT"]!),
 };
 
+const app = express();
+
 const swaggerOptions = YAML.load("./openapi.yml");
 swaggerOptions.defaultModelsExpandDepth = -1;
 
@@ -36,14 +39,13 @@ const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.errors({ stack: true }),
     winston.format.timestamp(),
+    winston.format.colorize(),
     winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`),
   ),
   transports: [
     new winston.transports.DailyRotateFile({
       filename: "logs/sproot-server-%DATE%.log",
       datePattern: "YYYY-MM-DD",
-      zippedArchive: true,
-      maxSize: "10m",
       maxFiles: "30d",
     }),
   ],
@@ -52,18 +54,36 @@ const logger = winston.createLogger({
 if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   logger.add(
     new winston.transports.Console({
+      level: "debug",
       format: winston.format.combine(
         winston.format.errors({ stack: true }),
         winston.format.colorize(),
-        winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`),
+        winston.format.printf(formatForDebug),
       ),
     }),
   );
-  logger.add(new winston.transports.File({ filename: "logs/debug.log", level: "debug" }));
+  logger.add(
+    new winston.transports.File({
+      filename: "logs/debug.log",
+      level: "debug",
+      format: winston.format.combine(
+        winston.format.errors({ stack: true }),
+        winston.format.colorize(),
+        winston.format.printf(formatForDebug),
+      ),
+    }),
+  );
+  app.use(
+    morgan("dev", {
+      stream: {
+        write: (message: string) => logger.http(message.trim()),
+      },
+    }),
+  );
 }
 
-const app = express();
 (async () => {
+  const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
@@ -118,6 +138,10 @@ const app = express();
   );
 
   const server = app.listen(process.env["APPLICATION_PORT"]!, () => {
+    profiler.done({
+      message: "Sproot server initialization time",
+      level: "debug",
+    });
     logger.info(`sproot is now listening on port ${process.env["APPLICATION_PORT"]}!`);
   });
 
@@ -154,6 +178,14 @@ const app = express();
     });
   }
 })();
+
+function formatForDebug(info: winston.Logform.TransformableInfo): string {
+  let base = `[${info["timestamp"]}] ${info.level}: ${info.message}`;
+  if (info["durationMs"]) {
+    base += ` (${info["durationMs"]}ms)`;
+  }
+  return base;
+}
 
 async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
   const defaultUser = {

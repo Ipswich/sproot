@@ -40,9 +40,14 @@ describe("SensorList.ts tests", function () {
         address: "28-00001",
       } as SDBSensor,
     ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
@@ -97,9 +102,14 @@ describe("SensorList.ts tests", function () {
         address: "28-00000",
       } as SDBSensor,
     ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     sandbox
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
@@ -145,9 +155,14 @@ describe("SensorList.ts tests", function () {
       address: null,
     } as SDBSensor;
     const loggerSpy = sinon.spy();
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: loggerSpy }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: loggerSpy,
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
 
     const getSensorsStub = sandbox
@@ -185,9 +200,14 @@ describe("SensorList.ts tests", function () {
       model: "DS18B20",
       address: "28-00000",
     } as SDBSensor;
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([mockDS18B20Data]);
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);

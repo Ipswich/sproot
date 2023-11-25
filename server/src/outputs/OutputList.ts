@@ -78,6 +78,7 @@ class OutputList {
   };
 
   async initializeOrRegenerateAsync(): Promise<void> {
+    const profiler = this.#logger.startTimer();
     const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
 
     for (const output of outputsFromDatabase) {
@@ -93,7 +94,9 @@ class OutputList {
           this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
           this.#createOutput(output);
         } catch (err) {
-          this.#logger.error(`Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`);
+          this.#logger.error(
+            `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
+          );
         }
       }
     }
@@ -115,6 +118,10 @@ class OutputList {
         }
       }
     }
+    profiler.done({
+      message: "OutputList initializeOrRegenerate time",
+      level: "debug",
+    });
   }
 
   #createOutput(output: SDBOutput): void {

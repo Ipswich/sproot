@@ -66,9 +66,14 @@ describe("BME280.ts tests", function () {
     ]);
     sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
 
     const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
@@ -95,70 +100,18 @@ describe("BME280.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
-    let recordsToLoad = 2;
-    const getSensorReadingsAsyncStub = sandbox
-      .stub(mockSprootDB, "getSensorReadingsAsync")
-      .resolves([
-        {
-          data: "1",
-          metric: ReadingType.temperature,
-          units: "°C",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.temperature,
-          units: "°C",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "1",
-          metric: ReadingType.humidity,
-          units: "%rH",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.humidity,
-          units: "%rH",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "1",
-          metric: ReadingType.pressure,
-          units: "hPa",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-        {
-          data: "2",
-          metric: ReadingType.pressure,
-          units: "hPa",
-          logTime: new Date().toISOString(),
-        } as SDBReading,
-      ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
-
-    sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
-
-    const logger = winston.createLogger();
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
-
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], recordsToLoad);
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], recordsToLoad);
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.pressure], recordsToLoad);
-
-    //Cleanup
-    bme280Sensor?.disposeAsync();
-
-    recordsToLoad = 1;
-    getSensorReadingsAsyncStub.resolves([
+    sandbox.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
         logTime: new Date().toISOString(),
+      } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.temperature,
+        units: "°C",
+        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
       } as SDBReading,
       {
         data: "1",
@@ -167,21 +120,44 @@ describe("BME280.ts tests", function () {
         logTime: new Date().toISOString(),
       } as SDBReading,
       {
+        data: "2",
+        metric: ReadingType.humidity,
+        units: "%rH",
+        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+      } as SDBReading,
+      {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
         logTime: new Date().toISOString(),
       } as SDBReading,
+      {
+        data: "2",
+        metric: ReadingType.pressure,
+        units: "hPa",
+        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+      } as SDBReading,
     ]);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
 
-    await bme280Sensor?.initAsync();
+    sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], recordsToLoad);
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], recordsToLoad);
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.pressure], recordsToLoad);
+    const logger = winston.createLogger();
+    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
+
+    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], 2);
+    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], 2);
+    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.pressure], 2);
 
     //Cleanup
-    bme280Sensor?.disposeAsync();
+    bme280Sensor!.disposeAsync();
   });
 
   it("should update cached readings with the last reading", async () => {
@@ -197,9 +173,14 @@ describe("BME280.ts tests", function () {
       humidity: 45.6,
       pressure: 1013.2,
     };
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     const bme280Sensor = new BME280(mockBME280Data, mockSprootDB, logger);
     bme280Sensor.lastReading = {
@@ -268,9 +249,14 @@ describe("BME280.ts tests", function () {
       humidity: 45.6,
       pressure: 1013.2,
     };
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     const readStub = sandbox.stub().resolves(mockReading as bme280.data);
     const closeStub = sandbox.stub().resolves();

@@ -23,24 +23,26 @@ class BME280 extends SensorBase {
   }
 
   async initAsync(): Promise<BME280 | null> {
+    const profiler = this.logger.startTimer();
     try {
       await this.loadCachedReadingsFromDatabaseAsync(INITIAL_CACHE_LOOKBACK);
       this.updateInterval = setInterval(async () => {
-        const profiler = this.logger.startTimer();
         await this.getReadingAsync();
-        profiler.done({
-          message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
-          level: "debug",
-        });
       }, this.MAX_SENSOR_READ_TIME);
     } catch (err) {
       this.logger.error(`Failed to create BME280 sensor ${this.id}. ${err}`);
       return null;
+    } finally {
+      profiler.done({
+        message: `Initialization time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
+        level: "debug",
+      });
     }
     return this;
   }
 
   override async getReadingAsync(): Promise<void> {
+    const profiler = this.logger.startTimer();
     await bme280
       .open({
         i2cBusNumber: 1,
@@ -54,6 +56,10 @@ class BME280 extends SensorBase {
         this.lastReadingTime = new Date();
         await sensor.close();
       });
+    profiler.done({
+      message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
+      level: "debug",
+    });
   }
 
   override disposeAsync(): Promise<void> {

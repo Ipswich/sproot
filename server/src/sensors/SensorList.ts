@@ -38,6 +38,7 @@ class SensorList {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
+    const profiler = this.#logger.startTimer();
     await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
       this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
     });
@@ -80,6 +81,10 @@ class SensorList {
         }
       }
     }
+    profiler.done({
+      message: "SensorList initializeOrRegenerate time",
+      level: "debug",
+    });
   }
 
   addReadingsToDatabaseAsync = async () =>

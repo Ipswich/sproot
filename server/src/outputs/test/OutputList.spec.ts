@@ -55,9 +55,14 @@ describe("OutputList.ts tests", function () {
         isInvertedPwm: true,
       } as SDBOutput,
     ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
 
     const outputList = new OutputList(mockSprootDB, logger);
@@ -95,9 +100,14 @@ describe("OutputList.ts tests", function () {
         isInvertedPwm: false,
       } as SDBOutput,
     ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
 
     const outputList = new OutputList(mockSprootDB, logger);
@@ -152,9 +162,14 @@ describe("OutputList.ts tests", function () {
         isInvertedPwm: true,
       } as SDBOutput,
     ]);
-    sandbox
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+    sandbox.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     const outputList = new OutputList(mockSprootDB, logger);
 
