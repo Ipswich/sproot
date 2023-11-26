@@ -3,7 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 
-import { getSensorData } from "./requests";
+import { authenticate, getSensors } from "./requests";
 
 function App() {
   // const [count, setCount] = useState(0);
@@ -20,8 +20,12 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={async () => await getSensorData()}>
-          {/* count is {count} */}
+        <button onClick={async () => await authenticate("\"dev-test\"", "\"password\"")}>
+          Authenticate
+        </button>
+        <br></br>
+        <button onClick={async () => await getSensors()}>
+          getSensors
         </button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
