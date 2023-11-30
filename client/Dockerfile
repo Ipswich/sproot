@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM nginx:stable
 RUN apt update -y && apt upgrade -y
 
 # Install curl, nano, python, make, g++, git
@@ -21,8 +21,12 @@ RUN apt update && apt install -y gh;
 
 # Copy project
 COPY .. ./sproot
-RUN cd ./sproot && npm run install:client
-ENTRYPOINT cd ./sproot && npm run start:client
+RUN cd ./sproot && npm run install:client && npm run build:client
+
+# Copy nginx config
+COPY ./sproot/client/dist /usr/share/nginx/html
+COPY ./sproot/client/default.conf /etc/nginx/conf.d/default.conf
 
 # Expose app ports
-EXPOSE 3000
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

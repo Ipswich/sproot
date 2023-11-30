@@ -31,14 +31,12 @@ router.post("/", async (req: Request, res: Response) => {
     const token = jwt.sign({ username: req.body.username }, process.env["JWT_SECRET"]!, {
       expiresIn: process.env["JWT_EXPIRATION"]!,
     });
-    res.clearCookie("jwt_token");
-    res.cookie("jwt_token", token, {
+    res.status(200)
+    .cookie("jwt_token", token, {
       maxAge: parseInt(process.env["JWT_EXPIRATION"]!),
       httpOnly: true,
-      secure: process.env["NODE_ENV"]!.toLowerCase() == "production" ? true : false,
       sameSite: "strict",
-    });
-    res.status(200).json({
+    }).json({
       message: "Authentication successful",
       statusCode: 200,
       JWTtoken: token,

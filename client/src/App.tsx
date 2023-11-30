@@ -24,7 +24,7 @@ function App() {
           Authenticate
         </button>
         <br></br>
-        <button onClick={async () => await getSensors()}>
+        <button onClick={async () => console.log(await getSensors())}>
           getSensors
         </button>
         <p>
