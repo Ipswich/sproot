@@ -24,8 +24,8 @@ COPY .. ./sproot
 RUN cd ./sproot && npm run install:client && npm run build:client
 
 # Copy nginx config
-COPY ./sproot/client/dist /usr/share/nginx/html
-COPY ./sproot/client/default.conf /etc/nginx/conf.d/default.conf
+COPY ./client/dist /usr/share/nginx/html
+COPY ./client/default.conf /etc/nginx/conf.d/default.conf
 
 # Expose app ports
 EXPOSE 80

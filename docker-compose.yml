@@ -12,7 +12,7 @@ services:
       - DEFAULT_USER_EMAIL=dev-test@example.com 
       - DEFAULT_USER_PASSWORD=password #Change this to something long and unique
       - APPLICATION_PORT=3000
-      - AUTHENTICATION_ENABLED=true
+      - AUTHENTICATION_ENABLED=false
       - JWT_SECRET="CHANGE ME" #Change this to something long and unique
       - JWT_EXPIRATION=3d
       - DATABASE_HOST=db
@@ -39,7 +39,6 @@ services:
       dockerfile: ./client/Dockerfile
     environment:
       - NODE_ENV=production
-      - VITE_SPROOT_SERVER_URL=http://192.168.1.19:3000 #Match me to your api server
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
