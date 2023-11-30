@@ -34,6 +34,8 @@ services:
     privileged: true
   
   client:
+    depends_on:
+      - server
     build:
       context: ./
       dockerfile: ./client/Dockerfile
