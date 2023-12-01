@@ -1,39 +1,44 @@
-// import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useEffect, useState } from "react";
 import "./App.css";
+import OutputCard from "./OutputCard"
 
-import { authenticate, getSensors } from "./requests";
+import { getOutputsAsync, getSensorsAsync } from "./requests";
+import { ApiOutputsResponse, ApiSensorsResponse } from "@sproot/sproot-common/dist/api/Responses"
+import SensorCard from "./SensorCard";
 
 function App() {
-  // const [count, setCount] = useState(0);
+  const [outputs, setOutputs] = useState({} as ApiOutputsResponse);
+  const [sensors, setSensors] = useState({} as ApiSensorsResponse);
+  
+  useEffect(() => {
+    updateOutputsAsync();
+    updateSensorsAsync();
+  }, []);
 
+  const updateOutputsAsync = async () => {
+    setOutputs(await getOutputsAsync())
+  }
+
+  const updateSensorsAsync = async () => {
+    setSensors(await getSensorsAsync())
+  }
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={async () => await authenticate("\"dev-test\"", "\"password\"")}>
-          Authenticate
-        </button>
         <br></br>
-        <button onClick={async () => console.log(await getSensors())}>
-          getSensors
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+          {
+            outputs.outputs ? Object.keys(outputs.outputs).map(key => <OutputCard key={"OutputCard-" + outputs.outputs[key]?.id} output={outputs.outputs[key]!} updateOutputsAsync={updateOutputsAsync} />) : "No Outputs"
+          }
+          <br></br>
+          <button onClick={async () => {
+            await updateSensorsAsync()
+            }}>
+            Update Sensors
+          </button>
+          {
+            sensors.sensors ? Object.keys(sensors.sensors).map(key => <SensorCard key={"SensorCard-" + sensors.sensors[key]?.id} sensor={sensors.sensors[key]!} updateSensorsAsync={updateSensorsAsync} />) : "No Sensors"
+          }
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   );
 }

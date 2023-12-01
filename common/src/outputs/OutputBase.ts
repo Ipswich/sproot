@@ -85,7 +85,9 @@ abstract class OutputBase implements IOutputBase {
   abstract dispose(): void;
 }
 
-interface IState {}
+interface IState {
+  value?: number
+}
 
 export { OutputBase, ControlMode };
 export type { IOutputBase, IState };

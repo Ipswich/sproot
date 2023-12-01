@@ -1,8 +1,8 @@
-import { ISensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ApiOutputsResponse, ApiReadingsResponse, ApiResponse, ApiSensorResponse, ApiSensorsResponse } from "@sproot/src/api/Responses";
 
-const SERVER_URL = ""
+const SERVER_URL = "http://192.168.2.20"
 
-export async function authenticate(username: string, password: string): Promise<boolean> {
+export async function authenticateAsync(username: string, password: string): Promise<boolean> {
   const response = await fetch(
     `${SERVER_URL}/api/v1/authenticate`,
     {
@@ -25,7 +25,7 @@ export async function authenticate(username: string, password: string): Promise<
   return false;
 }
 
-export async function getSensors(): Promise<ISensorBase[]> {
+export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
   const response = await fetch(
     `${SERVER_URL}/api/v1/sensors`, 
     {
@@ -42,7 +42,7 @@ export async function getSensors(): Promise<ISensorBase[]> {
   return await response.json();
 }
 
-export async function getSensorById(id: number): Promise<ISensorBase> {
+export async function getSensorById(id: number): Promise<ApiSensorResponse> {
   const response = await fetch( 
     `${SERVER_URL}/api/v1/sensors/${id}`,
     {
@@ -55,7 +55,7 @@ export async function getSensorById(id: number): Promise<ISensorBase> {
   return await response.json();
 }
 
-export async function getReadingsBySensorId(id: number): Promise<ISensorBase | false> {
+export async function getReadingsBySensorIdAsync(id: number): Promise<ApiReadingsResponse> {
   const response = await fetch(
     `${SERVER_URL}/api/v1/sensors/${id}/readings`,
     {
@@ -64,6 +64,57 @@ export async function getReadingsBySensorId(id: number): Promise<ISensorBase | f
   );
   if (!response.ok) {
     console.error(`Error fetching sensor data: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function getOutputsAsync(): Promise<ApiOutputsResponse> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v1/outputs`, 
+    {
+      method: "GET",
+      headers: {
+      },
+      // mode: "cors",
+      // credentials: "include",
+    }
+  );
+  if (!response.ok) {
+    console.error(`Error fetching sensor data: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function setOutputControlModeAsync(id: number, controlMode: string = "manual"): Promise<ApiResponse> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v1/outputs/${id}/control-mode`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ controlMode }),
+    }
+  );
+  if (!response.ok) {
+    console.error(`Error setting output control mode: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function setOutputManualStateAsync(id: number, value: number): Promise<ApiResponse> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v1/outputs/${id}/manual-state`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ value }),
+    }
+  );
+  if (!response.ok) {
+    console.error(`Error setting output manual state: ${response}`);
   }
   return await response.json();
 }

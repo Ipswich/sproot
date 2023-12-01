@@ -43,6 +43,7 @@ router.post("/", async (req: Request, res: Response) => {
   } catch (e) {
     res.status(400).json({
       message: "Invalid output property",
+      statusCode: 400,
       timestamp: new Date().toISOString(),
     });
     return;
