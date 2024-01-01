@@ -1,20 +1,26 @@
-import { ApiOutputsResponse, ApiReadingsResponse, ApiResponse, ApiSensorResponse, ApiSensorsResponse } from "@sproot/src/api/Responses";
+import {
+  ApiOutputsResponse,
+  ApiReadingsResponse,
+  ApiResponse,
+  ApiSensorResponse,
+  ApiSensorsResponse,
+} from "@sproot/src/api/Responses";
 
-const SERVER_URL = "http://192.168.2.20"
+const SERVER_URL = "";
 
-export async function authenticateAsync(username: string, password: string): Promise<boolean> {
-  const response = await fetch(
-    `${SERVER_URL}/api/v1/authenticate`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-      // mode: "cors",
-      // credentials: "include"
+export async function authenticateAsync(
+  username: string,
+  password: string,
+): Promise<boolean> {
+  const response = await fetch(`${SERVER_URL}/api/v1/authenticate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({ username, password }),
+    // mode: "cors",
+    // credentials: "include"
+  });
   if (!response.ok) {
     console.error(`Error authenticating: ${response}`);
   }
@@ -26,16 +32,12 @@ export async function authenticateAsync(username: string, password: string): Pro
 }
 
 export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
-  const response = await fetch(
-    `${SERVER_URL}/api/v1/sensors`, 
-    {
-      method: "GET",
-      headers: {
-      },
-      // mode: "cors",
-      // credentials: "include",
-    }
-  );
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors`, {
+    method: "GET",
+    headers: {},
+    // mode: "cors",
+    // credentials: "include",
+  });
   if (!response.ok) {
     console.error(`Error fetching sensor data: ${response}`);
   }
@@ -43,25 +45,21 @@ export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
 }
 
 export async function getSensorById(id: number): Promise<ApiSensorResponse> {
-  const response = await fetch( 
-    `${SERVER_URL}/api/v1/sensors/${id}`,
-    {
-      method: "GET",
-    }
-  );
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors/${id}`, {
+    method: "GET",
+  });
   if (!response.ok) {
     console.error(`Error fetching sensor data: ${response}`);
   }
   return await response.json();
 }
 
-export async function getReadingsBySensorIdAsync(id: number): Promise<ApiReadingsResponse> {
-  const response = await fetch(
-    `${SERVER_URL}/api/v1/sensors/${id}/readings`,
-    {
-      method: "GET",
-    }
-  );
+export async function getReadingsBySensorIdAsync(
+  id: number,
+): Promise<ApiReadingsResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors/${id}/readings`, {
+    method: "GET",
+  });
   if (!response.ok) {
     console.error(`Error fetching sensor data: ${response}`);
   }
@@ -69,23 +67,22 @@ export async function getReadingsBySensorIdAsync(id: number): Promise<ApiReading
 }
 
 export async function getOutputsAsync(): Promise<ApiOutputsResponse> {
-  const response = await fetch(
-    `${SERVER_URL}/api/v1/outputs`, 
-    {
-      method: "GET",
-      headers: {
-      },
-      // mode: "cors",
-      // credentials: "include",
-    }
-  );
+  const response = await fetch(`${SERVER_URL}/api/v1/outputs`, {
+    method: "GET",
+    headers: {},
+    // mode: "cors",
+    // credentials: "include",
+  });
   if (!response.ok) {
     console.error(`Error fetching sensor data: ${response}`);
   }
   return await response.json();
 }
 
-export async function setOutputControlModeAsync(id: number, controlMode: string = "manual"): Promise<ApiResponse> {
+export async function setOutputControlModeAsync(
+  id: number,
+  controlMode: string = "manual",
+): Promise<ApiResponse> {
   const response = await fetch(
     `${SERVER_URL}/api/v1/outputs/${id}/control-mode`,
     {
@@ -94,7 +91,7 @@ export async function setOutputControlModeAsync(id: number, controlMode: string 
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ controlMode }),
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error setting output control mode: ${response}`);
@@ -102,7 +99,10 @@ export async function setOutputControlModeAsync(id: number, controlMode: string 
   return await response.json();
 }
 
-export async function setOutputManualStateAsync(id: number, value: number): Promise<ApiResponse> {
+export async function setOutputManualStateAsync(
+  id: number,
+  value: number,
+): Promise<ApiResponse> {
   const response = await fetch(
     `${SERVER_URL}/api/v1/outputs/${id}/manual-state`,
     {
@@ -111,11 +111,10 @@ export async function setOutputManualStateAsync(id: number, value: number): Prom
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ value }),
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error setting output manual state: ${response}`);
   }
   return await response.json();
 }
-

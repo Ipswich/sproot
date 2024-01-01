@@ -10,7 +10,6 @@
     "prettier:write": "npx prettier . --write",
     "prettier:check": "npx prettier . --check",
     "preview": "vite preview",
-    "start": "npm run build && npx serve -p 3000 dist",
     "start:dev": "vite --host"
   },
   "devDependencies": {
@@ -29,7 +28,6 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^2.10.2",
-    "serve": "^14.2.1"
+    "recharts": "^2.10.2"
   }
 }

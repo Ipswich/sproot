@@ -1,6 +1,6 @@
-import { SDBReading } from '../database/SDBReading';
-import { ISensorBase } from '../sensors/SensorBase';
-import { IOutputBase } from '../outputs/OutputBase';
+import { SDBReading } from "../database/SDBReading";
+import { ISensorBase } from "../sensors/SensorBase";
+import { IOutputBase } from "../outputs/OutputBase";
 
 interface ApiResponse {
   message: string;

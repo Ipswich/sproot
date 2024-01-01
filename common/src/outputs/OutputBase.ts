@@ -86,7 +86,7 @@ abstract class OutputBase implements IOutputBase {
 }
 
 interface IState {
-  value?: number
+  value?: number;
 }
 
 export { OutputBase, ControlMode };

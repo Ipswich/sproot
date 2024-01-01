@@ -31,17 +31,19 @@ router.post("/", async (req: Request, res: Response) => {
     const token = jwt.sign({ username: req.body.username }, process.env["JWT_SECRET"]!, {
       expiresIn: process.env["JWT_EXPIRATION"]!,
     });
-    res.status(200)
-    .cookie("jwt_token", token, {
-      maxAge: parseInt(process.env["JWT_EXPIRATION"]!),
-      httpOnly: true,
-      sameSite: "strict",
-    }).json({
-      message: "Authentication successful",
-      statusCode: 200,
-      JWTtoken: token,
-      timestamp: new Date().toISOString(),
-    });
+    res
+      .status(200)
+      .cookie("jwt_token", token, {
+        maxAge: parseInt(process.env["JWT_EXPIRATION"]!),
+        httpOnly: true,
+        sameSite: "strict",
+      })
+      .json({
+        message: "Authentication successful",
+        statusCode: 200,
+        JWTtoken: token,
+        timestamp: new Date().toISOString(),
+      });
   } else {
     res.status(401).json({
       message: "Invalid credentials",
