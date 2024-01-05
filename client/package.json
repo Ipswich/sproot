@@ -10,7 +10,7 @@
     "prettier:write": "npx prettier . --write",
     "prettier:check": "npx prettier . --check",
     "preview": "vite preview",
-    "start:dev": "vite --host"
+    "start:dev": "vite"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
