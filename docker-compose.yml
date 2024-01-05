@@ -42,9 +42,9 @@ services:
       context: ./
       dockerfile: ./client/Dockerfile
       args:
-        - VITE_API_SERVER_URL="" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
+        VITE_API_SERVER_URL: "" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
