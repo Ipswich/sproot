@@ -43,6 +43,7 @@ services:
       dockerfile: ./client/Dockerfile
     environment:
       - NODE_ENV=production
+      - VITE_HOST=host.docker.internal
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:

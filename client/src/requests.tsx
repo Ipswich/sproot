@@ -6,7 +6,7 @@ import {
   ApiSensorsResponse,
 } from "@sproot/src/api/Responses";
 
-const SERVER_URL = "";
+const SERVER_URL = `http://${import.meta.env["VITE_HOST"]}`;
 
 export async function authenticateAsync(
   username: string,
@@ -93,9 +93,11 @@ export async function setOutputControlModeAsync(
       body: JSON.stringify({ controlMode }),
     },
   );
+
   if (!response.ok) {
     console.error(`Error setting output control mode: ${response}`);
   }
+
   return await response.json();
 }
 
