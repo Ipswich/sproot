@@ -6,7 +6,7 @@ import {
   ApiSensorsResponse,
 } from "@sproot/src/api/Responses";
 
-const SERVER_URL = `http://${import.meta.env["VITE_API_URL"]}`;
+const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
 export async function authenticateAsync(
   username: string,
