@@ -41,9 +41,10 @@ services:
     build:
       context: ./
       dockerfile: ./client/Dockerfile
+      args:
+        - VITE_API_URL=host.docker.internal
     environment:
       - NODE_ENV=production
-      - VITE_HOST=host.docker.internal
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
