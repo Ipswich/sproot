@@ -12,7 +12,7 @@ export default function SensorCard({ sensor }: SensorCardProps) {
   return (
     <div>
       <p>Sensor Id: {sensor.id}</p>
-      {sensor.description ? <p>{sensor.description}</p> : null}
+      {sensor.name ? <p>{sensor.name}</p> : null}
       {Object.keys(sensor.lastReading).map((key) => (
         <p key={"lastReading-" + key}>
           {key}: {sensor.lastReading[key as ReadingType]}{" "}

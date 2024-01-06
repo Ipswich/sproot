@@ -1,6 +1,7 @@
 import { BME280 } from "./BME280";
 import { DS18B20 } from "./DS18B20";
-import { ISensorBase, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ISensorBase, ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
@@ -9,6 +10,7 @@ class SensorList {
   #sprootDB: ISprootDB;
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
+  #chartData: Record<ReadingType, Array<ChartData>> = {};
 
   constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
@@ -22,11 +24,11 @@ class SensorList {
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, description, model, address, lastReading, lastReadingTime, units } = this
+      const { id, name, model, address, lastReading, lastReadingTime, units } = this
         .#sensors[key] as ISensorBase;
       cleanObject[key] = {
         id,
-        description,
+        name,
         model,
         address,
         lastReading,
@@ -50,7 +52,7 @@ class SensorList {
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
         //Update if it exists
-        this.#sensors[key]!.description = sensor.description;
+        this.#sensors[key]!.name = sensor.name;
       } else {
         //Create if it doesn't
         this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
@@ -91,6 +93,29 @@ class SensorList {
     await this.#touchAllSensorsAsync(async (sensor) => sensor.addLastReadingToDatabaseAsync());
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
+  loadChartData() {
+    //Format cached readings for recharts
+    const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
+    for (const key in this.#sensors){
+      const sensor = this.#sensors[key]!;
+      for (const readingType in sensor.cachedReadings) {
+        const cachedReadings = sensor.cachedReadings[readingType as ReadingType];
+        for (const reading of cachedReadings) {
+          if (!chartObject[readingType as ReadingType]) {
+            chartObject[readingType as ReadingType] = {};
+          }
+          if (!chartObject[readingType as ReadingType][reading.logTime])
+          {
+            chartObject[readingType as ReadingType][reading.logTime] = {
+              name: reading.logTime,
+            };
+          }
+          chartObject[readingType as ReadingType][reading.logTime][sensor]
+        }
+      }
+    }
+  }
+  
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     const promises = [];
@@ -145,7 +170,7 @@ class SensorList {
         this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
         promises.push(
           this.#sprootDB.addSensorAsync({
-            description: null,
+            name: `New DS18B20 ${address}`,
             model: "DS18B20",
             address: address,
           } as SDBSensor),

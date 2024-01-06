@@ -22,7 +22,7 @@ describe("BME280.ts tests", function () {
     process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
-      description: "test sensor 1",
+      name: "test sensor 1",
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
@@ -81,7 +81,7 @@ describe("BME280.ts tests", function () {
     assert.equal(bme280Sensor!.cachedReadings[ReadingType.temperature].length, 2);
     assert.isTrue(bme280Sensor instanceof BME280);
     assert.equal(bme280Sensor!.id, mockBME280Data.id);
-    assert.equal(bme280Sensor!.description, mockBME280Data.description);
+    assert.equal(bme280Sensor!.name, mockBME280Data.name);
     assert.equal(bme280Sensor!.model, mockBME280Data.model);
     assert.equal(bme280Sensor!.address, mockBME280Data.address);
     assert.equal(bme280Sensor!.units[ReadingType.temperature], "°C");
@@ -96,7 +96,7 @@ describe("BME280.ts tests", function () {
     process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
-      description: "test sensor 1",
+      name: "test sensor 1",
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
@@ -164,7 +164,7 @@ describe("BME280.ts tests", function () {
     process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "1";
     const mockBME280Data = {
       id: 1,
-      description: "test sensor 1",
+      name: "test sensor 1",
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
@@ -240,7 +240,7 @@ describe("BME280.ts tests", function () {
   it("should get a reading from a BME280 sensor", async () => {
     const mockBME280Data = {
       id: 1,
-      description: "test sensor 1",
+      name: "test sensor 1",
       model: "BME280",
       address: "0x76",
     } as SDBSensor;

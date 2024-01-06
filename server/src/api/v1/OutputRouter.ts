@@ -32,9 +32,9 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
-  let description, model, address, pin, isPwm, isInvertedPwm;
+  let name, model, address, pin, isPwm, isInvertedPwm;
   try {
-    description = req.body.description ? String(req.body.description) : null;
+    name = req.body.name ? String(req.body.name) : null;
     model = String(req.body.model);
     address = String(req.body.address);
     pin = Number(req.body.pin);
@@ -52,7 +52,7 @@ router.post("/", async (req: Request, res: Response) => {
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
 
   const newOutput = {
-    description,
+    name,
     model,
     address,
     pin,
@@ -118,8 +118,8 @@ router.put("/:id", async (req: Request, res: Response) => {
       });
       return;
     }
-    if (req.body.description) {
-      output.description = String(req.body.description);
+    if (req.body.name) {
+      output.name = String(req.body.name);
     }
     if (req.body.model) {
       output.model = String(req.body.model);

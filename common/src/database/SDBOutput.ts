@@ -4,7 +4,7 @@ interface SDBOutput extends RowDataPacket {
   id: number;
   model: string;
   address: string;
-  description: string | null;
+  name: string;
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;

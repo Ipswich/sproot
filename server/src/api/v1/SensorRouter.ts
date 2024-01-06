@@ -27,9 +27,9 @@ router.post("/", async (req: Request, res: Response) => {
     });
     return;
   }
-  let description, model, address;
+  let name, model, address;
   try {
-    description = req.body.description ? String(req.body.description) : null;
+    name = req.body.name ? String(req.body.name) : null;
     model = String(req.body.model);
     address = String(req.body.address);
   } catch (e) {
@@ -43,7 +43,7 @@ router.post("/", async (req: Request, res: Response) => {
 
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
   const newSensor = {
-    description,
+    name,
     model,
     address,
   } as SDBSensor;
@@ -107,8 +107,8 @@ router.put("/:id", async (req: Request, res: Response) => {
       });
       return;
     }
-    if (req.body.description) {
-      sensor.description = String(req.body.description);
+    if (req.body.name) {
+      sensor.name = String(req.body.name);
     }
     if (req.body.model) {
       sensor.model = String(req.body.model);

@@ -36,15 +36,15 @@ class SprootDB implements ISprootDB {
 
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
     await this.#connection.execute(
-      "INSERT INTO sensors (description, model, address) VALUES (?, ?, ?)",
-      [sensor.description, sensor.model, sensor.address],
+      "INSERT INTO sensors (name, model, address) VALUES (?, ?, ?)",
+      [sensor.name, sensor.model, sensor.address],
     );
   }
 
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {
     await this.#connection.execute(
-      "UPDATE sensors SET description = ?, model = ?, address = ? WHERE id = ?",
-      [sensor.description, sensor.model, sensor.address, sensor.id],
+      "UPDATE sensors SET name = ?, model = ?, address = ? WHERE id = ?",
+      [sensor.name, sensor.model, sensor.address, sensor.id],
     );
   }
 
@@ -67,9 +67,9 @@ class SprootDB implements ISprootDB {
 
   async addOutputAsync(output: SDBOutput): Promise<void> {
     await this.#connection.execute(
-      "INSERT INTO outputs (description, model, address, pin, isPwm, isInvertedPwm) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO outputs (name, model, address, pin, isPwm, isInvertedPwm) VALUES (?, ?, ?, ?, ?, ?)",
       [
-        output.description,
+        output.name,
         output.model,
         output.address,
         output.pin,
@@ -81,9 +81,9 @@ class SprootDB implements ISprootDB {
 
   async updateOutputAsync(output: SDBOutput): Promise<void> {
     await this.#connection.execute(
-      "UPDATE outputs SET description = ?, model = ?, address = ?, pin = ?, isPwm = ?, isInvertedPwm = ? WHERE id = ?",
+      "UPDATE outputs SET name = ?, model = ?, address = ?, pin = ?, isPwm = ?, isInvertedPwm = ? WHERE id = ?",
       [
-        output.description,
+        output.name,
         output.model,
         output.address,
         output.pin,

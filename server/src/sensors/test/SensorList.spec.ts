@@ -23,19 +23,19 @@ describe("SensorList.ts tests", function () {
     const getSensorsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
       {
         id: 1,
-        description: "test sensor 1",
+        name: "test sensor 1",
         model: "BME280",
         address: "0x76",
       } as SDBSensor,
       {
         id: 2,
-        description: "test sensor 2",
+        name: "test sensor 2",
         model: "DS18B20",
         address: "28-00000",
       } as SDBSensor,
       {
         id: 3,
-        description: "test sensor 3",
+        name: "test sensor 3",
         model: "DS18B20",
         address: "28-00001",
       } as SDBSensor,
@@ -67,20 +67,20 @@ describe("SensorList.ts tests", function () {
     getSensorsAsyncStub.resolves([
       {
         id: 2,
-        description: "2 rosnes tset",
+        name: "2 rosnes tset",
         model: "DS18B20",
         address: "28-00000",
       } as SDBSensor,
       {
         id: 3,
-        description: "test sensor 3",
+        name: "test sensor 3",
         model: "DS18B20",
         address: "28-00001",
       } as SDBSensor,
     ]);
     await sensorList.initializeOrRegenerateAsync();
     assert.equal(Object.keys(sensorList.sensors).length, 2);
-    assert.equal(sensorList.sensors["2"]!.description, "2 rosnes tset");
+    assert.equal(sensorList.sensors["2"]!.name, "2 rosnes tset");
 
     //Cleanup
     await sensorList.disposeAsync();
@@ -89,7 +89,7 @@ describe("SensorList.ts tests", function () {
   it("should return sensor data (no functions included in result)", async function () {
     const mockBME280Data = {
       id: 1,
-      description: "test sensor 1",
+      name: "test sensor 1",
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
@@ -97,7 +97,7 @@ describe("SensorList.ts tests", function () {
       mockBME280Data,
       {
         id: 2,
-        description: "test sensor 2",
+        name: "test sensor 2",
         model: "DS18B20",
         address: "28-00000",
       } as SDBSensor,
@@ -123,10 +123,10 @@ describe("SensorList.ts tests", function () {
     await sensorList.initializeOrRegenerateAsync();
     const sensorData = sensorList.sensorData;
 
-    assert.equal(sensorData["1"]!["description"], "test sensor 1");
+    assert.equal(sensorData["1"]!["name"], "test sensor 1");
     assert.equal(sensorData["1"]!["model"], "BME280");
     assert.equal(sensorData["1"]!["address"], "0x76");
-    assert.equal(sensorData["2"]!["description"], "test sensor 2");
+    assert.equal(sensorData["2"]!["name"], "test sensor 2");
     assert.equal(sensorData["2"]!["model"], "DS18B20");
     assert.equal(sensorData["2"]!["address"], "28-00000");
     assert.exists(sensorList.sensors["1"]!["sprootDB"]);
@@ -138,19 +138,19 @@ describe("SensorList.ts tests", function () {
   it("should handle errors when building sensors", async function () {
     const mockBME280Data = {
       id: 1,
-      description: "test sensor 1",
+      name: "test sensor 1",
       model: "BME280",
       address: null,
     } as SDBSensor;
     const mockDS18B20Data = {
       id: 2,
-      description: "test sensor 2",
+      name: "test sensor 2",
       model: "DS18B20",
       address: null,
     } as SDBSensor;
     const mockSensorData = {
       id: 3,
-      description: "test sensor 3",
+      name: "test sensor 3",
       model: "not a recognized model",
       address: null,
     } as SDBSensor;
@@ -196,7 +196,7 @@ describe("SensorList.ts tests", function () {
   it("should handle errors when reading sensors", async function () {
     const mockDS18B20Data = {
       id: 1,
-      description: "test sensor 2",
+      name: "test sensor 2",
       model: "DS18B20",
       address: "28-00000",
     } as SDBSensor;

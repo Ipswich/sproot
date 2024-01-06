@@ -11,7 +11,7 @@ interface IOutputBase {
   id: number;
   model: string;
   address: string;
-  description: string | null;
+  name: string | null;
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
@@ -24,7 +24,7 @@ abstract class OutputBase implements IOutputBase {
   readonly id: number;
   readonly model: string;
   readonly address: string;
-  description: string | null;
+  name: string | null;
   readonly pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
@@ -38,7 +38,7 @@ abstract class OutputBase implements IOutputBase {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
     this.address = sdbOutput.address;
-    this.description = sdbOutput.description;
+    this.name = sdbOutput.name;
     this.pin = sdbOutput.pin;
     this.isPwm = sdbOutput.isPwm;
     this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;

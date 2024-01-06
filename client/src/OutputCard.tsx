@@ -16,7 +16,7 @@ export default function OutputCard({
   return (
     <div>
       <p>Output Id: {output.id}</p>
-      {output.description ? <p>{output.description}</p> : null}
+      {output.name ? <p>{output.name}</p> : null}
       <p>Current state: {output.manualState["value"]}</p>
       {output.controlMode != "manual" ? (
         <button
