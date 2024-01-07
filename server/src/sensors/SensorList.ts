@@ -101,8 +101,6 @@ class SensorList {
 
     if (sensorListChanges) {
       this.loadChartData();
-    } else {
-      this.maintainChartData();
     }
     profiler.done({
       message: "SensorList initializeOrRegenerate time",
@@ -110,8 +108,10 @@ class SensorList {
     });
   }
 
-  addReadingsToDatabaseAsync = async () =>
-    await this.#touchAllSensorsAsync(async (sensor) => sensor.addLastReadingToDatabaseAsync());
+  addReadingsToDatabaseAsync = async () => {
+      await this.#touchAllSensorsAsync(async (sensor) => {sensor.addLastReadingToDatabaseAsync()});
+      this.maintainChartData();
+  };
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
   loadChartData() {
@@ -180,6 +180,7 @@ class SensorList {
         this.#chartData[readingType as ReadingType].shift();
       }
     }
+    this.#logger.info(this.#chartData.temperature)
 
     // Log changes
     let logMessage = "";

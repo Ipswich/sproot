@@ -245,6 +245,7 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
 
 router.get("/chart-data", async (req: Request, res: Response) => {
   const logger = req.app.get("logger") as winston.Logger;
+  logger.info("GETTED")
   let offset, limit;
   if (req.query["offset"] && req.query["limit"]) {
     offset = parseInt(req.query["offset"] as string);
@@ -252,7 +253,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
     if (isNaN(offset) || isNaN(limit)) {
       logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
       res.status(400).json({
-        message: "Failed to retrieve sensor chart data, invalid request",
+        message: "Failed to retrieve chart data, invalid request",
         statusCode: 400,
         timestamp: new Date().toISOString(),
       });
@@ -276,7 +277,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
         }
       }
       res.status(200).json({
-        message: "Sensor chart data successfully retrieved",
+        message: "Chart data successfully retrieved",
         statusCode: 200,
         result,
         moreChartDataAvailable,
@@ -285,7 +286,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
       return;
     }
     res.status(200).json({
-      message: "Sensor chart data successfully retrieved",
+      message: "Chart data successfully retrieved",
       statusCode: 200,
       chartData: sensorList.chartData,
       timestamp: new Date().toISOString(),
@@ -294,7 +295,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
   } catch (e) {
     logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
     res.status(400).json({
-      message: "Failed to retrieve sensor chart data, invalid request",
+      message: "Failed to retrieve chart data, invalid request",
       statusCode: 400,
       timestamp: new Date().toISOString(),
     });
