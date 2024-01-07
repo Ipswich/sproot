@@ -1,4 +1,5 @@
 import {
+  ApiChartDataResponse,
   ApiOutputsResponse,
   ApiReadingsResponse,
   ApiResponse,
@@ -33,6 +34,19 @@ export async function authenticateAsync(
 
 export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
   const response = await fetch(`${SERVER_URL}/api/v1/sensors`, {
+    method: "GET",
+    headers: {},
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching sensor data: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function getChartDataAsync(): Promise<ApiChartDataResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors/chart-data`, {
     method: "GET",
     headers: {},
     // mode: "cors",
