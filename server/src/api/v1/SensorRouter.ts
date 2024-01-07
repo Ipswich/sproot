@@ -1,3 +1,4 @@
+import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { SensorList } from "../../sensors/SensorList";
@@ -236,6 +237,64 @@ router.get("/:id/readings", async (req: Request, res: Response) => {
     logger.http("GET /api/v1/sensors/:id/readings - 400, Invalid request");
     res.status(400).json({
       message: "Failed to retrieve sensor readings, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+router.get("/chart-data", async (req: Request, res: Response) => {
+  const logger = req.app.get("logger") as winston.Logger;
+  let offset, limit;
+  if (req.query["offset"] && req.query["limit"]) {
+    offset = parseInt(req.query["offset"] as string);
+    limit = parseInt(req.query["limit"] as string);
+    if (isNaN(offset) || isNaN(limit)) {
+      logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
+      res.status(400).json({
+        message: "Failed to retrieve sensor chart data, invalid request",
+        statusCode: 400,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+  }
+  const sensorList = req.app.get("sensorList") as SensorList;
+  try {
+    logger.http("GET /api/v1/sensors/chart-data - 200, Success");
+    const chartData = sensorList.chartData;
+    if (offset != undefined && offset != null && limit != undefined && limit != null) {
+      const result: Record<string, ChartData[]> = {};
+      for (const key in chartData) {
+        result[key as ReadingType] = chartData[key as ReadingType]!.slice(offset, offset + limit);
+      }
+      let moreChartDataAvailable = true;
+      for (const key in chartData) {
+        if (chartData[key as ReadingType]!.length <= offset + limit) {
+          moreChartDataAvailable = false;
+          break;
+        }
+      }
+      res.status(200).json({
+        message: "Sensor chart data successfully retrieved",
+        statusCode: 200,
+        result,
+        moreChartDataAvailable,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "Sensor chart data successfully retrieved",
+      statusCode: 200,
+      chartData: sensorList.chartData,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  } catch (e) {
+    logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
+    res.status(400).json({
+      message: "Failed to retrieve sensor chart data, invalid request",
       statusCode: 400,
       timestamp: new Date().toISOString(),
     });

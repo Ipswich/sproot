@@ -1,6 +1,10 @@
 import { BME280 } from "./BME280";
 import { DS18B20 } from "./DS18B20";
-import { ISensorBase, ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import {
+  ISensorBase,
+  ReadingType,
+  SensorBase,
+} from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -10,7 +14,11 @@ class SensorList {
   #sprootDB: ISprootDB;
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
-  #chartData: Record<ReadingType, Array<ChartData>> = {};
+  #chartData: Record<ReadingType, Array<ChartData>> = {
+    temperature: [],
+    humidity: [],
+    pressure: [],
+  };
 
   constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
@@ -21,11 +29,16 @@ class SensorList {
     return this.#sensors;
   }
 
+  get chartData(): Record<ReadingType, Array<ChartData>> {
+    return this.#chartData;
+  }
+
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, name, model, address, lastReading, lastReadingTime, units } = this
-        .#sensors[key] as ISensorBase;
+      const { id, name, model, address, lastReading, lastReadingTime, units } = this.#sensors[
+        key
+      ] as ISensorBase;
       cleanObject[key] = {
         id,
         name,
@@ -40,11 +53,11 @@ class SensorList {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
+    let sensorListChanges = false;
     const profiler = this.#logger.startTimer();
     await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
       this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
     });
-
     const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
 
     const promises = [];
@@ -63,6 +76,7 @@ class SensorList {
             ),
           ),
         );
+        sensorListChanges = true;
       }
     }
     await Promise.allSettled(promises);
@@ -76,12 +90,19 @@ class SensorList {
             `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
           );
           this.#disposeSensorAsync(this.#sensors[key]!);
+          sensorListChanges = true;
         } catch (err) {
           this.#logger.error(
             `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}. ${err}`,
           );
         }
       }
+    }
+
+    if (sensorListChanges) {
+      this.loadChartData();
+    } else {
+      this.maintainChartData();
     }
     profiler.done({
       message: "SensorList initializeOrRegenerate time",
@@ -96,7 +117,7 @@ class SensorList {
   loadChartData() {
     //Format cached readings for recharts
     const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
-    for (const key in this.#sensors){
+    for (const key in this.#sensors) {
       const sensor = this.#sensors[key]!;
       for (const readingType in sensor.cachedReadings) {
         const cachedReadings = sensor.cachedReadings[readingType as ReadingType];
@@ -104,18 +125,69 @@ class SensorList {
           if (!chartObject[readingType as ReadingType]) {
             chartObject[readingType as ReadingType] = {};
           }
-          if (!chartObject[readingType as ReadingType][reading.logTime])
-          {
-            chartObject[readingType as ReadingType][reading.logTime] = {
-              name: reading.logTime,
-            };
+          const logTime = this.#formatDateForChart(reading.logTime);
+          if (!chartObject[readingType as ReadingType][logTime]) {
+            chartObject[readingType as ReadingType][logTime] = {
+              name: logTime,
+            } as ChartData;
           }
-          chartObject[readingType as ReadingType][reading.logTime][sensor]
+          chartObject[readingType as ReadingType][logTime]![sensor.name] = reading.data;
         }
       }
     }
+    // Convert to array
+    for (const readingType in chartObject) {
+      this.#chartData[readingType as ReadingType] = Object.values(
+        chartObject[readingType as ReadingType],
+      );
+    }
+
+    // Log changes
+    let logMessage = "";
+    for (const readingType in this.#chartData) {
+      logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}}`;
+    }
+    this.#logger.info(`Updated Chart Data. ${logMessage}`);
   }
-  
+
+  maintainChartData() {
+    const lastReadingObject = {} as Record<ReadingType, ChartData>;
+    for (const sensor of Object.values(this.#sensors)) {
+      for (const readingType in sensor.lastReading) {
+        const formattedTime = this.#formatDateForChart(sensor.lastReadingTime!);
+        if (!lastReadingObject[readingType as ReadingType]) {
+          lastReadingObject[readingType as ReadingType] = {
+            name: formattedTime,
+          } as ChartData;
+        }
+        lastReadingObject[readingType as ReadingType]![formattedTime] =
+          sensor.lastReading[readingType as ReadingType];
+      }
+    }
+    // Add new readings
+    for (const readingType in lastReadingObject) {
+      this.#chartData[readingType as ReadingType].push(
+        lastReadingObject[readingType as ReadingType],
+      );
+    }
+
+    //Remove old readings
+    for (const readingType in this.#chartData) {
+      while (
+        this.#chartData[readingType as ReadingType].length >
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+      ) {
+        this.#chartData[readingType as ReadingType].shift();
+      }
+    }
+
+    // Log changes
+    let logMessage = "";
+    for (const readingType in this.#chartData) {
+      logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}}`;
+    }
+    this.#logger.info(`Updated Chart Data. ${logMessage}`);
+  }
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     const promises = [];
@@ -193,12 +265,27 @@ class SensorList {
     await this.#sensors[sensor.id]!.disposeAsync();
     delete this.#sensors[sensor.id];
   }
+
+  #formatDateForChart(date: Date | string): string {
+    if (typeof date === "string") {
+      date = new Date(date);
+    }
+    date = date as Date;
+    const hours = date.getHours() % 12 || 12;
+    const amOrPm = hours >= 12 ? "pm" : "am";
+    const minutes = date.getMinutes();
+
+    return `${date.getMonth() + 1}/${date
+      .getFullYear()
+      .toString()
+      .slice(2)} ${hours}:${minutes} ${amOrPm}`;
+  }
 }
 
 class SensorListError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "BuildSensorError";
+    this.name = "SensorListError";
   }
 }
 

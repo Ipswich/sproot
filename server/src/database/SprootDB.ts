@@ -35,10 +35,11 @@ class SprootDB implements ISprootDB {
   }
 
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
-    await this.#connection.execute(
-      "INSERT INTO sensors (name, model, address) VALUES (?, ?, ?)",
-      [sensor.name, sensor.model, sensor.address],
-    );
+    await this.#connection.execute("INSERT INTO sensors (name, model, address) VALUES (?, ?, ?)", [
+      sensor.name,
+      sensor.model,
+      sensor.address,
+    ]);
   }
 
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {
@@ -68,14 +69,7 @@ class SprootDB implements ISprootDB {
   async addOutputAsync(output: SDBOutput): Promise<void> {
     await this.#connection.execute(
       "INSERT INTO outputs (name, model, address, pin, isPwm, isInvertedPwm) VALUES (?, ?, ?, ?, ?, ?)",
-      [
-        output.name,
-        output.model,
-        output.address,
-        output.pin,
-        output.isPwm,
-        output.isInvertedPwm,
-      ],
+      [output.name, output.model, output.address, output.pin, output.isPwm, output.isInvertedPwm],
     );
   }
 

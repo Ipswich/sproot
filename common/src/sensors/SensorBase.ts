@@ -4,7 +4,7 @@ import { SDBReading } from "../database/SDBReading";
 import { ISprootDB } from "../database/ISprootDB";
 import winston from "winston";
 
-const INITIAL_CACHE_LOOKBACK = Number(process.env["INITIAL_CACHE_LOOKBACK"]); // 7 days in minutes
+const INITIAL_CACHE_LOOKBACK = Number(process.env["INITIAL_CACHE_LOOKBACK"]);
 
 enum ReadingType {
   temperature = "temperature",
