@@ -75,19 +75,19 @@ function App() {
               <div>
                 {/* <ResponsiveContainer width="100%" height="100%"> */}
                 <LineChart
-                  width={400}
+                  width={350}
                   height={300}
                   data={chartData.chartData[readingType]!}
                   margin={{
                     top: 5,
-                    // right: 30,
+                    right: 50,
                     // left: 20,
                     bottom: 5,
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
-                  <YAxis />
+                  <YAxis domain={['auto', 'auto']}/>
                   <Tooltip />
                   <Legend />
                   {sensorNames.map((sensorName) => (
