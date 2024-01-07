@@ -109,8 +109,10 @@ class SensorList {
   }
 
   addReadingsToDatabaseAsync = async () => {
-      await this.#touchAllSensorsAsync(async (sensor) => {sensor.addLastReadingToDatabaseAsync()});
-      this.maintainChartData();
+    await this.#touchAllSensorsAsync(async (sensor) => {
+      sensor.addLastReadingToDatabaseAsync();
+    });
+    this.maintainChartData();
   };
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
@@ -180,7 +182,7 @@ class SensorList {
         this.#chartData[readingType as ReadingType].shift();
       }
     }
-    this.#logger.info(this.#chartData.temperature)
+    this.#logger.info(JSON.stringify(this.#chartData.temperature));
 
     // Log changes
     let logMessage = "";
