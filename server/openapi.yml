@@ -1248,10 +1248,10 @@ components:
           example: "2023-01-01 12:00:00"
         sensor1:
           type: number
-          example: "25.0"
+          example: 25.0
         sensor2:
           type: number
-          example: "25.0"
+          example: 25.0
 
   securitySchemes:
     bearerAuth:

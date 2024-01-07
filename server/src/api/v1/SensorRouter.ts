@@ -41,30 +41,66 @@ router.get("/chart-data", async (req: Request, res: Response) => {
     logger.http("GET /api/v1/sensors/chart-data - 200, Success");
     const chartData = sensorList.chartData;
     if (offset != undefined && offset != null && limit != undefined && limit != null) {
-      const result: Record<string, ChartData[]> = {};
-      for (const key in chartData) {
-        result[key as ReadingType] = chartData[key as ReadingType]!.slice(offset, offset + limit);
-      }
-      let moreChartDataAvailable = true;
-      for (const key in chartData) {
-        if (chartData[key as ReadingType]!.length <= offset + limit) {
-          moreChartDataAvailable = false;
+      let result: Record<string, ChartData[]> | ChartData[];
+      let moreChartDataAvailable = undefined;
+      switch (req.query["readingType"] as ReadingType) {
+        case ReadingType.temperature:
+          result = chartData[ReadingType.temperature].slice(offset, offset + limit);
+          if (chartData[ReadingType.temperature]!.length <= offset + limit) {
+            moreChartDataAvailable = false;
+          }
           break;
-        }
+        case ReadingType.humidity:
+          result = chartData[ReadingType.humidity].slice(offset, offset + limit);
+          if (chartData[ReadingType.humidity]!.length <= offset + limit) {
+            moreChartDataAvailable = false;
+          }
+          break;
+        case ReadingType.pressure:
+          result = chartData[ReadingType.pressure].slice(offset, offset + limit);
+          if (chartData[ReadingType.pressure]!.length <= offset + limit) {
+            moreChartDataAvailable = false;
+          }
+          break;
+        default:
+          result = {};
+          for (const key in chartData) {
+            result[key as ReadingType] = chartData[key as ReadingType]!.slice(
+              offset,
+              offset + limit,
+            );
+          }
+          break;
       }
+
       res.status(200).json({
         message: "Chart data successfully retrieved",
         statusCode: 200,
-        result,
+        chartData: result,
         moreChartDataAvailable,
         timestamp: new Date().toISOString(),
       });
       return;
     }
+    let chartDataByReadingType = {};
+    switch (req.query["readingType"] as ReadingType) {
+      case ReadingType.temperature:
+        chartDataByReadingType = chartData[ReadingType.temperature];
+        break;
+      case ReadingType.humidity:
+        chartDataByReadingType = chartData[ReadingType.humidity];
+        break;
+      case ReadingType.pressure:
+        chartDataByReadingType = chartData[ReadingType.pressure];
+        break;
+      default:
+        chartDataByReadingType = chartData;
+        break;
+    }
     res.status(200).json({
       message: "Chart data successfully retrieved",
       statusCode: 200,
-      chartData: sensorList.chartData,
+      chartData: chartDataByReadingType,
       timestamp: new Date().toISOString(),
     });
     return;

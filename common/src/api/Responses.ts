@@ -1,6 +1,7 @@
 import { SDBReading } from "../database/SDBReading";
 import { ISensorBase } from "../sensors/SensorBase";
 import { IOutputBase } from "../outputs/OutputBase";
+import { ChartData } from "./ChartData";
 
 interface ApiResponse {
   message: string;
@@ -30,6 +31,11 @@ interface ApiReadingsResponse extends ApiResponse {
   moreReadingsAvailable?: boolean;
 }
 
+interface ApiChartDataResponse extends ApiResponse {
+  chartData: Record<string, Array<ChartData>>;
+  moreReadingsAvailable?: boolean;
+}
+
 export type {
   ApiResponse,
   ApiOutputsResponse,
@@ -37,4 +43,5 @@ export type {
   ApiSensorsResponse,
   ApiSensorResponse,
   ApiReadingsResponse,
+  ApiChartDataResponse,
 };

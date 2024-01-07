@@ -151,7 +151,7 @@ class SensorList {
         logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
       }
     }
-    this.#logger.info(`Updated Chart Data. ${logMessage}`);
+    this.#logger.info(`Loaded chart data. ${logMessage}`);
   }
 
   maintainChartData() {
@@ -185,7 +185,6 @@ class SensorList {
         this.#chartData[readingType as ReadingType].shift();
       }
     }
-    this.#logger.info(JSON.stringify(this.#chartData.temperature));
 
     // Log changes
     let logMessage = "";
@@ -194,7 +193,7 @@ class SensorList {
         logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
       }
     }
-    this.#logger.info(`Updated Chart Data. Data counts: ${logMessage}`);
+    this.#logger.info(`Updated chart data. Data counts: ${logMessage}`);
   }
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
