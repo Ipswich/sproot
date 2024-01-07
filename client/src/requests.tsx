@@ -45,15 +45,21 @@ export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
   return await response.json();
 }
 
-export async function getChartDataAsync(): Promise<ApiChartDataResponse> {
-  const response = await fetch(`${SERVER_URL}/api/v1/sensors/chart-data`, {
+export async function getChartDataAsync(
+  readingType: string | undefined = undefined,
+): Promise<ApiChartDataResponse> {
+  let queryString = `${SERVER_URL}/api/v1/sensors/chart-data`;
+  if (readingType) {
+    queryString += `?readingType=${readingType}`;
+  }
+  const response = await fetch(queryString, {
     method: "GET",
     headers: {},
     // mode: "cors",
     // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error fetching sensor data: ${response}`);
+    console.error(`Error fetching chart data: ${response}`);
   }
   return await response.json();
 }
