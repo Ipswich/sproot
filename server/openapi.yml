@@ -526,12 +526,11 @@ paths:
         - "Chart"
       description: "Gets information for displaying recharts."
       parameters:
-        # - in: path
-        #   name: id
-        #   required: true
-        #   schema:
-        #     type: integer
-        #   description: The sensor's id.
+        - in: query
+          name: readingType
+          schema:
+            type: string
+          description: The ReadingType to get.
         - in: query
           name: offset
           schema:
@@ -562,7 +561,7 @@ paths:
                   readings:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Reading"
+                      $ref: "#/components/schemas/ChartData"
         "401":
           description: Unauthorized
           content:
@@ -581,22 +580,22 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
                   suggestion:
                     type: string
-        # "404":
-        #   description: Not Found
-        #   content:
-        #     application/json:
-        #       schema:
-        #         type: object
-        #         properties:
-        #           message:
-        #             type: string
-        #             example: "No sensor found with that Id"
-        #           statusCode:
-        #             type: integer
-        #             example: 404
-        #           timeStamp:
-        #             type: string
-        #             example: "2021-01-01T00:00:00.000Z"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No data found for the passed type"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
         "400":
           description: Bad Request
           content:
@@ -1240,6 +1239,19 @@ components:
         logTime:
           type: string
           example: "2023-01-01 12:00:00"
+
+    ChartData:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "2023-01-01 12:00:00"
+        sensor1:
+          type: number
+          example: "25.0"
+        sensor2:
+          type: number
+          example: "25.0"
 
   securitySchemes:
     bearerAuth:

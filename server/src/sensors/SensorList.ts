@@ -133,7 +133,7 @@ class SensorList {
               name: logTime,
             } as ChartData;
           }
-          chartObject[readingType as ReadingType][logTime]![sensor.name] = reading.data;
+          chartObject[readingType as ReadingType][logTime]![sensor.name] = Number(reading.data);
         }
       }
     }
@@ -147,7 +147,9 @@ class SensorList {
     // Log changes
     let logMessage = "";
     for (const readingType in this.#chartData) {
-      logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}}`;
+      if (this.#chartData[readingType as ReadingType].length > 0) {
+        logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
+      }
     }
     this.#logger.info(`Updated Chart Data. ${logMessage}`);
   }
@@ -162,8 +164,9 @@ class SensorList {
             name: formattedTime,
           } as ChartData;
         }
-        lastReadingObject[readingType as ReadingType]![formattedTime] =
-          sensor.lastReading[readingType as ReadingType];
+        lastReadingObject[readingType as ReadingType][sensor.name] = Number(
+          sensor.lastReading[readingType as ReadingType],
+        );
       }
     }
     // Add new readings
@@ -187,9 +190,11 @@ class SensorList {
     // Log changes
     let logMessage = "";
     for (const readingType in this.#chartData) {
-      logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}}`;
+      if (this.#chartData[readingType as ReadingType].length > 0) {
+        logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
+      }
     }
-    this.#logger.info(`Updated Chart Data. ${logMessage}`);
+    this.#logger.info(`Updated Chart Data. Data counts: ${logMessage}`);
   }
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
