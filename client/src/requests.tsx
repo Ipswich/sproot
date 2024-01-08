@@ -5,7 +5,7 @@ import {
   ApiResponse,
   ApiSensorResponse,
   ApiSensorsResponse,
-} from "@sproot/src/api/Responses";
+} from "@sproot/sproot-common/dist/api/Responses";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 

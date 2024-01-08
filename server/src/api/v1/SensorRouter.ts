@@ -21,7 +21,6 @@ router.get("/", async (req: Request, res: Response) => {
 
 router.get("/chart-data", async (req: Request, res: Response) => {
   const logger = req.app.get("logger") as winston.Logger;
-  logger.info("GETTED");
   let offset, limit;
   if (req.query["offset"] && req.query["limit"]) {
     offset = parseInt(req.query["offset"] as string);

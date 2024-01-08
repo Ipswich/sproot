@@ -30,17 +30,17 @@ export default function SensorSwipeable() {
     {} as Record<ReadingType, ChartData[]>,
   );
   const updateChartAsync = async () => {
-    const chartData = {} as Record<ReadingType, ChartData[]>;
+    const newChartData = {} as Record<ReadingType, ChartData[]>;
     const promises = [];
     for (const readingType of Object.values(ReadingType)) {
       promises.push(
-        getChartDataAsync(readingType).then((data) => {
-          chartData[readingType] = data.chartData[readingType]!;
+        getChartDataAsync().then((data) => {
+          newChartData[readingType] = data.chartData[readingType]!;
+          setChartData(newChartData);
         }),
       );
     }
-    await Promise.allSettled(promises);
-    setChartData(chartData);
+    return await Promise.allSettled(promises);
   };
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function SensorSwipeable() {
     updateChartAsync();
     const interval = setInterval(async () => {
       await updateChartAsync();
-    }, 15000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
