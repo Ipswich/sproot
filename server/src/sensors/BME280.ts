@@ -3,11 +3,7 @@ import bme280 from "bme280";
 import { SDBSensor } from "@sproot/sproot-common/dist/database//SDBSensor";
 import { SDBReading } from "@sproot/sproot-common/dist/database//SDBReading";
 import { ISprootDB } from "@sproot/sproot-common/dist/database//ISprootDB";
-import {
-  ReadingType,
-  SensorBase,
-  INITIAL_CACHE_LOOKBACK,
-} from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import winston from "winston";
 
 class BME280 extends SensorBase {
@@ -25,7 +21,7 @@ class BME280 extends SensorBase {
   async initAsync(): Promise<BME280 | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.loadCachedReadingsFromDatabaseAsync(INITIAL_CACHE_LOOKBACK);
+      await this.loadCachedReadingsFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
       this.updateInterval = setInterval(async () => {
         await this.getReadingAsync();
       }, this.MAX_SENSOR_READ_TIME);

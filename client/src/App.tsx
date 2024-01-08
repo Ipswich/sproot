@@ -7,6 +7,7 @@ import {
   ApiOutputsResponse,
   ApiSensorsResponse,
 } from "@sproot/sproot-common/dist/api/Responses";
+
 import SensorCard from "./SensorCard";
 import SensorSwipeable from "./SensorSwipeable";
 

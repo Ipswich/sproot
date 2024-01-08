@@ -1,11 +1,10 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Mousewheel, Keyboard, Pagination } from "swiper/modules";
-
 import "swiper/css";
 import "swiper/css/pagination";
 import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 // import { /*ApiSensorsResponse,*/ ApiChartDataResponse } from '@sproot/sproot-common/dist/api/Responses';
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+// import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { useEffect, useState } from "react";
 import { getChartDataAsync /*getSensorsAsync*/ } from "./requests";
 import {
@@ -18,6 +17,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+enum ReadingType {
+  temperature = "temperature",
+  humidity = "humidity",
+  pressure = "pressure",
+}
 
 // const [sensors, setSensors] = useState({} as ApiSensorsResponse);
 
