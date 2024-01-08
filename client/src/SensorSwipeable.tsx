@@ -5,7 +5,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 // import { /*ApiSensorsResponse,*/ ApiChartDataResponse } from '@sproot/sproot-common/dist/api/Responses';
-import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { useEffect, useState } from "react";
 import { getChartDataAsync /*getSensorsAsync*/ } from "./requests";
 import {
