@@ -7,12 +7,18 @@ interface TableProps {
 
 export default function Table({ readingType, sensors }: TableProps) {
   return (
-    <table style={{ marginLeft: "auto", marginRight: "auto", width: "100%", height: "100%"}}>
+    <table
+      style={{
+        marginLeft: "auto",
+        marginRight: "auto",
+        width: "100%",
+        height: "100%",
+      }}
+    >
       <thead>
         <tr>
           <th>Sensor</th>
-          <th>{readingType.charAt(0).toUpperCase() +
-                        readingType.slice(1)}</th>
+          <th>{readingType.charAt(0).toUpperCase() + readingType.slice(1)}</th>
         </tr>
       </thead>
       <tbody>
