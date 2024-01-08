@@ -2,14 +2,10 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import OutputCard from "./OutputCard";
 
-import { getOutputsAsync, getSensorsAsync } from "./requests";
-import {
-  ApiOutputsResponse,
-  ApiSensorsResponse,
-} from "@sproot/sproot-common/dist/api/Responses";
+import { ApiOutputsResponse } from "@sproot/sproot-common/dist/api/Responses";
 
-import SensorCard from "./SensorCard";
-import SensorSwipeable from "./SensorSwipeable";
+import SensorSwipeable from "./sensors/Swipeable";
+import { getOutputsAsync } from "./requests";
 
 function App() {
   const [outputs, setOutputs] = useState({} as ApiOutputsResponse);
@@ -18,20 +14,14 @@ function App() {
     updateOutputsAsync();
   }, []);
 
-  const [sensors, setSensors] = useState({} as ApiSensorsResponse);
-
-  const updateSensorsAsync = async () => {
-    setSensors(await getSensorsAsync());
-  };
-
   const updateOutputsAsync = async () => {
     setOutputs(await getOutputsAsync());
   };
 
   return (
     <>
-      <SensorSwipeable />
-      <div className="card">
+      <div>
+        <SensorSwipeable />
         <br></br>
         {outputs.outputs
           ? Object.keys(outputs.outputs).map((key) => (
@@ -43,22 +33,6 @@ function App() {
             ))
           : "No Outputs"}
         <br></br>
-        <button
-          onClick={async () => {
-            await updateSensorsAsync();
-          }}
-        >
-          Update Sensors
-        </button>
-        {sensors.sensors
-          ? Object.keys(sensors.sensors).map((key) => (
-              <SensorCard
-                key={"SensorCard-" + sensors.sensors[key]?.id}
-                sensor={sensors.sensors[key]!}
-                updateSensorsAsync={updateSensorsAsync}
-              />
-            ))
-          : "No Sensors"}
       </div>
     </>
   );

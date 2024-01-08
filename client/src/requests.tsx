@@ -5,7 +5,7 @@ import {
   ApiResponse,
   ApiSensorResponse,
   ApiSensorsResponse,
-} from "@sproot/sproot-common/dist/api/Responses";
+} from "@sproot/src/api/Responses";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -52,6 +52,7 @@ export async function getChartDataAsync(
   if (readingType) {
     queryString += `?readingType=${readingType}`;
   }
+
   const response = await fetch(queryString, {
     method: "GET",
     headers: {},
