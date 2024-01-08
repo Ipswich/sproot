@@ -81,16 +81,17 @@ router.get("/chart-data", async (req: Request, res: Response) => {
       });
       return;
     }
-    let chartDataByReadingType = {};
+
+    let chartDataByReadingType: Record<string, ChartData[]> = {};
     switch (req.query["readingType"] as ReadingType) {
       case ReadingType.temperature:
-        chartDataByReadingType = chartData[ReadingType.temperature];
+        chartDataByReadingType[ReadingType.temperature] = chartData[ReadingType.temperature];
         break;
       case ReadingType.humidity:
-        chartDataByReadingType = chartData[ReadingType.humidity];
+        chartDataByReadingType[ReadingType.humidity] = chartData[ReadingType.humidity];
         break;
       case ReadingType.pressure:
-        chartDataByReadingType = chartData[ReadingType.pressure];
+        chartDataByReadingType[ReadingType.pressure] = chartData[ReadingType.pressure];
         break;
       default:
         chartDataByReadingType = chartData;

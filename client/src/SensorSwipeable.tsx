@@ -39,7 +39,7 @@ export default function SensorSwipeable() {
     const promises = [];
     for (const readingType of Object.values(ReadingType)) {
       promises.push(
-        getChartDataAsync().then((data) => {
+        getChartDataAsync(readingType).then((data) => {
           newChartData[readingType] = data.chartData[readingType]!;
           setChartData(newChartData);
         }),
