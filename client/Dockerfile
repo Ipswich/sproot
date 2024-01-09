@@ -1,4 +1,4 @@
-FROM ubuntu:latest as build
+FROM debian:latest as build
 RUN apt-get update -y && apt-get upgrade -y
 
 # Install curl, nano, python, make, g++, git
