@@ -278,8 +278,10 @@ class SensorList {
       date = new Date(date);
     }
     date = date as Date;
-    const hours = date.getHours() % 12 || 12;
+
+    let hours = date.getHours();
     const amOrPm = hours >= 12 ? "pm" : "am";
+    hours = hours % 12 || 12;
     const minutes = date.getMinutes().toString().padStart(2, "0");
 
     return `${date.getDate()}/${date.getMonth() + 1} ${hours}:${minutes} ${amOrPm}`;

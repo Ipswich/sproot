@@ -38,7 +38,13 @@ const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
     winston.format.errors({ stack: true }),
-    winston.format.timestamp(),
+    winston.format.timestamp({
+      format: () => {
+        return new Date().toLocaleString("en-US", {
+          timeZone: process.env["TZ"],
+        });
+      },
+    }),
     winston.format.colorize(),
     winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`),
   ),
