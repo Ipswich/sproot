@@ -22,11 +22,17 @@
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "postcss": "^8.4.33",
+    "postcss-preset-mantine": "^1.12.3",
+    "postcss-simple-vars": "^7.0.1",
     "rimraf": "^5.0.1",
     "typescript": "^5.2.2",
     "vite": "^4.4.5"
   },
   "dependencies": {
+    "@mantine/charts": "^7.4.0",
+    "@mantine/core": "^7.4.0",
+    "@mantine/hooks": "^7.4.0",
     "mysql2": "^3.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

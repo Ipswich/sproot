@@ -8,6 +8,7 @@ services:
       context: ./
       dockerfile: ./server/Dockerfile
     environment:
+      - TZ=America/Los_Angeles
       - NODE_ENV=production
       - DEFAULT_USER=dev-test #Change this to something unique
       - DEFAULT_USER_EMAIL=dev-test@example.com 
@@ -44,6 +45,7 @@ services:
       args:
         VITE_API_SERVER_URL: "" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
     environment:
+      TZ: America/Los_Angeles
       NODE_ENV: production
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
