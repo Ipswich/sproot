@@ -2,19 +2,13 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Mousewheel, Keyboard, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
-import { ApiSensorsResponse } from "@sproot/sproot-common/dist/api/Responses";
-// import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ChartData } from "@sproot/sproot-common/src/api/ChartData";
+import { ApiSensorsResponse } from "@sproot/sproot-common/src/api/Responses";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
 import { useEffect, useState } from "react";
 import { getChartDataAsync, getSensorsAsync } from "../requests";
 import Chart from "./Chart";
 import Table from "./Table";
-
-enum ReadingType {
-  temperature = "temperature",
-  humidity = "humidity",
-  pressure = "pressure",
-}
 
 export default function SensorSwipeable() {
   const [sensors, setSensors] = useState({} as ApiSensorsResponse);

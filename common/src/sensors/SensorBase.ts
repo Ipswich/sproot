@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { SDBSensor } from "../database/SDBSensor";
 import { SDBReading } from "../database/SDBReading";
 import { ISprootDB } from "../database/ISprootDB";

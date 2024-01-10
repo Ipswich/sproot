@@ -1,8 +1,8 @@
 import "dotenv/config";
 import bme280 from "bme280";
-import { SDBSensor } from "@sproot/sproot-common/dist/database//SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database//SDBReading";
-import { ISprootDB } from "@sproot/sproot-common/dist/database//ISprootDB";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import winston from "winston";
 
