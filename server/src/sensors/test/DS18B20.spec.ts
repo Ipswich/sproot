@@ -11,11 +11,11 @@ import * as sinon from "sinon";
 import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
-const env = process.env;
+const MAX_SENSOR_READING_CACHE_SIZE = process.env["MAX_SENSOR_READING_CACHE_SIZE"];
 
 describe("DS18B20.ts tests", function () {
   afterEach(() => {
-    process.env = env;
+    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = MAX_SENSOR_READING_CACHE_SIZE;
     sandbox.restore();
   });
 

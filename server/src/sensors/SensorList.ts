@@ -100,7 +100,7 @@ class SensorList {
     }
 
     if (sensorListChanges) {
-      this.loadChartData();
+      this.loadChartDataFromCachedReadings();
     }
     profiler.done({
       message: "SensorList initializeOrRegenerate time",
@@ -112,11 +112,11 @@ class SensorList {
     await this.#touchAllSensorsAsync(async (sensor) => {
       sensor.addLastReadingToDatabaseAsync();
     });
-    this.maintainChartData();
+    this.updateChartDataFromLastReading();
   };
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
-  loadChartData() {
+  loadChartDataFromCachedReadings() {
     //Format cached readings for recharts
     const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
     for (const key in this.#sensors) {
@@ -144,6 +144,16 @@ class SensorList {
       );
     }
 
+    //Remove extra readings
+    for (const readingType in this.#chartData) {
+      while (
+        this.#chartData[readingType as ReadingType].length >
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+      ) {
+        this.#chartData[readingType as ReadingType].shift();
+      }
+    }
+
     // Log changes
     let logMessage = "";
     for (const readingType in this.#chartData) {
@@ -154,7 +164,7 @@ class SensorList {
     this.#logger.info(`Loaded chart data. ${logMessage}`);
   }
 
-  maintainChartData() {
+  updateChartDataFromLastReading() {
     const lastReadingObject = {} as Record<ReadingType, ChartData>;
     for (const sensor of Object.values(this.#sensors)) {
       for (const readingType in sensor.lastReading) {
