@@ -37,7 +37,6 @@ router.get("/chart-data", async (req: Request, res: Response) => {
   }
   const sensorList = req.app.get("sensorList") as SensorList;
   try {
-    logger.http("GET /api/v1/sensors/chart-data - 200, Success");
     const chartData = sensorList.chartData;
     if (offset != undefined && offset != null && limit != undefined && limit != null) {
       let result: Record<string, ChartData[]> | ChartData[];
@@ -72,6 +71,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
           break;
       }
 
+      logger.http("GET /api/v1/sensors/chart-data - 200, Success");
       res.status(200).json({
         message: "Chart data successfully retrieved",
         statusCode: 200,

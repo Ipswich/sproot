@@ -40,7 +40,7 @@ export default function SensorSwipeable() {
     const interval = setInterval(async () => {
       await updateSensorsAsync();
       await updateChartAsync();
-    }, 10000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
