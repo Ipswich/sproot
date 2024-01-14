@@ -45,19 +45,16 @@ router.get("/chart-data", async (req: Request, res: Response) => {
         let moreChartDataAvailable = undefined;
         switch (req.query["readingType"] as ReadingType) {
           case ReadingType.temperature:
-            result = chartData[ReadingType.temperature].slice(offset, offset + limit);
-            moreChartDataAvailable =
-              chartData[ReadingType.temperature]!.length <= offset + limit ? true : false;
+            result = chartData.temperature.slice(offset, offset + limit);
+            moreChartDataAvailable = chartData.temperature!.length <= offset + limit ? true : false;
             break;
           case ReadingType.humidity:
-            result = chartData[ReadingType.humidity].slice(offset, offset + limit);
-            moreChartDataAvailable =
-              chartData[ReadingType.humidity]!.length <= offset + limit ? true : false;
+            result = chartData.humidity.slice(offset, offset + limit);
+            moreChartDataAvailable = chartData.humidity!.length <= offset + limit ? true : false;
             break;
           case ReadingType.pressure:
-            result = chartData[ReadingType.pressure].slice(offset, offset + limit);
-            moreChartDataAvailable =
-              chartData[ReadingType.pressure]!.length <= offset + limit ? true : false;
+            result = chartData.pressure.slice(offset, offset + limit);
+            moreChartDataAvailable = chartData.pressure!.length <= offset + limit ? true : false;
             break;
           default:
             result = {};
@@ -85,24 +82,18 @@ router.get("/chart-data", async (req: Request, res: Response) => {
     switch (req.query["readingType"] as ReadingType) {
       case ReadingType.temperature:
         result[ReadingType.temperature] =
-          req.query["latest"] == "true"
-            ? chartData[ReadingType.temperature].slice(-1)
-            : chartData[ReadingType.temperature];
+          req.query["latest"] == "true" ? chartData.temperature.slice(-1) : chartData.temperature;
         break;
       case ReadingType.humidity:
         result[ReadingType.humidity] =
-          req.query["latest"] == "true"
-            ? chartData[ReadingType.humidity].slice(-1)
-            : chartData[ReadingType.humidity];
+          req.query["latest"] == "true" ? chartData.humidity.slice(-1) : chartData.humidity;
         break;
       case ReadingType.pressure:
         result[ReadingType.pressure] =
-          req.query["latest"] == "true"
-            ? chartData[ReadingType.pressure].slice(-1)
-            : chartData[ReadingType.pressure];
+          req.query["latest"] == "true" ? chartData.pressure.slice(-1) : chartData.pressure;
         break;
       default:
-        for (const key in Object.keys(chartData)) {
+        for (const key of Object.keys(chartData)) {
           result[key as ReadingType] =
             req.query["latest"] == "true"
               ? chartData[key as ReadingType].slice(-1)
@@ -119,6 +110,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
     });
     return;
   } catch (e) {
+    console.log(e);
     logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
     res.status(400).json({
       message: "Failed to retrieve chart data, invalid request",
