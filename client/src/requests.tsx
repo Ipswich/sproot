@@ -47,10 +47,18 @@ export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
 
 export async function getChartDataAsync(
   readingType: string | undefined = undefined,
+  latest: string | undefined = undefined,
 ): Promise<ApiChartDataResponse> {
   let queryString = `${SERVER_URL}/api/v1/sensors/chart-data`;
+  const params = [];
   if (readingType) {
-    queryString += `?readingType=${readingType}`;
+    params.push(`readingType=${readingType}`);
+  }
+  if (latest) {
+    params.push(`latest=${latest}`);
+  }
+  if (params.length > 0) {
+    queryString += `?${params.join("&")}`;
   }
 
   const response = await fetch(queryString, {

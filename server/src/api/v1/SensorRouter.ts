@@ -84,24 +84,26 @@ router.get("/chart-data", async (req: Request, res: Response) => {
 
     switch (req.query["readingType"] as ReadingType) {
       case ReadingType.temperature:
-        result[ReadingType.temperature] = chartData[ReadingType.temperature];
+        result[ReadingType.temperature] =
+          req.query["latest"] == "true"
+            ? chartData[ReadingType.temperature].slice(-1)
+            : chartData[ReadingType.temperature];
         break;
       case ReadingType.humidity:
-        result[ReadingType.humidity] = chartData[ReadingType.humidity];
+        result[ReadingType.humidity] =
+          req.query["latest"] == "true"
+            ? chartData[ReadingType.humidity].slice(-1)
+            : chartData[ReadingType.humidity];
         break;
       case ReadingType.pressure:
-        result[ReadingType.pressure] = chartData[ReadingType.pressure];
+        result[ReadingType.pressure] =
+          req.query["latest"] == "true"
+            ? chartData[ReadingType.pressure].slice(-1)
+            : chartData[ReadingType.pressure];
         break;
       default:
         result = chartData;
         break;
-    }
-
-    // Return only "latest" reading
-    if (req.query["latest"] == "true") {
-      for (const key in result) {
-        result[key as ReadingType] = result[key as ReadingType]!.slice(-1);
-      }
     }
     logger.http("GET /api/v1/sensors/chart-data - 200, Success");
     res.status(200).json({
