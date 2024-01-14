@@ -5,7 +5,7 @@ services:
       - db
     build:
       context: ./
-      dockerfile: ./server/Dockerfile.dev
+      dockerfile: ./server/Dockerfile.development
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
@@ -40,8 +40,9 @@ services:
       - server
     build:
       context: ./
-      dockerfile: ./client/Dockerfile.dev
+      dockerfile: ./client/Dockerfile.development
       args:
+        VITE_MAX_CHART_ENTRIES: 10080
         VITE_API_SERVER_URL: ""
     environment:
       NODE_ENV: development

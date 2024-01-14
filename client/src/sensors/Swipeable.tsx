@@ -26,6 +26,12 @@ export default function SensorSwipeable() {
       promises.push(
         getChartDataAsync(readingType).then((data) => {
           newChartData[readingType] = data.chartData[readingType]!;
+          while (
+            newChartData[readingType].length >
+            parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string)
+          ) {
+            newChartData[readingType].shift();
+          }
         }),
       );
     }
