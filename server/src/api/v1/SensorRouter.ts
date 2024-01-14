@@ -1,3 +1,4 @@
+import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { SensorList } from "../../sensors/SensorList";
@@ -18,6 +19,101 @@ router.get("/", async (req: Request, res: Response) => {
   });
 });
 
+router.get("/chart-data", async (req: Request, res: Response) => {
+  const logger = req.app.get("logger") as winston.Logger;
+  let offset, limit;
+  if (req.query["offset"] && req.query["limit"]) {
+    offset = parseInt(req.query["offset"] as string);
+    limit = parseInt(req.query["limit"] as string);
+    if (isNaN(offset) || isNaN(limit)) {
+      logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
+      res.status(400).json({
+        message: "Failed to retrieve chart data, invalid request",
+        statusCode: 400,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+  }
+  const sensorList = req.app.get("sensorList") as SensorList;
+  try {
+    const chartData = sensorList.chartData;
+    if (offset != undefined && offset != null && limit != undefined && limit != null) {
+      let result: Record<string, ChartData[]> | ChartData[];
+      let moreChartDataAvailable = undefined;
+      switch (req.query["readingType"] as ReadingType) {
+        case ReadingType.temperature:
+          result = chartData[ReadingType.temperature].slice(offset, offset + limit);
+          if (chartData[ReadingType.temperature]!.length <= offset + limit) {
+            moreChartDataAvailable = false;
+          }
+          break;
+        case ReadingType.humidity:
+          result = chartData[ReadingType.humidity].slice(offset, offset + limit);
+          if (chartData[ReadingType.humidity]!.length <= offset + limit) {
+            moreChartDataAvailable = false;
+          }
+          break;
+        case ReadingType.pressure:
+          result = chartData[ReadingType.pressure].slice(offset, offset + limit);
+          if (chartData[ReadingType.pressure]!.length <= offset + limit) {
+            moreChartDataAvailable = false;
+          }
+          break;
+        default:
+          result = {};
+          for (const key in chartData) {
+            result[key as ReadingType] = chartData[key as ReadingType]!.slice(
+              offset,
+              offset + limit,
+            );
+          }
+          break;
+      }
+
+      logger.http("GET /api/v1/sensors/chart-data - 200, Success");
+      res.status(200).json({
+        message: "Chart data successfully retrieved",
+        statusCode: 200,
+        chartData: result,
+        moreChartDataAvailable,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    let chartDataByReadingType: Record<string, ChartData[]> = {};
+    switch (req.query["readingType"] as ReadingType) {
+      case ReadingType.temperature:
+        chartDataByReadingType[ReadingType.temperature] = chartData[ReadingType.temperature];
+        break;
+      case ReadingType.humidity:
+        chartDataByReadingType[ReadingType.humidity] = chartData[ReadingType.humidity];
+        break;
+      case ReadingType.pressure:
+        chartDataByReadingType[ReadingType.pressure] = chartData[ReadingType.pressure];
+        break;
+      default:
+        chartDataByReadingType = chartData;
+        break;
+    }
+    res.status(200).json({
+      message: "Chart data successfully retrieved",
+      statusCode: 200,
+      chartData: chartDataByReadingType,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  } catch (e) {
+    logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
+    res.status(400).json({
+      message: "Failed to retrieve chart data, invalid request",
+      statusCode: 400,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 router.post("/", async (req: Request, res: Response) => {
   if (!req.body?.model || !req.body?.address) {
     res.status(400).json({
@@ -27,9 +123,9 @@ router.post("/", async (req: Request, res: Response) => {
     });
     return;
   }
-  let description, model, address;
+  let name, model, address;
   try {
-    description = req.body.description ? String(req.body.description) : null;
+    name = req.body.name ? String(req.body.name) : null;
     model = String(req.body.model);
     address = String(req.body.address);
   } catch (e) {
@@ -43,7 +139,7 @@ router.post("/", async (req: Request, res: Response) => {
 
   const sprootDB = req.app.get("sprootDB") as ISprootDB;
   const newSensor = {
-    description,
+    name,
     model,
     address,
   } as SDBSensor;
@@ -107,8 +203,8 @@ router.put("/:id", async (req: Request, res: Response) => {
       });
       return;
     }
-    if (req.body.description) {
-      sensor.description = String(req.body.description);
+    if (req.body.name) {
+      sensor.name = String(req.body.name);
     }
     if (req.body.model) {
       sensor.model = String(req.body.model);

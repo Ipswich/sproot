@@ -32,7 +32,7 @@ class OutputList {
         id,
         model,
         address,
-        description,
+        name,
         pin,
         isPwm,
         isInvertedPwm,
@@ -44,7 +44,7 @@ class OutputList {
         id,
         model,
         address,
-        description,
+        name,
         pin,
         isPwm,
         isInvertedPwm,
@@ -85,7 +85,7 @@ class OutputList {
       const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
       if (key) {
         //Update old ones
-        this.#outputs[key]!.description = output.description;
+        this.#outputs[key]!.name = output.name;
         this.#outputs[key]!.isPwm = output.isPwm;
         this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
       } else {

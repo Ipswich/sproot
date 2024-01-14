@@ -1,10 +1,7 @@
-import "dotenv/config";
 import { SDBSensor } from "../database/SDBSensor";
 import { SDBReading } from "../database/SDBReading";
 import { ISprootDB } from "../database/ISprootDB";
 import winston from "winston";
-
-const INITIAL_CACHE_LOOKBACK = Number(process.env['INITIAL_CACHE_LOOKBACK']); // 7 days in minutes
 
 enum ReadingType {
   temperature = "temperature",
@@ -14,7 +11,7 @@ enum ReadingType {
 
 interface ISensorBase {
   id: number;
-  description: string | null;
+  name: string;
   model: string;
   address: string | null;
   lastReading: Record<ReadingType, string>;
@@ -24,7 +21,7 @@ interface ISensorBase {
 
 abstract class SensorBase implements ISensorBase {
   id: number;
-  description: string | null;
+  name: string;
   model: string;
   address: string | null;
   lastReading: Record<ReadingType, string>;
@@ -37,7 +34,7 @@ abstract class SensorBase implements ISensorBase {
 
   constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
     this.id = sdbSensor.id;
-    this.description = sdbSensor.description;
+    this.name = sdbSensor.name;
     this.model = sdbSensor.model;
     this.address = sdbSensor.address;
     this.lastReading = {} as Record<ReadingType, string>;
@@ -89,5 +86,5 @@ abstract class SensorBase implements ISensorBase {
   }
 }
 
-export { SensorBase, ReadingType, INITIAL_CACHE_LOOKBACK };
+export { SensorBase, ReadingType };
 export type { ISensorBase };

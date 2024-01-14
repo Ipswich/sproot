@@ -30,7 +30,7 @@ describe("PCA9685.ts tests", function () {
       id: 1,
       model: "pca9685",
       address: "0x40",
-      description: "test output 1",
+      name: "test output 1",
       pin: 0,
       isPwm: true,
       isInvertedPwm: false,
@@ -39,7 +39,7 @@ describe("PCA9685.ts tests", function () {
       id: 2,
       model: "pca9685",
       address: "0x40",
-      description: "test output 2",
+      name: "test output 2",
       pin: 1,
       isPwm: false,
       isInvertedPwm: false,
@@ -48,7 +48,7 @@ describe("PCA9685.ts tests", function () {
       id: 3,
       model: "pca9685",
       address: "0x40",
-      description: "test output 3",
+      name: "test output 3",
       pin: 2,
       isPwm: true,
       isInvertedPwm: true,
@@ -57,7 +57,7 @@ describe("PCA9685.ts tests", function () {
       id: 4,
       model: "pca9685",
       address: "0x40",
-      description: "test output 4",
+      name: "test output 4",
       pin: 3,
       isPwm: false,
       isInvertedPwm: true,
@@ -93,14 +93,14 @@ describe("PCA9685.ts tests", function () {
     pca9685.createOutput({
       id: 1,
       model: "pca9685",
-      description: "test output 1",
+      name: "test output 1",
       pin: 0,
       isPwm: true,
       isInvertedPwm: false,
     } as SDBOutput);
     const outputData = pca9685.outputData;
 
-    assert.equal(outputData["1"]!["description"], "test output 1");
+    assert.equal(outputData["1"]!["name"], "test output 1");
     assert.equal(outputData["1"]!["pin"], 0);
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
@@ -121,7 +121,7 @@ describe("PCA9685.ts tests", function () {
     pca9685.createOutput({
       id: 1,
       model: "pca9685",
-      description: "test output 1",
+      name: "test output 1",
       pin: 0,
       isPwm: true,
       isInvertedPwm: false,
@@ -175,7 +175,7 @@ describe("PCA9685.ts tests", function () {
     pca9685.createOutput({
       id: 1,
       model: "pca9685",
-      description: "test output 1",
+      name: "test output 1",
       pin: 0,
       isPwm: true,
       isInvertedPwm: true,

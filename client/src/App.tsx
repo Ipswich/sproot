@@ -1,44 +1,65 @@
-// import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { useEffect, useState } from "react";
+import { MantineProvider, AppShell, Burger } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+// All packages except `@mantine/hooks` require styles imports
+import "@mantine/core/styles.css";
 import "./App.css";
-// import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import OutputCard from "./OutputCard";
+
+import { ApiOutputsResponse } from "@sproot/sproot-common/dist/api/Responses";
+
+import SensorSwipeable from "./sensors/Swipeable";
+import { getOutputsAsync } from "./requests";
 
 function App() {
-  // const [count, setCount] = useState(0);
-  const getSensorData = async () => {
-    fetch("http://192.168.2.166:3000/api/v1/sensors")
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        console.log(data.sensors);
-      });
+  const [opened, { toggle }] = useDisclosure();
+  const [outputs, setOutputs] = useState({} as ApiOutputsResponse);
+
+  useEffect(() => {
+    updateOutputsAsync();
+  }, []);
+
+  const updateOutputsAsync = async () => {
+    setOutputs(await getOutputsAsync());
   };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={async () => await getSensorData()}>
-          {/* count is {count} */}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <MantineProvider>
+      <AppShell
+        header={{ height: 60 }}
+        navbar={{
+          width: 300,
+          breakpoint: "sm",
+          collapsed: { mobile: !opened },
+        }}
+        padding="md"
+      >
+        <AppShell.Header style={{ paddingLeft: "14px", paddingTop: "12px" }}>
+          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+        </AppShell.Header>
+
+        <AppShell.Navbar p="md">Navbar</AppShell.Navbar>
+
+        <AppShell.Main>
+          <>
+            <div>
+              <SensorSwipeable />
+              <br></br>
+              {outputs.outputs
+                ? Object.keys(outputs.outputs).map((key) => (
+                    <OutputCard
+                      key={"OutputCard-" + outputs.outputs[key]?.id}
+                      output={outputs.outputs[key]!}
+                      updateOutputsAsync={updateOutputsAsync}
+                    />
+                  ))
+                : "No Outputs"}
+              <br></br>
+            </div>
+          </>
+        </AppShell.Main>
+      </AppShell>
+    </MantineProvider>
   );
 }
 

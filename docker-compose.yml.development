@@ -1,18 +1,17 @@
 version: "3"
 services:
   server:
-    restart: unless-stopped
     depends_on:
       - db
     build:
       context: ./
-      dockerfile: ./server/Dockerfile
+      dockerfile: ./server/Dockerfile.dev
     environment:
       TZ: America/Los_Angeles
-      NODE_ENV: production
-      DEFAULT_USER: dev-test #Change this to something unique
-      DEFAULT_USER_EMAIL: dev-test@example.com 
-      DEFAULT_USER_PASSWORD: password #Change this to something long and unique
+      NODE_ENV: development
+      DEFAULT_USER: dev-test
+      DEFAULT_USER_EMAIL: dev-test@example.com
+      DEFAULT_USER_PASSWORD: password
       APPLICATION_PORT: 3000
       AUTHENTICATION_ENABLED: false
       JWT_SECRET: CHANGE ME #Change this to something long and unique
@@ -34,19 +33,18 @@ services:
     expose:
       - "3000"
     privileged: true
+    command: ["sleep", "infinity"]
   
   client:
-    restart: unless-stopped
     depends_on:
       - server
     build:
       context: ./
-      dockerfile: ./client/Dockerfile
+      dockerfile: ./client/Dockerfile.dev
       args:
-        VITE_API_SERVER_URL: "" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
+        VITE_API_SERVER_URL: ""
     environment:
-      TZ: America/Los_Angeles
-      NODE_ENV: production
+      NODE_ENV: development
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:

@@ -517,6 +517,101 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
+  /api/v1/sensors/chart-data:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+        - "Chart"
+      description: "Gets information for displaying recharts."
+      parameters:
+        - in: query
+          name: readingType
+          schema:
+            type: string
+          description: The ReadingType to get.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Reading offset. Inclusive.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of readings to grab.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "chartData successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  readings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChartData"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion:
+                    type: string
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "No data found for the passed type"
+                  statusCode:
+                    type: integer
+                    example: 404
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Failed to retrieve chart data, invalid request"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
 
   /api/v1/outputs:
     get:
@@ -1144,6 +1239,19 @@ components:
         logTime:
           type: string
           example: "2023-01-01 12:00:00"
+
+    ChartData:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "2023-01-01 12:00:00"
+        sensor1:
+          type: number
+          example: 25.0
+        sensor2:
+          type: number
+          example: 25.0
 
   securitySchemes:
     bearerAuth:

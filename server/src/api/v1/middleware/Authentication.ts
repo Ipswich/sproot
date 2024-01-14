@@ -31,19 +31,19 @@ router.post("/", async (req: Request, res: Response) => {
     const token = jwt.sign({ username: req.body.username }, process.env["JWT_SECRET"]!, {
       expiresIn: process.env["JWT_EXPIRATION"]!,
     });
-    res.clearCookie("token");
-    res.cookie("token", token, {
-      maxAge: parseInt(process.env["JWT_EXPIRATION"]!),
-      httpOnly: true,
-      secure: process.env["NODE_ENV"]!.toLowerCase() != "production" ? false : true,
-      sameSite: "strict",
-    });
-    res.status(200).json({
-      message: "Authentication successful",
-      statusCode: 200,
-      JWTtoken: token,
-      timestamp: new Date().toISOString(),
-    });
+    res
+      .status(200)
+      .cookie("jwt_token", token, {
+        maxAge: parseInt(process.env["JWT_EXPIRATION"]!),
+        httpOnly: true,
+        sameSite: "strict",
+      })
+      .json({
+        message: "Authentication successful",
+        statusCode: 200,
+        JWTtoken: token,
+        timestamp: new Date().toISOString(),
+      });
   } else {
     res.status(401).json({
       message: "Invalid credentials",
@@ -67,7 +67,7 @@ async function authenticate(req: Request, res: Response, next: NextFunction) {
     suggestion:
       "Check token validity. Token must be present as either a cookie or in the Authorization header.",
   };
-  let token = req.headers["authorization"] ?? req.cookies["token"] ?? null;
+  let token = req.headers["authorization"] ?? req.cookies["jwt_token"] ?? null;
 
   if (!token) {
     res.status(401).json(errorResponse);

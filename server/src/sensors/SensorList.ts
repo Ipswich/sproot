@@ -1,6 +1,11 @@
 import { BME280 } from "./BME280";
 import { DS18B20 } from "./DS18B20";
-import { ISensorBase, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import {
+  ISensorBase,
+  ReadingType,
+  SensorBase,
+} from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
@@ -9,6 +14,11 @@ class SensorList {
   #sprootDB: ISprootDB;
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
+  #chartData: Record<ReadingType, Array<ChartData>> = {
+    temperature: [],
+    humidity: [],
+    pressure: [],
+  };
 
   constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
@@ -19,14 +29,19 @@ class SensorList {
     return this.#sensors;
   }
 
+  get chartData(): Record<ReadingType, Array<ChartData>> {
+    return this.#chartData;
+  }
+
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, description, model, address, lastReading, lastReadingTime, units } = this
-        .#sensors[key] as ISensorBase;
+      const { id, name, model, address, lastReading, lastReadingTime, units } = this.#sensors[
+        key
+      ] as ISensorBase;
       cleanObject[key] = {
         id,
-        description,
+        name,
         model,
         address,
         lastReading,
@@ -38,11 +53,11 @@ class SensorList {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
+    let sensorListChanges = false;
     const profiler = this.#logger.startTimer();
     await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
       this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
     });
-
     const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
 
     const promises = [];
@@ -50,7 +65,7 @@ class SensorList {
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
         //Update if it exists
-        this.#sensors[key]!.description = sensor.description;
+        this.#sensors[key]!.name = sensor.name;
       } else {
         //Create if it doesn't
         this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
@@ -61,6 +76,7 @@ class SensorList {
             ),
           ),
         );
+        sensorListChanges = true;
       }
     }
     await Promise.allSettled(promises);
@@ -74,6 +90,7 @@ class SensorList {
             `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
           );
           this.#disposeSensorAsync(this.#sensors[key]!);
+          sensorListChanges = true;
         } catch (err) {
           this.#logger.error(
             `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}. ${err}`,
@@ -81,16 +98,113 @@ class SensorList {
         }
       }
     }
+
+    if (sensorListChanges) {
+      this.loadChartDataFromCachedReadings();
+    }
     profiler.done({
       message: "SensorList initializeOrRegenerate time",
       level: "debug",
     });
   }
 
-  addReadingsToDatabaseAsync = async () =>
-    await this.#touchAllSensorsAsync(async (sensor) => sensor.addLastReadingToDatabaseAsync());
+  addReadingsToDatabaseAsync = async () => {
+    await this.#touchAllSensorsAsync(async (sensor) => {
+      sensor.addLastReadingToDatabaseAsync();
+    });
+    this.updateChartDataFromLastReading();
+  };
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
+  loadChartDataFromCachedReadings() {
+    //Format cached readings for recharts
+    const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
+    for (const key in this.#sensors) {
+      const sensor = this.#sensors[key]!;
+      for (const readingType in sensor.cachedReadings) {
+        const cachedReadings = sensor.cachedReadings[readingType as ReadingType];
+        for (const reading of cachedReadings) {
+          if (!chartObject[readingType as ReadingType]) {
+            chartObject[readingType as ReadingType] = {};
+          }
+          const logTime = this.#formatDateForChart(reading.logTime);
+          if (!chartObject[readingType as ReadingType][logTime]) {
+            chartObject[readingType as ReadingType][logTime] = {
+              name: logTime,
+            } as ChartData;
+          }
+          chartObject[readingType as ReadingType][logTime]![sensor.name] = Number(reading.data);
+        }
+      }
+    }
+    // Convert to array
+    for (const readingType in chartObject) {
+      this.#chartData[readingType as ReadingType] = Object.values(
+        chartObject[readingType as ReadingType],
+      );
+    }
+
+    //Remove extra readings
+    for (const readingType in this.#chartData) {
+      while (
+        this.#chartData[readingType as ReadingType].length >
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+      ) {
+        this.#chartData[readingType as ReadingType].shift();
+      }
+    }
+
+    // Log changes
+    let logMessage = "";
+    for (const readingType in this.#chartData) {
+      if (this.#chartData[readingType as ReadingType].length > 0) {
+        logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
+      }
+    }
+    this.#logger.info(`Loaded chart data. ${logMessage}`);
+  }
+
+  updateChartDataFromLastReading() {
+    const lastReadingObject = {} as Record<ReadingType, ChartData>;
+    for (const sensor of Object.values(this.#sensors)) {
+      for (const readingType in sensor.lastReading) {
+        const formattedTime = this.#formatDateForChart(sensor.lastReadingTime!);
+        if (!lastReadingObject[readingType as ReadingType]) {
+          lastReadingObject[readingType as ReadingType] = {
+            name: formattedTime,
+          } as ChartData;
+        }
+        lastReadingObject[readingType as ReadingType][sensor.name] = Number(
+          sensor.lastReading[readingType as ReadingType],
+        );
+      }
+    }
+    // Add new readings
+    for (const readingType in lastReadingObject) {
+      this.#chartData[readingType as ReadingType].push(
+        lastReadingObject[readingType as ReadingType],
+      );
+    }
+
+    //Remove old readings
+    for (const readingType in this.#chartData) {
+      while (
+        this.#chartData[readingType as ReadingType].length >
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+      ) {
+        this.#chartData[readingType as ReadingType].shift();
+      }
+    }
+
+    // Log changes
+    let logMessage = "";
+    for (const readingType in this.#chartData) {
+      if (this.#chartData[readingType as ReadingType].length > 0) {
+        logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
+      }
+    }
+    this.#logger.info(`Updated chart data. Data counts: ${logMessage}`);
+  }
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     const promises = [];
@@ -145,7 +259,7 @@ class SensorList {
         this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
         promises.push(
           this.#sprootDB.addSensorAsync({
-            description: null,
+            name: `New DS18B20 ${address}`,
             model: "DS18B20",
             address: address,
           } as SDBSensor),
@@ -168,12 +282,28 @@ class SensorList {
     await this.#sensors[sensor.id]!.disposeAsync();
     delete this.#sensors[sensor.id];
   }
+
+  #formatDateForChart(date: Date | string): string {
+    if (typeof date === "string") {
+      date = new Date(date);
+    }
+    date = date as Date;
+
+    let hours = date.getHours();
+    const amOrPm = hours >= 12 ? "pm" : "am";
+    hours = hours % 12 || 12;
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
+  }
 }
 
 class SensorListError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "BuildSensorError";
+    this.name = "SensorListError";
   }
 }
 

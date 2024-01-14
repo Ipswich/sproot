@@ -2,7 +2,7 @@ import { RowDataPacket } from "mysql2";
 
 interface SDBSensor extends RowDataPacket {
   id: number;
-  description: string | null;
+  name: string;
   model: string;
   address: string | null;
 }
