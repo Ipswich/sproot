@@ -19,12 +19,13 @@ export default function SensorSwipeable() {
   const updateSensorsAsync = async () => {
     setSensors(await getSensorsAsync());
   };
-  const updateChartAsync = async () => {
+
+  const updateChartAsync = async (latest: string | undefined = undefined) => {
     const newChartData = {} as Record<ReadingType, ChartData[]>;
     const promises = [];
     for (const readingType of Object.values(ReadingType)) {
       promises.push(
-        getChartDataAsync(readingType).then((data) => {
+        getChartDataAsync(readingType, latest).then((data) => {
           newChartData[readingType] = data.chartData[readingType]!;
           while (
             newChartData[readingType].length >
@@ -45,7 +46,7 @@ export default function SensorSwipeable() {
     updateChartAsync();
     const interval = setInterval(async () => {
       await updateSensorsAsync();
-      await updateChartAsync();
+      await updateChartAsync("true");
     }, 60000);
 
     return () => clearInterval(interval);
