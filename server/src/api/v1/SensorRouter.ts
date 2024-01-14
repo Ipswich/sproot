@@ -102,7 +102,12 @@ router.get("/chart-data", async (req: Request, res: Response) => {
             : chartData[ReadingType.pressure];
         break;
       default:
-        result = chartData;
+        for (const key in Object.keys(chartData)) {
+          result[key as ReadingType] =
+            req.query["latest"] == "true"
+              ? chartData[key as ReadingType].slice(-1)
+              : chartData[key as ReadingType];
+        }
         break;
     }
     logger.http("GET /api/v1/sensors/chart-data - 200, Success");
