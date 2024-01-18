@@ -13,11 +13,9 @@ const mockSprootDB = new MockSprootDB();
 const MAX_SENSOR_READING_CACHE_SIZE = process.env["MAX_SENSOR_READING_CACHE_SIZE"];
 
 describe("BME280.ts tests", function () {
-  console.log(process.env["MAX_SENSOR_READING_CACHE_SIZE"]);
   afterEach(() => {
     process.env["MAX_SENSOR_READING_CACHE_SIZE"] = MAX_SENSOR_READING_CACHE_SIZE;
     sandbox.restore();
-    console.log(process.env["MAX_SENSOR_READING_CACHE_SIZE"]);
   });
 
   it("should initialize a BME280 sensor", async () => {

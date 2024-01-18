@@ -167,8 +167,9 @@ class SensorList {
   updateChartDataFromLastCacheReading() {
     const lastReadingObject = {} as Record<ReadingType, ChartData>;
     for (const sensor of Object.values(this.#sensors)) {
-      for (const readingType in Object.keys(sensor.cachedReadings)) {
-        const lastCacheReading = sensor.cachedReadings[readingType as ReadingType][-1]!;
+      for (const readingType of Object.keys(sensor.cachedReadings)) {
+        const readings = sensor.cachedReadings[readingType as ReadingType];
+        const lastCacheReading = readings[readings.length - 1]!;
         const formattedTime = this.#formatDateForChart(lastCacheReading.logTime);
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {

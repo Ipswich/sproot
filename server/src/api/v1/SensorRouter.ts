@@ -110,7 +110,6 @@ router.get("/chart-data", async (req: Request, res: Response) => {
     });
     return;
   } catch (e) {
-    console.log(e);
     logger.http("GET /api/v1/sensors/chart-data - 400, Invalid request");
     res.status(400).json({
       message: "Failed to retrieve chart data, invalid request",

@@ -177,6 +177,7 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([mockBME280Data]);
+    sandbox.stub(MockSprootDB.prototype, "addSensorReadingAsync").resolves();
     sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
     const sensorList = new SensorList(mockSprootDB, winston.createLogger());
 
@@ -194,6 +195,7 @@ describe("SensorList.ts tests", function () {
     sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
 
     // Should add values
+    sensorList.sensors["1"]!.addLastReadingToDatabaseAsync();
     sensorList.updateChartDataFromLastCacheReading();
 
     assert.equal(sensorList.chartData["temperature"].length, 2);
@@ -204,6 +206,7 @@ describe("SensorList.ts tests", function () {
     sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
     sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
     sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
+    sensorList.sensors["1"]!.addLastReadingToDatabaseAsync();
     sensorList.updateChartDataFromLastCacheReading();
 
     // Should not have changed because ENV limit
