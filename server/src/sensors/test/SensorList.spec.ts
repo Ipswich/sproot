@@ -194,7 +194,7 @@ describe("SensorList.ts tests", function () {
     sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
 
     // Should add values
-    sensorList.updateChartDataFromLastReading();
+    sensorList.updateChartDataFromLastCacheReading();
 
     assert.equal(sensorList.chartData["temperature"].length, 2);
     assert.equal(sensorList.chartData["humidity"].length, 2);
@@ -204,7 +204,7 @@ describe("SensorList.ts tests", function () {
     sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
     sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
     sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
-    sensorList.updateChartDataFromLastReading();
+    sensorList.updateChartDataFromLastCacheReading();
 
     // Should not have changed because ENV limit
     assert.equal(sensorList.chartData["temperature"].length, 2);

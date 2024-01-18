@@ -112,7 +112,7 @@ class SensorList {
     await this.#touchAllSensorsAsync(async (sensor) => {
       sensor.addLastReadingToDatabaseAsync();
     });
-    this.updateChartDataFromLastReading();
+    this.updateChartDataFromLastCacheReading();
   };
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
@@ -164,19 +164,18 @@ class SensorList {
     this.#logger.info(`Loaded chart data. ${logMessage}`);
   }
 
-  updateChartDataFromLastReading() {
+  updateChartDataFromLastCacheReading() {
     const lastReadingObject = {} as Record<ReadingType, ChartData>;
     for (const sensor of Object.values(this.#sensors)) {
-      for (const readingType in sensor.lastReading) {
-        const formattedTime = this.#formatDateForChart(sensor.lastReadingTime!);
+      for (const readingType in Object.keys(sensor.cachedReadings)) {
+        const lastCacheReading = sensor.cachedReadings[readingType as ReadingType][-1]!;
+        const formattedTime = this.#formatDateForChart(lastCacheReading.logTime);
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {
             name: formattedTime,
           } as ChartData;
         }
-        lastReadingObject[readingType as ReadingType][sensor.name] = Number(
-          sensor.lastReading[readingType as ReadingType],
-        );
+        lastReadingObject[readingType as ReadingType][sensor.name] = Number(lastCacheReading.data);
       }
     }
     // Add new readings
