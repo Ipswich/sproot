@@ -114,8 +114,10 @@ class SensorList {
     });
     this.updateChartDataFromLastCacheReading();
   };
+
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
+
   loadChartDataFromCachedReadings() {
     //Format cached readings for recharts
     const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
@@ -127,7 +129,11 @@ class SensorList {
           if (!chartObject[readingType as ReadingType]) {
             chartObject[readingType as ReadingType] = {};
           }
-          const logTime = this.#formatDateForChart(reading.logTime);
+          const logTimeAsDate = new Date(reading.logTime);
+          if (logTimeAsDate.getMinutes() % 5 !== 0) {
+            continue;
+          }
+          const logTime = this.#formatDateForChart(logTimeAsDate);
           if (!chartObject[readingType as ReadingType][logTime]) {
             chartObject[readingType as ReadingType][logTime] = {
               name: logTime,
@@ -170,6 +176,10 @@ class SensorList {
       for (const readingType of Object.keys(sensor.cachedReadings)) {
         const readings = sensor.cachedReadings[readingType as ReadingType];
         const lastCacheReading = readings[readings.length - 1]!;
+        const logTimeAsDate = new Date(lastCacheReading.logTime);
+        if (logTimeAsDate.getMinutes() % 5 !== 0) {
+          continue;
+        }
         const formattedTime = this.#formatDateForChart(lastCacheReading.logTime);
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {

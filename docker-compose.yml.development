@@ -63,8 +63,8 @@ services:
       - ./sproot-schema.sql:/docker-entrypoint-initdb.d/sproot-schema.sql
     networks:
       - sproot-network
-    expose:
-      - "3306"
+    ports:
+      - 3306:3306
 
   adminer:
     image: adminer
