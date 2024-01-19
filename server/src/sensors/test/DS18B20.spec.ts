@@ -103,13 +103,13 @@ describe("DS18B20.ts tests", function () {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date().toUTCString(),
+        logTime: new Date().toISOString(),
       } as SDBReading,
       {
         data: "2",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date(new Date().getTime() - 60000).toUTCString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
     ]);
 

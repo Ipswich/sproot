@@ -69,19 +69,19 @@ class BME280 extends SensorBase {
         metric: ReadingType.temperature,
         data: this.lastReading[ReadingType.temperature],
         units: this.units[ReadingType.temperature],
-        logTime: this.lastReadingTime!.toUTCString(),
+        logTime: this.lastReadingTime!.toISOString(),
       } as SDBReading);
       this.cachedReadings[ReadingType.humidity].push({
         metric: ReadingType.humidity,
         data: this.lastReading[ReadingType.humidity],
         units: this.units[ReadingType.humidity],
-        logTime: this.lastReadingTime!.toUTCString(),
+        logTime: this.lastReadingTime!.toISOString(),
       } as SDBReading);
       this.cachedReadings[ReadingType.pressure].push({
         metric: ReadingType.pressure,
         data: this.lastReading[ReadingType.pressure],
         units: this.units[ReadingType.pressure],
-        logTime: this.lastReadingTime!.toUTCString(),
+        logTime: this.lastReadingTime!.toISOString(),
       } as SDBReading);
 
       while (

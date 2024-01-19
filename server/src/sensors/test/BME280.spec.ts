@@ -105,37 +105,37 @@ describe("BME280.ts tests", function () {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date().toUTCString(),
+        logTime: new Date().toISOString(),
       } as SDBReading,
       {
         data: "2",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date(new Date().getTime() - 60000).toUTCString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date().toUTCString(),
+        logTime: new Date().toISOString(),
       } as SDBReading,
       {
         data: "2",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date(new Date().getTime() - 60000).toUTCString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date().toUTCString(),
+        logTime: new Date().toISOString(),
       } as SDBReading,
       {
         data: "2",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date(new Date().getTime() - 60000).toUTCString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
     ]);
     sandbox.stub(winston, "createLogger").callsFake(

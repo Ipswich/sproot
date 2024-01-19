@@ -300,7 +300,9 @@ class SensorList {
 
   #formatDateForChart(date: Date | string): string {
     if (typeof date === "string") {
-      date = new Date(date);
+      //If it's a string, it's ISO
+      const offsetInMilliseconds = new Date().getTimezoneOffset() * 60000;
+      date = new Date(new Date(date).getTime() - offsetInMilliseconds);
     }
     date = date as Date;
 

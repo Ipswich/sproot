@@ -67,7 +67,7 @@ class DS18B20 extends SensorBase {
         metric: ReadingType.temperature,
         data: this.lastReading[ReadingType.temperature],
         units: this.units[ReadingType.temperature],
-        logTime: this.lastReadingTime!.toUTCString(),
+        logTime: this.lastReadingTime!.toISOString(),
       } as SDBReading);
       while (
         this.cachedReadings[ReadingType.temperature].length >
