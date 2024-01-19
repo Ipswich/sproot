@@ -105,37 +105,37 @@ describe("BME280.ts tests", function () {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date().toISOString(),
+        logTime: new Date().toUTCString(),
       } as SDBReading,
       {
         data: "2",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+        logTime: new Date(new Date().getTime() - 60000).toUTCString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date().toISOString(),
+        logTime: new Date().toUTCString(),
       } as SDBReading,
       {
         data: "2",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+        logTime: new Date(new Date().getTime() - 60000).toUTCString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date().toISOString(),
+        logTime: new Date().toUTCString(),
       } as SDBReading,
       {
         data: "2",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+        logTime: new Date(new Date().getTime() - 60000).toUTCString(),
       } as SDBReading,
     ]);
     sandbox.stub(winston, "createLogger").callsFake(
@@ -188,6 +188,7 @@ describe("BME280.ts tests", function () {
       humidity: String(mockReading.humidity),
       pressure: String(mockReading.pressure),
     };
+    bme280Sensor.lastReadingTime = new Date("2000-01-01T00:00:00.000Z");
 
     bme280Sensor.addLastReadingToDatabaseAsync();
 

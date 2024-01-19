@@ -154,7 +154,7 @@ class SensorList {
     for (const readingType in this.#chartData) {
       while (
         this.#chartData[readingType as ReadingType].length >
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+        Number(process.env["MAX_CHART_DATA_POINTS"]!)
       ) {
         this.#chartData[readingType as ReadingType].shift();
       }
@@ -171,6 +171,7 @@ class SensorList {
   }
 
   updateChartDataFromLastCacheReading() {
+    let update = false;
     const lastReadingObject = {} as Record<ReadingType, ChartData>;
     for (const sensor of Object.values(this.#sensors)) {
       for (const readingType of Object.keys(sensor.cachedReadings)) {
@@ -180,6 +181,7 @@ class SensorList {
         if (logTimeAsDate.getMinutes() % 5 !== 0) {
           continue;
         }
+        update = true;
         const formattedTime = this.#formatDateForChart(lastCacheReading.logTime);
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {
@@ -188,6 +190,9 @@ class SensorList {
         }
         lastReadingObject[readingType as ReadingType][sensor.name] = Number(lastCacheReading.data);
       }
+    }
+    if (!update) {
+      return;
     }
     // Add new readings
     for (const readingType in lastReadingObject) {
@@ -200,7 +205,7 @@ class SensorList {
     for (const readingType in this.#chartData) {
       while (
         this.#chartData[readingType as ReadingType].length >
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+        Number(process.env["MAX_CHART_DATA_POINTS"]!)
       ) {
         this.#chartData[readingType as ReadingType].shift();
       }
