@@ -182,7 +182,7 @@ class SensorList {
           continue;
         }
         update = true;
-        const formattedTime = this.#formatDateForChart(lastCacheReading.logTime);
+        const formattedTime = this.#formatDateForChart(logTimeAsDate);
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {
             name: formattedTime,
@@ -298,14 +298,7 @@ class SensorList {
     delete this.#sensors[sensor.id];
   }
 
-  #formatDateForChart(date: Date | string): string {
-    if (typeof date === "string") {
-      //If it's a string, it's ISO
-      const offsetInMilliseconds = new Date().getTimezoneOffset() * 60000;
-      date = new Date(new Date(date).getTime() - offsetInMilliseconds);
-    }
-    date = date as Date;
-
+  #formatDateForChart(date: Date): string {
     let hours = date.getHours();
     const amOrPm = hours >= 12 ? "pm" : "am";
     hours = hours % 12 || 12;

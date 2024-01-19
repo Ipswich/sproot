@@ -101,7 +101,7 @@ class SprootDB implements ISprootDB {
           readingType,
           sensor.lastReading[readingType as ReadingType],
           sensor.units[readingType as ReadingType],
-          sensor.lastReadingTime?.toISOString().slice(0, 19).replace("T", " "),
+          sensor.lastReadingTime?.toISOString(),
         ],
       );
     }
