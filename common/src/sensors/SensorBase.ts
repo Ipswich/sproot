@@ -47,8 +47,41 @@ abstract class SensorBase implements ISensorBase {
 
   abstract disposeAsync(): Promise<void>;
   abstract getReadingAsync(): Promise<void>;
-  protected abstract updateCachedReadings(): void;
-  protected abstract loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void>;
+
+  protected async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
+    for (const readingType in this.cachedReadings) {
+      this.cachedReadings[readingType as ReadingType] = [];
+    }
+    //Fill cached readings with readings from database
+    const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), minutes);
+    for (const sdbReading of sdbReadings) {
+      const newReading = {
+        metric: sdbReading.metric as ReadingType,
+        data: sdbReading.data,
+        units: sdbReading.units,
+        logTime: sdbReading.logTime,
+      } as SDBReading;
+      this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
+    }
+  }
+
+  protected updateCachedReadings(): void {
+    for (const readingType in this.cachedReadings) {
+      this.cachedReadings[readingType as ReadingType].push({
+        metric: readingType as ReadingType,
+        data: this.lastReading[readingType as ReadingType],
+        units: this.units[readingType as ReadingType],
+        logTime: this.lastReadingTime?.toISOString(),
+      } as SDBReading);
+
+      while (
+        this.cachedReadings[readingType as ReadingType].length >
+        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+      ) {
+        this.cachedReadings[readingType as ReadingType].shift();
+      }
+    }
+  }
 
   addLastReadingToDatabaseAsync = async (): Promise<void> => {
     this.updateCachedReadings();
