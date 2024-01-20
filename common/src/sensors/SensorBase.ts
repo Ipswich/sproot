@@ -61,7 +61,6 @@ abstract class SensorBase implements ISensorBase {
         false,
       );
       for (const sdbReading of sdbReadings) {
-        this.logger.info("sdbReading: " + JSON.stringify(sdbReading));
         const newReading = {
           metric: sdbReading.metric,
           data: sdbReading.data,
