@@ -159,38 +159,38 @@ describe("SensorList.ts tests", function () {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date("2024-01-01T00:00:00.000Z").toISOString(),
+        logTime: "2024-01-01T00:00:00.000",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date("2024-01-01T00:00:00.000Z").toISOString(),
+        logTime: "2024-01-01T00:00:00.000",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date("2024-01-01T00:00:00.000Z").toISOString(),
+        logTime: "2024-01-01T00:00:00.000",
       } as SDBReading,
       //These should be ignored, as minutes % 5 != 0
       {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date("2024-01-01T00:01:00.000Z").toISOString(),
+        logTime: "2024-01-01T00:01:00.000",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date("2024-01-01T00:01:00.000Z").toISOString(),
+        logTime: "2024-01-01T00:01:00.000",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date("2024-01-01T00:01:00.000Z").toISOString(),
+        logTime: "2024-01-01T00:01:00.000",
       } as SDBReading,
     ]);
     sandbox.stub(winston, "createLogger").callsFake(

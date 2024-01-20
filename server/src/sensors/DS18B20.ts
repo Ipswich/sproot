@@ -60,36 +60,6 @@ class DS18B20 extends SensorBase {
     return Promise.resolve();
   }
 
-  protected override updateCachedReadings(): void {
-    try {
-      super.updateCachedReadings();
-
-      this.logger.info(
-        `Updated cached readings for {DS18B20, id: ${this.id}}. Cache Size - temperature: ${
-          this.cachedReadings[ReadingType.temperature].length
-        }`,
-      );
-    } catch (err) {
-      this.logger.error(`Failed to update cached readings for {DS18B20, id: ${this.id}}. ${err}`);
-    }
-  }
-
-  protected override async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
-    try {
-      await super.loadCachedReadingsFromDatabaseAsync(minutes);
-
-      this.logger.info(
-        `Loaded cached readings for {DS18B20, id: ${this.id}}. Cache Size - temperature: ${
-          this.cachedReadings[ReadingType.temperature].length
-        }`,
-      );
-    } catch (err) {
-      this.logger.error(
-        `Failed to load cached readings for sensor {DS18B20, id: ${this.id}}. ${err}}`,
-      );
-    }
-  }
-
   static async getAddressesAsync(): Promise<string[]> {
     const data = await readFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves", "utf8");
     const parts = data.split("\n");

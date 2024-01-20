@@ -61,40 +61,6 @@ class BME280 extends SensorBase {
     this.internalDispose();
     return Promise.resolve();
   }
-
-  protected override updateCachedReadings() {
-    try {
-      super.updateCachedReadings();
-
-      this.logger.info(
-        `Updated cached readings for {BME280, id: ${this.id}}. Cache Size - temperature: ${
-          this.cachedReadings[ReadingType.temperature].length
-        }, humidity: ${this.cachedReadings[ReadingType.humidity].length}, pressure: ${
-          this.cachedReadings[ReadingType.pressure].length
-        }`,
-      );
-    } catch (err) {
-      this.logger.error(`Failed to update cache readings for {BME280, id: ${this.id}}. ${err}`);
-    }
-  }
-
-  protected override async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
-    try {
-      await super.loadCachedReadingsFromDatabaseAsync(minutes);
-
-      this.logger.info(
-        `Loaded cached readings for {BME280, id: ${this.id}}. Cache Size - temperature: ${
-          this.cachedReadings[ReadingType.temperature].length
-        }, humidity: ${this.cachedReadings[ReadingType.humidity].length}, pressure: ${
-          this.cachedReadings[ReadingType.pressure].length
-        }`,
-      );
-    } catch (err) {
-      this.logger.error(
-        `Failed to load cached readings for sensor {BME280, id:${this.id}}. ${err}`,
-      );
-    }
-  }
 }
 
 export { BME280 };

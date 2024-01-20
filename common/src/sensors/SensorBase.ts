@@ -49,37 +49,82 @@ abstract class SensorBase implements ISensorBase {
   abstract getReadingAsync(): Promise<void>;
 
   protected async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
-    for (const readingType in this.cachedReadings) {
-      this.cachedReadings[readingType as ReadingType] = [];
-    }
-    //Fill cached readings with readings from database
-    const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), minutes);
-    for (const sdbReading of sdbReadings) {
-      const newReading = {
-        metric: sdbReading.metric as ReadingType,
-        data: sdbReading.data,
-        units: sdbReading.units,
-        logTime: sdbReading.logTime,
-      } as SDBReading;
-      this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
+    try {
+      for (const readingType in this.cachedReadings) {
+        this.cachedReadings[readingType as ReadingType] = [];
+      }
+      //Fill cached readings with readings from database
+      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
+        this,
+        new Date(),
+        minutes,
+        false,
+      );
+      for (const sdbReading of sdbReadings) {
+        const newReading = {
+          metric: sdbReading.metric,
+          data: sdbReading.data,
+          units: sdbReading.units,
+          logTime: sdbReading.logTime.replace(" ", "T") + "Z",
+        } as SDBReading;
+        this.cachedReadings[sdbReading.metric]?.push(newReading);
+      }
+
+      let updateInfoString = "";
+      for (const readingType in this.cachedReadings) {
+        updateInfoString += `${readingType}: ${this.cachedReadings[readingType as ReadingType].length}`;
+        if (
+          readingType !=
+          Object.keys(this.cachedReadings)[Object.keys(this.cachedReadings).length - 1]
+        ) {
+          updateInfoString += ", ";
+        }
+      }
+      this.logger.info(
+        `Loaded cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
+      );
+    } catch (err) {
+      this.logger.error(
+        `Failed to load cached readings for {${this.constructor.name}, id: ${this.id}}. ${err}`,
+      );
     }
   }
 
   protected updateCachedReadings(): void {
-    for (const readingType in this.cachedReadings) {
-      this.cachedReadings[readingType as ReadingType].push({
-        metric: readingType as ReadingType,
-        data: this.lastReading[readingType as ReadingType],
-        units: this.units[readingType as ReadingType],
-        logTime: this.lastReadingTime?.toISOString(),
-      } as SDBReading);
+    try {
+      for (const readingType in this.cachedReadings) {
+        this.cachedReadings[readingType as ReadingType].push({
+          metric: readingType as ReadingType,
+          data: this.lastReading[readingType as ReadingType],
+          units: this.units[readingType as ReadingType],
+          logTime: this.lastReadingTime?.toISOString(),
+        } as SDBReading);
 
-      while (
-        this.cachedReadings[readingType as ReadingType].length >
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
-      ) {
-        this.cachedReadings[readingType as ReadingType].shift();
+        while (
+          this.cachedReadings[readingType as ReadingType].length >
+          Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+        ) {
+          this.cachedReadings[readingType as ReadingType].shift();
+        }
       }
+
+      let updateInfoString = "";
+      for (const readingType in this.cachedReadings) {
+        updateInfoString += `${readingType}: ${this.cachedReadings[readingType as ReadingType].length}`;
+        if (
+          readingType !=
+          Object.keys(this.cachedReadings)[Object.keys(this.cachedReadings).length - 1]
+        ) {
+          updateInfoString += ", ";
+        }
+      }
+      this.logger.info(
+        `Updated cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
+      );
+    } catch (err) {
+      this.logger.error(
+        `Failed to update cached readings for {${this.constructor.name}, id: ${this.id}}. ${err}`,
+      );
     }
   }
 

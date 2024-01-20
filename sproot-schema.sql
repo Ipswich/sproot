@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `sensor_data` (
   `metric` varchar(32) NOT NULL,
   `data` decimal(12,7) NOT NULL,
   `units` varchar(16) NOT NULL,
-  `logTime` timestamp NOT NULL DEFAULT current_timestamp(),
+  `logTime` datetime NOT NULL DEFAULT current_timestamp(), --SERVER STORES THIS AS ISO8601, RESPECT IT ON READS/WRITES
   PRIMARY KEY (`id`),
   KEY `sensor_id` (`sensor_id`),
   CONSTRAINT `sensor_data_ibfk_1` FOREIGN KEY (`sensor_id`) REFERENCES `sensors` (`id`) ON DELETE CASCADE

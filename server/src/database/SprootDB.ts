@@ -101,16 +101,29 @@ class SprootDB implements ISprootDB {
           readingType,
           sensor.lastReading[readingType as ReadingType],
           sensor.units[readingType as ReadingType],
-          sensor.lastReadingTime?.toISOString(),
+          sensor.lastReadingTime?.toISOString().slice(0, 19).replace("T", " "),
         ],
       );
     }
   }
 
+  /**
+   * Important note on this one:
+   * The logTime is stored in the database in the format "YYYY-MM-DD HH:MM:SS". This is not a valid ISO string.
+   * This function will convert the logTime to an ISO string if toIsoString is true. Otherwise, you should probably
+   * this before you turn the returned date into a Date object as it'll be in a very different timezone and there'll
+   * be some... Irregularities.
+   * @param sensor sensor to fetch readings for.
+   * @param since time at the start of the lookback period.
+   * @param minutes minutes to lookback from since.
+   * @param toIsoString whether to convert the logTime to an ISO string.
+   * @returns An array of SDBReadings.
+   */
   async getSensorReadingsAsync(
     sensor: SensorBase,
     since: Date,
     minutes: number = 120,
+    toIsoString: boolean = false,
   ): Promise<SDBReading[]> {
     const [rows] = await this.#connection.execute<SDBReading[]>(
       `SELECT metric, data, units, logTime
@@ -124,6 +137,11 @@ class SprootDB implements ISprootDB {
       ORDER BY logTime ASC`,
       [since.toISOString(), minutes, sensor.id],
     );
+    if (toIsoString) {
+      for (const row of rows) {
+        row.logTime = row.logTime.replace(" ", "T") + "Z";
+      }
+    }
     return rows;
   }
 
