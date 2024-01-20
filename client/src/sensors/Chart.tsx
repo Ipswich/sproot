@@ -1,15 +1,21 @@
 import { ChartData } from "@sproot/src/api/ChartData";
 import { ReadingType } from "@sproot/src/sensors/SensorBase";
-import {
-  LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  Line,
-  ResponsiveContainer,
-} from "recharts";
+import { LineChart } from "@mantine/charts";
+
+const colors = [
+  "lime",
+  "green",
+  "teal",
+  "cyan",
+  "blue",
+  "indigo",
+  "violet",
+  "grape",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+];
 
 interface ChartProps {
   width: number;
@@ -24,32 +30,33 @@ export default function Chart({
   chartData,
   sensorNames,
 }: ChartProps) {
+  if (
+    !chartData[readingType as ReadingType] ||
+    !chartData[readingType as ReadingType]![0]
+  ) {
+    return null;
+  }
+  const unit = chartData[readingType as ReadingType][0]?.units ?? "";
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart
-        data={chartData[readingType as ReadingType]!}
-        margin={{
-          top: 5,
-          right: 50,
-          left: 20,
-          bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis domain={["auto", "auto"]} />
-        <Tooltip />
-        <Legend />
-        {sensorNames.map((sensorName) => (
-          <Line
-            key={sensorName}
-            type="monotone"
-            dataKey={sensorName}
-            stroke="#8884d8"
-            dot={false}
-          />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+    <LineChart
+      h={300}
+      data={chartData[readingType as ReadingType]!}
+      unit={unit}
+      dataKey="sensorName"
+      series={sensorNames.map((sensorName, index) => ({
+        name: sensorName,
+        color: colors[index % colors.length]!,
+      }))}
+      dotProps={{ r: 0 }}
+      withLegend
+      withTooltip={false}
+      withXAxis
+      withYAxis
+      xAxisProps={{ dataKey: "name" }}
+      yAxisProps={{ domain: ["auto", "auto"] }}
+      referenceLines={[]}
+      style={{ marginTop: 5, marginBottom: 5, marginLeft: 20, marginRight: 20 }}
+      legendProps={{ verticalAlign: "bottom", height: 50 }}
+    />
   );
 }

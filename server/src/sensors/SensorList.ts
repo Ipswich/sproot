@@ -140,6 +140,8 @@ class SensorList {
             } as ChartData;
           }
           chartObject[readingType as ReadingType][logTime]![sensor.name] = Number(reading.data);
+          chartObject[readingType as ReadingType][logTime]!.units =
+            sensor.units[readingType as ReadingType];
         }
       }
     }
@@ -189,6 +191,8 @@ class SensorList {
           } as ChartData;
         }
         lastReadingObject[readingType as ReadingType][sensor.name] = Number(lastCacheReading.data);
+        lastReadingObject[readingType as ReadingType].units =
+          sensor.units[readingType as ReadingType];
       }
     }
     if (!update) {
@@ -274,7 +278,7 @@ class SensorList {
         this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
         promises.push(
           this.#sprootDB.addSensorAsync({
-            name: `New DS18B20 ${address}`,
+            name: `New DS18B20 ..${address.slice(-4)}`,
             model: "DS18B20",
             address: address,
           } as SDBSensor),
