@@ -139,7 +139,8 @@ class SensorList {
               name: logTime,
             } as ChartData;
           }
-          chartObject[readingType as ReadingType][logTime]![sensor.name] = Number(reading.data);
+          chartObject[readingType as ReadingType][logTime]![sensor.name] =
+            this.#formatReadingForChart(reading.data);
           chartObject[readingType as ReadingType][logTime]!.units =
             sensor.units[readingType as ReadingType];
         }
@@ -190,7 +191,9 @@ class SensorList {
             name: formattedTime,
           } as ChartData;
         }
-        lastReadingObject[readingType as ReadingType][sensor.name] = Number(lastCacheReading.data);
+        lastReadingObject[readingType as ReadingType][sensor.name] = this.#formatReadingForChart(
+          lastCacheReading.data,
+        );
         lastReadingObject[readingType as ReadingType].units =
           sensor.units[readingType as ReadingType];
       }
@@ -311,6 +314,10 @@ class SensorList {
     const day = date.getDate();
 
     return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
+  }
+
+  #formatReadingForChart(data: string): string {
+    return parseFloat(data).toFixed(3);
   }
 }
 

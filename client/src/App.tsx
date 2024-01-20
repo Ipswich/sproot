@@ -38,7 +38,9 @@ function App() {
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
         </AppShell.Header>
 
-        <AppShell.Navbar p="md">Navbar</AppShell.Navbar>
+        <AppShell.Navbar style={{ width: "200px", opacity: "84%" }} p="md">
+          Sproot
+        </AppShell.Navbar>
 
         <AppShell.Main>
           <>

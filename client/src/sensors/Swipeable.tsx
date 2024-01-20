@@ -10,6 +10,21 @@ import { getChartDataAsync, getSensorsAsync } from "../requests";
 import Chart from "./Chart";
 import Table from "./Table";
 
+const colors = [
+  "lime",
+  "green",
+  "teal",
+  "cyan",
+  "blue",
+  "indigo",
+  "violet",
+  "grape",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+];
+
 export default function SensorSwipeable() {
   const [sensors, setSensors] = useState({} as ApiSensorsResponse);
   const [chartData, setChartData] = useState(
@@ -87,6 +102,7 @@ export default function SensorSwipeable() {
                       .flat(),
                   ),
                 ];
+
                 return (
                   <SwiperSlide key={"SwiperSlide-" + readingType}>
                     <h1>
@@ -98,6 +114,10 @@ export default function SensorSwipeable() {
                       height={300}
                       readingType={readingType as ReadingType}
                       chartData={chartData}
+                      chartSeries={sensorNames.map((sensorName, index) => ({
+                        name: sensorName,
+                        color: colors[index % colors.length]!,
+                      }))}
                       sensorNames={sensorNames}
                     />
                     <Table
