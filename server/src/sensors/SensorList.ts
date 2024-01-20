@@ -39,6 +39,11 @@ class SensorList {
       const { id, name, model, address, lastReading, lastReadingTime, units } = this.#sensors[
         key
       ] as ISensorBase;
+      for (const readingType in lastReading) {
+        lastReading[readingType as ReadingType] = this.#formatReadingForDisplay(
+          lastReading[readingType as ReadingType],
+        );
+      }
       cleanObject[key] = {
         id,
         name,
@@ -136,13 +141,12 @@ class SensorList {
           const logTime = this.#formatDateForChart(logTimeAsDate);
           if (!chartObject[readingType as ReadingType][logTime]) {
             chartObject[readingType as ReadingType][logTime] = {
+              units:sensor.units[readingType as ReadingType],
               name: logTime,
             } as ChartData;
           }
           chartObject[readingType as ReadingType][logTime]![sensor.name] =
-            this.#formatReadingForChart(reading.data);
-          chartObject[readingType as ReadingType][logTime]!.units =
-            sensor.units[readingType as ReadingType];
+            this.#formatReadingForDisplay(reading.data);
         }
       }
     }
@@ -188,14 +192,13 @@ class SensorList {
         const formattedTime = this.#formatDateForChart(logTimeAsDate);
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {
-            name: formattedTime,
+            units: sensor.units[readingType as ReadingType],
+            name: formattedTime
           } as ChartData;
         }
-        lastReadingObject[readingType as ReadingType][sensor.name] = this.#formatReadingForChart(
+        lastReadingObject[readingType as ReadingType][sensor.name] = this.#formatReadingForDisplay(
           lastCacheReading.data,
         );
-        lastReadingObject[readingType as ReadingType].units =
-          sensor.units[readingType as ReadingType];
       }
     }
     if (!update) {
@@ -316,7 +319,7 @@ class SensorList {
     return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
   }
 
-  #formatReadingForChart(data: string): string {
+  #formatReadingForDisplay(data: string): string {
     return parseFloat(data).toFixed(3);
   }
 }
