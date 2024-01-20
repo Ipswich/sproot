@@ -159,38 +159,38 @@ describe("SensorList.ts tests", function () {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date("1/1/2000 12:00:00").toISOString(),
+        logTime: new Date("2024-01-01T00:00:00.000Z").toISOString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date("1/1/2000 12:00:00").toISOString(),
+        logTime: new Date("2024-01-01T00:00:00.000Z").toISOString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date("1/1/2000 12:00:00").toISOString(),
+        logTime: new Date("2024-01-01T00:00:00.000Z").toISOString(),
       } as SDBReading,
       //These should be ignored, as minutes % 5 != 0
       {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date("1/1/2000 12:01:00").toISOString(),
+        logTime: new Date("2024-01-01T00:01:00.000Z").toISOString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date("1/1/2000 12:01:00").toISOString(),
+        logTime: new Date("2024-01-01T00:01:00.000Z").toISOString(),
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date("1/1/2000 12:01:00").toISOString(),
+        logTime: new Date("2024-01-01T00:01:00.000Z").toISOString(),
       } as SDBReading,
     ]);
     sandbox.stub(winston, "createLogger").callsFake(
@@ -214,7 +214,7 @@ describe("SensorList.ts tests", function () {
       assert.equal(sensorList.chartData["humidity"].length, 1);
       assert.equal(sensorList.chartData["pressure"].length, 1);
 
-      sensorList.sensors["1"]!.lastReadingTime = new Date(new Date("1/1/2000 12:00:00").getTime());
+      sensorList.sensors["1"]!.lastReadingTime = new Date("2024-01-01T00:00:00.000Z");
       sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
       sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
       sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
@@ -227,7 +227,7 @@ describe("SensorList.ts tests", function () {
       assert.equal(sensorList.chartData["humidity"].length, 2);
       assert.equal(sensorList.chartData["pressure"].length, 2);
 
-      sensorList.sensors["1"]!.lastReadingTime = new Date(new Date("1/1/2000 12:00:00").getTime());
+      sensorList.sensors["1"]!.lastReadingTime = new Date("2024-01-01T00:00:00.000Z");
       sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
       sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
       sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
