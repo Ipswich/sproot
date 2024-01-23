@@ -141,7 +141,7 @@ class SensorList {
           const logTime = this.#formatDateForChart(logTimeAsDate);
           if (!chartObject[readingType as ReadingType][logTime]) {
             chartObject[readingType as ReadingType][logTime] = {
-              units:sensor.units[readingType as ReadingType],
+              units: sensor.units[readingType as ReadingType],
               name: logTime,
             } as ChartData;
           }
@@ -193,7 +193,7 @@ class SensorList {
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {
             units: sensor.units[readingType as ReadingType],
-            name: formattedTime
+            name: formattedTime,
           } as ChartData;
         }
         lastReadingObject[readingType as ReadingType][sensor.name] = this.#formatReadingForDisplay(

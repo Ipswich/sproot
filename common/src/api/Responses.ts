@@ -1,5 +1,5 @@
 import { SDBReading } from "../database/SDBReading";
-import { ISensorBase } from "../sensors/SensorBase";
+import { ISensorBase, ReadingType } from "../sensors/SensorBase";
 import { IOutputBase } from "../outputs/OutputBase";
 import { ChartData } from "./ChartData";
 
@@ -32,7 +32,7 @@ interface ApiReadingsResponse extends ApiResponse {
 }
 
 interface ApiChartDataResponse extends ApiResponse {
-  chartData: Record<string, Array<ChartData>>;
+  chartData: Record<ReadingType, Array<ChartData>>;
   moreReadingsAvailable?: boolean;
 }
 

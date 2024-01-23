@@ -220,11 +220,10 @@ describe("SensorList.ts tests", function () {
       assert.equal(sensorList.chartData["temperature"][0]?.units, "°C");
       assert.equal(sensorList.chartData["humidity"][0]?.units, "%rH");
       assert.equal(sensorList.chartData["pressure"][0]?.units, "hPa");
-      
+
       assert.equal(sensorList.chartData["temperature"][0]!["test sensor 1"], "1.101");
       assert.equal(sensorList.chartData["humidity"][0]!["test sensor 1"], "1.101");
       assert.equal(sensorList.chartData["pressure"][0]!["test sensor 1"], "1.101");
-      
 
       sensorList.sensors["1"]!.lastReadingTime = new Date("2024-01-01T00:00:00.000Z");
       sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";

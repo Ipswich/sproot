@@ -1,11 +1,11 @@
 import {
   ApiChartDataResponse,
   ApiOutputsResponse,
-  ApiReadingsResponse,
+  // ApiReadingsResponse,
   ApiResponse,
   ApiSensorResponse,
   ApiSensorsResponse,
-} from "@sproot/src/api/Responses";
+} from "@sproot/sproot-common/src/api/Responses";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -47,7 +47,7 @@ export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
 
 export async function getChartDataAsync(
   readingType: string | undefined = undefined,
-  latest: string | undefined = undefined,
+  latest: boolean | undefined = undefined,
 ): Promise<ApiChartDataResponse> {
   let queryString = `${SERVER_URL}/api/v1/sensors/chart-data`;
   const params = [];
@@ -75,18 +75,6 @@ export async function getChartDataAsync(
 
 export async function getSensorById(id: number): Promise<ApiSensorResponse> {
   const response = await fetch(`${SERVER_URL}/api/v1/sensors/${id}`, {
-    method: "GET",
-  });
-  if (!response.ok) {
-    console.error(`Error fetching sensor data: ${response}`);
-  }
-  return await response.json();
-}
-
-export async function getReadingsBySensorIdAsync(
-  id: number,
-): Promise<ApiReadingsResponse> {
-  const response = await fetch(`${SERVER_URL}/api/v1/sensors/${id}/readings`, {
     method: "GET",
   });
   if (!response.ok) {

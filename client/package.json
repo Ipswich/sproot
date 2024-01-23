@@ -30,13 +30,14 @@
     "vite": "^4.4.5"
   },
   "dependencies": {
-    "@mantine/charts": "^7.4.0",
-    "@mantine/core": "^7.4.0",
-    "@mantine/hooks": "^7.4.0",
+    "@mantine/carousel": "^7.4.2",
+    "@mantine/charts": "^7.4.2",
+    "@mantine/core": "^7.4.2",
+    "@mantine/hooks": "^7.4.2",
+    "@tabler/icons-react": "^2.46.0",
+    "embla-carousel-react": "^7.1.0",
     "mysql2": "^3.7.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "recharts": "^2.10.3",
-    "swiper": "^11.0.5"
+    "react-dom": "^18.2.0"
   }
 }
