@@ -13,8 +13,6 @@ import ColorToggle from "./ColorToggle";
 
 function App() {
   const [opened, { toggle }] = useDisclosure();
-  //create a state for theme to a new mantinecolorscheme of light
-
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
 
   useEffect(() => {

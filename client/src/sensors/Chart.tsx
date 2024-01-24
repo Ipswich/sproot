@@ -3,11 +3,8 @@ import { LineChart } from "@mantine/charts";
 import { Paper, Text, Tooltip } from "@mantine/core";
 
 interface ChartProps {
-  width: number;
-  height: number;
   lookback: LookbackData;
   chartSeries: { name: string; color: string }[];
-  sensorNames: string[];
 }
 
 export default function Chart({ lookback, chartSeries }: ChartProps) {

@@ -78,14 +78,11 @@ export default function SensorCarouselSlideContents({
         </Center>
       </Flex>
       <Chart
-        width={window.innerWidth}
-        height={300}
         lookback={lookback!}
         chartSeries={sensorNames.map((sensorName, index) => ({
           name: sensorName,
           color: colors[index % colors.length]!,
         }))}
-        sensorNames={sensorNames}
       />
       <SensorTable
         readingType={readingType as ReadingType}

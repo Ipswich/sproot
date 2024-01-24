@@ -6,12 +6,15 @@ interface ChartData {
   [key: string]: number | string;
 }
 
-interface LookbackData {
+interface LookbackData extends StatsResult {
   label: string;
-  chartData: ChartData[];
+}
+
+interface StatsResult {
   average: string;
-  max: string;
   min: string;
+  max: string;
+  chartData: ChartData[];
 }
 
 interface ChartDataSubsection {
@@ -120,64 +123,154 @@ class Utils {
     chartData: ChartData[],
     filters: string[],
   ): ChartDataSubsection {
-    const allLookback = Utils.filterChartData(chartData, filters || []);
-    const allStats = Utils.getStatisticsFromChartData(allLookback);
-
-    const sixHourLookback = allLookback.slice(-72);
-    const sixHourStats = Utils.getStatisticsFromChartData(sixHourLookback);
-
-    const twelveHourLookback = allLookback.slice(-144);
-    const twelveHourStats = Utils.getStatisticsFromChartData(twelveHourLookback);
-
-    const twentyFourHourLookback = allLookback.slice(-288);
-    const twentyFourHourStats = Utils.getStatisticsFromChartData(twentyFourHourLookback);
-
-    const seventyTwoHourLookback = allLookback.slice(-864);
-    const seventyTwoHourStats = Utils.getStatisticsFromChartData(seventyTwoHourLookback);
+    const LookbackIntervals = [72, 144, 288, 864];
+    const filteredChartData = Utils.filterChartData(chartData, filters || []);
+    console.time("getStatisticsAndDataFromAllChartData");
+    const statsData = Utils.getStatisticsAndDataFromAllChartData(
+      filteredChartData,
+      LookbackIntervals,
+    );
+    console.timeEnd("getStatisticsAndDataFromAllChartData");
+    const allData = statsData[-1] ?? { average: "N/A", min: "N/A", max: "N/A", chartData: [] };
+    const sixHourData = statsData[72] ?? allData;
+    const twelveHourData = statsData[144] ?? allData;
+    const twentyFourHourData = statsData[288] ?? allData;
+    const seventyTwoHourData = statsData[864] ?? allData;
 
     return {
       filters,
       lookbacks: {
         all: {
           label: "All",
-          chartData: allLookback,
-          average: allStats.average,
-          min: allStats.min,
-          max: allStats.max,
+          chartData: allData.chartData,
+          average: allData.average,
+          min: allData.min,
+          max: allData.max,
         },
         sixHours: {
           label: "Six Hours",
-          chartData: sixHourLookback,
-          average: sixHourStats.average,
-          min: sixHourStats.min,
-          max: sixHourStats.max,
+          chartData: sixHourData.chartData,
+          average: sixHourData.average,
+          min: sixHourData.min,
+          max: sixHourData.max,
         },
         twelveHours: {
           label: "Twelve Hours",
-          chartData: twelveHourLookback,
-          average: twelveHourStats.average,
-          min: twelveHourStats.min,
-          max: twelveHourStats.max,
+          chartData: twelveHourData.chartData,
+          average: twelveHourData.average,
+          min: twelveHourData.min,
+          max: twelveHourData.max,
         },
         twentyFourHours: {
           label: "24 Hours",
-          chartData: twentyFourHourLookback,
-          average: twentyFourHourStats.average,
-          min: twentyFourHourStats.min,
-          max: twentyFourHourStats.max,
+          chartData: twentyFourHourData.chartData,
+          average: twentyFourHourData.average,
+          min: twentyFourHourData.min,
+          max: twentyFourHourData.max,
         },
         seventyTwoHours: {
           label: "72 Hours",
-          chartData: seventyTwoHourLookback,
-          average: seventyTwoHourStats.average,
-          min: seventyTwoHourStats.min,
-          max: seventyTwoHourStats.max,
+          chartData: seventyTwoHourData.chartData,
+          average: seventyTwoHourData.average,
+          min: seventyTwoHourData.min,
+          max: seventyTwoHourData.max,
         },
       },
     };
   }
 
   static getStatisticsFromChartData(chartData: ChartData[]): {
+    average: string;
+    min: string;
+    max: string;
+  } {
+    let sumTotal = 0;
+    let readingCount = 0;
+    let min,
+      max = undefined;
+    for (const datum of chartData) {
+      for (const property in datum) {
+        // Filter out explicit properties
+        if (property === "name" || property === "units") {
+          continue;
+        }
+
+        const value = Number(datum[property]);
+        if (isNaN(value)) {
+          continue;
+        }
+        if (min === undefined || value < min) {
+          min = value;
+        }
+        if (max === undefined || value > max) {
+          max = value;
+        }
+
+        sumTotal += Number(value);
+        readingCount++;
+      }
+    }
+    return {
+      average: (sumTotal / readingCount).toFixed(2),
+      min: min?.toFixed(2) || "N/A",
+      max: max?.toFixed(2) || "N/A",
+    };
+  }
+
+  static getStatisticsAndDataFromAllChartData(
+    chartData: ChartData[],
+    intervals: number[],
+  ): Record<number, StatsResult> {
+    let sumTotal = 0;
+    let chartDataCount = 0;
+    let readingCount = 0;
+    let min,
+      max = undefined;
+    const results: Record<number, StatsResult> = {};
+    const reversedData = chartData.slice().reverse();
+
+    for (const datum of reversedData) {
+      for (const property in datum) {
+        // Filter out explicit properties
+        if (property === "name" || property === "units") {
+          continue;
+        }
+
+        const value = Number(datum[property]);
+        if (isNaN(value)) {
+          continue;
+        }
+        if (min === undefined || value < min) {
+          min = value;
+        }
+        if (max === undefined || value > max) {
+          max = value;
+        }
+
+        sumTotal += Number(value);
+        readingCount++;
+      }
+      chartDataCount++;
+      if (intervals.includes(chartDataCount)) {
+        results[chartDataCount] = {
+          chartData: reversedData.slice(0, chartDataCount).reverse(),
+          average: (sumTotal / readingCount).toFixed(2),
+          min: min?.toFixed(2) || "N/A",
+          max: max?.toFixed(2) || "N/A",
+        };
+      }
+    }
+    results[-1] = {
+      chartData: reversedData.slice(0, chartDataCount).reverse(),
+      average: (sumTotal / readingCount).toFixed(2),
+      min: min?.toFixed(2) || "N/A",
+      max: max?.toFixed(2) || "N/A",
+    };
+
+    return results;
+  }
+
+  static getAllStatisticsFromChartData(chartData: ChartData[]): {
     average: string;
     min: string;
     max: string;

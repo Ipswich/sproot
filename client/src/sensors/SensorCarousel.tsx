@@ -77,18 +77,15 @@ export default function SensorCarousel() {
     return;
   };
 
-  // const refreshFilterAndStats = (readingType: ReadingType) => {
-  //   const filters = {} as Record<ReadingType, string[]>;
-  //   const result = localChartDataRecord.chartData;
-  //   filters[readingType] = localChartDataRecord.chartSubData[readingType].filters;
-  //   localChartDataRecord = new ChartDataRecord(result, filters, parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string));
-  //   setChartData(localChartDataRecord);
-  //   return;
-  // }
-
   return (
     <>
-      <Carousel loop height="100%" style={{ flex: 1 }} slideGap={20}>
+      <Carousel
+        loop
+        height="100%"
+        style={{ flex: 1 }}
+        slideGap={20}
+        controlsOffset="xs"
+      >
         {chartDataRecord.chartData
           ? Object.keys(chartDataRecord.chartData)
               .sort()
