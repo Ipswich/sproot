@@ -125,12 +125,10 @@ class Utils {
   ): ChartDataSubsection {
     const LookbackIntervals = [72, 144, 288, 864];
     const filteredChartData = Utils.filterChartData(chartData, filters || []);
-    console.time("getStatisticsAndDataFromAllChartData");
     const statsData = Utils.getStatisticsAndDataFromAllChartData(
       filteredChartData,
       LookbackIntervals,
     );
-    console.timeEnd("getStatisticsAndDataFromAllChartData");
     const allData = statsData[-1] ?? { average: "N/A", min: "N/A", max: "N/A", chartData: [] };
     const sixHourData = statsData[72] ?? allData;
     const twelveHourData = statsData[144] ?? allData;

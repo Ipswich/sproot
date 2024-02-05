@@ -11,6 +11,7 @@ import {
 } from "@sproot/sproot-common/src/api/ChartData";
 import { getSensorsAsync, getChartDataAsync } from "../requests";
 import SensorCarouselSlideContents from "./SensorCarouselSlideContents";
+import { Box, LoadingOverlay } from "@mantine/core";
 
 export default function SensorCarousel() {
   const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
@@ -79,15 +80,22 @@ export default function SensorCarousel() {
 
   return (
     <>
-      <Carousel
-        loop
-        height="100%"
-        style={{ flex: 1 }}
-        slideGap={20}
-        controlsOffset="xs"
-      >
-        {chartDataRecord.chartData
-          ? Object.keys(chartDataRecord.chartData)
+      <Box pos="relative">
+        <LoadingOverlay
+          style={{ height: "100%" }}
+          visible={chartDataRecord.chartData === undefined}
+          zIndex={1000}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
+        <Carousel
+          loop
+          height="100%"
+          style={{ flex: 1 }}
+          slideGap={20}
+          controlsOffset="xs"
+        >
+          {chartDataRecord.chartData ? (
+            Object.keys(chartDataRecord.chartData)
               .sort()
               .map((readingType) => {
                 if (
@@ -121,8 +129,11 @@ export default function SensorCarousel() {
                   </Carousel.Slide>
                 );
               })
-          : "No Chart Data"}
-      </Carousel>
+          ) : (
+            <div style={{ minHeight: "450px" }}></div>
+          )}
+        </Carousel>
+      </Box>
     </>
   );
 }

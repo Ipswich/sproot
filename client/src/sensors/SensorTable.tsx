@@ -4,6 +4,7 @@ import {
   ReadingType,
   ISensorBase,
 } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { useTransition } from "react";
 
 interface SensorTableProps {
   readingType: ReadingType;
@@ -20,6 +21,9 @@ export default function SensorTable({
   toggleState,
   setToggleState,
 }: SensorTableProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, startTransition] = useTransition();
+
   const relevantSensors = Object.values(sensors).filter((sensor) =>
     Object.keys(sensor.lastReading).includes(readingType),
   );
@@ -55,12 +59,14 @@ export default function SensorTable({
                       ?.color ?? "bbb"
                   }
                   onChange={() => {
-                    if (toggleState.includes(sensor.name)) {
-                      toggleState.splice(toggleState.indexOf(sensor.name), 1);
-                    } else {
-                      toggleState.push(sensor.name);
-                    }
-                    setToggleState([...toggleState]);
+                    startTransition(() => {
+                      if (toggleState.includes(sensor.name)) {
+                        toggleState.splice(toggleState.indexOf(sensor.name), 1);
+                      } else {
+                        toggleState.push(sensor.name);
+                      }
+                      setToggleState([...toggleState]);
+                    });
                   }}
                 />
               </Flex>

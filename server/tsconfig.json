@@ -4,12 +4,12 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@sproot/*": ["../common/*", "../server/*", "../client/*"],
-    },
+      "@sproot/*": ["../common/*", "../server/*", "../client/*"]
+    }
   },
   "references": [
     {
-      "path": "../common",
-    },
-  ],
+      "path": "../common"
+    }
+  ]
 }
