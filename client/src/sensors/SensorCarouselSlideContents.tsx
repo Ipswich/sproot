@@ -36,6 +36,7 @@ export default function SensorCarouselSlideContents({
   sensorNames,
   sensors,
 }: SensorCarouselSlideProps) {
+  const [chartRendering, setChartRendering] = useState(true);
   const [toggleState, setToggleState] = useState([] as string[]);
   const [chartSubData, setChartSubData] = useState(
     Utils.generateChartDataSubsection(chartData, []),
@@ -67,24 +68,29 @@ export default function SensorCarouselSlideContents({
               data={Object.values(lookbackValues).map(
                 (lookback) => lookback.label,
               )}
+              allowDeselect={false}
               defaultValue={lookback!.label}
               onChange={(value) => {
+                if (!value || value == currentLookBack) {
+                  return;
+                }
+                setChartRendering(true);
                 startTransition(() => {
-                  if (!value) {
-                    return;
-                  }
                   setCurrentLookback(value);
                   setLookback(
                     lookbackValues.find(
                       (lookback) => lookback.label == value,
                     ) ?? lookbackValues[0],
                   );
+                  setChartRendering(false);
                 });
               }}
             />
           </Center>
         </Flex>
         <Chart
+          chartRendering={chartRendering}
+          setChartRendering={setChartRendering}
           lookback={lookback!}
           chartSeries={sensorNames.map((sensorName, index) => ({
             name: sensorName,

@@ -1,20 +1,27 @@
 import { LookbackData } from "@sproot/sproot-common/src/api/ChartData";
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay } from "@mantine/core";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Paper, Text } from "@mantine/core";
 
 interface ChartProps {
   lookback: LookbackData;
   chartSeries: { name: string; color: string }[];
+  chartRendering: boolean;
+  setChartRendering: (value: boolean) => void;
 }
 
-export default function Chart({ lookback, chartSeries }: ChartProps) {
-  const visible = useRef(true);
-
+export default function Chart({
+  lookback,
+  chartSeries,
+  chartRendering,
+  setChartRendering,
+}: ChartProps) {
   useEffect(() => {
-    visible.current = false;
-  });
+    setChartRendering(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (!lookback) {
     return null;
   }
@@ -23,7 +30,7 @@ export default function Chart({ lookback, chartSeries }: ChartProps) {
     <Box pos="relative">
       <LoadingOverlay
         style={{ height: "100%" }}
-        visible={visible.current}
+        visible={chartRendering}
         zIndex={1000}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
