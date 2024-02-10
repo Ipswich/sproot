@@ -49,9 +49,9 @@ class ChartDataRecord {
         filters: filters[readingType as ReadingType] || [],
         lookbacks: {
           all: { label: "All", chartData: [], average: "N/A", min: "N/A", max: "N/A" },
-          sixHours: { label: "Six Hours", chartData: [], average: "N/A", min: "N/A", max: "N/A" },
+          sixHours: { label: "6 Hours", chartData: [], average: "N/A", min: "N/A", max: "N/A" },
           twelveHours: {
-            label: "Twelve Hours",
+            label: "12 Hours",
             chartData: [],
             average: "N/A",
             min: "N/A",
@@ -146,14 +146,14 @@ class Utils {
           max: allData.max,
         },
         sixHours: {
-          label: "Six Hours",
+          label: "6 Hours",
           chartData: sixHourData.chartData,
           average: sixHourData.average,
           min: sixHourData.min,
           max: sixHourData.max,
         },
         twelveHours: {
-          label: "Twelve Hours",
+          label: "12 Hours",
           chartData: twelveHourData.chartData,
           average: twelveHourData.average,
           min: twelveHourData.min,
