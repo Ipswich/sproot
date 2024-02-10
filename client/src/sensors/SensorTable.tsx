@@ -37,7 +37,7 @@ export default function SensorTable({
     >
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>
+          <Table.Th style={{display: "flex", paddingLeft: 10}}>
             <IconEyeOff />
           </Table.Th>
           <Table.Th>Sensor</Table.Th>
