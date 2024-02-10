@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import winston from "winston";
 
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 
@@ -59,57 +58,6 @@ class DS18B20 extends SensorBase {
   override disposeAsync(): Promise<void> {
     this.internalDispose();
     return Promise.resolve();
-  }
-
-  protected override updateCachedReadings(): void {
-    try {
-      this.cachedReadings[ReadingType.temperature].push({
-        metric: ReadingType.temperature,
-        data: this.lastReading[ReadingType.temperature],
-        units: this.units[ReadingType.temperature],
-        logTime: new Date().toUTCString(),
-      } as SDBReading);
-      while (
-        this.cachedReadings[ReadingType.temperature].length >
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
-      ) {
-        this.cachedReadings[ReadingType.temperature].shift();
-      }
-      this.logger.info(
-        `Updated cached readings for {DS18B20, id: ${this.id}}. Cache Size - temperature: ${
-          this.cachedReadings[ReadingType.temperature].length
-        }`,
-      );
-    } catch (err) {
-      this.logger.error(`Failed to update cached readings for {DS18B20, id: ${this.id}}. ${err}`);
-    }
-  }
-
-  protected override async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
-    this.cachedReadings[ReadingType.temperature] = [];
-    try {
-      //Fill cached readings with readings from database
-      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(this, new Date(), minutes);
-      for (const sdbReading of sdbReadings) {
-        const newReading = {
-          metric: sdbReading.metric as ReadingType,
-          data: sdbReading.data,
-          units: sdbReading.units,
-          logTime: sdbReading.logTime,
-        } as SDBReading;
-        this.cachedReadings[sdbReading.metric as ReadingType]?.push(newReading);
-      }
-
-      this.logger.info(
-        `Loaded cached readings for {DS18B20, id: ${this.id}}. Cache Size - temperature: ${
-          this.cachedReadings[ReadingType.temperature].length
-        }`,
-      );
-    } catch (err) {
-      this.logger.error(
-        `Failed to load cached readings for sensor {DS18B20, id: ${this.id}}. ${err}}`,
-      );
-    }
   }
 
   static async getAddressesAsync(): Promise<string[]> {

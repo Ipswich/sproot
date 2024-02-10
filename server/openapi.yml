@@ -541,6 +541,11 @@ paths:
           schema:
             type: integer
           description: Number of readings to grab.
+        - in: query
+          name: latest
+          schema:
+            type: boolean
+          description: If true, only the latest reading(s) will be returned. Overrides offset and limit.
       responses:
         "200":
           description: OK
@@ -1245,7 +1250,10 @@ components:
       properties:
         name:
           type: string
-          example: "2023-01-01 12:00:00"
+          example: "1/20 12:00 pm"
+        units:
+          type: string
+          example: "°C"
         sensor1:
           type: number
           example: 25.0

@@ -6,21 +6,26 @@ import "@mantine/core/styles.css";
 import "./App.css";
 import OutputCard from "./OutputCard";
 
-import { ApiOutputsResponse } from "@sproot/sproot-common/dist/api/Responses";
-
-import SensorSwipeable from "./sensors/Swipeable";
+import SensorCarousel from "./sensors/SensorCarousel";
 import { getOutputsAsync } from "./requests";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/OutputBase";
+import ColorToggle from "./ColorToggle";
 
 function App() {
   const [opened, { toggle }] = useDisclosure();
-  const [outputs, setOutputs] = useState({} as ApiOutputsResponse);
+  const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
 
   useEffect(() => {
     updateOutputsAsync();
+    const interval = setInterval(async () => {
+      updateOutputsAsync();
+    }, 300000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const updateOutputsAsync = async () => {
-    setOutputs(await getOutputsAsync());
+    setOutputs((await getOutputsAsync()).outputs);
   };
 
   return (
@@ -36,20 +41,23 @@ function App() {
       >
         <AppShell.Header style={{ paddingLeft: "14px", paddingTop: "12px" }}>
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+          <ColorToggle />
         </AppShell.Header>
 
-        <AppShell.Navbar p="md">Navbar</AppShell.Navbar>
+        <AppShell.Navbar style={{ width: "200px", opacity: "84%" }} p="md">
+          Sproot
+        </AppShell.Navbar>
 
         <AppShell.Main>
           <>
             <div>
-              <SensorSwipeable />
+              <SensorCarousel />
               <br></br>
-              {outputs.outputs
-                ? Object.keys(outputs.outputs).map((key) => (
+              {outputs
+                ? Object.keys(outputs).map((key) => (
                     <OutputCard
-                      key={"OutputCard-" + outputs.outputs[key]?.id}
-                      output={outputs.outputs[key]!}
+                      key={"OutputCard-" + outputs[key]?.id}
+                      output={outputs[key]!}
                       updateOutputsAsync={updateOutputsAsync}
                     />
                   ))

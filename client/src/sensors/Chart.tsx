@@ -1,55 +1,112 @@
-import { ChartData } from "@sproot/src/api/ChartData";
-import { ReadingType } from "@sproot/src/sensors/SensorBase";
-import {
-  LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  Line,
-  ResponsiveContainer,
-} from "recharts";
+import { LookbackData } from "@sproot/sproot-common/src/api/ChartData";
+import { LineChart } from "@mantine/charts";
+import { Box, LoadingOverlay } from "@mantine/core";
+import { useEffect } from "react";
+import { Paper, Text } from "@mantine/core";
 
 interface ChartProps {
-  width: number;
-  height: number;
-  readingType: ReadingType;
-  chartData: Record<ReadingType, ChartData[]>;
-  sensorNames: string[];
+  lookback: LookbackData;
+  chartSeries: { name: string; color: string }[];
+  chartRendering: boolean;
+  setChartRendering: (value: boolean) => void;
 }
 
 export default function Chart({
-  readingType,
-  chartData,
-  sensorNames,
+  lookback,
+  chartSeries,
+  chartRendering,
+  setChartRendering,
 }: ChartProps) {
+  useEffect(() => {
+    setChartRendering(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!lookback) {
+    return null;
+  }
+  const unit = lookback.chartData[0]?.units ?? "";
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <Box pos="relative">
+      <LoadingOverlay
+        style={{ height: "100%" }}
+        visible={chartRendering}
+        zIndex={1000}
+        loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+      />
       <LineChart
-        data={chartData[readingType as ReadingType]!}
-        margin={{
-          top: 5,
-          right: 50,
-          left: 20,
-          bottom: 5,
+        tooltipProps={{
+          position: {},
+          content: ({ label, payload }) => (
+            <ChartTooltip
+              label={label}
+              payload={
+                (payload || []) as Record<
+                  string,
+                  { name: string; color: string; value: string }
+                >[]
+              }
+            />
+          ),
         }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis domain={["auto", "auto"]} />
-        <Tooltip />
-        <Legend />
-        {sensorNames.map((sensorName) => (
-          <Line
-            key={sensorName}
-            type="monotone"
-            dataKey={sensorName}
-            stroke="#8884d8"
-            dot={false}
-          />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+        h={300}
+        data={lookback.chartData.map((data) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { units: _, ...rest } = data;
+          return rest;
+        })}
+        // unit={unit}
+        dataKey="sensorName"
+        series={chartSeries}
+        dotProps={{ r: 0 }}
+        withLegend={false}
+        withTooltip={true}
+        withXAxis
+        withYAxis
+        xAxisProps={{ dataKey: "name" }}
+        yAxisProps={{ domain: ["auto", "auto"] }}
+        referenceLines={[
+          {
+            y: lookback.average,
+            label: `Average: ${lookback.average}${unit}`,
+            color: "red",
+          },
+          {
+            y: lookback.min,
+            label: `Min: ${lookback.min}${unit}`,
+            color: "blue",
+          },
+          {
+            y: lookback.max,
+            label: `Max: ${lookback.max}${unit}`,
+            color: "green",
+          },
+        ]}
+        style={{ marginTop: 5, marginBottom: 5 }}
+      />
+    </Box>
+  );
+}
+
+interface ChartTooltipProps {
+  label: string;
+  payload:
+    | Record<string, { name: string; color: string; value: string }>[]
+    | undefined;
+}
+function ChartTooltip({ label, payload }: ChartTooltipProps) {
+  if (!payload) return null;
+
+  return (
+    <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
+      <Text fw={500} mb={5}>
+        {label}
+      </Text>
+      {payload.map((item) => (
+        <Text key={String(item["name"])} c={item["color"]!} fz="sm">
+          {String(item["name"])}: {String(item["value"])}
+        </Text>
+      ))}
+    </Paper>
   );
 }

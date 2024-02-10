@@ -13,11 +13,9 @@ const mockSprootDB = new MockSprootDB();
 const MAX_SENSOR_READING_CACHE_SIZE = process.env["MAX_SENSOR_READING_CACHE_SIZE"];
 
 describe("BME280.ts tests", function () {
-  console.log(process.env["MAX_SENSOR_READING_CACHE_SIZE"]);
   afterEach(() => {
     process.env["MAX_SENSOR_READING_CACHE_SIZE"] = MAX_SENSOR_READING_CACHE_SIZE;
     sandbox.restore();
-    console.log(process.env["MAX_SENSOR_READING_CACHE_SIZE"]);
   });
 
   it("should initialize a BME280 sensor", async () => {
@@ -113,7 +111,7 @@ describe("BME280.ts tests", function () {
         data: "2",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
       {
         data: "1",
@@ -125,7 +123,7 @@ describe("BME280.ts tests", function () {
         data: "2",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
       {
         data: "1",
@@ -137,7 +135,7 @@ describe("BME280.ts tests", function () {
         data: "2",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
     ]);
     sandbox.stub(winston, "createLogger").callsFake(
@@ -190,6 +188,7 @@ describe("BME280.ts tests", function () {
       humidity: String(mockReading.humidity),
       pressure: String(mockReading.pressure),
     };
+    bme280Sensor.lastReadingTime = new Date("2000-01-01T00:00:00.000Z");
 
     bme280Sensor.addLastReadingToDatabaseAsync();
 

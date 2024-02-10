@@ -109,7 +109,7 @@ describe("DS18B20.ts tests", function () {
         data: "2",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date(new Date().getMilliseconds() - 60000).toISOString(),
+        logTime: new Date(new Date().getTime() - 60000).toISOString(),
       } as SDBReading,
     ]);
 
@@ -155,6 +155,7 @@ describe("DS18B20.ts tests", function () {
     const logger = winston.createLogger();
     const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, logger);
     ds18b20Sensor.lastReading[ReadingType.temperature] = String(mockReading.temperature);
+    ds18b20Sensor.lastReadingTime = new Date("2000-01-01T00:00:00.000Z");
 
     ds18b20Sensor.addLastReadingToDatabaseAsync();
 

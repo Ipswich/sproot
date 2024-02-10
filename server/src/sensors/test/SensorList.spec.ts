@@ -17,10 +17,12 @@ import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 const MAX_SENSOR_READING_CACHE_SIZE = process.env["MAX_SENSOR_READING_CACHE_SIZE"];
+const MAX_CHART_DATA_POINTS = process.env["MAX_CHART_DATA_POINTS"];
 
 describe("SensorList.ts tests", function () {
   afterEach(() => {
     process.env["MAX_SENSOR_READING_CACHE_SIZE"] = MAX_SENSOR_READING_CACHE_SIZE;
+    process.env["MAX_CHART_DATA_POINTS"] = MAX_CHART_DATA_POINTS;
     sandbox.restore();
   });
 
@@ -64,31 +66,33 @@ describe("SensorList.ts tests", function () {
     const addSensorSpy = sandbox.spy(mockSprootDB, "addSensorAsync");
 
     const sensorList = new SensorList(mockSprootDB, logger);
-    await sensorList.initializeOrRegenerateAsync();
+    try {
+      await sensorList.initializeOrRegenerateAsync();
 
-    assert.equal(addSensorSpy.callCount, 1);
-    assert.equal(Object.keys(sensorList.sensors).length, 3);
+      assert.equal(addSensorSpy.callCount, 1);
+      assert.equal(Object.keys(sensorList.sensors).length, 3);
 
-    getSensorsAsyncStub.resolves([
-      {
-        id: 2,
-        name: "2 rosnes tset",
-        model: "DS18B20",
-        address: "28-00000",
-      } as SDBSensor,
-      {
-        id: 3,
-        name: "test sensor 3",
-        model: "DS18B20",
-        address: "28-00001",
-      } as SDBSensor,
-    ]);
-    await sensorList.initializeOrRegenerateAsync();
-    assert.equal(Object.keys(sensorList.sensors).length, 2);
-    assert.equal(sensorList.sensors["2"]!.name, "2 rosnes tset");
-
-    //Cleanup
-    await sensorList.disposeAsync();
+      getSensorsAsyncStub.resolves([
+        {
+          id: 2,
+          name: "2 rosnes tset",
+          model: "DS18B20",
+          address: "28-00000",
+        } as SDBSensor,
+        {
+          id: 3,
+          name: "test sensor 3",
+          model: "DS18B20",
+          address: "28-00001",
+        } as SDBSensor,
+      ]);
+      await sensorList.initializeOrRegenerateAsync();
+      assert.equal(Object.keys(sensorList.sensors).length, 2);
+      assert.equal(sensorList.sensors["2"]!.name, "2 rosnes tset");
+    } finally {
+      //Cleanup
+      await sensorList.disposeAsync();
+    }
   });
 
   it("should return sensor data (no functions included in result)", async function () {
@@ -125,23 +129,25 @@ describe("SensorList.ts tests", function () {
       .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
 
     const sensorList = new SensorList(mockSprootDB, logger);
-    await sensorList.initializeOrRegenerateAsync();
-    const sensorData = sensorList.sensorData;
+    try {
+      await sensorList.initializeOrRegenerateAsync();
+      const sensorData = sensorList.sensorData;
 
-    assert.equal(sensorData["1"]!["name"], "test sensor 1");
-    assert.equal(sensorData["1"]!["model"], "BME280");
-    assert.equal(sensorData["1"]!["address"], "0x76");
-    assert.equal(sensorData["2"]!["name"], "test sensor 2");
-    assert.equal(sensorData["2"]!["model"], "DS18B20");
-    assert.equal(sensorData["2"]!["address"], "28-00000");
-    assert.exists(sensorList.sensors["1"]!["sprootDB"]);
-
-    //Cleanup
-    await sensorList.disposeAsync();
+      assert.equal(sensorData["1"]!["name"], "test sensor 1");
+      assert.equal(sensorData["1"]!["model"], "BME280");
+      assert.equal(sensorData["1"]!["address"], "0x76");
+      assert.equal(sensorData["2"]!["name"], "test sensor 2");
+      assert.equal(sensorData["2"]!["model"], "DS18B20");
+      assert.equal(sensorData["2"]!["address"], "28-00000");
+      assert.exists(sensorList.sensors["1"]!["sprootDB"]);
+    } finally {
+      //Cleanup
+      await sensorList.disposeAsync();
+    }
   });
 
   it("should load and maintain chart data", async function () {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
+    process.env["MAX_CHART_DATA_POINTS"] = "2";
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
@@ -153,19 +159,38 @@ describe("SensorList.ts tests", function () {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: new Date().toISOString(),
+        logTime: "2024-01-01T00:00:00.000",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: new Date().toISOString(),
+        logTime: "2024-01-01T00:00:00.000",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: new Date().toISOString(),
+        logTime: "2024-01-01T00:00:00.000",
+      } as SDBReading,
+      //These should be ignored, as minutes % 5 != 0
+      {
+        data: "1.101010",
+        metric: ReadingType.temperature,
+        units: "°C",
+        logTime: "2024-01-01T00:01:00.000",
+      } as SDBReading,
+      {
+        data: "1.101010",
+        metric: ReadingType.humidity,
+        units: "%rH",
+        logTime: "2024-01-01T00:01:00.000",
+      } as SDBReading,
+      {
+        data: "1.101010",
+        metric: ReadingType.pressure,
+        units: "hPa",
+        logTime: "2024-01-01T00:01:00.000",
       } as SDBReading,
     ]);
     sandbox.stub(winston, "createLogger").callsFake(
@@ -177,41 +202,56 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([mockBME280Data]);
+    sandbox.stub(MockSprootDB.prototype, "addSensorReadingAsync").resolves();
     sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
     const sensorList = new SensorList(mockSprootDB, winston.createLogger());
+    try {
+      //Method is called in this function, and we need something to update in the next step
+      //loadChartDataFromCachedReadings
+      await sensorList.initializeOrRegenerateAsync();
 
-    //Method is called in this function, and we need something to update in the next step
-    //loadChartDataFromCachedReadings
-    await sensorList.initializeOrRegenerateAsync();
+      assert.equal(sensorList.chartData["temperature"].length, 1);
+      assert.equal(sensorList.chartData["humidity"].length, 1);
+      assert.equal(sensorList.chartData["pressure"].length, 1);
 
-    assert.equal(sensorList.chartData["temperature"].length, 1);
-    assert.equal(sensorList.chartData["humidity"].length, 1);
-    assert.equal(sensorList.chartData["pressure"].length, 1);
+      assert.equal(sensorList.chartData["temperature"][0]?.name, "1/1 12:00 AM");
+      assert.equal(sensorList.chartData["humidity"][0]?.name, "1/1 12:00 AM");
+      assert.equal(sensorList.chartData["pressure"][0]?.name, "1/1 12:00 AM");
+      assert.equal(sensorList.chartData["temperature"][0]?.units, "°C");
+      assert.equal(sensorList.chartData["humidity"][0]?.units, "%rH");
+      assert.equal(sensorList.chartData["pressure"][0]?.units, "hPa");
 
-    sensorList.sensors["1"]!.lastReadingTime = new Date(new Date().getMilliseconds());
-    sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
-    sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
-    sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
+      assert.equal(sensorList.chartData["temperature"][0]!["test sensor 1"], "1.101");
+      assert.equal(sensorList.chartData["humidity"][0]!["test sensor 1"], "1.101");
+      assert.equal(sensorList.chartData["pressure"][0]!["test sensor 1"], "1.101");
 
-    // Should add values
-    sensorList.updateChartDataFromLastReading();
+      sensorList.sensors["1"]!.lastReadingTime = new Date("2024-01-01T00:00:00.000Z");
+      sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
+      sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
+      sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
 
-    assert.equal(sensorList.chartData["temperature"].length, 2);
-    assert.equal(sensorList.chartData["humidity"].length, 2);
-    assert.equal(sensorList.chartData["pressure"].length, 2);
+      // Should add values
+      sensorList.sensors["1"]!.addLastReadingToDatabaseAsync();
+      sensorList.updateChartDataFromLastCacheReading();
 
-    sensorList.sensors["1"]!.lastReadingTime = new Date(new Date().getMilliseconds() + 60000);
-    sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
-    sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
-    sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
-    sensorList.updateChartDataFromLastReading();
+      assert.equal(sensorList.chartData["temperature"].length, 2);
+      assert.equal(sensorList.chartData["humidity"].length, 2);
+      assert.equal(sensorList.chartData["pressure"].length, 2);
 
-    // Should not have changed because ENV limit
-    assert.equal(sensorList.chartData["temperature"].length, 2);
-    assert.equal(sensorList.chartData["humidity"].length, 2);
-    assert.equal(sensorList.chartData["pressure"].length, 2);
+      sensorList.sensors["1"]!.lastReadingTime = new Date("2024-01-01T00:00:00.000Z");
+      sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";
+      sensorList.sensors["1"]!.lastReading[ReadingType.humidity] = "3";
+      sensorList.sensors["1"]!.lastReading[ReadingType.pressure] = "3";
+      sensorList.sensors["1"]!.addLastReadingToDatabaseAsync();
+      sensorList.updateChartDataFromLastCacheReading();
 
-    await sensorList.disposeAsync();
+      // Should not have changed because ENV limit
+      assert.equal(sensorList.chartData["temperature"].length, 2);
+      assert.equal(sensorList.chartData["humidity"].length, 2);
+      assert.equal(sensorList.chartData["pressure"].length, 2);
+    } finally {
+      await sensorList.disposeAsync();
+    }
   });
 
   it("should handle errors when building sensors", async function () {
@@ -249,27 +289,31 @@ describe("SensorList.ts tests", function () {
       .resolves([mockBME280Data]);
     const getAddressesStub = sandbox.stub(DS18B20, "getAddressesAsync").resolves([]);
     const sensorList = new SensorList(mockSprootDB, logger);
-    await sensorList.initializeOrRegenerateAsync();
 
-    mockBME280Data["address"] = "0x76";
-    getSensorsStub.resolves([mockBME280Data, mockDS18B20Data]);
-    sandbox
-      .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
-      .resolves([{ address: "28-00000" } as SDBSensor]);
-    getAddressesStub.resolves(["28-00000"]);
-    sandbox
-      .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
-    await sensorList.initializeOrRegenerateAsync();
+    try {
+      await sensorList.initializeOrRegenerateAsync();
 
-    mockDS18B20Data["address"] = "28-00000";
-    getSensorsStub.resolves([mockBME280Data, mockDS18B20Data, mockSensorData]);
-    await sensorList.initializeOrRegenerateAsync();
+      mockBME280Data["address"] = "0x76";
+      getSensorsStub.resolves([mockBME280Data, mockDS18B20Data]);
+      sandbox
+        .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
+        .resolves([{ address: "28-00000" } as SDBSensor]);
+      getAddressesStub.resolves(["28-00000"]);
+      sandbox
+        .stub(BME280.prototype, "initAsync")
+        .resolves(new BME280(mockBME280Data, mockSprootDB, logger));
+      await sensorList.initializeOrRegenerateAsync();
 
-    assert.isTrue(loggerSpy.calledThrice);
+      mockDS18B20Data["address"] = "28-00000";
+      getSensorsStub.resolves([mockBME280Data, mockDS18B20Data, mockSensorData]);
+      await sensorList.initializeOrRegenerateAsync();
 
-    //Cleanup
-    await sensorList.disposeAsync();
+      assert.isTrue(loggerSpy.calledThrice);
+
+      //Cleanup
+    } finally {
+      await sensorList.disposeAsync();
+    }
   });
 
   it("should handle errors when reading sensors", async function () {
@@ -293,9 +337,11 @@ describe("SensorList.ts tests", function () {
     sandbox.stub(DS18B20.prototype, "getReadingAsync").rejects();
 
     const sensorList = new SensorList(mockSprootDB, logger);
-    await sensorList.initializeOrRegenerateAsync();
-
-    //Cleanup
-    await sensorList.disposeAsync();
+    try {
+      await sensorList.initializeOrRegenerateAsync();
+    } finally {
+      //Cleanup
+      await sensorList.disposeAsync();
+    }
   });
 });

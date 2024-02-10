@@ -39,6 +39,11 @@ class SensorList {
       const { id, name, model, address, lastReading, lastReadingTime, units } = this.#sensors[
         key
       ] as ISensorBase;
+      for (const readingType in lastReading) {
+        lastReading[readingType as ReadingType] = this.#formatReadingForDisplay(
+          lastReading[readingType as ReadingType],
+        );
+      }
       cleanObject[key] = {
         id,
         name,
@@ -112,10 +117,12 @@ class SensorList {
     await this.#touchAllSensorsAsync(async (sensor) => {
       sensor.addLastReadingToDatabaseAsync();
     });
-    this.updateChartDataFromLastReading();
+    this.updateChartDataFromLastCacheReading();
   };
+
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
+
   loadChartDataFromCachedReadings() {
     //Format cached readings for recharts
     const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
@@ -127,13 +134,19 @@ class SensorList {
           if (!chartObject[readingType as ReadingType]) {
             chartObject[readingType as ReadingType] = {};
           }
-          const logTime = this.#formatDateForChart(reading.logTime);
+          const logTimeAsDate = new Date(reading.logTime);
+          if (logTimeAsDate.getMinutes() % 5 !== 0) {
+            continue;
+          }
+          const logTime = this.#formatDateForChart(logTimeAsDate);
           if (!chartObject[readingType as ReadingType][logTime]) {
             chartObject[readingType as ReadingType][logTime] = {
+              units: sensor.units[readingType as ReadingType],
               name: logTime,
             } as ChartData;
           }
-          chartObject[readingType as ReadingType][logTime]![sensor.name] = Number(reading.data);
+          chartObject[readingType as ReadingType][logTime]![sensor.name] =
+            this.#formatReadingForDisplay(reading.data);
         }
       }
     }
@@ -148,7 +161,7 @@ class SensorList {
     for (const readingType in this.#chartData) {
       while (
         this.#chartData[readingType as ReadingType].length >
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+        Number(process.env["MAX_CHART_DATA_POINTS"]!)
       ) {
         this.#chartData[readingType as ReadingType].shift();
       }
@@ -164,20 +177,32 @@ class SensorList {
     this.#logger.info(`Loaded chart data. ${logMessage}`);
   }
 
-  updateChartDataFromLastReading() {
+  updateChartDataFromLastCacheReading() {
+    let update = false;
     const lastReadingObject = {} as Record<ReadingType, ChartData>;
     for (const sensor of Object.values(this.#sensors)) {
-      for (const readingType in sensor.lastReading) {
-        const formattedTime = this.#formatDateForChart(sensor.lastReadingTime!);
+      for (const readingType of Object.keys(sensor.cachedReadings)) {
+        const readings = sensor.cachedReadings[readingType as ReadingType];
+        const lastCacheReading = readings[readings.length - 1]!;
+        const logTimeAsDate = new Date(lastCacheReading.logTime);
+        if (logTimeAsDate.getMinutes() % 5 !== 0) {
+          continue;
+        }
+        update = true;
+        const formattedTime = this.#formatDateForChart(logTimeAsDate);
         if (!lastReadingObject[readingType as ReadingType]) {
           lastReadingObject[readingType as ReadingType] = {
+            units: sensor.units[readingType as ReadingType],
             name: formattedTime,
           } as ChartData;
         }
-        lastReadingObject[readingType as ReadingType][sensor.name] = Number(
-          sensor.lastReading[readingType as ReadingType],
+        lastReadingObject[readingType as ReadingType][sensor.name] = this.#formatReadingForDisplay(
+          lastCacheReading.data,
         );
       }
+    }
+    if (!update) {
+      return;
     }
     // Add new readings
     for (const readingType in lastReadingObject) {
@@ -190,7 +215,7 @@ class SensorList {
     for (const readingType in this.#chartData) {
       while (
         this.#chartData[readingType as ReadingType].length >
-        Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+        Number(process.env["MAX_CHART_DATA_POINTS"]!)
       ) {
         this.#chartData[readingType as ReadingType].shift();
       }
@@ -259,7 +284,7 @@ class SensorList {
         this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
         promises.push(
           this.#sprootDB.addSensorAsync({
-            name: `New DS18B20 ${address}`,
+            name: `New DS18B20 ..${address.slice(-4)}`,
             model: "DS18B20",
             address: address,
           } as SDBSensor),
@@ -283,12 +308,7 @@ class SensorList {
     delete this.#sensors[sensor.id];
   }
 
-  #formatDateForChart(date: Date | string): string {
-    if (typeof date === "string") {
-      date = new Date(date);
-    }
-    date = date as Date;
-
+  #formatDateForChart(date: Date): string {
     let hours = date.getHours();
     const amOrPm = hours >= 12 ? "pm" : "am";
     hours = hours % 12 || 12;
@@ -297,6 +317,10 @@ class SensorList {
     const day = date.getDate();
 
     return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
+  }
+
+  #formatReadingForDisplay(data: string): string {
+    return parseFloat(data).toFixed(3);
   }
 }
 

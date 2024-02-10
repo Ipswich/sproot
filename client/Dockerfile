@@ -21,8 +21,10 @@ RUN apt-get update && apt-get install -y gh;
 
 # Copy project
 COPY .. ./sproot
+ARG VITE_MAX_CHART_ENTRIES
 ARG VITE_API_SERVER_URL
-RUN cd ./sproot && npm run install:client && npm run build:client
+RUN cd ./sproot && npm run install:client
+RUN cd ./sproot && npm run build:client
 
 FROM nginx:alpine
 COPY --from=build ./sproot/client/dist /usr/share/nginx/html

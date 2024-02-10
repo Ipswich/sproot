@@ -5,7 +5,7 @@ services:
       - db
     build:
       context: ./
-      dockerfile: ./server/Dockerfile.dev
+      dockerfile: ./server/Dockerfile.development
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
@@ -23,6 +23,7 @@ services:
       DATABASE_NAME: sproot
       STATE_UPDATE_INTERVAL: 1000
       DATABASE_UPDATE_INTERVAL: 60000
+      MAX_CHART_DATA_POINTS: 2016
       MAX_SENSOR_READING_CACHE_SIZE: 10080 #7 days worth of minutes
       INITIAL_CACHE_LOOKBACK: 10080 #7 days in minutes
     volumes:
@@ -40,8 +41,9 @@ services:
       - server
     build:
       context: ./
-      dockerfile: ./client/Dockerfile.dev
+      dockerfile: ./client/Dockerfile.development
       args:
+        VITE_MAX_CHART_ENTRIES: 10080
         VITE_API_SERVER_URL: ""
     environment:
       NODE_ENV: development
@@ -62,8 +64,8 @@ services:
       - ./sproot-schema.sql:/docker-entrypoint-initdb.d/sproot-schema.sql
     networks:
       - sproot-network
-    expose:
-      - "3306"
+    ports:
+      - 3306:3306
 
   adminer:
     image: adminer
