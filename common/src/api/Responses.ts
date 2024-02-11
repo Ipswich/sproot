@@ -10,6 +10,10 @@ interface ApiResponse {
   suggestion?: string;
 }
 
+interface ApiSupportedModelsResponse extends ApiResponse {
+  supportedModels: string[];
+}
+
 interface ApiOutputsResponse extends ApiResponse {
   outputs: Record<string, IOutputBase>;
 }
@@ -38,6 +42,7 @@ interface ApiChartDataResponse extends ApiResponse {
 
 export type {
   ApiResponse,
+  ApiSupportedModelsResponse,
   ApiOutputsResponse,
   ApiOutputResponse,
   ApiSensorsResponse,

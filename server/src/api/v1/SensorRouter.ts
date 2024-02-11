@@ -2,6 +2,7 @@ import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { SensorList } from "../../sensors/SensorList";
+import ModelList from "../../sensors/ModelList";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import express, { Request, Response } from "express";
@@ -17,6 +18,18 @@ router.get("/", async (req: Request, res: Response) => {
     message: "Sensor information successfully retrieved",
     statusCode: 200,
     sensors: result,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+router.get("/supported-models", async (req: Request, res: Response) => {
+  const logger = req.app.get("logger") as winston.Logger;
+  const result = Object.values(ModelList);
+  logger.http("GET /api/v1/sensors/supported-models - 200, Success");
+  res.status(200).json({
+    message: "Supported sensor models successfully retrieved",
+    statusCode: 200,
+    supportedModels: result,
     timestamp: new Date().toISOString(),
   });
 });

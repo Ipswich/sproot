@@ -5,6 +5,7 @@ import {
   ApiResponse,
   ApiSensorResponse,
   ApiSensorsResponse,
+  ApiSupportedModelsResponse,
 } from "@sproot/sproot-common/src/api/Responses";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
@@ -41,6 +42,19 @@ export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
   });
   if (!response.ok) {
     console.error(`Error fetching sensor data: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function getSupportedModelsAsync(): Promise<ApiSupportedModelsResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors/supported-models`, {
+    method: "GET",
+    headers: {},
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching supported models: ${response}`);
   }
   return await response.json();
 }

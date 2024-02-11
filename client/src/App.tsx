@@ -17,10 +17,11 @@ import SensorCarouselContainer from "./sensors/SensorCarouselContainer";
 import { getOutputsAsync } from "./requests";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/OutputBase";
 import NavbarContents from "./shell/navbar/NavbarContents";
+import SensorSettings from "./settings/sensors/SensorSettings";
 
 function App() {
   const [navbarOpened, { toggle, close }] = useDisclosure();
-  const [selectedView, setSelectedView] = useState("Current Conditions"); // ["Dashboard", "Current Conditions", "Output States", "Schedule", "Triggers", "Settings"
+  const [selectedView, setSelectedView] = useState("Sensors"); // ["Dashboard", "Current Conditions", "Output States", "Schedule", "Triggers", "Settings"
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
 
   useEffect(() => {
@@ -92,7 +93,7 @@ function App() {
               ) : selectedView === "Triggers" ? (
                 <h1>Triggers</h1>
               ) : selectedView === "Sensors" ? (
-                <h1>Settings - Sensors</h1>
+                <SensorSettings />
               ) : selectedView === "Outputs" ? (
                 <h1>Settings - Outputs</h1>
               ) : selectedView === "System" ? (
