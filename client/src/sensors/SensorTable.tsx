@@ -30,6 +30,7 @@ export default function SensorTable({
 
   return (
     <Table
+      highlightOnHover
       style={{
         marginLeft: "auto",
         marginRight: "auto",
@@ -37,7 +38,7 @@ export default function SensorTable({
     >
       <Table.Thead>
         <Table.Tr>
-          <Table.Th style={{display: "flex", paddingLeft: 10}}>
+          <Table.Th style={{ display: "flex", paddingLeft: 10 }}>
             <IconEyeOff />
           </Table.Th>
           <Table.Th>Sensor</Table.Th>
@@ -53,7 +54,6 @@ export default function SensorTable({
               <Flex style={{ alignContent: "center" }}>
                 <Switch
                   defaultChecked
-                  style={{ marginRight: "4px" }}
                   color={
                     chartSeries.find((value) => value.name == sensor.name)
                       ?.color ?? "bbb"

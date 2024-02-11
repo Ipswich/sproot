@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y gh;
 COPY .. ./sproot
 ARG VITE_MAX_CHART_ENTRIES
 ARG VITE_API_SERVER_URL
+ARG VITE_CLIENT_VERSION
 RUN cd ./sproot && npm run install:client
 RUN cd ./sproot && npm run build:client
 

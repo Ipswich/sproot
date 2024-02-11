@@ -10,10 +10,10 @@ import {
   ChartDataRecord,
 } from "@sproot/sproot-common/src/api/ChartData";
 import { getSensorsAsync, getChartDataAsync } from "../requests";
-import SensorCarouselSlideContents from "./SensorCarouselSlideContents";
+import CarouselSlideContents from "./CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
 
-export default function SensorCarousel() {
+export default function CarouselContainer() {
   const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
   const [chartDataRecord, setChartData] = useState({} as ChartDataRecord);
 
@@ -118,7 +118,7 @@ export default function SensorCarousel() {
                 ];
                 return (
                   <Carousel.Slide key={"SwiperSlide-" + readingType}>
-                    <SensorCarouselSlideContents
+                    <CarouselSlideContents
                       readingType={readingType as ReadingType}
                       sensorNames={sensorNames}
                       sensors={sensors}

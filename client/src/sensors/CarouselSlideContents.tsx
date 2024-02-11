@@ -8,7 +8,7 @@ import { ChartData, Utils } from "@sproot/sproot-common/src/api/ChartData";
 import { Fragment, useState, useTransition } from "react";
 import { Select, Flex, Center, Card } from "@mantine/core";
 
-interface SensorCarouselSlideProps {
+interface CarouselSlideProps {
   readingType: ReadingType;
   chartData: ChartData[];
   sensorNames: string[];
@@ -30,12 +30,12 @@ const colors = [
   "yellow",
 ];
 
-export default function SensorCarouselSlideContents({
+export default function CarouselSlideContents({
   readingType,
   chartData,
   sensorNames,
   sensors,
-}: SensorCarouselSlideProps) {
+}: CarouselSlideProps) {
   const [chartRendering, setChartRendering] = useState(true);
   const [toggleState, setToggleState] = useState([] as string[]);
   const [chartSubData, setChartSubData] = useState(

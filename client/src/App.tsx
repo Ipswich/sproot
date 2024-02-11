@@ -6,10 +6,11 @@ import "@mantine/core/styles.css";
 import "./App.css";
 import OutputCard from "./OutputCard";
 
-import SensorCarousel from "./sensors/SensorCarousel";
+import CarouselContainer from "./sensors/CarouselContainer";
 import { getOutputsAsync } from "./requests";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/OutputBase";
 import ColorToggle from "./ColorToggle";
+import NavbarContents from "./shell/navbar/NavbarContents";
 
 function App() {
   const [opened, { toggle }] = useDisclosure();
@@ -44,14 +45,14 @@ function App() {
           <ColorToggle />
         </AppShell.Header>
 
-        <AppShell.Navbar style={{ width: "200px", opacity: "84%" }} p="md">
-          Sproot
+        <AppShell.Navbar style={{width:"250px", opacity: "90%" }} p="md">
+          <NavbarContents />
         </AppShell.Navbar>
 
         <AppShell.Main>
           <>
             <div>
-              <SensorCarousel />
+              <CarouselContainer />
               <br></br>
               {outputs
                 ? Object.keys(outputs).map((key) => (
