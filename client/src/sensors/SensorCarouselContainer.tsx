@@ -10,22 +10,25 @@ import {
   ChartDataRecord,
 } from "@sproot/sproot-common/src/api/ChartData";
 import { getSensorsAsync, getChartDataAsync } from "../requests";
-import SensorCarouselSlideContents from "./SensorCarouselSlideContents";
+import CarouselSlideContents from "./CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
 
-export default function SensorCarousel() {
+export default function SensorCarouselContainer() {
   const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
   const [chartDataRecord, setChartData] = useState({} as ChartDataRecord);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   //GROSS
   let localChartDataRecord = {} as ChartDataRecord;
   useEffect(() => {
     updateSensorsAsync();
     loadChartDataAsync();
+    setLastUpdated(new Date());
 
     const interval = setInterval(async () => {
       await updateSensorsAsync();
       await updateChartDataAsync();
+      setLastUpdated(new Date());
     }, 300000);
 
     return () => clearInterval(interval);
@@ -84,7 +87,7 @@ export default function SensorCarousel() {
         <LoadingOverlay
           style={{ height: "100%" }}
           visible={chartDataRecord.chartData === undefined}
-          zIndex={1000}
+          zIndex={200}
           loaderProps={{ color: "teal", type: "bars", size: "lg" }}
         />
         <Carousel
@@ -118,7 +121,8 @@ export default function SensorCarousel() {
                 ];
                 return (
                   <Carousel.Slide key={"SwiperSlide-" + readingType}>
-                    <SensorCarouselSlideContents
+                    <CarouselSlideContents
+                      lastUpdated={lastUpdated}
                       readingType={readingType as ReadingType}
                       sensorNames={sensorNames}
                       sensors={sensors}

@@ -46,6 +46,7 @@ services:
       args:
         VITE_MAX_CHART_ENTRIES: 10080 #7 days worth of minutes
         VITE_API_SERVER_URL: "" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
+        VITE_CLIENT_VERSION: $npm_package_version
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: production

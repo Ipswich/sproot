@@ -8,7 +8,8 @@ import { ChartData, Utils } from "@sproot/sproot-common/src/api/ChartData";
 import { Fragment, useState, useTransition } from "react";
 import { Select, Flex, Center, Card } from "@mantine/core";
 
-interface SensorCarouselSlideProps {
+interface CarouselSlideProps {
+  lastUpdated: Date;
   readingType: ReadingType;
   chartData: ChartData[];
   sensorNames: string[];
@@ -30,12 +31,13 @@ const colors = [
   "yellow",
 ];
 
-export default function SensorCarouselSlideContents({
+export default function CarouselSlideContents({
+  lastUpdated,
   readingType,
   chartData,
   sensorNames,
   sensors,
-}: SensorCarouselSlideProps) {
+}: CarouselSlideProps) {
   const [chartRendering, setChartRendering] = useState(true);
   const [toggleState, setToggleState] = useState([] as string[]);
   const [chartSubData, setChartSubData] = useState(
@@ -50,6 +52,8 @@ export default function SensorCarouselSlideContents({
     lookbackValues.find((lookback) => lookback.label == currentLookBack) ??
       lookbackValues[0],
   );
+
+  const currentTimeStamp = `${lastUpdated.toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
   return (
     <Fragment>
@@ -97,6 +101,9 @@ export default function SensorCarouselSlideContents({
             color: colors[index % colors.length]!,
           }))}
         />
+        <Center>
+          <h5>Last Updated: {currentTimeStamp}</h5>
+        </Center>
         <SensorTable
           readingType={readingType as ReadingType}
           sensors={sensors}
