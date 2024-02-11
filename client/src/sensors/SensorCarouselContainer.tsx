@@ -13,19 +13,22 @@ import { getSensorsAsync, getChartDataAsync } from "../requests";
 import CarouselSlideContents from "./CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
 
-export default function CarouselContainer() {
+export default function SensorCarouselContainer() {
   const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
   const [chartDataRecord, setChartData] = useState({} as ChartDataRecord);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   //GROSS
   let localChartDataRecord = {} as ChartDataRecord;
   useEffect(() => {
     updateSensorsAsync();
     loadChartDataAsync();
+    setLastUpdated(new Date());
 
     const interval = setInterval(async () => {
       await updateSensorsAsync();
       await updateChartDataAsync();
+      setLastUpdated(new Date());
     }, 300000);
 
     return () => clearInterval(interval);
@@ -119,6 +122,7 @@ export default function CarouselContainer() {
                 return (
                   <Carousel.Slide key={"SwiperSlide-" + readingType}>
                     <CarouselSlideContents
+                      lastUpdated={lastUpdated}
                       readingType={readingType as ReadingType}
                       sensorNames={sensorNames}
                       sensors={sensors}

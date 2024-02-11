@@ -1,20 +1,26 @@
-import { useEffect, useState } from "react";
-import { MantineProvider, AppShell, ActionIcon, Flex } from "@mantine/core";
-import { IconMenu2, IconX } from "@tabler/icons-react";
+import { Fragment, useEffect, useState } from "react";
+import {
+  MantineProvider,
+  AppShell,
+  Burger,
+  Flex,
+  ActionIcon,
+} from "@mantine/core";
+import { IconX } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
 import "./App.css";
 import OutputCard from "./OutputCard";
 
-import CarouselContainer from "./sensors/CarouselContainer";
+import SensorCarouselContainer from "./sensors/SensorCarouselContainer";
 import { getOutputsAsync } from "./requests";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/OutputBase";
-import ColorToggle from "./ColorToggle";
 import NavbarContents from "./shell/navbar/NavbarContents";
 
 function App() {
-  const [opened, { toggle, open, close }] = useDisclosure();
+  const [navbarOpened, { toggle, close }] = useDisclosure();
+  const [selectedView, setSelectedView] = useState("Current Conditions"); // ["Dashboard", "Current Conditions", "Output States", "Schedule", "Triggers", "Settings"
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
 
   useEffect(() => {
@@ -29,6 +35,7 @@ function App() {
   const updateOutputsAsync = async () => {
     setOutputs((await getOutputsAsync()).outputs);
   };
+  console.log(selectedView);
 
   return (
     <MantineProvider>
@@ -36,41 +43,90 @@ function App() {
         navbar={{
           width: 250,
           breakpoint: "sm",
-          collapsed: { mobile: !opened },
+          collapsed: { mobile: !navbarOpened },
         }}
         padding="md"
       >
-        <AppShell.Navbar style={{width:"250px", opacity: "90%", zIndex: 202 }} p="md">
+        <AppShell.Navbar
+          style={{ width: "250px", opacity: "95%", zIndex: 202 }}
+          p="md"
+        >
           <Flex align="center" justify="flex-end">
-            <ActionIcon variant="filled" onClick={toggle} hiddenFrom="sm">
+            <ActionIcon
+              color="black"
+              variant="transparent"
+              onClick={close}
+              title="Close"
+              style={{ position: "absolute", right: 16, top: 16 }}
+              hiddenFrom="sm"
+            >
               <IconX />
             </ActionIcon>
-            </Flex>
-          <NavbarContents />
-          <ColorToggle />
+          </Flex>
+          {/* <ColorToggle /> */}
+          <NavbarContents
+            setView={(view) => {
+              close();
+              return setSelectedView(view);
+            }}
+          />
         </AppShell.Navbar>
-
         <AppShell.Main>
           <>
-            <Flex align="center" justify="flex-end" style={{ position:"absolute", zIndex: 201, left: 6, top: 6}}>
-              <ActionIcon variant="filled" radius={"xl"} size={"56"} onClick={open} hiddenFrom="sm">
-                <IconMenu2 size={32}/>
-              </ActionIcon>
-            </Flex>
             <div onClick={close}>
-              <CarouselContainer />
-              {outputs
-                ? Object.keys(outputs).map((key) => (
+              {selectedView === "Current Conditions" ? (
+                <SensorCarouselContainer />
+              ) : selectedView === "Output States" && outputs ? (
+                <Fragment>
+                  <h1>Output States</h1>
+                  {Object.keys(outputs).map((key) => (
                     <OutputCard
                       key={"OutputCard-" + outputs[key]?.id}
                       output={outputs[key]!}
                       updateOutputsAsync={updateOutputsAsync}
                     />
-                  ))
-                : "No Outputs"}
+                  ))}
+                </Fragment>
+              ) : selectedView === "Schedule" ? (
+                <h1>Schedule</h1>
+              ) : selectedView === "Triggers" ? (
+                <h1>Triggers</h1>
+              ) : selectedView === "Sensors" ? (
+                <h1>Settings - Sensors</h1>
+              ) : selectedView === "Outputs" ? (
+                <h1>Settings - Outputs</h1>
+              ) : selectedView === "System" ? (
+                <h1>Settings - System</h1>
+              ) : (
+                <h1>Dashboard</h1>
+              )}
             </div>
           </>
         </AppShell.Main>
+        <AppShell.Footer>
+          <Flex
+            onClick={toggle}
+            align="center"
+            justify="flex-end"
+            style={{
+              cursor: "pointer",
+              position: "absolute",
+              zIndex: 201,
+              right: 12,
+              bottom: 12,
+              borderRadius: "60px",
+              background: "var(--mantine-color-blue-filled",
+            }}
+          >
+            <Burger
+              color="white"
+              opened={navbarOpened}
+              size="32px"
+              hiddenFrom="sm"
+              style={{ margin: "10px" }}
+            />
+          </Flex>
+        </AppShell.Footer>
       </AppShell>
     </MantineProvider>
   );

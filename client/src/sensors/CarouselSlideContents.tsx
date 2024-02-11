@@ -9,6 +9,7 @@ import { Fragment, useState, useTransition } from "react";
 import { Select, Flex, Center, Card } from "@mantine/core";
 
 interface CarouselSlideProps {
+  lastUpdated: Date;
   readingType: ReadingType;
   chartData: ChartData[];
   sensorNames: string[];
@@ -31,6 +32,7 @@ const colors = [
 ];
 
 export default function CarouselSlideContents({
+  lastUpdated,
   readingType,
   chartData,
   sensorNames,
@@ -50,6 +52,8 @@ export default function CarouselSlideContents({
     lookbackValues.find((lookback) => lookback.label == currentLookBack) ??
       lookbackValues[0],
   );
+
+  const currentTimeStamp = `${lastUpdated.toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
   return (
     <Fragment>
@@ -97,6 +101,9 @@ export default function CarouselSlideContents({
             color: colors[index % colors.length]!,
           }))}
         />
+        <Center>
+          <h5>Last Updated: {currentTimeStamp}</h5>
+        </Center>
         <SensorTable
           readingType={readingType as ReadingType}
           sensors={sensors}
