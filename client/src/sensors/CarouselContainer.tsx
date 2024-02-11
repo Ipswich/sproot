@@ -84,7 +84,7 @@ export default function CarouselContainer() {
         <LoadingOverlay
           style={{ height: "100%" }}
           visible={chartDataRecord.chartData === undefined}
-          zIndex={1000}
+          zIndex={200}
           loaderProps={{ color: "teal", type: "bars", size: "lg" }}
         />
         <Carousel

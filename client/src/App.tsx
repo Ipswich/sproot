@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { MantineProvider, AppShell, Burger } from "@mantine/core";
+import { MantineProvider, AppShell, ActionIcon, Flex } from "@mantine/core";
+import { IconMenu2, IconX } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
@@ -13,7 +14,7 @@ import ColorToggle from "./ColorToggle";
 import NavbarContents from "./shell/navbar/NavbarContents";
 
 function App() {
-  const [opened, { toggle }] = useDisclosure();
+  const [opened, { toggle, open, close }] = useDisclosure();
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
 
   useEffect(() => {
@@ -32,28 +33,32 @@ function App() {
   return (
     <MantineProvider>
       <AppShell
-        header={{ height: 60 }}
         navbar={{
-          width: 300,
+          width: 250,
           breakpoint: "sm",
           collapsed: { mobile: !opened },
         }}
         padding="md"
       >
-        <AppShell.Header style={{ paddingLeft: "14px", paddingTop: "12px" }}>
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-          <ColorToggle />
-        </AppShell.Header>
-
-        <AppShell.Navbar style={{width:"250px", opacity: "90%" }} p="md">
+        <AppShell.Navbar style={{width:"250px", opacity: "90%", zIndex: 202 }} p="md">
+          <Flex align="center" justify="flex-end">
+            <ActionIcon variant="filled" onClick={toggle} hiddenFrom="sm">
+              <IconX />
+            </ActionIcon>
+            </Flex>
           <NavbarContents />
+          <ColorToggle />
         </AppShell.Navbar>
 
         <AppShell.Main>
           <>
-            <div>
+            <Flex align="center" justify="flex-end" style={{ position:"absolute", zIndex: 201, left: 6, top: 6}}>
+              <ActionIcon variant="filled" radius={"xl"} size={"56"} onClick={open} hiddenFrom="sm">
+                <IconMenu2 size={32}/>
+              </ActionIcon>
+            </Flex>
+            <div onClick={close}>
               <CarouselContainer />
-              <br></br>
               {outputs
                 ? Object.keys(outputs).map((key) => (
                     <OutputCard
@@ -63,7 +68,6 @@ function App() {
                     />
                   ))
                 : "No Outputs"}
-              <br></br>
             </div>
           </>
         </AppShell.Main>
