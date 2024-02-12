@@ -18,16 +18,8 @@ interface ApiOutputsResponse extends ApiResponse {
   outputs: Record<string, IOutputBase>;
 }
 
-interface ApiOutputResponse extends ApiResponse {
-  output: IOutputBase;
-}
-
 interface ApiSensorsResponse extends ApiResponse {
   sensors: Record<string, ISensorBase>;
-}
-
-interface ApiSensorResponse extends ApiResponse {
-  sensor: ISensorBase;
 }
 
 interface ApiReadingsResponse extends ApiResponse {
@@ -44,9 +36,7 @@ export type {
   ApiResponse,
   ApiSupportedModelsResponse,
   ApiOutputsResponse,
-  ApiOutputResponse,
   ApiSensorsResponse,
-  ApiSensorResponse,
   ApiReadingsResponse,
   ApiChartDataResponse,
 };

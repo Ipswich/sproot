@@ -36,7 +36,6 @@ function App() {
   const updateOutputsAsync = async () => {
     setOutputs((await getOutputsAsync()).outputs);
   };
-  console.log(selectedView);
 
   return (
     <MantineProvider>

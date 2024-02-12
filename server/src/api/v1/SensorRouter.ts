@@ -164,7 +164,7 @@ router.post("/", async (req: Request, res: Response) => {
   } as SDBSensor;
 
   try {
-    sprootDB.addSensorAsync(newSensor);
+    await sprootDB.addSensorAsync(newSensor);
   } catch (e) {
     res.status(400).json({
       message: "Failed to add sensor to database, invalid request",
