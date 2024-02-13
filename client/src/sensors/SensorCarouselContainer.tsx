@@ -114,7 +114,7 @@ export default function SensorCarouselContainer() {
                       chartDataRecord.chartData[readingType as ReadingType]!,
                     )
                       .map((data) =>
-                        Object.keys(data).filter((key) => key !== "name"),
+                        Object.keys(data).filter((key) => key !== "name" && key !== "units"),
                       )
                       .flat(),
                   ),

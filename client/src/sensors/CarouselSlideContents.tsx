@@ -54,6 +54,10 @@ export default function CarouselSlideContents({
   );
 
   const currentTimeStamp = `${lastUpdated.toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  const chartSeries = sensorNames.map((sensorName, index) => ({
+    name: sensorName,
+    color: colors[index % colors.length]!,
+  }));
 
   return (
     <Fragment>
@@ -96,10 +100,7 @@ export default function CarouselSlideContents({
           chartRendering={chartRendering}
           setChartRendering={setChartRendering}
           lookback={lookback!}
-          chartSeries={sensorNames.map((sensorName, index) => ({
-            name: sensorName,
-            color: colors[index % colors.length]!,
-          }))}
+          chartSeries={chartSeries}
         />
         <Center>
           <h5>Last Updated: {currentTimeStamp}</h5>
@@ -107,10 +108,7 @@ export default function CarouselSlideContents({
         <SensorTable
           readingType={readingType as ReadingType}
           sensors={sensors}
-          chartSeries={sensorNames.map((sensorName, index) => ({
-            name: sensorName,
-            color: colors[index % colors.length]!,
-          }))}
+          chartSeries={chartSeries}
           toggleState={toggleState}
           setToggleState={(newToggleState) => {
             setToggleState(newToggleState);
