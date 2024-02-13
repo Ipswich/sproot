@@ -57,7 +57,7 @@ export default function NewSensorModal({
         blur: 3,
       }}
       centered
-      size="auto"
+      size="xs"
       opened={modalOpened}
       onClose={closeModal}
       title="Add New"

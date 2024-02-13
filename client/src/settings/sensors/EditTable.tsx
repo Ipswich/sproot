@@ -74,7 +74,7 @@ export default function EditTable({
           blur: 3,
         }}
         centered
-        size="auto"
+        size="xs"
         opened={modalOpened}
         onClose={closeModal}
         title="Edit"
@@ -118,7 +118,7 @@ export default function EditTable({
             placeholder={selectedSensor.address ?? ""}
             {...updateSensorForm.getInputProps("address")}
           />
-          <Group justify="flex-end" mt="md">
+          <Group justify="space-between" mt="md">
             <Button
               disabled={isUpdating}
               color="red"
