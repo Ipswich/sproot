@@ -106,7 +106,6 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
                   sensors:
                     $ref: "#/components/schemas/Sensors"
-
         "401":
           description: Unauthorized
           content:
@@ -617,6 +616,53 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
+  /api/v1/sensors/suppoerted-models:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Sensors"
+      description: "Get a list of all supported sensor models."
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Supported sensor models successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  models:
+                    type: array
+                    items:
+                      type: string
+                    example: ["BME280", "DS18B20"]
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion:
+                    type: string
 
   /api/v1/outputs:
     get:

@@ -3,9 +3,10 @@ import {
   ApiOutputsResponse,
   // ApiReadingsResponse,
   ApiResponse,
-  ApiSensorResponse,
   ApiSensorsResponse,
+  ApiSupportedModelsResponse,
 } from "@sproot/sproot-common/src/api/Responses";
+import { ISensorBase } from "@sproot/src/sensors/SensorBase";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -45,6 +46,71 @@ export async function getSensorsAsync(): Promise<ApiSensorsResponse> {
   return await response.json();
 }
 
+export async function addSensorAsync(
+  sensor: ISensorBase,
+): Promise<ApiResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(sensor),
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding sensor: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function deleteSensorAsync(id: number): Promise<ApiResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors/${id}`, {
+    method: "DELETE",
+    headers: {},
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting sensor: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function updateSensorAsync(
+  sensor: ISensorBase,
+): Promise<ApiResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/sensors/${sensor.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(sensor),
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error updating sensor: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function getSupportedModelsAsync(): Promise<ApiSupportedModelsResponse> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v1/sensors/supported-models`,
+    {
+      method: "GET",
+      headers: {},
+      // mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching supported models: ${response}`);
+  }
+  return await response.json();
+}
+
 export async function getChartDataAsync(
   readingType: string | undefined = undefined,
   latest: boolean | undefined = undefined,
@@ -69,16 +135,6 @@ export async function getChartDataAsync(
   });
   if (!response.ok) {
     console.error(`Error fetching chart data: ${response}`);
-  }
-  return await response.json();
-}
-
-export async function getSensorById(id: number): Promise<ApiSensorResponse> {
-  const response = await fetch(`${SERVER_URL}/api/v1/sensors/${id}`, {
-    method: "GET",
-  });
-  if (!response.ok) {
-    console.error(`Error fetching sensor data: ${response}`);
   }
   return await response.json();
 }

@@ -70,7 +70,13 @@ class SensorList {
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
         //Update if it exists
-        this.#sensors[key]!.name = sensor.name;
+        if (this.#sensors[key]!.name !== sensor.name) {
+          this.#logger.info(
+            `Updating sensor {model: ${this.#sensors[key]!.model}, id: ${this.#sensors[key]!.id}}`,
+          );
+          this.#sensors[key]!.name = sensor.name;
+          sensorListChanges = true;
+        }
       } else {
         //Create if it doesn't
         this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
