@@ -40,7 +40,6 @@ export default function SensorSettings() {
 
   return (
     <Fragment>
-      <h1>Sensor Settings</h1>
       <Stack h="600" justify="center" align="center">
         <NewSensorModal
           sensors={sensors}
