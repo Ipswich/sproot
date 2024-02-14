@@ -10,36 +10,37 @@ import {
 } from "@mantine/core";
 import { IconChevronRight, TablerIconsProps } from "@tabler/icons-react";
 import classes from "./NavbarLinksGroup.module.css";
+import { Page } from "../Pages";
 
 interface LinksGroupProps {
-  icon: (props: TablerIconsProps) => JSX.Element;
-  label: string;
+  icon: (props: TablerIconsProps | undefined) => JSX.Element;
+  navLinkText: string;
   initiallyOpened?: boolean;
-  links?: { label: string; link: string }[];
-  setView: (view: string) => void;
+  page: Page;
+  setCurrentPage: (page: Page) => void;
 }
 
 export function LinksGroup({
   icon: Icon,
-  label,
+  navLinkText,
   initiallyOpened,
-  links,
-  setView,
+  page,
+  setCurrentPage,
 }: LinksGroupProps) {
-  const hasLinks = Array.isArray(links);
+  const hasLinks = Array.isArray(page.links);
   const [opened, setOpened] = useState(initiallyOpened || false);
-  const items = (hasLinks ? links : []).map((link) => (
+  const items = (page.links?? []).map((link) => (
     <Text<"a">
       component="a"
       className={classes["link"]!}
-      href={link.link}
-      key={link.label}
+      href={"."}
+      key={link.navLinkText}
       onClick={(event) => {
         event.preventDefault();
-        setView(link.label);
+        setCurrentPage(link);
       }}
     >
-      {link.label}
+      {link.navLinkText}
     </Text>
   ));
 
@@ -49,7 +50,7 @@ export function LinksGroup({
         onClick={() => {
           setOpened((o) => !o);
           if (!hasLinks) {
-            setView(label);
+            setCurrentPage(page);
           }
         }}
         className={classes["control"]!}
@@ -59,7 +60,7 @@ export function LinksGroup({
             <ThemeIcon variant="light" size={30}>
               <Icon style={{ width: rem(18), height: rem(18) }} />
             </ThemeIcon>
-            <Box ml="md">{label}</Box>
+            <Box ml="md">{navLinkText}</Box>
           </Box>
           {hasLinks && (
             <IconChevronRight
