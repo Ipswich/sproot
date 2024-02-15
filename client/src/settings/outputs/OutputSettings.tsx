@@ -1,33 +1,34 @@
 import { Fragment, useEffect, useState } from "react";
-import { getSensorsAsync, getSupportedSensorModelsAsync } from "../../requests";
-import { ISensorBase } from "@sproot/src/sensors/SensorBase";
+import { getOutputsAsync, getSupportedOutputModelsAsync } from "../../requests";
 import { Button, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "./EditTable";
-import NewSensorModal from "./NewSensorModal";
+import { IOutputBase } from "@sproot/src/outputs/OutputBase";
+import NewOutputModal from "./NewOutputModal";
 
-export default function SensorSettings() {
+export default function OutputSettings() {
   const [
-    newSensorModalOpened,
-    { open: newSensorModalOpen, close: newSensorModalClose },
+    newOutputModalOpened,
+    { open: newOutputModalOpen, close: newOutputModalClose },
   ] = useDisclosure(false);
   const [supportedModels, setSupportedModels] = useState([] as string[]);
-  const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
+  const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [isStale, setIsStale] = useState(false);
   const [editDisabled, setEditDisabled] = useState(
     {} as Record<string, boolean>,
   );
 
   const updateData = async () => {
-    getSensorsAsync().then((response) => {
-      setSensors(response.sensors);
+    getOutputsAsync().then((response) => {
+      setOutputs(response.outputs);
+      console.log(response.outputs);
       const newEditDisabled = {} as Record<string, boolean>;
-      for (const key in response.sensors) {
+      for (const key in response.outputs) {
         newEditDisabled[key] = false;
       }
       setEditDisabled(newEditDisabled);
     });
-    getSupportedSensorModelsAsync().then((response) => {
+    getSupportedOutputModelsAsync().then((response) => {
       setSupportedModels(response.supportedModels);
     });
   };
@@ -41,25 +42,25 @@ export default function SensorSettings() {
   return (
     <Fragment>
       <Stack h="600" justify="center" align="center">
-        <NewSensorModal
-          sensors={sensors}
+        <NewOutputModal
+          outputs={outputs}
           supportedModels={supportedModels}
           editDisabled={editDisabled}
-          modalOpened={newSensorModalOpened}
-          closeModal={newSensorModalClose}
-          setSensors={setSensors}
+          modalOpened={newOutputModalOpened}
+          closeModal={newOutputModalClose}
+          setOutputs={setOutputs}
           setEditDisabled={setEditDisabled}
           setIsStale={setIsStale}
         />
         <EditTable
-          sensors={sensors}
+          outputs={outputs}
           supportedModels={supportedModels}
           editDisabled={editDisabled}
-          setSensors={setSensors}
+          setOutputs={setOutputs}
           setEditDisabled={setEditDisabled}
           setIsStale={setIsStale}
         />
-        <Button size="xl" fullWidth onClick={newSensorModalOpen}>
+        <Button size="xl" fullWidth onClick={newOutputModalOpen}>
           Add New
         </Button>
       </Stack>

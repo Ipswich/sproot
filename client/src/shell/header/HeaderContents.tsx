@@ -16,29 +16,46 @@ export default function HeaderContents({
 }: HeaderContentsProps) {
   return (
     <header className={classes["header"]}>
-      <Container style={{justifyContent: "space-between"}} hiddenFrom="sm" size="md" className={classes["inner"]!}>
-        <Burger
-          onClick={navbarToggle}
-          opened={navbarOpened}
-          size="md"
-          />
-          <Title hiddenFrom="sm" order={1}>{currentPage.headerText}</Title>
-        <Group>
-        </Group>
+      <Container
+        style={{ justifyContent: "space-between" }}
+        hiddenFrom="sm"
+        size="md"
+        className={classes["inner"]!}
+      >
+        <Burger onClick={navbarToggle} opened={navbarOpened} size="md" />
+        <Title hiddenFrom="sm" order={1}>
+          {currentPage.headerText}
+        </Title>
+        <Group></Group>
       </Container>
-      <Container style={{justifyContent: "center"}}  visibleFrom="sm" size="md" className={classes["inner"]!}>
+      <Container
+        style={{ justifyContent: "center" }}
+        visibleFrom="sm"
+        size="md"
+        className={classes["inner"]!}
+      >
         <Group>
-          <Title order={1} visibleFrom="sm">{currentPage.headerText}</Title>
+          <Title order={1} visibleFrom="sm">
+            {currentPage.headerText}
+          </Title>
         </Group>
       </Container>
     </header>
   );
 }
 
-{/* <Group/> */}
-{/* {currentPage.icon &&
+{
+  /* <Group/> */
+}
+{
+  /* {currentPage.icon &&
 <ThemeIcon variant="light" size={32}>
     <currentPage.icon style={{ width: rem(24), height: rem(24) }} />
-</ThemeIcon>} */}
-{/* <MantineLogo size={28} /> */}
-{/* <h1>{title}</h1> */}
+</ThemeIcon>} */
+}
+{
+  /* <MantineLogo size={28} /> */
+}
+{
+  /* <h1>{title}</h1> */
+}

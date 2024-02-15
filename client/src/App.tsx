@@ -14,6 +14,7 @@ import HeaderContents from "./shell/header/HeaderContents";
 import SensorSettings from "./settings/sensors/SensorSettings";
 
 import { Pages } from "./shell/Pages";
+import OutputSettings from "./settings/outputs/OutputSettings";
 
 const pages = new Pages();
 const homePage = pages.pages[1]!;
@@ -68,7 +69,7 @@ function App() {
             }}
           />
         </AppShell.Navbar>
-        <AppShell.Main style={{padding: "0 auto"}} >
+        <AppShell.Main style={{ padding: "0 auto" }}>
           <>
             <div onClick={close}>
               {currentPage.navLinkText === "Current Conditions" ? (
@@ -83,15 +84,17 @@ function App() {
                     />
                   ))}
                 </Fragment>
-              ) : currentPage.navLinkText === "Schedule" ? undefined : currentPage.navLinkText ===
-                "Triggers" ? undefined : currentPage.navLinkText === "Sensors" ? (
+              ) : currentPage.navLinkText ===
+                "Schedule" ? undefined : currentPage.navLinkText ===
+                "Triggers" ? undefined : currentPage.navLinkText ===
+                "Sensors" ? (
                 <SensorSettings />
-              ) : currentPage.navLinkText === "Outputs" ? undefined : currentPage.navLinkText ===
+              ) : currentPage.navLinkText ===
+                "Outputs" ? <OutputSettings /> : currentPage.navLinkText ===
                 "System" ? undefined : undefined}
             </div>
           </>
         </AppShell.Main>
-        
       </AppShell>
     </MantineProvider>
   );

@@ -1,48 +1,48 @@
 import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
-import { ISensorBase } from "@sproot/src/sensors/SensorBase";
 import { Fragment, useState } from "react";
-import { deleteSensorAsync, updateSensorAsync } from "../../requests";
+import { deleteOutputAsync, updateOutputAsync } from "../../requests";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "../common/EditablesTable";
+import { IOutputBase } from "@sproot/src/outputs/OutputBase";
 
 interface EditTableProps {
-  sensors: Record<string, ISensorBase>;
+  outputs: Record<string, IOutputBase>;
   editDisabled: Record<string, boolean>;
   supportedModels: string[];
-  setSensors: (sensors: Record<string, ISensorBase>) => void;
+  setOutputs: (outputs: Record<string, IOutputBase>) => void;
   setEditDisabled: (editDisabled: Record<string, boolean>) => void;
   setIsStale: (isStale: boolean) => void;
 }
 
 export default function EditTable({
-  sensors,
+  outputs,
   editDisabled,
   supportedModels,
-  setSensors,
+  setOutputs,
   setEditDisabled,
   setIsStale,
 }: EditTableProps) {
-  const [selectedSensor, setSelectedSensor] = useState({} as ISensorBase);
+  const [selectedOutput, setSelectedOutput] = useState({} as IOutputBase);
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const initialState = {} as Record<string, boolean>;
-  Object.keys(sensors).map((key) => (initialState[key] = false));
+  Object.keys(outputs).map((key) => (initialState[key] = false));
 
-  const updateSensorForm = useForm({
+  const updateOutputForm = useForm({
     initialValues: {
-      id: selectedSensor.id,
-      name: selectedSensor.name,
-      model: selectedSensor.model,
-      address: selectedSensor.address,
+      id: selectedOutput.id,
+      name: selectedOutput.name,
+      model: selectedOutput.model,
+      address: selectedOutput.address,
     },
     validate: {
       id: (value) =>
-        value || value != selectedSensor.id
+        value || value != selectedOutput.id
           ? null
-          : "ID must match selected sensor",
+          : "ID must match selected output",
       name: (value) =>
         !value || (value.length > 0 && value.length <= 64)
           ? null
@@ -60,14 +60,14 @@ export default function EditTable({
 
   const editTableOnClick = function (
     editDisabled: Record<string, boolean>,
-    sensor: ISensorBase,
+    output: IOutputBase,
   ) {
-    setEditDisabled({ ...editDisabled, [sensor.id]: false });
-    setSelectedSensor(sensor);
-    updateSensorForm.setFieldValue("name", sensor.name);
-    updateSensorForm.setFieldValue("model", sensor.model);
-    updateSensorForm.setFieldValue("address", sensor.address ?? "");
-    updateSensorForm.setFieldValue("id", sensor.id);
+    setEditDisabled({ ...editDisabled, [output.id]: false });
+    setSelectedOutput(output);
+    updateOutputForm.setFieldValue("name", output.name);
+    updateOutputForm.setFieldValue("model", output.model);
+    updateOutputForm.setFieldValue("address", output.address ?? "");
+    updateOutputForm.setFieldValue("id", output.id);
     openModal();
   };
 
@@ -85,17 +85,17 @@ export default function EditTable({
         title="Edit"
       >
         <form
-          onSubmit={updateSensorForm.onSubmit(async (values) => {
+          onSubmit={updateOutputForm.onSubmit(async (values) => {
             setIsUpdating(true);
-            await updateSensorAsync(values as ISensorBase);
-            const updatedSensors = {
-              ...sensors,
-              [values.id]: { ...sensors[values.id], ...values } as ISensorBase,
+            await updateOutputAsync(values as IOutputBase);
+            const updatedOutputs = {
+              ...outputs,
+              [values.id]: { ...outputs[values.id], ...values } as IOutputBase,
             };
-            setSensors(updatedSensors);
+            setOutputs(updatedOutputs);
             setEditDisabled({ ...editDisabled, [values.id]: true });
             setIsUpdating(false);
-            setSelectedSensor({} as ISensorBase);
+            setSelectedOutput({} as IOutputBase);
             closeModal();
             setTimeout(() => setIsStale(true), 3000);
           })}
@@ -103,25 +103,25 @@ export default function EditTable({
           <TextInput
             type="hidden"
             required
-            {...updateSensorForm.getInputProps("id")}
+            {...updateOutputForm.getInputProps("id")}
           />
           <TextInput
             maxLength={64}
             label="Name"
-            placeholder={selectedSensor.name}
-            {...updateSensorForm.getInputProps("name")}
+            placeholder={selectedOutput.name ?? ""}
+            {...updateOutputForm.getInputProps("name")}
           />
           <NativeSelect
             label="Model"
             data={supportedModels}
             required
-            {...updateSensorForm.getInputProps("model")}
+            {...updateOutputForm.getInputProps("model")}
           />
           <TextInput
             maxLength={64}
             label="Address"
-            placeholder={selectedSensor.address ?? ""}
-            {...updateSensorForm.getInputProps("address")}
+            placeholder={selectedOutput.address ?? ""}
+            {...updateOutputForm.getInputProps("address")}
           />
           <Group justify="space-between" mt="md">
             <Button
@@ -129,11 +129,11 @@ export default function EditTable({
               color="red"
               onClick={async () => {
                 setIsUpdating(true);
-                await deleteSensorAsync(selectedSensor.id);
-                delete sensors[selectedSensor.id];
-                setEditDisabled({ ...editDisabled, [selectedSensor.id]: true });
+                await deleteOutputAsync(selectedOutput.id);
+                delete outputs[selectedOutput.id];
+                setEditDisabled({ ...editDisabled, [selectedOutput.id]: true });
                 setIsUpdating(false);
-                setSelectedSensor({} as ISensorBase);
+                setSelectedOutput({} as IOutputBase);
                 closeModal();
                 setTimeout(() => setIsStale(true), 3000);
               }}
@@ -141,16 +141,16 @@ export default function EditTable({
               Delete
             </Button>
             <Button type="submit" disabled={isUpdating}>
-              Update Sensor
+              Update Output
             </Button>
           </Group>
         </form>
       </Modal>
       <EditablesTable
-        editables={sensors}
+        editables={outputs}
         editDisabled={editDisabled}
         onClick={(editDisabled, item) => {
-          editTableOnClick(editDisabled, item as ISensorBase);
+          editTableOnClick(editDisabled, item as IOutputBase);
         }}
       />
     </Fragment>

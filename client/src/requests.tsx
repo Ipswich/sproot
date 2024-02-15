@@ -6,6 +6,7 @@ import {
   ApiSensorsResponse,
   ApiSupportedModelsResponse,
 } from "@sproot/sproot-common/src/api/Responses";
+import { IOutputBase } from "@sproot/src/outputs/OutputBase";
 import { ISensorBase } from "@sproot/src/sensors/SensorBase";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
@@ -95,7 +96,7 @@ export async function updateSensorAsync(
   return await response.json();
 }
 
-export async function getSupportedModelsAsync(): Promise<ApiSupportedModelsResponse> {
+export async function getSupportedSensorModelsAsync(): Promise<ApiSupportedModelsResponse> {
   const response = await fetch(
     `${SERVER_URL}/api/v1/sensors/supported-models`,
     {
@@ -106,7 +107,72 @@ export async function getSupportedModelsAsync(): Promise<ApiSupportedModelsRespo
     },
   );
   if (!response.ok) {
-    console.error(`Error fetching supported models: ${response}`);
+    console.error(`Error fetching supported sensor models: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function getSupportedOutputModelsAsync(): Promise<ApiSupportedModelsResponse> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v1/outputs/supported-models`,
+    {
+      method: "GET",
+      headers: {},
+      // mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching supported output models: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function addOutputAsync(
+  output: IOutputBase,
+): Promise<ApiResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/outputs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(output),
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding output: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function updateOutputAsync(
+  output: IOutputBase,
+): Promise<ApiResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/outputs/${output.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(output),
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error updating output: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function deleteOutputAsync(id: number): Promise<ApiResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v1/outputs/${id}`, {
+    method: "DELETE",
+    headers: {},
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting output: ${response}`);
   }
   return await response.json();
 }

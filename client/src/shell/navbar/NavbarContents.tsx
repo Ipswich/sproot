@@ -8,11 +8,19 @@ interface NavbarContentsProps {
   setCurrentPage: (page: Page) => void;
 }
 
-export default function NavbarContents({ setCurrentPage }: NavbarContentsProps) {
+export default function NavbarContents({
+  setCurrentPage,
+}: NavbarContentsProps) {
   const navLinks = new Pages().pages;
-  
+
   const links = navLinks.map((item: Page) => (
-    <LinksGroup page={item} navLinkText={item.navLinkText} icon={item.icon} setCurrentPage={setCurrentPage} key={item.navLinkText} />
+    <LinksGroup
+      page={item}
+      navLinkText={item.navLinkText}
+      icon={item.icon}
+      setCurrentPage={setCurrentPage}
+      key={item.navLinkText}
+    />
   ));
 
   return (
