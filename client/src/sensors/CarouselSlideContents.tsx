@@ -61,13 +61,13 @@ export default function CarouselSlideContents({
 
   return (
     <Fragment>
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card shadow="sm" px="md" py="xs" radius="md" withBorder>
         <Flex gap="md">
           <Center>
             <Flex>
-              <h1>
+              <h2>
                 {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
-              </h1>
+              </h2>
               <h5>{lookback?.chartData[0]?.units}</h5>
             </Flex>
           </Center>

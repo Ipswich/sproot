@@ -1,27 +1,27 @@
 import { Fragment, useEffect, useState } from "react";
-import {
-  MantineProvider,
-  AppShell,
-  Burger,
-  Flex,
-  ActionIcon,
-} from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { MantineProvider, AppShell } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
-import "./App.css";
+// import classes from "./App.module.css";
 import OutputCard from "./OutputCard";
 
 import SensorCarouselContainer from "./sensors/SensorCarouselContainer";
 import { getOutputsAsync } from "./requests";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/OutputBase";
 import NavbarContents from "./shell/navbar/NavbarContents";
+import HeaderContents from "./shell/header/HeaderContents";
 import SensorSettings from "./settings/sensors/SensorSettings";
 
+import { Pages } from "./shell/Pages";
+import OutputSettings from "./settings/outputs/OutputSettings";
+
+const pages = new Pages();
+const homePage = pages.pages[0]!;
+
 function App() {
+  const [currentPage, setCurrentPage] = useState(homePage);
   const [navbarOpened, { toggle, close }] = useDisclosure();
-  const [selectedView, setSelectedView] = useState("Sensors"); // ["Dashboard", "Current Conditions", "Output States", "Schedule", "Triggers", "Settings"
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
 
   useEffect(() => {
@@ -45,40 +45,37 @@ function App() {
           breakpoint: "sm",
           collapsed: { mobile: !navbarOpened },
         }}
-        padding="md"
+        header={{
+          height: 73,
+        }}
+        padding="xs"
       >
+        <AppShell.Header>
+          <HeaderContents
+            currentPage={currentPage}
+            navbarToggle={toggle}
+            navbarOpened={navbarOpened}
+          />
+        </AppShell.Header>
         <AppShell.Navbar
           style={{ width: "250px", opacity: "95%", zIndex: 202 }}
           p="md"
         >
-          <Flex align="center" justify="flex-end">
-            <ActionIcon
-              color="black"
-              variant="transparent"
-              onClick={close}
-              title="Close"
-              style={{ position: "absolute", right: 16, top: 16 }}
-              hiddenFrom="sm"
-            >
-              <IconX />
-            </ActionIcon>
-          </Flex>
           {/* <ColorToggle /> */}
           <NavbarContents
-            setView={(view) => {
+            setCurrentPage={(view) => {
               close();
-              return setSelectedView(view);
+              setCurrentPage(view);
             }}
           />
         </AppShell.Navbar>
-        <AppShell.Main>
+        <AppShell.Main style={{ padding: "0 auto" }}>
           <>
             <div onClick={close}>
-              {selectedView === "Current Conditions" ? (
+              {currentPage.navLinkText === "Current Conditions" ? (
                 <SensorCarouselContainer />
-              ) : selectedView === "Output States" && outputs ? (
+              ) : currentPage.navLinkText === "Output States" && outputs ? (
                 <Fragment>
-                  <h1>Output States</h1>
                   {Object.keys(outputs).map((key) => (
                     <OutputCard
                       key={"OutputCard-" + outputs[key]?.id}
@@ -87,46 +84,17 @@ function App() {
                     />
                   ))}
                 </Fragment>
-              ) : selectedView === "Schedule" ? (
-                <h1>Schedule</h1>
-              ) : selectedView === "Triggers" ? (
-                <h1>Triggers</h1>
-              ) : selectedView === "Sensors" ? (
+              ) : 
+              currentPage.navLinkText === "Schedule" ? undefined :
+              currentPage.navLinkText === "Triggers" ? undefined :
+              currentPage.navLinkText === "Sensors" ? (
                 <SensorSettings />
-              ) : selectedView === "Outputs" ? (
-                <h1>Settings - Outputs</h1>
-              ) : selectedView === "System" ? (
-                <h1>Settings - System</h1>
-              ) : (
-                <h1>Dashboard</h1>
-              )}
+              ) : currentPage.navLinkText === "Outputs" ? (
+                <OutputSettings />
+              ) : currentPage.navLinkText === "System" ? undefined : undefined}
             </div>
           </>
         </AppShell.Main>
-        <AppShell.Footer>
-          <Flex
-            onClick={toggle}
-            align="center"
-            justify="flex-end"
-            style={{
-              cursor: "pointer",
-              position: "absolute",
-              zIndex: 201,
-              right: 12,
-              bottom: 12,
-              borderRadius: "60px",
-              background: "var(--mantine-color-blue-filled",
-            }}
-          >
-            <Burger
-              color="white"
-              opened={navbarOpened}
-              size="32px"
-              hiddenFrom="sm"
-              style={{ margin: "10px" }}
-            />
-          </Flex>
-        </AppShell.Footer>
       </AppShell>
     </MantineProvider>
   );

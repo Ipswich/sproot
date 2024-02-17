@@ -3,6 +3,8 @@ import { OutputList } from "../../outputs/OutputList";
 import { IState, ControlMode } from "@sproot/sproot-common/dist/outputs/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
+import ModelList from "../../outputs/ModelList";
 
 const router = express.Router();
 
@@ -12,6 +14,18 @@ router.get("/", async (req: Request, res: Response) => {
     message: "Output information successfully retrieved",
     statusCode: 200,
     outputs: result,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+router.get("/supported-models", async (req: Request, res: Response) => {
+  const logger = req.app.get("logger") as winston.Logger;
+  const result = Object.values(ModelList);
+  logger.http("GET /api/v1/outputs/supported-models - 200, Success");
+  res.status(200).json({
+    message: "Supported output models successfully retrieved",
+    statusCode: 200,
+    supportedModels: result,
     timestamp: new Date().toISOString(),
   });
 });

@@ -1,18 +1,10 @@
-import {
-  Modal,
-  TextInput,
-  NativeSelect,
-  Group,
-  Button,
-  Table,
-  ActionIcon,
-} from "@mantine/core";
+import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
 import { ISensorBase } from "@sproot/src/sensors/SensorBase";
-import { IconEdit } from "@tabler/icons-react";
 import { Fragment, useState } from "react";
 import { deleteSensorAsync, updateSensorAsync } from "../../requests";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
+import EditablesTable from "../common/EditablesTable";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
@@ -65,6 +57,19 @@ export default function EditTable({
           : "Address must be between 1 and 64 characters",
     },
   });
+
+  const editTableOnClick = function (
+    editDisabled: Record<string, boolean>,
+    sensor: ISensorBase,
+  ) {
+    setEditDisabled({ ...editDisabled, [sensor.id]: false });
+    setSelectedSensor(sensor);
+    updateSensorForm.setFieldValue("name", sensor.name);
+    updateSensorForm.setFieldValue("model", sensor.model);
+    updateSensorForm.setFieldValue("address", sensor.address ?? "");
+    updateSensorForm.setFieldValue("id", sensor.id);
+    openModal();
+  };
 
   return (
     <Fragment>
@@ -141,46 +146,13 @@ export default function EditTable({
           </Group>
         </form>
       </Modal>
-      <Table
-        highlightOnHover
-        style={{
-          marginLeft: "auto",
-          marginRight: "auto",
+      <EditablesTable
+        editables={sensors}
+        editDisabled={editDisabled}
+        onClick={(editDisabled, item) => {
+          editTableOnClick(editDisabled, item as ISensorBase);
         }}
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th style={{ textAlign: "center" }}>Name</Table.Th>
-            <Table.Th style={{ textAlign: "center" }}>Edit</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {Object.values(sensors).map((sensor) => (
-            <Table.Tr key={sensor.id}>
-              <Table.Td align="center">{sensor.name}</Table.Td>
-              <Table.Td align="center">
-                <ActionIcon
-                  disabled={editDisabled[sensor.id] ?? false}
-                  onClick={() => {
-                    setEditDisabled({ ...editDisabled, [sensor.id]: false });
-                    setSelectedSensor(sensor);
-                    updateSensorForm.setFieldValue("name", sensor.name);
-                    updateSensorForm.setFieldValue("model", sensor.model);
-                    updateSensorForm.setFieldValue(
-                      "address",
-                      sensor.address ?? "",
-                    );
-                    updateSensorForm.setFieldValue("id", sensor.id);
-                    openModal();
-                  }}
-                >
-                  <IconEdit />
-                </ActionIcon>
-              </Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+      />
     </Fragment>
   );
 }

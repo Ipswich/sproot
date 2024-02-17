@@ -1,38 +1,42 @@
 import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
-import { ISensorBase } from "@sproot/src/sensors/SensorBase";
-import { addSensorAsync } from "../../requests";
+import { IOutputBase } from "@sproot/src/outputs/OutputBase";
+import { addOutputAsync } from "../../requests";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
+import PCA9685Form from "./forms/PCA9685Form";
+import { FormValues } from "./OutputSettings";
 
-interface NewSensorModalProps {
-  sensors: Record<string, ISensorBase>;
+interface NewOutputModalProps {
+  outputs: Record<string, IOutputBase>;
   editDisabled: Record<string, boolean>;
   supportedModels: string[];
   modalOpened: boolean;
   closeModal: () => void;
-  setSensors: (sensors: Record<string, ISensorBase>) => void;
+  setOutputs: (outputs: Record<string, IOutputBase>) => void;
   setEditDisabled: (editDisabled: Record<string, boolean>) => void;
   setIsStale: (isStale: boolean) => void;
 }
 
-export default function NewSensorModal({
-  sensors,
+export default function NewOutputModal({
+  outputs,
   editDisabled,
   supportedModels,
   modalOpened,
   closeModal,
-  setSensors,
+  setOutputs,
   setEditDisabled,
   setIsStale,
-}: NewSensorModalProps) {
-  const [addingSensor, setIsAdding] = useState(false);
-
-  const newSensorForm = useForm({
+}: NewOutputModalProps) {
+  const [addingOutput, setIsAdding] = useState(false);
+  const newOutputForm = useForm({
     initialValues: {
       name: "",
       model: supportedModels[0] ?? "",
       address: "",
-    },
+      pin: 0,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as FormValues,
 
     validate: {
       name: (value) =>
@@ -57,26 +61,26 @@ export default function NewSensorModal({
         blur: 3,
       }}
       centered
-      size=""
+      size="xs"
       opened={modalOpened}
       onClose={closeModal}
       title="Add New"
     >
       <form
-        onSubmit={newSensorForm.onSubmit(async (values) => {
+        onSubmit={newOutputForm.onSubmit(async (values) => {
           setIsAdding(true);
           const uuid = String(Date.now());
 
-          setSensors({
-            ...sensors,
+          setOutputs({
+            ...outputs,
             [String(uuid)]: {
-              ...sensors[uuid],
+              ...outputs[uuid],
               ...values,
               id: Number(uuid),
-            } as ISensorBase,
+            } as IOutputBase,
           });
           setEditDisabled({ ...editDisabled, [uuid]: true });
-          await addSensorAsync(values as ISensorBase);
+          await addOutputAsync(values as IOutputBase);
           setIsAdding(false);
           closeModal();
 
@@ -86,8 +90,8 @@ export default function NewSensorModal({
         <TextInput
           maxLength={64}
           label="Name"
-          placeholder="Thermometer #1"
-          {...newSensorForm.getInputProps("name")}
+          placeholder="Output #1"
+          {...newOutputForm.getInputProps("name")}
         />
         <Select
           label="Model"
@@ -95,17 +99,20 @@ export default function NewSensorModal({
           allowDeselect={false}
           placeholder="Model Name"
           required
-          {...newSensorForm.getInputProps("model")}
+          {...newOutputForm.getInputProps("model")}
         />
         <TextInput
           maxLength={64}
           label="Address"
-          placeholder="0x76"
-          {...newSensorForm.getInputProps("address")}
+          placeholder="0x40"
+          {...newOutputForm.getInputProps("address")}
         />
+        {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
+          <PCA9685Form form={newOutputForm} />
+        ) : null}
         <Group justify="flex-end" mt="md">
-          <Button type="submit" disabled={addingSensor}>
-            Add Sensor
+          <Button type="submit" disabled={addingOutput}>
+            Add Output
           </Button>
         </Group>
       </form>

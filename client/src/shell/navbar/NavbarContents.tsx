@@ -1,41 +1,26 @@
 import { Group, Code, ScrollArea } from "@mantine/core";
-import {
-  IconCalendarStats,
-  IconGauge,
-  IconAdjustments,
-  IconArrowFork,
-  IconBolt,
-  IconTemperatureSun,
-} from "@tabler/icons-react";
-
 import { LinksGroup } from "./NavbarLinksGroup";
 // import { Logo } from './Logo';
 import classes from "./NavbarContents.module.css";
-
-const mockdata = [
-  { label: "Dashboard", icon: IconGauge },
-  { label: "Current Conditions", icon: IconTemperatureSun },
-  { label: "Output States", icon: IconBolt },
-  { label: "Schedule", icon: IconCalendarStats },
-  { label: "Triggers", icon: IconArrowFork },
-  {
-    label: "Settings",
-    icon: IconAdjustments,
-    links: [
-      { label: "Sensors", link: "." },
-      { label: "Outputs", link: "." },
-      { label: "System", link: "." },
-    ],
-  },
-];
+import { Page, Pages } from "../Pages";
 
 interface NavbarContentsProps {
-  setView: (view: string) => void;
+  setCurrentPage: (page: Page) => void;
 }
 
-export default function NavbarContents({ setView }: NavbarContentsProps) {
-  const links = mockdata.map((item) => (
-    <LinksGroup {...item} setView={setView} key={item.label} />
+export default function NavbarContents({
+  setCurrentPage,
+}: NavbarContentsProps) {
+  const navLinks = new Pages().pages;
+
+  const links = navLinks.map((item: Page) => (
+    <LinksGroup
+      page={item}
+      navLinkText={item.navLinkText}
+      icon={item.icon}
+      setCurrentPage={setCurrentPage}
+      key={item.navLinkText}
+    />
   ));
 
   return (

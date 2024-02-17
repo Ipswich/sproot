@@ -1,17 +1,18 @@
 version: "3"
 services:
   server:
+    restart: unless-stopped
     depends_on:
       - db
     build:
       context: ./
-      dockerfile: ./server/Dockerfile.development
+      dockerfile: ./server/Dockerfile
     environment:
       TZ: America/Los_Angeles
-      NODE_ENV: development
-      DEFAULT_USER: dev-test
-      DEFAULT_USER_EMAIL: dev-test@example.com
-      DEFAULT_USER_PASSWORD: password
+      NODE_ENV: production
+      DEFAULT_USER: dev-test #Change this to something unique
+      DEFAULT_USER_EMAIL: dev-test@example.com 
+      DEFAULT_USER_PASSWORD: password #Change this to something long and unique
       APPLICATION_PORT: 3000
       AUTHENTICATION_ENABLED: false
       JWT_SECRET: CHANGE ME #Change this to something long and unique
@@ -34,21 +35,22 @@ services:
     expose:
       - "3000"
     privileged: true
-    command: ["sleep", "infinity"]
   
   client:
+    restart: unless-stopped
     depends_on:
       - server
     build:
       context: ./
-      dockerfile: ./client/Dockerfile.development
+      dockerfile: ./client/Dockerfile
       args:
-        VITE_PRECONFIGURED: "false"
-        VITE_MAX_CHART_ENTRIES: 10080
-        VITE_API_SERVER_URL: ""
+        VITE_PRECONFIGURED: "true"
+        VITE_MAX_CHART_ENTRIES: 10080 #7 days worth of minutes
+        VITE_API_SERVER_URL: "" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
         VITE_CLIENT_VERSION: $npm_package_version
     environment:
-      NODE_ENV: development
+      TZ: America/Los_Angeles
+      NODE_ENV: production
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
@@ -63,7 +65,7 @@ services:
       MARIADB_ROOT_PASSWORD: root #**MATCH ME**
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-      - ./sproot-schema.sql:/docker-entrypoint-initdb.d/sproot-schema.sql
+      - ./sproot-schema.sql:/docker-entrypoint-initdb.d/sproot-schema.preconfigured.sql
     networks:
       - sproot-network
     ports:
