@@ -34,7 +34,7 @@ export default function OutputCard({
         <Paper shadow="xs" radius="md" withBorder m="xs" p="md" w={rem(400)}>
           <Group justify="space-between">
             <SegmentedControl
-              w={"25%"}
+              w={"28%"}
               color="blue"
               orientation="vertical"
               value={controlMode}
@@ -47,7 +47,7 @@ export default function OutputCard({
                 await setOutputControlModeAsync(output.id, value);
               }}
             />
-            <Stack justify="space-around" w={"70%"}>
+            <Stack justify="space-around" w={"66%"}>
               <Group justify="space-around">
                 <Title order={4}>{output.name}</Title>
               </Group>
