@@ -28,6 +28,8 @@ export default function OutputCard({
   updateOutputsAsync,
 }: OutputCardProps) {
   const [controlMode, setControlMode] = useState(output.controlMode);
+  const [segmentedControlColor, setSegmentedControlColor] = useState(output.controlMode === ControlMode.manual ? "blue" : "teal")
+  
   return (
     <Fragment>
       <Group justify="space-around">
@@ -35,7 +37,7 @@ export default function OutputCard({
           <Group justify="space-between">
             <SegmentedControl
               w={"28%"}
-              color="blue"
+              color={segmentedControlColor}
               orientation="vertical"
               value={controlMode}
               data={[
@@ -44,6 +46,7 @@ export default function OutputCard({
               ]}
               onChange={async (value) => {
                 setControlMode(value as ControlMode);
+                setSegmentedControlColor(value === ControlMode.manual ? "blue" : "teal")
                 await setOutputControlModeAsync(output.id, value);
               }}
             />
@@ -52,7 +55,6 @@ export default function OutputCard({
                 <Title order={4}>{output.name}</Title>
               </Group>
               {output.isPwm == true ? (
-                // <Box maw={240} m={10} style={{ width: "100%" }}>
                 <Slider
                   disabled={controlMode !== ControlMode.manual}
                   label={(value) => `${value}%`}
@@ -69,7 +71,6 @@ export default function OutputCard({
                   ]}
                 />
               ) : (
-                // </Box>
                 <Group justify="space-around">
                   <Switch
                     size="xl"
@@ -78,8 +79,6 @@ export default function OutputCard({
                     disabled={controlMode !== ControlMode.manual}
                     checked={output.manualState.value === 100}
                     onChange={async (event) => {
-                      console.table(output);
-                      console.log(event.target.checked ? 100 : 0);
                       await setOutputManualStateAsync(
                         output.id,
                         event.target.checked ? 100 : 0,
