@@ -1,9 +1,9 @@
 import {
   IconAdjustments,
-  IconArrowFork,
+  // IconArrowFork,
   IconBolt,
-  IconCalendarStats,
-  IconGauge,
+  // IconCalendarStats,
+  // IconGauge,
   IconTemperatureSun,
   TablerIconsProps,
 } from "@tabler/icons-react";
@@ -17,11 +17,11 @@ export interface Page {
 
 export class Pages {
   public pages: Page[] = [
-    {
-      navLinkText: "Dashboard",
-      headerText: "Dashboard",
-      icon: (props: TablerIconsProps | undefined) => <IconGauge {...props} />,
-    } as Page,
+    // {
+    //   navLinkText: "Dashboard",
+    //   headerText: "Dashboard",
+    //   icon: (props: TablerIconsProps | undefined) => <IconGauge {...props} />,
+    // } as Page,
     {
       navLinkText: "Current Conditions",
       headerText: "Current Conditions",
@@ -34,20 +34,20 @@ export class Pages {
       headerText: "Output States",
       icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
     } as Page,
-    {
-      navLinkText: "Schedule",
-      headerText: "Schedule",
-      icon: (props: TablerIconsProps | undefined) => (
-        <IconCalendarStats {...props} />
-      ),
-    } as Page,
-    {
-      navLinkText: "Triggers",
-      headerText: "Triggers",
-      icon: (props: TablerIconsProps | undefined) => (
-        <IconArrowFork {...props} />
-      ),
-    } as Page,
+    // {
+    //   navLinkText: "Schedule",
+    //   headerText: "Schedule",
+    //   icon: (props: TablerIconsProps | undefined) => (
+    //     <IconCalendarStats {...props} />
+    //   ),
+    // } as Page,
+    // {
+    //   navLinkText: "Triggers",
+    //   headerText: "Triggers",
+    //   icon: (props: TablerIconsProps | undefined) => (
+    //     <IconArrowFork {...props} />
+    //   ),
+    // } as Page,
     {
       navLinkText: "Settings",
       headerText: "Settings",
@@ -57,7 +57,7 @@ export class Pages {
       links: [
         { navLinkText: "Sensors", headerText: "Sensor Settings" } as Page,
         { navLinkText: "Outputs", headerText: "Output Settings" } as Page,
-        { navLinkText: "System", headerText: "System Settings" } as Page,
+        // { navLinkText: "System", headerText: "System Settings" } as Page,
       ],
     },
   ];

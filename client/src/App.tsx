@@ -17,7 +17,7 @@ import { Pages } from "./shell/Pages";
 import OutputSettings from "./settings/outputs/OutputSettings";
 
 const pages = new Pages();
-const homePage = pages.pages[1]!;
+const homePage = pages.pages[0]!;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(homePage);
@@ -84,14 +84,14 @@ function App() {
                     />
                   ))}
                 </Fragment>
-              ) : currentPage.navLinkText ===
-                "Schedule" ? undefined : currentPage.navLinkText ===
-                "Triggers" ? undefined : currentPage.navLinkText ===
-                "Sensors" ? (
+              ) : 
+              currentPage.navLinkText === "Schedule" ? undefined :
+              currentPage.navLinkText === "Triggers" ? undefined :
+              currentPage.navLinkText === "Sensors" ? (
                 <SensorSettings />
-              ) : currentPage.navLinkText ===
-                "Outputs" ? <OutputSettings /> : currentPage.navLinkText ===
-                "System" ? undefined : undefined}
+              ) : currentPage.navLinkText === "Outputs" ? (
+                <OutputSettings />
+              ) : currentPage.navLinkText === "System" ? undefined : undefined}
             </div>
           </>
         </AppShell.Main>

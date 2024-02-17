@@ -18,7 +18,6 @@ router.get("/", async (req: Request, res: Response) => {
   });
 });
 
-
 router.get("/supported-models", async (req: Request, res: Response) => {
   const logger = req.app.get("logger") as winston.Logger;
   const result = Object.values(ModelList);

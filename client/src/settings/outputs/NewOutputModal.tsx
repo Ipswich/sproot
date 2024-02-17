@@ -1,8 +1,10 @@
-import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
+import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
 import { IOutputBase } from "@sproot/src/outputs/OutputBase";
 import { addOutputAsync } from "../../requests";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
+import PCA9685Form from "./forms/PCA9685Form";
+import { FormValues } from "./OutputSettings";
 
 interface NewOutputModalProps {
   outputs: Record<string, IOutputBase>;
@@ -26,13 +28,15 @@ export default function NewOutputModal({
   setIsStale,
 }: NewOutputModalProps) {
   const [addingOutput, setIsAdding] = useState(false);
-
   const newOutputForm = useForm({
     initialValues: {
       name: "",
       model: supportedModels[0] ?? "",
       address: "",
-    },
+      pin: 0,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as FormValues,
 
     validate: {
       name: (value) =>
@@ -86,12 +90,13 @@ export default function NewOutputModal({
         <TextInput
           maxLength={64}
           label="Name"
-          placeholder="Thermometer #1"
+          placeholder="Output #1"
           {...newOutputForm.getInputProps("name")}
         />
-        <NativeSelect
+        <Select
           label="Model"
           data={supportedModels}
+          allowDeselect={false}
           placeholder="Model Name"
           required
           {...newOutputForm.getInputProps("model")}
@@ -99,9 +104,12 @@ export default function NewOutputModal({
         <TextInput
           maxLength={64}
           label="Address"
-          placeholder="0x76"
+          placeholder="0x40"
           {...newOutputForm.getInputProps("address")}
         />
+        {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
+          <PCA9685Form form={newOutputForm} />
+        ) : null}
         <Group justify="flex-end" mt="md">
           <Button type="submit" disabled={addingOutput}>
             Add Output

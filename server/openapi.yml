@@ -1175,52 +1175,52 @@ paths:
                     example: "2021-01-01T00:00:00.000Z"
 
   /api/v1/outputs/supported-models:
-      get:
-        security:
-          - bearerAuth: []
-        tags:
-          - "Outputs"
-        description: "Get a list of all supported output models."
-        responses:
-          "200":
-            description: OK
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Outputs"
+      description: "Get a list of all supported output models."
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Supported output models successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  models:
+                    type: array
+                    items:
                       type: string
-                      example: "Supported output models successfully retrieved"
-                    statusCode:
-                      type: integer
-                      example: 200
-                    timeStamp:
-                      type: string
-                      example: "2021-01-01T00:00:00.000Z"
-                    models:
-                      type: array
-                      items:
-                        type: string
-                      example: ["PCA9685"]
-          "401":
-            description: Unauthorized
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: "Invalid or Missing JWT"
-                    statusCode:
-                      type: integer
-                      example: 401
-                    timeStamp:
-                      type: string
-                      example: "2021-01-01T00:00:00.000Z"
-                    suggestion:
-                      type: string                    
+                    example: ["PCA9685"]
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion:
+                    type: string
 
 components:
   schemas:

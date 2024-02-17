@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { getSensorsAsync, getSupportedSensorModelsAsync } from "../../requests";
 import { ISensorBase } from "@sproot/src/sensors/SensorBase";
-import { Button, Stack } from "@mantine/core";
+import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "./EditTable";
 import NewSensorModal from "./NewSensorModal";
@@ -59,7 +59,7 @@ export default function SensorSettings() {
           setEditDisabled={setEditDisabled}
           setIsStale={setIsStale}
         />
-        <Button size="xl" fullWidth onClick={newSensorModalOpen}>
+        <Button size="xl" w={rem(300)} onClick={newSensorModalOpen}>
           Add New
         </Button>
       </Stack>

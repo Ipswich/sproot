@@ -5,6 +5,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "../common/EditablesTable";
 import { IOutputBase } from "@sproot/src/outputs/OutputBase";
+import PCA9685Form from "./forms/PCA9685Form";
+import { FormValues } from "./OutputSettings";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
@@ -37,7 +39,10 @@ export default function EditTable({
       name: selectedOutput.name,
       model: selectedOutput.model,
       address: selectedOutput.address,
-    },
+      pin: selectedOutput.pin,
+      isPwm: selectedOutput.isPwm,
+      isInvertedPwm: selectedOutput.isInvertedPwm,
+    } as FormValues,
     validate: {
       id: (value) =>
         value || value != selectedOutput.id
@@ -55,6 +60,14 @@ export default function EditTable({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
+      pin: (value) =>
+        value != null && value != undefined && value >= 0
+          ? null
+          : "Pin must be a number",
+      isInvertedPwm: (value) =>
+        value === true || value === false ? null : "Must be true or false",
+      isPwm: (value) =>
+        value === true || value === false ? null : "Must be true or false",
     },
   });
 
@@ -64,10 +77,13 @@ export default function EditTable({
   ) {
     setEditDisabled({ ...editDisabled, [output.id]: false });
     setSelectedOutput(output);
-    updateOutputForm.setFieldValue("name", output.name);
+    updateOutputForm.setFieldValue("name", output.name!);
     updateOutputForm.setFieldValue("model", output.model);
     updateOutputForm.setFieldValue("address", output.address ?? "");
     updateOutputForm.setFieldValue("id", output.id);
+    updateOutputForm.setFieldValue("pin", output.pin);
+    updateOutputForm.setFieldValue("isPwm", !!output.isPwm);
+    updateOutputForm.setFieldValue("isInvertedPwm", !!output.isInvertedPwm);
     openModal();
   };
 
@@ -90,10 +106,13 @@ export default function EditTable({
             await updateOutputAsync(values as IOutputBase);
             const updatedOutputs = {
               ...outputs,
-              [values.id]: { ...outputs[values.id], ...values } as IOutputBase,
+              [values.id!]: {
+                ...outputs[values.id!],
+                ...values,
+              } as IOutputBase,
             };
             setOutputs(updatedOutputs);
-            setEditDisabled({ ...editDisabled, [values.id]: true });
+            setEditDisabled({ ...editDisabled, [values.id!]: true });
             setIsUpdating(false);
             setSelectedOutput({} as IOutputBase);
             closeModal();
@@ -111,39 +130,68 @@ export default function EditTable({
             placeholder={selectedOutput.name ?? ""}
             {...updateOutputForm.getInputProps("name")}
           />
-          <NativeSelect
-            label="Model"
-            data={supportedModels}
-            required
-            {...updateOutputForm.getInputProps("model")}
-          />
-          <TextInput
-            maxLength={64}
-            label="Address"
-            placeholder={selectedOutput.address ?? ""}
-            {...updateOutputForm.getInputProps("address")}
-          />
-          <Group justify="space-between" mt="md">
-            <Button
-              disabled={isUpdating}
-              color="red"
-              onClick={async () => {
-                setIsUpdating(true);
-                await deleteOutputAsync(selectedOutput.id);
-                delete outputs[selectedOutput.id];
-                setEditDisabled({ ...editDisabled, [selectedOutput.id]: true });
-                setIsUpdating(false);
-                setSelectedOutput({} as IOutputBase);
-                closeModal();
-                setTimeout(() => setIsStale(true), 3000);
-              }}
-            >
-              Delete
-            </Button>
-            <Button type="submit" disabled={isUpdating}>
-              Update Output
-            </Button>
-          </Group>
+          {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
+            <Fragment>
+              <NativeSelect
+                label="Model"
+                data={supportedModels}
+                required
+                {...updateOutputForm.getInputProps("model")}
+              />
+              <TextInput
+                maxLength={64}
+                label="Address"
+                placeholder={selectedOutput.address ?? ""}
+                {...updateOutputForm.getInputProps("address")}
+              />
+
+              {selectedOutput.model?.toLowerCase() === "pca9685" ? (
+                <PCA9685Form
+                  selectedOutput={selectedOutput}
+                  form={updateOutputForm}
+                />
+              ) : null}
+
+              <Group justify="space-between" mt="md">
+                <Button
+                  disabled={isUpdating}
+                  color="red"
+                  onClick={async () => {
+                    setIsUpdating(true);
+                    await deleteOutputAsync(selectedOutput.id);
+                    delete outputs[selectedOutput.id];
+                    setEditDisabled({
+                      ...editDisabled,
+                      [selectedOutput.id]: true,
+                    });
+                    setIsUpdating(false);
+                    setSelectedOutput({} as IOutputBase);
+                    closeModal();
+                    setTimeout(() => setIsStale(true), 3000);
+                  }}
+                >
+                  Delete
+                </Button>
+                <Button type="submit" disabled={isUpdating}>
+                  Update Output
+                </Button>
+              </Group>
+            </Fragment>
+          ) : (
+            <Fragment>
+              {selectedOutput.model?.toLowerCase() === "pca9685" ? (
+                <PCA9685Form
+                  selectedOutput={selectedOutput}
+                  form={updateOutputForm}
+                />
+              ) : null}
+              <Group justify="flex-end" mt="md">
+                <Button type="submit" disabled={isUpdating}>
+                  Update Output
+                </Button>
+              </Group>
+            </Fragment>
+          )}
         </form>
       </Modal>
       <EditablesTable

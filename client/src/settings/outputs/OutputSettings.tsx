@@ -1,10 +1,20 @@
 import { Fragment, useEffect, useState } from "react";
 import { getOutputsAsync, getSupportedOutputModelsAsync } from "../../requests";
-import { Button, Stack } from "@mantine/core";
+import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "./EditTable";
 import { IOutputBase } from "@sproot/src/outputs/OutputBase";
 import NewOutputModal from "./NewOutputModal";
+
+export interface FormValues {
+  id?: number;
+  name: string;
+  model: string;
+  address: string;
+  pin?: number;
+  isPwm?: boolean;
+  isInvertedPwm?: boolean;
+}
 
 export default function OutputSettings() {
   const [
@@ -21,7 +31,6 @@ export default function OutputSettings() {
   const updateData = async () => {
     getOutputsAsync().then((response) => {
       setOutputs(response.outputs);
-      console.log(response.outputs);
       const newEditDisabled = {} as Record<string, boolean>;
       for (const key in response.outputs) {
         newEditDisabled[key] = false;
@@ -60,9 +69,26 @@ export default function OutputSettings() {
           setEditDisabled={setEditDisabled}
           setIsStale={setIsStale}
         />
-        <Button size="xl" fullWidth onClick={newOutputModalOpen}>
-          Add New
-        </Button>
+        {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
+          <Fragment>
+            <Button
+              hiddenFrom="sm"
+              size="xl"
+              w={rem(300)}
+              onClick={newOutputModalOpen}
+            >
+              Add New
+            </Button>
+            <Button
+              visibleFrom="sm"
+              size="xl"
+              w={rem(300)}
+              onClick={newOutputModalOpen}
+            >
+              Add New
+            </Button>
+          </Fragment>
+        ) : null}
       </Stack>
     </Fragment>
   );

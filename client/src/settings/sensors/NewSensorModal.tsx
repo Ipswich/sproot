@@ -1,4 +1,4 @@
-import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
+import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
 import { ISensorBase } from "@sproot/src/sensors/SensorBase";
 import { addSensorAsync } from "../../requests";
 import { useForm } from "@mantine/form";
@@ -57,7 +57,7 @@ export default function NewSensorModal({
         blur: 3,
       }}
       centered
-      size="xs"
+      size=""
       opened={modalOpened}
       onClose={closeModal}
       title="Add New"
@@ -89,9 +89,10 @@ export default function NewSensorModal({
           placeholder="Thermometer #1"
           {...newSensorForm.getInputProps("name")}
         />
-        <NativeSelect
+        <Select
           label="Model"
           data={supportedModels}
+          allowDeselect={false}
           placeholder="Model Name"
           required
           {...newSensorForm.getInputProps("model")}
