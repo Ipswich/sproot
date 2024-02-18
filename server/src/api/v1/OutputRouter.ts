@@ -231,7 +231,11 @@ router.post("/:id/manual-state", async (req: Request, res: Response) => {
   const outputList = req.app.get("outputList") as OutputList;
   let suggestion = "Value must be a number between 0 and 100.";
   if (typeof req.body.value == "number" && req.body.value >= 0 && req.body.value <= 100) {
-    if (outputList.outputs[String(req.params["id"])]?.isPwm == false) {
+    if (
+      req.body.value > 0 &&
+      req.body.value < 100 &&
+      outputList.outputs[String(req.params["id"])]?.isPwm == false
+    ) {
       suggestion = "Output is not a PWM output, value must be 0 or 100.";
     } else {
       const state = {
