@@ -8,6 +8,7 @@ import {
 } from "../requests";
 import { Fragment, useState } from "react";
 import {
+  Box,
   Group,
   Paper,
   SegmentedControl,
@@ -28,70 +29,111 @@ export default function OutputCard({
   updateOutputsAsync,
 }: OutputCardProps) {
   const [controlMode, setControlMode] = useState(output.controlMode);
-  const [segmentedControlColor, setSegmentedControlColor] = useState(output.controlMode === ControlMode.manual ? "blue" : "teal")
-  
+  const [segmentedControlColor, setSegmentedControlColor] = useState(
+    output.controlMode === ControlMode.manual ? "blue" : "teal",
+  );
+
   return (
     <Fragment>
-      <Group justify="space-around">
-        <Paper shadow="xs" radius="md" withBorder m="xs" p="md" w={rem(400)}>
-          <Group justify="space-between">
-            <SegmentedControl
-              w={"28%"}
-              color={segmentedControlColor}
-              orientation="vertical"
-              value={controlMode}
-              data={[
-                { label: "Manual", value: ControlMode.manual },
-                { label: "Schedule", value: ControlMode.schedule },
-              ]}
-              onChange={async (value) => {
-                setControlMode(value as ControlMode);
-                setSegmentedControlColor(value === ControlMode.manual ? "blue" : "teal")
-                await setOutputControlModeAsync(output.id, value);
-              }}
-            />
-            <Stack justify="space-around" w={"66%"}>
-              <Group justify="space-around">
-                <Title order={4}>{output.name}</Title>
-              </Group>
-              {output.isPwm == true ? (
-                <Slider
-                  disabled={controlMode !== ControlMode.manual}
-                  label={(value) => `${value}%`}
-                  onChangeEnd={async (value) => {
-                    await setOutputManualStateAsync(output.id, value);
-                    await updateOutputsAsync();
-                  }}
-                  size="xl"
-                  color="blue"
-                  marks={[
-                    { value: 20, label: "20%" },
-                    { value: 50, label: "50%" },
-                    { value: 80, label: "80%" },
-                  ]}
-                />
-              ) : (
+      <Stack justify="space-around">
+        <Group justify="space-around">
+          <Paper shadow="xs" radius="md" withBorder m="4" p="md" w={rem(400)}>
+            <Group justify="space-between">
+              <SegmentedControl
+                styles={
+                  controlMode === ControlMode.manual
+                    ? {
+                        root: {
+                          outline: "1px solid var(--mantine-color-blue-3)",
+                        },
+                      }
+                    : {
+                        root: {
+                          outline: "1px solid var(--mantine-color-teal-3)",
+                        },
+                      }
+                }
+                w={"28%"}
+                color={segmentedControlColor}
+                orientation="vertical"
+                value={controlMode}
+                data={[
+                  { label: "Manual", value: ControlMode.manual },
+                  { label: "Schedule", value: ControlMode.schedule },
+                ]}
+                onChange={async (value) => {
+                  setControlMode(value as ControlMode);
+                  setSegmentedControlColor(
+                    value === ControlMode.manual ? "blue" : "teal",
+                  );
+                  await setOutputControlModeAsync(output.id, value);
+                  await updateOutputsAsync();
+                }}
+              />
+              <Stack justify="space-around" w={"66%"}>
                 <Group justify="space-around">
-                  <Switch
-                    size="xl"
-                    onLabel="On"
-                    offLabel="Off"
-                    disabled={controlMode !== ControlMode.manual}
-                    checked={output.manualState.value === 100}
-                    onChange={async (event) => {
-                      await setOutputManualStateAsync(
-                        output.id,
-                        event.target.checked ? 100 : 0,
-                      );
-                      await updateOutputsAsync();
-                    }}
-                  />
+                  <Title order={4}>{output.name}</Title>
                 </Group>
-              )}
-            </Stack>
-          </Group>
-        </Paper>
-      </Group>
+                {output.isPwm == true ? (
+                  <Box h={rem(32)}>
+                    {controlMode === ControlMode.manual ? (
+                      <Slider
+                        defaultValue={output.manualState.value!}
+                        disabled={controlMode !== ControlMode.manual}
+                        label={(value) => `${value}%`}
+                        onChangeEnd={async (value) => {
+                          await setOutputManualStateAsync(output.id, value);
+                          await updateOutputsAsync();
+                        }}
+                        size="xl"
+                        color="blue"
+                        marks={[
+                          { value: 20, label: "20%" },
+                          { value: 50, label: "50%" },
+                          { value: 80, label: "80%" },
+                        ]}
+                      />
+                    ) : (
+                      <Group justify="space-around">
+                        <Title c="teal" order={5}>
+                          {" "}
+                          {output.scheduleState.value}%
+                        </Title>
+                      </Group>
+                    )}
+                  </Box>
+                ) : (
+                  <Group justify="space-around">
+                    <Box h={rem(32)}>
+                      {controlMode === ControlMode.manual ? (
+                        <Switch
+                          size="xl"
+                          onLabel="On"
+                          offLabel="Off"
+                          disabled={controlMode !== ControlMode.manual}
+                          checked={output.manualState.value === 100}
+                          onChange={async (event) => {
+                            await setOutputManualStateAsync(
+                              output.id,
+                              event.target.checked ? 100 : 0,
+                            );
+                            await updateOutputsAsync();
+                          }}
+                        />
+                      ) : (
+                        <Title c="teal" order={5}>
+                          {" "}
+                          {output.scheduleState.value === 100 ? "On" : "Off"}
+                        </Title>
+                      )}
+                    </Box>
+                  </Group>
+                )}
+              </Stack>
+            </Group>
+          </Paper>
+        </Group>
+      </Stack>
     </Fragment>
   );
 }

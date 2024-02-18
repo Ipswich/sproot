@@ -14,7 +14,7 @@ export default function OutputState() {
     updateOutputsAsync();
     const interval = setInterval(async () => {
       await updateOutputsAsync();
-    }, 120000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
