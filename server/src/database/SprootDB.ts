@@ -6,6 +6,8 @@ import { SDBOutput } from "@sproot/src/database/SDBOutput";
 import { ISprootDB } from "@sproot/src/database/ISprootDB";
 import { SensorBase, ReadingType } from "@sproot/src/sensors/SensorBase";
 import { SDBReading } from "@sproot/src/database/SDBReading";
+import { OutputBase } from "@sproot/src/outputs/OutputBase";
+import { SDBOutputState } from "@sproot/src/database/SDBOutputState";
 
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
@@ -92,6 +94,18 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute("DELETE FROM outputs WHERE id = ?", [id]);
   }
 
+  async addOutputStateAsync(output: OutputBase): Promise<void> {
+    await this.#connection.execute(
+      "INSERT INTO output_data (output_id, value, controlMode, logTime) VALUES (?, ?, ?, ?)",
+      [
+        output.id,
+        output.value,
+        output.controlMode,
+        new Date().toISOString().slice(0, 19).replace("T", " ")
+      ],
+    );
+  }
+
   async addSensorReadingAsync(sensor: SensorBase): Promise<void> {
     for (const readingType in sensor.lastReading) {
       await this.#connection.execute(
@@ -105,6 +119,44 @@ class SprootDB implements ISprootDB {
         ],
       );
     }
+  }
+
+  /**
+   * Important note on this one:
+   * The logTime is stored in the database in the format "YYYY-MM-DD HH:MM:SS". This is not a valid ISO string.
+   * This function will convert the logTime to an ISO string if toIsoString is true. Otherwise, you should probably
+   * this before you turn the returned date into a Date object as it'll be in a very different timezone and there'll
+   * be some... Irregularities.
+   * @param sensor sensor to fetch readings for.
+   * @param since time at the start of the lookback period.
+   * @param minutes minutes to lookback from since.
+   * @param toIsoString whether to convert the logTime to an ISO string.
+   * @returns An array of SDBReadings.
+   */
+  async getOutputStatesAsync(
+    output: OutputBase,
+    since: Date,
+    minutes: number = 120,
+    toIsoString: boolean = false,
+  ): Promise<SDBOutputState[]> {
+    const [rows] = await this.#connection.execute<SDBOutputState[]>(
+      `SELECT metric, data, units, logTime
+      FROM sensors s
+      JOIN (
+        SELECT *
+        FROM sensor_data
+        WHERE logTime > DATE_SUB(?, INTERVAL ? MINUTE)
+      ) AS d ON s.id=d.sensor_id
+      WHERE sensor_id = ?
+      ORDER BY logTime ASC`,
+      [since.toISOString(), minutes, output.id],
+    );
+    if (toIsoString) {
+      for (const row of rows) {
+        row.logTime = row.logTime.replace(" ", "T") + "Z";
+      }
+    }
+    return rows;
   }
 
   /**

@@ -63,7 +63,7 @@ services:
       MARIADB_ROOT_PASSWORD: root #**MATCH ME**
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-      - ./sproot-schema.sql:/docker-entrypoint-initdb.d/sproot-schema.sql
+      - ./sproot-schema.preconfigured.sql:/docker-entrypoint-initdb.d/sproot-schema.preconfigured.sql
     networks:
       - sproot-network
     ports:

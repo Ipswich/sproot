@@ -3,6 +3,8 @@ import { SDBOutput } from "./SDBOutput";
 import { SDBReading } from "./SDBReading";
 import { SDBUser } from "./SDBUser";
 import { SensorBase } from "../sensors/SensorBase";
+import { OutputBase } from "../outputs/OutputBase";
+import { SDBOutputState } from "./SDBOutputState";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -23,12 +25,25 @@ interface ISprootDB {
   addOutputAsync(output: SDBOutput): Promise<void>;
   updateOutputAsync(output: SDBOutput): Promise<void>;
   deleteOutputAsync(id: number): Promise<void>;
+  addOutputStateAsync(output: OutputBase): Promise<void>;
+  getOutputStatesAsync(output: OutputBase, since: Date, minutes: number, toIsoString: boolean): Promise<SDBOutputState[]>;
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
 }
 
 /* istanbul ignore next */
 class MockSprootDB implements ISprootDB {
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getOutputStatesAsync(_output: OutputBase, _since: Date, _minutes: number, _toIsoString: boolean): Promise<SDBOutputState[]> {
+    return [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async addOutputStateAsync(_output: OutputBase): Promise<void> {
+    return;
+  }
+
   async getOutputsAsync(): Promise<SDBOutput[]> {
     return [];
   }

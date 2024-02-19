@@ -108,6 +108,7 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     sensorList.initializeOrRegenerateAsync(),
     outputList.initializeOrRegenerateAsync(),
   ]);
+  await outputList.addReadingsToDatabaseAsync();
 
   //State update loop
   const updateStateLoop = setInterval(async () => {
@@ -124,6 +125,7 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   // Database update loop
   const updateDatabaseLoop = setInterval(async () => {
     await sensorList.addReadingsToDatabaseAsync();
+    await outputList.addReadingsToDatabaseAsync();
   }, parseInt(process.env["DATABASE_UPDATE_INTERVAL"]!));
 
   app.use(cors());

@@ -16,12 +16,12 @@ import winston from "winston";
 
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
-const MAX_SENSOR_READING_CACHE_SIZE = process.env["MAX_SENSOR_READING_CACHE_SIZE"];
+const MAX_CACHE_SIZE = process.env["MAX_CACHE_SIZE"];
 const MAX_CHART_DATA_POINTS = process.env["MAX_CHART_DATA_POINTS"];
 
 describe("SensorList.ts tests", function () {
   afterEach(() => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = MAX_SENSOR_READING_CACHE_SIZE;
+    process.env["MAX_CACHE_SIZE"] = MAX_CACHE_SIZE;
     process.env["MAX_CHART_DATA_POINTS"] = MAX_CHART_DATA_POINTS;
     sandbox.restore();
   });

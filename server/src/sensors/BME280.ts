@@ -50,7 +50,8 @@ class BME280 extends SensorBase {
         this.lastReading[ReadingType.pressure] = String(reading.pressure);
         this.lastReadingTime = new Date();
         await sensor.close();
-      }).catch((err) => {
+      })
+      .catch((err) => {
         this.logger.error(`Failed to read BME280 sensor ${this.id}. ${err}`);
       });
     profiler.done({

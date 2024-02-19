@@ -1,6 +1,7 @@
 import { SDBOutput } from "../database/SDBOutput";
 import { ISprootDB } from "../database/ISprootDB";
 import winston from "winston";
+import { SDBOutputState } from "../database/SDBOutputState";
 
 enum ControlMode {
   manual = "manual",
@@ -15,23 +16,25 @@ interface IOutputBase {
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
-  manualState: IState;
-  scheduleState: IState;
+  manualState: SDBOutputState;
+  scheduleState: SDBOutputState;
   controlMode: ControlMode;
+  cachedStates: SDBOutputState[];
 }
 
 abstract class OutputBase implements IOutputBase {
   readonly id: number;
   readonly model: string;
   readonly address: string;
-  name: string | null;
+  name: string;
   readonly pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
   readonly sprootDB: ISprootDB;
-  manualState: IState;
-  scheduleState: IState;
+  manualState: SDBOutputState;
+  scheduleState: SDBOutputState;
   controlMode: ControlMode;
+  cachedStates: SDBOutputState[];
   logger: winston.Logger;
 
   constructor(sdbOutput: SDBOutput, sprootDB: ISprootDB, logger: winston.Logger) {
@@ -43,10 +46,20 @@ abstract class OutputBase implements IOutputBase {
     this.isPwm = sdbOutput.isPwm;
     this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
     this.sprootDB = sprootDB;
-    this.manualState = {};
-    this.scheduleState = {};
+    this.manualState = {value: 0, logTime: new Date().toISOString().slice(0, 19).replace("T", " ")} as SDBOutputState;
+    this.scheduleState = {value: 0, logTime: new Date().toISOString().slice(0, 19).replace("T", " ")} as SDBOutputState;
     this.controlMode = ControlMode.schedule;
+    this.cachedStates = [];
     this.logger = logger;
+  }
+
+  get value(): number | undefined {
+    switch (this.controlMode) {
+      case ControlMode.manual:
+        return this.manualState.value;
+      case ControlMode.schedule:
+        return this.scheduleState.value;
+    }
   }
 
   /**
@@ -65,7 +78,7 @@ abstract class OutputBase implements IOutputBase {
    * @param newState New state to set
    * @param targetControlMode Determines which state will be overwritten
    */
-  setNewState(newState: IState, targetControlMode: ControlMode) {
+  setNewState(newState: SDBOutputState, targetControlMode: ControlMode) {
     switch (targetControlMode) {
       case ControlMode.manual:
         this.manualState = newState;
@@ -77,17 +90,80 @@ abstract class OutputBase implements IOutputBase {
     }
   }
 
+  async addLastStateToDatabase(): Promise<void> {
+    this.updateCachedReadings();
+    try {
+      await this.sprootDB.addOutputStateAsync(this);
+    } catch (err) {
+      this.logger.error(
+        `Failed to add last state to database for {${this.constructor.name}, id: ${this.id}}. ${err}`,
+      );
+    }
+  }
+
   /**
    * Executes the current state of the output, setting the physical state of the output to the recorded state (respecting the current ControlMode).
    * This should be called after setNewState() to ensure that the physical state of the output is always in sync with the recorded state of the output.
    */
   abstract executeState(): void;
   abstract dispose(): void;
-}
 
-interface IState {
-  value?: number;
+  protected async loadCachedStatesFromDatabaseAsync(minutes: number): Promise<void> {
+    try {
+      this.cachedStates = [];
+      const sdbStates = await this.sprootDB.getOutputStatesAsync(
+        this,
+        new Date(),
+        minutes,
+        false,
+      );
+      for (const sdbState of sdbStates) {
+        this.cachedStates.push({
+          value: sdbState.value!,
+          logTime: sdbState.logTime?.replace(" ", "T") + "Z",
+        } as SDBOutputState);
+      }
+      this.logger.info(
+        `Loaded cached states for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${this.cachedStates.length}`,
+      );
+    } catch (err) {
+      this.logger.error(
+        `Failed to load cached states for {${this.constructor.name}, id: ${this.id}}. ${err}`,
+      );
+    }
+  }
+
+  protected updateCachedReadings(): void {
+    if (this.value == undefined) {
+      return;
+    }
+
+    this.cachedStates.push({
+      value: this.value,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    } as SDBOutputState);
+
+    while (
+      this.cachedStates.length > Number(process.env["MAX_CACHE_SIZE"]!)
+    ) {
+      this.cachedStates.shift();
+    }
+    this.logger.info(
+      `Updated cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${this.cachedStates.length}`,
+    );
+  }
+
+  getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
+    if (offset == undefined || offset == null || limit == undefined || limit == null) {
+      return this.cachedStates;
+    }
+    if (offset < 0 || limit < 1 || offset > this.cachedStates.length) {
+      return [];
+    }
+
+    return this.cachedStates.slice(offset, offset + limit);
+  }
 }
 
 export { OutputBase, ControlMode };
-export type { IOutputBase, IState };
+export type { IOutputBase};

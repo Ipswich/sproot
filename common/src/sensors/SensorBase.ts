@@ -102,7 +102,7 @@ abstract class SensorBase implements ISensorBase {
 
         while (
           this.cachedReadings[readingType as ReadingType].length >
-          Number(process.env["MAX_SENSOR_READING_CACHE_SIZE"]!)
+          Number(process.env["MAX_CACHE_SIZE"]!)
         ) {
           this.cachedReadings[readingType as ReadingType].shift();
         }

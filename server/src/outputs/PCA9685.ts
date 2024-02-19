@@ -4,9 +4,9 @@ import {
   IOutputBase,
   OutputBase,
   ControlMode,
-  IState,
 } from "@sproot/sproot-common/dist/outputs/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
@@ -79,6 +79,7 @@ class PCA9685 {
         manualState,
         scheduleState,
         controlMode,
+        cachedStates,
       } = this.#outputs[key] as IOutputBase;
       cleanObject[key] = {
         id,
@@ -91,6 +92,7 @@ class PCA9685 {
         manualState,
         scheduleState,
         controlMode,
+        cachedStates,
       };
     }
     return cleanObject;
@@ -115,8 +117,11 @@ class PCA9685 {
 
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
     this.#outputs[outputId]?.updateControlMode(controlMode);
-  setNewOutputState = (outputId: string, newState: PCA9685State, targetControlMode: ControlMode) =>
-    this.#outputs[outputId]?.setNewState(newState, targetControlMode);
+  setNewOutputState = (
+    outputId: string,
+    newState: SDBOutputState,
+    targetControlMode: ControlMode,
+  ) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
   executeOutputState = (outputId?: string) =>
     outputId
       ? this.#outputs[outputId]?.executeState()
@@ -125,8 +130,8 @@ class PCA9685 {
 
 class PCA9685Output extends OutputBase {
   pca9685: Pca9685Driver;
-  override manualState: PCA9685State;
-  override scheduleState: PCA9685State;
+  override manualState: SDBOutputState;
+  override scheduleState: SDBOutputState;
 
   constructor(
     pca9685: Pca9685Driver,
@@ -136,20 +141,29 @@ class PCA9685Output extends OutputBase {
   ) {
     super(output, sprootDB, logger);
     this.pca9685 = pca9685;
-    this.manualState = { value: 0 };
-    this.scheduleState = { value: 0 };
+    this.manualState = {
+      value: 0,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    } as SDBOutputState;
+    this.scheduleState = {
+      value: 0,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    } as SDBOutputState;
   }
 
   executeState(): void {
-    this.logger.verbose(
-      `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.manualState.value}`,
-    );
     switch (this.controlMode) {
       case ControlMode.manual:
+        this.logger.verbose(
+          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.manualState.value}`,
+        );
         this.#setPwm(this.manualState.value);
         break;
 
       case ControlMode.schedule:
+        this.logger.verbose(
+          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.scheduleState.value}`,
+        );
         this.#setPwm(this.scheduleState.value);
         break;
     }
@@ -176,9 +190,4 @@ class PCA9685Output extends OutputBase {
   }
 }
 
-interface PCA9685State extends IState {
-  value: number;
-}
-
 export { PCA9685, PCA9685Output };
-export type { PCA9685State };

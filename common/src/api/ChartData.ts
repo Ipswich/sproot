@@ -2,7 +2,7 @@ import { ReadingType } from "../sensors/SensorBase";
 
 interface ChartData {
   name: string;
-  units: string;
+  units?: string;
   [key: string]: number | string;
 }
 
@@ -81,7 +81,7 @@ class ChartDataRecord {
         this.chartData[readingType as ReadingType][0]!.units
       ) {
         this.units[readingType as ReadingType] =
-          this.chartData[readingType as ReadingType][0]!.units;
+          this.chartData[readingType as ReadingType][0]!.units!;
       }
     }
   }

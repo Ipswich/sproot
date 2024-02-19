@@ -1,8 +1,9 @@
 import "dotenv/config";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/OutputBase";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { PCA9685, PCA9685State } from "../PCA9685";
+import { PCA9685 } from "../PCA9685";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState"
 import { Pca9685Driver } from "pca9685";
 
 import chai, { assert } from "chai";
@@ -128,7 +129,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Schedule High
-    pca9685.setNewOutputState("1", <PCA9685State>{ isOn: true, value: 100 }, ControlMode.schedule);
+    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 100, logTime: new Date().toISOString() }, ControlMode.schedule);
     assert.equal(pca9685.outputs["1"]?.scheduleState.value, 100);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 1);
@@ -136,7 +137,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(0).args[1], 1);
 
     //Schedule Low
-    pca9685.setNewOutputState("1", <PCA9685State>{ isOn: false, value: 0 }, ControlMode.schedule);
+    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 0, logTime: new Date().toISOString() }, ControlMode.schedule);
     assert.equal(pca9685.outputs["1"]?.scheduleState.value, 0);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 2);
@@ -147,7 +148,7 @@ describe("PCA9685.ts tests", function () {
     pca9685.updateControlMode("1", ControlMode.manual);
 
     //Manual Low
-    pca9685.setNewOutputState("1", <PCA9685State>{ isOn: false, value: 0 }, ControlMode.manual);
+    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 0, logTime: new Date().toISOString() }, ControlMode.manual);
     assert.equal(pca9685.outputs["1"]?.manualState.value, 0);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 3);
@@ -155,7 +156,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(2).args[1], 0);
 
     //Manual High
-    pca9685.setNewOutputState("1", <PCA9685State>{ isOn: true, value: 100 }, ControlMode.manual);
+    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 100, logTime: new Date().toISOString() }, ControlMode.manual);
     assert.equal(pca9685.outputs["1"]?.manualState.value, 100);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 4);
@@ -181,7 +182,7 @@ describe("PCA9685.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    pca9685.setNewOutputState("1", <PCA9685State>{ isOn: true, value: 100 }, ControlMode.schedule);
+    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 100 }, ControlMode.schedule);
     assert.equal(pca9685.outputs["1"]?.scheduleState.value, 100);
     pca9685.executeOutputState("1"); //Receives individual output id as well.
     assert.equal(setDutyCycleStub.callCount, 6);

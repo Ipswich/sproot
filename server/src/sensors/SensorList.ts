@@ -131,6 +131,7 @@ class SensorList {
 
   loadChartDataFromCachedReadings() {
     //Format cached readings for recharts
+    const profiler = this.#logger.startTimer();
     const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
     for (const key in this.#sensors) {
       const sensor = this.#sensors[key]!;
@@ -180,10 +181,15 @@ class SensorList {
         logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
       }
     }
-    this.#logger.info(`Loaded chart data. ${logMessage}`);
+    this.#logger.info(`Loaded sensor chart data. ${logMessage}`);
+    profiler.done({
+      message: "SensorList loadChartDataFromCachedReadings time",
+      level: "debug",
+    });
   }
 
   updateChartDataFromLastCacheReading() {
+    const profiler = this.#logger.startTimer();
     let update = false;
     const lastReadingObject = {} as Record<ReadingType, ChartData>;
     for (const sensor of Object.values(this.#sensors)) {
@@ -191,6 +197,7 @@ class SensorList {
         const readings = sensor.cachedReadings[readingType as ReadingType];
         const lastCacheReading = readings[readings.length - 1]!;
         const logTimeAsDate = new Date(lastCacheReading.logTime);
+        //If it isn't a 5 minute interval, skip
         if (logTimeAsDate.getMinutes() % 5 !== 0) {
           continue;
         }
@@ -234,7 +241,11 @@ class SensorList {
         logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
       }
     }
-    this.#logger.info(`Updated chart data. Data counts: ${logMessage}`);
+    this.#logger.info(`Updated sensor chart data. Data counts: ${logMessage}`);
+    profiler.done({
+      message: "SensorList updateChartDataFromLastCacheReading time",
+      level: "debug",
+    });
   }
 
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {

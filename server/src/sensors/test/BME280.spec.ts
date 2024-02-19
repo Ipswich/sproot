@@ -10,16 +10,16 @@ import * as sinon from "sinon";
 import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
-const MAX_SENSOR_READING_CACHE_SIZE = process.env["MAX_SENSOR_READING_CACHE_SIZE"];
+const MAX_CACHE_SIZE = process.env["MAX_CACHE_SIZE"];
 
 describe("BME280.ts tests", function () {
   afterEach(() => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = MAX_SENSOR_READING_CACHE_SIZE;
+    process.env["MAX_CACHE_SIZE"] = MAX_CACHE_SIZE;
     sandbox.restore();
   });
 
   it("should initialize a BME280 sensor", async () => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
+    process.env["MAX_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
@@ -93,7 +93,7 @@ describe("BME280.ts tests", function () {
   });
 
   it("should load cached readings from the database, clearing any old ones", async () => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
+    process.env["MAX_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
@@ -161,7 +161,7 @@ describe("BME280.ts tests", function () {
   });
 
   it("should update cached readings with the last reading", async () => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "1";
+    process.env["MAX_CACHE_SIZE"] = "1";
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
