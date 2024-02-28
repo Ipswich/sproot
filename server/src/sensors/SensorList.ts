@@ -291,7 +291,9 @@ class SensorList {
   }
 
   async #addUnreconizedDS18B20sToSDBAsync() {
-    const deviceAddresses = await DS18B20.getAddressesAsync();
+    // filter noise addresses (anything prefixed with "00")
+    const deviceAddresses = (await DS18B20.getAddressesAsync())
+      .filter((address) => (address[0] == "0" && address[1] == "0") || address == "not found.");;
     const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
     const promises: Promise<void>[] = [];
     for (const address of deviceAddresses) {

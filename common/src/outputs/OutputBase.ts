@@ -46,8 +46,14 @@ abstract class OutputBase implements IOutputBase {
     this.isPwm = sdbOutput.isPwm;
     this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
     this.sprootDB = sprootDB;
-    this.manualState = {value: 0, logTime: new Date().toISOString().slice(0, 19).replace("T", " ")} as SDBOutputState;
-    this.scheduleState = {value: 0, logTime: new Date().toISOString().slice(0, 19).replace("T", " ")} as SDBOutputState;
+    this.manualState = {
+      value: 0,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    } as SDBOutputState;
+    this.scheduleState = {
+      value: 0,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    } as SDBOutputState;
     this.controlMode = ControlMode.schedule;
     this.cachedStates = [];
     this.logger = logger;
@@ -111,12 +117,7 @@ abstract class OutputBase implements IOutputBase {
   protected async loadCachedStatesFromDatabaseAsync(minutes: number): Promise<void> {
     try {
       this.cachedStates = [];
-      const sdbStates = await this.sprootDB.getOutputStatesAsync(
-        this,
-        new Date(),
-        minutes,
-        false,
-      );
+      const sdbStates = await this.sprootDB.getOutputStatesAsync(this, new Date(), minutes, false);
       for (const sdbState of sdbStates) {
         this.cachedStates.push({
           value: sdbState.value!,
@@ -143,9 +144,7 @@ abstract class OutputBase implements IOutputBase {
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
     } as SDBOutputState);
 
-    while (
-      this.cachedStates.length > Number(process.env["MAX_CACHE_SIZE"]!)
-    ) {
+    while (this.cachedStates.length > Number(process.env["MAX_CACHE_SIZE"]!)) {
       this.cachedStates.shift();
     }
     this.logger.info(
@@ -166,4 +165,4 @@ abstract class OutputBase implements IOutputBase {
 }
 
 export { OutputBase, ControlMode };
-export type { IOutputBase};
+export type { IOutputBase };

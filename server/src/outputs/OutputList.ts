@@ -98,17 +98,17 @@ class OutputList {
         //Update old ones
         let update = false;
         if (this.#outputs[key]?.name !== output.name) {
-          update = true
+          update = true;
           this.#outputs[key]!.name = output.name;
         }
 
         if (this.#outputs[key]?.isPwm !== output.isPwm) {
-          update = true
+          update = true;
           this.#outputs[key]!.isPwm = output.isPwm;
         }
 
         if (this.#outputs[key]?.isInvertedPwm !== output.isInvertedPwm) {
-          update = true
+          update = true;
           this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
         }
 
@@ -129,7 +129,6 @@ class OutputList {
             `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
           );
         }
-
       }
     }
 
@@ -170,7 +169,7 @@ class OutputList {
   }
 
   //#####
-  
+
   loadChartDataFromCachedStates() {
     //Format cached readings for recharts
     const profiler = this.#logger.startTimer();
@@ -178,30 +177,24 @@ class OutputList {
     for (const key in this.#outputs) {
       const sensor = this.#outputs[key]!;
       for (const state of sensor.cachedStates) {
-
-          const logTimeAsDate = new Date(state.logTime);
-          if (logTimeAsDate.getMinutes() % 5 !== 0) {
-            continue;
-          }
-          const logTime = this.#formatDateForChart(logTimeAsDate);
-          if (!chartObject[logTime]) {
-            chartObject[logTime] = {
-              name: logTime,
-            } as ChartData;
-          }
-          chartObject[logTime]![sensor.name] = state.value;
+        const logTimeAsDate = new Date(state.logTime);
+        if (logTimeAsDate.getMinutes() % 5 !== 0) {
+          continue;
         }
+        const logTime = this.#formatDateForChart(logTimeAsDate);
+        if (!chartObject[logTime]) {
+          chartObject[logTime] = {
+            name: logTime,
+          } as ChartData;
+        }
+        chartObject[logTime]![sensor.name] = state.value;
+      }
     }
     // Convert to array
-    this.#chartData = Object.values(
-      chartObject,
-    );
+    this.#chartData = Object.values(chartObject);
 
     //Remove extra readings
-    while (
-      this.#chartData.length >
-      Number(process.env["MAX_CHART_DATA_POINTS"]!)
-    ) {
+    while (this.#chartData.length > Number(process.env["MAX_CHART_DATA_POINTS"]!)) {
       this.#chartData.shift();
     }
 
@@ -216,7 +209,7 @@ class OutputList {
   updateChartDataFromCachedStates() {
     const profiler = this.#logger.startTimer();
     let update = false;
-    let updatedChartData = {} as ChartData
+    let updatedChartData = {} as ChartData;
     for (const output of Object.values(this.#outputs)) {
       const states = output.cachedStates;
       const lastState = states[states.length - 1]!;
@@ -241,13 +234,10 @@ class OutputList {
     this.#chartData.push(updatedChartData);
 
     //Remove old readings
-    while (
-      this.#chartData.length >
-      Number(process.env["MAX_CHART_DATA_POINTS"]!)
-    ) {
+    while (this.#chartData.length > Number(process.env["MAX_CHART_DATA_POINTS"]!)) {
       this.#chartData.shift();
     }
-    
+
     // Log changes
     this.#logger.info(`Updated output chart data. Data count: ${this.#chartData.length}`);
     profiler.done({
