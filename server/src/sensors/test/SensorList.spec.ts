@@ -159,38 +159,38 @@ describe("SensorList.ts tests", function () {
         data: "1",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: "2024-01-01T00:00:00.000",
+        logTime: "2024-01-01 00:00:00",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: "2024-01-01T00:00:00.000",
+        logTime: "2024-01-01 00:00:00",
       } as SDBReading,
       {
         data: "1",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: "2024-01-01T00:00:00.000",
+        logTime: "2024-01-01 00:00:00",
       } as SDBReading,
       //These should be ignored, as minutes % 5 != 0
       {
         data: "1.101010",
         metric: ReadingType.temperature,
         units: "°C",
-        logTime: "2024-01-01T00:01:00.000",
+        logTime: "2024-01-01 00:01:00",
       } as SDBReading,
       {
         data: "1.101010",
         metric: ReadingType.humidity,
         units: "%rH",
-        logTime: "2024-01-01T00:01:00.000",
+        logTime: "2024-01-01 00:01:00",
       } as SDBReading,
       {
         data: "1.101010",
         metric: ReadingType.pressure,
         units: "hPa",
-        logTime: "2024-01-01T00:01:00.000",
+        logTime: "2024-01-01 00:01:00",
       } as SDBReading,
     ]);
     sandbox.stub(winston, "createLogger").callsFake(
@@ -214,16 +214,16 @@ describe("SensorList.ts tests", function () {
       assert.equal(sensorList.chartData["humidity"].length, 1);
       assert.equal(sensorList.chartData["pressure"].length, 1);
 
-      assert.equal(sensorList.chartData["temperature"][0]?.name, "1/1 12:00 AM");
-      assert.equal(sensorList.chartData["humidity"][0]?.name, "1/1 12:00 AM");
-      assert.equal(sensorList.chartData["pressure"][0]?.name, "1/1 12:00 AM");
+      assert.equal(sensorList.chartData["temperature"][0]?.name, "12/31 4:00 pm");
+      assert.equal(sensorList.chartData["humidity"][0]?.name, "12/31 4:00 pm");
+      assert.equal(sensorList.chartData["pressure"][0]?.name, "12/31 4:00 pm");
       assert.equal(sensorList.chartData["temperature"][0]?.units, "°C");
       assert.equal(sensorList.chartData["humidity"][0]?.units, "%rH");
       assert.equal(sensorList.chartData["pressure"][0]?.units, "hPa");
 
-      assert.equal(sensorList.chartData["temperature"][0]!["test sensor 1"], "1.101");
-      assert.equal(sensorList.chartData["humidity"][0]!["test sensor 1"], "1.101");
-      assert.equal(sensorList.chartData["pressure"][0]!["test sensor 1"], "1.101");
+      assert.equal(sensorList.chartData["temperature"][0]!["test sensor 1"], "1.000");
+      assert.equal(sensorList.chartData["humidity"][0]!["test sensor 1"], "1.000");
+      assert.equal(sensorList.chartData["pressure"][0]!["test sensor 1"], "1.000");
 
       sensorList.sensors["1"]!.lastReadingTime = new Date("2024-01-01T00:00:00.000Z");
       sensorList.sensors["1"]!.lastReading[ReadingType.temperature] = "3";

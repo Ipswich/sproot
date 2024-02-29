@@ -101,7 +101,7 @@ class SprootDB implements ISprootDB {
         output.id,
         output.value,
         output.controlMode,
-        new Date().toISOString().slice(0, 19).replace("T", " ")
+        new Date().toISOString().slice(0, 19).replace("T", " "),
       ],
     );
   }

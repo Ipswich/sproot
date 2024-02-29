@@ -81,13 +81,15 @@ describe("DS18B20.ts tests", function () {
   });
 
   it("should get all DS18B20 addresses", async function () {
-    sandbox.stub(promises, "readFile").resolves("28-00000\n28-00001\n28-00002\n");
+    sandbox
+      .stub(promises, "readFile")
+      .resolves("28-0311977965c0\n28-031197797be0\n28-03119779f5f2\nundefined\n00-a88000000000\n");
     const addresses = await DS18B20.getAddressesAsync();
 
     assert.equal(addresses.length, 3);
-    assert.equal(addresses[0], "28-00000");
-    assert.equal(addresses[1], "28-00001");
-    assert.equal(addresses[2], "28-00002");
+    assert.equal(addresses[0], "28-0311977965c0");
+    assert.equal(addresses[1], "28-031197797be0");
+    assert.equal(addresses[2], "28-03119779f5f2");
   });
 
   it("should load cached readings from the database, initializing a sensor", async function () {

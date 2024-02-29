@@ -64,7 +64,7 @@ class DS18B20 extends SensorBase {
     const data = await readFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves", "utf8");
     const parts = data.split("\n");
     parts.pop();
-    return parts;
+    return parts.filter((part) => part.substring(0, 2) === "28");
   }
 }
 
