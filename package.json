@@ -10,6 +10,7 @@
     "build:server": "npm run build --workspace=common --workspace=server",
     "clean": "npm run clean --workspaces --if-present",
     "coverage": "npm run coverage --workspaces --if-present",
+    "install:common": "npm install --workspace=common",
     "install:client": "npm install --workspace=common --workspace=client",
     "install:server": "npm install --workspace=common --workspace=server",
     "prettier:check": "npm run prettier:check --workspaces --if-present",
