@@ -9,8 +9,8 @@ import {
   ChartData,
   ChartDataRecord,
 } from "@sproot/sproot-common/src/api/ChartData";
-import { getSensorsAsync, getChartDataAsync } from "../requests";
-import CarouselSlideContents from "./CarouselSlideContents";
+import { getSensorsAsync, getChartDataAsync } from "@sproot/sproot-client/src/requests";
+import CarouselSlideContents from "@sproot/sproot-client/src/sensors/CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
 
 export default function SensorCarouselContainer() {

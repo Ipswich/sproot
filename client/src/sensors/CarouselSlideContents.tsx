@@ -1,9 +1,9 @@
-import SensorTable from "./SensorTable";
+import SensorTable from "@sproot/sproot-client/src/sensors/SensorTable";
 import {
   ISensorBase,
   ReadingType,
 } from "@sproot/sproot-common/src/sensors/SensorBase";
-import Chart from "./Chart";
+import Chart from "@sproot/sproot-client/src/sensors/Chart";
 import { ChartData, Utils } from "@sproot/sproot-common/src/api/ChartData";
 import { Fragment, useState, useTransition } from "react";
 import { Select, Flex, Center, Card } from "@mantine/core";

@@ -6,8 +6,8 @@ import {
   ApiSensorsResponse,
   ApiSupportedModelsResponse,
 } from "@sproot/sproot-common/src/api/Responses";
-import { IOutputBase } from "@sproot/src/outputs/OutputBase";
-import { ISensorBase } from "@sproot/src/sensors/SensorBase";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/SensorBase";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 

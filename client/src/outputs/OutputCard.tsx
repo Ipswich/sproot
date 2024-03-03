@@ -1,11 +1,11 @@
 import {
   ControlMode,
   IOutputBase,
-} from "@sproot/sproot-common/src/outputs/OutputBase";
+} from "@sproot/sproot-common/src/outputs/IOutputBase";
 import {
   setOutputControlModeAsync,
   setOutputManualStateAsync,
-} from "../requests";
+} from "@sproot/sproot-client/src/requests";
 import { Fragment, useState } from "react";
 import {
   Box,

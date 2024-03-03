@@ -1,7 +1,7 @@
-import { SDBReading } from "../database/SDBReading";
-import { ISensorBase, ReadingType } from "../sensors/SensorBase";
-import { IOutputBase } from "../outputs/OutputBase";
-import { ChartData } from "./ChartData";
+import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
+import { ISensorBase, ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { ChartData } from "@sproot/sproot-common/src/api/ChartData";
 
 interface ApiResponse {
   message: string;

@@ -1,5 +1,5 @@
 import { RowDataPacket } from "mysql2";
-import { ReadingType } from "../sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
 
 interface SDBReading extends RowDataPacket {
   metric: ReadingType;

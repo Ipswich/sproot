@@ -1,12 +1,12 @@
 import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
 import { Fragment, useState } from "react";
-import { deleteOutputAsync, updateOutputAsync } from "../../requests";
+import { deleteOutputAsync, updateOutputAsync } from "@sproot/sproot-client/src/requests";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
-import EditablesTable from "../common/EditablesTable";
-import { IOutputBase } from "@sproot/src/outputs/OutputBase";
-import PCA9685Form from "./forms/PCA9685Form";
-import { FormValues } from "./OutputSettings";
+import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";
+import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;

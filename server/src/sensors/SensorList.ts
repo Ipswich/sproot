@@ -1,5 +1,5 @@
-import { BME280 } from "./BME280";
-import { DS18B20 } from "./DS18B20";
+import { BME280 } from "../sensors/BME280";
+import { DS18B20 } from "../sensors/DS18B20";
 import {
   ISensorBase,
   ReadingType,

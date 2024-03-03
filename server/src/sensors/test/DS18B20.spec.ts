@@ -1,6 +1,6 @@
 import { promises } from "fs";
 
-import { DS18B20 } from "../DS18B20";
+import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";

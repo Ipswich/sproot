@@ -1,10 +1,10 @@
 import { PCA9685 } from "./PCA9685";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import {
-  OutputBase,
   IOutputBase,
   ControlMode,
-} from "@sproot/sproot-common/dist/outputs/OutputBase";
+} from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";

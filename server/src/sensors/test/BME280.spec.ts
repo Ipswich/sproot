@@ -1,5 +1,5 @@
 import bme280, { Bme280 } from "bme280";
-import { BME280 } from "../BME280";
+import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";

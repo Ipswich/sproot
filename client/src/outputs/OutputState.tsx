@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
-import OutputCard from "./OutputCard";
-import { getOutputsAsync } from "../requests";
-import { IOutputBase } from "@sproot/src/outputs/OutputBase";
+import OutputCard from "@sproot/sproot-client/src/outputs/OutputCard";
+import { getOutputsAsync } from "@sproot/sproot-client/src/requests";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 
 export default function OutputState() {
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);

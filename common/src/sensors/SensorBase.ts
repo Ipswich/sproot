@@ -1,6 +1,6 @@
-import { SDBSensor } from "../database/SDBSensor";
-import { SDBReading } from "../database/SDBReading";
-import { ISprootDB } from "../database/ISprootDB";
+import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
+import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import winston from "winston";
 
 enum ReadingType {

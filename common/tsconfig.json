@@ -4,7 +4,13 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
-      "@sproot/*": ["../common/*", "../server/*", "../client/*"]
+      "@sproot/*": ["../common/src/*"]
     }
-  }
+  },
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "./dist/**/*"
+  ],
 }

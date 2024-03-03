@@ -1,7 +1,7 @@
 import { Burger, Container, Group, Title } from "@mantine/core";
 // import { MantineLogo } from '@mantinex/mantine-logo';
-import classes from "./HeaderContents.module.css";
-import { Page } from "../Pages";
+import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.module.css";
+import { Page } from "@sproot/sproot-client/src/shell/Pages";
 
 interface HeaderContentsProps {
   currentPage: Page;

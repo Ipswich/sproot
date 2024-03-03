@@ -1,6 +1,6 @@
 import { NumberInput, Stack, Switch } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
-import { IOutputBase } from "@sproot/src/outputs/OutputBase";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { Fragment, useState } from "react";
 import { FormValues } from "../OutputSettings";
 

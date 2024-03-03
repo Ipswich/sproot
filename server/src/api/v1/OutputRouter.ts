@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import { OutputList } from "../../outputs/OutputList";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/OutputBase";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/src/database/SDBOutputState";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import ModelList from "../../outputs/ModelList";

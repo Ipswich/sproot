@@ -2,9 +2,9 @@ import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
 import {
   IOutputBase,
-  OutputBase,
   ControlMode,
-} from "@sproot/sproot-common/dist/outputs/OutputBase";
+} from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";

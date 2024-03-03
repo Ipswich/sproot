@@ -1,28 +1,11 @@
-import { SDBOutput } from "../database/SDBOutput";
-import { ISprootDB } from "../database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import winston from "winston";
-import { SDBOutputState } from "../database/SDBOutputState";
+import { IChartable, ChartData } from "../utility/IChartable";
 
-enum ControlMode {
-  manual = "manual",
-  schedule = "schedule",
-}
-
-interface IOutputBase {
-  id: number;
-  model: string;
-  address: string;
-  name: string | null;
-  pin: number;
-  isPwm: boolean;
-  isInvertedPwm: boolean;
-  manualState: SDBOutputState;
-  scheduleState: SDBOutputState;
-  controlMode: ControlMode;
-  cachedStates: SDBOutputState[];
-}
-
-abstract class OutputBase implements IOutputBase {
+export abstract class OutputBase implements IOutputBase, IChartable {
   readonly id: number;
   readonly model: string;
   readonly address: string;
@@ -35,6 +18,7 @@ abstract class OutputBase implements IOutputBase {
   scheduleState: SDBOutputState;
   controlMode: ControlMode;
   cachedStates: SDBOutputState[];
+  chartData: ChartData;
   logger: winston.Logger;
 
   constructor(sdbOutput: SDBOutput, sprootDB: ISprootDB, logger: winston.Logger) {
@@ -56,6 +40,7 @@ abstract class OutputBase implements IOutputBase {
     } as SDBOutputState;
     this.controlMode = ControlMode.schedule;
     this.cachedStates = [];
+    this.chartData = new ChartData(Number(process.env["MAX_CACHE_SIZE"]!));
     this.logger = logger;
   }
 
@@ -162,7 +147,20 @@ abstract class OutputBase implements IOutputBase {
 
     return this.cachedStates.slice(offset, offset + limit);
   }
-}
 
-export { OutputBase, ControlMode };
-export type { IOutputBase };
+  loadChartData(): void {
+    for (const state of this.cachedStates) {
+      this.chartData.addDataPoint({
+        name: ChartData.formatDateForChart(state.logTime),
+        [this.name]: ChartData.formatReadingForDisplay(state.value.toString()),
+      });
+    }
+  }
+
+  updateChartData(): void {
+    this.chartData.addDataPoint({
+      name: ChartData.formatDateForChart(new Date()),
+      [this.name]: ChartData.formatReadingForDisplay(this.value!.toString()),
+    });
+  }
+}
