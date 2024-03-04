@@ -1,4 +1,4 @@
-import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ISensorBase";
 
 interface DataPoint {
   name: string;
@@ -6,7 +6,7 @@ interface DataPoint {
   [key: string]: number | string;
 }
 
-type DataSeries = DataPoint[]
+type DataSeries = DataPoint[];
 
 interface StatsResult {
   average: string;

@@ -4,7 +4,8 @@ import winston from "winston";
 
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
+import { SensorBase } from "./SensorBase";
 
 class DS18B20 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
@@ -18,7 +19,7 @@ class DS18B20 extends SensorBase {
   async initAsync(): Promise<DS18B20 | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.loadCachedReadingsFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+      await this.intitializeCacheAndChartDataAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
       this.updateInterval = setInterval(async () => {
         const profiler = this.logger.startTimer();
         await this.getReadingAsync();

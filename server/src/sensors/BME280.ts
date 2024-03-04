@@ -2,7 +2,8 @@ import "dotenv/config";
 import bme280 from "bme280";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
+import { SensorBase } from "./SensorBase";
 import winston from "winston";
 
 class BME280 extends SensorBase {
@@ -20,7 +21,7 @@ class BME280 extends SensorBase {
   async initAsync(): Promise<BME280 | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.loadCachedReadingsFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+      await this.intitializeCacheAndChartDataAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
       this.updateInterval = setInterval(async () => {
         await this.getReadingAsync();
       }, this.MAX_SENSOR_READ_TIME);

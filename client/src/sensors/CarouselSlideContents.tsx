@@ -2,7 +2,7 @@ import SensorTable from "@sproot/sproot-client/src/sensors/SensorTable";
 import {
   ISensorBase,
   ReadingType,
-} from "@sproot/sproot-common/src/sensors/SensorBase";
+} from "@sproot/sproot-common/src/sensors/ISensorBase";
 import Chart from "@sproot/sproot-client/src/sensors/Chart";
 import { ChartData, Utils } from "@sproot/sproot-common/src/api/ChartData";
 import { Fragment, useState, useTransition } from "react";

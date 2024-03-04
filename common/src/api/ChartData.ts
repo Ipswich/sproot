@@ -1,4 +1,4 @@
-import { ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ISensorBase";
 
 interface ChartData {
   name: string;

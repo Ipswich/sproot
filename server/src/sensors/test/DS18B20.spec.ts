@@ -2,7 +2,7 @@ import { promises } from "fs";
 
 import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 

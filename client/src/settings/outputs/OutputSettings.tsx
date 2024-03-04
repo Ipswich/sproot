@@ -1,5 +1,8 @@
 import { Fragment, useEffect, useState } from "react";
-import { getOutputsAsync, getSupportedOutputModelsAsync } from "@sproot/sproot-client/src/requests";
+import {
+  getOutputsAsync,
+  getSupportedOutputModelsAsync,
+} from "@sproot/sproot-client/src/requests";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/settings/outputs/EditTable";

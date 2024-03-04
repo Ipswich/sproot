@@ -1,16 +1,27 @@
-import { DataSeries, DataPoint } from '@sproot/sproot-common/dist/charts/ChartData';
+export interface DataPoint {
+  name: string;
+  units?: string;
+  [key: string]: number | string;
+}
+
+export type DataSeries = DataPoint[];
 
 export class ChartData {
   dataSeries: DataSeries;
   readonly limit: number;
 
-  constructor(limit: number, dataSeries?: DataSeries) {
+  constructor(limit: number, dataSeries?: DataSeries, now: Date = new Date()) {
     this.limit = limit;
-
     if (dataSeries) {
       this.dataSeries = dataSeries;
     } else {
       this.dataSeries = [];
+      const fiveMinutes = 1000 * 60 * 5;
+      let fiveMinuteDate = new Date(Math.floor(now.getTime() / fiveMinutes) * fiveMinutes);
+      for (let i = 0; i < this.limit; i++) {
+        this.dataSeries.unshift({ name: ChartData.formatDateForChart(fiveMinuteDate) });
+        fiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
+      }
     }
   }
 
@@ -35,13 +46,13 @@ export class ChartData {
     return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
   }
 
-  static formatReadingForDisplay(data: string): string {
+  static formatDecimalReadingForDisplay(data: string): string {
     return parseFloat(data).toFixed(3);
   }
 }
 
 export interface IChartable {
   chartData: Record<string | number | symbol, ChartData> | ChartData;
-  loadChartData(): void;
-  updateChartData(): void;
+  loadChartData(cache: [], name: string): void;
+  updateChartData(cache: [], name: string): void;
 }

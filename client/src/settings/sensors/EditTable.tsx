@@ -1,7 +1,10 @@
 import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
-import { deleteSensorAsync, updateSensorAsync } from "@sproot/sproot-client/src/requests";
+import {
+  deleteSensorAsync,
+  updateSensorAsync,
+} from "@sproot/sproot-client/src/requests";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";

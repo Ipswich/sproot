@@ -2,7 +2,7 @@ import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
 import { SDBUser } from "@sproot/sproot-common/src/database/SDBUser";
-import { SensorBase } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
 
@@ -13,9 +13,9 @@ interface ISprootDB {
   addSensorAsync(sensor: SDBSensor): Promise<void>;
   updateSensorAsync(sensor: SDBSensor): Promise<void>;
   deleteSensorAsync(id: number): Promise<void>;
-  addSensorReadingAsync(sensor: SensorBase): Promise<void>;
+  addSensorReadingAsync(sensor: ISensorBase): Promise<void>;
   getSensorReadingsAsync(
-    sensor: SensorBase,
+    sensor: ISensorBase,
     since: Date,
     minutes: number,
     toIsoString: boolean,
@@ -25,9 +25,11 @@ interface ISprootDB {
   addOutputAsync(output: SDBOutput): Promise<void>;
   updateOutputAsync(output: SDBOutput): Promise<void>;
   deleteOutputAsync(id: number): Promise<void>;
-  addOutputStateAsync(output: IOutputBase): Promise<void>;
+  addOutputStateAsync(
+    output: IOutputBase | { id: number; value: number; controlMode: any },
+  ): Promise<void>;
   getOutputStatesAsync(
-    output: IOutputBase,
+    output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
     toIsoString: boolean,
@@ -40,7 +42,7 @@ interface ISprootDB {
 class MockSprootDB implements ISprootDB {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getOutputStatesAsync(
-    _output: IOutputBase,
+    _output: IOutputBase | { id: number },
     _since: Date,
     _minutes: number,
     _toIsoString: boolean,
@@ -107,7 +109,7 @@ class MockSprootDB implements ISprootDB {
 
   /* eslint-disable */
   async getSensorReadingsAsync(
-    _sensor: SensorBase,
+    _sensor: ISensorBase,
     _since: Date,
     _minutes?: number,
   ): Promise<SDBReading[]> {
@@ -116,7 +118,7 @@ class MockSprootDB implements ISprootDB {
   /* eslint-enable */
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async addSensorReadingAsync(_sensor: SensorBase): Promise<void> {
+  async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
     return;
   }
 

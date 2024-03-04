@@ -1,9 +1,6 @@
 import { PCA9685 } from "./PCA9685";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import {
-  IOutputBase,
-  ControlMode,
-} from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
@@ -30,19 +27,9 @@ class OutputList {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const {
-        id,
-        model,
-        address,
-        name,
-        pin,
-        isPwm,
-        isInvertedPwm,
-        manualState,
-        scheduleState,
-        controlMode,
-        cachedStates,
-      } = this.#outputs[key] as IOutputBase;
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, state } = this.#outputs[
+        key
+      ] as IOutputBase;
       cleanObject[key] = {
         id,
         model,
@@ -51,23 +38,20 @@ class OutputList {
         pin,
         isPwm,
         isInvertedPwm,
-        manualState,
-        scheduleState,
-        controlMode,
-        cachedStates,
+        state,
       };
     }
     return cleanObject;
   }
 
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
-    this.#outputs[outputId]?.updateControlMode(controlMode);
+    this.#outputs[outputId]?.state.updateControlMode(controlMode);
 
   setNewOutputState = (
     outputId: string,
     newState: SDBOutputState,
     targetControlMode: ControlMode,
-  ) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
+  ) => this.#outputs[outputId]?.state.setNewState(newState, targetControlMode);
 
   executeOutputState = (outputId?: string) =>
     outputId
@@ -122,7 +106,8 @@ class OutputList {
         //Add new ones
         try {
           this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
-          this.#createOutput(output);
+
+          await this.#createOutput(output);
           outputListChanges = true;
         } catch (err) {
           this.#logger.error(
@@ -152,7 +137,7 @@ class OutputList {
     }
 
     if (outputListChanges) {
-      this.loadChartDataFromCachedStates();
+      // this.loadChartDataFromCachedStates();
     }
 
     profiler.done({
@@ -163,9 +148,9 @@ class OutputList {
 
   async addReadingsToDatabaseAsync(): Promise<void> {
     await this.#touchAllOutputsAsync(async (output) => {
-      output.addLastStateToDatabase();
+      output.state.addCurrentStateToDatabaseAsync(output.id);
     });
-    this.updateChartDataFromCachedStates();
+    // this.updateChartDataFromCachedStates();
   }
 
   //#####
@@ -175,8 +160,8 @@ class OutputList {
     const profiler = this.#logger.startTimer();
     const chartObject = {} as Record<string, ChartData>;
     for (const key in this.#outputs) {
-      const sensor = this.#outputs[key]!;
-      for (const state of sensor.cachedStates) {
+      const output = this.#outputs[key]!;
+      for (const state of output.cache.get()) {
         const logTimeAsDate = new Date(state.logTime);
         if (logTimeAsDate.getMinutes() % 5 !== 0) {
           continue;
@@ -187,7 +172,7 @@ class OutputList {
             name: logTime,
           } as ChartData;
         }
-        chartObject[logTime]![sensor.name] = state.value;
+        chartObject[logTime]![output.name] = state.value;
       }
     }
     // Convert to array
@@ -211,7 +196,7 @@ class OutputList {
     let update = false;
     let updatedChartData = {} as ChartData;
     for (const output of Object.values(this.#outputs)) {
-      const states = output.cachedStates;
+      const states = output.cache.get();
       const lastState = states[states.length - 1]!;
       const logTimeAsDate = new Date(lastState.logTime);
       // If it isn't a 5 minute interval, skip
@@ -261,18 +246,17 @@ class OutputList {
     await Promise.allSettled(promises);
   }
 
-  #createOutput(output: SDBOutput): void {
+  async #createOutput(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | null = null;
     switch (output.model.toLowerCase()) {
       case "pca9685": {
         if (!output.address) {
           throw new OutputListError("PCA9685 address cannot be null");
         }
-        newOutput = this.#PCA9685.createOutput(output);
+        newOutput = await this.#PCA9685.createOutput(output);
         if (newOutput) {
           this.#outputs[output.id] = newOutput;
         }
-
         break;
       }
       default: {

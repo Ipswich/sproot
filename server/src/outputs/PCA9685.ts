@@ -1,9 +1,6 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
-import {
-  IOutputBase,
-  ControlMode,
-} from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
@@ -24,7 +21,7 @@ class PCA9685 {
     this.#logger = logger;
   }
 
-  createOutput(output: SDBOutput): PCA9685Output | null {
+  async createOutput(output: SDBOutput): Promise<PCA9685Output | null> {
     //Create new PCA9685 if one doesn't exist for this address.
     if (!this.#boardRecord[output.address]) {
       this.#boardRecord[output.address] = new Pca9685Driver(
@@ -47,6 +44,7 @@ class PCA9685 {
         this.#sprootDB,
         this.#logger,
       );
+      await this.#outputs[output.id]?.initializeAsync();
       this.#usedPins[output.address]?.push(output.pin);
       return this.#outputs[output.id]!;
     } else {
@@ -68,19 +66,9 @@ class PCA9685 {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const {
-        id,
-        model,
-        address,
-        name,
-        pin,
-        isPwm,
-        isInvertedPwm,
-        manualState,
-        scheduleState,
-        controlMode,
-        cachedStates,
-      } = this.#outputs[key] as IOutputBase;
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, state } = this.#outputs[
+        key
+      ] as IOutputBase;
       cleanObject[key] = {
         id,
         model,
@@ -89,10 +77,7 @@ class PCA9685 {
         pin,
         isPwm,
         isInvertedPwm,
-        manualState,
-        scheduleState,
-        controlMode,
-        cachedStates,
+        state,
       };
     }
     return cleanObject;
@@ -116,12 +101,12 @@ class PCA9685 {
   }
 
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
-    this.#outputs[outputId]?.updateControlMode(controlMode);
+    this.#outputs[outputId]?.state.updateControlMode(controlMode);
   setNewOutputState = (
     outputId: string,
     newState: SDBOutputState,
     targetControlMode: ControlMode,
-  ) => this.#outputs[outputId]?.setNewState(newState, targetControlMode);
+  ) => this.#outputs[outputId]?.state.setNewState(newState, targetControlMode);
   executeOutputState = (outputId?: string) =>
     outputId
       ? this.#outputs[outputId]?.executeState()
@@ -130,8 +115,6 @@ class PCA9685 {
 
 class PCA9685Output extends OutputBase {
   pca9685: Pca9685Driver;
-  override manualState: SDBOutputState;
-  override scheduleState: SDBOutputState;
 
   constructor(
     pca9685: Pca9685Driver,
@@ -141,30 +124,28 @@ class PCA9685Output extends OutputBase {
   ) {
     super(output, sprootDB, logger);
     this.pca9685 = pca9685;
-    this.manualState = {
-      value: 0,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-    } as SDBOutputState;
-    this.scheduleState = {
-      value: 0,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-    } as SDBOutputState;
+  }
+
+  async initializeAsync(): Promise<void> {
+    await this.loadCacheFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+    this.loadChartData();
+    console.log(this.chartData.get())
   }
 
   executeState(): void {
     switch (this.controlMode) {
       case ControlMode.manual:
         this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.manualState.value}`,
+          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.manualState.value}`,
         );
-        this.#setPwm(this.manualState.value);
+        this.#setPwm(this.state.manualState.value);
         break;
 
       case ControlMode.schedule:
         this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.scheduleState.value}`,
+          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.scheduleState.value}`,
         );
-        this.#setPwm(this.scheduleState.value);
+        this.#setPwm(this.state.scheduleState.value);
         break;
     }
   }

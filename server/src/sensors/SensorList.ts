@@ -1,13 +1,10 @@
 import { BME280 } from "../sensors/BME280";
 import { DS18B20 } from "../sensors/DS18B20";
-import {
-  ISensorBase,
-  ReadingType,
-  SensorBase,
-} from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ISensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SensorBase } from "./SensorBase";
 import winston from "winston";
 
 class SensorList {

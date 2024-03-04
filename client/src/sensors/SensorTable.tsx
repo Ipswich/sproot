@@ -3,7 +3,7 @@ import { IconEyeOff } from "@tabler/icons-react";
 import {
   ReadingType,
   ISensorBase,
-} from "@sproot/sproot-common/src/sensors/SensorBase";
+} from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { useTransition } from "react";
 
 interface SensorTableProps {

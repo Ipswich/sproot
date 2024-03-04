@@ -4,7 +4,7 @@ import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ISensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { OutputBase } from "@sproot/sproot-server/src/outputs/OutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
@@ -94,7 +94,9 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute("DELETE FROM outputs WHERE id = ?", [id]);
   }
 
-  async addOutputStateAsync(output: OutputBase): Promise<void> {
+  async addOutputStateAsync(
+    output: OutputBase | { id: number; value: number; controlMode: any },
+  ): Promise<void> {
     await this.#connection.execute(
       "INSERT INTO output_data (output_id, value, controlMode, logTime) VALUES (?, ?, ?, ?)",
       [
@@ -106,7 +108,7 @@ class SprootDB implements ISprootDB {
     );
   }
 
-  async addSensorReadingAsync(sensor: SensorBase): Promise<void> {
+  async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {
     for (const readingType in sensor.lastReading) {
       await this.#connection.execute(
         "INSERT INTO sensor_data (sensor_id, metric, data, units, logTime) VALUES (?, ?, ?, ?, ?)",
@@ -131,23 +133,23 @@ class SprootDB implements ISprootDB {
    * @param since time at the start of the lookback period.
    * @param minutes minutes to lookback from since.
    * @param toIsoString whether to convert the logTime to an ISO string.
-   * @returns An array of SDBReadings.
+   * @returns An array of SDBOutputStates.
    */
   async getOutputStatesAsync(
-    output: OutputBase,
+    output: OutputBase | { id: number },
     since: Date,
     minutes: number = 120,
     toIsoString: boolean = false,
   ): Promise<SDBOutputState[]> {
     const [rows] = await this.#connection.execute<SDBOutputState[]>(
-      `SELECT metric, data, units, logTime
-      FROM sensors s
+      `SELECT value, controlMode, logTime
+      FROM outputs o
       JOIN (
         SELECT *
-        FROM sensor_data
+        FROM output_data
         WHERE logTime > DATE_SUB(?, INTERVAL ? MINUTE)
-      ) AS d ON s.id=d.sensor_id
-      WHERE sensor_id = ?
+      ) AS d ON o.id=d.output_id
+      WHERE output_id = ?
       ORDER BY logTime ASC`,
       [since.toISOString(), minutes, output.id],
     );
@@ -172,7 +174,7 @@ class SprootDB implements ISprootDB {
    * @returns An array of SDBReadings.
    */
   async getSensorReadingsAsync(
-    sensor: SensorBase,
+    sensor: ISensorBase,
     since: Date,
     minutes: number = 120,
     toIsoString: boolean = false,

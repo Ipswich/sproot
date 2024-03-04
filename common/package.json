@@ -9,7 +9,8 @@
     "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
     "lint": "npx eslint ./src",
     "prettier:write": "npx prettier . --write",
-    "prettier:check": "npx prettier . --check"
+    "prettier:check": "npx prettier . --check",
+    "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts && npm run prettier:check"
   },
   "author": "Ben Steele",
   "license": "ISC",

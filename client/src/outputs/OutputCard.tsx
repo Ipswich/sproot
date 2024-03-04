@@ -28,9 +28,9 @@ export default function OutputCard({
   output,
   updateOutputsAsync,
 }: OutputCardProps) {
-  const [controlMode, setControlMode] = useState(output.controlMode);
+  const [controlMode, setControlMode] = useState(output.state.controlMode);
   const [segmentedControlColor, setSegmentedControlColor] = useState(
-    output.controlMode === ControlMode.manual ? "blue" : "teal",
+    output.state.controlMode === ControlMode.manual ? "blue" : "teal",
   );
 
   return (
@@ -78,7 +78,7 @@ export default function OutputCard({
                   <Box h={rem(32)}>
                     {controlMode === ControlMode.manual ? (
                       <Slider
-                        defaultValue={output.manualState.value!}
+                        defaultValue={output.state.manualState.value!}
                         disabled={controlMode !== ControlMode.manual}
                         label={(value) => `${value}%`}
                         onChangeEnd={async (value) => {
@@ -97,7 +97,7 @@ export default function OutputCard({
                       <Group justify="space-around">
                         <Title c="teal" order={5}>
                           {" "}
-                          {output.scheduleState.value}%
+                          {output.state.scheduleState.value}%
                         </Title>
                       </Group>
                     )}
@@ -111,7 +111,7 @@ export default function OutputCard({
                           onLabel="On"
                           offLabel="Off"
                           disabled={controlMode !== ControlMode.manual}
-                          checked={output.manualState.value === 100}
+                          checked={output.state.manualState.value === 100}
                           onChange={async (event) => {
                             await setOutputManualStateAsync(
                               output.id,
@@ -123,7 +123,9 @@ export default function OutputCard({
                       ) : (
                         <Title c="teal" order={5}>
                           {" "}
-                          {output.scheduleState.value === 100 ? "On" : "Off"}
+                          {output.state.scheduleState.value === 100
+                            ? "On"
+                            : "Off"}
                         </Title>
                       )}
                     </Box>

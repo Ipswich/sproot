@@ -19,7 +19,7 @@ describe("PCA9685.ts tests", function () {
     sandbox.restore();
   });
 
-  it("should create and delete PCA9685 outputs", function () {
+  it("should create and delete PCA9685 outputs", async function () {
     sandbox.createStubInstance(Pca9685Driver);
     sandbox
       .stub(winston, "createLogger")
@@ -27,7 +27,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockSprootDB, logger);
-    const output1 = pca9685.createOutput({
+    const output1 = await pca9685.createOutput({
       id: 1,
       model: "pca9685",
       address: "0x40",
@@ -36,7 +36,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: true,
       isInvertedPwm: false,
     } as SDBOutput);
-    const output2 = pca9685.createOutput({
+    const output2 = await pca9685.createOutput({
       id: 2,
       model: "pca9685",
       address: "0x40",
@@ -45,7 +45,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
-    const output3 = pca9685.createOutput({
+    const output3 = await pca9685.createOutput({
       id: 3,
       model: "pca9685",
       address: "0x40",
@@ -54,7 +54,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: true,
       isInvertedPwm: true,
     } as SDBOutput);
-    const output4 = pca9685.createOutput({
+    const output4 = await pca9685.createOutput({
       id: 4,
       model: "pca9685",
       address: "0x40",
@@ -134,7 +134,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.schedule,
     );
-    assert.equal(pca9685.outputs["1"]?.scheduleState.value, 100);
+    assert.equal(pca9685.outputs["1"]?.state.scheduleState.value, 100);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 1);
     assert.equal(setDutyCycleStub.getCall(0).args[0], 0);
@@ -146,7 +146,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.schedule,
     );
-    assert.equal(pca9685.outputs["1"]?.scheduleState.value, 0);
+    assert.equal(pca9685.outputs["1"]?.state.scheduleState.value, 0);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 2);
     assert.equal(setDutyCycleStub.getCall(1).args[0], 0);
@@ -161,7 +161,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.manual,
     );
-    assert.equal(pca9685.outputs["1"]?.manualState.value, 0);
+    assert.equal(pca9685.outputs["1"]?.state.manualState.value, 0);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 3);
     assert.equal(setDutyCycleStub.getCall(2).args[0], 0);
@@ -173,7 +173,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.manual,
     );
-    assert.equal(pca9685.outputs["1"]?.manualState.value, 100);
+    assert.equal(pca9685.outputs["1"]?.state.manualState.value, 100);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 4);
     assert.equal(setDutyCycleStub.getCall(3).args[0], 0);
@@ -199,7 +199,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     pca9685.setNewOutputState("1", <SDBOutputState>{ value: 100 }, ControlMode.schedule);
-    assert.equal(pca9685.outputs["1"]?.scheduleState.value, 100);
+    assert.equal(pca9685.outputs["1"]?.state.scheduleState.value, 100);
     pca9685.executeOutputState("1"); //Receives individual output id as well.
     assert.equal(setDutyCycleStub.callCount, 6);
     assert.equal(setDutyCycleStub.getCall(5).args[0], 0);

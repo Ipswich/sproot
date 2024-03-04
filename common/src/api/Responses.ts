@@ -1,5 +1,5 @@
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
-import { ISensorBase, ReadingType } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ISensorBase, ReadingType } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { ChartData } from "@sproot/sproot-common/src/api/ChartData";
 

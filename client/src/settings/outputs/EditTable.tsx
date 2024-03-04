@@ -1,6 +1,9 @@
 import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
 import { Fragment, useState } from "react";
-import { deleteOutputAsync, updateOutputAsync } from "@sproot/sproot-client/src/requests";
+import {
+  deleteOutputAsync,
+  updateOutputAsync,
+} from "@sproot/sproot-client/src/requests";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";

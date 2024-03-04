@@ -7,10 +7,6 @@
       "@sproot/*": ["../common/src/*"]
     }
   },
-  "include": [
-    "./src/**/*"
-  ],
-  "exclude": [
-    "./dist/**/*"
-  ],
+  "include": ["./src/**/*"],
+  "exclude": ["./dist/**/*"]
 }

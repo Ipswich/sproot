@@ -1,6 +1,6 @@
 import { Table, ActionIcon } from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { IconEdit } from "@tabler/icons-react";
 
 interface EditablesTableProps {

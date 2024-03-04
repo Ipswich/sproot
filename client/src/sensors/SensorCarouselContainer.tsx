@@ -4,12 +4,15 @@ import "@mantine/carousel/styles.css";
 import {
   ISensorBase,
   ReadingType,
-} from "@sproot/sproot-common/src/sensors/SensorBase";
+} from "@sproot/sproot-common/src/sensors/ISensorBase";
 import {
   ChartData,
   ChartDataRecord,
 } from "@sproot/sproot-common/src/api/ChartData";
-import { getSensorsAsync, getChartDataAsync } from "@sproot/sproot-client/src/requests";
+import {
+  getSensorsAsync,
+  getChartDataAsync,
+} from "@sproot/sproot-client/src/requests";
 import CarouselSlideContents from "@sproot/sproot-client/src/sensors/CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
 
