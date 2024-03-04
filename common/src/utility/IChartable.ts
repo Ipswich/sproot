@@ -49,6 +49,36 @@ export class ChartData {
   static formatDecimalReadingForDisplay(data: string): string {
     return parseFloat(data).toFixed(3);
   }
+
+  static combineDataSeries(data: DataSeries[]): DataSeries {
+    const combinedInput = data.flat();
+    const grouped = combinedInput.reduce(
+      (acc, obj) => {
+        const key = obj.name;
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        // Add object to list for given key's value
+        acc[key]?.push(obj);
+        return acc;
+      },
+      {} as Record<string, DataPoint[]>,
+    );
+
+    const result = Object.entries(grouped).map(([key, value]) => {
+      const dataPoint: DataPoint = { name: key };
+      value.forEach((value) => {
+        Object.keys(value).forEach((key) => {
+          if (key !== "name") {
+            dataPoint[key] = value[key] as string | number;
+          }
+        });
+      });
+      return dataPoint;
+    });
+
+    return result;
+  }
 }
 
 export interface IChartable {

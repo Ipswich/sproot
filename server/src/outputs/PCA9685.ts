@@ -129,7 +129,6 @@ class PCA9685Output extends OutputBase {
   async initializeAsync(): Promise<void> {
     await this.loadCacheFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
     this.loadChartData();
-    console.log(this.chartData.get())
   }
 
   executeState(): void {

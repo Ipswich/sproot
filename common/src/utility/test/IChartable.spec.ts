@@ -74,5 +74,38 @@ describe("IChartable.ts tests", function () {
         assert.equal(chartData.dataSeries[1]?.name, "test3");
       });
     });
+
+    describe("combineDataSeries", function () {
+      it("should return a new DataSeries object with the combined data", function () {
+        const series1 = [
+          {
+            name: "test1",
+            data1: 1.234567,
+          } as DataPoint,
+          {
+            name: "test2",
+            data1: 2.345678,
+          } as DataPoint,
+        ];
+        const series2 = [
+          {
+            name: "test1",
+            data2: 1.234567,
+          } as DataPoint,
+          {
+            name: "test2",
+            data2: 2.345678,
+          } as DataPoint,
+        ];
+        const combinedDataSeries = ChartData.combineDataSeries([series1, series2]);
+        assert.equal(combinedDataSeries.length, 2);
+        assert.equal(combinedDataSeries[0]?.name, "test1");
+        assert.equal(combinedDataSeries[0]?.["data1"], 1.234567);
+        assert.equal(combinedDataSeries[0]?.["data2"], 1.234567);
+        assert.equal(combinedDataSeries[1]?.name, "test2");
+        assert.equal(combinedDataSeries[1]?.["data1"], 2.345678);
+        assert.equal(combinedDataSeries[1]?.["data2"], 2.345678);
+      });
+    });
   });
 });
