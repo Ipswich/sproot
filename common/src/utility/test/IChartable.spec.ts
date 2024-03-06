@@ -105,6 +105,7 @@ describe("IChartable.ts tests", function () {
         assert.equal(combinedDataSeries[1]?.name, "test2");
         assert.equal(combinedDataSeries[1]?.["data1"], 2.345678);
         assert.equal(combinedDataSeries[1]?.["data2"], 2.345678);
+        assert.isFalse(series1[0] === combinedDataSeries[0]);
       });
     });
   });

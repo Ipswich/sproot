@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { OutputList } from "@sproot/sproot-server/src/outputs/OutputList";
+import { OutputList, OutputListChartData } from "@sproot/sproot-server/src/outputs/OutputList";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
 import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import Pca9685Driver from "pca9685";
@@ -7,6 +7,7 @@ import Pca9685Driver from "pca9685";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
+import { DataPoint, DataSeries } from "@sproot/utility/IChartable";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
@@ -177,5 +178,51 @@ describe("OutputList.ts tests", function () {
     await outputList.initializeOrRegenerateAsync();
     outputList.dispose();
     assert.isEmpty(outputList.outputs);
+  });
+
+  describe("OutputListChart", function () {
+    describe("constructor", function () {
+      it("should create a new OutputListChart", function () {
+        const chartData = new OutputListChartData(3);
+        assert.exists(chartData);
+        assert.equal(chartData.chartData.limit, 3);
+      });
+    });
+
+    describe("loadChartData", function () {
+      it("should load chart data", async function () {
+        const chartData = new OutputListChartData(3);
+        const data = [
+          [{ name: "test1" } as DataPoint, { name: "test2" } as DataPoint] as DataSeries,
+        ] as DataSeries[];
+        chartData.loadChartData(data, "test");
+        assert.exists(chartData.chartData);
+        assert.equal(Object.values(chartData.chartData).length, 2);
+      });
+    });
+
+    describe("updateChartData", function () {
+      it("should update chart data", async function () {
+        const chartData = new OutputListChartData(3);
+        const data = [
+          [{ name: "test1", value1: "TEST!" } as DataPoint] as DataSeries,
+        ] as DataSeries[];
+        chartData.loadChartData(data, "test");
+        const newData = [
+          [
+            { name: "test2", value2: "TEST!" } as DataPoint,
+            { name: "test3", value2: "TEST!" } as DataPoint,
+          ] as DataSeries,
+          [
+            { name: "test2", value3: "TEST!" } as DataPoint,
+            { name: "test3", value3: "TEST!" } as DataPoint,
+          ] as DataSeries,
+        ] as DataSeries[];
+        chartData.updateChartData(newData, "ignored");
+        assert.exists(chartData.chartData);
+        assert.equal(Object.keys(chartData.chartData).length, 2);
+        assert.equal(Object.keys(chartData.chartData.dataSeries[1]!).length, 3);
+      });
+    });
   });
 });

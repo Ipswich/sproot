@@ -5,19 +5,20 @@ import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
-import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
+import { ChartData, DataSeries, IChartable } from "@sproot/sproot-common/dist/utility/IChartable";
 
 class OutputList {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
-  #chartData: ChartData[] = [];
+  chartData: OutputListChartData;
 
   constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(this.#sprootDB, this.#logger);
+    this.chartData = new OutputListChartData(Number(process.env["MAX_CHART_DATA_POINTS"]));
   }
 
   get outputs(): Record<string, OutputBase> {
@@ -44,21 +45,25 @@ class OutputList {
     return cleanObject;
   }
 
-  updateControlMode = (outputId: string, controlMode: ControlMode) =>
+  updateControlMode(outputId: string, controlMode: ControlMode): void {
     this.#outputs[outputId]?.state.updateControlMode(controlMode);
+  }
 
-  setNewOutputState = (
+  setNewOutputState(
     outputId: string,
     newState: SDBOutputState,
     targetControlMode: ControlMode,
-  ) => this.#outputs[outputId]?.state.setNewState(newState, targetControlMode);
+  ): void {
+    this.#outputs[outputId]?.state.setNewState(newState, targetControlMode);
+  }
 
-  executeOutputState = (outputId?: string) =>
+  executeOutputState(outputId?: string): void {
     outputId
       ? this.#outputs[outputId]?.executeState()
       : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
+  }
 
-  dispose = () => {
+  dispose(): void {
     for (const key in this.#outputs) {
       try {
         this.#deleteOutput(this.#outputs[key]!);
@@ -69,7 +74,7 @@ class OutputList {
       }
     }
     this.#outputs = {};
-  };
+  }
 
   async initializeOrRegenerateAsync(): Promise<void> {
     let outputListChanges = false;
@@ -81,17 +86,17 @@ class OutputList {
       if (key) {
         //Update old ones
         let update = false;
-        if (this.#outputs[key]?.name !== output.name) {
+        if (this.#outputs[key]?.name != output.name) {
           update = true;
           this.#outputs[key]!.name = output.name;
         }
 
-        if (this.#outputs[key]?.isPwm !== output.isPwm) {
+        if (this.#outputs[key]?.isPwm != output.isPwm) {
           update = true;
           this.#outputs[key]!.isPwm = output.isPwm;
         }
 
-        if (this.#outputs[key]?.isInvertedPwm !== output.isInvertedPwm) {
+        if (this.#outputs[key]?.isInvertedPwm != output.isInvertedPwm) {
           update = true;
           this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
         }
@@ -107,7 +112,7 @@ class OutputList {
         try {
           this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
 
-          await this.#createOutput(output);
+          await this.#createOutputAsync(output);
           outputListChanges = true;
         } catch (err) {
           this.#logger.error(
@@ -137,7 +142,8 @@ class OutputList {
     }
 
     if (outputListChanges) {
-      // this.loadChartDataFromCachedStates();
+      const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
+      this.chartData.loadChartData(dataSeries, "output");
     }
 
     profiler.done({
@@ -150,88 +156,11 @@ class OutputList {
     await this.#touchAllOutputsAsync(async (output) => {
       output.state.addCurrentStateToDatabaseAsync(output.id);
     });
-    // this.updateChartDataFromCachedStates();
+    this.chartData.updateChartData(
+      Object.values(this.outputs).map((output) => output.chartData.get()),
+      "output",
+    );
   }
-
-  //#####
-
-  loadChartDataFromCachedStates() {
-    //Format cached readings for recharts
-    const profiler = this.#logger.startTimer();
-    const chartObject = {} as Record<string, ChartData>;
-    for (const key in this.#outputs) {
-      const output = this.#outputs[key]!;
-      for (const state of output.cache.get()) {
-        const logTimeAsDate = new Date(state.logTime);
-        if (logTimeAsDate.getMinutes() % 5 !== 0) {
-          continue;
-        }
-        const logTime = this.#formatDateForChart(logTimeAsDate);
-        if (!chartObject[logTime]) {
-          chartObject[logTime] = {
-            name: logTime,
-          } as ChartData;
-        }
-        chartObject[logTime]![output.name] = state.value;
-      }
-    }
-    // Convert to array
-    this.#chartData = Object.values(chartObject);
-
-    //Remove extra readings
-    while (this.#chartData.length > Number(process.env["MAX_CHART_DATA_POINTS"]!)) {
-      this.#chartData.shift();
-    }
-
-    // Log changes
-    this.#logger.info(`Loaded output chart data. Data Count: ${this.#chartData.length}`);
-    profiler.done({
-      message: "OutputList loadChartDataFromCachedStates time",
-      level: "debug",
-    });
-  }
-
-  updateChartDataFromCachedStates() {
-    const profiler = this.#logger.startTimer();
-    let update = false;
-    let updatedChartData = {} as ChartData;
-    for (const output of Object.values(this.#outputs)) {
-      const states = output.cache.get();
-      const lastState = states[states.length - 1]!;
-      const logTimeAsDate = new Date(lastState.logTime);
-      // If it isn't a 5 minute interval, skip
-      if (logTimeAsDate.getMinutes() % 5 !== 0) {
-        continue;
-      }
-      update = true;
-      const formattedTime = this.#formatDateForChart(logTimeAsDate);
-      if (!updatedChartData[formattedTime]) {
-        updatedChartData = {
-          name: formattedTime,
-        } as ChartData;
-      }
-      updatedChartData[output.name] = lastState.value;
-    }
-    if (!update) {
-      return;
-    }
-    // Add new readings
-    this.#chartData.push(updatedChartData);
-
-    //Remove old readings
-    while (this.#chartData.length > Number(process.env["MAX_CHART_DATA_POINTS"]!)) {
-      this.#chartData.shift();
-    }
-
-    // Log changes
-    this.#logger.info(`Updated output chart data. Data count: ${this.#chartData.length}`);
-    profiler.done({
-      message: "OutputList updateChartDataFromCachedStates time",
-      level: "debug",
-    });
-  }
-
-  //#####
 
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {
     const promises = [];
@@ -246,7 +175,7 @@ class OutputList {
     await Promise.allSettled(promises);
   }
 
-  async #createOutput(output: SDBOutput): Promise<void> {
+  async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | null = null;
     switch (output.model.toLowerCase()) {
       case "pca9685": {
@@ -254,14 +183,14 @@ class OutputList {
           throw new OutputListError("PCA9685 address cannot be null");
         }
         newOutput = await this.#PCA9685.createOutput(output);
-        if (newOutput) {
-          this.#outputs[output.id] = newOutput;
-        }
         break;
       }
       default: {
         throw new OutputListError(`Unrecognized output model ${output.model}`);
       }
+    }
+    if (newOutput) {
+      this.#outputs[output.id] = newOutput;
     }
   }
 
@@ -280,16 +209,29 @@ class OutputList {
       }
     }
   }
+}
 
-  #formatDateForChart(date: Date): string {
-    let hours = date.getHours();
-    const amOrPm = hours >= 12 ? "pm" : "am";
-    hours = hours % 12 || 12;
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+class OutputListChartData implements IChartable {
+  chartData: ChartData;
+  #limit;
 
-    return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
+  constructor(limit: number) {
+    this.chartData = new ChartData(limit);
+    this.#limit = limit;
+  }
+
+  loadChartData(cache: DataSeries[], _name: string): void {
+    this.chartData = new ChartData(this.#limit, ChartData.combineDataSeries([...cache]));
+  }
+
+  updateChartData(cache: DataSeries[], _name: string): void {
+    const newValues = cache
+      .map((dataSeries) => dataSeries[dataSeries.length - 1]!)
+      .filter((value) => value !== undefined);
+    const newChartData = ChartData.combineDataSeries([newValues]);
+    if (newChartData[0] !== undefined) {
+      this.chartData.addDataPoint(newChartData[0]);
+    }
   }
 }
 
@@ -300,4 +242,4 @@ class OutputListError extends Error {
   }
 }
 
-export { OutputList };
+export { OutputList, OutputListChartData };

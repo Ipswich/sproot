@@ -103,10 +103,9 @@ export class OutputState implements IOutputState {
   manualState: SDBOutputState;
   scheduleState: SDBOutputState;
   controlMode: ControlMode;
-  sprootDB: ISprootDB;
-  logger: winston.Logger;
+  #sprootDB: ISprootDB;
 
-  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(sprootDB: ISprootDB, _logger: winston.Logger) {
     this.manualState = {
       value: 0,
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
@@ -116,8 +115,7 @@ export class OutputState implements IOutputState {
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
     } as SDBOutputState;
     this.controlMode = ControlMode.schedule;
-    this.sprootDB = sprootDB;
-    this.logger = logger;
+    this.#sprootDB = sprootDB;
   }
 
   get(): SDBOutputState {
@@ -170,7 +168,7 @@ export class OutputState implements IOutputState {
    * Adds the current state of the output to the database.
    */
   async addCurrentStateToDatabaseAsync(outputId: number): Promise<void> {
-    await this.sprootDB.addOutputStateAsync({
+    await this.#sprootDB.addOutputStateAsync({
       id: outputId,
       value: this.value,
       controlMode: this.controlMode,

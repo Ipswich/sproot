@@ -14,7 +14,7 @@ router.get("/", async (req: Request, res: Response) => {
   res.status(200).json({
     message: "Output information successfully retrieved",
     statusCode: 200,
-    outputs: result,
+    outputs: JSON.stringify(result),
     timestamp: new Date().toISOString(),
   });
 });

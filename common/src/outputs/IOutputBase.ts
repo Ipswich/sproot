@@ -16,10 +16,10 @@ interface IOutputBase {
   isPwm: boolean;
   isInvertedPwm: boolean;
   state: IOutputState;
-  value?: number;
-  controlMode?: ControlMode;
-  cache?: IQueueCacheable;
-  chartData?: IChartable;
+  value?: number | undefined;
+  controlMode?: ControlMode | undefined;
+  cache?: IQueueCacheable | undefined;
+  chartData?: IChartable | undefined;
 }
 
 interface IOutputState {
