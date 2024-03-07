@@ -16,14 +16,14 @@ describe("IChartable.ts tests", function () {
         let date = new Date(dateString);
         //Because timezones suck butts, use regex to verify it's the proper shape.
         const regex = /(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2}) (am|pm)/;
-
-        assert.isTrue(regex.exec(ChartData.formatDateForChart(dateString)));
-        assert.isTrue(regex.exec(ChartData.formatDateForChart(date)));
+        
+        assert.isTrue(regex.test(ChartData.formatDateForChart(dateString)));
+        assert.isTrue(regex.test(ChartData.formatDateForChart(date)));
         
         dateString = "2021-01-01T12:00:00Z";
         date = new Date(dateString);
-        assert.isTrue(regex.exec(ChartData.formatDateForChart(dateString)));
-        assert.isTrue(regex.exec(ChartData.formatDateForChart(date)));
+        assert.isTrue(regex.test(ChartData.formatDateForChart(dateString)));
+        assert.isTrue(regex.test(ChartData.formatDateForChart(date)));
       });
     });
 
