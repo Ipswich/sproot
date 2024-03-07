@@ -72,7 +72,7 @@ export abstract class OutputBase implements IOutputBase {
     try {
       await this.cache.loadCacheFromDatabaseAsync(this.id, minutes);
       this.logger.info(
-        `Loaded cached states for {id: ${this.id}}. Cache Size - ${this.cache.get().length}`,
+        `Loaded cached states for output {id: ${this.id}}. Cache Size - ${this.cache.get().length}`,
       );
     } catch (err) {
       this.logger.error(`Failed to load cached states for {id: ${this.id}}. ${err}`);
@@ -82,7 +82,7 @@ export abstract class OutputBase implements IOutputBase {
   protected updateCache(): void {
     this.cache.addData(this.state.get());
     this.logger.info(
-      `Updated cached states for {id: ${this.id}}. Cache Size - ${this.cache.get().length}`,
+      `Updated cached states for output {id: ${this.id}}. Cache Size - ${this.cache.get().length}`,
     );
   }
 
@@ -93,14 +93,14 @@ export abstract class OutputBase implements IOutputBase {
   loadChartData(): void {
     this.chartData.loadChartData(this.cache.get(), this.name);
     this.logger.info(
-      `Loaded chart data for {id: ${this.id}}. Chart data Size - ${this.chartData.get().length}`,
+      `Loaded chart data for output {id: ${this.id}}. Chart data Size - ${this.chartData.get().length}`,
     );
   }
 
   updateChartData(): void {
     this.chartData.updateChartData(this.cache.get(), this.name);
     this.logger.info(
-      `Updated chart data for {id: ${this.id}}. Chart data Size - ${this.chartData.get().length}`,
+      `Updated chart data for output {id: ${this.id}}. Chart data Size - ${this.chartData.get().length}`,
     );
   }
 }
