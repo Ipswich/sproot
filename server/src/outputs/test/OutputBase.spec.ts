@@ -255,7 +255,7 @@ describe("OutputBase.ts tests", function () {
 
         assert.equal(outputChartData.get().length, 1);
         assert.equal(outputChartData.get()[0]?.["Test"], 100);
-        assert.isTrue(outputChartData.get()[0]?.name.includes("7:30 pm"));
+        assert.isString(outputChartData.get()[0]?.name);
       });
     });
   });

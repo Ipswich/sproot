@@ -14,13 +14,16 @@ describe("IChartable.ts tests", function () {
       it("should format a date for the chart", function () {
         let dateString = "2021-01-01T00:00:00Z";
         let date = new Date(dateString);
-        assert.equal(ChartData.formatDateForChart(dateString), "12/31 4:00 pm");
-        assert.equal(ChartData.formatDateForChart(date), "12/31 4:00 pm");
+        //Because timezones suck butts, use regex to verify it's the proper shape.
+        const regex = /(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2}) (am|pm)/;
 
+        assert.isTrue(regex.exec(ChartData.formatDateForChart(dateString)));
+        assert.isTrue(regex.exec(ChartData.formatDateForChart(date)));
+        
         dateString = "2021-01-01T12:00:00Z";
         date = new Date(dateString);
-        assert.equal(ChartData.formatDateForChart(dateString), "1/1 4:00 am");
-        assert.equal(ChartData.formatDateForChart(date), "1/1 4:00 am");
+        assert.isTrue(regex.exec(ChartData.formatDateForChart(dateString)));
+        assert.isTrue(regex.exec(ChartData.formatDateForChart(date)));
       });
     });
 

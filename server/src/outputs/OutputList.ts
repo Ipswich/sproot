@@ -162,7 +162,7 @@ class OutputList {
     );
 
     this.#logger.info(
-      `Updated output chart data. Data count: ${Object.keys(this.chartData.chartData).length}}`,
+      `Updated output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}}`,
     );
   }
 

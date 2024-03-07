@@ -241,7 +241,6 @@ export class OutputChartData implements IChartable {
   }
 
   loadChartData(cache: SDBOutputState[], outputName: string): void {
-    console.time("loadChartData");
     for (const state of cache) {
       const formattedDate = ChartData.formatDateForChart(state.logTime);
       const value = this.get().find((x) => x.name == formattedDate);
@@ -249,7 +248,6 @@ export class OutputChartData implements IChartable {
         value[outputName] = state.value.toString();
       }
     }
-    console.timeEnd("loadChartData");
   }
 
   updateChartData(cache: SDBOutputState[], outputName: string): void {
