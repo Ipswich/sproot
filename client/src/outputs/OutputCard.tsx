@@ -78,7 +78,7 @@ export default function OutputCard({
                   <Box h={rem(32)}>
                     {controlMode === ControlMode.manual ? (
                       <Slider
-                        defaultValue={output.state.manualState.value!}
+                        defaultValue={output.state.manual.value!}
                         disabled={controlMode !== ControlMode.manual}
                         label={(value) => `${value}%`}
                         onChangeEnd={async (value) => {
@@ -97,7 +97,7 @@ export default function OutputCard({
                       <Group justify="space-around">
                         <Title c="teal" order={5}>
                           {" "}
-                          {output.state.scheduleState.value}%
+                          {output.state.schedule.value}%
                         </Title>
                       </Group>
                     )}
@@ -111,7 +111,7 @@ export default function OutputCard({
                           onLabel="On"
                           offLabel="Off"
                           disabled={controlMode !== ControlMode.manual}
-                          checked={output.state.manualState.value === 100}
+                          checked={output.state.manual.value === 100}
                           onChange={async (event) => {
                             await setOutputManualStateAsync(
                               output.id,
@@ -123,7 +123,7 @@ export default function OutputCard({
                       ) : (
                         <Title c="teal" order={5}>
                           {" "}
-                          {output.state.scheduleState.value === 100
+                          {output.state.schedule.value === 100
                             ? "On"
                             : "Off"}
                         </Title>

@@ -160,6 +160,8 @@ class OutputList {
       Object.values(this.outputs).map((output) => output.chartData.get()),
       "output",
     );
+    
+    this.#logger.info(`Updated output chart data. Data count: ${Object.keys(this.chartData.chartData).length}}`);
   }
 
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {

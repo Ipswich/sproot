@@ -23,8 +23,8 @@ interface IOutputBase {
 }
 
 interface IOutputState {
-  manualState: SDBOutputState;
-  scheduleState: SDBOutputState;
+  manual: SDBOutputState;
+  schedule: SDBOutputState;
   controlMode: ControlMode;
   value: number;
 }

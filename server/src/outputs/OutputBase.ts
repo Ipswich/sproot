@@ -106,17 +106,17 @@ export abstract class OutputBase implements IOutputBase {
 }
 
 export class OutputState implements IOutputState {
-  manualState: SDBOutputState;
-  scheduleState: SDBOutputState;
+  manual: SDBOutputState;
+  schedule: SDBOutputState;
   controlMode: ControlMode;
   #sprootDB: ISprootDB;
 
   constructor(sprootDB: ISprootDB, _logger: winston.Logger) {
-    this.manualState = {
+    this.manual = {
       value: 0,
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
     } as SDBOutputState;
-    this.scheduleState = {
+    this.schedule = {
       value: 0,
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
     } as SDBOutputState;
@@ -127,18 +127,18 @@ export class OutputState implements IOutputState {
   get(): SDBOutputState {
     switch (this.controlMode) {
       case ControlMode.manual:
-        return this.manualState;
+        return this.manual;
       case ControlMode.schedule:
-        return this.scheduleState;
+        return this.schedule;
     }
   }
 
   get value(): number {
     switch (this.controlMode) {
       case ControlMode.manual:
-        return this.manualState.value;
+        return this.manual.value;
       case ControlMode.schedule:
-        return this.scheduleState.value;
+        return this.schedule.value;
     }
   }
 
@@ -161,11 +161,11 @@ export class OutputState implements IOutputState {
   setNewState(newState: SDBOutputState, targetControlMode: ControlMode) {
     switch (targetControlMode) {
       case ControlMode.manual:
-        this.manualState = newState;
+        this.manual = newState;
         break;
 
       case ControlMode.schedule:
-        this.scheduleState = newState;
+        this.schedule = newState;
         break;
     }
   }

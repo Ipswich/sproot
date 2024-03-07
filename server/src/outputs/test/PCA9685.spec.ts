@@ -134,7 +134,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.schedule,
     );
-    assert.equal(pca9685.outputs["1"]?.state.scheduleState.value, 100);
+    assert.equal(pca9685.outputs["1"]?.state.schedule.value, 100);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 1);
     assert.equal(setDutyCycleStub.getCall(0).args[0], 0);
@@ -146,7 +146,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.schedule,
     );
-    assert.equal(pca9685.outputs["1"]?.state.scheduleState.value, 0);
+    assert.equal(pca9685.outputs["1"]?.state.schedule.value, 0);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 2);
     assert.equal(setDutyCycleStub.getCall(1).args[0], 0);
@@ -161,7 +161,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.manual,
     );
-    assert.equal(pca9685.outputs["1"]?.state.manualState.value, 0);
+    assert.equal(pca9685.outputs["1"]?.state.manual.value, 0);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 3);
     assert.equal(setDutyCycleStub.getCall(2).args[0], 0);
@@ -173,7 +173,7 @@ describe("PCA9685.ts tests", function () {
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.manual,
     );
-    assert.equal(pca9685.outputs["1"]?.state.manualState.value, 100);
+    assert.equal(pca9685.outputs["1"]?.state.manual.value, 100);
     pca9685.executeOutputState();
     assert.equal(setDutyCycleStub.callCount, 4);
     assert.equal(setDutyCycleStub.getCall(3).args[0], 0);
@@ -199,7 +199,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     pca9685.setNewOutputState("1", <SDBOutputState>{ value: 100 }, ControlMode.schedule);
-    assert.equal(pca9685.outputs["1"]?.state.scheduleState.value, 100);
+    assert.equal(pca9685.outputs["1"]?.state.schedule.value, 100);
     pca9685.executeOutputState("1"); //Receives individual output id as well.
     assert.equal(setDutyCycleStub.callCount, 6);
     assert.equal(setDutyCycleStub.getCall(5).args[0], 0);

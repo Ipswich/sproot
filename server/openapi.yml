@@ -1300,16 +1300,19 @@ components:
         isInvertedPwm:
           type: boolean
           example: false
-        manualState:
-          $ref: "#/components/schemas/State"
-        scheduleState:
-          $ref: "#/components/schemas/State"
-        controlMode:
-          type: string
-          enum:
-            - "manual"
-            - "schedule"
-          example: "manual"
+        state:
+          type: object
+          properties:
+            manual:
+              $ref: "#/components/schemas/State"
+            schedule:
+              $ref: "#/components/schemas/State"
+            controlMode:
+              type: string
+              enum:
+                - "manual"
+                - "schedule"
+              example: "manual"
 
     State:
       type: object
