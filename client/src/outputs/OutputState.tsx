@@ -18,7 +18,7 @@ export default function OutputState() {
 
     return () => clearInterval(interval);
   }, []);
-
+  console.log(outputs);
   return (
     <Fragment>
       {Object.keys(outputs).map((key) => (

@@ -11,7 +11,7 @@ describe("IChartable.ts tests", function () {
 
   describe("ChartData class", function () {
     describe("formatDateForChart", function () {
-      xit("should format a date for the chart", function () {
+      it("should format a date for the chart", function () {
         let dateString = "2021-01-01T00:00:00Z";
         let date = new Date(dateString);
         assert.equal(ChartData.formatDateForChart(dateString), "12/31 4:00 pm");

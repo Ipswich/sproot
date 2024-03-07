@@ -143,9 +143,7 @@ class OutputList {
 
     if (outputListChanges) {
       const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
-      console.time("loadChartData");
       this.chartData.loadChartData(dataSeries, "output");
-      console.timeEnd("loadChartData");
     }
 
     profiler.done({
@@ -227,9 +225,7 @@ class OutputListChartData implements IChartable {
   }
 
   loadChartData(cache: DataSeries[], _name: string): void {
-    console.time("combineDataSeries");
     const combinedData = ChartData.combineDataSeries([...cache]);
-    console.timeEnd("combineDataSeries");
     this.chartData = new ChartData(this.#limit, combinedData);
   }
 

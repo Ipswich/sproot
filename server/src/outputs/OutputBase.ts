@@ -241,14 +241,15 @@ export class OutputChartData implements IChartable {
   }
 
   loadChartData(cache: SDBOutputState[], outputName: string): void {
+    console.time("loadChartData");
     for (const state of cache) {
-      const value = this.get().filter(
-        (x) => x.name === ChartData.formatDateForChart(state.logTime),
-      );
-      if (value[0]) {
-        value[0][outputName] = state.value.toString();
+      const formattedDate = ChartData.formatDateForChart(state.logTime);
+      const value = this.get().find((x) => x.name == formattedDate);
+      if (value) {
+        value[outputName] = state.value.toString();
       }
     }
+    console.timeEnd("loadChartData");
   }
 
   updateChartData(cache: SDBOutputState[], outputName: string): void {
