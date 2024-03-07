@@ -123,9 +123,7 @@ export default function OutputCard({
                       ) : (
                         <Title c="teal" order={5}>
                           {" "}
-                          {output.state.schedule.value === 100
-                            ? "On"
-                            : "Off"}
+                          {output.state.schedule.value === 100 ? "On" : "Off"}
                         </Title>
                       )}
                     </Box>

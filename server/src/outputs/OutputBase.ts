@@ -85,18 +85,18 @@ export abstract class OutputBase implements IOutputBase {
       `Updated cached states for {id: ${this.id}}. Cache Size - ${this.cache.get().length}`,
     );
   }
-  
+
   getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
     return this.cache.get(offset, limit);
   }
-  
+
   loadChartData(): void {
     this.chartData.loadChartData(this.cache.get(), this.name);
     this.logger.info(
       `Loaded chart data for {id: ${this.id}}. Chart data Size - ${this.chartData.get().length}`,
     );
   }
-  
+
   updateChartData(): void {
     this.chartData.updateChartData(this.cache.get(), this.name);
     this.logger.info(
@@ -256,7 +256,7 @@ export class OutputChartData implements IChartable {
     if (lastCacheData) {
       this.chartData.addDataPoint({
         name: ChartData.formatDateForChart(lastCacheData.logTime),
-        [outputName]: lastCacheData.value.toString()
+        [outputName]: lastCacheData.value.toString(),
       });
     }
   }

@@ -51,7 +51,10 @@ export class ChartData {
   }
 
   static combineDataSeries(data: DataSeries[]): DataSeries {
+    console.time("flatten");
     const combinedInput = data.flat();
+    console.timeEnd("flatten");
+    console.time("reduce");
     const grouped = combinedInput.reduce(
       (acc, obj) => {
         const key = obj.name;
@@ -64,7 +67,9 @@ export class ChartData {
       },
       {} as Record<string, DataPoint[]>,
     );
+    console.timeEnd("reduce");
 
+    console.time("map");
     const result = Object.entries(grouped).map(([key, value]) => {
       const dataPoint: DataPoint = { name: key };
       value.forEach((value) => {
@@ -76,6 +81,7 @@ export class ChartData {
       });
       return dataPoint;
     });
+    console.timeEnd("map");
 
     return result;
   }

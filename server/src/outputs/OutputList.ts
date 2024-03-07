@@ -143,7 +143,9 @@ class OutputList {
 
     if (outputListChanges) {
       const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
+      console.time("loadChartData");
       this.chartData.loadChartData(dataSeries, "output");
+      console.timeEnd("loadChartData");
     }
 
     profiler.done({
@@ -160,8 +162,10 @@ class OutputList {
       Object.values(this.outputs).map((output) => output.chartData.get()),
       "output",
     );
-    
-    this.#logger.info(`Updated output chart data. Data count: ${Object.keys(this.chartData.chartData).length}}`);
+
+    this.#logger.info(
+      `Updated output chart data. Data count: ${Object.keys(this.chartData.chartData).length}}`,
+    );
   }
 
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {
@@ -223,7 +227,10 @@ class OutputListChartData implements IChartable {
   }
 
   loadChartData(cache: DataSeries[], _name: string): void {
-    this.chartData = new ChartData(this.#limit, ChartData.combineDataSeries([...cache]));
+    console.time("combineDataSeries");
+    const combinedData = ChartData.combineDataSeries([...cache]);
+    console.timeEnd("combineDataSeries");
+    this.chartData = new ChartData(this.#limit, combinedData);
   }
 
   updateChartData(cache: DataSeries[], _name: string): void {
