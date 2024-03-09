@@ -35,20 +35,20 @@ describe("IChartable.ts tests", function () {
       });
     });
 
-    describe("generateEmptyDataSeries", function() {
-      it("should generate an empty DataSeries", function() {
-        assert.isEmpty(ChartData.cachedEmptyDataSeries)
+    describe("generateEmptyDataSeries", function () {
+      it("should generate an empty DataSeries", function () {
+        assert.isEmpty(ChartData.cachedEmptyDataSeries);
         let dataSeries = ChartData.generateEmptyDataSeries(10, new Date("2021-01-01T00:00:00Z"));
         const id = ChartData.cachedEmptyDataSeriesID;
-        assert.equal(ChartData.cachedEmptyDataSeries.length, 10)
+        assert.equal(ChartData.cachedEmptyDataSeries.length, 10);
         assert.equal(dataSeries.length, 10);
 
         dataSeries = ChartData.generateEmptyDataSeries(10, new Date("2021-02-01T00:00:00Z"));
-        assert.equal(ChartData.cachedEmptyDataSeries.length, 10)
+        assert.equal(ChartData.cachedEmptyDataSeries.length, 10);
         assert.equal(dataSeries.length, 10);
         assert.notEqual(ChartData.cachedEmptyDataSeriesID, id);
       });
-    })
+    });
 
     describe("constructor", function () {
       it("should create a new ChartData object", function () {

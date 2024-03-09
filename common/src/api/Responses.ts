@@ -2,6 +2,7 @@ import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
 import { ISensorBase, ReadingType } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { ChartData } from "@sproot/sproot-common/src/api/ChartData";
+import { ChartData as NewChartData } from "@sproot/sproot-common/src/utility/IChartable";
 
 interface ApiResponse {
   message: string;
@@ -32,6 +33,10 @@ interface ApiChartDataResponse extends ApiResponse {
   moreReadingsAvailable?: boolean;
 }
 
+interface ApiOutputsChartDataResponse extends ApiResponse {
+  chartData: NewChartData;
+}
+
 export type {
   ApiResponse,
   ApiSupportedModelsResponse,
@@ -39,4 +44,5 @@ export type {
   ApiSensorsResponse,
   ApiReadingsResponse,
   ApiChartDataResponse,
+  ApiOutputsChartDataResponse,
 };

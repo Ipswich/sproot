@@ -11,7 +11,7 @@ import {
 } from "@sproot/sproot-common/src/api/ChartData";
 import {
   getSensorsAsync,
-  getChartDataAsync,
+  getSensorChartDataAsync,
 } from "@sproot/sproot-client/src/requests";
 import CarouselSlideContents from "@sproot/sproot-client/src/sensors/CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
@@ -47,7 +47,7 @@ export default function SensorCarouselContainer() {
     const result = {} as Record<string, ChartData[]>;
     for (const readingType of Object.values(ReadingType)) {
       promises.push(
-        getChartDataAsync(readingType).then((data) => {
+        getSensorChartDataAsync(readingType).then((data) => {
           result[readingType] = data.chartData[readingType]!;
         }),
       );
@@ -69,7 +69,7 @@ export default function SensorCarouselContainer() {
       filters[readingType] =
         localChartDataRecord.chartSubData[readingType].filters;
       promises.push(
-        getChartDataAsync(readingType, true).then((data) => {
+        getSensorChartDataAsync(readingType, true).then((data) => {
           result[readingType]!.push(data.chartData[readingType]![0]!);
         }),
       );

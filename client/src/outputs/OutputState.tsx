@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import OutputCard from "@sproot/sproot-client/src/outputs/OutputCard";
 import { getOutputsAsync } from "@sproot/sproot-client/src/requests";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { Paper } from "@mantine/core";
 
 export default function OutputState() {
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
@@ -18,16 +19,17 @@ export default function OutputState() {
 
     return () => clearInterval(interval);
   }, []);
-  console.log(outputs);
   return (
     <Fragment>
-      {Object.keys(outputs).map((key) => (
-        <OutputCard
-          key={"OutputCard-" + outputs[key]?.id}
-          output={outputs[key]!}
-          updateOutputsAsync={updateOutputsAsync}
-        />
-      ))}
+      <Paper shadow="sm" px="md" py="xs" radius="md" withBorder>
+        {Object.keys(outputs).map((key) => (
+          <OutputCard
+            key={"OutputCard-" + outputs[key]?.id}
+            output={outputs[key]!}
+            updateOutputsAsync={updateOutputsAsync}
+          />
+        ))}
+      </Paper>
     </Fragment>
   );
 }

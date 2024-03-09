@@ -37,7 +37,7 @@ export default function OutputCard({
     <Fragment>
       <Stack justify="space-around">
         <Group justify="space-around">
-          <Paper shadow="xs" radius="md" withBorder m="4" p="md" w={rem(400)}>
+          <Paper shadow="xs" radius="md" withBorder my="4" p="sm" w={rem(360)}>
             <Group justify="space-between">
               <SegmentedControl
                 styles={
