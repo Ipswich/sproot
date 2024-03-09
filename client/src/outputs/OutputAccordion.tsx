@@ -31,5 +31,5 @@ export default function OutputAccordion({
       </Accordion.Item>
     );
   });
-  return <Accordion defaultValue={firstOutput}>{items}</Accordion>;
+  return <Accordion defaultValue={firstOutput.toString()}>{items}</Accordion>;
 }

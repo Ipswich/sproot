@@ -29,7 +29,7 @@ export default function OutputStates() {
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [chartData, setChartData] = useState(
     new ChartData(
-      parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string),
+      parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
       [],
     ),
   );
@@ -47,10 +47,9 @@ export default function OutputStates() {
 
   const loadChartDataAsync = async () => {
     const chartData = await getOutputChartDataAsync();
-    console.log(chartData.chartData)
     setChartData(
       new ChartData(
-        parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string),
+        parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
         chartData.chartData,
       ),
     );
@@ -65,7 +64,7 @@ export default function OutputStates() {
     chartData.addDataPoint(newChartData.chartData[0]);
     setChartData(
       new ChartData(
-        parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string),
+        parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
         chartData.dataSeries,
       ),
     );

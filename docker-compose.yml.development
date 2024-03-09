@@ -44,7 +44,8 @@ services:
       dockerfile: ./client/Dockerfile.development
       args:
         VITE_PRECONFIGURED: "false"
-        VITE_MAX_CHART_ENTRIES: 10080
+        VITE_MAX_SENSOR_CHART_ENTRIES: 10080
+        VITE_MAX_OUTPUT_CHART_ENTRIES=2016
         VITE_API_SERVER_URL: ""
         VITE_CLIENT_VERSION: $npm_package_version
     environment:

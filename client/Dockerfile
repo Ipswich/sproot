@@ -16,7 +16,8 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 # Copy project
 COPY .. ./sproot
 RUN cd ./sproot && npm run install:common
-ARG VITE_MAX_CHART_ENTRIES
+ARG VITE_MAX_SENSOR_CHART_ENTRIES
+ARG VITE_MAX_OUTPUT_CHART_ENTRIES
 ARG VITE_API_SERVER_URL
 ARG VITE_CLIENT_VERSION
 RUN cd ./sproot && npm run install:client

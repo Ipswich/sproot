@@ -16,6 +16,9 @@ export class ChartData {
     this.limit = limit;
     if (dataSeries) {
       this.dataSeries = dataSeries;
+      while (this.dataSeries.length > limit) {
+        this.dataSeries.shift();
+      }
     } else {
       this.dataSeries = ChartData.generateEmptyDataSeries(this.limit, now);
     }
