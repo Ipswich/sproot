@@ -31,6 +31,23 @@ router.get("/supported-models", async (req: Request, res: Response) => {
   });
 });
 
+router.get("/chart-data", async (req: Request, res: Response) => {
+  const outputList = req.app.get("outputList") as OutputList;
+  const logger = req.app.get("logger") as winston.Logger;
+  const resultData =
+    req.query["latest"] == "true"
+      ? outputList.chartData.chartData.dataSeries.slice(-1)
+      : outputList.chartData.chartData.dataSeries;
+
+  logger.http("GET /api/v1/outputs/chart-data - 200, Success");
+  res.status(200).json({
+    message: "Chart data successfully retrieved",
+    statusCode: 200,
+    chartData: resultData,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 router.post("/", async (req: Request, res: Response) => {
   if (
     !req.body?.model ||

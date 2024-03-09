@@ -144,6 +144,9 @@ class OutputList {
     if (outputListChanges) {
       const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
       this.chartData.loadChartData(dataSeries, "output");
+      this.#logger.info(
+        `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}`,
+      );
     }
 
     profiler.done({
@@ -162,7 +165,7 @@ class OutputList {
     );
 
     this.#logger.info(
-      `Updated output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}}`,
+      `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}`,
     );
   }
 

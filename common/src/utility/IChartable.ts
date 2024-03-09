@@ -7,6 +7,8 @@ export interface DataPoint {
 export type DataSeries = DataPoint[];
 
 export class ChartData {
+  static cachedEmptyDataSeries: DataSeries = [];
+  static cachedEmptyDataSeriesID: string = "";
   dataSeries: DataSeries;
   readonly limit: number;
 
@@ -15,14 +17,12 @@ export class ChartData {
     if (dataSeries) {
       this.dataSeries = dataSeries;
     } else {
-      this.dataSeries = [];
-      const fiveMinutes = 1000 * 60 * 5;
-      let fiveMinuteDate = new Date(Math.floor(now.getTime() / fiveMinutes) * fiveMinutes);
-      for (let i = 0; i < this.limit; i++) {
-        this.dataSeries.unshift({ name: ChartData.formatDateForChart(fiveMinuteDate) });
-        fiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
-      }
+      this.dataSeries = ChartData.generateEmptyDataSeries(this.limit, now);
     }
+  }
+
+  get(): DataSeries {
+    return this.dataSeries;
   }
 
   public addDataPoint(dataPoint: DataPoint): void {
@@ -32,7 +32,26 @@ export class ChartData {
     }
   }
 
-  static formatDateForChart(date: Date | string): string {
+  public static generateEmptyDataSeries(limit: number, now: Date = new Date()): DataSeries {
+    const fiveMinutes = 1000 * 60 * 5;
+    const newDataSeries: DataSeries = [];
+    let fiveMinuteDate = new Date(Math.floor(now.getTime() / fiveMinutes) * fiveMinutes);
+
+    const dataId = this.formatDateForChart(fiveMinuteDate);
+    if (dataId === this.cachedEmptyDataSeriesID) {
+      return this.cachedEmptyDataSeries;
+    }
+    this.cachedEmptyDataSeriesID = dataId;
+
+    for (let i = 0; i < limit; i++) {
+      newDataSeries.unshift({ name: this.formatDateForChart(fiveMinuteDate) });
+      fiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
+    }
+    this.cachedEmptyDataSeries = newDataSeries;
+    return newDataSeries;
+  }
+
+  public static formatDateForChart(date: Date | string): string {
     if (typeof date === "string") {
       date = new Date(date);
     }
