@@ -94,6 +94,7 @@ interface ChartTooltipProps {
     | Record<string, { name: string; color: string; value: string }>[]
     | undefined;
 }
+
 function ChartTooltip({ label, payload }: ChartTooltipProps) {
   if (!payload) return null;
 

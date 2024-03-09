@@ -209,7 +209,7 @@ export async function getSensorChartDataAsync(
 export async function getOutputChartDataAsync(
   latest: boolean | undefined = undefined,
 ): Promise<ApiOutputsChartDataResponse> {
-  let queryString = `${SERVER_URL}/api/v1/output/chart-data`;
+  let queryString = `${SERVER_URL}/api/v1/outputs/chart-data`;
   const params = [];
   if (latest) {
     params.push(`latest=${latest}`);

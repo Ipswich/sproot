@@ -1,4 +1,3 @@
-import { Carousel } from "@mantine/carousel";
 import "@mantine/carousel/styles.css";
 import { Box } from "@mantine/core";
 import OutputAccordion from "./OutputAccordion";
@@ -6,8 +5,27 @@ import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { useState, useEffect } from "react";
 import { getOutputChartDataAsync, getOutputsAsync } from "../requests";
 import { ChartData } from "@sproot/sproot-common/src/utility/IChartable";
+import ChartContainer from "./ChartContainer";
 
-export default function SensorCarouselContainer() {
+const colors = [
+  "lime",
+  "green",
+  "teal",
+  "cyan",
+  "blue",
+  "indigo",
+  "violet",
+  "grape",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+];
+
+export default function OutputStates() {
+  const [chartRendering, setChartRendering] = useState(true);
+  // const [_, startTransition] = useTransition();
+
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [chartData, setChartData] = useState(
     new ChartData(
@@ -16,26 +34,35 @@ export default function SensorCarouselContainer() {
     ),
   );
 
+
+  const outputNames = Object.values(outputs).map((output) => output.name).filter((name) => name !== undefined);
+  const chartSeries = outputNames.map((outputName, index) => ({
+    name: outputName!,
+    color: colors[index % colors.length]!,
+  }));
+
   const updateOutputsAsync = async () => {
     setOutputs((await getOutputsAsync()).outputs);
   };
 
   const loadChartDataAsync = async () => {
     const chartData = await getOutputChartDataAsync();
+    console.log(chartData.chartData)
     setChartData(
       new ChartData(
         parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string),
-        chartData.chartData.dataSeries,
+        chartData.chartData,
       ),
     );
+    setChartRendering(false);
   };
 
   const updateChartDataAsync = async () => {
     const newChartData = await getOutputChartDataAsync(true);
-    if (!newChartData.chartData.dataSeries[0]) {
+    if (!newChartData.chartData || !newChartData.chartData[0]) {
       return;
     }
-    chartData.addDataPoint(newChartData.chartData.dataSeries[0]);
+    chartData.addDataPoint(newChartData.chartData[0]);
     setChartData(
       new ChartData(
         parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string),
@@ -55,35 +82,15 @@ export default function SensorCarouselContainer() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  console.log(chartData.dataSeries);
+
   return (
     <>
       <Box pos="relative">
-        <Carousel
-          loop
-          height="100%"
-          style={{ flex: 1 }}
-          slideGap={20}
-          controlsOffset="xs"
-        >
-          <Carousel.Slide key={"SwiperSlide-Output-States"}>
-            <OutputAccordion
-              outputs={outputs}
-              updateOutputsAsync={updateOutputsAsync}
-            ></OutputAccordion>
-          </Carousel.Slide>
-          <Carousel.Slide key={"SwiperSlide-Output-Chart"}>
-            {/* <CarouselSlideContents
-                lastUpdated={lastUpdated}
-                readingType={readingType as ReadingType}
-                sensorNames={sensorNames}
-                sensors={sensors}
-                chartData={
-                  chartDataRecord.chartData[readingType as ReadingType]!
-                }
-              /> */}
-          </Carousel.Slide>
-        </Carousel>
+        <ChartContainer chartData={chartData} chartSeries={chartSeries} chartRendering={chartRendering} setChartRendering={setChartRendering}></ChartContainer>
+        <OutputAccordion
+          outputs={outputs}
+          updateOutputsAsync={updateOutputsAsync}
+        ></OutputAccordion>
       </Box>
     </>
   );

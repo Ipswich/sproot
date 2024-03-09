@@ -31,6 +31,5 @@ export default function OutputAccordion({
       </Accordion.Item>
     );
   });
-  console.log(firstOutput === "Relay #1");
   return <Accordion defaultValue={firstOutput}>{items}</Accordion>;
 }

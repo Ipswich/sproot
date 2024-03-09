@@ -12,10 +12,10 @@ import SensorSettings from "./settings/sensors/SensorSettings";
 
 import { Pages } from "./shell/Pages";
 import OutputSettings from "./settings/outputs/OutputSettings";
-import OutputCarouselContainer from "./outputs/OutputCarouselContainer";
+import OutputStates from "./outputs/OutputStates";
 
 const pages = new Pages();
-const homePage = pages.pages[0]!;
+const homePage = pages.pages[1]!;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(homePage);
@@ -59,7 +59,7 @@ function App() {
               {currentPage.navLinkText === "Current Conditions" ? (
                 <SensorCarouselContainer />
               ) : currentPage.navLinkText === "Output States" ? (
-                <OutputCarouselContainer />
+                <OutputStates />
               ) : currentPage.navLinkText ===
                 "Schedule" ? undefined : currentPage.navLinkText ===
                 "Triggers" ? undefined : currentPage.navLinkText ===
