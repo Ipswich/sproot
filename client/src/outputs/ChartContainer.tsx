@@ -1,6 +1,5 @@
 import { ChartData } from "@sproot/utility/IChartable";
 import Chart from "./Chart";
-import { useTransition } from "react";
 
 interface ChartContainerProps {
   chartData: ChartData;
@@ -9,9 +8,12 @@ interface ChartContainerProps {
   setChartRendering: (value: boolean) => void;
 }
 
-export default function ChartContainer({ chartData, chartSeries, chartRendering, setChartRendering }: ChartContainerProps) {
-  const [_, startTransition] = useTransition();
-
+export default function ChartContainer({
+  chartData,
+  chartSeries,
+  chartRendering,
+  setChartRendering,
+}: ChartContainerProps) {
   return (
     <Chart
       chartData={chartData}
@@ -20,5 +22,4 @@ export default function ChartContainer({ chartData, chartSeries, chartRendering,
       setChartRendering={setChartRendering}
     />
   );
-
 }

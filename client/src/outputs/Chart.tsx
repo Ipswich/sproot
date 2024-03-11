@@ -3,7 +3,6 @@ import { Box, LoadingOverlay } from "@mantine/core";
 // import { Paper, Text } from "@mantine/core";
 import { ChartData } from "@sproot/sproot-common/src/utility/IChartable";
 
-
 export interface OutputChartProps {
   chartData: ChartData;
   chartSeries: { name: string; color: string }[];
@@ -11,13 +10,14 @@ export interface OutputChartProps {
   setChartRendering: (value: boolean) => void;
 }
 
-export default function OutputChart({ chartData, chartSeries, chartRendering, setChartRendering }: OutputChartProps) {
-
-  
+export default function OutputChart({
+  chartData,
+  chartSeries,
+  chartRendering,
+}: OutputChartProps) {
   if (!chartData) {
     return null;
   }
-
 
   return (
     <Box pos="relative">
@@ -53,9 +53,8 @@ export default function OutputChart({ chartData, chartSeries, chartRendering, se
         withLegend={false}
         withXAxis
         withYAxis
-        xAxisProps={{dataKey: "name"}}
-        yAxisProps={{domain: [0, 100]}}
-        
+        xAxisProps={{ dataKey: "name" }}
+        yAxisProps={{ domain: [0, 100] }}
         // unit={unit}
         dataKey="outputName"
         series={chartSeries}

@@ -53,7 +53,7 @@ export default function OutputCard({
                         },
                       }
                 }
-                w={"28%"}
+                w={"30%"}
                 color={segmentedControlColor}
                 orientation="vertical"
                 value={controlMode}
@@ -70,7 +70,7 @@ export default function OutputCard({
                   await updateOutputsAsync();
                 }}
               />
-              <Stack justify="space-around" w={"66%"}>
+              <Stack justify="space-around" w={"64%"}>
                 <Group justify="space-around">
                   <Title order={4}>{output.name}</Title>
                 </Group>

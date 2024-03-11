@@ -1,5 +1,5 @@
 import "@mantine/carousel/styles.css";
-import { Box } from "@mantine/core";
+import { Box, Paper } from "@mantine/core";
 import OutputAccordion from "./OutputAccordion";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { useState, useEffect } from "react";
@@ -34,8 +34,9 @@ export default function OutputStates() {
     ),
   );
 
-
-  const outputNames = Object.values(outputs).map((output) => output.name).filter((name) => name !== undefined);
+  const outputNames = Object.values(outputs)
+    .map((output) => output.name)
+    .filter((name) => name !== undefined);
   const chartSeries = outputNames.map((outputName, index) => ({
     name: outputName!,
     color: colors[index % colors.length]!,
@@ -85,11 +86,19 @@ export default function OutputStates() {
   return (
     <>
       <Box pos="relative">
-        <ChartContainer chartData={chartData} chartSeries={chartSeries} chartRendering={chartRendering} setChartRendering={setChartRendering}></ChartContainer>
-        <OutputAccordion
-          outputs={outputs}
-          updateOutputsAsync={updateOutputsAsync}
-        ></OutputAccordion>
+        <Paper shadow="sm" px="md" py="xs" radius="md" withBorder>
+          <ChartContainer
+            chartData={chartData}
+            chartSeries={chartSeries}
+            chartRendering={chartRendering}
+            setChartRendering={setChartRendering}
+          ></ChartContainer>
+          <OutputAccordion
+            chartSeries={chartSeries}
+            outputs={outputs}
+            updateOutputsAsync={updateOutputsAsync}
+          ></OutputAccordion>
+        </Paper>
       </Box>
     </>
   );

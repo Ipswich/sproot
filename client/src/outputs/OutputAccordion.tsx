@@ -3,27 +3,26 @@ import { Accordion } from "@mantine/core";
 import OutputCard from "./OutputCard";
 
 interface OutputAccordionProps {
+  chartSeries: { name: string; color: string }[];
   outputs: Record<string, IOutputBase>;
   updateOutputsAsync: () => Promise<void>;
 }
 
 export default function OutputAccordion({
+  // chartSeries,
   outputs,
   updateOutputsAsync,
 }: OutputAccordionProps) {
-  let firstOutput = Object.keys(outputs)[0]
-    ? outputs[Object.keys(outputs)[0]!]?.name ?? ""
-    : "";
+  let value = 0;
   const items = Object.keys(outputs).map((key) => {
+    value++;
     const output = outputs[key];
     if (!output) {
       return null;
     }
-    if (firstOutput === "") {
-      firstOutput = output.name ?? "";
-    }
+    // const seriesData = chartSeries.find((series) => series.name === output.name);
     return (
-      <Accordion.Item key={output.name} value={output.name ?? ""}>
+      <Accordion.Item key={output.name} value={`item-${value}`}>
         <Accordion.Control>{output.name}</Accordion.Control>
         <Accordion.Panel>
           <OutputCard output={output} updateOutputsAsync={updateOutputsAsync} />
@@ -31,5 +30,6 @@ export default function OutputAccordion({
       </Accordion.Item>
     );
   });
-  return <Accordion defaultValue={firstOutput.toString()}>{items}</Accordion>;
+
+  return <Accordion defaultValue={"item-1"}>{items}</Accordion>;
 }
