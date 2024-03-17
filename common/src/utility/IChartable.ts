@@ -28,21 +28,21 @@ export class ChartData {
     return this.dataSeries;
   }
 
-  public addDataPoint(dataPoint: DataPoint): void {
+  addDataPoint(dataPoint: DataPoint): void {
     this.dataSeries.push(dataPoint);
     if (this.dataSeries.length > this.limit) {
       this.dataSeries.shift();
     }
   }
 
-  public static generateEmptyDataSeries(limit: number, now: Date = new Date()): DataSeries {
+  static generateEmptyDataSeries(limit: number, now: Date = new Date()): DataSeries {
     const fiveMinutes = 1000 * 60 * 5;
     const newDataSeries: DataSeries = [];
     let fiveMinuteDate = new Date(Math.floor(now.getTime() / fiveMinutes) * fiveMinutes);
 
     const dataId = this.formatDateForChart(fiveMinuteDate);
     if (dataId === this.cachedEmptyDataSeriesID) {
-      return this.cachedEmptyDataSeries;
+      return this.cachedEmptyDataSeries.map((x) => ({ ...x }));
     }
     this.cachedEmptyDataSeriesID = dataId;
 
@@ -54,7 +54,7 @@ export class ChartData {
     return newDataSeries;
   }
 
-  public static formatDateForChart(date: Date | string): string {
+  static formatDateForChart(date: Date | string): string {
     if (typeof date === "string") {
       date = new Date(date);
     }

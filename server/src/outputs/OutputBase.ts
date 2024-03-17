@@ -68,6 +68,25 @@ export abstract class OutputBase implements IOutputBase {
     this.executeState();
   }
 
+  async publishState(): Promise<void> {
+    this.addCurrentStateToCache();
+    if (new Date().getMinutes() % 5 == 0) {
+      this.updateChartData();
+    }
+    try {
+      await this.state.addCurrentStateToDatabaseAsync(this.id);
+    } catch (error) {
+      this.logger.error(`Error adding state to database for output ${this.id}: ${error}`);
+    }
+  }
+
+  protected addCurrentStateToCache(): void {
+    this.cache.addData(this.state.get());
+    this.logger.info(
+      `Updated cached states for output {id: ${this.id}}. Cache Size - ${this.cache.get().length}`,
+    );
+  }
+
   async loadCacheFromDatabaseAsync(minutes: number): Promise<void> {
     try {
       await this.cache.loadCacheFromDatabaseAsync(this.id, minutes);
@@ -77,13 +96,6 @@ export abstract class OutputBase implements IOutputBase {
     } catch (err) {
       this.logger.error(`Failed to load cached states for {id: ${this.id}}. ${err}`);
     }
-  }
-
-  protected updateCache(): void {
-    this.cache.addData(this.state.get());
-    this.logger.info(
-      `Updated cached states for output {id: ${this.id}}. Cache Size - ${this.cache.get().length}`,
-    );
   }
 
   getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
@@ -102,6 +114,7 @@ export abstract class OutputBase implements IOutputBase {
     this.logger.info(
       `Updated chart data for output {id: ${this.id}}. Chart data Size - ${this.chartData.get().length}`,
     );
+    console.table(this.chartData.get().slice(-25));
   }
 }
 
@@ -113,12 +126,14 @@ export class OutputState implements IOutputState {
 
   constructor(sprootDB: ISprootDB, _logger: winston.Logger) {
     this.manual = {
+      controlMode: ControlMode.manual,
       value: 0,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      logTime: new Date().toISOString(),
     } as SDBOutputState;
     this.schedule = {
+      controlMode: ControlMode.schedule,
       value: 0,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      logTime: new Date().toISOString(),
     } as SDBOutputState;
     this.controlMode = ControlMode.schedule;
     this.#sprootDB = sprootDB;
@@ -142,6 +157,15 @@ export class OutputState implements IOutputState {
     }
   }
 
+  get logTime(): string {
+    switch (this.controlMode) {
+      case ControlMode.manual:
+        return this.manual.logTime;
+      case ControlMode.schedule:
+        return this.schedule.logTime;
+    }
+  }
+
   /**
    * Updates the control mode for the output; used to switch between manual and schedule modes
    * @param controlMode Mode to give system control to.
@@ -161,11 +185,11 @@ export class OutputState implements IOutputState {
   setNewState(newState: SDBOutputState, targetControlMode: ControlMode) {
     switch (targetControlMode) {
       case ControlMode.manual:
-        this.manual = newState;
+        this.manual = { ...newState, controlMode: ControlMode.manual };
         break;
 
       case ControlMode.schedule:
-        this.schedule = newState;
+        this.schedule = { ...newState, controlMode: ControlMode.schedule };
         break;
     }
   }
@@ -222,7 +246,7 @@ export class OutputCache implements IQueueCacheable {
     this.queueCache.addData({
       controlMode: state.controlMode,
       value: state.value,
-      logTime: state.logTime ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+      logTime: new Date().toISOString(),
     } as SDBOutputState);
   }
 
@@ -253,10 +277,14 @@ export class OutputChartData implements IChartable {
   updateChartData(cache: SDBOutputState[], outputName: string): void {
     const lastCacheData = cache[cache.length - 1];
     if (lastCacheData) {
-      this.chartData.addDataPoint({
-        name: ChartData.formatDateForChart(lastCacheData.logTime),
-        [outputName]: lastCacheData.value.toString(),
-      });
+      const name = ChartData.formatDateForChart(lastCacheData.logTime);
+      //Add Only if not the same time stamp as the last data point
+      if (name != this.chartData.get().slice(-1)[0]?.name) {
+        this.chartData.addDataPoint({
+          name,
+          [outputName]: lastCacheData.value.toString(),
+        });
+      }
     }
   }
 }
