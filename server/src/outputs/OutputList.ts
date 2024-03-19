@@ -145,7 +145,7 @@ class OutputList {
       const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
       this.chartData.loadChartData(dataSeries, "output");
       this.#logger.info(
-        `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}`,
+        `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
       );
     }
 
@@ -167,11 +167,8 @@ class OutputList {
       );
     }
 
-    console.table(this.chartData.chartData.get().slice(0, 25));
-    console.table(this.chartData.chartData.get().slice(-25));
-
     this.#logger.info(
-      `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}`,
+      `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
     );
   }
 

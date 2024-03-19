@@ -36,8 +36,8 @@ router.get("/chart-data", async (req: Request, res: Response) => {
   const logger = req.app.get("logger") as winston.Logger;
   const resultData =
     req.query["latest"] == "true"
-      ? outputList.chartData.chartData.dataSeries.slice(-1)
-      : outputList.chartData.chartData.dataSeries;
+      ? outputList.chartData.chartData.get().slice(-1)
+      : outputList.chartData.chartData.get();
 
   logger.http("GET /api/v1/outputs/chart-data - 200, Success");
   res.status(200).json({

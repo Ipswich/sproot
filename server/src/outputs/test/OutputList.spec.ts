@@ -221,7 +221,7 @@ describe("OutputList.ts tests", function () {
         chartData.updateChartData(newData, "ignored");
         assert.exists(chartData.chartData);
         assert.equal(Object.keys(chartData.chartData).length, 2);
-        assert.equal(Object.keys(chartData.chartData.dataSeries[1]!).length, 3);
+        assert.equal(Object.keys(chartData.chartData.get()[1]!).length, 3);
       });
     });
   });

@@ -1,16 +1,16 @@
 import {
   OutputCache,
   OutputChartData,
-  OutputState /*OutputCache, OutputChartData */,
-} from "../OutputBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+  OutputState,
+} from "@sproot/sproot-server/src/outputs/OutputBase";
+import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ControlMode } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import winston from "winston";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { ChartData } from "@sproot/sproot-common/dist/utility/IChartable";
+import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
+import { ChartData } from "@sproot/sproot-common/src/utility/IChartable";
 const sandbox = sinon.createSandbox();
 
 describe("OutputBase.ts tests", function () {

@@ -114,7 +114,6 @@ export abstract class OutputBase implements IOutputBase {
     this.logger.info(
       `Updated chart data for output {id: ${this.id}}. Chart data Size - ${this.chartData.get().length}`,
     );
-    console.table(this.chartData.get().slice(-25));
   }
 }
 
@@ -260,8 +259,9 @@ export class OutputChartData implements IChartable {
   constructor(limit: number, dataSeries?: DataSeries) {
     this.chartData = new ChartData(limit, dataSeries);
   }
+
   get(): DataSeries {
-    return this.chartData.dataSeries;
+    return this.chartData.get();
   }
 
   loadChartData(cache: SDBOutputState[], outputName: string): void {
