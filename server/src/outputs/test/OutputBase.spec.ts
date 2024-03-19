@@ -10,6 +10,7 @@ import winston from "winston";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
+import { ChartData } from "@sproot/sproot-common/dist/utility/IChartable";
 const sandbox = sinon.createSandbox();
 
 describe("OutputBase.ts tests", function () {
@@ -111,12 +112,12 @@ describe("OutputBase.ts tests", function () {
           {
             controlMode: ControlMode.schedule,
             value: 100,
-            logTime: "2024-03-03 03:29:01",
+            logTime: "2024-03-03T03:29:01Z",
           } as SDBOutputState,
           {
             controlMode: ControlMode.manual,
             value: 200,
-            logTime: "2024-03-03 03:30:01",
+            logTime: "2024-03-03T03:30:01Z",
           } as SDBOutputState,
         ]);
         const outputCache = new OutputCache(2, mockSprootDB, logger);
@@ -147,7 +148,7 @@ describe("OutputBase.ts tests", function () {
         assert.equal(outputCache.get().length, 1);
         assert.equal(outputCache.get()[0]!.controlMode, ControlMode.schedule);
         assert.equal(outputCache.get()[0]!.value, 100);
-        assert.isFalse(
+        assert.isTrue(
           outputCache.get()[0]!.logTime.includes("Z") &&
             outputCache.get()[0]!.logTime.includes("T"),
         );
@@ -211,30 +212,42 @@ describe("OutputBase.ts tests", function () {
     describe("loadChartData", function () {
       it("should load chart data from the given cache into existing chart data", function () {
         const outputCache = new OutputCache(4, mockSprootDB, logger);
-        outputCache.addData({
-          logTime: "3/3 6:40 pm",
-          controlMode: ControlMode.manual,
-          value: 100,
-        } as SDBOutputState);
-        outputCache.addData({
-          logTime: "3/3 6:45 pm",
-          controlMode: ControlMode.schedule,
-          value: 30,
-        } as SDBOutputState);
-        outputCache.addData({
-          logTime: "3/3 6:47 pm",
-          controlMode: ControlMode.manual,
-          value: 0,
-        } as SDBOutputState); //should be ignored
-        outputCache.addData({
-          logTime: "3/3 6:50 pm",
-          controlMode: ControlMode.manual,
-          value: 0,
-        } as SDBOutputState);
+        outputCache.addData(
+          {
+            logTime: "2024-03-03T18:40:01Z",
+            controlMode: ControlMode.manual,
+            value: 100,
+          } as SDBOutputState,
+          new Date("2024-03-03T18:40:01Z"),
+        );
+        outputCache.addData(
+          {
+            logTime: "2024-03-03T18:45:01Z",
+            controlMode: ControlMode.schedule,
+            value: 30,
+          } as SDBOutputState,
+          new Date("2024-03-03T18:45:01Z"),
+        );
+        outputCache.addData(
+          {
+            logTime: "2024-03-03T18:47:01Z",
+            controlMode: ControlMode.manual,
+            value: 0,
+          } as SDBOutputState,
+          new Date("2024-03-03T18:47:01Z"),
+        ); //should be ignored
+        outputCache.addData(
+          {
+            logTime: "2024-03-03T18:50:01Z",
+            controlMode: ControlMode.manual,
+            value: 0,
+          } as SDBOutputState,
+          new Date("2024-03-03T18:50:01Z"),
+        );
         const outputChartData = new OutputChartData(4, [
-          { name: "3/3 6:40 pm" },
-          { name: "3/3 6:45 pm" },
-          { name: "3/3 6:50 pm" },
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")) },
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")) },
         ]);
         outputChartData.loadChartData(outputCache.get(), "Test");
 

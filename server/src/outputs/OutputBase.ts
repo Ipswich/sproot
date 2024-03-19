@@ -226,19 +226,19 @@ export class OutputCache implements IQueueCacheable {
       { id: outputId },
       new Date(),
       minutes,
-      false,
+      true,
     );
     for (const sdbState of sdbStates) {
       const newState = {
         controlMode: sdbState.controlMode,
         value: sdbState.value,
-        logTime: sdbState.logTime?.replace(" ", "T") + "Z",
+        logTime: sdbState.logTime,
       } as SDBOutputState;
       this.queueCache.addData(newState);
     }
   }
 
-  addData(state: SDBOutputState): void {
+  addData(state: SDBOutputState, now = new Date()): void {
     if (state.value == undefined) {
       return;
     }
@@ -246,7 +246,7 @@ export class OutputCache implements IQueueCacheable {
     this.queueCache.addData({
       controlMode: state.controlMode,
       value: state.value,
-      logTime: new Date().toISOString(),
+      logTime: now.toISOString(),
     } as SDBOutputState);
   }
 
