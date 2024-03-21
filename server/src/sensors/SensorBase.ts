@@ -171,9 +171,9 @@ abstract class SensorBase implements ISensorBase, IChartable {
     for (const readingType in this.cachedReadings) {
       for (const reading of this.cachedReadings[readingType as ReadingType]) {
         if (!this.chartData[readingType as ReadingType]) {
-          const value = this.chartData[readingType as ReadingType]?.dataSeries.filter(
-            (x) => x.name === ChartData.formatDateForChart(reading.logTime),
-          );
+          const value = this.chartData[readingType as ReadingType]
+            ?.get()
+            .filter((x) => x.name === ChartData.formatDateForChart(reading.logTime));
           if (value && value[0]) {
             value[0][this.name] = ChartData.formatDecimalReadingForDisplay(reading.data);
           }

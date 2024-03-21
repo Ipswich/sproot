@@ -54,15 +54,21 @@ describe("IChartable.ts tests", function () {
       it("should create a new ChartData object", function () {
         const chartData = new ChartData(10, undefined, new Date("2021-01-01T00:00:00Z"));
         assert.equal(chartData.limit, 10);
-        assert.equal(chartData.dataSeries.length, 10);
+        assert.equal(chartData.get().length, 10);
         assert.equal(
-          chartData.dataSeries[9]?.name,
+          chartData.get()[9]?.name,
           ChartData.formatDateForChart(new Date("2021-01-01T00:00:00Z")),
         );
         assert.equal(
-          chartData.dataSeries[8]?.name,
+          chartData.get()[8]?.name,
           ChartData.formatDateForChart(new Date("2021-12-31T23:55:00Z")),
         );
+      });
+
+      it("should copy (not reference) the cache to new ChartData objects", function () {
+        const chartData1 = new ChartData(10);
+        const chartData2 = new ChartData(10);
+        assert.notEqual(chartData1.get(), chartData2.get());
       });
 
       it("should create a new ChartData object with a DataSeries", function () {
@@ -74,22 +80,22 @@ describe("IChartable.ts tests", function () {
         ];
         const chartData = new ChartData(10, dataSeries as DataSeries);
         assert.equal(chartData.limit, 10);
-        assert.equal(chartData.dataSeries.length, 1);
-        assert.equal(chartData.dataSeries[0]?.name, "test");
+        assert.equal(chartData.get().length, 1);
+        assert.equal(chartData.get()[0]?.name, "test");
       });
     });
 
     describe("addDataPoint", function () {
       it("should add a new DataPoint to the ChartData and remove the oldest DataPoint", function () {
         const chartData = new ChartData(2, []);
-        assert.equal(chartData.dataSeries.length, 0);
+        assert.equal(chartData.get().length, 0);
 
         chartData.addDataPoint({ name: "test1" });
         chartData.addDataPoint({ name: "test2" });
         chartData.addDataPoint({ name: "test3" });
-        assert.equal(chartData.dataSeries.length, 2);
-        assert.equal(chartData.dataSeries[0]?.name, "test2");
-        assert.equal(chartData.dataSeries[1]?.name, "test3");
+        assert.equal(chartData.get().length, 2);
+        assert.equal(chartData.get()[0]?.name, "test2");
+        assert.equal(chartData.get()[1]?.name, "test3");
       });
     });
 
@@ -124,6 +130,40 @@ describe("IChartable.ts tests", function () {
         assert.equal(combinedDataSeries[1]?.["data1"], 2.345678);
         assert.equal(combinedDataSeries[1]?.["data2"], 2.345678);
         assert.isFalse(series1[0] === combinedDataSeries[0]);
+      });
+    });
+
+    describe("generateStatsForDataSeries", function () {
+      it("should return a new DataSeriesStats object", function () {
+        const series = [
+          {
+            name: "test1",
+            data1: 1.0,
+            data2: 2.0,
+          } as DataPoint,
+          {
+            name: "test2",
+            data1: 2.0,
+            data2: 3.0,
+          } as DataPoint,
+        ];
+        const stats = ChartData.generateStatsForDataSeries(series);
+
+        assert.equal(stats.counts["data1"], 2);
+        assert.equal(stats.totals["data1"], 3.0);
+        assert.equal(stats.minimums["data1"], 1.0);
+        assert.equal(stats.maximums["data1"], 2.0);
+        assert.equal(stats.averages["data1"], 1.5);
+
+        assert.equal(stats.counts["data2"], 2);
+        assert.equal(stats.totals["data2"], 5.0);
+        assert.equal(stats.minimums["data2"], 2.0);
+        assert.equal(stats.maximums["data2"], 3.0);
+        assert.equal(stats.averages["data2"], 2.5);
+
+        assert.equal(stats.cumulativeMin, 1.0);
+        assert.equal(stats.cumulativeMax, 3.0);
+        assert.equal(stats.cumulativeAverage, 2.0);
       });
     });
   });

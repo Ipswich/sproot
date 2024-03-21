@@ -145,7 +145,7 @@ class OutputList {
       const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
       this.chartData.loadChartData(dataSeries, "output");
       this.#logger.info(
-        `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}`,
+        `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
       );
     }
 
@@ -157,15 +157,18 @@ class OutputList {
 
   async addReadingsToDatabaseAsync(): Promise<void> {
     await this.#touchAllOutputsAsync(async (output) => {
-      output.state.addCurrentStateToDatabaseAsync(output.id);
+      output.publishState();
     });
-    this.chartData.updateChartData(
-      Object.values(this.outputs).map((output) => output.chartData.get()),
-      "output",
-    );
+
+    if (new Date().getMinutes() % 5 == 0) {
+      this.chartData.updateChartData(
+        Object.values(this.outputs).map((output) => output.chartData.get()),
+        "output",
+      );
+    }
 
     this.#logger.info(
-      `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.dataSeries).length}`,
+      `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
     );
   }
 
@@ -237,7 +240,11 @@ class OutputListChartData implements IChartable {
       .map((dataSeries) => dataSeries[dataSeries.length - 1]!)
       .filter((value) => value !== undefined);
     const newChartData = ChartData.combineDataSeries([newValues]);
-    if (newChartData[0] !== undefined) {
+    //No duplicate time stamps
+    if (
+      newChartData[0] !== undefined &&
+      newChartData[0].name != this.chartData.get().slice(-1)[0]?.name
+    ) {
       this.chartData.addDataPoint(newChartData[0]);
     }
   }
