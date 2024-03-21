@@ -27,12 +27,11 @@ export default function OutputStates() {
   // const [_, startTransition] = useTransition();
 
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
-  const [chartData, setChartData] = useState(
-    new ChartData(
-      parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
-      [],
-    ),
+  let localChartData = new ChartData(
+    parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
+    [],
   );
+  const [chartData, setChartData] = useState(localChartData);
 
   const outputNames = Object.values(outputs)
     .map((output) => output.name)
@@ -47,13 +46,12 @@ export default function OutputStates() {
   };
 
   const loadChartDataAsync = async () => {
-    const chartData = await getOutputChartDataAsync();
-    setChartData(
-      new ChartData(
-        parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
-        chartData.chartData,
-      ),
+    const newChartData = await getOutputChartDataAsync();
+    localChartData = new ChartData(
+      parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
+      newChartData.chartData,
     );
+    setChartData(localChartData);
     setChartRendering(false);
   };
 
@@ -62,13 +60,12 @@ export default function OutputStates() {
     if (!newChartData.chartData || !newChartData.chartData[0]) {
       return;
     }
-    chartData.addDataPoint(newChartData.chartData[0]);
-    setChartData(
-      new ChartData(
-        parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
-        chartData.dataSeries,
-      ),
+    localChartData.addDataPoint(newChartData.chartData[0]);
+    localChartData = new ChartData(
+      parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
+      localChartData.get(),
     );
+    setChartData(localChartData);
   };
 
   useEffect(() => {
@@ -77,7 +74,7 @@ export default function OutputStates() {
     const interval = setInterval(async () => {
       await updateOutputsAsync();
       await updateChartDataAsync();
-    }, 60000);
+    }, 300000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps

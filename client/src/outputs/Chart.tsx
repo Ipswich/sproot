@@ -1,5 +1,5 @@
 import { LineChart } from "@mantine/charts";
-import { Box, LoadingOverlay } from "@mantine/core";
+import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
 // import { Paper, Text } from "@mantine/core";
 import { ChartData } from "@sproot/sproot-common/src/utility/IChartable";
 
@@ -28,20 +28,22 @@ export default function OutputChart({
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
       <LineChart
-        // tooltipProps={{
-        //   position: {},
-        //   content: ({ label, payload }) => (
-        //     <ChartTooltip
-        //       label={label}
-        //       payload={
-        //         (payload || []) as Record<
-        //           string,
-        //           { name: string; color: string; value: string }
-        //         >[]
-        //       }
-        //     />
-        //   ),
-        // }}
+        tooltipProps={{
+          position: {},
+          content: ({ label, payload }) => (
+            <ChartTooltip
+              label={label}
+              payload={
+                (payload || []) as Record<
+                  string,
+                  { name: string; color: string; value: string }
+                >[]
+              }
+            />
+          ),
+        }}
+        mt={12}
+        ml={-28}
         curveType="linear"
         h={300}
         dotProps={{ r: 0 }}
@@ -60,5 +62,29 @@ export default function OutputChart({
         series={chartSeries}
       />
     </Box>
+  );
+}
+
+interface ChartTooltipProps {
+  label: string;
+  payload:
+    | Record<string, { name: string; color: string; value: string }>[]
+    | undefined;
+}
+
+function ChartTooltip({ label, payload }: ChartTooltipProps) {
+  if (!payload) return null;
+
+  return (
+    <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
+      <Text fw={500} mb={5}>
+        {label}
+      </Text>
+      {payload.map((item) => (
+        <Text key={String(item["name"])} c={item["color"]!} fz="sm">
+          {String(item["name"])}: {String(item["value"] + "%")}
+        </Text>
+      ))}
+    </Paper>
   );
 }

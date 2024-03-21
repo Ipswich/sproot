@@ -1,5 +1,5 @@
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { Accordion } from "@mantine/core";
+import { Accordion, Badge } from "@mantine/core";
 import OutputCard from "./OutputCard";
 
 interface OutputAccordionProps {
@@ -9,7 +9,7 @@ interface OutputAccordionProps {
 }
 
 export default function OutputAccordion({
-  // chartSeries,
+  chartSeries,
   outputs,
   updateOutputsAsync,
 }: OutputAccordionProps) {
@@ -20,10 +20,16 @@ export default function OutputAccordion({
     if (!output) {
       return null;
     }
-    // const seriesData = chartSeries.find((series) => series.name === output.name);
+    const seriesData = chartSeries.find(
+      (series) => series.name === output.name,
+    );
     return (
       <Accordion.Item key={output.name} value={`item-${value}`}>
-        <Accordion.Control>{output.name}</Accordion.Control>
+        <Accordion.Control>
+          <Badge size="xl" radius="sm" color={seriesData?.color ?? ""}>
+            {output.name}
+          </Badge>
+        </Accordion.Control>
         <Accordion.Panel>
           <OutputCard output={output} updateOutputsAsync={updateOutputsAsync} />
         </Accordion.Panel>

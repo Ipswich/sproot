@@ -15,7 +15,7 @@ import OutputSettings from "./settings/outputs/OutputSettings";
 import OutputStates from "./outputs/OutputStates";
 
 const pages = new Pages();
-const homePage = pages.pages[1]!;
+const homePage = pages.pages[0]!;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(homePage);

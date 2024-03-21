@@ -8,16 +8,15 @@ import {
 } from "@sproot/sproot-client/src/requests";
 import { Fragment, useState } from "react";
 import {
-  Box,
   Group,
   Paper,
   SegmentedControl,
   Slider,
   Stack,
   Switch,
-  Title,
   rem,
 } from "@mantine/core";
+import { StatsRing } from "./StatsRing";
 
 interface OutputCardProps {
   output: IOutputBase;
@@ -38,7 +37,7 @@ export default function OutputCard({
       <Stack justify="space-around">
         <Group justify="space-around">
           <Paper shadow="xs" radius="md" withBorder my="4" p="sm" w={rem(360)}>
-            <Group justify="space-between">
+            <Group justify="space-between" h="80">
               <SegmentedControl
                 styles={
                   controlMode === ControlMode.manual
@@ -53,7 +52,7 @@ export default function OutputCard({
                         },
                       }
                 }
-                w={"30%"}
+                w={"36%"}
                 color={segmentedControlColor}
                 orientation="vertical"
                 value={controlMode}
@@ -70,12 +69,9 @@ export default function OutputCard({
                   await updateOutputsAsync();
                 }}
               />
-              <Stack justify="space-around" w={"64%"}>
-                <Group justify="space-around">
-                  <Title order={4}>{output.name}</Title>
-                </Group>
+              <Stack justify="space-around" w={"58%"}>
                 {output.isPwm == true ? (
-                  <Box h={rem(32)}>
+                  <Fragment>
                     {controlMode === ControlMode.manual ? (
                       <Slider
                         defaultValue={output.state.manual.value!}
@@ -95,38 +91,36 @@ export default function OutputCard({
                       />
                     ) : (
                       <Group justify="space-around">
-                        <Title c="teal" order={5}>
-                          {" "}
-                          {output.state.schedule.value}%
-                        </Title>
+                        <StatsRing
+                          value={output.state.schedule.value}
+                          color="teal"
+                        />
                       </Group>
                     )}
-                  </Box>
+                  </Fragment>
                 ) : (
                   <Group justify="space-around">
-                    <Box h={rem(32)}>
-                      {controlMode === ControlMode.manual ? (
-                        <Switch
-                          size="xl"
-                          onLabel="On"
-                          offLabel="Off"
-                          disabled={controlMode !== ControlMode.manual}
-                          checked={output.state.manual.value === 100}
-                          onChange={async (event) => {
-                            await setOutputManualStateAsync(
-                              output.id,
-                              event.target.checked ? 100 : 0,
-                            );
-                            await updateOutputsAsync();
-                          }}
-                        />
-                      ) : (
-                        <Title c="teal" order={5}>
-                          {" "}
-                          {output.state.schedule.value === 100 ? "On" : "Off"}
-                        </Title>
-                      )}
-                    </Box>
+                    {controlMode === ControlMode.manual ? (
+                      <Switch
+                        size="xl"
+                        onLabel="On"
+                        offLabel="Off"
+                        disabled={controlMode !== ControlMode.manual}
+                        checked={output.state.manual.value === 100}
+                        onChange={async (event) => {
+                          await setOutputManualStateAsync(
+                            output.id,
+                            event.target.checked ? 100 : 0,
+                          );
+                          await updateOutputsAsync();
+                        }}
+                      />
+                    ) : (
+                      <StatsRing
+                        value={output.state.schedule.value}
+                        color="teal"
+                      />
+                    )}
                   </Group>
                 )}
               </Stack>
