@@ -1,5 +1,5 @@
 import "@mantine/carousel/styles.css";
-import { Box, Paper } from "@mantine/core";
+import { Box, Flex, Paper } from "@mantine/core";
 import OutputAccordion from "./OutputAccordion";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { useState, useEffect } from "react";
@@ -84,17 +84,16 @@ export default function OutputStates() {
     <>
       <Box pos="relative">
         <Paper shadow="sm" px="md" py="xs" radius="md" withBorder>
+          <Flex my={-12}>
+            <h2>History</h2>
+          </Flex>
           <ChartContainer
             chartData={chartData}
             chartSeries={chartSeries}
             chartRendering={chartRendering}
             setChartRendering={setChartRendering}
           ></ChartContainer>
-          <OutputAccordion
-            chartSeries={chartSeries}
-            outputs={outputs}
-            updateOutputsAsync={updateOutputsAsync}
-          ></OutputAccordion>
+          <OutputAccordion colorList={colors}></OutputAccordion>
         </Paper>
       </Box>
     </>

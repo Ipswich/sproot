@@ -1,7 +1,7 @@
 import { Burger, Container, Group, Title } from "@mantine/core";
-// import { MantineLogo } from '@mantinex/mantine-logo';
 import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.module.css";
 import { Page } from "@sproot/sproot-client/src/shell/Pages";
+import { useTransition } from "react";
 
 interface HeaderContentsProps {
   currentPage: Page;
@@ -14,6 +14,14 @@ export default function HeaderContents({
   navbarToggle,
   navbarOpened,
 }: HeaderContentsProps) {
+  const [, startTransition] = useTransition();
+
+  function toggleNavbar() {
+    startTransition(() => {
+      navbarToggle();
+    });
+  }
+
   return (
     <header className={classes["header"]}>
       <Container
@@ -22,7 +30,7 @@ export default function HeaderContents({
         size="md"
         className={classes["inner"]!}
       >
-        <Burger onClick={navbarToggle} opened={navbarOpened} size="md" />
+        <Burger onClick={toggleNavbar} opened={navbarOpened} size="md" />
         <Title hiddenFrom="sm" order={1}>
           {currentPage.headerText}
         </Title>
@@ -42,20 +50,4 @@ export default function HeaderContents({
       </Container>
     </header>
   );
-}
-
-{
-  /* <Group/> */
-}
-{
-  /* {currentPage.icon &&
-<ThemeIcon variant="light" size={32}>
-    <currentPage.icon style={{ width: rem(24), height: rem(24) }} />
-</ThemeIcon>} */
-}
-{
-  /* <MantineLogo size={28} /> */
-}
-{
-  /* <h1>{title}</h1> */
 }

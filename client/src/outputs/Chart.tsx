@@ -19,6 +19,12 @@ export default function OutputChart({
     return null;
   }
 
+  const data = chartData.dataSeries.map((data) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { units: _, ...rest } = data;
+    return rest;
+  });
+
   return (
     <Box pos="relative">
       <LoadingOverlay
@@ -47,15 +53,12 @@ export default function OutputChart({
         curveType="linear"
         h={300}
         dotProps={{ r: 0 }}
-        data={chartData.dataSeries.map((data) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { units: _, ...rest } = data;
-          return rest;
-        })}
+        data={data}
         withLegend={false}
         withXAxis
         withYAxis
-        xAxisProps={{ dataKey: "name" }}
+        tickLine="xy"
+        xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
         yAxisProps={{ domain: [0, 100] }}
         // unit={unit}
         dataKey="outputName"

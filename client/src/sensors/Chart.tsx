@@ -63,7 +63,8 @@ export default function Chart({
         withTooltip={true}
         withXAxis
         withYAxis
-        xAxisProps={{ dataKey: "name" }}
+        tickLine="xy"
+        xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
         yAxisProps={{ domain: ["auto", "auto"] }}
         referenceLines={[
           {

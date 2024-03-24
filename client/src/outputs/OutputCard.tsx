@@ -28,10 +28,12 @@ export default function OutputCard({
   updateOutputsAsync,
 }: OutputCardProps) {
   const [controlMode, setControlMode] = useState(output.state.controlMode);
-  const [segmentedControlColor, setSegmentedControlColor] = useState(
-    output.state.controlMode === ControlMode.manual ? "blue" : "teal",
-  );
 
+  function segmentedControlColor() {
+    return output.state.controlMode == ControlMode.manual ? "blue" : "teal";
+  }
+
+  let isSegmentedControlDisabled = false;
   return (
     <Fragment>
       <Stack justify="space-around">
@@ -53,20 +55,20 @@ export default function OutputCard({
                       }
                 }
                 w={"36%"}
-                color={segmentedControlColor}
+                color={segmentedControlColor()}
                 orientation="vertical"
                 value={controlMode}
                 data={[
                   { label: "Manual", value: ControlMode.manual },
                   { label: "Schedule", value: ControlMode.schedule },
                 ]}
+                disabled={isSegmentedControlDisabled}
                 onChange={async (value) => {
+                  isSegmentedControlDisabled = true;
                   setControlMode(value as ControlMode);
-                  setSegmentedControlColor(
-                    value === ControlMode.manual ? "blue" : "teal",
-                  );
                   await setOutputControlModeAsync(output.id, value);
                   await updateOutputsAsync();
+                  isSegmentedControlDisabled = false;
                 }}
               />
               <Stack justify="space-around" w={"58%"}>
@@ -116,10 +118,12 @@ export default function OutputCard({
                         }}
                       />
                     ) : (
-                      <StatsRing
-                        value={output.state.schedule.value}
-                        color="teal"
-                      />
+                      <Fragment>
+                        <StatsRing
+                          value={output.state.schedule.value}
+                          color="teal"
+                        />
+                      </Fragment>
                     )}
                   </Group>
                 )}

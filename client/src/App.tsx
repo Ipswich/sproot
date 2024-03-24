@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { MantineProvider, AppShell } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
 // import classes from "./App.module.css";
@@ -19,7 +18,17 @@ const homePage = pages.pages[0]!;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(homePage);
-  const [navbarOpened, { toggle, close }] = useDisclosure();
+  const [isNavbarOpened, setIsNavbarOpened] = useState(false);
+
+  function toggleNavbar() {
+    setIsNavbarOpened(!isNavbarOpened);
+  }
+
+  function closeNavbar() {
+    if (isNavbarOpened) {
+      setIsNavbarOpened(false);
+    }
+  }
 
   return (
     <MantineProvider>
@@ -27,7 +36,7 @@ function App() {
         navbar={{
           width: 250,
           breakpoint: "sm",
-          collapsed: { mobile: !navbarOpened },
+          collapsed: { mobile: !isNavbarOpened },
         }}
         header={{
           height: 73,
@@ -37,25 +46,24 @@ function App() {
         <AppShell.Header>
           <HeaderContents
             currentPage={currentPage}
-            navbarToggle={toggle}
-            navbarOpened={navbarOpened}
+            navbarToggle={toggleNavbar}
+            navbarOpened={isNavbarOpened}
           />
         </AppShell.Header>
         <AppShell.Navbar
           style={{ width: "250px", opacity: "95%", zIndex: 202 }}
           p="md"
         >
-          {/* <ColorToggle /> */}
           <NavbarContents
             setCurrentPage={(view) => {
-              close();
+              closeNavbar();
               setCurrentPage(view);
             }}
           />
         </AppShell.Navbar>
         <AppShell.Main style={{ padding: "0 auto" }}>
           <>
-            <div onClick={close}>
+            <div onClick={closeNavbar}>
               {currentPage.navLinkText === "Current Conditions" ? (
                 <SensorCarouselContainer />
               ) : currentPage.navLinkText === "Output States" ? (
@@ -69,6 +77,7 @@ function App() {
                 <OutputSettings />
               ) : currentPage.navLinkText === "System" ? undefined : undefined}
             </div>
+            {/* <ColorToggle /> */}
           </>
         </AppShell.Main>
       </AppShell>

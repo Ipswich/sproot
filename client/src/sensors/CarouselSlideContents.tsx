@@ -64,7 +64,7 @@ export default function CarouselSlideContents({
       <Card shadow="sm" px="md" py="xs" radius="md" withBorder>
         <Flex gap="md">
           <Center>
-            <Flex>
+            <Flex mt={-12}>
               <h2>
                 {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
               </h2>
