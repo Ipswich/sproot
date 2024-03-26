@@ -18,7 +18,10 @@ class OutputList {
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(this.#sprootDB, this.#logger);
-    this.chartData = new OutputListChartData(Number(process.env["MAX_CHART_DATA_POINTS"]));
+    this.chartData = new OutputListChartData(
+      Number(process.env["MAX_CACHE_SIZE"]),
+      Number(process.env["CHART_DATA_POINT_INTERVAL"]),
+    );
   }
 
   get outputs(): Record<string, OutputBase> {
@@ -157,7 +160,7 @@ class OutputList {
 
   async addReadingsToDatabaseAsync(): Promise<void> {
     await this.#touchAllOutputsAsync(async (output) => {
-      output.publishState();
+      output.updateDataStores();
     });
 
     if (new Date().getMinutes() % 5 == 0) {
@@ -224,15 +227,17 @@ class OutputList {
 class OutputListChartData implements IChartable {
   chartData: ChartData;
   #limit;
+  #interval;
 
-  constructor(limit: number) {
-    this.chartData = new ChartData(limit);
+  constructor(limit: number, interval: number) {
+    this.chartData = new ChartData(limit, interval);
     this.#limit = limit;
+    this.#interval = interval;
   }
 
   loadChartData(cache: DataSeries[], _name: string): void {
     const combinedData = ChartData.combineDataSeries([...cache]);
-    this.chartData = new ChartData(this.#limit, combinedData);
+    this.chartData = new ChartData(this.#limit, this.#interval, combinedData);
   }
 
   updateChartData(cache: DataSeries[], _name: string): void {

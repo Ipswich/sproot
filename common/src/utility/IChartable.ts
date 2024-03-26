@@ -10,10 +10,12 @@ export class ChartData {
   static cachedEmptyDataSeries: DataSeries = [];
   static cachedEmptyDataSeriesID: string = "";
   readonly limit: number;
+  readonly interval: number;
   dataSeries: DataSeries;
 
-  constructor(limit: number, dataSeries?: DataSeries, now: Date = new Date()) {
+  constructor(limit: number, interval: number, dataSeries?: DataSeries, now: Date = new Date()) {
     this.limit = limit;
+    this.interval = interval;
     if (dataSeries) {
       this.dataSeries = dataSeries;
       while (this.dataSeries.length > limit) {
@@ -35,13 +37,19 @@ export class ChartData {
     }
   }
 
-  static generateTimeSpansFromDataSeries(dataSeries: DataSeries): Record<number, DataSeries> {
-    const res: Record<number, DataSeries> = {};
-    res[6] = dataSeries.slice(-72);
-    res[12] = dataSeries.slice(-144);
-    res[24] = dataSeries.slice(-288);
-    res[72] = dataSeries.slice(-864);
+  generateTimeSpansFromDataSeries(dataSeries: DataSeries): Record<number, DataSeries> {
+    const res = ChartData.generateTimeSpansFromDataSeries(dataSeries, this.interval);
+    return res;
+  }
 
+  static generateTimeSpansFromDataSeries(dataSeries: DataSeries, interval: number): Record<number, DataSeries> {
+    const res: Record<number, DataSeries> = {};
+
+    res[0] = dataSeries;
+    res[6] = dataSeries.slice(Math.floor(-360 / interval));
+    res[12] = dataSeries.slice(Math.floor(-720 / interval));
+    res[24] = dataSeries.slice(Math.floor(-1440 / interval));
+    res[72] = dataSeries.slice(Math.floor(-4320 / interval));
     return res;
   }
 

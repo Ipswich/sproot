@@ -53,7 +53,7 @@ describe("IChartable.ts tests", function () {
     describe("generateTimeSpansFromDataSeries", function () {
       it("should generate time spans from a DataSeries", function () {
         const dataSeries = ChartData.generateEmptyDataSeries(2016);
-        const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries);
+        const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries, 5);
         assert.equal(Object.keys(timeSpans).length, 4);
         assert.equal(timeSpans[6]!.length, 72);
         assert.equal(timeSpans[12]!.length, 144);
@@ -65,7 +65,7 @@ describe("IChartable.ts tests", function () {
     describe("generateStatsForTimeSpans", function () {
       it("should generate stats for time spans", function () {
         const dataSeries = ChartData.generateEmptyDataSeries(2016);
-        const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries);
+        const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries, 5);
         const stats = ChartData.generateStatsForTimeSpans(timeSpans);
         assert.equal(Object.keys(stats).length, 4);
       });
@@ -73,7 +73,7 @@ describe("IChartable.ts tests", function () {
 
     describe("constructor", function () {
       it("should create a new ChartData object", function () {
-        const chartData = new ChartData(10, undefined, new Date("2021-01-01T00:00:00Z"));
+        const chartData = new ChartData(10, 5, undefined, new Date("2021-01-01T00:00:00Z"));
         assert.equal(chartData.limit, 10);
         assert.equal(chartData.get().length, 10);
         assert.equal(
@@ -87,8 +87,8 @@ describe("IChartable.ts tests", function () {
       });
 
       it("should copy (not reference) the cache to new ChartData objects", function () {
-        const chartData1 = new ChartData(10);
-        const chartData2 = new ChartData(10);
+        const chartData1 = new ChartData(10, 5);
+        const chartData2 = new ChartData(10, 5);
         assert.notEqual(chartData1.get(), chartData2.get());
       });
 
@@ -99,7 +99,7 @@ describe("IChartable.ts tests", function () {
             data: 1.234567,
           } as DataPoint,
         ];
-        const chartData = new ChartData(10, dataSeries as DataSeries);
+        const chartData = new ChartData(10, 5, dataSeries as DataSeries);
         assert.equal(chartData.limit, 10);
         assert.equal(chartData.get().length, 1);
         assert.equal(chartData.get()[0]?.name, "test");
@@ -108,7 +108,7 @@ describe("IChartable.ts tests", function () {
 
     describe("addDataPoint", function () {
       it("should add a new DataPoint to the ChartData and remove the oldest DataPoint", function () {
-        const chartData = new ChartData(2, []);
+        const chartData = new ChartData(2, 5, []);
         assert.equal(chartData.get().length, 0);
 
         chartData.addDataPoint({ name: "test1" });

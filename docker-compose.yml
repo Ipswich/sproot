@@ -24,9 +24,10 @@ services:
       DATABASE_NAME: sproot
       STATE_UPDATE_INTERVAL: 1000
       DATABASE_UPDATE_INTERVAL: 60000
-      MAX_CHART_DATA_POINTS: 2016
       MAX_CACHE_SIZE: 10080 #7 days worth of minutes
       INITIAL_CACHE_LOOKBACK: 10080 #7 days in minutes
+      CHART_DATA_POINT_INTERVAL: 5 #5 minutes (i.e. 5 minutes between each data point)
+      MAX_CHART_DATA_POINTS: 2016
 
     volumes:
       - /sys:/sys

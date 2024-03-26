@@ -23,6 +23,9 @@ export abstract class OutputBase implements IOutputBase {
   cache: OutputCache;
   chartData: OutputChartData;
   logger: winston.Logger;
+  private readonly chartDataPointInterval: number;
+
+  private updateMissCount = 0;
 
   constructor(sdbOutput: SDBOutput, sprootDB: ISprootDB, logger: winston.Logger) {
     this.id = sdbOutput.id;
@@ -35,8 +38,12 @@ export abstract class OutputBase implements IOutputBase {
     this.sprootDB = sprootDB;
     this.state = new OutputState(sprootDB);
     this.cache = new OutputCache(Number(process.env["MAX_CACHE_SIZE"]!), sprootDB, logger);
-    this.chartData = new OutputChartData(Number(process.env["MAX_CHART_DATA_POINTS"]!));
+    this.chartData = new OutputChartData(
+      Number(process.env["MAX_CACHE_SIZE"]!),
+      Number(process.env["CHART_DATA_POINT_INTERVAL"]!),
+    );
     this.logger = logger;
+    this.chartDataPointInterval = Number(process.env["CHART_DATA_POINT_INTERVAL"]!) * 60000;
   }
 
   get value(): number {
@@ -68,11 +75,27 @@ export abstract class OutputBase implements IOutputBase {
     this.executeState();
   }
 
-  async publishState(): Promise<void> {
+  async updateDataStores(): Promise<void> {
     this.addCurrentStateToCache();
-    if (new Date().getMinutes() % 5 == 0) {
+    const lastCacheData = this.cache.get().slice(-1)[0];
+    //Only update chart if the most recent datapoint is N minutes after last cache
+    if (this.chartData.shouldUpdateChartData(lastCacheData)) {
       this.updateChartData();
+      //Reset miss count if successful
+      this.updateMissCount = 0;
+    } else {
+      //Increment miss count if unsuccessful. Easy CYA if things get out of sync.
+      this.updateMissCount++;
+      //If miss count exceeds 10 * N, force update (3 real tries, because intervals).
+      if (this.updateMissCount >= 3 * this.chartDataPointInterval) {
+        this.logger.error(
+          `Chart data update miss count exceeded (3) for output {id: ${this.id}}. Forcing update to re-sync.`,
+        );
+        this.updateChartData();
+        this.updateMissCount = 0;
+      }
     }
+
     try {
       await this.state.addCurrentStateToDatabaseAsync(this.id);
     } catch (error) {
@@ -256,8 +279,10 @@ export class OutputCache implements IQueueCacheable<SDBOutputState> {
 
 export class OutputChartData implements IChartable {
   chartData: ChartData;
-  constructor(limit: number, dataSeries?: DataSeries) {
-    this.chartData = new ChartData(limit, dataSeries);
+  intervalMs: number;
+  constructor(limit: number, interval: number, dataSeries?: DataSeries) {
+    this.intervalMs = interval * 60000;
+    this.chartData = new ChartData(limit, interval, dataSeries);
   }
 
   get(): DataSeries {
@@ -286,5 +311,20 @@ export class OutputChartData implements IChartable {
         });
       }
     }
+  }
+
+  shouldUpdateChartData(lastCacheData?: SDBOutputState): boolean {
+    const lastChartData = this.chartData.get().slice(-1)[0];
+    if (
+      lastChartData &&
+      lastCacheData &&
+      lastChartData.name ==
+        ChartData.formatDateForChart(
+          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMs),
+        )
+    ) {
+      return true;
+    }
+    return false;
   }
 }

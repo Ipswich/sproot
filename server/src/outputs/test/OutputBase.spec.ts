@@ -182,7 +182,7 @@ describe("OutputBase.ts tests", function () {
   describe("OutputChartData class", function () {
     describe("constructor", function () {
       it("should create a new OutputChartData object with default values", function () {
-        const outputChartData = new OutputChartData(2);
+        const outputChartData = new OutputChartData(2, 5);
 
         const fiveMinutes = 1000 * 60 * 5;
         const fiveMinuteDate = new Date(
@@ -200,7 +200,7 @@ describe("OutputBase.ts tests", function () {
       });
 
       it("should create a new OutputChartData object with custom values", function () {
-        const outputChartData = new OutputChartData(2, [
+        const outputChartData = new OutputChartData(2, 5, [
           { name: "3/3 6:40 pm" },
           { name: "3/3 6:45 pm" },
         ]);
@@ -246,7 +246,7 @@ describe("OutputBase.ts tests", function () {
           } as SDBOutputState,
           new Date("2024-03-03T18:50:01Z"),
         );
-        const outputChartData = new OutputChartData(4, [
+        const outputChartData = new OutputChartData(4, 5, [
           { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")) },
           { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
           { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")) },
@@ -262,7 +262,7 @@ describe("OutputBase.ts tests", function () {
 
     describe("updateChartData", function () {
       it("should update the chart data with the last entry in the passed cache", function () {
-        const outputChartData = new OutputChartData(4, []);
+        const outputChartData = new OutputChartData(4, 5, []);
         outputChartData.updateChartData(
           [{ value: 100, logTime: "2024-03-03T03:30:01Z" } as SDBOutputState],
           "Test",
@@ -271,6 +271,43 @@ describe("OutputBase.ts tests", function () {
         assert.equal(outputChartData.get().length, 1);
         assert.equal(outputChartData.get()[0]?.["Test"], 100);
         assert.isString(outputChartData.get()[0]?.name);
+      });
+    });
+
+    describe("shouldUpdateChartData", function () {
+      it("should return true if the last entry in the cache is different from the last entry in the chart data", function () {
+        const outputChartData = new OutputChartData(4, 5, [
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), Test: 200 },
+        ]);
+
+        const outputCache = new OutputCache(4, mockSprootDB, logger);
+        outputCache.addData(
+          {
+            logTime: "2024-03-03T18:50:01Z",
+            controlMode: ControlMode.manual,
+            value: 100,
+          } as SDBOutputState,
+          new Date("2024-03-03T18:50:01Z"),
+        );
+
+        assert.isTrue(outputChartData.shouldUpdateChartData(outputCache.get().slice(-1)[0]));
+      });
+
+      it("should return false if the last entry in the cache is the same as the last entry in the chart data", function () {
+        const outputChartData = new OutputChartData(4, 5, [
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), Test: 100 },
+        ]);
+
+        const outputCache = new OutputCache(4, mockSprootDB, logger);
+        outputCache.addData(
+          {
+            logTime: "2024-03-03T18:49:01Z",
+            controlMode: ControlMode.manual,
+            value: 100,
+          } as SDBOutputState,
+          new Date("2024-03-03T18:49:01Z"),
+        );
+        assert.isFalse(outputChartData.shouldUpdateChartData(outputCache.get().slice(-1)[0]));
       });
     });
   });

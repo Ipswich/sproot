@@ -41,7 +41,8 @@ abstract class SensorBase implements ISensorBase, IChartable {
     this.chartData = {} as Record<string | number | symbol, ChartData>;
     for (const readingType in ReadingType) {
       this.chartData[readingType as ReadingType] = new ChartData(
-        Number(process.env["MAX_CHART_DATA_POINTS"]!),
+        Number(process.env["MAX_CACHE_SIZE"]!),
+        Number(process.env["CHART_DATA_POINT_INTERVAL"]!),
       );
     }
   }
