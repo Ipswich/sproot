@@ -18,7 +18,7 @@ interface IOutputBase {
   state: IOutputState;
   value?: number | undefined;
   controlMode?: ControlMode | undefined;
-  cache?: IQueueCacheable | undefined;
+  cache?: IQueueCacheable<unknown> | undefined;
   chartData?: IChartable | undefined;
 }
 

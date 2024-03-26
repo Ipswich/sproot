@@ -50,6 +50,27 @@ describe("IChartable.ts tests", function () {
       });
     });
 
+    describe("generateTimeSpansFromDataSeries", function () {
+      it("should generate time spans from a DataSeries", function () {
+        const dataSeries = ChartData.generateEmptyDataSeries(2016);
+        const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries);
+        assert.equal(Object.keys(timeSpans).length, 4);
+        assert.equal(timeSpans[6]!.length, 72);
+        assert.equal(timeSpans[12]!.length, 144);
+        assert.equal(timeSpans[24]!.length, 288);
+        assert.equal(timeSpans[72]!.length, 864);
+      });
+    });
+
+    describe("generateStatsForTimeSpans", function () {
+      it("should generate stats for time spans", function () {
+        const dataSeries = ChartData.generateEmptyDataSeries(2016);
+        const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries);
+        const stats = ChartData.generateStatsForTimeSpans(timeSpans);
+        assert.equal(Object.keys(stats).length, 4);
+      });
+    });
+
     describe("constructor", function () {
       it("should create a new ChartData object", function () {
         const chartData = new ChartData(10, undefined, new Date("2021-01-01T00:00:00Z"));

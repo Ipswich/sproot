@@ -10,6 +10,10 @@ class QueueCache<T> {
     } else {
       this.cache = [];
     }
+
+    while (this.cache.length > this.limit) {
+      this.cache.shift();
+    }
   }
 
   public addData(data: T): void {
@@ -38,8 +42,8 @@ class QueueCache<T> {
   }
 }
 
-interface IQueueCacheable {
-  queueCache: QueueCache<any>;
+interface IQueueCacheable<T> {
+  queueCache: QueueCache<T>;
 }
 
 export { QueueCache };

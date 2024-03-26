@@ -33,7 +33,7 @@ export abstract class OutputBase implements IOutputBase {
     this.isPwm = sdbOutput.isPwm;
     this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
     this.sprootDB = sprootDB;
-    this.state = new OutputState(sprootDB, logger);
+    this.state = new OutputState(sprootDB);
     this.cache = new OutputCache(Number(process.env["MAX_CACHE_SIZE"]!), sprootDB, logger);
     this.chartData = new OutputChartData(Number(process.env["MAX_CHART_DATA_POINTS"]!));
     this.logger = logger;
@@ -123,7 +123,7 @@ export class OutputState implements IOutputState {
   controlMode: ControlMode;
   #sprootDB: ISprootDB;
 
-  constructor(sprootDB: ISprootDB, _logger: winston.Logger) {
+  constructor(sprootDB: ISprootDB) {
     this.manual = {
       controlMode: ControlMode.manual,
       value: 0,
@@ -205,7 +205,7 @@ export class OutputState implements IOutputState {
   }
 }
 
-export class OutputCache implements IQueueCacheable {
+export class OutputCache implements IQueueCacheable<SDBOutputState> {
   queueCache: QueueCache<SDBOutputState>;
   sprootDB: ISprootDB;
   logger: winston.Logger;
