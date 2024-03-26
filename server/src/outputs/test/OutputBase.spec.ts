@@ -36,7 +36,7 @@ describe("OutputBase.ts tests", function () {
   describe("OutputState class", function () {
     describe("constructor", function () {
       it("should create a new OutputState object with default values", function () {
-        const outputState = new OutputState(mockSprootDB, logger);
+        const outputState = new OutputState(mockSprootDB);
 
         assert.equal(outputState.value, 0);
         assert.equal(outputState.controlMode, ControlMode.schedule);
@@ -45,7 +45,7 @@ describe("OutputBase.ts tests", function () {
 
     describe("updateControlMode", function () {
       it("should update the control mode of the output state", function () {
-        const outputState = new OutputState(mockSprootDB, logger);
+        const outputState = new OutputState(mockSprootDB);
 
         outputState.updateControlMode(ControlMode.manual);
         assert.equal(outputState.controlMode, ControlMode.manual);
@@ -57,7 +57,7 @@ describe("OutputBase.ts tests", function () {
 
     describe("setNewState", function () {
       it("should update the value of the output state", function () {
-        const outputState = new OutputState(mockSprootDB, logger);
+        const outputState = new OutputState(mockSprootDB);
 
         const newState = { value: 100 } as SDBOutputState;
         //We're not in manual, should have no effect
@@ -73,7 +73,7 @@ describe("OutputBase.ts tests", function () {
     describe("addCurrentStateToDatabaseAsync()", function () {
       it("should add the current state to the database", async function () {
         const dbStub = sinon.stub(mockSprootDB, "addOutputStateAsync");
-        const outputState = new OutputState(mockSprootDB, logger);
+        const outputState = new OutputState(mockSprootDB);
 
         //Start in schedule, set schedule value to 100
         let newState = { value: 100 } as SDBOutputState;
@@ -185,8 +185,10 @@ describe("OutputBase.ts tests", function () {
         const outputChartData = new OutputChartData(2);
 
         const fiveMinutes = 1000 * 60 * 5;
-        let fiveMinuteDate = new Date(Math.floor(new Date().getTime() / fiveMinutes) * fiveMinutes);
-        let earlierfiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
+        const fiveMinuteDate = new Date(
+          Math.floor(new Date().getTime() / fiveMinutes) * fiveMinutes,
+        );
+        const earlierfiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
 
         assert.equal(outputChartData.get().length, 2);
         assert.isTrue(

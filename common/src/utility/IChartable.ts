@@ -9,8 +9,8 @@ export type DataSeries = DataPoint[];
 export class ChartData {
   static cachedEmptyDataSeries: DataSeries = [];
   static cachedEmptyDataSeriesID: string = "";
-  dataSeries: DataSeries;
   readonly limit: number;
+  dataSeries: DataSeries;
 
   constructor(limit: number, dataSeries?: DataSeries, now: Date = new Date()) {
     this.limit = limit;
@@ -33,6 +33,27 @@ export class ChartData {
     if (this.dataSeries.length > this.limit) {
       this.dataSeries.shift();
     }
+  }
+
+  static generateTimeSpansFromDataSeries(dataSeries: DataSeries): Record<number, DataSeries> {
+    const res: Record<number, DataSeries> = {};
+    res[6] = dataSeries.slice(-72);
+    res[12] = dataSeries.slice(-144);
+    res[24] = dataSeries.slice(-288);
+    res[72] = dataSeries.slice(-864);
+
+    return res;
+  }
+
+  static generateStatsForTimeSpans(
+    timeSpans: Record<number, DataSeries>,
+  ): Record<number, DataSeriesStats> {
+    const res: Record<number, DataSeriesStats> = {};
+    Object.entries(timeSpans).forEach(([key, value]) => {
+      res[parseInt(key)] = ChartData.generateStatsForDataSeries(value);
+    });
+
+    return res;
   }
 
   static generateStatsForDataSeries(dataSeries: DataSeries): DataSeriesStats {
