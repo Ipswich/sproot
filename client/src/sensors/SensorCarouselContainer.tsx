@@ -56,7 +56,7 @@ export default function SensorCarouselContainer() {
     localChartDataRecord = new ChartDataRecord(
       result,
       {} as Record<ReadingType, string[]>,
-      parseInt(import.meta.env["VITE_MAX_SENSOR_CHART_ENTRIES"] as string),
+      parseInt(import.meta.env["VITE_MAX_CHART_DATA_POINTS"] as string),
     );
     setChartData(localChartDataRecord);
   };
@@ -78,7 +78,7 @@ export default function SensorCarouselContainer() {
     localChartDataRecord = new ChartDataRecord(
       result,
       filters,
-      parseInt(import.meta.env["VITE_MAX_SENSOR_CHART_ENTRIES"] as string),
+      parseInt(import.meta.env["VITE_MAX_CHART_DATA_POINTS"] as string),
     );
     setChartData(localChartDataRecord);
     return;

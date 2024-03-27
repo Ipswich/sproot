@@ -18,6 +18,7 @@ describe("OutputList.ts tests", function () {
 
   it("should create, update, and delete outputs.", async function () {
     sandbox.createStubInstance(Pca9685Driver);
+
     const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
       {
         id: 1,
@@ -27,6 +28,7 @@ describe("OutputList.ts tests", function () {
         pin: 0,
         isPwm: true,
         isInvertedPwm: false,
+        color: "blue",
       } as SDBOutput,
       {
         id: 2,
@@ -66,10 +68,12 @@ describe("OutputList.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const outputList = new OutputList(mockSprootDB, logger);
+    const outputList = new OutputList(mockSprootDB, 5, 5, logger);
     // Create
     await outputList.initializeOrRegenerateAsync();
     assert.equal(Object.keys(outputList.outputs).length, 4);
+    assert.equal("lime", outputList.outputs["2"]!.color);
+    assert.equal("green", outputList.outputs["3"]!.color);
 
     // Update and delete
     getOutputsAsyncStub.resolves([
@@ -79,17 +83,23 @@ describe("OutputList.ts tests", function () {
         address: "0x40",
         name: "1 tuptuo tset",
         pin: 0,
-        isPwm: true,
-        isInvertedPwm: false,
+        isPwm: false,
+        isInvertedPwm: true,
+        color: "pink",
       } as SDBOutput,
     ]);
     await outputList.initializeOrRegenerateAsync();
-    assert.equal(outputList.outputs["1"]!.name, "1 tuptuo tset");
+
     assert.equal(Object.keys(outputList.outputs).length, 1);
+    assert.equal(outputList.outputs["1"]!.name, "1 tuptuo tset");
+    assert.equal(outputList.outputs["1"]!.isPwm, false);
+    assert.equal(outputList.outputs["1"]!.isInvertedPwm, true);
+    assert.equal(outputList.outputs["1"]!.color, "pink");
   });
 
   it("should return output data (no functions)", async function () {
     sandbox.createStubInstance(Pca9685Driver);
+
     sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
       {
         id: 1,
@@ -111,7 +121,7 @@ describe("OutputList.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const outputList = new OutputList(mockSprootDB, logger);
+    const outputList = new OutputList(mockSprootDB, 5, 5, logger);
     await outputList.initializeOrRegenerateAsync();
     const outputData = outputList.outputData;
 
@@ -124,6 +134,7 @@ describe("OutputList.ts tests", function () {
 
   it("should dispose of all outputs", async function () {
     sandbox.createStubInstance(Pca9685Driver);
+
     sandbox.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
     sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
       {
@@ -134,6 +145,7 @@ describe("OutputList.ts tests", function () {
         pin: 0,
         isPwm: true,
         isInvertedPwm: false,
+        color: "pink",
       } as SDBOutput,
       {
         id: 2,
@@ -152,6 +164,7 @@ describe("OutputList.ts tests", function () {
         pin: 2,
         isPwm: true,
         isInvertedPwm: true,
+        color: "red",
       } as SDBOutput,
       {
         id: 4,
@@ -172,7 +185,7 @@ describe("OutputList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    const outputList = new OutputList(mockSprootDB, logger);
+    const outputList = new OutputList(mockSprootDB, 5, 5, logger);
 
     // Create
     await outputList.initializeOrRegenerateAsync();

@@ -100,7 +100,12 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   logger.info("Creating sensor and output lists. . .");
   const sensorList = new SensorList(sprootDB, logger);
   app.set("sensorList", sensorList);
-  const outputList = new OutputList(sprootDB, logger);
+  const outputList = new OutputList(
+    sprootDB,
+    Number(process.env["MAX_CACHE_SIZE"]),
+    Number(process.env["CHART_DATA_POINT_INTERVAL"]),
+    logger,
+  );
   app.set("outputList", outputList);
 
   logger.info("Initializing sensor and output lists. . .");

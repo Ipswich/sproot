@@ -7,21 +7,50 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
 import winston from "winston";
 import { ChartData, DataSeries, IChartable } from "@sproot/sproot-common/dist/utility/IChartable";
 
+const COLORS = [
+  "lime",
+  "green",
+  "teal",
+  "cyan",
+  "blue",
+  "indigo",
+  "violet",
+  "grape",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+];
+
 class OutputList {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
   chartData: OutputListChartData;
+  colorIndex: number;
+  maxCacheSize: number;
+  chartDataPointInterval: number;
 
-  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
+    this.colorIndex = 0;
     this.#sprootDB = sprootDB;
     this.#logger = logger;
-    this.#PCA9685 = new PCA9685(this.#sprootDB, this.#logger);
-    this.chartData = new OutputListChartData(
-      Number(process.env["MAX_CACHE_SIZE"]),
-      Number(process.env["CHART_DATA_POINT_INTERVAL"]),
+    this.#PCA9685 = new PCA9685(
+      this.#sprootDB,
+      maxCacheSize,
+      chartDataPointInterval,
+      undefined,
+      this.#logger,
     );
+    this.maxCacheSize = maxCacheSize;
+    this.chartDataPointInterval = chartDataPointInterval;
+    this.chartData = new OutputListChartData(maxCacheSize, chartDataPointInterval);
   }
 
   get outputs(): Record<string, OutputBase> {
@@ -102,6 +131,11 @@ class OutputList {
         if (this.#outputs[key]?.isInvertedPwm != output.isInvertedPwm) {
           update = true;
           this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
+        }
+
+        if (this.#outputs[key]?.color != output.color) {
+          update = true;
+          this.#outputs[key]!.color = output.color;
         }
 
         if (update) {
@@ -203,6 +237,10 @@ class OutputList {
       }
     }
     if (newOutput) {
+      if (!newOutput.color) {
+        newOutput.color = COLORS[this.colorIndex];
+        this.colorIndex = (this.colorIndex + 1) % COLORS.length;
+      }
       this.#outputs[output.id] = newOutput;
     }
   }

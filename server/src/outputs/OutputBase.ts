@@ -23,11 +23,18 @@ export abstract class OutputBase implements IOutputBase {
   cache: OutputCache;
   chartData: OutputChartData;
   logger: winston.Logger;
+  color?: string | undefined;
   private readonly chartDataPointInterval: number;
 
   private updateMissCount = 0;
 
-  constructor(sdbOutput: SDBOutput, sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(
+    sdbOutput: SDBOutput,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
     this.address = sdbOutput.address;
@@ -36,14 +43,12 @@ export abstract class OutputBase implements IOutputBase {
     this.isPwm = sdbOutput.isPwm;
     this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
     this.sprootDB = sprootDB;
+    this.color = sdbOutput.color;
     this.state = new OutputState(sprootDB);
-    this.cache = new OutputCache(Number(process.env["MAX_CACHE_SIZE"]!), sprootDB, logger);
-    this.chartData = new OutputChartData(
-      Number(process.env["MAX_CACHE_SIZE"]!),
-      Number(process.env["CHART_DATA_POINT_INTERVAL"]!),
-    );
+    this.cache = new OutputCache(maxCacheSize, sprootDB, logger);
+    this.chartData = new OutputChartData(maxCacheSize, chartDataPointInterval);
     this.logger = logger;
-    this.chartDataPointInterval = Number(process.env["CHART_DATA_POINT_INTERVAL"]!) * 60000;
+    this.chartDataPointInterval = Number(chartDataPointInterval) * 60000;
   }
 
   get value(): number {
@@ -282,6 +287,7 @@ export class OutputChartData implements IChartable {
   intervalMs: number;
   constructor(limit: number, interval: number, dataSeries?: DataSeries) {
     this.intervalMs = interval * 60000;
+    console;
     this.chartData = new ChartData(limit, interval, dataSeries);
   }
 

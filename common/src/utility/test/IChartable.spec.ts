@@ -38,12 +38,17 @@ describe("IChartable.ts tests", function () {
     describe("generateEmptyDataSeries", function () {
       it("should generate an empty DataSeries", function () {
         assert.isEmpty(ChartData.cachedEmptyDataSeries);
-        let dataSeries = ChartData.generateEmptyDataSeries(10, new Date("2021-01-01T00:00:00Z"));
+
+        let dataSeries = ChartData.generateEmptyDataSeries(10, 5, new Date("2021-01-01T00:00:00Z"));
         const id = ChartData.cachedEmptyDataSeriesID;
         assert.equal(ChartData.cachedEmptyDataSeries.length, 10);
         assert.equal(dataSeries.length, 10);
+        for (const value of dataSeries) {
+          const lastDigit = value.name.split(" ")[1]?.slice(-1)[0];
+          assert.isTrue(lastDigit == "0" || lastDigit == "5");
+        }
 
-        dataSeries = ChartData.generateEmptyDataSeries(10, new Date("2021-02-01T00:00:00Z"));
+        dataSeries = ChartData.generateEmptyDataSeries(10, 5, new Date("2021-02-01T00:00:00Z"));
         assert.equal(ChartData.cachedEmptyDataSeries.length, 10);
         assert.equal(dataSeries.length, 10);
         assert.notEqual(ChartData.cachedEmptyDataSeriesID, id);
@@ -52,9 +57,10 @@ describe("IChartable.ts tests", function () {
 
     describe("generateTimeSpansFromDataSeries", function () {
       it("should generate time spans from a DataSeries", function () {
-        const dataSeries = ChartData.generateEmptyDataSeries(2016);
+        const dataSeries = ChartData.generateEmptyDataSeries(2016, 5);
         const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries, 5);
-        assert.equal(Object.keys(timeSpans).length, 4);
+        assert.equal(Object.keys(timeSpans).length, 5);
+        assert.equal(timeSpans[0]!.length, 2016);
         assert.equal(timeSpans[6]!.length, 72);
         assert.equal(timeSpans[12]!.length, 144);
         assert.equal(timeSpans[24]!.length, 288);
@@ -64,17 +70,16 @@ describe("IChartable.ts tests", function () {
 
     describe("generateStatsForTimeSpans", function () {
       it("should generate stats for time spans", function () {
-        const dataSeries = ChartData.generateEmptyDataSeries(2016);
+        const dataSeries = ChartData.generateEmptyDataSeries(2016, 5);
         const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries, 5);
         const stats = ChartData.generateStatsForTimeSpans(timeSpans);
-        assert.equal(Object.keys(stats).length, 4);
+        assert.equal(Object.keys(stats).length, 5);
       });
     });
 
     describe("constructor", function () {
       it("should create a new ChartData object", function () {
-        const chartData = new ChartData(10, 5, undefined, new Date("2021-01-01T00:00:00Z"));
-        assert.equal(chartData.limit, 10);
+        let chartData = new ChartData(10, 5, undefined, new Date("2021-01-01T00:00:00Z"));
         assert.equal(chartData.get().length, 10);
         assert.equal(
           chartData.get()[9]?.name,
@@ -83,6 +88,18 @@ describe("IChartable.ts tests", function () {
         assert.equal(
           chartData.get()[8]?.name,
           ChartData.formatDateForChart(new Date("2021-12-31T23:55:00Z")),
+        );
+
+        // Different length, different interval
+        chartData = new ChartData(13, 10, undefined, new Date("2021-01-01T00:00:00Z"));
+        assert.equal(chartData.get().length, 13);
+        assert.equal(
+          chartData.get()[12]?.name,
+          ChartData.formatDateForChart(new Date("2021-01-01T00:00:00Z")),
+        );
+        assert.equal(
+          chartData.get()[11]?.name,
+          ChartData.formatDateForChart(new Date("2021-12-31T23:50:00Z")),
         );
       });
 

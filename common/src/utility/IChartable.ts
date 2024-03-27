@@ -22,7 +22,7 @@ export class ChartData {
         this.dataSeries.shift();
       }
     } else {
-      this.dataSeries = ChartData.generateEmptyDataSeries(this.limit, now);
+      this.dataSeries = ChartData.generateEmptyDataSeries(this.limit, this.interval, now);
     }
   }
 
@@ -42,7 +42,10 @@ export class ChartData {
     return res;
   }
 
-  static generateTimeSpansFromDataSeries(dataSeries: DataSeries, interval: number): Record<number, DataSeries> {
+  static generateTimeSpansFromDataSeries(
+    dataSeries: DataSeries,
+    interval: number,
+  ): Record<number, DataSeries> {
     const res: Record<number, DataSeries> = {};
 
     res[0] = dataSeries;
@@ -68,20 +71,26 @@ export class ChartData {
     return new DataSeriesStats(dataSeries);
   }
 
-  static generateEmptyDataSeries(limit: number, now: Date = new Date()): DataSeries {
-    const fiveMinutes = 1000 * 60 * 5;
+  static generateEmptyDataSeries(
+    limit: number,
+    interval: number,
+    now: Date = new Date(),
+  ): DataSeries {
+    const intervalInMs = interval * 60000;
     const newDataSeries: DataSeries = [];
-    let fiveMinuteDate = new Date(Math.floor(now.getTime() / fiveMinutes) * fiveMinutes);
+    //NOTE: This is a reminder to check how this behaves in the sensor shit when you get there
+    // console.log(intervalInMs)
+    let NMinuteDate = new Date(Math.floor(now.getTime() / intervalInMs) * intervalInMs);
 
-    const dataId = this.formatDateForChart(fiveMinuteDate);
+    const dataId = this.formatDateForChart(NMinuteDate);
     if (dataId === this.cachedEmptyDataSeriesID && this.cachedEmptyDataSeries.length === limit) {
       return this.cachedEmptyDataSeries.map((x) => ({ ...x }));
     }
     this.cachedEmptyDataSeriesID = dataId;
 
     for (let i = 0; i < limit; i++) {
-      newDataSeries.unshift({ name: this.formatDateForChart(fiveMinuteDate) });
-      fiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
+      newDataSeries.unshift({ name: this.formatDateForChart(NMinuteDate) });
+      NMinuteDate = new Date(NMinuteDate.getTime() - intervalInMs);
     }
     this.cachedEmptyDataSeries = newDataSeries;
     return newDataSeries;

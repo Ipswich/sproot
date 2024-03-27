@@ -28,7 +28,8 @@ export default function OutputStates() {
 
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   let localChartData = new ChartData(
-    parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
+    parseInt(import.meta.env["VITE_MAX_CHART_DATA_POINTS"] as string),
+    parseInt(import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"] as string),
     [],
   );
   const [chartData, setChartData] = useState(localChartData);
@@ -47,10 +48,17 @@ export default function OutputStates() {
 
   const loadChartDataAsync = async () => {
     const newChartData = await getOutputChartDataAsync();
+    console.time("loadChartDataAsync");
     localChartData = new ChartData(
-      parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
+      parseInt(import.meta.env["VITE_MAX_CHART_DATA_POINTS"] as string),
+      parseInt(import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"] as string),
       newChartData.chartData,
     );
+
+    // const timeSpans = ChartData.generateTimeSpansFromDataSeries(localChartData.get());
+    // const timeSpansStats = ChartData.generateStatsForTimeSpans(timeSpans);
+
+    console.timeEnd("loadChartDataAsync");
     setChartData(localChartData);
     setChartRendering(false);
   };
@@ -62,7 +70,8 @@ export default function OutputStates() {
     }
     localChartData.addDataPoint(newChartData.chartData[0]);
     localChartData = new ChartData(
-      parseInt(import.meta.env["VITE_MAX_OUTPUT_CHART_ENTRIES"] as string),
+      parseInt(import.meta.env["VITE_MAX_CHART_DATA_POINTS"] as string),
+      parseInt(import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"] as string),
       localChartData.get(),
     );
     setChartData(localChartData);

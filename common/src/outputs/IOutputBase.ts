@@ -20,6 +20,7 @@ interface IOutputBase {
   controlMode?: ControlMode | undefined;
   cache?: IQueueCacheable<unknown> | undefined;
   chartData?: IChartable | undefined;
+  color?: string | undefined;
 }
 
 interface IOutputState {

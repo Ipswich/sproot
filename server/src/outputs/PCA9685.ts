@@ -13,12 +13,22 @@ class PCA9685 {
   #sprootDB: ISprootDB;
   #frequency: number;
   #usedPins: Record<string, number[]> = {};
+  #maxCacheSize: number;
+  #chartDataPointInterval: number;
   #logger: winston.Logger;
-  constructor(sprootDB: ISprootDB, logger: winston.Logger, frequency: number = 50) {
+  constructor(
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
+    frequency: number = 50,
+    logger: winston.Logger,
+  ) {
     this.#sprootDB = sprootDB;
-    this.#outputs = {};
+    this.#maxCacheSize = maxCacheSize;
+    this.#chartDataPointInterval = chartDataPointInterval;
     this.#frequency = frequency;
     this.#logger = logger;
+    this.#outputs = {};
   }
 
   async createOutput(output: SDBOutput): Promise<PCA9685Output | null> {
@@ -42,6 +52,8 @@ class PCA9685 {
         pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
         output,
         this.#sprootDB,
+        this.#maxCacheSize,
+        this.#chartDataPointInterval,
         this.#logger,
       );
       await this.#outputs[output.id]?.initializeAsync();
@@ -120,9 +132,11 @@ class PCA9685Output extends OutputBase {
     pca9685: Pca9685Driver,
     output: SDBOutput,
     sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    super(output, sprootDB, logger);
+    super(output, sprootDB, maxCacheSize, chartDataPointInterval, logger);
     this.pca9685 = pca9685;
   }
 

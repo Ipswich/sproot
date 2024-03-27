@@ -182,20 +182,45 @@ describe("OutputBase.ts tests", function () {
   describe("OutputChartData class", function () {
     describe("constructor", function () {
       it("should create a new OutputChartData object with default values", function () {
-        const outputChartData = new OutputChartData(2, 5);
+        const outputChartData5 = new OutputChartData(3, 5);
+        const outputChartData3 = new OutputChartData(3, 3);
 
         const fiveMinutes = 1000 * 60 * 5;
+        const threeMinutes = 1000 * 60 * 3;
         const fiveMinuteDate = new Date(
           Math.floor(new Date().getTime() / fiveMinutes) * fiveMinutes,
         );
-        const earlierfiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
+        const threeMinuteDate = new Date(
+          Math.floor(new Date().getTime() / threeMinutes) * threeMinutes,
+        );
+        const earlierFiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
+        const earliestFiveMinuteDate = new Date(earlierFiveMinuteDate.getTime() - fiveMinutes);
+        const earlierThreeMinuteDate = new Date(threeMinuteDate.getTime() - threeMinutes);
+        const earliestThreeMinuteDate = new Date(earlierThreeMinuteDate.getTime() - threeMinutes);
 
-        assert.equal(outputChartData.get().length, 2);
+        assert.equal(outputChartData5.get().length, 3);
+        assert.equal(outputChartData3.get().length, 3);
+
+        console.table(outputChartData5.get());
+
+        console.table(outputChartData3.get());
         assert.isTrue(
-          outputChartData.get()[0]?.name.includes(earlierfiveMinuteDate.getMinutes().toString()),
+          outputChartData5.get()[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString()),
         );
         assert.isTrue(
-          outputChartData.get()[1]?.name.includes(fiveMinuteDate.getMinutes().toString()),
+          outputChartData5.get()[1]?.name.includes(earlierFiveMinuteDate.getMinutes().toString()),
+        );
+        assert.isTrue(
+          outputChartData5.get()[2]?.name.includes(fiveMinuteDate.getMinutes().toString()),
+        );
+        assert.isTrue(
+          outputChartData3.get()[0]?.name.includes(earliestThreeMinuteDate.getMinutes().toString()),
+        );
+        assert.isTrue(
+          outputChartData3.get()[1]?.name.includes(earlierThreeMinuteDate.getMinutes().toString()),
+        );
+        assert.isTrue(
+          outputChartData3.get()[2]?.name.includes(threeMinuteDate.getMinutes().toString()),
         );
       });
 
