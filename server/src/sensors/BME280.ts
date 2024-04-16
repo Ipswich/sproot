@@ -8,8 +8,14 @@ import winston from "winston";
 
 class BME280 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
-  constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
-    super(sdbsensor, sprootDB, logger);
+  constructor(
+    sdbsensor: SDBSensor,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
+    super(sdbsensor, sprootDB, maxCacheSize, chartDataPointInterval, logger);
     this.units[ReadingType.temperature] = "°C";
     this.units[ReadingType.humidity] = "%rH";
     this.units[ReadingType.pressure] = "hPa";

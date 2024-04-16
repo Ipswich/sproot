@@ -285,9 +285,10 @@ export class OutputCache implements IQueueCacheable<SDBOutputState> {
 export class OutputChartData implements IChartable {
   chartData: ChartData;
   intervalMs: number;
+  limit: number;
   constructor(limit: number, interval: number, dataSeries?: DataSeries) {
+    this.limit = limit;
     this.intervalMs = interval * 60000;
-    console;
     this.chartData = new ChartData(limit, interval, dataSeries);
   }
 

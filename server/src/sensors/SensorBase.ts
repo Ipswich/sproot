@@ -3,10 +3,11 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import winston from "winston";
-import { ChartData, IChartable } from "@sproot/sproot-common/dist/utility/IChartable";
+import { ChartData } from "@sproot/sproot-common/dist/utility/IChartable";
 import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
+import { SensorChartData } from "./base/SensorChartData";
 
-abstract class SensorBase implements ISensorBase, IChartable {
+export abstract class SensorBase implements ISensorBase {
   id: number;
   name: string;
   model: string;
@@ -16,12 +17,20 @@ abstract class SensorBase implements ISensorBase, IChartable {
   sprootDB: ISprootDB;
   logger: winston.Logger;
   readonly units: Record<ReadingType, string>;
+  maxCacheSize: number;
+  chartDataPointInterval: number;
   cachedReadings: Record<ReadingType, SDBReading[]>;
-  chartData: Record<ReadingType, ChartData>;
   cacheData: Record<ReadingType, QueueCache<SDBReading>>;
+  chartData: SensorChartData;
   updateInterval: NodeJS.Timeout | null = null;
 
-  constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(
+    sdbSensor: SDBSensor,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
     this.id = sdbSensor.id;
     this.name = sdbSensor.name;
     this.model = sdbSensor.model;
@@ -31,20 +40,14 @@ abstract class SensorBase implements ISensorBase, IChartable {
     this.sprootDB = sprootDB;
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
+    this.maxCacheSize = maxCacheSize;
+    this.chartDataPointInterval = chartDataPointInterval;
     this.cachedReadings = {} as Record<ReadingType, SDBReading[]>;
     this.cacheData = {} as Record<ReadingType, QueueCache<SDBReading>>;
     for (const readingType in ReadingType) {
-      this.cacheData[readingType as ReadingType] = new QueueCache<SDBReading>(
-        Number(process.env["MAX_CACHE_SIZE"]!),
-      );
+      this.cacheData[readingType as ReadingType] = new QueueCache<SDBReading>(maxCacheSize);
     }
-    this.chartData = {} as Record<string | number | symbol, ChartData>;
-    for (const readingType in ReadingType) {
-      this.chartData[readingType as ReadingType] = new ChartData(
-        Number(process.env["MAX_CACHE_SIZE"]!),
-        Number(process.env["CHART_DATA_POINT_INTERVAL"]!),
-      );
-    }
+    this.chartData = new SensorChartData(maxCacheSize, chartDataPointInterval);
   }
 
   abstract disposeAsync(): Promise<void>;
@@ -171,9 +174,8 @@ abstract class SensorBase implements ISensorBase, IChartable {
   loadChartData(): void {
     for (const readingType in this.cachedReadings) {
       for (const reading of this.cachedReadings[readingType as ReadingType]) {
-        if (!this.chartData[readingType as ReadingType]) {
-          const value = this.chartData[readingType as ReadingType]
-            ?.get()
+        if (!this.chartData.getOne(readingType as ReadingType)) {
+          const value = this.chartData.chartData[readingType as ReadingType].get()
             .filter((x) => x.name === ChartData.formatDateForChart(reading.logTime));
           if (value && value[0]) {
             value[0][this.name] = ChartData.formatDecimalReadingForDisplay(reading.data);
@@ -190,7 +192,7 @@ abstract class SensorBase implements ISensorBase, IChartable {
           this.cachedReadings[readingType as ReadingType].length - 1
         ];
       if (lastCacheData) {
-        this.chartData[readingType as ReadingType]?.addDataPoint({
+        this.chartData.chartData[readingType as ReadingType].addDataPoint({
           name: ChartData.formatDateForChart(lastCacheData.logTime),
           [this.name]: ChartData.formatDecimalReadingForDisplay(lastCacheData.data),
         });
@@ -204,5 +206,3 @@ abstract class SensorBase implements ISensorBase, IChartable {
     }
   }
 }
-
-export { SensorBase };

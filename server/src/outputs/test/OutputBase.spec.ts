@@ -201,9 +201,6 @@ describe("OutputBase.ts tests", function () {
         assert.equal(outputChartData5.get().length, 3);
         assert.equal(outputChartData3.get().length, 3);
 
-        console.table(outputChartData5.get());
-
-        console.table(outputChartData3.get());
         assert.isTrue(
           outputChartData5.get()[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString()),
         );

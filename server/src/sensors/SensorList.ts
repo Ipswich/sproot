@@ -11,14 +11,23 @@ class SensorList {
   #sprootDB: ISprootDB;
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
+  #maxCacheSize: number;
+  #chartDataPointInterval: number;
   #chartData: Record<ReadingType, Array<ChartData>> = {
     temperature: [],
     humidity: [],
     pressure: [],
   };
 
-  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
     this.#sprootDB = sprootDB;
+    this.#maxCacheSize = maxCacheSize;
+    this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
   }
 
@@ -265,7 +274,13 @@ class SensorList {
         if (!sensor.address) {
           throw new SensorListError("BME280 sensor address cannot be null");
         }
-        newSensor = await new BME280(sensor, this.#sprootDB, this.#logger).initAsync();
+        newSensor = await new BME280(
+          sensor,
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
         if (newSensor) {
           this.#sensors[sensor.id] = newSensor;
         }
@@ -275,7 +290,13 @@ class SensorList {
         if (!sensor.address) {
           throw new SensorListError("DS18B20 sensor address cannot be null");
         }
-        newSensor = await new DS18B20(sensor, this.#sprootDB, this.#logger).initAsync();
+        newSensor = await new DS18B20(
+          sensor,
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
         newSensor;
         if (newSensor) {
           this.#sensors[sensor.id] = newSensor;

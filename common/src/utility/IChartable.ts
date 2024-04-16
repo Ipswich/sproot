@@ -10,19 +10,19 @@ export class ChartData {
   static cachedEmptyDataSeries: DataSeries = [];
   static cachedEmptyDataSeriesID: string = "";
   readonly limit: number;
-  readonly interval: number;
+  readonly intervalMinutes: number;
   dataSeries: DataSeries;
 
-  constructor(limit: number, interval: number, dataSeries?: DataSeries, now: Date = new Date()) {
+  constructor(limit: number, intervalMinutes: number, dataSeries?: DataSeries, now: Date = new Date()) {
     this.limit = limit;
-    this.interval = interval;
+    this.intervalMinutes = intervalMinutes;
     if (dataSeries) {
       this.dataSeries = dataSeries;
       while (this.dataSeries.length > limit) {
         this.dataSeries.shift();
       }
     } else {
-      this.dataSeries = ChartData.generateEmptyDataSeries(this.limit, this.interval, now);
+      this.dataSeries = ChartData.generateEmptyDataSeries(this.limit, this.intervalMinutes, now);
     }
   }
 
@@ -38,7 +38,7 @@ export class ChartData {
   }
 
   generateTimeSpansFromDataSeries(dataSeries: DataSeries): Record<number, DataSeries> {
-    const res = ChartData.generateTimeSpansFromDataSeries(dataSeries, this.interval);
+    const res = ChartData.generateTimeSpansFromDataSeries(dataSeries, this.intervalMinutes);
     return res;
   }
 
@@ -73,26 +73,25 @@ export class ChartData {
 
   static generateEmptyDataSeries(
     limit: number,
-    interval: number,
+    intervalMinutes: number,
     now: Date = new Date(),
   ): DataSeries {
-    const intervalInMs = interval * 60000;
+    const intervalInMs = intervalMinutes * 60000;
     const newDataSeries: DataSeries = [];
-    //NOTE: This is a reminder to check how this behaves in the sensor shit when you get there
-    // console.log(intervalInMs)
     let NMinuteDate = new Date(Math.floor(now.getTime() / intervalInMs) * intervalInMs);
 
-    const dataId = this.formatDateForChart(NMinuteDate);
-    if (dataId === this.cachedEmptyDataSeriesID && this.cachedEmptyDataSeries.length === limit) {
+    const newDataId = this.formatDateForChart(NMinuteDate) + limit + intervalMinutes;
+    if (newDataId === this.cachedEmptyDataSeriesID) {
       return this.cachedEmptyDataSeries.map((x) => ({ ...x }));
     }
-    this.cachedEmptyDataSeriesID = dataId;
+    this.cachedEmptyDataSeriesID = newDataId;
 
     for (let i = 0; i < limit; i++) {
       newDataSeries.unshift({ name: this.formatDateForChart(NMinuteDate) });
       NMinuteDate = new Date(NMinuteDate.getTime() - intervalInMs);
     }
     this.cachedEmptyDataSeries = newDataSeries;
+    // console.table(newDataSeries) -> Flaky test
     return newDataSeries;
   }
 
@@ -147,8 +146,8 @@ export class ChartData {
 
 export interface IChartable {
   chartData: Record<string | number | symbol, ChartData> | ChartData;
-  loadChartData(cache: [], name: string): void;
-  updateChartData(cache: [], name: string): void;
+  loadChartData(cache: [], name: string, key?: string | number | symbol): void;
+  updateChartData(cache: [], name: string, key?: string | number | symbol): void;
 }
 
 class DataSeriesStats {

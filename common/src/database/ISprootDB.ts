@@ -15,7 +15,7 @@ interface ISprootDB {
   deleteSensorAsync(id: number): Promise<void>;
   addSensorReadingAsync(sensor: ISensorBase): Promise<void>;
   getSensorReadingsAsync(
-    sensor: ISensorBase,
+    sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
     toIsoString: boolean,

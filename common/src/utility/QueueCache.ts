@@ -43,7 +43,7 @@ class QueueCache<T> {
 }
 
 interface IQueueCacheable<T> {
-  queueCache: QueueCache<T>;
+  queueCache: Record<string | number | symbol, QueueCache<T>> | QueueCache<T>;
 }
 
 export { QueueCache };

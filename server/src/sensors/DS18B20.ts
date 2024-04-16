@@ -10,8 +10,14 @@ import { SensorBase } from "./SensorBase";
 class DS18B20 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
 
-  constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
-    super(sdbSensor, sprootDB, logger);
+  constructor(
+    sdbSensor: SDBSensor,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
+    super(sdbSensor, sprootDB, maxCacheSize, chartDataPointInterval, logger);
     this.units[ReadingType.temperature] = "°C";
     this.cachedReadings[ReadingType.temperature] = [];
   }

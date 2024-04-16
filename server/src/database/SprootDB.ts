@@ -174,7 +174,7 @@ class SprootDB implements ISprootDB {
    * @returns An array of SDBReadings.
    */
   async getSensorReadingsAsync(
-    sensor: ISensorBase,
+    sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number = 120,
     toIsoString: boolean = false,

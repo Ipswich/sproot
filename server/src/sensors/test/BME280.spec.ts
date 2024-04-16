@@ -76,7 +76,7 @@ describe("BME280.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
+    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, 5, 3, logger).initAsync();
 
     assert.equal(bme280Sensor!.cachedReadings[ReadingType.temperature].length, 2);
     assert.isTrue(bme280Sensor instanceof BME280);
@@ -150,7 +150,7 @@ describe("BME280.ts tests", function () {
     sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
 
     const logger = winston.createLogger();
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
+    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, 5, 3, logger).initAsync();
 
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], 2);
     assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], 2);
@@ -182,7 +182,7 @@ describe("BME280.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    const bme280Sensor = new BME280(mockBME280Data, mockSprootDB, logger);
+    const bme280Sensor = new BME280(mockBME280Data, mockSprootDB, 5, 3, logger);
     bme280Sensor.lastReading = {
       temperature: String(mockReading.temperature),
       humidity: String(mockReading.humidity),
@@ -269,7 +269,7 @@ describe("BME280.ts tests", function () {
       close: closeStub as Bme280["close"],
     } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
+    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, 5, 3, logger).initAsync();
 
     await bme280Sensor!.getReadingAsync();
 
