@@ -105,6 +105,7 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     logger,
   );
   app.set("sensorList", sensorList);
+  console.log(Number(process.env["MAX_CACHE_SIZE"]));
   const outputList = new OutputList(
     sprootDB,
     Number(process.env["MAX_CACHE_SIZE"]),

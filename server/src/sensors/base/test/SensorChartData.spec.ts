@@ -114,7 +114,6 @@ describe("SensorChartData.ts tests", function () {
         ReadingType.temperature,
       );
       assert.equal(Object.keys(sensorChartData.getAll()).length, 2);
-      console.log(sensorChartData.getAll());
       assert.equal(sensorChartData.getOne(ReadingType.humidity).length, 4);
       assert.equal(sensorChartData.getOne(ReadingType.humidity)[0]?.["Test"], undefined);
 

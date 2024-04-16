@@ -6,8 +6,8 @@ import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ISensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { OutputBase } from "@sproot/sproot-server/src/outputs/OutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { OutputBase } from "@sproot/sproot-server/src/outputs/base/OutputBase";
 
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;

@@ -22,7 +22,8 @@ export class ChartData {
         this.dataSeries.shift();
       }
     } else {
-      this.dataSeries = ChartData.generateEmptyDataSeries(this.limit, this.intervalMinutes, now);
+      this.dataSeries = ChartData.generateEmptyDataSeries(limit, intervalMinutes, now);
+      console.table(this.dataSeries)
     }
   }
 
@@ -76,6 +77,7 @@ export class ChartData {
     intervalMinutes: number,
     now: Date = new Date(),
   ): DataSeries {
+    // console.log(limit, intervalMinutes, now)
     const intervalInMs = intervalMinutes * 60000;
     const newDataSeries: DataSeries = [];
     let NMinuteDate = new Date(Math.floor(now.getTime() / intervalInMs) * intervalInMs);
@@ -91,7 +93,7 @@ export class ChartData {
       NMinuteDate = new Date(NMinuteDate.getTime() - intervalInMs);
     }
     this.cachedEmptyDataSeries = newDataSeries;
-    // console.table(newDataSeries) -> Flaky test
+    // console.table(newDataSeries) // -> Flaky test
     return newDataSeries;
   }
 
