@@ -13,7 +13,12 @@ export class ChartData {
   readonly intervalMinutes: number;
   dataSeries: DataSeries;
 
-  constructor(limit: number, intervalMinutes: number, dataSeries?: DataSeries, now: Date = new Date()) {
+  constructor(
+    limit: number,
+    intervalMinutes: number,
+    dataSeries?: DataSeries,
+    now: Date = new Date(),
+  ) {
     this.limit = limit;
     this.intervalMinutes = intervalMinutes;
     if (dataSeries) {
@@ -23,7 +28,7 @@ export class ChartData {
       }
     } else {
       this.dataSeries = ChartData.generateEmptyDataSeries(limit, intervalMinutes, now);
-      console.table(this.dataSeries)
+      console.table(this.dataSeries);
     }
   }
 
