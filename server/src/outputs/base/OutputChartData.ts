@@ -8,7 +8,6 @@ export class OutputChartData implements IChartable {
   constructor(limit: number, intervalMinutes: number, dataSeries?: DataSeries) {
     this.limit = limit;
     this.intervalMinutes = intervalMinutes;
-    console.log(limit, intervalMinutes, dataSeries);
     this.chartData = new ChartData(limit, intervalMinutes, dataSeries);
   }
 
@@ -19,9 +18,9 @@ export class OutputChartData implements IChartable {
   loadChartData(cache: SDBOutputState[], outputName: string): void {
     for (const state of cache) {
       const formattedDate = ChartData.formatDateForChart(state.logTime);
-      const value = this.get().find((x) => x.name == formattedDate);
-      if (value) {
-        value[outputName] = state.value.toString();
+      const value = this.get().findIndex((x) => x.name == formattedDate);
+      if (value >= 0 && this.get()[value]) {
+        this.get()[value]![outputName] = state.value.toString();
       }
     }
   }

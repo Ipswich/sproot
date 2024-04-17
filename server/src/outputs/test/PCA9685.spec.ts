@@ -26,7 +26,7 @@ describe("PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, undefined, logger);
     const output1 = await pca9685.createOutput({
       id: 1,
       model: "pca9685",
@@ -90,7 +90,7 @@ describe("PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, undefined, logger);
     pca9685.createOutput({
       id: 1,
       model: "pca9685",
@@ -118,7 +118,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     sandbox.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sandbox.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, undefined, logger);
     pca9685.createOutput({
       id: 1,
       model: "pca9685",

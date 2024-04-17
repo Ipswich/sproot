@@ -29,6 +29,7 @@ export abstract class OutputBase implements IOutputBase {
     sdbOutput: SDBOutput,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
@@ -43,7 +44,7 @@ export abstract class OutputBase implements IOutputBase {
     this.color = sdbOutput.color;
     this.state = new OutputState(sprootDB);
     this.cache = new OutputCache(maxCacheSize, sprootDB, logger);
-    this.chartData = new OutputChartData(maxCacheSize, chartDataPointInterval);
+    this.chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
     this.logger = logger;
     this.chartDataPointInterval = Number(chartDataPointInterval);
   }

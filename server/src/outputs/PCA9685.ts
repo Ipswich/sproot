@@ -14,17 +14,21 @@ class PCA9685 {
   #frequency: number;
   #usedPins: Record<string, number[]> = {};
   #maxCacheSize: number;
+  #maxChartDataSize: number;
   #chartDataPointInterval: number;
   #logger: winston.Logger;
+
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    maxChartDataSize: number,
     chartDataPointInterval: number,
     frequency: number = 50,
     logger: winston.Logger,
   ) {
     this.#sprootDB = sprootDB;
     this.#maxCacheSize = maxCacheSize;
+    this.#maxChartDataSize = maxChartDataSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#frequency = frequency;
     this.#logger = logger;
@@ -53,6 +57,7 @@ class PCA9685 {
         output,
         this.#sprootDB,
         this.#maxCacheSize,
+        this.#maxChartDataSize,
         this.#chartDataPointInterval,
         this.#logger,
       );
@@ -133,10 +138,11 @@ class PCA9685Output extends OutputBase {
     output: SDBOutput,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    super(output, sprootDB, maxCacheSize, chartDataPointInterval, logger);
+    super(output, sprootDB, maxCacheSize, maxChartDataSize, chartDataPointInterval, logger);
     this.pca9685 = pca9685;
   }
 

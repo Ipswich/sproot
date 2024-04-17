@@ -30,11 +30,13 @@ class OutputList {
   chartData: OutputListChartData;
   colorIndex: number;
   maxCacheSize: number;
+  maxChartDataSize: number;
   chartDataPointInterval: number;
 
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
@@ -44,13 +46,15 @@ class OutputList {
     this.#PCA9685 = new PCA9685(
       this.#sprootDB,
       maxCacheSize,
+      maxChartDataSize,
       chartDataPointInterval,
       undefined,
       this.#logger,
     );
     this.maxCacheSize = maxCacheSize;
+    this.maxChartDataSize = maxChartDataSize;
     this.chartDataPointInterval = chartDataPointInterval;
-    this.chartData = new OutputListChartData(maxCacheSize, chartDataPointInterval);
+    this.chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
   }
 
   get outputs(): Record<string, OutputBase> {
