@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { OutputList } from "../../outputs/OutputList";
+import { OutputList } from "../../outputs/list/OutputList";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";

@@ -5,7 +5,7 @@ import { ISensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/ISe
 import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/IChartable";
 import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
-import { SensorChartData } from "./base/SensorChartData";
+import { SensorChartData } from "./SensorChartData";
 
 export abstract class SensorBase implements ISensorBase {
   id: number;
@@ -15,6 +15,7 @@ export abstract class SensorBase implements ISensorBase {
   lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
   sprootDB: ISprootDB;
+  color?: string | undefined;
   logger: winston.Logger;
   readonly units: Record<ReadingType, string>;
   maxCacheSize: number;
@@ -38,6 +39,7 @@ export abstract class SensorBase implements ISensorBase {
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.sprootDB = sprootDB;
+    this.color = sdbSensor.color;
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
     this.maxCacheSize = maxCacheSize;

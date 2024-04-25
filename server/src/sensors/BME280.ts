@@ -3,7 +3,7 @@ import bme280 from "bme280";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
-import { SensorBase } from "./SensorBase";
+import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 
 class BME280 extends SensorBase {

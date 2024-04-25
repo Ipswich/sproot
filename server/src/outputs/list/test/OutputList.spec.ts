@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { OutputList, OutputListChartData } from "@sproot/sproot-server/src/outputs/OutputList";
+import { OutputList, OutputListChartData } from "../OutputList";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
 import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import Pca9685Driver from "pca9685";

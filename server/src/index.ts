@@ -12,8 +12,8 @@ import "winston-daily-rotate-file";
 
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
-import { SensorList } from "./sensors/SensorList";
-import { OutputList } from "./outputs/OutputList";
+import { SensorList } from "./sensors/list/SensorList";
+import { OutputList } from "./outputs/list/OutputList";
 
 import login, { authenticate } from "./api/v1/middleware/Authentication";
 import sensorRouter from "./api/v1/SensorRouter";

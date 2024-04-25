@@ -5,7 +5,7 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SensorList } from "@sproot/sproot-server/src/sensors/SensorList";
+import { SensorList } from "../SensorList";
 
 import bme280, { Bme280 } from "bme280";
 import chai, { assert } from "chai";

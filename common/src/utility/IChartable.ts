@@ -96,7 +96,6 @@ export class ChartData {
       NMinuteDate = new Date(NMinuteDate.getTime() - intervalInMs);
     }
     this.cachedEmptyDataSeries = newDataSeries;
-    // console.table(newDataSeries) // -> Flaky test
     return newDataSeries;
   }
 
