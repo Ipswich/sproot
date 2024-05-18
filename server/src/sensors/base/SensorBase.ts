@@ -85,12 +85,9 @@ export abstract class SensorBase implements ISensorBase {
       }
 
       let updateInfoString = "";
-      for (const readingType in this.cachedReadings) {
-        updateInfoString += `${readingType}: ${this.cachedReadings[readingType as ReadingType].length}`;
-        if (
-          readingType !=
-          Object.keys(this.cachedReadings)[Object.keys(this.cachedReadings).length - 1]
-        ) {
+      for (const readingType in this.cacheData) {
+        updateInfoString += `${readingType}: ${this.cacheData[readingType as ReadingType].length()}`;
+        if (readingType != Object.keys(this.cacheData)[Object.keys(this.cacheData).length - 1]) {
           updateInfoString += ", ";
         }
       }
@@ -125,12 +122,9 @@ export abstract class SensorBase implements ISensorBase {
       }
 
       let updateInfoString = "";
-      for (const readingType in this.cachedReadings) {
-        updateInfoString += `${readingType}: ${this.cachedReadings[readingType as ReadingType].length}`;
-        if (
-          readingType !=
-          Object.keys(this.cachedReadings)[Object.keys(this.cachedReadings).length - 1]
-        ) {
+      for (const readingType in this.cacheData) {
+        updateInfoString += `${readingType}: ${this.cacheData[readingType as ReadingType].length()}`;
+        if (readingType != Object.keys(this.cacheData)[Object.keys(this.cacheData).length - 1]) {
           updateInfoString += ", ";
         }
       }
@@ -152,6 +146,29 @@ export abstract class SensorBase implements ISensorBase {
       this.logger.error(`Error adding reading to database for sensor ${this.id}: ${error}`);
     }
   };
+
+  getCacheData(offset?: number, limit?: number): Record<string, SDBReading[]> {
+    const result: Record<string, SDBReading[]> = {};
+    if (offset == undefined || offset == null || limit == undefined || limit == null) {
+      for (const key in this.cacheData) {
+        result[key] = this.cacheData[key as ReadingType].get();
+      }
+      return result;
+    }
+    if (offset < 0 || limit < 1) {
+      return result;
+    }
+    for (const key in this.cacheData) {
+      if (offset > this.cacheData[key as ReadingType].length()) {
+        return result;
+      }
+    }
+
+    for (const key in this.cacheData) {
+      result[key] = this.cacheData[key as ReadingType].get(offset, limit);
+    }
+    return result;
+  }
 
   getCachedReadings(offset?: number, limit?: number): Record<string, SDBReading[]> {
     if (offset == undefined || offset == null || limit == undefined || limit == null) {

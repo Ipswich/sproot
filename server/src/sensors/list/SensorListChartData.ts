@@ -1,4 +1,3 @@
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
 
@@ -71,36 +70,25 @@ export class SensorListChartData implements IChartable {
     }
   }
 
-  updateChartData(_cache: DataSeries[], _sensorName: string, _key: ReadingType): void {
-    // const lastCacheData = cache[cache.length - 1];
-    // if (lastCacheData) {
-    //   const name = ChartData.formatDateForChart(lastCacheData.logTime);
-    //   //If there isn't an existing ChartData for this key, create it
-    //   if (!this.chartData[key]) {
-    //     this.chartData[key] = new ChartData(this.limit, this.intervalSeconds);
-    //   }
-    //   //Add Only if not the same time stamp as the last data point
-    //   if (name != this.chartData[key].get().slice(-1)[0]?.name) {
-    //     this.chartData[key].addDataPoint({
-    //       name,
-    //       [sensorName]: lastCacheData.data,
-    //     });
-    //   }
-    // }
-  }
-
-  shouldUpdateChartData(key: ReadingType, lastCacheData?: SDBReading): boolean {
-    const lastChartData = this.chartData[key].get().slice(-1)[0];
-    if (
-      lastChartData &&
-      lastCacheData &&
-      lastChartData.name ==
-        ChartData.formatDateForChart(
-          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalSeconds),
-        )
-    ) {
-      return true;
+  updateChartData(cache: DataSeries[], _sensorName: string, key: ReadingType): void {
+    const combinedDataSeries = ChartData.combineDataSeries(cache);
+    //If there isn't an existing ChartData for this key, create it
+    if (!this.chartData[key]) {
+      this.chartData[key] = new ChartData(this.limit, this.intervalSeconds, combinedDataSeries);
+      return;
     }
-    return false;
+
+    const lastCombinedDataPoint = combinedDataSeries[combinedDataSeries.length - 1];
+    if (lastCombinedDataPoint) {
+      const dateName = lastCombinedDataPoint.name;
+      //Add Only if not the same time stamp as the last data point
+      if (dateName != this.chartData[key].get().slice(-1)[0]?.name) {
+        const { name, ...data } = lastCombinedDataPoint;
+        this.chartData[key].addDataPoint({
+          name: dateName,
+          ...data,
+        });
+      }
+    }
   }
 }

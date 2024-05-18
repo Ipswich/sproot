@@ -110,99 +110,71 @@ describe("SensorListChartData.ts tests", function () {
       });
     });
 
-    // describe("updateChartData", function () {
-    //   it("should update the chart data with the last entry in the passed cache, adding a key if necessary", function () {
-    //     const sensorChartData = new SensorChartData(4, 5);
+    describe("updateChartData", function () {
+      it("should update the chart data with the last entry in the passed dataseries, adding a key with the combined chart if necessary", function () {
+        const sensorListChartData = new SensorListChartData(4, 5);
 
-    //     assert.equal(Object.keys(sensorChartData.getAll()).length, 0);
+        assert.equal(Object.keys(sensorListChartData.getAll()).length, 0);
+        const dataSeriesRecordBase = {} as Record<ReadingType, DataSeries>;
+        dataSeriesRecordBase.temperature = [
+          {
+            name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")),
+            base: 100,
+            one: 98,
+          },
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), base: 30 },
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")), base: 3 },
+        ];
+        dataSeriesRecordBase.humidity = [
+          { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")), one: 99 },
+        ];
 
-    //     sensorChartData.updateChartData(
-    //       [
-    //         {
-    //           metric: ReadingType.temperature,
-    //           units: "°C",
-    //           data: "100",
-    //           logTime: "2024-03-03T03:30:01Z",
-    //         } as SDBReading,
-    //       ],
-    //       "Test",
-    //       ReadingType.temperature,
-    //     );
-    //     sensorChartData.updateChartData(
-    //       [
-    //         {
-    //           metric: ReadingType.humidity,
-    //           units: "%rH",
-    //           data: "30",
-    //           logTime: "2024-03-03T03:30:01Z",
-    //         } as SDBReading,
-    //       ],
-    //       "Test",
-    //       ReadingType.humidity,
-    //     );
+        sensorListChartData.updateChartData(
+          [dataSeriesRecordBase.humidity],
+          "Test",
+          ReadingType.humidity,
+        );
 
-    //     assert.equal(Object.keys(sensorChartData.getAll()).length, 2);
+        dataSeriesRecordBase.humidity.push({
+          name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")),
+          one: 29,
+        });
+        sensorListChartData.updateChartData(
+          [dataSeriesRecordBase.humidity],
+          "Test",
+          ReadingType.humidity,
+        );
 
-    //     assert.equal(sensorChartData.getOne(ReadingType.temperature).length, 4);
-    //     assert.equal(sensorChartData.getOne(ReadingType.temperature).slice(-1)[0]?.["Test"], 100);
-    //     assert.isString(sensorChartData.getOne(ReadingType.temperature)[0]?.name);
+        dataSeriesRecordBase.humidity.push({
+          name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")),
+          one: 2,
+        });
+        sensorListChartData.updateChartData(
+          [dataSeriesRecordBase.humidity],
+          "Test",
+          ReadingType.humidity,
+        );
 
-    //     assert.equal(sensorChartData.getOne(ReadingType.humidity).length, 4);
-    //     assert.equal(sensorChartData.getOne(ReadingType.humidity).slice(-1)[0]?.["Test"], 30);
-    //     assert.isString(sensorChartData.getOne(ReadingType.humidity)[0]?.name);
-    //   });
-    // });
+        assert.equal(Object.keys(sensorListChartData.getAll()).length, 1);
 
-    // describe("shouldUpdateChartData", function () {
-    //   it("should return true if the last entry in the cache is different from the last entry in the chart data", function () {
-    //     const dataSeriesRecord = {} as Record<ReadingType, DataSeries>;
-    //     dataSeriesRecord.temperature = [
-    //       { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
-    //     ];
-    //     const sensorChartData = new SensorChartData(4, 5, dataSeriesRecord);
+        sensorListChartData.updateChartData(
+          [dataSeriesRecordBase.temperature],
+          "Test",
+          ReadingType.temperature,
+        );
 
-    //     const sensorCache = new SensorCache(4, mockSprootDB, logger);
-    //     sensorCache.addData(
-    //       {
-    //         logTime: "2024-03-03T18:50:01Z",
-    //         metric: ReadingType.temperature,
-    //         units: "°C",
-    //         data: "100",
-    //       } as SDBReading,
-    //       new Date("2024-03-03T18:50:01Z"),
-    //     );
+        assert.equal(Object.keys(sensorListChartData.getAll()).length, 2);
 
-    //     assert.isTrue(
-    //       sensorChartData.shouldUpdateChartData(
-    //         ReadingType.temperature,
-    //         sensorCache.get(ReadingType.temperature).slice(-1)[0],
-    //       ),
-    //     );
-    //   });
+        assert.equal(sensorListChartData.getOne(ReadingType.temperature).length, 3);
+        assert.equal(sensorListChartData.getOne(ReadingType.temperature)[0]!["base"], 100);
+        assert.equal(sensorListChartData.getOne(ReadingType.temperature)[2]!["base"], 3);
+        assert.equal(sensorListChartData.getOne(ReadingType.temperature)[0]!["one"], 98);
 
-    //   it("should return false if the last entry in the cache is the same as the last entry in the chart data", function () {
-    //     const dataSeriesRecord = {} as Record<ReadingType, DataSeries>;
-    //     dataSeriesRecord.temperature = [
-    //       { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
-    //     ];
-    //     const sensorChartData = new SensorChartData(4, 5, dataSeriesRecord);
-
-    //     const sensorCache = new SensorCache(4, mockSprootDB, logger);
-    //     sensorCache.addData(
-    //       {
-    //         logTime: "2024-03-03T18:49:01Z",
-    //         metric: ReadingType.temperature,
-    //         units: "°C",
-    //         data: "100",
-    //       } as SDBReading,
-    //       new Date("2024-03-03T18:49:01Z"),
-    //     );
-    //     assert.isFalse(
-    //       sensorChartData.shouldUpdateChartData(
-    //         ReadingType.temperature,
-    //         sensorCache.get(ReadingType.temperature).slice(-1)[0],
-    //       ),
-    //     );
-    //   });
+        assert.equal(sensorListChartData.getOne(ReadingType.humidity).length, 3);
+        assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]!["one"], 99);
+        assert.equal(sensorListChartData.getOne(ReadingType.humidity)[1]!["one"], 29);
+        assert.equal(sensorListChartData.getOne(ReadingType.humidity)[2]!["one"], 2);
+      });
+    });
   });
 });

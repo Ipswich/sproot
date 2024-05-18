@@ -1,11 +1,12 @@
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
 import { ISensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
-import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
+import { SensorListChartData } from "./SensorListChartData";
+import { DataSeries } from "@sproot/utility/IChartable";
 
 class SensorList {
   #sprootDB: ISprootDB;
@@ -13,11 +14,7 @@ class SensorList {
   #logger: winston.Logger;
   #maxCacheSize: number;
   #chartDataPointInterval: number;
-  #chartData: Record<ReadingType, Array<ChartData>> = {
-    temperature: [],
-    humidity: [],
-    pressure: [],
-  };
+  #chartData: SensorListChartData;
 
   constructor(
     sprootDB: ISprootDB,
@@ -29,14 +26,15 @@ class SensorList {
     this.#maxCacheSize = maxCacheSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
+    this.#chartData = new SensorListChartData(maxCacheSize, chartDataPointInterval);
   }
 
   get sensors(): Record<string, SensorBase> {
     return this.#sensors;
   }
 
-  get chartData(): Record<ReadingType, Array<ChartData>> {
-    return this.#chartData;
+  get chartData(): Record<ReadingType, DataSeries> {
+    return this.#chartData.getAll();
   }
 
   get sensorData(): Record<string, ISensorBase> {
@@ -117,7 +115,7 @@ class SensorList {
     }
 
     if (sensorListChanges) {
-      this.loadChartDataFromCachedReadings();
+      this.loadChartData();
     }
     profiler.done({
       message: "SensorList initializeOrRegenerate time",
@@ -129,62 +127,30 @@ class SensorList {
     await this.#touchAllSensorsAsync(async (sensor) => {
       sensor.addLastReadingToDatabaseAsync();
     });
-    this.updateChartDataFromLastCacheReading();
+    this.updateChartData();
   };
 
   disposeAsync = async () =>
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
 
-  loadChartDataFromCachedReadings() {
+  loadChartData() {
     //Format cached readings for recharts
     const profiler = this.#logger.startTimer();
-    const chartObject = {} as Record<ReadingType, Record<string, ChartData>>;
-    for (const key in this.#sensors) {
-      const sensor = this.#sensors[key]!;
-      for (const readingType in sensor.cachedReadings) {
-        const cachedReadings = sensor.cachedReadings[readingType as ReadingType];
-        for (const reading of cachedReadings) {
-          if (!chartObject[readingType as ReadingType]) {
-            chartObject[readingType as ReadingType] = {};
-          }
-          const logTimeAsDate = new Date(reading.logTime);
-          if (logTimeAsDate.getMinutes() % 5 !== 0) {
-            continue;
-          }
-          const logTime = this.#formatDateForChart(logTimeAsDate);
-          if (!chartObject[readingType as ReadingType][logTime]) {
-            chartObject[readingType as ReadingType][logTime] = {
-              units: sensor.units[readingType as ReadingType],
-              name: logTime,
-            } as ChartData;
-          }
-          chartObject[readingType as ReadingType][logTime]![sensor.name] =
-            this.#formatReadingForDisplay(reading.data);
-        }
-      }
-    }
-    // Convert to array
-    for (const readingType in chartObject) {
-      this.#chartData[readingType as ReadingType] = Object.values(
-        chartObject[readingType as ReadingType],
-      );
-    }
 
-    //Remove extra readings
-    for (const readingType in this.#chartData) {
-      while (
-        this.#chartData[readingType as ReadingType].length >
-        Number(process.env["MAX_CHART_DATA_POINTS"]!)
-      ) {
-        this.#chartData[readingType as ReadingType].shift();
-      }
+    for (const readingType in ReadingType) {
+      const dataSeriesMap = Object.keys(this.#sensors)
+        .map((key) => {
+          return this.#sensors[key]?.chartData.getOne(readingType as ReadingType);
+        })
+        .filter((x) => x != undefined) as DataSeries[];
+      this.#chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
     // Log changes
     let logMessage = "";
-    for (const readingType in this.#chartData) {
-      if (this.#chartData[readingType as ReadingType].length > 0) {
-        logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
+    for (const readingType in Object.keys(this.#chartData.getAll())) {
+      if (this.#chartData.getOne(readingType as ReadingType).length > 0) {
+        logMessage += `{${readingType}: ${this.#chartData.getOne(readingType as ReadingType).length}} `;
       }
     }
     this.#logger.info(`Loaded sensor chart data. ${logMessage}`);
@@ -194,62 +160,26 @@ class SensorList {
     });
   }
 
-  updateChartDataFromLastCacheReading() {
+  updateChartData() {
     const profiler = this.#logger.startTimer();
-    let update = false;
-    const lastReadingObject = {} as Record<ReadingType, ChartData>;
-    for (const sensor of Object.values(this.#sensors)) {
-      for (const readingType of Object.keys(sensor.cachedReadings)) {
-        const readings = sensor.cachedReadings[readingType as ReadingType];
-        const lastCacheReading = readings[readings.length - 1]!;
-        const logTimeAsDate = new Date(lastCacheReading.logTime);
-        //If it isn't a 5 minute interval, skip
-        if (logTimeAsDate.getMinutes() % 5 !== 0) {
-          continue;
-        }
-        update = true;
-        const formattedTime = this.#formatDateForChart(logTimeAsDate);
-        if (!lastReadingObject[readingType as ReadingType]) {
-          lastReadingObject[readingType as ReadingType] = {
-            units: sensor.units[readingType as ReadingType],
-            name: formattedTime,
-          } as ChartData;
-        }
-        lastReadingObject[readingType as ReadingType][sensor.name] = this.#formatReadingForDisplay(
-          lastCacheReading.data,
-        );
-      }
-    }
-    if (!update) {
-      return;
-    }
-    // Add new readings
-    for (const readingType in lastReadingObject) {
-      this.#chartData[readingType as ReadingType].push(
-        lastReadingObject[readingType as ReadingType],
-      );
-    }
 
-    //Remove old readings
-    for (const readingType in this.#chartData) {
-      while (
-        this.#chartData[readingType as ReadingType].length >
-        Number(process.env["MAX_CHART_DATA_POINTS"]!)
-      ) {
-        this.#chartData[readingType as ReadingType].shift();
-      }
+    for (const readingType in ReadingType) {
+      const dataSeriesMap = Object.keys(this.#sensors).map((key) => {
+        return this.#sensors[key]?.chartData.getOne(readingType as ReadingType);
+      }) as DataSeries[];
+      this.#chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
     // Log changes
     let logMessage = "";
-    for (const readingType in this.#chartData) {
-      if (this.#chartData[readingType as ReadingType].length > 0) {
-        logMessage += `{${readingType}: ${this.#chartData[readingType as ReadingType].length}} `;
+    for (const readingType in Object.keys(this.#chartData.getAll())) {
+      if (this.#chartData.getOne(readingType as ReadingType).length > 0) {
+        logMessage += `{${readingType}: ${this.#chartData.getOne(readingType as ReadingType).length}} `;
       }
     }
     this.#logger.info(`Updated sensor chart data. Data counts: ${logMessage}`);
     profiler.done({
-      message: "SensorList updateChartDataFromLastCacheReading time",
+      message: "SensorList updateChartData time",
       level: "debug",
     });
   }
@@ -342,17 +272,6 @@ class SensorList {
   async #disposeSensorAsync(sensor: SensorBase) {
     await this.#sensors[sensor.id]!.disposeAsync();
     delete this.#sensors[sensor.id];
-  }
-
-  #formatDateForChart(date: Date): string {
-    let hours = date.getHours();
-    const amOrPm = hours >= 12 ? "pm" : "am";
-    hours = hours % 12 || 12;
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-
-    return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
   }
 
   #formatReadingForDisplay(data: string): string {

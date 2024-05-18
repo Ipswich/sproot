@@ -1,9 +1,9 @@
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { IQueueCacheable, QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
+import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
 import winston from "winston";
 
-export class OutputCache implements IQueueCacheable<SDBOutputState> {
+export class OutputCache {
   queueCache: QueueCache<SDBOutputState>;
   sprootDB: ISprootDB;
   logger: winston.Logger;

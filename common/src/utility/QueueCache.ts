@@ -40,6 +40,10 @@ class QueueCache<T> {
 
     return this.cache.slice(offset, offset + limit);
   }
+
+  public length(): number {
+    return this.cache.length;
+  }
 }
 
 interface IQueueCacheable<T> {
