@@ -84,7 +84,7 @@ export class SensorChartData implements IChartable {
       if (name != this.chartData[key].get().slice(-1)[0]?.name) {
         this.chartData[key].addDataPoint({
           name,
-          [sensorName]: lastCacheData.data,
+          [sensorName]: ChartData.formatDecimalReadingForDisplay(lastCacheData.data),
         });
       }
     }

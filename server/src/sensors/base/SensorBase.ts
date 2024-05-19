@@ -214,7 +214,7 @@ export abstract class SensorBase implements ISensorBase {
         readingType as ReadingType,
       );
       this.logger.info(
-        `Updated ${readingType} chart data for sensor {id: ${this.id}}. Chart data size - ${this.chartData.getOne(readingType as ReadingType).length}`,
+        `Updated chart data for sensor {id: ${this.id}, ${readingType}}. Chart data size - ${this.chartData.getOne(readingType as ReadingType).length}`,
       );
     }
   }
