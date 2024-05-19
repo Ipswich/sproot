@@ -126,21 +126,14 @@ class SensorList {
     });
   }
 
-  addReadingsToDatabaseAsync = async () => {
+  updateDataStoresAsync = async () => {
     await this.#touchAllSensorsAsync(async (sensor) => {
       sensor.updateDataStoresAsync();
     });
 
     if (new Date().getMinutes() % 5 == 0) {
-      // this.chartData.updateChartData(
-      //   Object.values(this.outputs).map((output) => output.chartData.get()),
-      //   "output",
-      // );
+      this.updateChartData();
     }
-
-    // this.#logger.info(
-    //   `Updated aggregate sensor chart data. Data count: ${Object.keys(this.chartData.get()).length}`,
-    // );
   };
 
   disposeAsync = async () =>
@@ -185,12 +178,12 @@ class SensorList {
 
     // Log changes
     let logMessage = "";
-    for (const readingType in Object.keys(this.#chartData.getAll())) {
+    for (const readingType of Object.keys(this.#chartData.getAll())) {
       if (this.#chartData.getOne(readingType as ReadingType).length > 0) {
         logMessage += `{${readingType}: ${this.#chartData.getOne(readingType as ReadingType).length}} `;
       }
     }
-    this.#logger.info(`Updated sensor chart data. Data counts: ${logMessage}`);
+    this.#logger.info(`Updated sensor list chart data. Data counts: ${logMessage}`);
     profiler.done({
       message: "SensorList updateChartData time",
       level: "debug",

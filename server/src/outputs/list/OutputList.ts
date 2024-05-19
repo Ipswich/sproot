@@ -196,7 +196,7 @@ class OutputList {
     });
   }
 
-  async addReadingsToDatabaseAsync(): Promise<void> {
+  async updateDataStoresAsync(): Promise<void> {
     await this.#touchAllOutputsAsync(async (output) => {
       output.updateDataStoresAsync();
     });

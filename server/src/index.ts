@@ -120,7 +120,7 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     sensorList.initializeOrRegenerateAsync(),
     outputList.initializeOrRegenerateAsync(),
   ]);
-  await outputList.addReadingsToDatabaseAsync();
+  // await outputList.updateDataStoresAsync();
 
   //State update loop
   const updateStateLoop = setInterval(async () => {
@@ -134,10 +134,10 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     outputList.executeOutputState();
   }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
 
-  // Database update loop
+  //  update loop
   const updateDatabaseLoop = setInterval(async () => {
-    await sensorList.addReadingsToDatabaseAsync();
-    await outputList.addReadingsToDatabaseAsync();
+    await sensorList.updateDataStoresAsync();
+    await outputList.updateDataStoresAsync();
   }, parseInt(process.env["DATABASE_UPDATE_INTERVAL"]!));
 
   app.use(cors());
