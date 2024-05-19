@@ -120,7 +120,6 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     sensorList.initializeOrRegenerateAsync(),
     outputList.initializeOrRegenerateAsync(),
   ]);
-  // await outputList.updateDataStoresAsync();
 
   //State update loop
   const updateStateLoop = setInterval(async () => {

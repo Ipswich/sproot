@@ -57,6 +57,7 @@ class DS18B20 extends SensorBase {
         }
         const reading = String(result);
         this.lastReading[ReadingType.temperature] = reading;
+        this.lastReadingTime = new Date();
       })
       .catch((err) => {
         this.logger.error(
