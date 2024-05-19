@@ -206,11 +206,10 @@ class OutputList {
         Object.values(this.outputs).map((output) => output.chartData.get()),
         "output",
       );
+      this.#logger.info(
+        `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
+      );
     }
-
-    this.#logger.info(
-      `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
-    );
   }
 
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {

@@ -150,7 +150,7 @@ export abstract class SensorBase implements ISensorBase {
         this.updateMissCount++;
         //If miss count exceeds 10 * N, force update (3 real tries, because intervals).
         if (this.updateMissCount >= 3 * this.chartDataPointInterval) {
-          this.logger.error(
+          this.logger.warn(
             `Chart data update miss count exceeded (3) for sensor {id: ${this.id}}. Forcing update to re-sync.`,
           );
           this.updateChartData();
@@ -214,7 +214,7 @@ export abstract class SensorBase implements ISensorBase {
         readingType as ReadingType,
       );
       this.logger.info(
-        `Updated chart data for sensor {id: ${this.id}}. Chart data size - ${this.chartData.getOne(readingType as ReadingType).length}`,
+        `Updated ${readingType} chart data for sensor {id: ${this.id}}. Chart data size - ${this.chartData.getOne(readingType as ReadingType).length}`,
       );
     }
   }

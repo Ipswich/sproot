@@ -91,7 +91,7 @@ export abstract class OutputBase implements IOutputBase {
       this.updateMissCount++;
       //If miss count exceeds 10 * N, force update (3 real tries, because intervals).
       if (this.updateMissCount >= 3 * this.chartDataPointInterval) {
-        this.logger.error(
+        this.logger.warn(
           `Chart data update miss count exceeded (3) for output {id: ${this.id}}. Forcing update to re-sync.`,
         );
         this.updateChartData();
