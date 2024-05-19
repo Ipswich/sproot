@@ -20,6 +20,7 @@ export class OutputChartData implements IChartable {
       const formattedDate = ChartData.formatDateForChart(state.logTime);
       const value = this.get().findIndex((x) => x.name == formattedDate);
       if (value >= 0 && this.get()[value]) {
+        this.get()[value]!.units = "%";
         this.get()[value]![outputName] = state.value.toString();
       }
     }
@@ -33,6 +34,7 @@ export class OutputChartData implements IChartable {
       if (name != this.chartData.get().slice(-1)[0]?.name) {
         this.chartData.addDataPoint({
           name,
+          units: "%",
           [outputName]: lastCacheData.value.toString(),
         });
       }

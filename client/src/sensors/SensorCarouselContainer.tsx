@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { Carousel } from "@mantine/carousel";
 import "@mantine/carousel/styles.css";
-import {
-  ISensorBase,
-  ReadingType,
-} from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import {
   ChartData,
   ChartDataRecord,

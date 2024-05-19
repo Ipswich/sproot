@@ -67,6 +67,7 @@ export class SensorChartData implements IChartable {
       const formattedDate = ChartData.formatDateForChart(reading.logTime);
       const value = this.getOne(key).find((x) => x.name == formattedDate);
       if (value) {
+        value.units = reading.units;
         value[sensorName] = ChartData.formatDecimalReadingForDisplay(reading.data);
       }
     }
@@ -84,6 +85,7 @@ export class SensorChartData implements IChartable {
       if (name != this.chartData[key].get().slice(-1)[0]?.name) {
         this.chartData[key].addDataPoint({
           name,
+          units: lastCacheData.units,
           [sensorName]: ChartData.formatDecimalReadingForDisplay(lastCacheData.data),
         });
       }

@@ -2,14 +2,14 @@
 enum ReadingType {
   temperature = "temperature",
   humidity = "humidity",
-  pressure = "pressure"
+  pressure = "pressure",
 }
 
 // Constants for the units of measurement for each reading type.
 enum Units {
   temperature = "°C",
   humidity = "%rH",
-  pressure = "hPa"
+  pressure = "hPa",
 }
 
 export { ReadingType, Units };

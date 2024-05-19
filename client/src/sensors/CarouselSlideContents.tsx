@@ -1,12 +1,10 @@
 import SensorTable from "@sproot/sproot-client/src/sensors/SensorTable";
-import {
-  ISensorBase,
-  ReadingType,
-} from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import Chart from "@sproot/sproot-client/src/sensors/Chart";
 import { ChartData, Utils } from "@sproot/sproot-common/src/api/ChartData";
 import { Fragment, useState, useTransition } from "react";
 import { Select, Flex, Center, Card } from "@mantine/core";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 
 interface CarouselSlideProps {
   lastUpdated: Date;

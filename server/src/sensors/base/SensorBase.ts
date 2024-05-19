@@ -113,31 +113,25 @@ export abstract class SensorBase implements ISensorBase {
   }
 
   protected updateCachedReadings(): void {
-    try {
-      for (const readingType in this.cacheData) {
-        this.cacheData[readingType as ReadingType].addData({
-          metric: readingType as ReadingType,
-          data: this.lastReading[readingType as ReadingType],
-          units: this.units[readingType as ReadingType],
-          logTime: this.lastReadingTime?.toISOString(),
-        } as SDBReading);
-      }
-
-      let updateInfoString = "";
-      for (const readingType in this.cacheData) {
-        updateInfoString += `${readingType}: ${this.cacheData[readingType as ReadingType].length()}`;
-        if (readingType != Object.keys(this.cacheData)[Object.keys(this.cacheData).length - 1]) {
-          updateInfoString += ", ";
-        }
-      }
-      this.logger.info(
-        `Updated cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
-      );
-    } catch (err) {
-      this.logger.error(
-        `Failed to update cached readings for {${this.constructor.name}, id: ${this.id}}. ${err}`,
-      );
+    for (const readingType in this.cacheData) {
+      this.cacheData[readingType as ReadingType].addData({
+        metric: readingType as ReadingType,
+        data: this.lastReading[readingType as ReadingType],
+        units: this.units[readingType as ReadingType],
+        logTime: this.lastReadingTime?.toISOString(),
+      } as SDBReading);
     }
+
+    let updateInfoString = "";
+    for (const readingType in this.cacheData) {
+      updateInfoString += `${readingType}: ${this.cacheData[readingType as ReadingType].length()}`;
+      if (readingType != Object.keys(this.cacheData)[Object.keys(this.cacheData).length - 1]) {
+        updateInfoString += ", ";
+      }
+    }
+    this.logger.info(
+      `Updated cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
+    );
   }
 
   async updateDataStoresAsync(): Promise<void> {
