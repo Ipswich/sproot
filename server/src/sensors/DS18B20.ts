@@ -14,12 +14,19 @@ class DS18B20 extends SensorBase {
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    super(sdbSensor, sprootDB, maxCacheSize, chartDataPointInterval, logger);
-    this.units[ReadingType.temperature] = "°C";
-    this.cachedReadings[ReadingType.temperature] = [];
+    super(
+      sdbSensor,
+      sprootDB,
+      maxCacheSize,
+      maxChartDataSize,
+      chartDataPointInterval,
+      [ReadingType.temperature],
+      logger,
+    );
   }
 
   async initAsync(): Promise<DS18B20 | null> {

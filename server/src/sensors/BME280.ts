@@ -12,16 +12,19 @@ class BME280 extends SensorBase {
     sdbsensor: SDBSensor,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    super(sdbsensor, sprootDB, maxCacheSize, chartDataPointInterval, logger);
-    this.units[ReadingType.temperature] = "°C";
-    this.units[ReadingType.humidity] = "%rH";
-    this.units[ReadingType.pressure] = "hPa";
-    this.cachedReadings[ReadingType.temperature] = [];
-    this.cachedReadings[ReadingType.humidity] = [];
-    this.cachedReadings[ReadingType.pressure] = [];
+    super(
+      sdbsensor,
+      sprootDB,
+      maxCacheSize,
+      maxChartDataSize,
+      chartDataPointInterval,
+      [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
+      logger,
+    );
   }
 
   async initAsync(): Promise<BME280 | null> {

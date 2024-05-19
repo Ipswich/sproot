@@ -13,20 +13,23 @@ class SensorList {
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
   #maxCacheSize: number;
+  #maxChartDataSize: number;
   #chartDataPointInterval: number;
   #chartData: SensorListChartData;
 
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
     this.#sprootDB = sprootDB;
     this.#maxCacheSize = maxCacheSize;
+    this.#maxChartDataSize = maxChartDataSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
-    this.#chartData = new SensorListChartData(maxCacheSize, chartDataPointInterval);
+    this.#chartData = new SensorListChartData(maxChartDataSize, chartDataPointInterval);
   }
 
   get sensors(): Record<string, SensorBase> {
@@ -125,9 +128,19 @@ class SensorList {
 
   addReadingsToDatabaseAsync = async () => {
     await this.#touchAllSensorsAsync(async (sensor) => {
-      sensor.addLastReadingToDatabaseAsync();
+      sensor.updateDataStoresAsync();
     });
-    this.updateChartData();
+
+    if (new Date().getMinutes() % 5 == 0) {
+      // this.chartData.updateChartData(
+      //   Object.values(this.outputs).map((output) => output.chartData.get()),
+      //   "output",
+      // );
+    }
+
+    // this.#logger.info(
+    //   `Updated aggregate sensor chart data. Data count: ${Object.keys(this.chartData.get()).length}`,
+    // );
   };
 
   disposeAsync = async () =>
@@ -208,6 +221,7 @@ class SensorList {
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
+          this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
         ).initAsync();
@@ -224,6 +238,7 @@ class SensorList {
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
+          this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
         ).initAsync();

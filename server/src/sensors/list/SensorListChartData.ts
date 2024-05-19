@@ -38,7 +38,7 @@ export class SensorListChartData implements IChartable {
   getAll(): Record<ReadingType, DataSeries> {
     const res = {} as Record<ReadingType, DataSeries>;
     for (const key in this.chartData) {
-      res[key as ReadingType] = { ...this.chartData[key as ReadingType].get() };
+      res[key as ReadingType] = [...this.chartData[key as ReadingType].get()];
     }
     return res;
   }

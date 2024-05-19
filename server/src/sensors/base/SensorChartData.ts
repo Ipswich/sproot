@@ -5,17 +5,31 @@ import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/ut
 export class SensorChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;
   readonly limit: number;
-  readonly intervalSeconds: number;
-  constructor(limit: number, interval: number, dataSeriesRecord?: Record<ReadingType, DataSeries>) {
+  readonly intervalMinutes: number;
+  constructor(
+    limit: number,
+    intervalMinutes: number,
+    dataSeriesRecord?: Record<ReadingType, DataSeries>,
+    readingTypes?: ReadingType[],
+  ) {
     this.limit = limit;
-    this.intervalSeconds = interval * 60000;
+    this.intervalMinutes = intervalMinutes;
     this.chartData = {} as Record<ReadingType, ChartData>;
     for (const readingType in dataSeriesRecord) {
       this.chartData[readingType as ReadingType] = new ChartData(
         limit,
-        interval,
+        intervalMinutes,
         dataSeriesRecord ? dataSeriesRecord[readingType as ReadingType] : undefined,
       );
+    }
+    if (!dataSeriesRecord && readingTypes) {
+      for (const readingType of readingTypes) {
+        this.chartData[readingType] = new ChartData(
+          limit,
+          intervalMinutes,
+          dataSeriesRecord ? dataSeriesRecord[readingType] : undefined,
+        );
+      }
     }
   }
 
@@ -47,7 +61,7 @@ export class SensorChartData implements IChartable {
   loadChartData(cache: SDBReading[], sensorName: string, key: ReadingType): void {
     //If there isn't an existing ChartData for this key, create it
     if (!this.chartData[key]) {
-      this.chartData[key] = new ChartData(this.limit, this.intervalSeconds);
+      this.chartData[key] = new ChartData(this.limit, this.intervalMinutes);
     }
     for (const reading of cache) {
       const formattedDate = ChartData.formatDateForChart(reading.logTime);
@@ -64,7 +78,7 @@ export class SensorChartData implements IChartable {
       const name = ChartData.formatDateForChart(lastCacheData.logTime);
       //If there isn't an existing ChartData for this key, create it
       if (!this.chartData[key]) {
-        this.chartData[key] = new ChartData(this.limit, this.intervalSeconds);
+        this.chartData[key] = new ChartData(this.limit, this.intervalMinutes);
       }
       //Add Only if not the same time stamp as the last data point
       if (name != this.chartData[key].get().slice(-1)[0]?.name) {
@@ -83,7 +97,7 @@ export class SensorChartData implements IChartable {
       lastCacheData &&
       lastChartData.name ==
         ChartData.formatDateForChart(
-          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalSeconds),
+          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
         )
     ) {
       return true;
