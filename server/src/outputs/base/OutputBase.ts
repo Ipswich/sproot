@@ -22,6 +22,7 @@ export abstract class OutputBase implements IOutputBase {
   logger: winston.Logger;
   color?: string | undefined;
   private readonly chartDataPointInterval: number;
+  private readonly initialCacheLookback: number;
 
   private updateMissCount = 0;
 
@@ -29,6 +30,7 @@ export abstract class OutputBase implements IOutputBase {
     sdbOutput: SDBOutput,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
@@ -47,6 +49,7 @@ export abstract class OutputBase implements IOutputBase {
     this.chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
     this.logger = logger;
     this.chartDataPointInterval = Number(chartDataPointInterval);
+    this.initialCacheLookback = initialCacheLookback;
   }
 
   get value(): number {
@@ -113,9 +116,9 @@ export abstract class OutputBase implements IOutputBase {
     );
   }
 
-  async loadCacheFromDatabaseAsync(minutes: number): Promise<void> {
+  async loadCacheFromDatabaseAsync(): Promise<void> {
     try {
-      await this.cache.loadCacheFromDatabaseAsync(this.id, minutes);
+      await this.cache.loadCacheFromDatabaseAsync(this.id, this.initialCacheLookback);
       this.logger.info(
         `Loaded cached states for output {id: ${this.id}}. Cache size - ${this.cache.get().length}`,
       );

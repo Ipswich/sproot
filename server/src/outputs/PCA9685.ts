@@ -14,6 +14,7 @@ class PCA9685 {
   #frequency: number;
   #usedPins: Record<string, number[]> = {};
   #maxCacheSize: number;
+  #initialCacheLookback: number;
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
   #logger: winston.Logger;
@@ -21,6 +22,7 @@ class PCA9685 {
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
     frequency: number = 50,
@@ -28,6 +30,7 @@ class PCA9685 {
   ) {
     this.#sprootDB = sprootDB;
     this.#maxCacheSize = maxCacheSize;
+    this.#initialCacheLookback = initialCacheLookback;
     this.#maxChartDataSize = maxChartDataSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#frequency = frequency;
@@ -57,6 +60,7 @@ class PCA9685 {
         output,
         this.#sprootDB,
         this.#maxCacheSize,
+        this.#initialCacheLookback,
         this.#maxChartDataSize,
         this.#chartDataPointInterval,
         this.#logger,
@@ -138,16 +142,25 @@ class PCA9685Output extends OutputBase {
     output: SDBOutput,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    super(output, sprootDB, maxCacheSize, maxChartDataSize, chartDataPointInterval, logger);
+    super(
+      output,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
     this.pca9685 = pca9685;
   }
 
   async initializeAsync(): Promise<void> {
-    await this.loadCacheFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+    await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
   }
 

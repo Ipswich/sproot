@@ -19,8 +19,9 @@ export abstract class SensorBase implements ISensorBase {
   logger: winston.Logger;
   readonly units: Record<ReadingType, string>;
   maxCacheSize: number;
-  chartDataPointInterval: number;
+  initialCacheLookback: number;
   maxChartDataSize: number;
+  chartDataPointInterval: number;
   cacheData: Record<ReadingType, QueueCache<SDBReading>>;
   chartData: SensorChartData;
   updateInterval: NodeJS.Timeout | null = null;
@@ -31,6 +32,7 @@ export abstract class SensorBase implements ISensorBase {
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
     readingTypes: ReadingType[],
@@ -47,6 +49,7 @@ export abstract class SensorBase implements ISensorBase {
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
     this.maxCacheSize = maxCacheSize;
+    this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
     this.chartDataPointInterval = chartDataPointInterval;
     this.cacheData = {} as Record<ReadingType, QueueCache<SDBReading>>;
@@ -65,8 +68,8 @@ export abstract class SensorBase implements ISensorBase {
   abstract disposeAsync(): Promise<void>;
   abstract getReadingAsync(): Promise<void>;
 
-  protected async intitializeCacheAndChartDataAsync(minutes: number): Promise<void> {
-    await this.loadCachedReadingsFromDatabaseAsync(minutes);
+  protected async intitializeCacheAndChartDataAsync(): Promise<void> {
+    await this.loadCachedReadingsFromDatabaseAsync(this.initialCacheLookback);
     this.loadChartData();
   }
 

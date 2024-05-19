@@ -77,6 +77,7 @@ describe("BME280.ts tests", function () {
       mockBME280Data,
       mockSprootDB,
       5,
+      5,
       3,
       5,
       logger,
@@ -126,6 +127,7 @@ describe("BME280.ts tests", function () {
     const bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
+      5,
       5,
       3,
       5,

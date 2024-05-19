@@ -14,13 +14,9 @@ import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
-const MAX_CACHE_SIZE = process.env["MAX_CACHE_SIZE"];
-const MAX_CHART_DATA_POINTS = process.env["MAX_CHART_DATA_POINTS"];
 
 describe("SensorList.ts tests", function () {
   afterEach(() => {
-    process.env["MAX_CACHE_SIZE"] = MAX_CACHE_SIZE;
-    process.env["MAX_CHART_DATA_POINTS"] = MAX_CHART_DATA_POINTS;
     sandbox.restore();
   });
 
@@ -67,7 +63,7 @@ describe("SensorList.ts tests", function () {
     } as BME280);
     const addSensorSpy = sandbox.spy(mockSprootDB, "addSensorAsync");
 
-    const sensorList = new SensorList(mockSprootDB, 5, 3, 5, logger);
+    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
     try {
       await sensorList.initializeOrRegenerateAsync();
 
@@ -128,9 +124,9 @@ describe("SensorList.ts tests", function () {
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 3, 5, logger));
+      .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
 
-    const sensorList = new SensorList(mockSprootDB, 5, 3, 5, logger);
+    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
     try {
       await sensorList.initializeOrRegenerateAsync();
       const sensorData = sensorList.sensorData;
@@ -182,7 +178,7 @@ describe("SensorList.ts tests", function () {
       .stub(MockSprootDB.prototype, "getSensorsAsync")
       .resolves([mockBME280Data]);
     const getAddressesStub = sandbox.stub(DS18B20, "getAddressesAsync").resolves([]);
-    const sensorList = new SensorList(mockSprootDB, 5, 3, 5, logger);
+    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
 
     try {
       await sensorList.initializeOrRegenerateAsync();
@@ -195,7 +191,7 @@ describe("SensorList.ts tests", function () {
       getAddressesStub.resolves(["28-00000"]);
       sandbox
         .stub(BME280.prototype, "initAsync")
-        .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 3, 5, logger));
+        .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
       await sensorList.initializeOrRegenerateAsync();
 
       mockDS18B20Data["address"] = "28-00000";
@@ -230,7 +226,7 @@ describe("SensorList.ts tests", function () {
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sandbox.stub(DS18B20.prototype, "getReadingAsync").rejects();
 
-    const sensorList = new SensorList(mockSprootDB, 5, 3, 5, logger);
+    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
     try {
       await sensorList.initializeOrRegenerateAsync();
     } finally {

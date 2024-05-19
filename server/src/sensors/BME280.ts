@@ -12,6 +12,7 @@ class BME280 extends SensorBase {
     sdbsensor: SDBSensor,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
@@ -20,6 +21,7 @@ class BME280 extends SensorBase {
       sdbsensor,
       sprootDB,
       maxCacheSize,
+      initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
       [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
@@ -30,7 +32,7 @@ class BME280 extends SensorBase {
   async initAsync(): Promise<BME280 | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.intitializeCacheAndChartDataAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+      await this.intitializeCacheAndChartDataAsync();
       this.updateInterval = setInterval(async () => {
         await this.getReadingAsync();
       }, this.MAX_SENSOR_READ_TIME);

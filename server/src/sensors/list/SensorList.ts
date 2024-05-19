@@ -14,6 +14,7 @@ class SensorList {
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
   #maxCacheSize: number;
+  #initialCacheLookback: number;
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
   #chartData: SensorListChartData;
@@ -21,12 +22,14 @@ class SensorList {
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
     this.#sprootDB = sprootDB;
     this.#maxCacheSize = maxCacheSize;
+    this.#initialCacheLookback = initialCacheLookback;
     this.#maxChartDataSize = maxChartDataSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
@@ -215,6 +218,7 @@ class SensorList {
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
+          this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
@@ -232,6 +236,7 @@ class SensorList {
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
+          this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,

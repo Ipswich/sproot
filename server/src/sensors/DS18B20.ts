@@ -14,6 +14,7 @@ class DS18B20 extends SensorBase {
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
     maxCacheSize: number,
+    initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
@@ -22,6 +23,7 @@ class DS18B20 extends SensorBase {
       sdbSensor,
       sprootDB,
       maxCacheSize,
+      initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
       [ReadingType.temperature],
@@ -32,7 +34,7 @@ class DS18B20 extends SensorBase {
   async initAsync(): Promise<DS18B20 | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.intitializeCacheAndChartDataAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+      await this.intitializeCacheAndChartDataAsync();
       this.updateInterval = setInterval(async () => {
         await this.getReadingAsync();
       }, this.MAX_SENSOR_READ_TIME);
