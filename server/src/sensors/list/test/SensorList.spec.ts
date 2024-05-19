@@ -10,7 +10,7 @@ import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
-import { ReadingType } from "@sproot/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();

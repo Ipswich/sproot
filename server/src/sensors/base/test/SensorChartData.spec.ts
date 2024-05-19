@@ -4,7 +4,7 @@ import winston from "winston";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { SensorChartData } from "../SensorChartData";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/IChartable";
 import { SensorCache } from "../SensorCache";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";

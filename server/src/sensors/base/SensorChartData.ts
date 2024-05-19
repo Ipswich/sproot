@@ -1,5 +1,5 @@
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
 
 export class SensorChartData implements IChartable {
@@ -67,7 +67,7 @@ export class SensorChartData implements IChartable {
       const formattedDate = ChartData.formatDateForChart(reading.logTime);
       const value = this.getOne(key).find((x) => x.name == formattedDate);
       if (value) {
-        value[sensorName] = reading.data;
+        value[sensorName] = ChartData.formatDecimalReadingForDisplay(reading.data);
       }
     }
   }

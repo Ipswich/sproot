@@ -1,6 +1,6 @@
 import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { QueueCache } from "@sproot/sproot-common/src/utility/QueueCache";
 import winston from "winston";
 

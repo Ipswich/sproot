@@ -1,10 +1,11 @@
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISensorBase, ReadingType, Units } from "@sproot/sproot-common/dist/sensors/ISensorBase";
+import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import winston from "winston";
 import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
 import { SensorChartData } from "./SensorChartData";
+import { ReadingType, Units } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 export abstract class SensorBase implements ISensorBase {
   id: number;

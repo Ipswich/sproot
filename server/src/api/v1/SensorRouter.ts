@@ -1,6 +1,6 @@
 import { DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorList } from "../../sensors/list/SensorList";
 import ModelList from "../../sensors/ModelList";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";

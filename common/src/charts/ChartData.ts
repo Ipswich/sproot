@@ -1,4 +1,4 @@
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ReadingType } from "../sensors/ReadingType";
 
 interface DataPoint {
   name: string;

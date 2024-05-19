@@ -1,4 +1,4 @@
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
 
 export class SensorListChartData implements IChartable {

@@ -5,7 +5,7 @@ import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
-import { ChartData, DataSeries, IChartable } from "@sproot/sproot-common/dist/utility/IChartable";
+import { OutputListChartData } from "./OutputListChartData";
 
 const COLORS = [
   "lime",
@@ -265,37 +265,6 @@ class OutputList {
   }
 }
 
-class OutputListChartData implements IChartable {
-  chartData: ChartData;
-  #limit;
-  #interval;
-
-  constructor(limit: number, interval: number) {
-    this.chartData = new ChartData(limit, interval);
-    this.#limit = limit;
-    this.#interval = interval;
-  }
-
-  loadChartData(cache: DataSeries[], _name: string): void {
-    const combinedData = ChartData.combineDataSeries([...cache]);
-    this.chartData = new ChartData(this.#limit, this.#interval, combinedData);
-  }
-
-  updateChartData(cache: DataSeries[], _name: string): void {
-    const newValues = cache
-      .map((dataSeries) => dataSeries[dataSeries.length - 1]!)
-      .filter((value) => value !== undefined);
-    const newChartData = ChartData.combineDataSeries([newValues]);
-    //No duplicate time stamps
-    if (
-      newChartData[0] !== undefined &&
-      newChartData[0].name != this.chartData.get().slice(-1)[0]?.name
-    ) {
-      this.chartData.addDataPoint(newChartData[0]);
-    }
-  }
-}
-
 class OutputListError extends Error {
   constructor(message: string) {
     super(message);
@@ -303,4 +272,4 @@ class OutputListError extends Error {
   }
 }
 
-export { OutputList, OutputListChartData };
+export { OutputList };
