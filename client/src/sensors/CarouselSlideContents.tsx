@@ -1,12 +1,10 @@
-import SensorTable from "./SensorTable";
-import {
-  ISensorBase,
-  ReadingType,
-} from "@sproot/sproot-common/src/sensors/SensorBase";
-import Chart from "./Chart";
+import SensorTable from "@sproot/sproot-client/src/sensors/SensorTable";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import Chart from "@sproot/sproot-client/src/sensors/Chart";
 import { ChartData, Utils } from "@sproot/sproot-common/src/api/ChartData";
 import { Fragment, useState, useTransition } from "react";
 import { Select, Flex, Center, Card } from "@mantine/core";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 
 interface CarouselSlideProps {
   lastUpdated: Date;
@@ -64,7 +62,7 @@ export default function CarouselSlideContents({
       <Card shadow="sm" px="md" py="xs" radius="md" withBorder>
         <Flex gap="md">
           <Center>
-            <Flex>
+            <Flex mt={-12}>
               <h2>
                 {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
               </h2>

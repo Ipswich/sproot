@@ -1,11 +1,14 @@
 import mysql2 from "mysql2/promise";
 
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
-import { SDBSensor } from "@sproot/src/database/SDBSensor";
-import { SDBOutput } from "@sproot/src/database/SDBOutput";
-import { ISprootDB } from "@sproot/src/database/ISprootDB";
-import { SensorBase, ReadingType } from "@sproot/src/sensors/SensorBase";
-import { SDBReading } from "@sproot/src/database/SDBReading";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { OutputBase } from "@sproot/sproot-server/src/outputs/base/OutputBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
@@ -92,7 +95,21 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute("DELETE FROM outputs WHERE id = ?", [id]);
   }
 
-  async addSensorReadingAsync(sensor: SensorBase): Promise<void> {
+  async addOutputStateAsync(
+    output: OutputBase | { id: number; value: number; controlMode: any },
+  ): Promise<void> {
+    await this.#connection.execute(
+      "INSERT INTO output_data (output_id, value, controlMode, logTime) VALUES (?, ?, ?, ?)",
+      [
+        output.id,
+        output.value,
+        output.controlMode,
+        new Date().toISOString().slice(0, 19).replace("T", " "),
+      ],
+    );
+  }
+
+  async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {
     for (const readingType in sensor.lastReading) {
       await this.#connection.execute(
         "INSERT INTO sensor_data (sensor_id, metric, data, units, logTime) VALUES (?, ?, ?, ?, ?)",
@@ -117,10 +134,48 @@ class SprootDB implements ISprootDB {
    * @param since time at the start of the lookback period.
    * @param minutes minutes to lookback from since.
    * @param toIsoString whether to convert the logTime to an ISO string.
+   * @returns An array of SDBOutputStates.
+   */
+  async getOutputStatesAsync(
+    output: OutputBase | { id: number },
+    since: Date,
+    minutes: number = 120,
+    toIsoString: boolean = false,
+  ): Promise<SDBOutputState[]> {
+    const [rows] = await this.#connection.execute<SDBOutputState[]>(
+      `SELECT value, controlMode, logTime
+      FROM outputs o
+      JOIN (
+        SELECT *
+        FROM output_data
+        WHERE logTime > DATE_SUB(?, INTERVAL ? MINUTE)
+      ) AS d ON o.id=d.output_id
+      WHERE output_id = ?
+      ORDER BY logTime ASC`,
+      [since.toISOString(), minutes, output.id],
+    );
+    if (toIsoString) {
+      for (const row of rows) {
+        row.logTime = row.logTime.replace(" ", "T") + "Z";
+      }
+    }
+    return rows;
+  }
+
+  /**
+   * Important note on this one:
+   * The logTime is stored in the database in the format "YYYY-MM-DD HH:MM:SS". This is not a valid ISO string.
+   * This function will convert the logTime to an ISO string if toIsoString is true. Otherwise, you should probably
+   * this before you turn the returned date into a Date object as it'll be in a very different timezone and there'll
+   * be some... Irregularities.
+   * @param sensor sensor to fetch readings for.
+   * @param since time at the start of the lookback period.
+   * @param minutes minutes to lookback from since.
+   * @param toIsoString whether to convert the logTime to an ISO string.
    * @returns An array of SDBReadings.
    */
   async getSensorReadingsAsync(
-    sensor: SensorBase,
+    sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number = 120,
     toIsoString: boolean = false,

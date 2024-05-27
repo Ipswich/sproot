@@ -1173,6 +1173,101 @@ paths:
                   timeStamp:
                     type: string
                     example: "2021-01-01T00:00:00.000Z"
+  /api/v1/outputs/chart-data:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - "Outputs"
+        - "Chart"
+      description: "Gets information for displaying recharts."
+      parameters:
+        # - in: query
+        #   name: offset
+        #   schema:
+        #     type: integer
+        #   description: Reading offset. Inclusive.
+        # - in: query
+        #   name: limit
+        #   schema:
+        #     type: integer
+        #   description: Number of readings to grab.
+        - in: query
+          name: latest
+          schema:
+            type: boolean
+          description: If true, only the latest reading(s) will be returned. Overrides offset and limit.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "chartData successfully retrieved"
+                  statusCode:
+                    type: integer
+                    example: 200
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  readings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChartData"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid or Missing JWT"
+                  statusCode:
+                    type: integer
+                    example: 401
+                  timeStamp:
+                    type: string
+                    example: "2021-01-01T00:00:00.000Z"
+                  suggestion:
+                    type: string
+        # "404":
+        #   description: Not Found
+        #   content:
+        #     application/json:
+        #       schema:
+        #         type: object
+        #         properties:
+        #           message:
+        #             type: string
+        #             example: "No data found for the passed type"
+        #           statusCode:
+        #             type: integer
+        #             example: 404
+        #           timeStamp:
+        #             type: string
+        #             example: "2021-01-01T00:00:00.000Z"
+        # "400":
+        #   description: Bad Request
+        #   content:
+        #     application/json:
+        #       schema:
+        #         type: object
+        #         properties:
+        #           message:
+        #             type: string
+        #             example: "Failed to retrieve chart data, invalid request"
+        #           statusCode:
+        #             type: integer
+        #             example: 400
+        #           timeStamp:
+        #             type: string
+        #             example: "2021-01-01T00:00:00.000Z"
 
   /api/v1/outputs/supported-models:
     get:
@@ -1300,16 +1395,19 @@ components:
         isInvertedPwm:
           type: boolean
           example: false
-        manualState:
-          $ref: "#/components/schemas/State"
-        scheduleState:
-          $ref: "#/components/schemas/State"
-        controlMode:
-          type: string
-          enum:
-            - "manual"
-            - "schedule"
-          example: "manual"
+        state:
+          type: object
+          properties:
+            manual:
+              $ref: "#/components/schemas/State"
+            schedule:
+              $ref: "#/components/schemas/State"
+            controlMode:
+              type: string
+              enum:
+                - "manual"
+                - "schedule"
+              example: "manual"
 
     State:
       type: object

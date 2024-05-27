@@ -8,6 +8,7 @@ interface SDBOutput extends RowDataPacket {
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
+  color?: string;
 }
 
 export type { SDBOutput };

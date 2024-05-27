@@ -1,23 +1,22 @@
 import {
   ControlMode,
   IOutputBase,
-} from "@sproot/sproot-common/src/outputs/OutputBase";
+} from "@sproot/sproot-common/src/outputs/IOutputBase";
 import {
   setOutputControlModeAsync,
   setOutputManualStateAsync,
-} from "../requests";
+} from "@sproot/sproot-client/src/requests";
 import { Fragment, useState } from "react";
 import {
-  Box,
   Group,
   Paper,
   SegmentedControl,
   Slider,
   Stack,
   Switch,
-  Title,
   rem,
 } from "@mantine/core";
+import { StatsRing } from "./StatsRing";
 
 interface OutputCardProps {
   output: IOutputBase;
@@ -28,17 +27,19 @@ export default function OutputCard({
   output,
   updateOutputsAsync,
 }: OutputCardProps) {
-  const [controlMode, setControlMode] = useState(output.controlMode);
-  const [segmentedControlColor, setSegmentedControlColor] = useState(
-    output.controlMode === ControlMode.manual ? "blue" : "teal",
-  );
+  const [controlMode, setControlMode] = useState(output.state.controlMode);
 
+  function segmentedControlColor() {
+    return output.state.controlMode == ControlMode.manual ? "blue" : "teal";
+  }
+
+  let isSegmentedControlDisabled = false;
   return (
     <Fragment>
       <Stack justify="space-around">
         <Group justify="space-around">
-          <Paper shadow="xs" radius="md" withBorder m="4" p="md" w={rem(400)}>
-            <Group justify="space-between">
+          <Paper shadow="xs" radius="md" withBorder my="4" p="sm" w={rem(360)}>
+            <Group justify="space-between" h="80">
               <SegmentedControl
                 styles={
                   controlMode === ControlMode.manual
@@ -53,32 +54,29 @@ export default function OutputCard({
                         },
                       }
                 }
-                w={"28%"}
-                color={segmentedControlColor}
+                w={"36%"}
+                color={segmentedControlColor()}
                 orientation="vertical"
                 value={controlMode}
                 data={[
                   { label: "Manual", value: ControlMode.manual },
                   { label: "Schedule", value: ControlMode.schedule },
                 ]}
+                disabled={isSegmentedControlDisabled}
                 onChange={async (value) => {
+                  isSegmentedControlDisabled = true;
                   setControlMode(value as ControlMode);
-                  setSegmentedControlColor(
-                    value === ControlMode.manual ? "blue" : "teal",
-                  );
                   await setOutputControlModeAsync(output.id, value);
                   await updateOutputsAsync();
+                  isSegmentedControlDisabled = false;
                 }}
               />
-              <Stack justify="space-around" w={"66%"}>
-                <Group justify="space-around">
-                  <Title order={4}>{output.name}</Title>
-                </Group>
+              <Stack justify="space-around" w={"58%"}>
                 {output.isPwm == true ? (
-                  <Box h={rem(32)}>
+                  <Fragment>
                     {controlMode === ControlMode.manual ? (
                       <Slider
-                        defaultValue={output.manualState.value!}
+                        defaultValue={output.state.manual.value!}
                         disabled={controlMode !== ControlMode.manual}
                         label={(value) => `${value}%`}
                         onChangeEnd={async (value) => {
@@ -95,38 +93,38 @@ export default function OutputCard({
                       />
                     ) : (
                       <Group justify="space-around">
-                        <Title c="teal" order={5}>
-                          {" "}
-                          {output.scheduleState.value}%
-                        </Title>
+                        <StatsRing
+                          value={output.state.schedule.value}
+                          color="teal"
+                        />
                       </Group>
                     )}
-                  </Box>
+                  </Fragment>
                 ) : (
                   <Group justify="space-around">
-                    <Box h={rem(32)}>
-                      {controlMode === ControlMode.manual ? (
-                        <Switch
-                          size="xl"
-                          onLabel="On"
-                          offLabel="Off"
-                          disabled={controlMode !== ControlMode.manual}
-                          checked={output.manualState.value === 100}
-                          onChange={async (event) => {
-                            await setOutputManualStateAsync(
-                              output.id,
-                              event.target.checked ? 100 : 0,
-                            );
-                            await updateOutputsAsync();
-                          }}
+                    {controlMode === ControlMode.manual ? (
+                      <Switch
+                        size="xl"
+                        onLabel="On"
+                        offLabel="Off"
+                        disabled={controlMode !== ControlMode.manual}
+                        checked={output.state.manual.value === 100}
+                        onChange={async (event) => {
+                          await setOutputManualStateAsync(
+                            output.id,
+                            event.target.checked ? 100 : 0,
+                          );
+                          await updateOutputsAsync();
+                        }}
+                      />
+                    ) : (
+                      <Fragment>
+                        <StatsRing
+                          value={output.state.schedule.value}
+                          color="teal"
                         />
-                      ) : (
-                        <Title c="teal" order={5}>
-                          {" "}
-                          {output.scheduleState.value === 100 ? "On" : "Off"}
-                        </Title>
-                      )}
-                    </Box>
+                      </Fragment>
+                    )}
                   </Group>
                 )}
               </Stack>

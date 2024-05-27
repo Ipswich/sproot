@@ -7,8 +7,8 @@
     "clean": "rimraf tsconfig.node.tsbuildinfo && rimraf ./dist",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "prettier:write": "npx prettier . --write",
-    "prettier:check": "npx prettier . --check",
+    "prettier:write": "npx --yes prettier . --write",
+    "prettier:check": "npx --yes prettier . --check",
     "preview": "vite preview",
     "start:dev": "vite --host"
   },

@@ -1,7 +1,7 @@
 import bme280, { Bme280 } from "bme280";
-import { BME280 } from "../BME280";
+import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 
@@ -10,16 +10,13 @@ import * as sinon from "sinon";
 import winston from "winston";
 const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
-const MAX_SENSOR_READING_CACHE_SIZE = process.env["MAX_SENSOR_READING_CACHE_SIZE"];
 
 describe("BME280.ts tests", function () {
   afterEach(() => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = MAX_SENSOR_READING_CACHE_SIZE;
     sandbox.restore();
   });
 
   it("should initialize a BME280 sensor", async () => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
@@ -76,9 +73,16 @@ describe("BME280.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
-
-    assert.equal(bme280Sensor!.cachedReadings[ReadingType.temperature].length, 2);
+    const bme280Sensor = await new BME280(
+      mockBME280Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    ).initAsync();
+    assert.equal(bme280Sensor!.cacheData[ReadingType.temperature].length(), 2);
     assert.isTrue(bme280Sensor instanceof BME280);
     assert.equal(bme280Sensor!.id, mockBME280Data.id);
     assert.equal(bme280Sensor!.name, mockBME280Data.name);
@@ -90,155 +94,6 @@ describe("BME280.ts tests", function () {
 
     //Cleanup
     await bme280Sensor?.disposeAsync();
-  });
-
-  it("should load cached readings from the database, clearing any old ones", async () => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "2";
-    const mockBME280Data = {
-      id: 1,
-      name: "test sensor 1",
-      model: "BME280",
-      address: "0x76",
-    } as SDBSensor;
-    sandbox.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
-      {
-        data: "1",
-        metric: ReadingType.temperature,
-        units: "°C",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "2",
-        metric: ReadingType.temperature,
-        units: "°C",
-        logTime: new Date(new Date().getTime() - 60000).toISOString(),
-      } as SDBReading,
-      {
-        data: "1",
-        metric: ReadingType.humidity,
-        units: "%rH",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "2",
-        metric: ReadingType.humidity,
-        units: "%rH",
-        logTime: new Date(new Date().getTime() - 60000).toISOString(),
-      } as SDBReading,
-      {
-        data: "1",
-        metric: ReadingType.pressure,
-        units: "hPa",
-        logTime: new Date().toISOString(),
-      } as SDBReading,
-      {
-        data: "2",
-        metric: ReadingType.pressure,
-        units: "hPa",
-        logTime: new Date(new Date().getTime() - 60000).toISOString(),
-      } as SDBReading,
-    ]);
-    sandbox.stub(winston, "createLogger").callsFake(
-      () =>
-        ({
-          info: () => {},
-          error: () => {},
-          startTimer: () => ({ done: () => {} }) as winston.Profiler,
-        }) as unknown as winston.Logger,
-    );
-
-    sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
-
-    const logger = winston.createLogger();
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
-
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.temperature], 2);
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.humidity], 2);
-    assert.lengthOf(bme280Sensor!.cachedReadings[ReadingType.pressure], 2);
-
-    //Cleanup
-    await bme280Sensor!.disposeAsync();
-  });
-
-  it("should update cached readings with the last reading", async () => {
-    process.env["MAX_SENSOR_READING_CACHE_SIZE"] = "1";
-    const mockBME280Data = {
-      id: 1,
-      name: "test sensor 1",
-      model: "BME280",
-      address: "0x76",
-    } as SDBSensor;
-    let mockReading = {
-      temperature: 21.2,
-      humidity: 45.6,
-      pressure: 1013.2,
-    };
-    sandbox.stub(winston, "createLogger").callsFake(
-      () =>
-        ({
-          info: () => {},
-          error: () => {},
-          startTimer: () => ({ done: () => {} }) as winston.Profiler,
-        }) as unknown as winston.Logger,
-    );
-    const logger = winston.createLogger();
-    const bme280Sensor = new BME280(mockBME280Data, mockSprootDB, logger);
-    bme280Sensor.lastReading = {
-      temperature: String(mockReading.temperature),
-      humidity: String(mockReading.humidity),
-      pressure: String(mockReading.pressure),
-    };
-    bme280Sensor.lastReadingTime = new Date("2000-01-01T00:00:00.000Z");
-
-    bme280Sensor.addLastReadingToDatabaseAsync();
-
-    assert.equal(
-      bme280Sensor.cachedReadings[ReadingType.temperature][0]?.data,
-      String(mockReading.temperature),
-    );
-    assert.equal(
-      bme280Sensor.cachedReadings[ReadingType.humidity][0]?.data,
-      String(mockReading.humidity),
-    );
-    assert.equal(
-      bme280Sensor.cachedReadings[ReadingType.pressure][0]?.data,
-      bme280Sensor.lastReading[ReadingType.pressure],
-    );
-    assert.equal(bme280Sensor.cachedReadings[ReadingType.temperature].length, 1);
-    assert.equal(bme280Sensor.cachedReadings[ReadingType.humidity].length, 1);
-    assert.equal(bme280Sensor.cachedReadings[ReadingType.pressure].length, 1);
-
-    //Add another reading to make sure it gets shifted out
-    mockReading = {
-      temperature: 21.3,
-      humidity: 45.7,
-      pressure: 1013.3,
-    };
-    bme280Sensor.lastReading = {
-      temperature: String(mockReading.temperature),
-      humidity: String(mockReading.humidity),
-      pressure: String(mockReading.pressure),
-    };
-    bme280Sensor.addLastReadingToDatabaseAsync();
-
-    assert.equal(
-      bme280Sensor.cachedReadings[ReadingType.temperature][0]?.data,
-      String(mockReading.temperature),
-    );
-    assert.equal(
-      bme280Sensor.cachedReadings[ReadingType.humidity][0]?.data,
-      String(mockReading.humidity),
-    );
-    assert.equal(
-      bme280Sensor.cachedReadings[ReadingType.pressure][0]?.data,
-      String(mockReading.pressure),
-    );
-    assert.equal(bme280Sensor.cachedReadings[ReadingType.temperature].length, 1);
-    assert.equal(bme280Sensor.cachedReadings[ReadingType.humidity].length, 1);
-    assert.equal(bme280Sensor.cachedReadings[ReadingType.pressure].length, 1);
-
-    //Cleanup
-    await bme280Sensor.disposeAsync();
   });
 
   it("should get a reading from a BME280 sensor", async () => {
@@ -269,7 +124,15 @@ describe("BME280.ts tests", function () {
       close: closeStub as Bme280["close"],
     } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    const bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, logger).initAsync();
+    const bme280Sensor = await new BME280(
+      mockBME280Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    ).initAsync();
 
     await bme280Sensor!.getReadingAsync();
 

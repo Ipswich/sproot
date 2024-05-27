@@ -1,10 +1,8 @@
 import { Flex, Switch, Table } from "@mantine/core";
 import { IconEyeOff } from "@tabler/icons-react";
-import {
-  ReadingType,
-  ISensorBase,
-} from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { useTransition } from "react";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 
 interface SensorTableProps {
   readingType: ReadingType;

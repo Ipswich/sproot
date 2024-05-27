@@ -5,6 +5,7 @@ interface SDBSensor extends RowDataPacket {
   name: string;
   model: string;
   address: string | null;
+  color?: string;
 }
 
 export type { SDBSensor };

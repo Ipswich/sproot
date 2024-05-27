@@ -4,28 +4,39 @@ import winston from "winston";
 
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SensorBase, ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SensorBase } from "./base/SensorBase";
 
 class DS18B20 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
 
-  constructor(sdbSensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
-    super(sdbSensor, sprootDB, logger);
-    this.units[ReadingType.temperature] = "°C";
-    this.cachedReadings[ReadingType.temperature] = [];
+  constructor(
+    sdbSensor: SDBSensor,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
+    super(
+      sdbSensor,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      [ReadingType.temperature],
+      logger,
+    );
   }
 
   async initAsync(): Promise<DS18B20 | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.loadCachedReadingsFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+      await this.intitializeCacheAndChartDataAsync();
       this.updateInterval = setInterval(async () => {
-        const profiler = this.logger.startTimer();
         await this.getReadingAsync();
-        profiler.done({
-          message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
-          level: "debug",
-        });
       }, this.MAX_SENSOR_READ_TIME);
     } catch (err) {
       this.logger.error(`Failed to create DS18B20 sensor ${this.id}. ${err}`);
@@ -40,19 +51,25 @@ class DS18B20 extends SensorBase {
   }
 
   override async getReadingAsync(): Promise<void> {
-    try {
-      const result = await readTemperatureFromDeviceAsync(this.address!);
-      if (result === false) {
-        throw new Error("Invalid reading from sensor.");
-      }
-      const reading = String(result);
-      this.lastReading[ReadingType.temperature] = reading;
-      this.lastReadingTime = new Date();
-    } catch (err) {
-      this.logger.error(
-        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
-      );
-    }
+    const profiler = this.logger.startTimer();
+    await readTemperatureFromDeviceAsync(this.address!)
+      .then(async (result) => {
+        if (result === false) {
+          throw new Error("Invalid reading from sensor.");
+        }
+        const reading = String(result);
+        this.lastReading[ReadingType.temperature] = reading;
+        this.lastReadingTime = new Date();
+      })
+      .catch((err) => {
+        this.logger.error(
+          `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
+        );
+      });
+    profiler.done({
+      message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
+      level: "debug",
+    });
   }
 
   override disposeAsync(): Promise<void> {
@@ -64,7 +81,7 @@ class DS18B20 extends SensorBase {
     const data = await readFile("/sys/bus/w1/devices/w1_bus_master1/w1_master_slaves", "utf8");
     const parts = data.split("\n");
     parts.pop();
-    return parts;
+    return parts.filter((part) => part.substring(0, 2) === "28");
   }
 }
 

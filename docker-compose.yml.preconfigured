@@ -24,9 +24,10 @@ services:
       DATABASE_NAME: sproot
       STATE_UPDATE_INTERVAL: 1000
       DATABASE_UPDATE_INTERVAL: 60000
-      MAX_CHART_DATA_POINTS: 2016
-      MAX_SENSOR_READING_CACHE_SIZE: 10080 #7 days worth of minutes
+      MAX_CACHE_SIZE: 10080 #7 days worth of minutes
       INITIAL_CACHE_LOOKBACK: 10080 #7 days in minutes
+      CHART_DATA_POINT_INTERVAL: 5 #5 minutes (i.e. 5 minutes between each data point)
+      MAX_CHART_DATA_POINTS: 2016
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
@@ -45,7 +46,8 @@ services:
       dockerfile: ./client/Dockerfile
       args:
         VITE_PRECONFIGURED: "true"
-        VITE_MAX_CHART_ENTRIES: 10080 #7 days worth of minutes
+        VITE_CHART_DATA_POINT_INTERVAL: 5
+        VITE_MAX_CHART_DATA_POINTS: 10080 #7 days worth of minutes
         VITE_API_SERVER_URL: "" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
         VITE_CLIENT_VERSION: $npm_package_version
     environment:
@@ -65,7 +67,7 @@ services:
       MARIADB_ROOT_PASSWORD: root #**MATCH ME**
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-      - ./sproot-schema.sql:/docker-entrypoint-initdb.d/sproot-schema.preconfigured.sql
+      - ./sproot-schema.preconfigured.sql:/docker-entrypoint-initdb.d/sproot-schema.preconfigured.sql
     networks:
       - sproot-network
     ports:

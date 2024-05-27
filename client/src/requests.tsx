@@ -5,9 +5,10 @@ import {
   ApiResponse,
   ApiSensorsResponse,
   ApiSupportedModelsResponse,
+  ApiOutputsChartDataResponse,
 } from "@sproot/sproot-common/src/api/Responses";
-import { IOutputBase } from "@sproot/src/outputs/OutputBase";
-import { ISensorBase } from "@sproot/src/sensors/SensorBase";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -177,7 +178,7 @@ export async function deleteOutputAsync(id: number): Promise<ApiResponse> {
   return await response.json();
 }
 
-export async function getChartDataAsync(
+export async function getSensorChartDataAsync(
   readingType: string | undefined = undefined,
   latest: boolean | undefined = undefined,
 ): Promise<ApiChartDataResponse> {
@@ -200,7 +201,31 @@ export async function getChartDataAsync(
     // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error fetching chart data: ${response}`);
+    console.error(`Error fetching sensor chart data: ${response}`);
+  }
+  return await response.json();
+}
+
+export async function getOutputChartDataAsync(
+  latest: boolean | undefined = undefined,
+): Promise<ApiOutputsChartDataResponse> {
+  let queryString = `${SERVER_URL}/api/v1/outputs/chart-data`;
+  const params = [];
+  if (latest) {
+    params.push(`latest=${latest}`);
+  }
+  if (params.length > 0) {
+    queryString += `?${params.join("&")}`;
+  }
+
+  const response = await fetch(queryString, {
+    method: "GET",
+    headers: {},
+    // mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching output chart data: ${response}`);
   }
   return await response.json();
 }

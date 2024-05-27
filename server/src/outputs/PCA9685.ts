@@ -1,12 +1,9 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
-import {
-  IOutputBase,
-  OutputBase,
-  ControlMode,
-  IState,
-} from "@sproot/sproot-common/dist/outputs/OutputBase";
+import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
@@ -16,15 +13,32 @@ class PCA9685 {
   #sprootDB: ISprootDB;
   #frequency: number;
   #usedPins: Record<string, number[]> = {};
+  #maxCacheSize: number;
+  #initialCacheLookback: number;
+  #maxChartDataSize: number;
+  #chartDataPointInterval: number;
   #logger: winston.Logger;
-  constructor(sprootDB: ISprootDB, logger: winston.Logger, frequency: number = 50) {
+
+  constructor(
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    frequency: number = 50,
+    logger: winston.Logger,
+  ) {
     this.#sprootDB = sprootDB;
-    this.#outputs = {};
+    this.#maxCacheSize = maxCacheSize;
+    this.#initialCacheLookback = initialCacheLookback;
+    this.#maxChartDataSize = maxChartDataSize;
+    this.#chartDataPointInterval = chartDataPointInterval;
     this.#frequency = frequency;
     this.#logger = logger;
+    this.#outputs = {};
   }
 
-  createOutput(output: SDBOutput): PCA9685Output | null {
+  async createOutput(output: SDBOutput): Promise<PCA9685Output | null> {
     //Create new PCA9685 if one doesn't exist for this address.
     if (!this.#boardRecord[output.address]) {
       this.#boardRecord[output.address] = new Pca9685Driver(
@@ -45,8 +59,13 @@ class PCA9685 {
         pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
         output,
         this.#sprootDB,
+        this.#maxCacheSize,
+        this.#initialCacheLookback,
+        this.#maxChartDataSize,
+        this.#chartDataPointInterval,
         this.#logger,
       );
+      await this.#outputs[output.id]?.initializeAsync();
       this.#usedPins[output.address]?.push(output.pin);
       return this.#outputs[output.id]!;
     } else {
@@ -68,18 +87,9 @@ class PCA9685 {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const {
-        id,
-        model,
-        address,
-        name,
-        pin,
-        isPwm,
-        isInvertedPwm,
-        manualState,
-        scheduleState,
-        controlMode,
-      } = this.#outputs[key] as IOutputBase;
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, state } = this.#outputs[
+        key
+      ] as IOutputBase;
       cleanObject[key] = {
         id,
         model,
@@ -88,9 +98,7 @@ class PCA9685 {
         pin,
         isPwm,
         isInvertedPwm,
-        manualState,
-        scheduleState,
-        controlMode,
+        state,
       };
     }
     return cleanObject;
@@ -114,9 +122,12 @@ class PCA9685 {
   }
 
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
-    this.#outputs[outputId]?.updateControlMode(controlMode);
-  setNewOutputState = (outputId: string, newState: PCA9685State, targetControlMode: ControlMode) =>
-    this.#outputs[outputId]?.setNewState(newState, targetControlMode);
+    this.#outputs[outputId]?.state.updateControlMode(controlMode);
+  setNewOutputState = (
+    outputId: string,
+    newState: SDBOutputState,
+    targetControlMode: ControlMode,
+  ) => this.#outputs[outputId]?.state.setNewState(newState, targetControlMode);
   executeOutputState = (outputId?: string) =>
     outputId
       ? this.#outputs[outputId]?.executeState()
@@ -125,32 +136,48 @@ class PCA9685 {
 
 class PCA9685Output extends OutputBase {
   pca9685: Pca9685Driver;
-  override manualState: PCA9685State;
-  override scheduleState: PCA9685State;
 
   constructor(
     pca9685: Pca9685Driver,
     output: SDBOutput,
     sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    super(output, sprootDB, logger);
+    super(
+      output,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
     this.pca9685 = pca9685;
-    this.manualState = { value: 0 };
-    this.scheduleState = { value: 0 };
+  }
+
+  async initializeAsync(): Promise<void> {
+    await this.loadCacheFromDatabaseAsync();
+    this.loadChartData();
   }
 
   executeState(): void {
-    this.logger.verbose(
-      `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.manualState.value}`,
-    );
     switch (this.controlMode) {
       case ControlMode.manual:
-        this.#setPwm(this.manualState.value);
+        this.logger.verbose(
+          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.manual.value}`,
+        );
+        this.#setPwm(this.state.manual.value);
         break;
 
       case ControlMode.schedule:
-        this.#setPwm(this.scheduleState.value);
+        this.logger.verbose(
+          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.schedule.value}`,
+        );
+        this.#setPwm(this.state.schedule.value);
         break;
     }
   }
@@ -176,9 +203,4 @@ class PCA9685Output extends OutputBase {
   }
 }
 
-interface PCA9685State extends IState {
-  value: number;
-}
-
 export { PCA9685, PCA9685Output };
-export type { PCA9685State };

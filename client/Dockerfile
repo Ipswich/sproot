@@ -1,11 +1,11 @@
 FROM debian:latest as build
 RUN apt-get update -y && apt-get upgrade -y
 
-# Install curl, nano, python, make, g++, git
-RUN apt-get install curl nano python3 make g++ git -y
+# Install curl
+RUN apt-get install curl -y
 
 # Install NVM (and Node, npm)
-ENV NODE_VERSION=18.18.0
+ENV NODE_VERSION=21.7.0
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 ENV NVM_DIR=/root/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION} --latest-npm
@@ -13,15 +13,11 @@ RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
 RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 
-# Install gh
-RUN apt-get install -y gpg
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg;
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null;
-RUN apt-get update && apt-get install -y gh;
-
 # Copy project
 COPY .. ./sproot
-ARG VITE_MAX_CHART_ENTRIES
+RUN cd ./sproot && npm run install:common
+ARG VITE_CHART_DATA_POINT_INTERVAL
+ARG VITE_MAX_CHART_DATA_POINTS
 ARG VITE_API_SERVER_URL
 ARG VITE_CLIENT_VERSION
 RUN cd ./sproot && npm run install:client

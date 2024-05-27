@@ -1,10 +1,10 @@
 import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
-import { IOutputBase } from "@sproot/src/outputs/OutputBase";
-import { addOutputAsync } from "../../requests";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { addOutputAsync } from "@sproot/sproot-client/src/requests";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
-import PCA9685Form from "./forms/PCA9685Form";
-import { FormValues } from "./OutputSettings";
+import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";
+import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
 
 interface NewOutputModalProps {
   outputs: Record<string, IOutputBase>;

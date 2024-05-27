@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { Carousel } from "@mantine/carousel";
 import "@mantine/carousel/styles.css";
-import {
-  ISensorBase,
-  ReadingType,
-} from "@sproot/sproot-common/src/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import {
   ChartData,
   ChartDataRecord,
 } from "@sproot/sproot-common/src/api/ChartData";
-import { getSensorsAsync, getChartDataAsync } from "../requests";
-import CarouselSlideContents from "./CarouselSlideContents";
+import {
+  getSensorsAsync,
+  getSensorChartDataAsync,
+} from "@sproot/sproot-client/src/requests";
+import CarouselSlideContents from "@sproot/sproot-client/src/sensors/CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
 
 export default function SensorCarouselContainer() {
@@ -44,7 +45,7 @@ export default function SensorCarouselContainer() {
     const result = {} as Record<string, ChartData[]>;
     for (const readingType of Object.values(ReadingType)) {
       promises.push(
-        getChartDataAsync(readingType).then((data) => {
+        getSensorChartDataAsync(readingType).then((data) => {
           result[readingType] = data.chartData[readingType]!;
         }),
       );
@@ -53,7 +54,7 @@ export default function SensorCarouselContainer() {
     localChartDataRecord = new ChartDataRecord(
       result,
       {} as Record<ReadingType, string[]>,
-      parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string),
+      parseInt(import.meta.env["VITE_MAX_CHART_DATA_POINTS"] as string),
     );
     setChartData(localChartDataRecord);
   };
@@ -66,7 +67,7 @@ export default function SensorCarouselContainer() {
       filters[readingType] =
         localChartDataRecord.chartSubData[readingType].filters;
       promises.push(
-        getChartDataAsync(readingType, true).then((data) => {
+        getSensorChartDataAsync(readingType, true).then((data) => {
           result[readingType]!.push(data.chartData[readingType]![0]!);
         }),
       );
@@ -75,7 +76,7 @@ export default function SensorCarouselContainer() {
     localChartDataRecord = new ChartDataRecord(
       result,
       filters,
-      parseInt(import.meta.env["VITE_MAX_CHART_ENTRIES"] as string),
+      parseInt(import.meta.env["VITE_MAX_CHART_DATA_POINTS"] as string),
     );
     setChartData(localChartDataRecord);
     return;

@@ -1,10 +1,13 @@
 import { Fragment, useEffect, useState } from "react";
-import { getOutputsAsync, getSupportedOutputModelsAsync } from "../../requests";
+import {
+  getOutputsAsync,
+  getSupportedOutputModelsAsync,
+} from "@sproot/sproot-client/src/requests";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import EditTable from "./EditTable";
-import { IOutputBase } from "@sproot/src/outputs/OutputBase";
-import NewOutputModal from "./NewOutputModal";
+import EditTable from "@sproot/sproot-client/src/settings/outputs/EditTable";
+import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import NewOutputModal from "@sproot/sproot-client/src/settings/outputs/NewOutputModal";
 
 export interface FormValues {
   id?: number;

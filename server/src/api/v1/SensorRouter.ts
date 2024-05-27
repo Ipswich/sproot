@@ -1,7 +1,7 @@
-import { ChartData } from "@sproot/sproot-common/dist/api/ChartData";
+import { DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/SensorBase";
-import { SensorList } from "../../sensors/SensorList";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SensorList } from "../../sensors/list/SensorList";
 import ModelList from "../../sensors/ModelList";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
@@ -37,7 +37,7 @@ router.get("/supported-models", async (req: Request, res: Response) => {
 router.get("/chart-data", async (req: Request, res: Response) => {
   const sensorList = req.app.get("sensorList") as SensorList;
   const logger = req.app.get("logger") as winston.Logger;
-  let result: Record<string, ChartData[]> | ChartData[] = {};
+  let result: Record<string, DataSeries> | DataSeries = {};
   let offset, limit;
   try {
     const chartData = sensorList.chartData;

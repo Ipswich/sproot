@@ -1,7 +1,8 @@
 import express, { Request, Response } from "express";
-import { OutputList } from "../../outputs/OutputList";
-import { IState, ControlMode } from "@sproot/sproot-common/dist/outputs/OutputBase";
+import { OutputList } from "../../outputs/list/OutputList";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import ModelList from "../../outputs/ModelList";
@@ -26,6 +27,23 @@ router.get("/supported-models", async (req: Request, res: Response) => {
     message: "Supported output models successfully retrieved",
     statusCode: 200,
     supportedModels: result,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+router.get("/chart-data", async (req: Request, res: Response) => {
+  const outputList = req.app.get("outputList") as OutputList;
+  const logger = req.app.get("logger") as winston.Logger;
+  const resultData =
+    req.query["latest"] == "true"
+      ? outputList.chartData.chartData.get().slice(-1)
+      : outputList.chartData.chartData.get();
+
+  logger.http("GET /api/v1/outputs/chart-data - 200, Success");
+  res.status(200).json({
+    message: "Chart data successfully retrieved",
+    statusCode: 200,
+    chartData: resultData,
     timestamp: new Date().toISOString(),
   });
 });
@@ -240,7 +258,8 @@ router.post("/:id/manual-state", async (req: Request, res: Response) => {
     } else {
       const state = {
         value: req.body.value,
-      } as IState;
+        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      } as SDBOutputState;
       outputList.setNewOutputState(String(req.params["id"]), state, ControlMode.manual);
       outputList.executeOutputState(String(req.params["id"]));
 

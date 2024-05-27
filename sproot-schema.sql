@@ -43,11 +43,34 @@ CREATE TABLE IF NOT EXISTS `sensor_data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
+CREATE TABLE IF NOT EXISTS `output_data` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `output_id` int(11) NOT NULL,
+  `value` int(11) NOT NULL,
+  `controlMode` varchar(32) NOT NULL,
+  `logTime` datetime NOT NULL DEFAULT current_timestamp(), #SERVER STORES THIS AS ISO8601, RESPECT IT ON READS/WRITES
+  PRIMARY KEY (`id`),
+  KEY `output_id` (`output_id`),
+  CONSTRAINT `output_data_ibfk_1` FOREIGN KEY (`output_id`) REFERENCES `outputs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 CREATE TABLE IF NOT EXISTS `users` (
   `username` varchar(32) NOT NULL,
   `hash` char(60) NOT NULL,
   `email` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+INSERT INTO `outputs` (`model`, `address`, `name`, `pin`, `isPwm`, `isInvertedPwm`) VALUES
+('pca9685',	'0x40',	'Relay #1',	0,	0,	0),
+('pca9685',	'0x40',	'Relay #2',	1,	0,	0),
+('pca9685',	'0x40',	'Relay #3',	2,	0,	0),
+('pca9685',	'0x40',	'Relay #4',	3,	0,	0),
+('pca9685',	'0x40',	'Pwm #1',	4,	1,	0),
+('pca9685',	'0x40',	'Pwm #2',	5,	1,	0),
+('pca9685',	'0x40',	'Pwm #3',	6,	1,	0),
+('pca9685',	'0x40',	'Pwm #4',	7,	1,	0);
 
 COMMIT;

@@ -2,25 +2,37 @@ import "dotenv/config";
 import bme280 from "bme280";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType, SensorBase } from "@sproot/sproot-common/dist/sensors/SensorBase";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 
 class BME280 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
-  constructor(sdbsensor: SDBSensor, sprootDB: ISprootDB, logger: winston.Logger) {
-    super(sdbsensor, sprootDB, logger);
-    this.units[ReadingType.temperature] = "°C";
-    this.units[ReadingType.humidity] = "%rH";
-    this.units[ReadingType.pressure] = "hPa";
-    this.cachedReadings[ReadingType.temperature] = [];
-    this.cachedReadings[ReadingType.humidity] = [];
-    this.cachedReadings[ReadingType.pressure] = [];
+  constructor(
+    sdbsensor: SDBSensor,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ) {
+    super(
+      sdbsensor,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
+      logger,
+    );
   }
 
   async initAsync(): Promise<BME280 | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.loadCachedReadingsFromDatabaseAsync(Number(process.env["INITIAL_CACHE_LOOKBACK"]));
+      await this.intitializeCacheAndChartDataAsync();
       this.updateInterval = setInterval(async () => {
         await this.getReadingAsync();
       }, this.MAX_SENSOR_READ_TIME);
@@ -50,7 +62,8 @@ class BME280 extends SensorBase {
         this.lastReading[ReadingType.pressure] = String(reading.pressure);
         this.lastReadingTime = new Date();
         await sensor.close();
-      }).catch((err) => {
+      })
+      .catch((err) => {
         this.logger.error(`Failed to read BME280 sensor ${this.id}. ${err}`);
       });
     profiler.done({

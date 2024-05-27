@@ -12,8 +12,8 @@ import "winston-daily-rotate-file";
 
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
-import { SensorList } from "./sensors/SensorList";
-import { OutputList } from "./outputs/OutputList";
+import { SensorList } from "./sensors/list/SensorList";
+import { OutputList } from "./outputs/list/OutputList";
 
 import login, { authenticate } from "./api/v1/middleware/Authentication";
 import sensorRouter from "./api/v1/SensorRouter";
@@ -98,9 +98,23 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   await defaultUserCheck(sprootDB, logger);
 
   logger.info("Creating sensor and output lists. . .");
-  const sensorList = new SensorList(sprootDB, logger);
+  const sensorList = new SensorList(
+    sprootDB,
+    Number(process.env["MAX_CACHE_SIZE"]),
+    Number(process.env["INITIAL_CACHE_LOOKBACK"]),
+    Number(process.env["MAX_CHART_DATA_POINTS"]),
+    Number(process.env["CHART_DATA_POINT_INTERVAL"]),
+    logger,
+  );
   app.set("sensorList", sensorList);
-  const outputList = new OutputList(sprootDB, logger);
+  const outputList = new OutputList(
+    sprootDB,
+    Number(process.env["MAX_CACHE_SIZE"]),
+    Number(process.env["INITIAL_CACHE_LOOKBACK"]),
+    Number(process.env["MAX_CHART_DATA_POINTS"]),
+    Number(process.env["CHART_DATA_POINT_INTERVAL"]),
+    logger,
+  );
   app.set("outputList", outputList);
 
   logger.info("Initializing sensor and output lists. . .");
@@ -121,9 +135,10 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     outputList.executeOutputState();
   }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
 
-  // Database update loop
+  //  update loop
   const updateDatabaseLoop = setInterval(async () => {
-    await sensorList.addReadingsToDatabaseAsync();
+    await sensorList.updateDataStoresAsync();
+    await outputList.updateDataStoresAsync();
   }, parseInt(process.env["DATABASE_UPDATE_INTERVAL"]!));
 
   app.use(cors());

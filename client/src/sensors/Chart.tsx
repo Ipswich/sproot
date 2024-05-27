@@ -63,7 +63,8 @@ export default function Chart({
         withTooltip={true}
         withXAxis
         withYAxis
-        xAxisProps={{ dataKey: "name" }}
+        tickLine="xy"
+        xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
         yAxisProps={{ domain: ["auto", "auto"] }}
         referenceLines={[
           {
@@ -94,6 +95,7 @@ interface ChartTooltipProps {
     | Record<string, { name: string; color: string; value: string }>[]
     | undefined;
 }
+
 function ChartTooltip({ label, payload }: ChartTooltipProps) {
   if (!payload) return null;
 
