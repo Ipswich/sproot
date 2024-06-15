@@ -1,6 +1,6 @@
 import { RowDataPacket } from "mysql2";
 
-interface SDBOutput extends RowDataPacket {
+type SDBOutput = RowDataPacket & {
   id: number;
   model: string;
   address: string;
@@ -9,6 +9,6 @@ interface SDBOutput extends RowDataPacket {
   isPwm: boolean;
   isInvertedPwm: boolean;
   color?: string;
-}
+};
 
 export type { SDBOutput };

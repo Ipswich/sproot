@@ -1,4 +1,4 @@
-import { ChartData, DataPoint, DataSeries } from "@sproot/sproot-common/src/utility/IChartable";
+import { ChartData, DataPoint, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
 
 import { assert } from "chai";
 import * as sinon from "sinon";

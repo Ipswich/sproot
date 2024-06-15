@@ -1,25 +1,25 @@
 import { ReadingType } from "../sensors/ReadingType";
 
-interface DataPoint {
+type DataPoint = {
   name: string;
   units?: string;
   [key: string]: number | string;
-}
+};
 
 type DataSeries = DataPoint[];
 
-interface StatsResult {
+type StatsResult = {
   average: string;
   min: string;
   max: string;
   dataSeries: DataSeries;
-}
+};
 
-interface LookbackData extends StatsResult {
+type LookbackData = StatsResult & {
   label: string;
-}
+};
 
-interface ChartDataSubsection {
+type ChartDataSubsection = {
   filters: string[];
   lookbacks: {
     all: LookbackData;
@@ -28,7 +28,7 @@ interface ChartDataSubsection {
     twentyFourHours: LookbackData;
     seventyTwoHours: LookbackData;
   };
-}
+};
 
 class ChartDataRecord {
   chartData: Record<ReadingType, DataSeries>;

@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
-import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/IChartable";
+import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
 import { SensorListChartData } from "../SensorListChartData";
 const sandbox = sinon.createSandbox();
 

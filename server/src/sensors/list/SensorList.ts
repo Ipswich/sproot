@@ -6,7 +6,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
-import { DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 class SensorList {

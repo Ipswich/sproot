@@ -1,0 +1,238 @@
+openapi: "3.0.1"
+
+info:
+  title: "sproot"
+  version: "0.0.1"
+  description: "Sproot API documentation"
+
+
+paths:
+  /api/v2/ping:
+    get:
+      tags:
+        - "Ping"
+      summary: "Ping the server"
+      description: "Returns a simple 'pong' response."
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        
+  /api/v2/sensors/:
+    get:
+      tags:
+        - "Sensors"
+      summary: "Get all sensors"
+      description: "Returns a list of all sensors."
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  
+  /api/v2/sensors/{id}:
+    get:
+      tags:
+        - "Sensors"
+      summary: "Get sensor by ID"
+      description: "Returns a sensor by ID."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Sensor ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+
+        404:
+          description: "Sensor not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v2/sensors/chart-data:
+    get:
+      tags:
+        - "Sensors"
+        - "Charts"
+      summary: "Get chart data"
+      description: "Returns chart data for all sensors."
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v2/sensors/supported-models:
+    get:
+      tags:
+        - "Sensors"
+      summary: "Get supported models"
+      description: "Returns a list of supported sensor models."
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      required:
+        - "statusCode"
+        - "timestamp"
+        - "requestId"
+      properties:
+        statusCode:
+          type: integer
+          example: 200
+        timestamp:
+          type: string
+          example: "2021-01-01T00:00:00.000Z"
+        requestId: 
+          type: string
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+
+    Success:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            content:
+              type: object
+              required:
+                - "data"
+              properties:
+                data:
+                  anyOf:
+                    - $ref: "#/components/schemas/SupportedModels"
+                    - $ref: "#/components/schemas/SensorBase"
+                    - type: object
+                      items:
+                        $ref: "#/components/schemas/SensorBase"
+                    - type: string
+                    - type: number
+                    - type: integer
+                    - type: boolean
+                    - type: array
+                    - type: object
+                # moreDataAvailable:
+                #   type: boolean
+                #   example: false
+
+    Error:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          required:
+            - "error"
+          properties:
+            error:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Bad Request"
+                details:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      path:
+                        type: string
+                      message:
+                        type: string
+                  example:
+                    - fullPath: "/api/v2/does-not-exist"
+                    - message: "not found"
+
+    SensorBase:
+      type: object
+      required:
+        - "id"
+        - "name"
+        - "model"
+        - "address"
+        - "lastReading"
+        - "lastReadingTime"
+        - "units"
+      properties:
+        id:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: "Windowsill"
+        model:
+          type: string
+          example: "DS18B20"
+        address:
+          type: string
+          example: "28-00000"
+        lastReading:
+          type: string
+          example: "23.5"
+        lastReadingTime:
+          type: string
+          example: "2021-01-01T00:00:00.000Z"
+        units:
+          type: object
+          properties:
+            temperature:
+              type: string
+              example: "C"
+
+    SupportedModels:
+      type: array
+      items:
+        type: string

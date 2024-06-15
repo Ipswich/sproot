@@ -1,6 +1,6 @@
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class SensorChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;

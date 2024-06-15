@@ -56,6 +56,12 @@ describe("SensorList.ts tests", function () {
     sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
     sandbox.stub(BME280.prototype, "initAsync").resolves({
       id: 1,
+      name: "test sensor 1",
+      model: "BME280",
+      address: "0x76",
+      lastReading: { humidity: "", pressure: "", temperature: "" },
+      lastReadingTime: null,
+      units: { temperature: "°C", humidity: "%", pressure: "hPa" },
       disposeAsync: async () => {},
       chartData: {
         getOne: (_key: ReadingType) => {},

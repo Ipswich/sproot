@@ -1,4 +1,4 @@
-import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 
 class OutputListChartData implements IChartable {
   chartData: ChartData;

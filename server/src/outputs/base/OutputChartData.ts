@@ -1,5 +1,5 @@
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class OutputChartData implements IChartable {
   chartData: ChartData;

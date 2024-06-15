@@ -1,8 +1,8 @@
-export interface DataPoint {
+export type DataPoint = {
   name: string;
   units?: string;
   [key: string]: number | string;
-}
+};
 
 export type DataSeries = DataPoint[];
 
@@ -148,11 +148,11 @@ export class ChartData {
   }
 }
 
-export interface IChartable {
+export type IChartable = {
   chartData: Record<string | number | symbol, ChartData> | ChartData;
   loadChartData(cache: [], name: string, key?: string | number | symbol): void;
   updateChartData(cache: [], name: string, key?: string | number | symbol): void;
-}
+};
 
 class DataSeriesStats {
   counts: Record<string, number>;

@@ -1,6 +1,6 @@
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { ChartData } from "@sproot/sproot-common/dist/utility/IChartable";
+import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { assert } from "chai";
 import { OutputCache } from "../OutputCache";
 import { OutputChartData } from "../OutputChartData";
