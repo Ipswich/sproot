@@ -19,14 +19,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Success"
-        500:
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        
+                allOf:
+                  - $ref: "#/components/schemas/Success"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            example: "pong"
+                                
   /api/v2/sensors/:
     get:
       tags:
@@ -39,13 +39,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Success"
-        500:
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                allOf:
+                  - $ref: "#/components/schemas/Success"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/SensorBase"
+                              
   
   /api/v2/sensors/{id}:
     get:
@@ -67,42 +69,50 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Success"
+                allOf:
+                  - $ref: "#/components/schemas/Success"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/SensorBase"
 
         404:
           description: "Sensor not found"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          fullPath:
+                            example: "/api/v2/sensors/-1"
+                          details:
+                            items:
+                              example: "Sensor with ID -1 not found."
+                
 
-        500:
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /api/v2/sensors/chart-data:
-    get:
-      tags:
-        - "Sensors"
-        - "Charts"
-      summary: "Get chart data"
-      description: "Returns chart data for all sensors."
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Success"
-        500:
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+  # /api/v2/sensors/chart-data:
+  #   get:
+  #     tags:
+  #       - "Sensors"
+  #       - "Charts"
+  #     summary: "Get chart data"
+  #     description: "Returns chart data for all sensors."
+  #     responses:
+  #       200:
+  #         description: "Success"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/Success"
 
   /api/v2/sensors/supported-models:
     get:
@@ -117,12 +127,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Success"
-        500:
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -135,7 +139,6 @@ components:
       properties:
         statusCode:
           type: integer
-          example: 200
         timestamp:
           type: string
           example: "2021-01-01T00:00:00.000Z"
@@ -148,6 +151,9 @@ components:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
+            statusCode:
+              type: integer
+              example: 200
             content:
               type: object
               required:
@@ -156,8 +162,7 @@ components:
                 data:
                   anyOf:
                     - $ref: "#/components/schemas/SupportedModels"
-                    - $ref: "#/components/schemas/SensorBase"
-                    - type: object
+                    - type: array
                       items:
                         $ref: "#/components/schemas/SensorBase"
                     - type: string
@@ -177,24 +182,15 @@ components:
           required:
             - "error"
           properties:
+            statusCode:
+              type: integer
             error:
               type: object
               properties:
                 name:
                   type: string
-                  example: "Bad Request"
                 details:
                   type: array
-                  items:
-                    type: object
-                    properties:
-                      path:
-                        type: string
-                      message:
-                        type: string
-                  example:
-                    - fullPath: "/api/v2/does-not-exist"
-                    - message: "not found"
 
     SensorBase:
       type: object
@@ -208,8 +204,8 @@ components:
         - "units"
       properties:
         id:
-          type: string
-          example: "1"
+          type: number
+          example: 1
         name:
           type: string
           example: "Windowsill"
@@ -220,10 +216,14 @@ components:
           type: string
           example: "28-00000"
         lastReading:
-          type: string
-          example: "23.5"
+          type: object
+          properties:
+            temperature:
+              type: string
+              example: "23.5"
         lastReadingTime:
           type: string
+          nullable: true
           example: "2021-01-01T00:00:00.000Z"
         units:
           type: object

@@ -4,14 +4,12 @@ import { SensorList } from "../../../../sensors/list/SensorList";
 export default function sensorListHandler(
   sensorList: SensorList,
   sensorId?: string,
-): Record<string, ISensorBase> {
+): ISensorBase[] {
   if (sensorId) {
     if (sensorList.sensorData[sensorId]) {
-      return {
-        [sensorId]: sensorList.sensorData[sensorId] as ISensorBase,
-      };
+      return [sensorList.sensorData[sensorId] as ISensorBase];
     }
-    return {};
+    return [];
   }
-  return sensorList.sensorData;
+  return Object.values(sensorList.sensorData);
 }

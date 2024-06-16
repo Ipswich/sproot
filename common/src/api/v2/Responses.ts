@@ -14,9 +14,9 @@ type Success = ApiResponseBase & {
 type Error = ApiResponseBase & {
   error: {
     name: string;
-    fullPath: string;
-    details: string [];
+    url: string;
+    details: [];
   };
 };
 
-export type { Success, Error }
+export type { Success, Error };

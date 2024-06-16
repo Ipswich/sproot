@@ -33,9 +33,6 @@ const mysqlConfig = {
 
 const app = express();
 
-const openapi_v1_options = YAML.load("./openapi_v1.yaml");
-openapi_v1_options.defaultModelsExpandDepth = -1;
-
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
@@ -153,14 +150,14 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   app.use("/api/v1/sensors", authenticate, sensorRouter);
   app.use("/api/v1/outputs", authenticate, outputRouter);
 
+  const openapi_v1_doc = YAML.load("./openapi_v1.yaml");
 
-  let v1Docs = swaggerUi
   app.use(
     "/api/v1/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(openapi_v1_options, {
+    swaggerUi.serveFiles(openapi_v1_doc, {
       swaggerOptions: { defaultModelsExpandDepth: -1 },
     }),
+    swaggerUi.setup(openapi_v1_doc),
   );
 
   // API v2

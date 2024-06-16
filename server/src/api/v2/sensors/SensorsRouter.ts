@@ -6,6 +6,21 @@ import { SensorList } from "../../../sensors/list/SensorList";
 
 const router = express.Router();
 
+router.get("/supported-models", async (_req: Request, res: Response) => {
+  const data = supportedModelsHandler();
+  console.log(data);
+
+  const response: Success = {
+    statusCode: 200,
+    content: {
+      data,
+    },
+    ...res.locals["defaultProperties"],
+  };
+
+  res.status(200).json(response);
+});
+
 router.get("/", async (req: Request, res: Response) => {
   const data = sensorListHandler(req.app.get("sensorList") as SensorList);
 
@@ -23,13 +38,13 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/:sensorId", async (req: Request, res: Response) => {
   const data = sensorListHandler(req.app.get("sensorList") as SensorList, req.params["sensorId"]);
 
-  if (Object.keys(data).length === 0) {
+  if (data.length === 0) {
     const response: Error = {
       statusCode: 404,
       error: {
         name: "Not Found",
-        fullPath: req.originalUrl,
-        details: [`Sensor with ID ${req.params["sensorId"]} not found`],
+        url: req.originalUrl,
+        details: [`Sensor with ID ${req.params["sensorId"]} not found.`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -37,20 +52,6 @@ router.get("/:sensorId", async (req: Request, res: Response) => {
     res.status(404).json(response);
     return;
   }
-
-  const response: Success = {
-    statusCode: 200,
-    content: {
-      data,
-    },
-    ...res.locals["defaultProperties"],
-  };
-
-  res.status(200).json(response);
-});
-
-router.get("/supported-models", async (_req: Request, res: Response) => {
-  const data = supportedModelsHandler();
 
   const response: Success = {
     statusCode: 200,

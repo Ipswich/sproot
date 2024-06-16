@@ -17,7 +17,7 @@ interface IOutputBase {
   value?: number | undefined;
   controlMode?: ControlMode | undefined;
   color?: string | undefined;
-};
+}
 
 type IOutputState = {
   manual: SDBOutputState;

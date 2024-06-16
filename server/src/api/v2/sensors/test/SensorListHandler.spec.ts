@@ -69,11 +69,11 @@ describe("SensorListHandler.ts tests", () => {
     try {
       await sensorList.initializeOrRegenerateAsync();
 
-      assert.deepEqual(sensorListHandler(sensorList), sensorList.sensorData);
+      assert.deepEqual(sensorListHandler(sensorList), Object.values(sensorList.sensorData));
 
-      assert.deepEqual(sensorListHandler(sensorList, "-1"), {});
-      assert.deepEqual(sensorListHandler(sensorList, "1"), {
-        "1": {
+      assert.deepEqual(sensorListHandler(sensorList, "-1"), []);
+      assert.deepEqual(sensorListHandler(sensorList, "1"), [
+        {
           id: 1,
           name: "test sensor 1",
           model: "BME280",
@@ -82,7 +82,7 @@ describe("SensorListHandler.ts tests", () => {
           lastReadingTime: null,
           units: { temperature: "°C", humidity: "%", pressure: "hPa" },
         },
-      });
+      ]);
     } finally {
       sensorList.disposeAsync();
     }

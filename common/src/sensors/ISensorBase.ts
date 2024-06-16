@@ -9,6 +9,6 @@ interface ISensorBase {
   lastReadingTime: Date | null;
   readonly units: Record<ReadingType, string>;
   color?: string | undefined;
-};
+}
 
 export type { ISensorBase };
