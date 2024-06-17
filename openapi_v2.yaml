@@ -3,15 +3,21 @@ openapi: "3.0.1"
 info:
   title: "sproot"
   version: "0.0.1"
-  description: "Sproot API documentation"
+  description: >
+    Sproot is a general purpose environmental management system with a focus on greenhouse and garden.
+    The system is intended to be used to monitor and control various environmental parameters, to 
+    continuously update and maintain "homeostasis". This API is a machine-friendly interface for 
+    interacting with the system, and is designed to be used by a web-based front-end. This specification
+    can be used to generate client libraries, documentation, and other tools.
 
 paths:
   /api/v2/ping:
     get:
       tags:
         - "Ping"
-      summary: "Ping the server."
-      description: "Returns a simple 'pong' response."
+      summary: Ping the server.
+      description: >
+        Returns a simple 'pong' response. Useful for checking if the server is running, or connectivity.
       responses:
         200:
           description: "Success"
@@ -25,13 +31,15 @@ paths:
                         properties:
                           data:
                             example: "pong"
-                                
+
   /api/v2/sensors/:
     get:
       tags:
         - "Sensors"
-      summary: "Get all sensors."
-      description: "Returns a list of all sensors."
+      summary: Get all sensors.
+      description: > 
+        Returns a list of all sensors. This includes basic information about each sensor, such as 
+        name, model, and address. Also contains the last reading and time of the last reading.
       responses:
         200:
           description: "Success"
@@ -49,8 +57,10 @@ paths:
     post:
       tags:
         - "Sensors"
-      summary: "Add a new sensor."
-      description: "Add a new sensor."
+      summary: Add a new sensor.
+      description: >
+        Adds a new sensor to the service, and regenerates the list of sensors. Returns the information
+        used to create the sensor.
       requestBody:
         required: true
         content:
@@ -85,7 +95,7 @@ paths:
                           name:
                             example: "Bad Request"
                           details:
-                            example: 
+                            example:
                               - "Missing required field: name"
                               - "Missing required field: model"
                               - "Missing required field: address"
@@ -105,7 +115,7 @@ paths:
                             example: "Service Unavailable"
                           details:
                             items:
-                              example: 
+                              example:
                                 - "Failed to add sensor to database."
                                 - "Database connection failed."
 
@@ -113,8 +123,10 @@ paths:
     get:
       tags:
         - "Sensors"
-      summary: "Get a sensor by ID"
-      description: "Returns a sensor by ID."
+      summary: Get a sensor by id.
+      description: >
+        Returns data for the given sensor. This includes basic information, such as name, model, 
+        and address. Also contains the last reading and time of the last reading.
       parameters:
         - in: path
           name: id
@@ -160,8 +172,9 @@ paths:
     patch:
       tags:
         - "Sensors"
-      summary: "Update a sensor by ID."
-      description: "Update a sensor by ID."
+      summary: Update a sensor by ID.
+      description: >
+        Updates a sensor with the given ID. This operation changes only the fields provided.
       parameters:
         - in: path
           name: id
@@ -217,7 +230,7 @@ paths:
                           name:
                             example: "Bad Request"
                           details:
-                            example: 
+                            example:
                               - Invalid sensor Id.
         404:
           description: "Not Found"
@@ -237,7 +250,7 @@ paths:
                             example: "/api/v2/sensors/-1"
                           details:
                             items:
-                              example: "Sensor with ID -1 not found." 
+                              example: "Sensor with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -254,14 +267,15 @@ paths:
                             example: "Service Unavailable"
                           details:
                             items:
-                              example: 
+                              example:
                                 - "Failed to update sensor in database."
                                 - "Database connection failed."
     delete:
       tags:
         - "Sensors"
-      summary: "Delete a sensor by ID."
-      description: "Delete a sensor by ID."
+      summary: Delete a sensor by id.
+      description: >
+        Deletes a sensor with the given ID. This operation is permanent and cannot be undone.
       parameters:
         - in: path
           name: id
@@ -292,7 +306,7 @@ paths:
                           name:
                             example: "Bad Request"
                           details:
-                            example: 
+                            example:
                               - Invalid sensor Id.
         404:
           description: "Not Found"
@@ -320,11 +334,9 @@ paths:
                             example: "Service Unavailable"
                           details:
                             items:
-                              example: 
+                              example:
                                 - "Failed to delete sensor from database."
                                 - "Database connection failed."
-
-
 
   # /api/v2/sensors/chart-data:
   #   get:
@@ -345,8 +357,8 @@ paths:
     get:
       tags:
         - "Sensors"
-      summary: "Get supported models"
-      description: "Returns a list of supported sensor models."
+      summary: Get supported models.
+      description: Returns a list of supported sensor models. 
       responses:
         200:
           description: "Success"
@@ -358,6 +370,9 @@ paths:
 components:
   schemas:
     ApiResponse:
+      description: >
+        A generic response object that is returned by all API endpoints. Contains a status code, 
+        timestamp, and a unique request ID.
       type: object
       required:
         - "statusCode"
@@ -369,11 +384,14 @@ components:
         timestamp:
           type: string
           example: "2021-01-01T00:00:00.000Z"
-        requestId: 
+        requestId:
           type: string
           example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
 
     Success:
+      description: >
+        A generic success response object that is returned by all successful API endpoints. 
+        Contains a status code, timestamp, a unique request ID, and, optionally, some content.
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
@@ -403,6 +421,10 @@ components:
                 #   example: false
 
     Error:
+      description: >
+        A generic error response object that is returned by all unsuccessful API endpoints. 
+        Contains a status code, timestamp, a unique request ID, and an error object. This error
+        object may contain the name of the error, and an array of details (if relevant).
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
@@ -420,6 +442,9 @@ components:
                   type: array
 
     SDBSensor:
+      description: >
+        A sensor object that is stored in the database. Contains all the information needed to 
+        create a sensor, including name, model, address, and, optionally, color.
       type: object
       required:
         - "name"
@@ -440,6 +465,9 @@ components:
           example: "#ff0000"
 
     SensorBase:
+      description: >
+        A basic sensor object that is returned by the API. This expands upon SDBSensor, including the
+        last reading, last reading time, and units.
       allOf:
         - $ref: "#/components/schemas/SDBSensor"
         - type: object
@@ -473,6 +501,8 @@ components:
                   example: "C"
 
     SupportedModels:
+      description: >
+        A list of supported sensor models. This is a simple array of strings.
       type: array
       items:
         type: string
