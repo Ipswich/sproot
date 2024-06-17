@@ -38,11 +38,17 @@ class SprootDB implements ISprootDB {
   }
 
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
-    await this.#connection.execute("INSERT INTO sensors (name, model, address) VALUES (?, ?, ?)", [
-      sensor.name,
-      sensor.model,
-      sensor.address,
-    ]);
+    if (sensor.color !== undefined) {
+      await this.#connection.execute(
+        "INSERT INTO sensors (name, model, address, color) VALUES (?, ?, ?, ?)",
+        [sensor.name, sensor.model, sensor.address, sensor.color],
+      );
+    } else {
+      await this.#connection.execute(
+        "INSERT INTO sensors (name, model, address) VALUES (?, ?, ?)",
+        [sensor.name, sensor.model, sensor.address],
+      );
+    }
   }
 
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {

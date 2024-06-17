@@ -1,67 +1,54 @@
 import express, { Request, Response } from "express";
-import sensorListHandler from "./handlers/SensorListHandler";
+import {
+  getSensorDataHandler,
+  addSensorHandlerAsync,
+  updateSensorHandlerAsync,
+  deleteSensorHandlerAsync,
+} from "./handlers/SensorHandlers";
 import supportedModelsHandler from "./handlers/SupportedModelsHandler";
-import { Success } from "@sproot/api/v2/Responses";
-import { SensorList } from "../../../sensors/list/SensorList";
 
 const router = express.Router();
 
-router.get("/supported-models", async (_req: Request, res: Response) => {
-  const data = supportedModelsHandler();
-  console.log(data);
+router.get("/supported-models", (_req: Request, res: Response) => {
+  const response = supportedModelsHandler(res);
 
-  const response: Success = {
-    statusCode: 200,
-    content: {
-      data,
-    },
-    ...res.locals["defaultProperties"],
-  };
-
-  res.status(200).json(response);
+  res.status(response.statusCode).json(response);
+  return;
 });
 
-router.get("/", async (req: Request, res: Response) => {
-  const data = sensorListHandler(req.app.get("sensorList") as SensorList);
+router.get("/", (req: Request, res: Response) => {
+  const response = getSensorDataHandler(req, res);
 
-  const response: Success = {
-    statusCode: 200,
-    content: {
-      data,
-    },
-    ...res.locals["defaultProperties"],
-  };
-
-  res.status(200).json(response);
+  res.status(response.statusCode).json(response);
+  return;
 });
 
-router.get("/:sensorId", async (req: Request, res: Response) => {
-  const data = sensorListHandler(req.app.get("sensorList") as SensorList, req.params["sensorId"]);
+router.delete("/:id", async (req: Request, res: Response) => {
+  const response = await deleteSensorHandlerAsync(req, res);
 
-  if (data.length === 0) {
-    const response: Error = {
-      statusCode: 404,
-      error: {
-        name: "Not Found",
-        url: req.originalUrl,
-        details: [`Sensor with ID ${req.params["sensorId"]} not found.`],
-      },
-      ...res.locals["defaultProperties"],
-    };
+  res.status(response.statusCode).json(response);
+  return;
+});
 
-    res.status(404).json(response);
-    return;
-  }
+router.post("/", async (req: Request, res: Response) => {
+  const response = await addSensorHandlerAsync(req, res);
 
-  const response: Success = {
-    statusCode: 200,
-    content: {
-      data,
-    },
-    ...res.locals["defaultProperties"],
-  };
+  res.status(response.statusCode).json(response);
+  return;
+});
 
-  res.status(200).json(response);
+router.get("/:id", (req: Request, res: Response) => {
+  const response = getSensorDataHandler(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.patch("/:id", async (req: Request, res: Response) => {
+  const response = await updateSensorHandlerAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
 });
 
 export default router;

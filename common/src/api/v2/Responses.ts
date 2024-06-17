@@ -4,14 +4,14 @@ type ApiResponseBase = {
   requestId: string;
 };
 
-type Success = ApiResponseBase & {
+type SuccessResponse = ApiResponseBase & {
   content?: {
-    data: object;
+    data: object | Array<any>;
     moreDataAvailable?: boolean;
   };
 };
 
-type Error = ApiResponseBase & {
+type ErrorResponse = ApiResponseBase & {
   error: {
     name: string;
     url: string;
@@ -19,4 +19,4 @@ type Error = ApiResponseBase & {
   };
 };
 
-export type { Success, Error };
+export type { SuccessResponse, ErrorResponse };

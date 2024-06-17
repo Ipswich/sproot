@@ -1,10 +1,10 @@
-import { Success } from "@sproot/api/v2/Responses";
+import { SuccessResponse } from "@sproot/api/v2/Responses";
 import express, { Request, Response } from "express";
 
 const router = express.Router();
 
 router.get("/", async (_req: Request, res: Response) => {
-  let response: Success = {
+  let response: SuccessResponse = {
     statusCode: 200,
     content: {
       data: "pong",

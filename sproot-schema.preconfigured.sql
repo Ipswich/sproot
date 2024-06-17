@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `outputs` (
   `model` varchar(64) NOT NULL,
   `address` varchar(64) NOT NULL,
   `name` varchar(64) DEFAULT NULL,
+  `color` varchar(64) DEFAULT NULL,
   `pin` int(11) NOT NULL,
   `isPwm` tinyint(1) NOT NULL,
   `isInvertedPwm` tinyint(1) NOT NULL,
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS `sensors` (
   `name` varchar(64) DEFAULT NULL,
   `model` varchar(64) NOT NULL,
   `address` varchar(64) DEFAULT NULL,
+  `color` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

@@ -5,13 +5,12 @@ info:
   version: "0.0.1"
   description: "Sproot API documentation"
 
-
 paths:
   /api/v2/ping:
     get:
       tags:
         - "Ping"
-      summary: "Ping the server"
+      summary: "Ping the server."
       description: "Returns a simple 'pong' response."
       responses:
         200:
@@ -31,7 +30,7 @@ paths:
     get:
       tags:
         - "Sensors"
-      summary: "Get all sensors"
+      summary: "Get all sensors."
       description: "Returns a list of all sensors."
       responses:
         200:
@@ -47,13 +46,74 @@ paths:
                           data:
                             items:
                               $ref: "#/components/schemas/SensorBase"
-                              
-  
+    post:
+      tags:
+        - "Sensors"
+      summary: "Add a new sensor."
+      description: "Add a new sensor."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBSensor"
+      responses:
+        201:
+          description: "Sensor created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Success"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBSensor"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          details:
+                            example: 
+                              - "Missing required field: name"
+                              - "Missing required field: model"
+                              - "Missing required field: address"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          details:
+                            items:
+                              example: 
+                                - "Failed to add sensor to database."
+                                - "Database connection failed."
+
   /api/v2/sensors/{id}:
     get:
       tags:
         - "Sensors"
-      summary: "Get sensor by ID"
+      summary: "Get a sensor by ID"
       description: "Returns a sensor by ID."
       parameters:
         - in: path
@@ -97,7 +157,174 @@ paths:
                           details:
                             items:
                               example: "Sensor with ID -1 not found."
-                
+    patch:
+      tags:
+        - "Sensors"
+      summary: "Update a sensor by ID."
+      description: "Update a sensor by ID."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Sensor ID"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Windowsill"
+                model:
+                  type: string
+                  example: "BME280"
+                address:
+                  type: string
+                  example: "0x76"
+                color:
+                  type: string
+                  example: "#ff0000"
+      responses:
+        200:
+          description: "Sensor updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Success"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBSensor"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          details:
+                            example: 
+                              - Invalid sensor Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          fullPath:
+                            example: "/api/v2/sensors/-1"
+                          details:
+                            items:
+                              example: "Sensor with ID -1 not found." 
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          details:
+                            items:
+                              example: 
+                                - "Failed to update sensor in database."
+                                - "Database connection failed."
+    delete:
+      tags:
+        - "Sensors"
+      summary: "Delete a sensor by ID."
+      description: "Delete a sensor by ID."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Sensor ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        204:
+          description: "Sensor deleted"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          details:
+                            example: 
+                              - Invalid sensor Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Success"
+                  - properties:
+                      statusCode:
+                        example: 404
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          details:
+                            items:
+                              example: 
+                                - "Failed to delete sensor from database."
+                                - "Database connection failed."
+
+
 
   # /api/v2/sensors/chart-data:
   #   get:
@@ -192,20 +419,13 @@ components:
                 details:
                   type: array
 
-    SensorBase:
+    SDBSensor:
       type: object
       required:
-        - "id"
         - "name"
         - "model"
         - "address"
-        - "lastReading"
-        - "lastReadingTime"
-        - "units"
       properties:
-        id:
-          type: number
-          example: 1
         name:
           type: string
           example: "Windowsill"
@@ -215,22 +435,42 @@ components:
         address:
           type: string
           example: "28-00000"
-        lastReading:
-          type: object
-          properties:
-            temperature:
-              type: string
-              example: "23.5"
-        lastReadingTime:
+        color:
           type: string
-          nullable: true
-          example: "2021-01-01T00:00:00.000Z"
-        units:
-          type: object
+          example: "#ff0000"
+
+    SensorBase:
+      allOf:
+        - $ref: "#/components/schemas/SDBSensor"
+        - type: object
+          required:
+            - "id"
+            - "name"
+            - "model"
+            - "address"
+            - "lastReading"
+            - "lastReadingTime"
+            - "units"
           properties:
-            temperature:
+            id:
+              type: number
+              example: 1
+            lastReading:
+              type: object
+              properties:
+                temperature:
+                  type: string
+                  example: "23.5"
+            lastReadingTime:
               type: string
-              example: "C"
+              nullable: true
+              example: "2021-01-01T00:00:00.000Z"
+            units:
+              type: object
+              properties:
+                temperature:
+                  type: string
+                  example: "C"
 
     SupportedModels:
       type: array
