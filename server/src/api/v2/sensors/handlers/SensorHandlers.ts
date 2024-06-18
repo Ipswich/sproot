@@ -113,7 +113,7 @@ export async function addSensorHandlerAsync(
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: ["Failed to add sensor to database.", error.message],
+        details: ["Failed to add sensor to database", error.message],
       },
       ...response.locals["defaultProperties"],
     };
