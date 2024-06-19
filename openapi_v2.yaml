@@ -32,7 +32,29 @@ paths:
                           data:
                             example: "pong"
 
-  /api/v2/sensors/:
+  /api/v2/outputs/supported-models:
+    get:
+      tags:
+        - "Outputs"
+      summary: Get supported models.
+      description: Returns a list of supported output models. 
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Success"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            type: string
+                            example: 
+                              - "PCA9685"
+
+  /api/v2/sensors:
     get:
       tags:
         - "Sensors"
@@ -76,6 +98,8 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/Success"
                   - properties:
+                      statusCode:
+                        example: 201
                       content:
                         properties:
                           data:
@@ -94,6 +118,8 @@ paths:
                         properties:
                           name:
                             example: "Bad Request"
+                          url:
+                            example: "/api/v2/sensors"
                           details:
                             example:
                               - "Missing required field: name"
@@ -113,6 +139,8 @@ paths:
                         properties:
                           name:
                             example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/sensors"
                           details:
                             items:
                               example:
