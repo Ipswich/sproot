@@ -52,6 +52,12 @@ class SprootDB implements ISprootDB {
   }
 
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {
+    if (sensor.color !== undefined) {
+      await this.#connection.execute(
+        "UPDATE sensors SET name = ?, model = ?, address = ?, color = ? WHERE id = ?",
+        [sensor.name, sensor.model, sensor.address, sensor.color, sensor.id],
+      );
+    }
     await this.#connection.execute(
       "UPDATE sensors SET name = ?, model = ?, address = ? WHERE id = ?",
       [sensor.name, sensor.model, sensor.address, sensor.id],

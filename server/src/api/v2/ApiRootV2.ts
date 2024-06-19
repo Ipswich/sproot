@@ -9,6 +9,7 @@ import addDefaultProperties, {
 import login from "./middleware/Authentication";
 import pingRouter from "./ping/PingRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
+import outputsRouter from "./outputs/OutputsRouter";
 
 const openapi_v2_doc = YAML.load("../openapi_v2.yaml");
 const swaggerUiOptions = {
@@ -34,6 +35,7 @@ function ApiRootV2(app: Express) {
   app.use("/api/v2/ping", openApiValidator, addDefaultProperties, pingRouter);
 
   app.use("/api/v2/sensors", openApiValidator, addDefaultProperties, sensorsRouter);
+  app.use("/api/v2/outputs", openApiValidator, addDefaultProperties, outputsRouter);
 
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     // format error
