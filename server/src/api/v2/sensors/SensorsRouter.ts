@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import {
-  getSensorDataHandler,
+  getSensorHandler,
   addSensorHandlerAsync,
   updateSensorHandlerAsync,
   deleteSensorHandlerAsync,
@@ -17,7 +17,7 @@ router.get("/supported-models", (_req: Request, res: Response) => {
 });
 
 router.get("/", (req: Request, res: Response) => {
-  const response = getSensorDataHandler(req, res);
+  const response = getSensorHandler(req, res);
 
   res.status(response.statusCode).json(response);
   return;
@@ -38,7 +38,7 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.get("/:id", (req: Request, res: Response) => {
-  const response = getSensorDataHandler(req, res);
+  const response = getSensorHandler(req, res);
 
   res.status(response.statusCode).json(response);
   return;

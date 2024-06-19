@@ -10,16 +10,16 @@ import { Request, Response } from "express";
  * @param response
  * @returns
  */
-export function getSensorDataHandler(
+export function getSensorHandler(
   request: Request,
   response: Response,
 ): SuccessResponse | ErrorResponse {
   const sensorList = request.app.get("sensorList") as SensorList;
-  let sensorDataResponse: SuccessResponse | ErrorResponse;
+  let getSensorResponse: SuccessResponse | ErrorResponse;
 
   if (request.params["id"] !== undefined) {
     if (sensorList.sensorData[request.params["id"]]) {
-      sensorDataResponse = {
+      getSensorResponse = {
         statusCode: 200,
         content: {
           data: [sensorList.sensorData[request.params["id"]]],
@@ -27,7 +27,7 @@ export function getSensorDataHandler(
         ...response.locals["defaultProperties"],
       };
     } else {
-      sensorDataResponse = {
+      getSensorResponse = {
         statusCode: 404,
         error: {
           name: "Not Found",
@@ -37,10 +37,10 @@ export function getSensorDataHandler(
         ...response.locals["defaultProperties"],
       };
     }
-    return sensorDataResponse;
+    return getSensorResponse;
   }
 
-  sensorDataResponse = {
+  getSensorResponse = {
     statusCode: 200,
     content: {
       data: Object.values(sensorList.sensorData),
@@ -48,7 +48,7 @@ export function getSensorDataHandler(
     ...response.locals["defaultProperties"],
   };
 
-  return sensorDataResponse;
+  return getSensorResponse;
 }
 
 /**
@@ -72,7 +72,7 @@ export async function addSensorHandlerAsync(
     color: request.body["color"],
   } as SDBSensor;
 
-  let missingFields: Array<string> = [];
+  const missingFields: Array<string> = [];
   if (!newSensor.name) {
     missingFields.push("Missing required field: name");
   }
@@ -135,13 +135,7 @@ export async function updateSensorHandlerAsync(
   const sensorList = request.app.get("sensorList") as SensorList;
   let updateSensorResponse: SuccessResponse | ErrorResponse;
 
-  let sensorId: number;
-  // If sensorId is an array, get the last element.
-  if (!Array.isArray(request.params["id"])) {
-    sensorId = parseInt([request.params["id"]].at(-1) ?? "");
-  } else {
-    sensorId = parseInt(request.params["id"]);
-  }
+  const sensorId = parseInt(request.params["id"] ?? "");
   if (isNaN(sensorId)) {
     updateSensorResponse = {
       statusCode: 400,
@@ -156,7 +150,7 @@ export async function updateSensorHandlerAsync(
     return updateSensorResponse;
   }
 
-  let sensorData = sensorList.sensorData[sensorId] as SDBSensor;
+  const sensorData = sensorList.sensorData[sensorId] as SDBSensor;
 
   if (!sensorData) {
     updateSensorResponse = {
@@ -178,13 +172,14 @@ export async function updateSensorHandlerAsync(
 
   try {
     await sprootDB.updateSensorAsync(sensorData);
-  } catch (error) {
+    await sensorList.initializeOrRegenerateAsync();
+  } catch (error: any) {
     updateSensorResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: ["Failed to update sensor in database."],
+        details: ["Failed to update sensor in database.", error.message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -215,13 +210,7 @@ export async function deleteSensorHandlerAsync(
   const sensorList = request.app.get("sensorList") as SensorList;
   let deleteSensorResponse: SuccessResponse | ErrorResponse;
 
-  let sensorId: number;
-  // If sensorId is an array, get the last element.
-  if (!Array.isArray(request.params["id"])) {
-    sensorId = parseInt([request.params["id"]].at(-1) ?? "");
-  } else {
-    sensorId = parseInt(request.params["id"]);
-  }
+  const sensorId = parseInt(request.params["id"] ?? "");
   if (isNaN(sensorId)) {
     deleteSensorResponse = {
       statusCode: 400,
@@ -239,6 +228,11 @@ export async function deleteSensorHandlerAsync(
   if (sensorList.sensorData[sensorId] === undefined) {
     deleteSensorResponse = {
       statusCode: 404,
+      error: {
+        name: "Not Found",
+        url: request.originalUrl,
+        details: [`Sensor with ID ${sensorId} not found.`],
+      },
       ...response.locals["defaultProperties"],
     };
     return deleteSensorResponse;
