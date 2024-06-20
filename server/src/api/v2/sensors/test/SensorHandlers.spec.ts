@@ -70,7 +70,7 @@ describe("SensorHandlers.ts tests", () => {
     });
 
     it("should return a 200 and all of the sensors", async () => {
-      let mockRequest = {
+      const mockRequest = {
         app: {
           get: (_dependency: string) => sensorList,
         },
@@ -151,7 +151,7 @@ describe("SensorHandlers.ts tests", () => {
         body: newSensor,
       } as unknown as Request;
 
-      let success = (await addSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      const success = (await addSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
       assert.deepEqual(success.content?.data, newSensor);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -278,7 +278,7 @@ describe("SensorHandlers.ts tests", () => {
         body: updatedSensor,
       } as unknown as Request;
 
-      let success = (await updateSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      const success = (await updateSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.deepEqual(success.content?.data, updatedSensor[1]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -431,7 +431,7 @@ describe("SensorHandlers.ts tests", () => {
       },
     } as unknown as Response;
 
-    it("should return a 204 and delete an existing sensor", async () => {
+    it("should return a 200 and delete an existing sensor", async () => {
       const deletedSensor = {
         1: {
           id: 1,
@@ -457,8 +457,9 @@ describe("SensorHandlers.ts tests", () => {
         params: { id: 1 },
       } as unknown as Request;
 
-      let success = (await deleteSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
-      assert.equal(success.statusCode, 204);
+      const success = (await deleteSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content?.data, "Sensor deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.deleteSensorAsync.calledOnce);

@@ -197,7 +197,7 @@ export async function updateSensorHandlerAsync(
 }
 
 /**
- * Possible statusCodes: 204, 400, 404, 503
+ * Possible statusCodes: 200, 400, 404, 503
  * @param request
  * @param response
  * @returns
@@ -243,7 +243,10 @@ export async function deleteSensorHandlerAsync(
     await sensorList.initializeOrRegenerateAsync();
 
     deleteSensorResponse = {
-      statusCode: 204,
+      statusCode: 200,
+      content: {
+        data: "Sensor deleted successfully."
+      },
       ...response.locals["defaultProperties"],
     };
   } catch (error: any) {

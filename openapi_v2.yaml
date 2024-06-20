@@ -25,8 +25,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Success"
+                  - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
+                      statusCode:
+                        example: 200
                       content:
                         properties:
                           data:
@@ -45,8 +47,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Success"
+                  - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
+                      statusCode:
+                        example: 200
                       content:
                         properties:
                           data:
@@ -69,8 +73,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Success"
+                  - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
+                      statusCode:
+                        example: 200
                       content:
                         properties:
                           data:
@@ -96,7 +102,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Success"
+                  - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
                       statusCode:
                         example: 201
@@ -110,7 +116,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 400
@@ -131,7 +137,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 503
@@ -159,7 +165,7 @@ paths:
         - in: path
           name: id
           required: true
-          description: "Sensor ID"
+          description: "Sensor Id"
           schema:
             type: string
           example: "1"
@@ -170,8 +176,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Success"
+                  - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
+                      statusCode:
+                        example: 200
                       content:
                         properties:
                           data:
@@ -184,7 +192,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 404
@@ -192,22 +200,22 @@ paths:
                         properties:
                           name:
                             example: "Not Found"
-                          fullPath:
+                          url:
                             example: "/api/v2/sensors/-1"
                           details:
                             items:
-                              example: "Sensor with ID -1 not found."
+                              example: "Sensor with Id -1 not found."
     patch:
       tags:
         - "Sensors"
-      summary: Update a sensor by ID.
+      summary: Update a sensor by Id.
       description: >
-        Updates a sensor with the given ID. This operation changes only the fields provided.
+        Updates a sensor with the given Id. This operation changes only the fields provided.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Sensor ID"
+          description: "Sensor Id"
           schema:
             type: string
           example: "1"
@@ -237,8 +245,10 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Success"
+                  - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
+                      statusCode:
+                        example: 200
                       content:
                         properties:
                           data:
@@ -249,7 +259,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 400
@@ -257,6 +267,8 @@ paths:
                         properties:
                           name:
                             example: "Bad Request"
+                          url:
+                            example: "/api/v2/sensors/string"
                           details:
                             example:
                               - Invalid sensor Id.
@@ -266,7 +278,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 404
@@ -274,18 +286,18 @@ paths:
                         properties:
                           name:
                             example: "Not Found"
-                          fullPath:
+                          url:
                             example: "/api/v2/sensors/-1"
                           details:
                             items:
-                              example: "Sensor with ID -1 not found."
+                              example: "Sensor with Id -1 not found."
         503:
           description: "Service unavailable"
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 503
@@ -293,6 +305,8 @@ paths:
                         properties:
                           name:
                             example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/sensors/1"
                           details:
                             items:
                               example:
@@ -303,29 +317,39 @@ paths:
         - "Sensors"
       summary: Delete a sensor by id.
       description: >
-        Deletes a sensor with the given ID. This operation is permanent and cannot be undone.
+        Deletes a sensor with the given Id. This operation is permanent and cannot be undone.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Sensor ID"
+          description: "Sensor Id"
           schema:
             type: string
           example: "1"
       responses:
-        204:
+        200:
           description: "Sensor deleted"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Success"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              "Sensor sucessfully deleted."
+                    
         400:
           description: "Bad request"
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 400
@@ -333,6 +357,8 @@ paths:
                         properties:
                           name:
                             example: "Bad Request"
+                          url:
+                            example: "/api/v2/sensors/string"
                           details:
                             example:
                               - Invalid sensor Id.
@@ -342,17 +368,26 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Success"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/sensors/-1"
+                          details:
+                            items:
+                              example: "Sensor with Id -1 not found."
         503:
           description: "Service unavailable"
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
                         example: 503
@@ -360,6 +395,8 @@ paths:
                         properties:
                           name:
                             example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/sensors/1"
                           details:
                             items:
                               example:
@@ -379,7 +416,7 @@ paths:
   #         content:
   #           application/json:
   #             schema:
-  #               $ref: "#/components/schemas/Success"
+  #               $ref: "#/components/schemas/SuccessResponse"
 
   /api/v2/sensors/supported-models:
     get:
@@ -393,14 +430,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Success"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: string
+                            example: 
+                              - "BME280"
+                              - "DS18B20"
 
 components:
   schemas:
     ApiResponse:
       description: >
         A generic response object that is returned by all API endpoints. Contains a status code, 
-        timestamp, and a unique request ID.
+        timestamp, and a unique request Id.
       type: object
       required:
         - "statusCode"
@@ -416,17 +464,15 @@ components:
           type: string
           example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
 
-    Success:
+    SuccessResponse:
       description: >
         A generic success response object that is returned by all successful API endpoints. 
-        Contains a status code, timestamp, a unique request ID, and, optionally, some content.
+        Contains a status code, timestamp, a unique request Id, and, optionally, some content.
       allOf:
-        - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             statusCode:
               type: integer
-              example: 200
             content:
               type: object
               required:
@@ -447,14 +493,14 @@ components:
                 # moreDataAvailable:
                 #   type: boolean
                 #   example: false
+        - $ref: "#/components/schemas/ApiResponse"
 
-    Error:
+    ErrorResponse:
       description: >
         A generic error response object that is returned by all unsuccessful API endpoints. 
-        Contains a status code, timestamp, a unique request ID, and an error object. This error
+        Contains a status code, timestamp, a unique request Id, and an error object. This error
         object may contain the name of the error, and an array of details (if relevant).
       allOf:
-        - $ref: "#/components/schemas/ApiResponse"
         - type: object
           required:
             - "error"
@@ -468,7 +514,8 @@ components:
                   type: string
                 details:
                   type: array
-
+        - $ref: "#/components/schemas/ApiResponse"
+        
     SDBSensor:
       description: >
         A sensor object that is stored in the database. Contains all the information needed to 

@@ -6,7 +6,7 @@ type ApiResponseBase = {
 
 type SuccessResponse = ApiResponseBase & {
   content?: {
-    data: object | Array<any>;
+    data: any;
     moreDataAvailable?: boolean;
   };
 };
