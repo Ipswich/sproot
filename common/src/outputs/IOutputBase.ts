@@ -14,8 +14,6 @@ interface IOutputBase {
   isPwm: boolean;
   isInvertedPwm: boolean;
   state: IOutputState;
-  value?: number | undefined;
-  controlMode?: ControlMode | undefined;
   color?: string | undefined;
 }
 

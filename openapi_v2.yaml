@@ -58,6 +58,85 @@ paths:
                             example: 
                               - "PCA9685"
 
+  /api/v2/outputs:
+    get:
+      tags:
+        - "Outputs"
+      summary: Get all outputs.
+      description: > 
+        Returns a list of all outputs. This includes basic information about each output, such as 
+        name, model, and address. 
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/OutputBase"
+    
+  /api/v2/outputs/{id}:
+    get:
+      tags:
+        - "Outputs"
+      summary: Get an output by id.
+      description: >
+        Returns data for the given output. This includes basic information, such as name, model, 
+        and address. Also contains the current state of the output.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/OutputBase"
+
+        404:
+          description: "Output not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+
+
   /api/v2/sensors:
     get:
       tags:
@@ -515,6 +594,97 @@ components:
                 details:
                   type: array
         - $ref: "#/components/schemas/ApiResponse"
+
+    SDBOutput:
+      description: >
+        An output object that is stored in the database. Contains all the information needed to 
+        create an output, including model, address, name, pin, if the output is a pwm, whether that
+        pwm value is should be inverted, and, optionally, color.
+      type: object
+      required:
+        - "model"
+        - "address"
+        - "name"
+        - "pin"
+        - "isPwm"
+        - "isInvertedPwm"
+      properties:
+        model:
+          type: string
+          example: "PCA9685"
+        address:
+          type: string
+          example: "0x40"
+        name:
+          type: string
+          example: "PCA9685"
+        pin:
+          type: number
+          example: 0
+        isPwm:
+          type: boolean
+          example: true
+        isInvertedPwm:
+          type: boolean
+          example: false
+        color:
+          type: string
+          example: "#ff0000"
+    
+    OutputBase:
+      description: >
+        A basic output object that is returned by the API. This expands upon SDBOutput, including the
+        id and state of the output.
+      allOf:
+        - $ref: "#/components/schemas/SDBOutput"
+        - type: object
+          required:
+            - "id"
+            - "name"
+            - "model"
+            - "address"
+            - "state"
+          properties:
+            id:
+              type: number
+              example: 1
+            state:
+              type: object
+              properties:
+                controlMode:
+                  type: string
+                  example: "manual"
+                manual:
+                  type: object
+                  properties:
+                    value:
+                      type: number
+                      example: 50
+                    logTime:
+                      type: string
+                      example: "2021-01-01T00:00:00.000Z"
+                schedule:
+                  type: object
+                  properties:
+                    value:
+                      type: number
+                      example: 0
+                    logTime:
+                      type: string
+                      example: "2021-01-01T00:00:00.000Z"
+
+        
+    SDBOutputState:
+      description: >
+        An output state object that is stored in the database. Contains details about the current state
+        of the output, including the current controller, value, and when that value was logged.
+      type: object
+      required:
+        - "outputId"
+        - "state"
+
+              
+
         
     SDBSensor:
       description: >
@@ -577,7 +747,7 @@ components:
 
     SupportedModels:
       description: >
-        A list of supported sensor models. This is a simple array of strings.
+        A list of supported device models. This is a simple array of strings.
       type: array
       items:
         type: string

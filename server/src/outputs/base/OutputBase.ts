@@ -40,8 +40,8 @@ export abstract class OutputBase implements IOutputBase {
     this.address = sdbOutput.address;
     this.name = sdbOutput.name;
     this.pin = sdbOutput.pin;
-    this.isPwm = sdbOutput.isPwm;
-    this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
+    this.isPwm = sdbOutput.isPwm ? true : false;
+    this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
     this.sprootDB = sprootDB;
     this.color = sdbOutput.color;
     this.state = new OutputState(sprootDB);

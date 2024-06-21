@@ -23,8 +23,8 @@ router.get("/", (req: Request, res: Response) => {
   return;
 });
 
-router.delete("/:id", async (req: Request, res: Response) => {
-  const response = await deleteSensorHandlerAsync(req, res);
+router.get("/:id", (req: Request, res: Response) => {
+  const response = getSensorHandler(req, res);
 
   res.status(response.statusCode).json(response);
   return;
@@ -37,15 +37,15 @@ router.post("/", async (req: Request, res: Response) => {
   return;
 });
 
-router.get("/:id", (req: Request, res: Response) => {
-  const response = getSensorHandler(req, res);
+router.patch("/:id", async (req: Request, res: Response) => {
+  const response = await updateSensorHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.patch("/:id", async (req: Request, res: Response) => {
-  const response = await updateSensorHandlerAsync(req, res);
+router.delete("/:id", async (req: Request, res: Response) => {
+  const response = await deleteSensorHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

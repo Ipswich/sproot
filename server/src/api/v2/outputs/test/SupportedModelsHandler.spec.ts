@@ -1,5 +1,4 @@
 import { Response } from "express";
-
 import supportedModelsHandler from "../handlers/SupportedModelsHandler";
 import ModelList from "../../../../outputs/ModelList";
 

@@ -32,7 +32,7 @@ export function getSensorHandler(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Sensor with ID ${request.params["id"]} not found.`],
+          details: [`Sensor with Id ${request.params["id"]} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -158,7 +158,7 @@ export async function updateSensorHandlerAsync(
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Sensor with ID ${sensorId} not found.`],
+        details: [`Sensor with Id ${sensorId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };
@@ -231,7 +231,7 @@ export async function deleteSensorHandlerAsync(
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Sensor with ID ${sensorId} not found.`],
+        details: [`Sensor with Id ${sensorId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };
@@ -245,7 +245,7 @@ export async function deleteSensorHandlerAsync(
     deleteSensorResponse = {
       statusCode: 200,
       content: {
-        data: "Sensor deleted successfully."
+        data: "Sensor deleted successfully.",
       },
       ...response.locals["defaultProperties"],
     };

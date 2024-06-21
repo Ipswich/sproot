@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-
 import { assert } from "chai";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import {
@@ -21,7 +20,7 @@ describe("SensorHandlers.ts tests", () => {
     sandbox.restore();
   });
 
-  describe("getSensorDataHandler", () => {
+  describe("getSensoraHandler", () => {
     const sensorList = sinon.createStubInstance(SensorList);
     const sensorData = {
       1: {
@@ -54,13 +53,14 @@ describe("SensorHandlers.ts tests", () => {
       },
     } as unknown as Response;
 
-    it("should return a 200 and one sensor", async () => {
+    it("should return a 200 and one sensor", () => {
       const mockRequest = {
         app: {
           get: (_dependency: string) => sensorList,
         },
         params: { id: 1 },
       } as unknown as Request;
+
       const success = getSensorHandler(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -69,7 +69,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, [sensorData[1]]);
     });
 
-    it("should return a 200 and all of the sensors", async () => {
+    it("should return a 200 and all of the sensors", () => {
       const mockRequest = {
         app: {
           get: (_dependency: string) => sensorList,
@@ -88,7 +88,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, Object.values(sensorData));
     });
 
-    it("should return a 404 and an error", async () => {
+    it("should return a 404 and an error", () => {
       const mockRequest = {
         app: {
           get: (_dependency: string) => sensorList,
@@ -102,7 +102,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
-      assert.equal(error.error["details"].at(0), "Sensor with ID -1 not found.");
+      assert.equal(error.error["details"].at(0), "Sensor with Id -1 not found.");
     });
   });
 
@@ -278,7 +278,10 @@ describe("SensorHandlers.ts tests", () => {
         body: updatedSensor,
       } as unknown as Request;
 
-      const success = (await updateSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      const success = (await updateSensorHandlerAsync(
+        mockRequest,
+        mockResponse,
+      )) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.deepEqual(success.content?.data, updatedSensor[1]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -360,7 +363,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
-      assert.deepEqual(error.error["details"], ["Sensor with ID -1 not found."]);
+      assert.deepEqual(error.error["details"], ["Sensor with Id -1 not found."]);
       assert.isTrue(sprootDB.updateSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
@@ -457,7 +460,10 @@ describe("SensorHandlers.ts tests", () => {
         params: { id: 1 },
       } as unknown as Request;
 
-      const success = (await deleteSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      const success = (await deleteSensorHandlerAsync(
+        mockRequest,
+        mockResponse,
+      )) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.content?.data, "Sensor deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -537,7 +543,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
-      assert.deepEqual(error.error["details"], ["Sensor with ID -1 not found."]);
+      assert.deepEqual(error.error["details"], ["Sensor with Id -1 not found."]);
       assert.isTrue(sprootDB.deleteSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });

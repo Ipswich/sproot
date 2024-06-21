@@ -9,6 +9,7 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { OutputBase } from "@sproot/sproot-server/src/outputs/base/OutputBase";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ControlMode } from "@sproot/outputs/IOutputBase";
 
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
@@ -107,9 +108,11 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute("DELETE FROM outputs WHERE id = ?", [id]);
   }
 
-  async addOutputStateAsync(
-    output: OutputBase | { id: number; value: number; controlMode: any },
-  ): Promise<void> {
+  async addOutputStateAsync(output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void> {
     await this.#connection.execute(
       "INSERT INTO output_data (output_id, value, controlMode, logTime) VALUES (?, ?, ?, ?)",
       [
