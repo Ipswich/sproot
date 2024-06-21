@@ -587,6 +587,8 @@ describe("SensorHandlers.ts tests", () => {
         "Failed to delete sensor from database.",
         "DB Error",
       ]);
+      assert.isTrue(sprootDB.deleteSensorAsync.calledOnce);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
   });
 });

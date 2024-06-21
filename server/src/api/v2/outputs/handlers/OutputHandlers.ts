@@ -133,3 +133,81 @@ export async function addOutputHandlerAsync(
     return addOutputResponse;
   }
 }
+/**
+ * Possible statusCodes: 200, 400, 404, 503
+ * @param request
+ * @param response
+ * @returns
+ */
+export async function updateOutputHandlerAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
+  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const outputList = request.app.get("outputList") as OutputList;
+  let updateOutputResponse: SuccessResponse | ErrorResponse;
+
+  const outputId = parseInt(request.params["id"] ?? "");
+  if (isNaN(outputId)) {
+    updateOutputResponse = {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: ["Invalid output Id."],
+      },
+      ...response.locals["defaultProperties"],
+    };
+
+    return updateOutputResponse;
+  }
+
+  const outputData = outputList.outputData[outputId] as SDBOutput;
+
+  if (!outputData) {
+    updateOutputResponse = {
+      statusCode: 404,
+      error: {
+        name: "Not Found",
+        url: request.originalUrl,
+        details: [`Output with Id ${outputId} not found.`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+
+    return updateOutputResponse;
+  }
+
+  outputData.model = request.body["model"] ?? outputData.model;
+  outputData.address = request.body["address"] ?? outputData.address;
+  outputData.name = request.body["name"] ?? outputData.name;
+  outputData.pin = request.body["pin"] ?? outputData.pin;
+  outputData.isPwm = request.body["isPwm"] ?? outputData.isPwm;
+  outputData.isInvertedPwm = request.body["isInvertedPwm"] ?? outputData.isInvertedPwm;
+  outputData.color = request.body["color"] ?? outputData.color;
+
+  try {
+    await sprootDB.updateOutputAsync(outputData);
+    await outputList.initializeOrRegenerateAsync();
+  } catch (error: any) {
+    updateOutputResponse = {
+      statusCode: 503,
+      error: {
+        name: "Service Unreachable",
+        url: request.originalUrl,
+        details: ["Failed to update output in database.", error.message],
+      },
+      ...response.locals["defaultProperties"],
+    };
+    return updateOutputResponse;
+  }
+
+  updateOutputResponse = {
+    statusCode: 200,
+    content: {
+      data: outputData,
+    },
+    ...response.locals["defaultProperties"],
+  };
+  return updateOutputResponse;
+}

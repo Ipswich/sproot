@@ -207,7 +207,122 @@ paths:
                           details:
                             items:
                               example: "Output with Id -1 not found."
-          
+    patch:
+      tags:
+        - "Outputs"
+      summary: Update an output by Id.
+      description: >
+        Updates an output with the given Id. This operation changes only the fields provided.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "PCA9685"
+                model:
+                  type: string
+                  example: "PCA9685"
+                address:
+                  type: string
+                  example: "0x40"
+                pin:
+                  type: number
+                  example: 0
+                isPwm:
+                  type: boolean
+                  example: true
+                isInvertedPwm:
+                  type: boolean
+                  example: false
+                color:
+                  type: string
+                  example: "#ff0000"
+      responses:
+        200:
+          description: "Output updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBOutput"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/outputs/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update output in database."
+                                - "Database connection failed."
 
 
   /api/v2/sensors:

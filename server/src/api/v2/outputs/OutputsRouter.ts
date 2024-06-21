@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import supportedModelsHandler from "./handlers/SupportedModelsHandler";
-import { addOutputHandlerAsync, getOutputHandler } from "./handlers/OutputHandlers";
+import { addOutputHandlerAsync, getOutputHandler, updateOutputHandlerAsync } from "./handlers/OutputHandlers";
 
 const router = express.Router();
 
@@ -27,6 +27,13 @@ router.get("/:id", (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   const response = await addOutputHandlerAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.patch("/:id", async (req: Request, res: Response) => {
+  const response = await updateOutputHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
