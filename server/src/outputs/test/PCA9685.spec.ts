@@ -11,17 +11,16 @@ import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
-const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   it("should create and delete PCA9685 outputs", async function () {
-    sandbox.createStubInstance(Pca9685Driver);
-    sandbox
+    sinon.createStubInstance(Pca9685Driver);
+    sinon
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
@@ -84,8 +83,8 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should return output data (no functions)", function () {
-    sandbox.createStubInstance(Pca9685Driver);
-    sandbox
+    sinon.createStubInstance(Pca9685Driver);
+    sinon
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
@@ -110,14 +109,14 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should update and apply states with respect to control mode", function () {
-    sandbox
+    sinon
       .stub(winston, "createLogger")
       .callsFake(
         () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
       );
     const logger = winston.createLogger();
-    sandbox.createStubInstance(Pca9685Driver);
-    const setDutyCycleStub = sandbox.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
+    sinon.createStubInstance(Pca9685Driver);
+    const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     pca9685.createOutput({
       id: 1,

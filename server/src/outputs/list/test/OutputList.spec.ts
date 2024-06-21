@@ -7,18 +7,17 @@ import Pca9685Driver from "pca9685";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
 describe("OutputList.ts tests", function () {
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
   describe("initializeOrRegnerateAsync", function () {
     it("should create, update, and delete outputs.", async function () {
-      sandbox.createStubInstance(Pca9685Driver);
+      sinon.createStubInstance(Pca9685Driver);
 
-      const getOutputsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      const getOutputsAsyncStub = sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
         {
           id: 1,
           model: "pca9685",
@@ -57,7 +56,7 @@ describe("OutputList.ts tests", function () {
           isInvertedPwm: true,
         } as SDBOutput,
       ]);
-      sandbox.stub(winston, "createLogger").callsFake(
+      sinon.stub(winston, "createLogger").callsFake(
         () =>
           ({
             info: () => {},
@@ -99,9 +98,9 @@ describe("OutputList.ts tests", function () {
 
   describe("outputData", function () {
     it("should return output data (no functions)", async function () {
-      sandbox.createStubInstance(Pca9685Driver);
+      sinon.createStubInstance(Pca9685Driver);
 
-      sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
         {
           id: 1,
           model: "pca9685",
@@ -112,7 +111,7 @@ describe("OutputList.ts tests", function () {
           isInvertedPwm: false,
         } as SDBOutput,
       ]);
-      sandbox.stub(winston, "createLogger").callsFake(
+      sinon.stub(winston, "createLogger").callsFake(
         () =>
           ({
             info: () => {},
@@ -136,10 +135,10 @@ describe("OutputList.ts tests", function () {
 
   describe("dispose", function () {
     it("should dispose of all outputs", async function () {
-      sandbox.createStubInstance(Pca9685Driver);
+      sinon.createStubInstance(Pca9685Driver);
 
-      sandbox.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
-      sandbox.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      sinon.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
+      sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
         {
           id: 1,
           model: "pca9685",
@@ -179,7 +178,7 @@ describe("OutputList.ts tests", function () {
           isInvertedPwm: true,
         } as SDBOutput,
       ]);
-      sandbox.stub(winston, "createLogger").callsFake(
+      sinon.stub(winston, "createLogger").callsFake(
         () =>
           ({
             info: () => {},

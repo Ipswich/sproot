@@ -5,20 +5,11 @@ import { assert } from "chai";
 import { OutputCache } from "../OutputCache";
 import { OutputChartData } from "../OutputChartData";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import sinon from "sinon";
 import winston from "winston";
-const sandbox = sinon.createSandbox();
 
 describe("OutputChartData.ts tests", function () {
   const mockSprootDB = new MockSprootDB();
   let logger: winston.Logger;
-
-  beforeEach(() => {});
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe("constructor", function () {
     it("should create a new OutputChartData object with default values", function () {
       const outputChartData5 = new OutputChartData(3, 5);

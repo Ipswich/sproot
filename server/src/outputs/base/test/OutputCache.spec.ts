@@ -6,13 +6,12 @@ import { OutputCache } from "../OutputCache";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
-const sandbox = sinon.createSandbox();
 describe("OutputCache.ts", function () {
   const mockSprootDB = new MockSprootDB();
   let logger: winston.Logger;
 
   beforeEach(() => {
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -24,7 +23,7 @@ describe("OutputCache.ts", function () {
   });
 
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   describe("loadCacheFromDatabaseAsync", function () {

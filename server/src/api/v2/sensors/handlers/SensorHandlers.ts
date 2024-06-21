@@ -63,7 +63,7 @@ export async function addSensorHandlerAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get("sprootDB") as ISprootDB;
   const sensorList = request.app.get("sensorList") as SensorList;
-  let sensorDataResponse: SuccessResponse | ErrorResponse;
+  let addSensorResponse: SuccessResponse | ErrorResponse;
 
   const newSensor = {
     name: request.body["name"],
@@ -73,18 +73,18 @@ export async function addSensorHandlerAsync(
   } as SDBSensor;
 
   const missingFields: Array<string> = [];
-  if (!newSensor.name) {
+  if (newSensor.name == undefined || newSensor.name == null) {
     missingFields.push("Missing required field: name");
   }
-  if (!newSensor.model) {
+  if (newSensor.model == undefined || newSensor.name == null) {
     missingFields.push("Missing required field: model");
   }
-  if (!newSensor.address) {
+  if (newSensor.address == undefined || newSensor.name == null) {
     missingFields.push("Missing required field: address");
   }
 
   if (missingFields.length > 0) {
-    sensorDataResponse = {
+    addSensorResponse = {
       statusCode: 400,
       error: {
         name: "Bad Request",
@@ -93,14 +93,14 @@ export async function addSensorHandlerAsync(
       },
       ...response.locals["defaultProperties"],
     };
-    return sensorDataResponse;
+    return addSensorResponse;
   }
 
   try {
     await sprootDB.addSensorAsync(newSensor);
     await sensorList.initializeOrRegenerateAsync();
 
-    sensorDataResponse = {
+    addSensorResponse = {
       statusCode: 201,
       content: {
         data: newSensor,
@@ -108,7 +108,7 @@ export async function addSensorHandlerAsync(
       ...response.locals["defaultProperties"],
     };
   } catch (error: any) {
-    sensorDataResponse = {
+    addSensorResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
@@ -118,7 +118,7 @@ export async function addSensorHandlerAsync(
       ...response.locals["defaultProperties"],
     };
   }
-  return sensorDataResponse;
+  return addSensorResponse;
 }
 
 /**

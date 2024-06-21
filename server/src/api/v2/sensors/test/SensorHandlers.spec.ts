@@ -13,15 +13,9 @@ import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
 
-const sandbox = sinon.createSandbox();
-
 describe("SensorHandlers.ts tests", () => {
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  describe("getSensoraHandler", () => {
-    const sensorList = sinon.createStubInstance(SensorList);
+  describe("getSensorsHandler", () => {
+    let sensorList: sinon.SinonStubbedInstance<SensorList>;
     const sensorData = {
       1: {
         id: 1,
@@ -42,8 +36,6 @@ describe("SensorHandlers.ts tests", () => {
         units: { temperature: "°C" },
       } as SensorBase,
     };
-    sinon.stub(sensorList, "sensorData").value(sensorData);
-
     const mockResponse = {
       locals: {
         defaultProperties: {
@@ -52,6 +44,13 @@ describe("SensorHandlers.ts tests", () => {
         },
       },
     } as unknown as Response;
+    beforeEach(() => {
+      sensorList = sinon.createStubInstance(SensorList);
+      sinon.stub(sensorList, "sensorData").value(sensorData);
+    });
+    afterEach(() => {
+      sinon.restore();
+    });
 
     it("should return a 200 and one sensor", () => {
       const mockRequest = {
@@ -152,6 +151,7 @@ describe("SensorHandlers.ts tests", () => {
       } as unknown as Request;
 
       const success = (await addSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+
       assert.equal(success.statusCode, 201);
       assert.deepEqual(success.content?.data, newSensor);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);

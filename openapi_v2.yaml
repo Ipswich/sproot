@@ -82,6 +82,79 @@ paths:
                           data:
                             items:
                               $ref: "#/components/schemas/OutputBase"
+    post:
+      tags:
+        - "Outputs"
+      summary: Add a new output.
+      description: >
+        Adds a new output to the service, and regenerates the list of outputs. Returns the information
+        used to create the output.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBOutput"
+      responses:
+        201:
+          description: "Output created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBOutput"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs"
+                          details:
+                            example:
+                              - "Missing required field: model"
+                              - "Missing required field: address"
+                              - "Missing required field: name"
+                              - "Missing required field: pin"
+                              - "Missing required field: isPwm"
+                              - "Missing required field: isInvertedPwm"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/outputs"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add output to database."
+                                - "Database connection failed."
     
   /api/v2/outputs/{id}:
     get:
@@ -115,7 +188,6 @@ paths:
                           data:
                             items:
                               $ref: "#/components/schemas/OutputBase"
-
         404:
           description: "Output not found"
           content:
@@ -135,6 +207,7 @@ paths:
                           details:
                             items:
                               example: "Output with Id -1 not found."
+          
 
 
   /api/v2/sensors:
@@ -672,18 +745,6 @@ components:
                     logTime:
                       type: string
                       example: "2021-01-01T00:00:00.000Z"
-
-        
-    SDBOutputState:
-      description: >
-        An output state object that is stored in the database. Contains details about the current state
-        of the output, including the current controller, value, and when that value was logged.
-      type: object
-      required:
-        - "outputId"
-        - "state"
-
-              
 
         
     SDBSensor:

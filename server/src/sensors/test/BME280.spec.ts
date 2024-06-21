@@ -8,14 +8,12 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
 describe("BME280.ts tests", function () {
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
-
   it("should initialize a BME280 sensor", async () => {
     const mockBME280Data = {
       id: 1,
@@ -23,7 +21,7 @@ describe("BME280.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
-    sandbox.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,
@@ -61,9 +59,9 @@ describe("BME280.ts tests", function () {
         logTime: new Date().toISOString(),
       } as SDBReading,
     ]);
-    sandbox.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
+    sinon.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -108,7 +106,7 @@ describe("BME280.ts tests", function () {
       humidity: 45.6,
       pressure: 1013.2,
     };
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -117,9 +115,9 @@ describe("BME280.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    const readStub = sandbox.stub().resolves(mockReading as bme280.data);
-    const closeStub = sandbox.stub().resolves();
-    sandbox.stub(bme280, "open").resolves({
+    const readStub = sinon.stub().resolves(mockReading as bme280.data);
+    const closeStub = sinon.stub().resolves();
+    sinon.stub(bme280, "open").resolves({
       read: readStub as Bme280["read"],
       close: closeStub as Bme280["close"],
     } as Bme280); // Don't create a real sensor - needs I2C bus

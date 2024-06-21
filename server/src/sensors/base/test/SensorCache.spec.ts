@@ -6,14 +6,13 @@ import * as sinon from "sinon";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
 import { SensorCache } from "../SensorCache";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
-const sandbox = sinon.createSandbox();
 
 describe("SensorCache.ts tests", function () {
   const mockSprootDB = new MockSprootDB();
   let logger: winston.Logger;
 
   beforeEach(() => {
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -25,7 +24,7 @@ describe("SensorCache.ts tests", function () {
   });
 
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   describe("loadCacheFromDatabaseAsync", function () {

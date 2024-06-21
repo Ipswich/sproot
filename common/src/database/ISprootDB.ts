@@ -25,9 +25,11 @@ interface ISprootDB {
   addOutputAsync(output: SDBOutput): Promise<void>;
   updateOutputAsync(output: SDBOutput): Promise<void>;
   deleteOutputAsync(id: number): Promise<void>;
-  addOutputStateAsync(
-    output: { id: number; value: number; controlMode: ControlMode },
-  ): Promise<void>;
+  addOutputStateAsync(output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void>;
   getOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
@@ -49,7 +51,11 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async addOutputStateAsync(_output: { id: number; value: number; controlMode: ControlMode }): Promise<void> {
+  async addOutputStateAsync(_output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void> {
     return;
   }
 

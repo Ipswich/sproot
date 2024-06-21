@@ -1,17 +1,9 @@
 import { assert } from "chai";
-import * as sinon from "sinon";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
 import { SensorListChartData } from "../SensorListChartData";
-const sandbox = sinon.createSandbox();
 
 describe("SensorListChartData.ts tests", function () {
-  beforeEach(() => {});
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe("constructor", function () {
     it("should create a new SensorListChartData object with default values", function () {
       const sensorChartData = new SensorListChartData(2, 5);

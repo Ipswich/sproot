@@ -8,14 +8,13 @@ import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
 import { SensorCache } from "../SensorCache";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
-const sandbox = sinon.createSandbox();
 
 describe("SensorChartData.ts tests", function () {
   const mockSprootDB = new MockSprootDB();
   let logger: winston.Logger;
 
   beforeEach(() => {
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -27,7 +26,7 @@ describe("SensorChartData.ts tests", function () {
   });
 
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   describe("constructor", function () {

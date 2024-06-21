@@ -2,22 +2,17 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { getOutputHandler } from "../handlers/OutputHandlers";
+import { addOutputHandlerAsync, getOutputHandler } from "../handlers/OutputHandlers";
 
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { OutputBase } from "../../../../outputs/base/OutputBase";
 
-const sandbox = sinon.createSandbox();
-
 describe("OutputHandlers.ts tests", () => {
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe("getOutputHandler", () => {
-    const outputList = sinon.createStubInstance(OutputList);
+    let outputList: sinon.SinonStubbedInstance<OutputList>;
     const outputData = {
       1: {
         id: 1,
@@ -46,8 +41,6 @@ describe("OutputHandlers.ts tests", () => {
         },
       } as OutputBase,
     };
-    sinon.stub(outputList, "outputData").value(outputData);
-
     const mockResponse = {
       locals: {
         defaultProperties: {
@@ -56,6 +49,14 @@ describe("OutputHandlers.ts tests", () => {
         },
       },
     } as unknown as Response;
+
+    beforeEach(() => {
+      outputList = sinon.createStubInstance(OutputList);
+      sinon.stub(outputList, "outputData").value(outputData);
+    });
+    afterEach(() => {
+      sinon.restore();
+    });
 
     it("should return a 200 and one output", () => {
       const mockRequest = {
@@ -109,6 +110,64 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
       assert.equal(error.error["details"].at(0), "Output with Id -1 not found.");
+    });
+  });
+
+  describe("addOutputHandlerAsync", () => {
+    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
+    let sensorList: sinon.SinonStubbedInstance<OutputList>;
+    beforeEach(() => {
+      sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.addSensorAsync.resolves();
+      sensorList = sinon.createStubInstance(OutputList);
+      sensorList.initializeOrRegenerateAsync.resolves();
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    const mockResponse = {
+      locals: {
+        defaultProperties: {
+          timestamp: new Date().toISOString(),
+          requestId: "1234",
+        },
+      },
+    } as unknown as Response;
+
+    it("should return a 201 and add a new output", async () => {
+      const newOutput = {
+        model: "pca9685",
+        address: "0x40",
+        name: "test output",
+        pin: 0,
+        isPwm: true,
+        isInvertedPwm: true,
+        color: "#FF0000",
+      } as SDBOutput;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return sensorList;
+            }
+          },
+        },
+        body: newOutput,
+      } as unknown as Request;
+
+      const success = (await addOutputHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, newOutput);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.isTrue(sprootDB.addOutputAsync.calledOnce);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.calledOnce);
     });
   });
 });
