@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import supportedModelsHandler from "./handlers/SupportedModelsHandler";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
+import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
 
 const router = express.Router();
 
@@ -41,6 +42,20 @@ router.patch("/:id", async (req: Request, res: Response) => {
 
 router.delete("/:id", async (req: Request, res: Response) => {
   const response = await deleteAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.put("/:id/control-mode", (req: Request, res: Response) => {
+  const response = setControlMode(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.put("/:id/manual-state", (req: Request, res: Response) => {
+  const response = setManualState(req, res);
 
   res.status(response.statusCode).json(response);
   return;

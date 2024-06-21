@@ -5,7 +5,7 @@ import ModelList from "../../../../outputs/ModelList";
 import { assert } from "chai";
 
 describe("SupportedModelsHandler.ts tests", () => {
-  it("should return an array of supported models", () => {
+  it("should return a 200 and an array of supported models", () => {
     const mockResponse = {
       locals: {
         defaultProperties: {

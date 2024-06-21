@@ -413,6 +413,167 @@ paths:
                                 - "Failed to delete output from database."
                                 - "Database connection failed."
 
+  /api/v2/outputs/{id}/control-mode:
+    put:
+      tags:
+        - "Output State"
+      summary: Set control mode for an output.
+      description: >
+        Sets the control mode for the output with the given Id. This operation changes the control mode
+        for the output.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                controlMode:
+                  type: string
+                  example: "manual"
+      responses:
+        200:
+          description: "Control mode set"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              - "Control mode successfully updated."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string/control-mode"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1/control-mode"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+
+  /api/v2/outputs/{id}/manual-state:
+    put:
+      tags:
+        - "Output State"
+      summary: Set manual state for an output.
+      description: >
+        Sets the manual state for the output with the given Id. 
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value:
+                  type: number
+                  example: 50
+      responses:
+        200:
+          description: "Manual state set"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              - "Manual state successfully updated."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string/set-manual-state"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1/set-manual-state"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+
   /api/v2/sensors:
     get:
       tags:
@@ -931,24 +1092,30 @@ components:
                   type: string
                   example: "manual"
                 manual:
-                  type: object
-                  properties:
-                    value:
-                      type: number
-                      example: 50
-                    logTime:
-                      type: string
-                      example: "2021-01-01T00:00:00.000Z"
+                  allOf:
+                    - $ref: "#/components/schemas/SDBOutputState"
                 schedule:
-                  type: object
-                  properties:
-                    value:
-                      type: number
-                      example: 0
-                    logTime:
-                      type: string
-                      example: "2021-01-01T00:00:00.000Z"
+                  allOf:
+                    - $ref: "#/components/schemas/SDBOutputState"
 
+    SDBOutputState:
+      description: >
+        An output state object that is stored in the database. Contains all the information needed to 
+        define an output's state, including control mode, value, and log time.
+      type: object
+      required:
+        - value
+        - logTime
+      properties:
+        controlMode:
+          type: string
+          example: "manual"
+        value:
+          type: number
+          example: 50
+        logTime:
+          type: string
+          example: "2021-01-01T00:00:00.000Z"
         
     SDBSensor:
       description: >

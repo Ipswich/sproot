@@ -169,6 +169,83 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(sprootDB.addOutputAsync.calledOnce);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.calledOnce);
     });
+
+    it("should return a 400 and details for each missing required field", async () => {
+      const newOutput = {} as SDBOutput;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return sensorList;
+            }
+          },
+        },
+        originalUrl: "/api/v2/outputs",
+        params: { id: "string" },
+        body: newOutput,
+      } as unknown as Request;
+
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/outputs");
+      assert.deepEqual(error.error["details"], [
+        "Missing required field: model",
+        "Missing required field: address",
+        "Missing required field: name",
+        "Missing required field: pin",
+        "Missing required field: isPwm",
+        "Missing required field: isInvertedPwm",
+      ]);
+      assert.isTrue(sprootDB.addOutputAsync.notCalled);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+    });
+
+    it("should return a 503 and an error", async () => {
+      const newOutput = {
+        model: "pca9685",
+        address: "0x40",
+        name: "test output",
+        pin: 0,
+        isPwm: true,
+        isInvertedPwm: true,
+        color: "#FF0000",
+      } as SDBOutput;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return sensorList;
+            }
+          },
+        },
+        originalUrl: "/api/v2/outputs",
+        params: { id: 1 },
+        body: newOutput,
+      } as unknown as Request;
+
+      sprootDB.addOutputAsync.rejects(new Error("DB Error"));
+
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 503);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Service Unreachable");
+      assert.equal(error.error.url, "/api/v2/outputs");
+      assert.deepEqual(error.error["details"], ["Failed to add output to database.", "DB Error"]);
+      assert.isTrue(sprootDB.addOutputAsync.calledOnce);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+    });
   });
 
   describe("updateAsync", () => {

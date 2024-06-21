@@ -123,7 +123,7 @@ export async function addAsync(
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: ["Failed to add output to database", error.message],
+        details: ["Failed to add output to database.", error.message],
       },
       ...response.locals["defaultProperties"],
     };
