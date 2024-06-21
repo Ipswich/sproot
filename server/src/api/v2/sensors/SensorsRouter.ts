@@ -1,10 +1,5 @@
 import express, { Request, Response } from "express";
-import {
-  getSensorHandler,
-  addSensorHandlerAsync,
-  updateSensorHandlerAsync,
-  deleteSensorHandlerAsync,
-} from "./handlers/SensorHandlers";
+import { addAsync, deleteAsync, get, updateAsync } from "./handlers/SensorHandlers";
 import supportedModelsHandler from "./handlers/SupportedModelsHandler";
 
 const router = express.Router();
@@ -17,35 +12,35 @@ router.get("/supported-models", (_req: Request, res: Response) => {
 });
 
 router.get("/", (req: Request, res: Response) => {
-  const response = getSensorHandler(req, res);
+  const response = get(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
 router.get("/:id", (req: Request, res: Response) => {
-  const response = getSensorHandler(req, res);
+  const response = get(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  const response = await addSensorHandlerAsync(req, res);
+  const response = await addAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
 router.patch("/:id", async (req: Request, res: Response) => {
-  const response = await updateSensorHandlerAsync(req, res);
+  const response = await updateAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
 router.delete("/:id", async (req: Request, res: Response) => {
-  const response = await deleteSensorHandlerAsync(req, res);
+  const response = await deleteAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

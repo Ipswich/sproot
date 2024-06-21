@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import supportedModelsHandler from "./handlers/SupportedModelsHandler";
-import { addOutputHandlerAsync, getOutputHandler, updateOutputHandlerAsync } from "./handlers/OutputHandlers";
+import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 
 const router = express.Router();
 
@@ -12,28 +12,35 @@ router.get("/supported-models", (_req: Request, res: Response) => {
 });
 
 router.get("/", (req: Request, res: Response) => {
-  const response = getOutputHandler(req, res);
+  const response = get(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
 router.get("/:id", (req: Request, res: Response) => {
-  const response = getOutputHandler(req, res);
+  const response = get(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  const response = await addOutputHandlerAsync(req, res);
+  const response = await addAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
 router.patch("/:id", async (req: Request, res: Response) => {
-  const response = await updateOutputHandlerAsync(req, res);
+  const response = await updateAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.delete("/:id", async (req: Request, res: Response) => {
+  const response = await deleteAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

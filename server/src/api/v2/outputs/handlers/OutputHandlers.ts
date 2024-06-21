@@ -12,10 +12,7 @@ import { Request, Response } from "express";
  * @param response
  * @returns
  */
-export function getOutputHandler(
-  request: Request,
-  response: Response,
-): SuccessResponse | ErrorResponse {
+export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
   const outputList = request.app.get("outputList") as OutputList;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -58,7 +55,7 @@ export function getOutputHandler(
  * @param response
  * @returns
  */
-export async function addOutputHandlerAsync(
+export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -139,7 +136,7 @@ export async function addOutputHandlerAsync(
  * @param response
  * @returns
  */
-export async function updateOutputHandlerAsync(
+export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -210,4 +207,68 @@ export async function updateOutputHandlerAsync(
     ...response.locals["defaultProperties"],
   };
   return updateOutputResponse;
+}
+
+export async function deleteAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
+  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const outputList = request.app.get("outputList") as OutputList;
+  let deleteOutputResponse: SuccessResponse | ErrorResponse;
+
+  const outputId = parseInt(request.params["id"] ?? "");
+  if (isNaN(outputId)) {
+    deleteOutputResponse = {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: ["Invalid output Id."],
+      },
+      ...response.locals["defaultProperties"],
+    };
+
+    return deleteOutputResponse;
+  }
+
+  const outputData = outputList.outputData[outputId] as SDBOutput;
+
+  if (!outputData) {
+    deleteOutputResponse = {
+      statusCode: 404,
+      error: {
+        name: "Not Found",
+        url: request.originalUrl,
+        details: [`Output with Id ${outputId} not found.`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+
+    return deleteOutputResponse;
+  }
+
+  try {
+    await sprootDB.deleteOutputAsync(outputId);
+    await outputList.initializeOrRegenerateAsync();
+
+    deleteOutputResponse = {
+      statusCode: 200,
+      content: {
+        data: "Output deleted successfully.",
+      },
+      ...response.locals["defaultProperties"],
+    };
+  } catch (error: any) {
+    deleteOutputResponse = {
+      statusCode: 503,
+      error: {
+        name: "Service Unreachable",
+        url: request.originalUrl,
+        details: ["Failed to delete output from database.", error.message],
+      },
+      ...response.locals["defaultProperties"],
+    };
+  }
+  return deleteOutputResponse;
 }

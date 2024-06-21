@@ -2,11 +2,7 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import {
-  addOutputHandlerAsync,
-  getOutputHandler,
-  updateOutputHandlerAsync,
-} from "../handlers/OutputHandlers";
+import { addAsync, deleteAsync, get, updateAsync } from "../handlers/OutputHandlers";
 
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
@@ -15,7 +11,7 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { OutputBase } from "../../../../outputs/base/OutputBase";
 
 describe("OutputHandlers.ts tests", () => {
-  describe("getOutputHandler", () => {
+  describe("get", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     const outputData = {
       1: {
@@ -70,7 +66,7 @@ describe("OutputHandlers.ts tests", () => {
         params: { id: 1 },
       } as unknown as Request;
 
-      const success = getOutputHandler(mockRequest, mockResponse) as SuccessResponse;
+      const success = get(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -86,7 +82,7 @@ describe("OutputHandlers.ts tests", () => {
         params: {},
       } as unknown as Request;
 
-      const success = getOutputHandler(mockRequest, mockResponse) as SuccessResponse;
+      const success = get(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -106,7 +102,7 @@ describe("OutputHandlers.ts tests", () => {
         params: { id: -1 },
       } as unknown as Request;
 
-      const error = getOutputHandler(mockRequest, mockResponse) as ErrorResponse;
+      const error = get(mockRequest, mockResponse) as ErrorResponse;
 
       assert.equal(error.statusCode, 404);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -117,7 +113,7 @@ describe("OutputHandlers.ts tests", () => {
     });
   });
 
-  describe("addOutputHandlerAsync", () => {
+  describe("addAsync", () => {
     let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let sensorList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
@@ -165,7 +161,7 @@ describe("OutputHandlers.ts tests", () => {
         body: newOutput,
       } as unknown as Request;
 
-      const success = (await addOutputHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
       assert.deepEqual(success.content?.data, newOutput);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -175,7 +171,7 @@ describe("OutputHandlers.ts tests", () => {
     });
   });
 
-  describe("updateOutputHandlerAsync", () => {
+  describe("updateAsync", () => {
     let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
@@ -228,10 +224,7 @@ describe("OutputHandlers.ts tests", () => {
         body: updatedOutput,
       } as unknown as Request;
 
-      const success = (await updateOutputHandlerAsync(
-        mockRequest,
-        mockResponse,
-      )) as SuccessResponse;
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.deepEqual(success.content?.data, updatedOutput[1]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -271,7 +264,7 @@ describe("OutputHandlers.ts tests", () => {
         body: updatedOutput,
       } as unknown as Request;
 
-      const error = (await updateOutputHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -313,7 +306,7 @@ describe("OutputHandlers.ts tests", () => {
         body: updatedOutput,
       } as unknown as Request;
 
-      const error = (await updateOutputHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -357,7 +350,7 @@ describe("OutputHandlers.ts tests", () => {
 
       sprootDB.updateOutputAsync.rejects(new Error("DB Error"));
 
-      const error = (await updateOutputHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -368,6 +361,196 @@ describe("OutputHandlers.ts tests", () => {
         "DB Error",
       ]);
       assert.isTrue(sprootDB.updateOutputAsync.calledOnce);
+      assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
+    });
+  });
+
+  describe("deleteAsync", () => {
+    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
+    let outputList: sinon.SinonStubbedInstance<OutputList>;
+    beforeEach(() => {
+      sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.addSensorAsync.resolves();
+      outputList = sinon.createStubInstance(OutputList);
+      outputList.initializeOrRegenerateAsync.resolves();
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    const mockResponse = {
+      locals: {
+        defaultProperties: {
+          timestamp: new Date().toISOString(),
+          requestId: "1234",
+        },
+      },
+    } as unknown as Response;
+
+    it("should return a 200 and delete an existing output", async () => {
+      const deletedOutput = {
+        1: {
+          id: 1,
+          model: "pca9685",
+          address: "0x40",
+          name: "test output",
+          pin: 0,
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(deletedOutput);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        params: { id: 1 },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.deepEqual(success.content?.data, "Output deleted successfully.");
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.isTrue(sprootDB.deleteOutputAsync.calledOnce);
+      assert.isTrue(outputList.initializeOrRegenerateAsync.calledOnce);
+    });
+
+    it("should return a 400 and an error", async () => {
+      const deletedOutput = {
+        1: {
+          id: 1,
+          model: "pca9685",
+          address: "0x40",
+          name: "test output",
+          pin: 0,
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(deletedOutput);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        originalUrl: "/api/v2/outputs",
+        params: { id: "string" },
+      } as unknown as Request;
+
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/outputs");
+      assert.deepEqual(error.error["details"], ["Invalid output Id."]);
+      assert.isTrue(sprootDB.deleteOutputAsync.notCalled);
+      assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
+    });
+
+    it("should return a 404 and an error", async () => {
+      const deletedOutput = {
+        1: {
+          id: 1,
+          model: "pca9685",
+          address: "0x40",
+          name: "test output",
+          pin: 0,
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(deletedOutput);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        originalUrl: "/api/v2/outputs/-1",
+        params: { id: -1 },
+      } as unknown as Request;
+
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 404);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Not Found");
+      assert.equal(error.error.url, "/api/v2/outputs/-1");
+      assert.deepEqual(error.error["details"], ["Output with Id -1 not found."]);
+      assert.isTrue(sprootDB.deleteOutputAsync.notCalled);
+      assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
+    });
+
+    it("should return a 503 and an error", async () => {
+      const deletedOutput = {
+        1: {
+          id: 1,
+          model: "pca9685",
+          address: "0x40",
+          name: "test output",
+          pin: 0,
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(deletedOutput);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        originalUrl: "/api/v2/outputs/1",
+        params: { id: 1 },
+      } as unknown as Request;
+
+      sprootDB.deleteOutputAsync.rejects(new Error("DB Error"));
+
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 503);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Service Unreachable");
+      assert.equal(error.error.url, "/api/v2/outputs/1");
+      assert.deepEqual(error.error["details"], [
+        "Failed to delete output from database.",
+        "DB Error",
+      ]);
+      assert.isTrue(sprootDB.deleteOutputAsync.calledOnce);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
   });

@@ -10,10 +10,7 @@ import { Request, Response } from "express";
  * @param response
  * @returns
  */
-export function getSensorHandler(
-  request: Request,
-  response: Response,
-): SuccessResponse | ErrorResponse {
+export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
   const sensorList = request.app.get("sensorList") as SensorList;
   let getSensorResponse: SuccessResponse | ErrorResponse;
 
@@ -57,7 +54,7 @@ export function getSensorHandler(
  * @param response
  * @returns
  */
-export async function addSensorHandlerAsync(
+export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -127,7 +124,7 @@ export async function addSensorHandlerAsync(
  * @param response
  * @returns
  **/
-export async function updateSensorHandlerAsync(
+export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -202,7 +199,7 @@ export async function updateSensorHandlerAsync(
  * @param response
  * @returns
  */
-export async function deleteSensorHandlerAsync(
+export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {

@@ -1,12 +1,7 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import { SensorList } from "../../../../sensors/list/SensorList";
-import {
-  addSensorHandlerAsync,
-  deleteSensorHandlerAsync,
-  getSensorHandler,
-  updateSensorHandlerAsync,
-} from "../handlers/SensorHandlers";
+import { addAsync, deleteAsync, get, updateAsync } from "../handlers/SensorHandlers";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import sinon from "sinon";
@@ -14,7 +9,7 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
 
 describe("SensorHandlers.ts tests", () => {
-  describe("getSensorsHandler", () => {
+  describe("get", () => {
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     const sensorData = {
       1: {
@@ -60,7 +55,7 @@ describe("SensorHandlers.ts tests", () => {
         params: { id: 1 },
       } as unknown as Request;
 
-      const success = getSensorHandler(mockRequest, mockResponse) as SuccessResponse;
+      const success = get(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -76,7 +71,7 @@ describe("SensorHandlers.ts tests", () => {
         params: {},
       } as unknown as Request;
 
-      const success = getSensorHandler(mockRequest, mockResponse) as SuccessResponse;
+      const success = get(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -95,7 +90,7 @@ describe("SensorHandlers.ts tests", () => {
         originalUrl: "/api/v2/sensors/-1",
         params: { id: "-1" },
       } as unknown as Request;
-      const error = getSensorHandler(mockRequest, mockResponse) as ErrorResponse;
+      const error = get(mockRequest, mockResponse) as ErrorResponse;
       assert.equal(error.statusCode, 404);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -105,7 +100,7 @@ describe("SensorHandlers.ts tests", () => {
     });
   });
 
-  describe("addSensorHandlerAsync", () => {
+  describe("addAsync", () => {
     let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     beforeEach(() => {
@@ -150,7 +145,7 @@ describe("SensorHandlers.ts tests", () => {
         body: newSensor,
       } as unknown as Request;
 
-      const success = (await addSensorHandlerAsync(mockRequest, mockResponse)) as SuccessResponse;
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
 
       assert.equal(success.statusCode, 201);
       assert.deepEqual(success.content?.data, newSensor);
@@ -178,7 +173,7 @@ describe("SensorHandlers.ts tests", () => {
         body: newSensor,
       } as unknown as Request;
 
-      const error = (await addSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -218,7 +213,7 @@ describe("SensorHandlers.ts tests", () => {
 
       sprootDB.addSensorAsync.rejects(new Error("DB Error"));
 
-      const error = (await addSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -228,7 +223,7 @@ describe("SensorHandlers.ts tests", () => {
     });
   });
 
-  describe("updateSensorHandlerAsync", () => {
+  describe("updateAsync", () => {
     let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     beforeEach(() => {
@@ -278,10 +273,7 @@ describe("SensorHandlers.ts tests", () => {
         body: updatedSensor,
       } as unknown as Request;
 
-      const success = (await updateSensorHandlerAsync(
-        mockRequest,
-        mockResponse,
-      )) as SuccessResponse;
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.deepEqual(success.content?.data, updatedSensor[1]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -318,7 +310,7 @@ describe("SensorHandlers.ts tests", () => {
         body: updatedSensor,
       } as unknown as Request;
 
-      const error = (await updateSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -357,7 +349,7 @@ describe("SensorHandlers.ts tests", () => {
         body: updatedSensor,
       } as unknown as Request;
 
-      const error = (await updateSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -398,7 +390,7 @@ describe("SensorHandlers.ts tests", () => {
 
       sprootDB.updateSensorAsync.rejects(new Error("DB Error"));
 
-      const error = (await updateSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -411,7 +403,7 @@ describe("SensorHandlers.ts tests", () => {
     });
   });
 
-  describe("deleteSensorHandlerAsync", () => {
+  describe("deleteAsync", () => {
     let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     beforeEach(() => {
@@ -460,10 +452,7 @@ describe("SensorHandlers.ts tests", () => {
         params: { id: 1 },
       } as unknown as Request;
 
-      const success = (await deleteSensorHandlerAsync(
-        mockRequest,
-        mockResponse,
-      )) as SuccessResponse;
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.content?.data, "Sensor deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -499,7 +488,7 @@ describe("SensorHandlers.ts tests", () => {
         params: { id: "string" },
       } as unknown as Request;
 
-      const error = (await deleteSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -537,7 +526,7 @@ describe("SensorHandlers.ts tests", () => {
         params: { id: -1 },
       } as unknown as Request;
 
-      const error = (await deleteSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -577,7 +566,7 @@ describe("SensorHandlers.ts tests", () => {
 
       sprootDB.deleteSensorAsync.rejects(new Error("DB Error"));
 
-      const error = (await deleteSensorHandlerAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);

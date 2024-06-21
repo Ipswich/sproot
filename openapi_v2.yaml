@@ -323,7 +323,95 @@ paths:
                               example:
                                 - "Failed to update output in database."
                                 - "Database connection failed."
-
+    delete:
+      tags:
+        - "Outputs"
+      summary: Delete an output by id.
+      description: >
+        Deletes an output with the given Id. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Output deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              "Output sucessfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/outputs/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete output from database."
+                                - "Database connection failed."
 
   /api/v2/sensors:
     get:
