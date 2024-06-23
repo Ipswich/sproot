@@ -168,14 +168,14 @@ class PCA9685Output extends OutputBase {
     switch (this.controlMode) {
       case ControlMode.manual:
         this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.manual.value}`,
+          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.manual.value}`,
         );
         this.#setPwm(this.state.manual.value);
         break;
 
       case ControlMode.schedule:
         this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.schedule.value}`,
+          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.schedule.value}`,
         );
         this.#setPwm(this.state.schedule.value);
         break;
