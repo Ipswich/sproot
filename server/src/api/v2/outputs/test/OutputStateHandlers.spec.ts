@@ -31,7 +31,7 @@ describe("OutputStateHandlers.ts tests", () => {
     });
 
     it("should return a 200 and update state", () => {
-      const mockRequest = {
+      let mockRequest = {
         app: {
           get: () => outputList,
         },
@@ -52,14 +52,22 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      const success = setControlMode(mockRequest, mockResponse) as SuccessResponse;
+      let success = setControlMode(mockRequest, mockResponse) as SuccessResponse;
 
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.deepEqual(success.content?.data, ["Control mode successfully updated."]);
-      assert.equal(outputList.updateControlMode.calledOnce, true);
-      assert.equal(outputList.executeOutputState.calledOnce, true);
+
+      mockRequest.body["controlMode"] = ControlMode.schedule;
+      success = setControlMode(mockRequest, mockResponse) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.deepEqual(success.content?.data, ["Control mode successfully updated."]);
+
+      assert.equal(outputList.updateControlMode.calledTwice, true);
+      assert.equal(outputList.executeOutputState.calledTwice, true);
     });
 
     it("should return a 404 and an error", () => {
