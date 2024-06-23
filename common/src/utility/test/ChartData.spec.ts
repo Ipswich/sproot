@@ -4,7 +4,7 @@ import { assert } from "chai";
 import * as sinon from "sinon";
 const sandbox = sinon.createSandbox();
 
-describe("IChartable.ts tests", function () {
+describe("ChartData.ts tests", function () {
   afterEach(() => {
     sandbox.restore();
   });

@@ -4,7 +4,7 @@ import OutputAccordion from "./OutputAccordion";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { useState, useEffect } from "react";
 import { getOutputChartDataAsync, getOutputsAsync } from "../requests";
-import { ChartData } from "@sproot/sproot-common/src/utility/IChartable";
+import { ChartData } from "@sproot/sproot-common/src/utility/ChartData";
 import ChartContainer from "./ChartContainer";
 
 const colors = [
