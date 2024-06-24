@@ -5,7 +5,7 @@ type SDBSensor = RowDataPacket & {
   name: string;
   model: string;
   address: string | null;
-  color?: string;
+  color: string | null;
 };
 
 export type { SDBSensor };

@@ -108,51 +108,50 @@ class OutputList {
     const profiler = this.#logger.startTimer();
     const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
 
+    const promises = [];
     for (const output of outputsFromDatabase) {
       const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
       if (key) {
-        //Update old ones
-        let update = false;
+        //Update if it exists
         if (this.#outputs[key]?.name != output.name) {
-          update = true;
+          outputListChanges = true;
           this.#outputs[key]!.name = output.name;
         }
 
         if (this.#outputs[key]?.isPwm != output.isPwm) {
-          update = true;
+          outputListChanges = true;
           this.#outputs[key]!.isPwm = output.isPwm;
         }
 
         if (this.#outputs[key]?.isInvertedPwm != output.isInvertedPwm) {
-          update = true;
+          outputListChanges = true;
           this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
         }
 
-        if (this.#outputs[key]?.color != output.color /*&& output.color != undefined*/) {
-          update = true;
+        if (output.color != null && this.#outputs[key]?.color != output.color) {
+          outputListChanges = true;
           this.#outputs[key]!.color = output.color;
         }
 
-        if (update) {
+        if (outputListChanges) {
           this.#logger.info(
             `Updating output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
           );
-          outputListChanges = true;
         }
       } else {
-        //Add new ones
-        try {
-          this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
-
-          await this.#createOutputAsync(output);
-          outputListChanges = true;
-        } catch (err) {
-          this.#logger.error(
-            `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
-          );
-        }
+        //Create if it doesn't
+        this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
+        promises.push(
+          this.#createOutputAsync(output).catch((err) =>
+            this.#logger.error(
+              `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
+            ),
+          ),
+        );
+        outputListChanges = true;
       }
     }
+    await Promise.allSettled(promises);
 
     //Remove deleted ones
     const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
@@ -226,12 +225,12 @@ class OutputList {
         newOutput = await this.#PCA9685.createOutput(output);
         break;
       }
-      default: 
-        throw new OutputListError(`Unrecognized output model ${output.model}`);      
+      default:
+        throw new OutputListError(`Unrecognized output model ${output.model}`);
     }
     if (newOutput) {
       if (newOutput.color == undefined) {
-        newOutput.color = DefaultColors[this.#colorIndex];
+        newOutput.color = DefaultColors[this.#colorIndex] ?? "#000000";
         this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
       }
       this.#outputs[output.id] = newOutput;

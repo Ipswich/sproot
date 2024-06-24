@@ -50,9 +50,8 @@ class SensorList {
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, name, model, address, color, lastReading, lastReadingTime, units } = this.#sensors[
-        key
-      ] as ISensorBase;
+      const { id, name, model, address, color, lastReading, lastReadingTime, units } = this
+        .#sensors[key] as ISensorBase;
       for (const readingType in lastReading) {
         lastReading[readingType as ReadingType] = this.#formatReadingForDisplay(
           lastReading[readingType as ReadingType],
@@ -86,11 +85,19 @@ class SensorList {
       if (key) {
         //Update if it exists
         if (this.#sensors[key]!.name !== sensor.name) {
-          this.#logger.info(
-            `Updating sensor {model: ${this.#sensors[key]!.model}, id: ${this.#sensors[key]!.id}}`,
-          );
           this.#sensors[key]!.name = sensor.name;
           sensorListChanges = true;
+        }
+
+        if (sensor.color != null && this.#sensors[key]?.color != sensor.color) {
+          sensorListChanges = true;
+          this.#sensors[key]!.color = sensor.color;
+        }
+
+        if (sensorListChanges) {
+          this.#logger.info(
+            `Updating sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
+          );
         }
       } else {
         //Create if it doesn't
@@ -107,7 +114,7 @@ class SensorList {
     }
     await Promise.allSettled(promises);
 
-    //Delete ones that don't exist
+    //Remove deleted ones
     const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
     for (const key in this.#sensors) {
       if (!sensorIdsFromDatabase.includes(key)) {
@@ -248,7 +255,7 @@ class SensorList {
     }
     if (newSensor) {
       if (newSensor.color == undefined) {
-        newSensor.color = DefaultColors[this.#colorIndex];
+        newSensor.color = DefaultColors[this.#colorIndex] ?? "#000000";
         this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
       }
       this.#sensors[sensor.id] = newSensor;

@@ -14,7 +14,7 @@ export abstract class SensorBase implements ISensorBase {
   address: string | null;
   lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
-  color?: string | undefined;
+  color: string | null;
   sprootDB: ISprootDB;
   logger: winston.Logger;
   readonly units: Record<ReadingType, string>;

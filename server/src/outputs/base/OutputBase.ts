@@ -20,7 +20,7 @@ export abstract class OutputBase implements IOutputBase {
   cache: OutputCache;
   chartData: OutputChartData;
   logger: winston.Logger;
-  color?: string | undefined;
+  color: string | null;
   private readonly chartDataPointInterval: number;
   private readonly initialCacheLookback: number;
 

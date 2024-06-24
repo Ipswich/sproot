@@ -87,7 +87,7 @@ class PCA9685 {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const { id, model, address, name, pin, isPwm, isInvertedPwm, state } = this.#outputs[
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state } = this.#outputs[
         key
       ] as IOutputBase;
       cleanObject[key] = {
@@ -98,6 +98,7 @@ class PCA9685 {
         pin,
         isPwm,
         isInvertedPwm,
+        color,
         state,
       };
     }

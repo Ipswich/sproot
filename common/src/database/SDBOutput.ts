@@ -8,7 +8,7 @@ type SDBOutput = RowDataPacket & {
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
-  color?: string;
+  color: string | null;
 };
 
 export type { SDBOutput };
