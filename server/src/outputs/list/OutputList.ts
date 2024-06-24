@@ -5,22 +5,8 @@ import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
+import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
-
-const COLORS = [
-  "lime",
-  "green",
-  "teal",
-  "cyan",
-  "blue",
-  "indigo",
-  "violet",
-  "grape",
-  "pink",
-  "red",
-  "orange",
-  "yellow",
-];
 
 class OutputList {
   #sprootDB: ISprootDB;
@@ -28,7 +14,7 @@ class OutputList {
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
   chartData: OutputListChartData;
-  colorIndex: number;
+  #colorIndex: number;
   maxCacheSize: number;
   initialCacheLookback: number;
   maxChartDataSize: number;
@@ -42,7 +28,7 @@ class OutputList {
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    this.colorIndex = 0;
+    this.#colorIndex = 0;
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
@@ -68,7 +54,7 @@ class OutputList {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const { id, model, address, name, pin, isPwm, isInvertedPwm, state } = this.#outputs[
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state } = this.#outputs[
         key
       ] as IOutputBase;
       cleanObject[key] = {
@@ -79,6 +65,7 @@ class OutputList {
         pin,
         isPwm,
         isInvertedPwm,
+        color,
         state,
       };
     }
@@ -141,7 +128,7 @@ class OutputList {
           this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
         }
 
-        if (this.#outputs[key]?.color != output.color) {
+        if (this.#outputs[key]?.color != output.color /*&& output.color != undefined*/) {
           update = true;
           this.#outputs[key]!.color = output.color;
         }
@@ -239,14 +226,13 @@ class OutputList {
         newOutput = await this.#PCA9685.createOutput(output);
         break;
       }
-      default: {
-        throw new OutputListError(`Unrecognized output model ${output.model}`);
-      }
+      default: 
+        throw new OutputListError(`Unrecognized output model ${output.model}`);      
     }
     if (newOutput) {
-      if (!newOutput.color) {
-        newOutput.color = COLORS[this.colorIndex];
-        this.colorIndex = (this.colorIndex + 1) % COLORS.length;
+      if (newOutput.color == undefined) {
+        newOutput.color = DefaultColors[this.#colorIndex];
+        this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
       }
       this.#outputs[output.id] = newOutput;
     }

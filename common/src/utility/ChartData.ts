@@ -233,3 +233,18 @@ class DataSeriesStats {
     this.averages = averages;
   }
 }
+
+export const DefaultColors = [
+  "lime",
+  "green",
+  "teal",
+  "cyan",
+  "blue",
+  "indigo",
+  "violet",
+  "grape",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+] as const;

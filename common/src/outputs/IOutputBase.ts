@@ -13,8 +13,8 @@ interface IOutputBase {
   pin: number;
   isPwm: boolean;
   isInvertedPwm: boolean;
-  state: IOutputState;
   color?: string | undefined;
+  state: IOutputState;
 }
 
 type IOutputState = {

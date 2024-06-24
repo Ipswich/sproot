@@ -5,10 +5,10 @@ interface ISensorBase {
   name: string;
   model: string;
   address: string | null;
+  color?: string | undefined;
   lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
   readonly units: Record<ReadingType, string>;
-  color?: string | undefined;
 }
 
 export type { ISensorBase };

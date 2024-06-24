@@ -3,6 +3,7 @@ import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
@@ -18,6 +19,7 @@ class SensorList {
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
   #chartData: SensorListChartData;
+  #colorIndex: number;
 
   constructor(
     sprootDB: ISprootDB,
@@ -27,6 +29,7 @@ class SensorList {
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
+    this.#colorIndex = 0;
     this.#sprootDB = sprootDB;
     this.#maxCacheSize = maxCacheSize;
     this.#initialCacheLookback = initialCacheLookback;
@@ -47,7 +50,7 @@ class SensorList {
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, name, model, address, lastReading, lastReadingTime, units } = this.#sensors[
+      const { id, name, model, address, color, lastReading, lastReadingTime, units } = this.#sensors[
         key
       ] as ISensorBase;
       for (const readingType in lastReading) {
@@ -60,6 +63,7 @@ class SensorList {
         name,
         model,
         address,
+        color,
         lastReading,
         lastReadingTime,
         units,
@@ -223,9 +227,6 @@ class SensorList {
           this.#chartDataPointInterval,
           this.#logger,
         ).initAsync();
-        if (newSensor) {
-          this.#sensors[sensor.id] = newSensor;
-        }
         break;
 
       case "ds18b20":
@@ -241,14 +242,16 @@ class SensorList {
           this.#chartDataPointInterval,
           this.#logger,
         ).initAsync();
-        newSensor;
-        if (newSensor) {
-          this.#sensors[sensor.id] = newSensor;
-        }
         break;
-
       default:
         throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);
+    }
+    if (newSensor) {
+      if (newSensor.color == undefined) {
+        newSensor.color = DefaultColors[this.#colorIndex];
+        this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
+      }
+      this.#sensors[sensor.id] = newSensor;
     }
   }
 
