@@ -34,32 +34,6 @@ paths:
                           data:
                             example: "pong"
 
-  /api/v2/outputs/supported-models:
-    get:
-      tags:
-        - "Outputs"
-      summary: Get supported models.
-      description: Returns a list of supported output models. 
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            allOf:
-                              - $ref: "#/components/schemas/SupportedModels"
-                            example:
-                              - "PCA9685"
-                            
-
   /api/v2/outputs:
     get:
       tags:
@@ -84,7 +58,6 @@ paths:
                           data:
                             items:
                               $ref: "#/components/schemas/OutputBase"
-
     post:
       tags:
         - "Outputs"
@@ -158,7 +131,7 @@ paths:
                               example:
                                 - "Failed to add output to database."
                                 - "Database connection failed."
-    
+
   /api/v2/outputs/{id}:
     get:
       tags:
@@ -415,6 +388,81 @@ paths:
                               example:
                                 - "Failed to delete output from database."
                                 - "Database connection failed."
+  /api/v2/outputs/chart-data:
+    get:
+      tags:
+        - "Outputs"
+      summary: "Get all chart data."
+      parameters:
+        - name: "latest"
+          in: "query"
+          description: "Return only the latest data point."
+          schema:
+            type: string
+          example: "true"
+      description: "Returns chart data for all ouputs."
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              data:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/DataPoint"
+                                example:
+                                  - name: "1/24 12:00 am"
+                                    output1: "0"
+                                    output2: "50"
+                                    units: "%"
+                                  - name: "1/24 12:05 am"
+                                    output1: "0"
+                                    output2: "50"
+                                    units: "%"
+                              series:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/ChartSeries"
+                                example:
+                                  - name: "output1"
+                                    color: "lime"
+                                  - name: "output2"
+                                    color: "blue"
+  /api/v2/outputs/supported-models:
+    get:
+      tags:
+        - "Outputs"
+      summary: Get supported models.
+      description: Returns a list of supported output models. 
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - $ref: "#/components/schemas/SupportedModels"
+                            example:
+                              - "PCA9685"
 
   /api/v2/outputs/{id}/control-mode:
     put:
@@ -922,20 +970,76 @@ paths:
                                 - "Failed to delete sensor from database."
                                 - "Database connection failed."
 
-  # /api/v2/sensors/chart-data:
-  #   get:
-  #     tags:
-  #       - "Sensors"
-  #       - "Charts"
-  #     summary: "Get chart data"
-  #     description: "Returns chart data for all sensors."
-  #     responses:
-  #       200:
-  #         description: "Success"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: "#/components/schemas/SuccessResponse"
+  /api/v2/sensors/chart-data:
+    get:
+      tags:
+        - "Sensors"
+      summary: "Get all chart data."
+      description: "Returns chart data for all sensors."
+      parameters:
+        - in: query
+          name: readingType
+          description: "Reading type"
+          schema:
+            type: string
+          example: "temperature"
+        - name: "latest"
+          in: "query"
+          description: "Return only the latest data point."
+          schema:
+            type: string
+          example: "true"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              temperature:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/DataPoint"
+                                example:
+                                  - name: "1/24 12:00 am"
+                                    sensor1: "25.000"
+                                    sensor2: "25.000"
+                                    units: "°C"
+                                  - name: "1/24 12:05 am"
+                                    sensor1: "25.625"
+                                    sensor2: "25.625"
+                                    units: "°C"
+                              humidity:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/DataPoint"
+                                example:
+                                  - name: "1/24 12:00 am"
+                                    sensor1: "50.000"
+                                    sensor2: "50.000"
+                                    units: "%rH"
+                                  - name: "1/24 12:05 am"
+                                    sensor1: "50.625"
+                                    sensor2: "50.625"
+                                    units: "%rH"
+                          series:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/ChartSeries"
+                            example:
+                              - name: "sensor1"
+                                color: "lime"
+                              - name: "sensor2"
+                                color: "blue"
 
   /api/v2/sensors/supported-models:
     get:
@@ -1003,16 +1107,17 @@ components:
                     - $ref: "#/components/schemas/SupportedModels"
                     - type: array
                       items:
-                        $ref: "#/components/schemas/SensorBase"
+                        oneOf:
+                          - $ref: "#/components/schemas/SensorBase"
+                          - $ref: "#/components/schemas/OutputBase"
+                          
+                          
                     - type: string
                     - type: number
                     - type: integer
                     - type: boolean
                     - type: array
                     - type: object
-                # moreDataAvailable:
-                #   type: boolean
-                #   example: false
         - $ref: "#/components/schemas/ApiResponse"
 
     ErrorResponse:
@@ -1187,3 +1292,28 @@ components:
       type: array
       items:
         type: string
+    
+    DataPoint:
+      description: >
+        A data point for recharts.
+      type: object
+      required:
+        - "name"
+      properties:
+        name:
+          type: string
+        units:
+          type: string
+    
+    ChartSeries:
+      description: >
+        An object containing both a name and a color. Used to add flair to a line on a chart.
+      type: object
+      required:
+        - "name"
+        - "color"
+      properties:
+        name:
+          type: string
+        color:
+          type: string

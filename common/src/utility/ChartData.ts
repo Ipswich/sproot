@@ -1,6 +1,6 @@
 export interface IChartable {
   chartData: Record<string | number | symbol, ChartData> | ChartData;
-  chartSeries: ChartSeries[] | ChartSeries;
+  chartSeries: ChartSeries[]| ChartSeries;
   loadChartData(cache: [], name: string, key?: string | number | symbol): void;
   loadChartSeries(series: ChartSeries | ChartSeries[]): void
   updateChartData(cache: [], name: string, key?: string | number | symbol): void;

@@ -13,6 +13,10 @@ class OutputListChartData implements IChartable {
     this.#interval = interval;
   }
 
+  get(): { data: DataSeries; series: ChartSeries[] } {
+    return { data: this.chartData.get(), series: this.chartSeries };
+  }
+
   loadChartData(cache: DataSeries[], _name: string): void {
     const combinedData = ChartData.combineDataSeries([...cache]);
     this.chartData = new ChartData(this.#limit, this.#interval, combinedData);

@@ -1,5 +1,5 @@
 import { Response } from "express";
-import supportedModelsHandler from "../handlers/SupportedModelsHandler";
+import supportedModelsHandler from "../handlers/SupportedModelsHandlers";
 import ModelList from "../../../../outputs/ModelList";
 
 import { assert } from "chai";

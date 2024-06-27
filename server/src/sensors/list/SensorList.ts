@@ -3,7 +3,7 @@ import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ChartSeries, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
@@ -18,7 +18,7 @@ class SensorList {
   #initialCacheLookback: number;
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
-  #chartData: SensorListChartData;
+  chartData: SensorListChartData;
   #colorIndex: number;
 
   constructor(
@@ -36,15 +36,11 @@ class SensorList {
     this.#maxChartDataSize = maxChartDataSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
-    this.#chartData = new SensorListChartData(maxChartDataSize, chartDataPointInterval);
+    this.chartData = new SensorListChartData(maxChartDataSize, chartDataPointInterval);
   }
 
   get sensors(): Record<string, SensorBase> {
     return this.#sensors;
-  }
-
-  get chartData(): {data: Record<ReadingType, DataSeries>, series: ChartSeries[]} {
-    return this.#chartData.get();
   }
 
   get sensorData(): Record<string, ISensorBase> {
@@ -165,12 +161,12 @@ class SensorList {
           return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
         })
         .filter((x) => x != undefined) as DataSeries[];
-      this.#chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
+      this.chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
     // Log changes
     let logMessage = "";
-    const chartData = this.#chartData.get().data;
+    const chartData = this.chartData.get().data;
     for (const readingType of Object.keys(chartData)) {
       if (chartData[readingType as ReadingType].length > 0) {
         logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;
@@ -185,7 +181,7 @@ class SensorList {
 
   loadChartSeries() {
     const series = Object.values(this.#sensors).map((sensor) => sensor.chartData.get().series);
-    this.#chartData.loadChartSeries(series);
+    this.chartData.loadChartSeries(series);
   }
 
   updateChartData() {
@@ -195,12 +191,12 @@ class SensorList {
       const dataSeriesMap = Object.keys(this.#sensors).map((key) => {
         return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
       }) as DataSeries[];
-      this.#chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
+      this.chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
     // Log changes
     let logMessage = "";
-    const chartData = this.#chartData.get().data;
+    const chartData = this.chartData.get().data;
     for (const readingType of Object.keys(chartData)) {
       if (chartData[readingType as ReadingType].length > 0) {
         logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;

@@ -1,6 +1,4 @@
 import { OutputList } from "../../../../outputs/list/OutputList";
-// import { ISprootDB } from "@sproot/database/ISprootDB";
-// import { SDBOutput } from "@sproot/database/SDBOutput";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";

@@ -40,7 +40,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
   let result: Record<string, DataSeries> | DataSeries = {};
   let offset, limit;
   try {
-    const chartData = sensorList.chartData.data;
+    const chartData = sensorList.chartData.get().data;
     if (req.query["latest"] != "true") {
       if (req.query["offset"] && req.query["limit"]) {
         offset = parseInt(req.query["offset"] as string);
