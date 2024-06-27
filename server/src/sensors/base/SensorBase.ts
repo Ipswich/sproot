@@ -199,9 +199,10 @@ export abstract class SensorBase implements ISensorBase {
         readingType as ReadingType,
       );
       this.logger.info(
-        `Loaded chart data for sensor {id: ${this.id}}. Chart data size - ${this.chartData.getOne(readingType as ReadingType).length}`,
+        `Loaded chart data for sensor {id: ${this.id}}. Chart data size - ${this.chartData.get().data[readingType as ReadingType].length}`,
       );
     }
+    this.chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark"});
   }
 
   updateChartData(): void {
@@ -212,7 +213,7 @@ export abstract class SensorBase implements ISensorBase {
         readingType as ReadingType,
       );
       this.logger.info(
-        `Updated chart data for sensor {id: ${this.id}, ${readingType}}. Chart data size - ${this.chartData.getOne(readingType as ReadingType).length}`,
+        `Updated chart data for sensor {id: ${this.id}, ${readingType}}. Chart data size - ${this.chartData.get().data[readingType as ReadingType].length}`,
       );
     }
   }

@@ -26,26 +26,26 @@ describe("OutputChartData.ts tests", function () {
       const earlierThreeMinuteDate = new Date(threeMinuteDate.getTime() - threeMinutes);
       const earliestThreeMinuteDate = new Date(earlierThreeMinuteDate.getTime() - threeMinutes);
 
-      assert.equal(outputChartData5.get().length, 3);
-      assert.equal(outputChartData3.get().length, 3);
+      assert.equal(outputChartData5.get().data.length, 3);
+      assert.equal(outputChartData3.get().data.length, 3);
 
       assert.isTrue(
-        outputChartData5.get()[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString()),
+        outputChartData5.get().data[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData5.get()[1]?.name.includes(earlierFiveMinuteDate.getMinutes().toString()),
+        outputChartData5.get().data[1]?.name.includes(earlierFiveMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData5.get()[2]?.name.includes(fiveMinuteDate.getMinutes().toString()),
+        outputChartData5.get().data[2]?.name.includes(fiveMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData3.get()[0]?.name.includes(earliestThreeMinuteDate.getMinutes().toString()),
+        outputChartData3.get().data[0]?.name.includes(earliestThreeMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData3.get()[1]?.name.includes(earlierThreeMinuteDate.getMinutes().toString()),
+        outputChartData3.get().data[1]?.name.includes(earlierThreeMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData3.get()[2]?.name.includes(threeMinuteDate.getMinutes().toString()),
+        outputChartData3.get().data[2]?.name.includes(threeMinuteDate.getMinutes().toString()),
       );
     });
 
@@ -55,9 +55,9 @@ describe("OutputChartData.ts tests", function () {
         { name: "3/3 6:45 pm" },
       ]);
 
-      assert.equal(outputChartData.get().length, 2);
-      assert.isTrue(outputChartData.get()[0]?.name.includes("6:40 pm"));
-      assert.isTrue(outputChartData.get()[1]?.name.includes("6:45 pm"));
+      assert.equal(outputChartData.get().data.length, 2);
+      assert.isTrue(outputChartData.get().data[0]?.name.includes("6:40 pm"));
+      assert.isTrue(outputChartData.get().data[1]?.name.includes("6:45 pm"));
     });
   });
 
@@ -103,10 +103,10 @@ describe("OutputChartData.ts tests", function () {
       ]);
       outputChartData.loadChartData(outputCache.get(), "Test");
 
-      assert.equal(outputChartData.get().length, 3);
-      assert.equal(outputChartData.get()[0]?.["Test"], 100);
-      assert.equal(outputChartData.get()[1]?.["Test"], 30);
-      assert.equal(outputChartData.get()[2]?.["Test"], 0);
+      assert.equal(outputChartData.get().data.length, 3);
+      assert.equal(outputChartData.get().data[0]?.["Test"], 100);
+      assert.equal(outputChartData.get().data[1]?.["Test"], 30);
+      assert.equal(outputChartData.get().data[2]?.["Test"], 0);
     });
   });
 
@@ -118,9 +118,9 @@ describe("OutputChartData.ts tests", function () {
         "Test",
       );
 
-      assert.equal(outputChartData.get().length, 1);
-      assert.equal(outputChartData.get()[0]?.["Test"], 100);
-      assert.isString(outputChartData.get()[0]?.name);
+      assert.equal(outputChartData.get().data.length, 1);
+      assert.equal(outputChartData.get().data[0]?.["Test"], 100);
+      assert.isString(outputChartData.get().data[0]?.name);
     });
   });
 

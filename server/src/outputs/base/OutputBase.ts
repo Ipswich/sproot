@@ -133,15 +133,16 @@ export abstract class OutputBase implements IOutputBase {
 
   loadChartData(): void {
     this.chartData.loadChartData(this.cache.get(), this.name);
+    this.chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
     this.logger.info(
-      `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().length}`,
+      `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().data.length}`,
     );
   }
 
   updateChartData(): void {
     this.chartData.updateChartData(this.cache.get(), this.name);
     this.logger.info(
-      `Updated chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().length}`,
+      `Updated chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().data.length}`,
     );
   }
 }

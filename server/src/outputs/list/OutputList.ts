@@ -173,8 +173,10 @@ class OutputList {
     }
 
     if (outputListChanges) {
-      const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
-      this.chartData.loadChartData(dataSeries, "output");
+      const data = Object.values(this.outputs).map((output) => output.chartData.get().data);
+      const series = Object.values(this.outputs).map((output) => output.chartData.get().series);
+      this.chartData.loadChartData(data, "output");
+      this.chartData.loadChartSeries(series)
       this.#logger.info(
         `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
       );
@@ -193,7 +195,7 @@ class OutputList {
 
     if (new Date().getMinutes() % 5 == 0) {
       this.chartData.updateChartData(
-        Object.values(this.outputs).map((output) => output.chartData.get()),
+        Object.values(this.outputs).map((output) => output.chartData.get().data),
         "output",
       );
       this.#logger.info(
@@ -217,6 +219,10 @@ class OutputList {
 
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | null = null;
+    if (output.color == undefined) {
+      output.color = DefaultColors[this.#colorIndex] ?? "#000000";
+      this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
+    }
     switch (output.model.toLowerCase()) {
       case "pca9685": {
         if (!output.address) {
@@ -229,10 +235,6 @@ class OutputList {
         throw new OutputListError(`Unrecognized output model ${output.model}`);
     }
     if (newOutput) {
-      if (newOutput.color == undefined) {
-        newOutput.color = DefaultColors[this.#colorIndex] ?? "#000000";
-        this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
-      }
       this.#outputs[output.id] = newOutput;
     }
   }

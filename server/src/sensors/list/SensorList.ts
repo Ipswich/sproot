@@ -3,7 +3,7 @@ import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { ChartSeries, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
@@ -43,8 +43,8 @@ class SensorList {
     return this.#sensors;
   }
 
-  get chartData(): Record<ReadingType, DataSeries> {
-    return this.#chartData.getAll();
+  get chartData(): {data: Record<ReadingType, DataSeries>, series: ChartSeries[]} {
+    return this.#chartData.get();
   }
 
   get sensorData(): Record<string, ISensorBase> {
@@ -134,6 +134,7 @@ class SensorList {
 
     if (sensorListChanges) {
       this.loadChartData();
+      this.loadChartSeries();
     }
     profiler.done({
       message: "SensorList initializeOrRegenerate time",
@@ -161,7 +162,7 @@ class SensorList {
     for (const readingType in ReadingType) {
       const dataSeriesMap = Object.keys(this.#sensors)
         .map((key) => {
-          return this.#sensors[key]?.chartData.getOne(readingType as ReadingType);
+          return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
         })
         .filter((x) => x != undefined) as DataSeries[];
       this.#chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
@@ -169,9 +170,10 @@ class SensorList {
 
     // Log changes
     let logMessage = "";
-    for (const readingType in Object.keys(this.#chartData.getAll())) {
-      if (this.#chartData.getOne(readingType as ReadingType).length > 0) {
-        logMessage += `{${readingType}: ${this.#chartData.getOne(readingType as ReadingType).length}} `;
+    const chartData = this.#chartData.get().data;
+    for (const readingType of Object.keys(chartData)) {
+      if (chartData[readingType as ReadingType].length > 0) {
+        logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;
       }
     }
     this.#logger.info(`Loaded sensor chart data. ${logMessage}`);
@@ -181,21 +183,27 @@ class SensorList {
     });
   }
 
+  loadChartSeries() {
+    const series = Object.values(this.#sensors).map((sensor) => sensor.chartData.get().series);
+    this.#chartData.loadChartSeries(series);
+  }
+
   updateChartData() {
     const profiler = this.#logger.startTimer();
 
     for (const readingType in ReadingType) {
       const dataSeriesMap = Object.keys(this.#sensors).map((key) => {
-        return this.#sensors[key]?.chartData.getOne(readingType as ReadingType);
+        return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
       }) as DataSeries[];
       this.#chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
     // Log changes
     let logMessage = "";
-    for (const readingType of Object.keys(this.#chartData.getAll())) {
-      if (this.#chartData.getOne(readingType as ReadingType).length > 0) {
-        logMessage += `{${readingType}: ${this.#chartData.getOne(readingType as ReadingType).length}} `;
+    const chartData = this.#chartData.get().data;
+    for (const readingType of Object.keys(chartData)) {
+      if (chartData[readingType as ReadingType].length > 0) {
+        logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;
       }
     }
     this.#logger.info(`Updated sensor list chart data. Data counts: ${logMessage}`);
@@ -220,6 +228,10 @@ class SensorList {
 
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
+    if (sensor.color == undefined) {
+      sensor.color = DefaultColors[this.#colorIndex] ?? "#000000";
+      this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
+    }
     switch (sensor.model.toLowerCase()) {
       case "bme280":
         if (!sensor.address) {
@@ -254,10 +266,6 @@ class SensorList {
         throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);
     }
     if (newSensor) {
-      if (newSensor.color == undefined) {
-        newSensor.color = DefaultColors[this.#colorIndex] ?? "#000000";
-        this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
-      }
       this.#sensors[sensor.id] = newSensor;
     }
   }

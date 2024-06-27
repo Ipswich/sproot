@@ -11,6 +11,7 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ChartSeries, DataSeries } from "@sproot/utility/ChartData";
 
 const mockSprootDB = new MockSprootDB();
 
@@ -63,7 +64,7 @@ describe("SensorList.ts tests", function () {
       units: { temperature: "°C", humidity: "%", pressure: "hPa" },
       disposeAsync: async () => {},
       chartData: {
-        getOne: (_key: ReadingType) => {},
+        get: () => { return { data: {} as Record<ReadingType, DataSeries>, series: {} as ChartSeries} }
       },
     } as BME280);
     const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");

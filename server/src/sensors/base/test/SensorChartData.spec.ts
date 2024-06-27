@@ -38,9 +38,9 @@ describe("SensorChartData.ts tests", function () {
       ];
       const sensorChartData = new SensorChartData(2, 5, dataSeries);
 
-      assert.equal(sensorChartData.getOne(ReadingType.temperature).length, 2);
-      assert.isTrue(sensorChartData.getOne(ReadingType.temperature)[0]?.name.includes("6:40 pm"));
-      assert.isTrue(sensorChartData.getOne(ReadingType.temperature)[1]?.name.includes("6:45 pm"));
+      assert.equal(sensorChartData.get().data[ReadingType.temperature].length, 2);
+      assert.isTrue(sensorChartData.get().data[ReadingType.temperature][0]?.name.includes("6:40 pm"));
+      assert.isTrue(sensorChartData.get().data[ReadingType.temperature][1]?.name.includes("6:45 pm"));
     });
   });
 
@@ -112,14 +112,14 @@ describe("SensorChartData.ts tests", function () {
         "Test",
         ReadingType.temperature,
       );
-      assert.equal(Object.keys(sensorChartData.getAll()).length, 2);
-      assert.equal(sensorChartData.getOne(ReadingType.humidity).length, 4);
-      assert.equal(sensorChartData.getOne(ReadingType.humidity)[0]?.["Test"], undefined);
+      assert.equal(Object.keys(sensorChartData.get()).length, 2);
+      assert.equal(sensorChartData.get().data[ReadingType.humidity].length, 4);
+      assert.equal(sensorChartData.get().data[ReadingType.humidity][0]?.["Test"], undefined);
 
-      assert.equal(sensorChartData.getOne(ReadingType.temperature).length, 3);
-      assert.equal(sensorChartData.getOne(ReadingType.temperature)[0]?.["Test"], 100);
-      assert.equal(sensorChartData.getOne(ReadingType.temperature)[1]?.["Test"], 30);
-      assert.equal(sensorChartData.getOne(ReadingType.temperature)[2]?.["Test"], 0);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature].length, 3);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature][0]?.["Test"], 100);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature][1]?.["Test"], 30);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature][2]?.["Test"], 0);
     });
   });
 
@@ -127,7 +127,7 @@ describe("SensorChartData.ts tests", function () {
     it("should update the chart data with the last entry in the passed cache, adding a key if necessary", function () {
       const sensorChartData = new SensorChartData(4, 5);
 
-      assert.equal(Object.keys(sensorChartData.getAll()).length, 0);
+      assert.equal(Object.keys(sensorChartData.get().data).length, 0);
 
       sensorChartData.updateChartData(
         [
@@ -154,15 +154,15 @@ describe("SensorChartData.ts tests", function () {
         ReadingType.humidity,
       );
 
-      assert.equal(Object.keys(sensorChartData.getAll()).length, 2);
+      assert.equal(Object.keys(sensorChartData.get().data).length, 2);
 
-      assert.equal(sensorChartData.getOne(ReadingType.temperature).length, 4);
-      assert.equal(sensorChartData.getOne(ReadingType.temperature).slice(-1)[0]?.["Test"], 100);
-      assert.isString(sensorChartData.getOne(ReadingType.temperature)[0]?.name);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature].length, 4);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature].slice(-1)[0]?.["Test"], 100);
+      assert.isString(sensorChartData.get().data[ReadingType.temperature][0]?.name);
 
-      assert.equal(sensorChartData.getOne(ReadingType.humidity).length, 4);
-      assert.equal(sensorChartData.getOne(ReadingType.humidity).slice(-1)[0]?.["Test"], 30);
-      assert.isString(sensorChartData.getOne(ReadingType.humidity)[0]?.name);
+      assert.equal(sensorChartData.get().data[ReadingType.humidity].length, 4);
+      assert.equal(sensorChartData.get().data[ReadingType.humidity].slice(-1)[0]?.["Test"], 30);
+      assert.isString(sensorChartData.get().data[ReadingType.humidity][0]?.name);
     });
   });
 
