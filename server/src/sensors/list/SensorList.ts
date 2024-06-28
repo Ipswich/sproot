@@ -186,11 +186,13 @@ class SensorList {
 
   updateChartData() {
     const profiler = this.#logger.startTimer();
-
     for (const readingType in ReadingType) {
-      const dataSeriesMap = Object.keys(this.#sensors).map((key) => {
+      const dataSeriesMap = Object.keys(this.#sensors)
+      .map((key) => {
         return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
-      }) as DataSeries[];
+      })
+      .filter((dataSeries) => dataSeries != undefined) as DataSeries[];
+      
       this.chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
