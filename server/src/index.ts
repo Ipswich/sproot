@@ -127,6 +127,7 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
       sensorList.initializeOrRegenerateAsync(),
       outputList.initializeOrRegenerateAsync(),
     ]);
+    logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "Mb");
     //Add triggers and shit here.
 
     //Execute any changes made to state.
