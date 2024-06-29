@@ -14,9 +14,9 @@ router.get("/supported-models", (_req: Request, res: Response) => {
 
 router.get("/chart-data", (req: Request, res: Response) => {
   const response = sensorChartDataHandler(req, res);
-  
-    res.status(response.statusCode).json(response);
-    return;
+
+  res.status(response.statusCode).json(response);
+  return;
 });
 
 router.get("/", (req: Request, res: Response) => {

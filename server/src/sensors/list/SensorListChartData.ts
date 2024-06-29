@@ -1,5 +1,10 @@
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { IChartable, ChartData, DataSeries, ChartSeries } from "@sproot/sproot-common/dist/utility/ChartData";
+import {
+  IChartable,
+  ChartData,
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class SensorListChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;
@@ -24,12 +29,12 @@ export class SensorListChartData implements IChartable {
    * Gets a copy of all data series.
    * @returns a copy of all data series.
    */
-  get(): {data: Record<ReadingType, DataSeries>, series: ChartSeries[]} {
+  get(): { data: Record<ReadingType, DataSeries>; series: ChartSeries[] } {
     const res = {} as Record<ReadingType, DataSeries>;
     for (const key in this.chartData) {
       res[key as ReadingType] = [...this.chartData[key as ReadingType].get()];
     }
-    return {data: res, series: this.chartSeries};
+    return { data: res, series: this.chartSeries };
   }
 
   loadChartData(cache: DataSeries[], _sensorName: string, key: ReadingType): void {

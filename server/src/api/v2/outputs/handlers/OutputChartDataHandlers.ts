@@ -2,7 +2,10 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 
-export function outputChartDataHandler(request: Request, response: Response): SuccessResponse | ErrorResponse {
+export function outputChartDataHandler(
+  request: Request,
+  response: Response,
+): SuccessResponse | ErrorResponse {
   const outputList = request.app.get("outputList") as OutputList;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -19,4 +22,4 @@ export function outputChartDataHandler(request: Request, response: Response): Su
     ...response.locals["defaultProperties"],
   };
   return getOutputResponse;
-};
+}

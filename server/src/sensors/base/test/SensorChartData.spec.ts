@@ -39,8 +39,12 @@ describe("SensorChartData.ts tests", function () {
       const sensorChartData = new SensorChartData(2, 5, dataSeries);
 
       assert.equal(sensorChartData.get().data[ReadingType.temperature].length, 2);
-      assert.isTrue(sensorChartData.get().data[ReadingType.temperature][0]?.name.includes("6:40 pm"));
-      assert.isTrue(sensorChartData.get().data[ReadingType.temperature][1]?.name.includes("6:45 pm"));
+      assert.isTrue(
+        sensorChartData.get().data[ReadingType.temperature][0]?.name.includes("6:40 pm"),
+      );
+      assert.isTrue(
+        sensorChartData.get().data[ReadingType.temperature][1]?.name.includes("6:45 pm"),
+      );
     });
   });
 

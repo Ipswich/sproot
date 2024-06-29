@@ -202,7 +202,7 @@ export abstract class SensorBase implements ISensorBase {
         `Loaded chart data for sensor {id: ${this.id}}. Chart data size - ${this.chartData.get().data[readingType as ReadingType].length}`,
       );
     }
-    this.chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark"});
+    this.chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
   }
 
   updateChartData(): void {

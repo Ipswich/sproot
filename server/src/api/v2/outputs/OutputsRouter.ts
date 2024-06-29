@@ -15,7 +15,7 @@ router.get("/supported-models", (_req: Request, res: Response) => {
 
 router.get("/chart-data", (req: Request, res: Response) => {
   const response = outputChartDataHandler(req, res);
-console.log(response)
+  console.log(response);
   res.status(response.statusCode).json(response);
   return;
 });

@@ -13,7 +13,7 @@ class OutputList {
   #PCA9685: PCA9685;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
-  chartData: OutputListChartData;
+  #chartData: OutputListChartData;
   #colorIndex: number;
   maxCacheSize: number;
   initialCacheLookback: number;
@@ -44,7 +44,7 @@ class OutputList {
     this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
     this.chartDataPointInterval = chartDataPointInterval;
-    this.chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
+    this.#chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
   }
 
   get outputs(): Record<string, OutputBase> {
@@ -70,6 +70,10 @@ class OutputList {
       };
     }
     return cleanObject;
+  }
+
+  get chartData(): OutputListChartData {
+    return this.#chartData;
   }
 
   updateControlMode(outputId: string, controlMode: ControlMode): void {
@@ -175,10 +179,10 @@ class OutputList {
     if (outputListChanges) {
       const data = Object.values(this.outputs).map((output) => output.chartData.get().data);
       const series = Object.values(this.outputs).map((output) => output.chartData.get().series);
-      this.chartData.loadChartData(data, "output");
-      this.chartData.loadChartSeries(series)
+      this.#chartData.loadChartData(data, "output");
+      this.#chartData.loadChartSeries(series);
       this.#logger.info(
-        `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
+        `Loaded aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
       );
     }
 
@@ -194,12 +198,12 @@ class OutputList {
     });
 
     if (new Date().getMinutes() % 5 == 0) {
-      this.chartData.updateChartData(
+      this.#chartData.updateChartData(
         Object.values(this.outputs).map((output) => output.chartData.get().data),
         "output",
       );
       this.#logger.info(
-        `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
+        `Updated aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
       );
     }
   }

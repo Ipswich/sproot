@@ -18,7 +18,7 @@ class SensorList {
   #initialCacheLookback: number;
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
-  chartData: SensorListChartData;
+  #chartData: SensorListChartData;
   #colorIndex: number;
 
   constructor(
@@ -36,7 +36,11 @@ class SensorList {
     this.#maxChartDataSize = maxChartDataSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
-    this.chartData = new SensorListChartData(maxChartDataSize, chartDataPointInterval);
+    this.#chartData = new SensorListChartData(maxChartDataSize, chartDataPointInterval);
+  }
+
+  get chartData(): SensorListChartData {
+    return this.#chartData;
   }
 
   get sensors(): Record<string, SensorBase> {
@@ -161,12 +165,12 @@ class SensorList {
           return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
         })
         .filter((x) => x != undefined) as DataSeries[];
-      this.chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
+      this.#chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
     // Log changes
     let logMessage = "";
-    const chartData = this.chartData.get().data;
+    const chartData = this.#chartData.get().data;
     for (const readingType of Object.keys(chartData)) {
       if (chartData[readingType as ReadingType].length > 0) {
         logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;
@@ -181,24 +185,24 @@ class SensorList {
 
   loadChartSeries() {
     const series = Object.values(this.#sensors).map((sensor) => sensor.chartData.get().series);
-    this.chartData.loadChartSeries(series);
+    this.#chartData.loadChartSeries(series);
   }
 
   updateChartData() {
     const profiler = this.#logger.startTimer();
     for (const readingType in ReadingType) {
       const dataSeriesMap = Object.keys(this.#sensors)
-      .map((key) => {
-        return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
-      })
-      .filter((dataSeries) => dataSeries != undefined) as DataSeries[];
-      
-      this.chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
+        .map((key) => {
+          return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
+        })
+        .filter((dataSeries) => dataSeries != undefined) as DataSeries[];
+
+      this.#chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
     }
 
     // Log changes
     let logMessage = "";
-    const chartData = this.chartData.get().data;
+    const chartData = this.#chartData.get().data;
     for (const readingType of Object.keys(chartData)) {
       if (chartData[readingType as ReadingType].length > 0) {
         logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;

@@ -1,5 +1,10 @@
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { IChartable, ChartData, DataSeries, ChartSeries } from "@sproot/sproot-common/dist/utility/ChartData";
+import {
+  IChartable,
+  ChartData,
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class OutputChartData implements IChartable {
   chartData: ChartData;
@@ -13,10 +18,10 @@ export class OutputChartData implements IChartable {
     this.chartSeries = { name: "", color: "" };
   }
 
-  get(): { data: DataSeries, series: ChartSeries } {
+  get(): { data: DataSeries; series: ChartSeries } {
     return {
       data: this.chartData.get(),
-      series: this.chartSeries
+      series: this.chartSeries,
     };
   }
 
@@ -56,9 +61,9 @@ export class OutputChartData implements IChartable {
       lastChartData &&
       lastCacheData &&
       lastChartData.name ==
-      ChartData.formatDateForChart(
-        new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
-      )
+        ChartData.formatDateForChart(
+          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
+        )
     ) {
       return true;
     }

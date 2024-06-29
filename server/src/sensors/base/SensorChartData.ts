@@ -1,6 +1,11 @@
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { IChartable, ChartData, DataSeries, ChartSeries } from "@sproot/sproot-common/dist/utility/ChartData";
+import {
+  IChartable,
+  ChartData,
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class SensorChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;
@@ -39,12 +44,12 @@ export class SensorChartData implements IChartable {
    * Gets a copy of all data series.
    * @returns a copy of all data series.
    */
-  get(): {data: Record<ReadingType, DataSeries>, series: ChartSeries} {
+  get(): { data: Record<ReadingType, DataSeries>; series: ChartSeries } {
     const res = {} as Record<ReadingType, DataSeries>;
     for (const key in this.chartData) {
-      res[key as ReadingType] = [ ...this.chartData[key as ReadingType].get() ];
+      res[key as ReadingType] = [...this.chartData[key as ReadingType].get()];
     }
-    return {data: res, series: this.chartSeries};
+    return { data: res, series: this.chartSeries };
   }
 
   loadChartData(cache: SDBReading[], sensorName: string, key: ReadingType): void {

@@ -64,7 +64,9 @@ describe("SensorList.ts tests", function () {
       units: { temperature: "°C", humidity: "%", pressure: "hPa" },
       disposeAsync: async () => {},
       chartData: {
-        get: () => { return { data: {} as Record<ReadingType, DataSeries>, series: {} as ChartSeries} }
+        get: () => {
+          return { data: {} as Record<ReadingType, DataSeries>, series: {} as ChartSeries };
+        },
       },
     } as BME280);
     const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");

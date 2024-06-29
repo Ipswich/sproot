@@ -30,19 +30,27 @@ describe("OutputChartData.ts tests", function () {
       assert.equal(outputChartData3.get().data.length, 3);
 
       assert.isTrue(
-        outputChartData5.get().data[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString()),
+        outputChartData5
+          .get()
+          .data[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData5.get().data[1]?.name.includes(earlierFiveMinuteDate.getMinutes().toString()),
+        outputChartData5
+          .get()
+          .data[1]?.name.includes(earlierFiveMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
         outputChartData5.get().data[2]?.name.includes(fiveMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData3.get().data[0]?.name.includes(earliestThreeMinuteDate.getMinutes().toString()),
+        outputChartData3
+          .get()
+          .data[0]?.name.includes(earliestThreeMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
-        outputChartData3.get().data[1]?.name.includes(earlierThreeMinuteDate.getMinutes().toString()),
+        outputChartData3
+          .get()
+          .data[1]?.name.includes(earlierThreeMinuteDate.getMinutes().toString()),
       );
       assert.isTrue(
         outputChartData3.get().data[2]?.name.includes(threeMinuteDate.getMinutes().toString()),
