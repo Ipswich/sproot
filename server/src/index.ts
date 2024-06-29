@@ -20,6 +20,7 @@ import sensorRouter from "./api/v1/SensorRouter";
 import outputRouter from "./api/v1/OutputRouter";
 import homeRouter from "./api/v1/HomeRouter";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
+import ApiRootV2 from "./api/v2/ApiRootV2";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
@@ -31,9 +32,6 @@ const mysqlConfig = {
 };
 
 const app = express();
-
-const swaggerOptions = YAML.load("./openapi.yml");
-swaggerOptions.defaultModelsExpandDepth = -1;
 
 const logger = winston.createLogger({
   level: "info",
@@ -146,18 +144,24 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // API v1
   app.use("/api/v1/authenticate", login);
   app.use("/api/v1/", homeRouter);
   app.use("/api/v1/sensors", authenticate, sensorRouter);
   app.use("/api/v1/outputs", authenticate, outputRouter);
 
+  const openapi_v1_doc = YAML.load("./openapi_v1.yaml");
+
   app.use(
     "/api/v1/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerOptions, {
+    swaggerUi.serveFiles(openapi_v1_doc, {
       swaggerOptions: { defaultModelsExpandDepth: -1 },
     }),
+    swaggerUi.setup(openapi_v1_doc),
   );
+
+  // API v2
+  ApiRootV2(app);
 
   const server = app.listen(process.env["APPLICATION_PORT"]!, () => {
     profiler.done({

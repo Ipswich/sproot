@@ -1,4 +1,4 @@
-import { ChartData } from "@sproot/utility/IChartable";
+import { ChartData } from "@sproot/utility/ChartData";
 import Chart from "./Chart";
 
 interface ChartContainerProps {

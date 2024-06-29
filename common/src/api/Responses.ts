@@ -3,7 +3,7 @@ import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { ReadingType } from "../sensors/ReadingType";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { ChartData } from "@sproot/sproot-common/src/api/ChartData";
-import { DataSeries } from "@sproot/sproot-common/src/utility/IChartable";
+import { DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
 
 interface ApiResponse {
   message: string;

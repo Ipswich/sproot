@@ -5,16 +5,12 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
 
 import { assert } from "chai";
 import * as sinon from "sinon";
-const sandbox = sinon.createSandbox();
 
 describe("OutputBase.ts tests", function () {
-  const mockSprootDB = new MockSprootDB();
-
-  beforeEach(() => {});
-
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
+  const mockSprootDB = new MockSprootDB();
 
   describe("constructor", function () {
     it("should create a new OutputState object with default values", function () {

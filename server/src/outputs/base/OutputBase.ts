@@ -20,7 +20,7 @@ export abstract class OutputBase implements IOutputBase {
   cache: OutputCache;
   chartData: OutputChartData;
   logger: winston.Logger;
-  color?: string | undefined;
+  color: string | null;
   private readonly chartDataPointInterval: number;
   private readonly initialCacheLookback: number;
 
@@ -40,8 +40,8 @@ export abstract class OutputBase implements IOutputBase {
     this.address = sdbOutput.address;
     this.name = sdbOutput.name;
     this.pin = sdbOutput.pin;
-    this.isPwm = sdbOutput.isPwm;
-    this.isInvertedPwm = sdbOutput.isPwm ? sdbOutput.isInvertedPwm : false;
+    this.isPwm = sdbOutput.isPwm ? true : false;
+    this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
     this.sprootDB = sprootDB;
     this.color = sdbOutput.color;
     this.state = new OutputState(sprootDB);
@@ -133,15 +133,16 @@ export abstract class OutputBase implements IOutputBase {
 
   loadChartData(): void {
     this.chartData.loadChartData(this.cache.get(), this.name);
+    this.chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
     this.logger.info(
-      `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().length}`,
+      `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().data.length}`,
     );
   }
 
   updateChartData(): void {
     this.chartData.updateChartData(this.cache.get(), this.name);
     this.logger.info(
-      `Updated chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().length}`,
+      `Updated chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().data.length}`,
     );
   }
 }

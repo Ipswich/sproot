@@ -1,19 +1,34 @@
-import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import {
+  IChartable,
+  ChartData,
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/dist/utility/ChartData";
 
 class OutputListChartData implements IChartable {
   chartData: ChartData;
+  chartSeries: ChartSeries[];
   #limit;
   #interval;
 
   constructor(limit: number, interval: number) {
     this.chartData = new ChartData(limit, interval);
+    this.chartSeries = [];
     this.#limit = limit;
     this.#interval = interval;
+  }
+
+  get(): { data: DataSeries; series: ChartSeries[] } {
+    return { data: this.chartData.get(), series: this.chartSeries };
   }
 
   loadChartData(cache: DataSeries[], _name: string): void {
     const combinedData = ChartData.combineDataSeries([...cache]);
     this.chartData = new ChartData(this.#limit, this.#interval, combinedData);
+  }
+
+  loadChartSeries(series: ChartSeries[]): void {
+    this.chartSeries = series;
   }
 
   updateChartData(cache: DataSeries[], _name: string): void {

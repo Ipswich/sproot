@@ -11,17 +11,17 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ChartSeries, DataSeries } from "@sproot/utility/ChartData";
 
-const sandbox = sinon.createSandbox();
 const mockSprootDB = new MockSprootDB();
 
 describe("SensorList.ts tests", function () {
   afterEach(() => {
-    sandbox.restore();
+    sinon.restore();
   });
 
   it("should create, update, and delete sensors, adding a DS18B20 to MockSprootDB", async function () {
-    const getSensorsAsyncStub = sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
+    const getSensorsAsyncStub = sinon.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
       {
         id: 1,
         name: "test sensor 1",
@@ -41,7 +41,7 @@ describe("SensorList.ts tests", function () {
         address: "28-00001",
       } as SDBSensor,
     ]);
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -50,18 +50,26 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    sandbox
+    sinon
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor, { address: "28-00001" } as SDBSensor]);
-    sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
-    sandbox.stub(BME280.prototype, "initAsync").resolves({
+    sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
+    sinon.stub(BME280.prototype, "initAsync").resolves({
       id: 1,
+      name: "test sensor 1",
+      model: "BME280",
+      address: "0x76",
+      lastReading: { humidity: "", pressure: "", temperature: "" },
+      lastReadingTime: null,
+      units: { temperature: "°C", humidity: "%", pressure: "hPa" },
       disposeAsync: async () => {},
       chartData: {
-        getOne: (_key: ReadingType) => {},
+        get: () => {
+          return { data: {} as Record<ReadingType, DataSeries>, series: {} as ChartSeries };
+        },
       },
     } as BME280);
-    const addSensorSpy = sandbox.spy(mockSprootDB, "addSensorAsync");
+    const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
 
     const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
     try {
@@ -100,7 +108,7 @@ describe("SensorList.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
-    sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
+    sinon.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
       mockBME280Data,
       {
         id: 2,
@@ -109,7 +117,7 @@ describe("SensorList.ts tests", function () {
         address: "28-00000",
       } as SDBSensor,
     ]);
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -118,11 +126,11 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    sandbox
+    sinon
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor]);
-    sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
-    sandbox
+    sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
+    sinon
       .stub(BME280.prototype, "initAsync")
       .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
 
@@ -164,7 +172,7 @@ describe("SensorList.ts tests", function () {
       address: null,
     } as SDBSensor;
     const loggerSpy = sinon.spy();
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -174,10 +182,10 @@ describe("SensorList.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const getSensorsStub = sandbox
+    const getSensorsStub = sinon
       .stub(MockSprootDB.prototype, "getSensorsAsync")
       .resolves([mockBME280Data]);
-    const getAddressesStub = sandbox.stub(DS18B20, "getAddressesAsync").resolves([]);
+    const getAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
 
     try {
@@ -185,11 +193,11 @@ describe("SensorList.ts tests", function () {
 
       mockBME280Data["address"] = "0x76";
       getSensorsStub.resolves([mockBME280Data, mockDS18B20Data]);
-      sandbox
+      sinon
         .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
         .resolves([{ address: "28-00000" } as SDBSensor]);
       getAddressesStub.resolves(["28-00000"]);
-      sandbox
+      sinon
         .stub(BME280.prototype, "initAsync")
         .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
       await sensorList.initializeOrRegenerateAsync();
@@ -213,7 +221,7 @@ describe("SensorList.ts tests", function () {
       model: "DS18B20",
       address: "28-00000",
     } as SDBSensor;
-    sandbox.stub(winston, "createLogger").callsFake(
+    sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: () => {},
@@ -222,9 +230,9 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    sandbox.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([mockDS18B20Data]);
-    sandbox.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
-    sandbox.stub(DS18B20.prototype, "getReadingAsync").rejects();
+    sinon.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([mockDS18B20Data]);
+    sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
+    sinon.stub(DS18B20.prototype, "getReadingAsync").rejects();
 
     const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
     try {

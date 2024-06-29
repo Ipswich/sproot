@@ -1,4 +1,4 @@
-import { DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorList } from "../../sensors/list/SensorList";
@@ -40,7 +40,7 @@ router.get("/chart-data", async (req: Request, res: Response) => {
   let result: Record<string, DataSeries> | DataSeries = {};
   let offset, limit;
   try {
-    const chartData = sensorList.chartData;
+    const chartData = sensorList.chartData.get().data;
     if (req.query["latest"] != "true") {
       if (req.query["offset"] && req.query["limit"]) {
         offset = parseInt(req.query["offset"] as string);

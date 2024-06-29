@@ -565,7 +565,7 @@ paths:
                   readings:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ChartData"
+                      $ref: "#/components/schemas/DataPoint"
         "401":
           description: Unauthorized
           content:
@@ -1217,7 +1217,7 @@ paths:
                   readings:
                     type: array
                     items:
-                      $ref: "#/components/schemas/ChartData"
+                      $ref: "#/components/schemas/DataPoint"
         "401":
           description: Unauthorized
           content:
@@ -1374,6 +1374,14 @@ components:
 
     Output:
       type: object
+      required:
+        - "id"
+        - "model"
+        - "address"
+        - "name"
+        - "pin"
+        - "isPwm"
+        - "isInvertedPwm"
       properties:
         id:
           type: integer
@@ -1383,6 +1391,9 @@ components:
         address:
           type: string
           example: "0x40"
+        name:
+          type: string
+          example: "Output 1"
         description:
           type: string
           nullable: true
@@ -1437,8 +1448,10 @@ components:
           type: string
           example: "2023-01-01 12:00:00"
 
-    ChartData:
+    DataPoint:
       type: object
+      required:
+        - "name"
       properties:
         name:
           type: string
@@ -1446,12 +1459,69 @@ components:
         units:
           type: string
           example: "°C"
-        sensor1:
+        item1:
           type: number
           example: 25.0
-        sensor2:
+        item2:
           type: number
           example: 25.0
+
+    ApiResponse:
+      type: object
+      required:
+        - "status"
+        - "statusCode"
+        - "timestamp"
+        - "requestId"
+      properties:
+        status:
+          type: string
+          example:
+            - "Success"
+            - "Error"
+        statusCode:
+          type: integer
+          example: 200
+        timestamp:
+          type: string
+          example: "2021-01-01T00:00:00.000Z"
+        requestId:
+          type: string
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+
+    Success:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            content:
+              type: object
+              required:
+                - "data"
+              properties:
+                data:
+                  type: object
+                  example: {}
+                moreDataAvailable:
+                  type: boolean
+                  example: false
+
+    Error:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          required:
+            - "error"
+          properties:
+            error:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Bad Request"
+                details:
+                  type: string
+                  example: "Invalid request"
 
   securitySchemes:
     bearerAuth:

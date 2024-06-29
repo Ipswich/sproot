@@ -1,10 +1,10 @@
-export interface DataPoint {
-  name: string;
-  units?: string;
-  [key: string]: number | string;
+export interface IChartable {
+  chartData: Record<string | number | symbol, ChartData> | ChartData;
+  chartSeries: ChartSeries[] | ChartSeries;
+  loadChartData(cache: [], name: string, key?: string | number | symbol): void;
+  loadChartSeries(series: ChartSeries | ChartSeries[]): void;
+  updateChartData(cache: [], name: string, key?: string | number | symbol): void;
 }
-
-export type DataSeries = DataPoint[];
 
 export class ChartData {
   static cachedEmptyDataSeries: DataSeries = [];
@@ -148,11 +148,18 @@ export class ChartData {
   }
 }
 
-export interface IChartable {
-  chartData: Record<string | number | symbol, ChartData> | ChartData;
-  loadChartData(cache: [], name: string, key?: string | number | symbol): void;
-  updateChartData(cache: [], name: string, key?: string | number | symbol): void;
-}
+export type DataPoint = {
+  name: string;
+  units?: string;
+  [key: string]: number | string;
+};
+
+export type DataSeries = DataPoint[];
+
+export type ChartSeries = {
+  name: string;
+  color: string;
+};
 
 class DataSeriesStats {
   counts: Record<string, number>;
@@ -233,3 +240,18 @@ class DataSeriesStats {
     this.averages = averages;
   }
 }
+
+export const DefaultColors = [
+  "lime",
+  "green",
+  "teal",
+  "cyan",
+  "blue",
+  "indigo",
+  "violet",
+  "grape",
+  "pink",
+  "red",
+  "orange",
+  "yellow",
+] as const;

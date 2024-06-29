@@ -1,22 +1,14 @@
 import { assert } from "chai";
-import * as sinon from "sinon";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
-import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/IChartable";
+import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
 import { SensorListChartData } from "../SensorListChartData";
-const sandbox = sinon.createSandbox();
 
 describe("SensorListChartData.ts tests", function () {
-  beforeEach(() => {});
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   describe("constructor", function () {
     it("should create a new SensorListChartData object with default values", function () {
       const sensorChartData = new SensorListChartData(2, 5);
 
-      assert.equal(Object.keys(sensorChartData.getAll()).length, 0);
+      assert.equal(Object.keys(sensorChartData.get().data).length, 0);
     });
 
     it("should create a new SensorListChartData object with custom values", function () {
@@ -31,17 +23,17 @@ describe("SensorListChartData.ts tests", function () {
       ];
       const sensorChartData = new SensorListChartData(2, 5, dataSeries);
 
-      assert.equal(sensorChartData.getOne(ReadingType.temperature).length, 2);
-      assert.equal(sensorChartData.getOne(ReadingType.temperature)[0]?.name, "6:40 pm");
-      assert.equal(sensorChartData.getOne(ReadingType.temperature)[0]!["value"], 100);
-      assert.equal(sensorChartData.getOne(ReadingType.temperature)[1]?.name, "6:45 pm");
-      assert.equal(sensorChartData.getOne(ReadingType.temperature)[1]!["value"], 30);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature].length, 2);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature][0]?.name, "6:40 pm");
+      assert.equal(sensorChartData.get().data[ReadingType.temperature][0]!["value"], 100);
+      assert.equal(sensorChartData.get().data[ReadingType.temperature][1]?.name, "6:45 pm");
+      assert.equal(sensorChartData.get().data[ReadingType.temperature][1]!["value"], 30);
 
-      assert.equal(sensorChartData.getOne(ReadingType.humidity).length, 2);
-      assert.equal(sensorChartData.getOne(ReadingType.humidity)[0]?.name, "6:40 pm");
-      assert.equal(sensorChartData.getOne(ReadingType.humidity)[0]!["value"], 37);
-      assert.equal(sensorChartData.getOne(ReadingType.humidity)[1]?.name, "6:45 pm");
-      assert.equal(sensorChartData.getOne(ReadingType.humidity)[1]!["value"], 20);
+      assert.equal(sensorChartData.get().data[ReadingType.humidity].length, 2);
+      assert.equal(sensorChartData.get().data[ReadingType.humidity][0]?.name, "6:40 pm");
+      assert.equal(sensorChartData.get().data[ReadingType.humidity][0]!["value"], 37);
+      assert.equal(sensorChartData.get().data[ReadingType.humidity][1]?.name, "6:45 pm");
+      assert.equal(sensorChartData.get().data[ReadingType.humidity][1]!["value"], 20);
     });
   });
   describe("loadChartData", function () {
@@ -73,9 +65,9 @@ describe("SensorListChartData.ts tests", function () {
 
       const sensorListChartData = new SensorListChartData(4, 5, humidityDataSeriesRecord1);
 
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]?.["one"], 99);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]?.["two"], undefined);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]?.["three"], undefined);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][0]?.["one"], 99);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][0]?.["two"], undefined);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][0]?.["three"], undefined);
 
       //Should be merged and interwoven with the existing set of data
       sensorListChartData.loadChartData(
@@ -84,14 +76,14 @@ describe("SensorListChartData.ts tests", function () {
         ReadingType.humidity,
       );
 
-      assert.equal(Object.keys(sensorListChartData.getAll()).length, 1);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity).length, 3);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]?.["one"], 99);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]?.["two"], 98);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]?.["three"], 97);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[2]?.["one"], 2);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[2]?.["two"], 1);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[2]?.["three"], 0);
+      assert.equal(Object.keys(sensorListChartData.get().data).length, 1);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity].length, 3);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][0]?.["one"], 99);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][0]?.["two"], 98);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][0]?.["three"], 97);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][2]?.["one"], 2);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][2]?.["two"], 1);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][2]?.["three"], 0);
 
       // Should create a new ChartData with the provided set because it doesn't exist.
       sensorListChartData.loadChartData(
@@ -99,11 +91,11 @@ describe("SensorListChartData.ts tests", function () {
         "Test",
         ReadingType.temperature,
       );
-      assert.equal(Object.keys(sensorListChartData.getAll()).length, 2);
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature).length, 3);
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature)[0]?.["base"], 100);
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature)[1]?.["base"], 30);
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature)[2]?.["base"], 3);
+      assert.equal(Object.keys(sensorListChartData.get().data).length, 2);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature].length, 3);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature][0]?.["base"], 100);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature][1]?.["base"], 30);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature][2]?.["base"], 3);
     });
   });
 
@@ -111,7 +103,7 @@ describe("SensorListChartData.ts tests", function () {
     it("should update the chart data with the last entry in the passed dataseries, adding a key with the combined chart if necessary", function () {
       const sensorListChartData = new SensorListChartData(4, 5);
 
-      assert.equal(Object.keys(sensorListChartData.getAll()).length, 0);
+      assert.equal(Object.keys(sensorListChartData.get().data).length, 0);
       const dataSeriesRecordBase = {} as Record<ReadingType, DataSeries>;
       dataSeriesRecordBase.temperature = [
         {
@@ -152,7 +144,7 @@ describe("SensorListChartData.ts tests", function () {
         ReadingType.humidity,
       );
 
-      assert.equal(Object.keys(sensorListChartData.getAll()).length, 1);
+      assert.equal(Object.keys(sensorListChartData.get().data).length, 1);
 
       sensorListChartData.updateChartData(
         [dataSeriesRecordBase.temperature],
@@ -160,17 +152,17 @@ describe("SensorListChartData.ts tests", function () {
         ReadingType.temperature,
       );
 
-      assert.equal(Object.keys(sensorListChartData.getAll()).length, 2);
+      assert.equal(Object.keys(sensorListChartData.get().data).length, 2);
 
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature).length, 3);
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature)[0]!["base"], 100);
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature)[2]!["base"], 3);
-      assert.equal(sensorListChartData.getOne(ReadingType.temperature)[0]!["one"], 98);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature].length, 3);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature][0]!["base"], 100);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature][2]!["base"], 3);
+      assert.equal(sensorListChartData.get().data[ReadingType.temperature][0]!["one"], 98);
 
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity).length, 3);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[0]!["one"], 99);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[1]!["one"], 29);
-      assert.equal(sensorListChartData.getOne(ReadingType.humidity)[2]!["one"], 2);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity].length, 3);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][0]!["one"], 99);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][1]!["one"], 29);
+      assert.equal(sensorListChartData.get().data[ReadingType.humidity][2]!["one"], 2);
     });
   });
 });

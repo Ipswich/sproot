@@ -1,14 +1,21 @@
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import {
+  IChartable,
+  ChartData,
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class SensorListChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;
+  chartSeries: ChartSeries[];
   readonly limit: number;
   readonly intervalSeconds: number;
   constructor(limit: number, interval: number, dataSeriesRecord?: Record<ReadingType, DataSeries>) {
     this.limit = limit;
     this.intervalSeconds = interval * 60000;
     this.chartData = {} as Record<ReadingType, ChartData>;
+    this.chartSeries = [];
     for (const readingType in dataSeriesRecord) {
       this.chartData[readingType as ReadingType] = new ChartData(
         limit,
@@ -19,28 +26,15 @@ export class SensorListChartData implements IChartable {
   }
 
   /**
-   * Gets a copy of a data series.
-   * @param key dataSeries key
-   * @returns a copy of the data series
-   */
-  getOne(key: ReadingType): DataSeries {
-    if (!this.chartData[key as ReadingType]) {
-      return [];
-    }
-
-    return [...this.chartData[key as ReadingType].get()];
-  }
-
-  /**
    * Gets a copy of all data series.
    * @returns a copy of all data series.
    */
-  getAll(): Record<ReadingType, DataSeries> {
+  get(): { data: Record<ReadingType, DataSeries>; series: ChartSeries[] } {
     const res = {} as Record<ReadingType, DataSeries>;
     for (const key in this.chartData) {
       res[key as ReadingType] = [...this.chartData[key as ReadingType].get()];
     }
-    return res;
+    return { data: res, series: this.chartSeries };
   }
 
   loadChartData(cache: DataSeries[], _sensorName: string, key: ReadingType): void {
@@ -56,7 +50,7 @@ export class SensorListChartData implements IChartable {
     //Merge all provided dataSeries into one
     const combinedDataSeries = ChartData.combineDataSeries(cache);
     for (const dataPoint of combinedDataSeries) {
-      const value = this.getOne(key).find((x) => x.name == dataPoint.name);
+      const value = this.get().data[key].find((x) => x.name == dataPoint.name);
       if (value) {
         //For each sensor in the dataPoint, conditionally find
         //and add the K:V sensorName:reading to chart data
@@ -68,6 +62,10 @@ export class SensorListChartData implements IChartable {
         }
       }
     }
+  }
+
+  loadChartSeries(series: ChartSeries[]): void {
+    this.chartSeries = series;
   }
 
   updateChartData(cache: DataSeries[], _sensorName: string, key: ReadingType): void {

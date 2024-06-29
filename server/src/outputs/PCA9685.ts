@@ -87,7 +87,7 @@ class PCA9685 {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const { id, model, address, name, pin, isPwm, isInvertedPwm, state } = this.#outputs[
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state } = this.#outputs[
         key
       ] as IOutputBase;
       cleanObject[key] = {
@@ -98,6 +98,7 @@ class PCA9685 {
         pin,
         isPwm,
         isInvertedPwm,
+        color,
         state,
       };
     }
@@ -168,14 +169,14 @@ class PCA9685Output extends OutputBase {
     switch (this.controlMode) {
       case ControlMode.manual:
         this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.manual.value}`,
+          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.manual.value}`,
         );
         this.#setPwm(this.state.manual.value);
         break;
 
       case ControlMode.schedule:
         this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model} ${this.id}, pin ${this.pin}. New value: ${this.state.schedule.value}`,
+          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.schedule.value}`,
         );
         this.#setPwm(this.state.schedule.value);
         break;

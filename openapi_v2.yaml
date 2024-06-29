@@ -1,0 +1,1319 @@
+openapi: "3.0.1"
+
+info:
+  title: "sproot"
+  version: "0.0.1"
+  description: >
+    Sproot is a general purpose environmental management system with a focus on greenhouse and garden.
+    The system is intended to be used to monitor and control various environmental parameters, to 
+    continuously update and maintain "homeostasis". This API is a machine-friendly interface for 
+    interacting with the system, and is designed to be used by a web-based front-end. This specification
+    can be used to generate client libraries, documentation, and other tools.
+
+paths:
+  /api/v2/ping:
+    get:
+      tags:
+        - "Ping"
+      summary: Ping the server.
+      description: >
+        Returns a simple 'pong' response. Useful for checking if the server is running, or connectivity.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "pong"
+
+  /api/v2/outputs:
+    get:
+      tags:
+        - "Outputs"
+      summary: Get all outputs.
+      description: > 
+        Returns a list of all outputs. This includes basic information about each output, such as 
+        name, model, and address. 
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/OutputBase"
+    post:
+      tags:
+        - "Outputs"
+      summary: Add a new output.
+      description: >
+        Adds a new output to the service, and regenerates the list of outputs. Returns the information
+        used to create the output.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBOutput"
+      responses:
+        201:
+          description: "Output created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBOutput"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs"
+                          details:
+                            example:
+                              - "Missing required field: model"
+                              - "Missing required field: address"
+                              - "Missing required field: name"
+                              - "Missing required field: pin"
+                              - "Missing required field: isPwm"
+                              - "Missing required field: isInvertedPwm"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/outputs"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add output to database."
+                                - "Database connection failed."
+
+  /api/v2/outputs/{id}:
+    get:
+      tags:
+        - "Outputs"
+      summary: Get an output by id.
+      description: >
+        Returns data for the given output. This includes basic information, such as name, model, 
+        and address. Also contains the current state of the output.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/OutputBase"
+        404:
+          description: "Output not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+    patch:
+      tags:
+        - "Outputs"
+      summary: Update an output by Id.
+      description: >
+        Updates an output with the given Id. This operation changes only the fields provided.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "PCA9685"
+                model:
+                  type: string
+                  example: "PCA9685"
+                address:
+                  type: string
+                  example: "0x40"
+                pin:
+                  type: number
+                  example: 0
+                isPwm:
+                  type: boolean
+                  example: true
+                isInvertedPwm:
+                  type: boolean
+                  example: false
+                color:
+                  type: string
+                  example: "#ff0000"
+      responses:
+        200:
+          description: "Output updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBOutput"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/outputs/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update output in database."
+                                - "Database connection failed."
+    delete:
+      tags:
+        - "Outputs"
+      summary: Delete an output by id.
+      description: >
+        Deletes an output with the given Id. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Output deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              "Output sucessfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/outputs/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete output from database."
+                                - "Database connection failed."
+  /api/v2/outputs/chart-data:
+    get:
+      tags:
+        - "Outputs"
+      summary: "Get all chart data."
+      parameters:
+        - name: "latest"
+          in: "query"
+          description: "Return only the latest data point."
+          schema:
+            type: string
+          example: "true"
+      description: "Returns chart data for all ouputs."
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              data:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/DataPoint"
+                                example:
+                                  - name: "1/24 12:00 am"
+                                    output1: "0"
+                                    output2: "50"
+                                    units: "%"
+                                  - name: "1/24 12:05 am"
+                                    output1: "0"
+                                    output2: "50"
+                                    units: "%"
+                              series:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/ChartSeries"
+                                example:
+                                  - name: "output1"
+                                    color: "lime"
+                                  - name: "output2"
+                                    color: "blue"
+  /api/v2/outputs/supported-models:
+    get:
+      tags:
+        - "Outputs"
+      summary: Get supported models.
+      description: Returns a list of supported output models. 
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - $ref: "#/components/schemas/SupportedModels"
+                            example:
+                              - "PCA9685"
+
+  /api/v2/outputs/{id}/control-mode:
+    put:
+      tags:
+        - "Output State"
+      summary: Set control mode for an output.
+      description: >
+        Sets the control mode for the output with the given Id. This operation changes the control mode
+        for the output.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                controlMode:
+                  type: string
+                  example: "manual"
+      responses:
+        200:
+          description: "Control mode set"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              - "Control mode successfully updated."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string/control-mode"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1/control-mode"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+
+  /api/v2/outputs/{id}/manual-state:
+    put:
+      tags:
+        - "Output State"
+      summary: Set manual state for an output.
+      description: >
+        Sets the manual state for the output with the given Id. 
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Output Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value:
+                  type: number
+                  example: 50
+      responses:
+        200:
+          description: "Manual state set"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              - "Manual state successfully updated."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/string/set-manual-state"
+                          details:
+                            example:
+                              - Invalid output Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1/set-manual-state"
+                          details:
+                            items:
+                              example: "Output with Id -1 not found."
+
+  /api/v2/sensors:
+    get:
+      tags:
+        - "Sensors"
+      summary: Get all sensors.
+      description: > 
+        Returns a list of all sensors. This includes basic information about each sensor, such as 
+        name, model, and address. Also contains the last reading and time of the last reading.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/SensorBase"
+    post:
+      tags:
+        - "Sensors"
+      summary: Add a new sensor.
+      description: >
+        Adds a new sensor to the service, and regenerates the list of sensors. Returns the information
+        used to create the sensor.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBSensor"
+      responses:
+        201:
+          description: "Sensor created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBSensor"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/sensors"
+                          details:
+                            example:
+                              - "Missing required field: name"
+                              - "Missing required field: model"
+                              - "Missing required field: address"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/sensors"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add sensor to database."
+                                - "Database connection failed."
+
+  /api/v2/sensors/{id}:
+    get:
+      tags:
+        - "Sensors"
+      summary: Get a sensor by id.
+      description: >
+        Returns data for the given sensor. This includes basic information, such as name, model, 
+        and address. Also contains the last reading and time of the last reading.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Sensor Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/SensorBase"
+
+        404:
+          description: "Sensor not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/sensors/-1"
+                          details:
+                            items:
+                              example: "Sensor with Id -1 not found."
+    patch:
+      tags:
+        - "Sensors"
+      summary: Update a sensor by Id.
+      description: >
+        Updates a sensor with the given Id. This operation changes only the fields provided.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Sensor Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Windowsill"
+                model:
+                  type: string
+                  example: "BME280"
+                address:
+                  type: string
+                  example: "0x76"
+                color:
+                  type: string
+                  example: "#ff0000"
+      responses:
+        200:
+          description: "Sensor updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBSensor"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/sensors/string"
+                          details:
+                            example:
+                              - Invalid sensor Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/sensors/-1"
+                          details:
+                            items:
+                              example: "Sensor with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/sensors/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update sensor in database."
+                                - "Database connection failed."
+    delete:
+      tags:
+        - "Sensors"
+      summary: Delete a sensor by id.
+      description: >
+        Deletes a sensor with the given Id. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: "Sensor Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Sensor deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: 
+                              "Sensor sucessfully deleted."
+                    
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/sensors/string"
+                          details:
+                            example:
+                              - Invalid sensor Id.
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/sensors/-1"
+                          details:
+                            items:
+                              example: "Sensor with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/sensors/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete sensor from database."
+                                - "Database connection failed."
+
+  /api/v2/sensors/chart-data:
+    get:
+      tags:
+        - "Sensors"
+      summary: "Get all chart data."
+      description: "Returns chart data for all sensors."
+      parameters:
+        - in: query
+          name: readingType
+          description: "Reading type"
+          schema:
+            type: string
+          example: "temperature"
+        - name: "latest"
+          in: "query"
+          description: "Return only the latest data point."
+          schema:
+            type: string
+          example: "true"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              temperature:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/DataPoint"
+                                example:
+                                  - name: "1/24 12:00 am"
+                                    sensor1: "25.000"
+                                    sensor2: "25.000"
+                                    units: "°C"
+                                  - name: "1/24 12:05 am"
+                                    sensor1: "25.625"
+                                    sensor2: "25.625"
+                                    units: "°C"
+                              humidity:
+                                type: array
+                                items:
+                                  $ref: "#/components/schemas/DataPoint"
+                                example:
+                                  - name: "1/24 12:00 am"
+                                    sensor1: "50.000"
+                                    sensor2: "50.000"
+                                    units: "%rH"
+                                  - name: "1/24 12:05 am"
+                                    sensor1: "50.625"
+                                    sensor2: "50.625"
+                                    units: "%rH"
+                          series:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/ChartSeries"
+                            example:
+                              - name: "sensor1"
+                                color: "lime"
+                              - name: "sensor2"
+                                color: "blue"
+
+  /api/v2/sensors/supported-models:
+    get:
+      tags:
+        - "Sensors"
+      summary: Get supported models.
+      description: Returns a list of supported sensor models. 
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - $ref: "#/components/schemas/SupportedModels"
+                            example:
+                              - "DS18B20"
+                              - "BME280"
+
+components:
+  schemas:
+    ApiResponse:
+      description: >
+        A generic response object that is returned by all API endpoints. Contains a status code, 
+        timestamp, and a unique request Id.
+      type: object
+      required:
+        - "statusCode"
+        - "timestamp"
+        - "requestId"
+      properties:
+        statusCode:
+          type: integer
+        timestamp:
+          type: string
+          example: "2021-01-01T00:00:00.000Z"
+        requestId:
+          type: string
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+
+    SuccessResponse:
+      description: >
+        A generic success response object that is returned by all successful API endpoints. 
+        Contains a status code, timestamp, a unique request Id, and, optionally, some content.
+      allOf:
+        - type: object
+          properties:
+            statusCode:
+              type: integer
+            content:
+              type: object
+              required:
+                - "data"
+              properties:
+                data:
+                  anyOf:
+                    - $ref: "#/components/schemas/SupportedModels"
+                    - type: array
+                      items:
+                        oneOf:
+                          - $ref: "#/components/schemas/SensorBase"
+                          - $ref: "#/components/schemas/OutputBase"
+                          
+                          
+                    - type: string
+                    - type: number
+                    - type: integer
+                    - type: boolean
+                    - type: array
+                    - type: object
+        - $ref: "#/components/schemas/ApiResponse"
+
+    ErrorResponse:
+      description: >
+        A generic error response object that is returned by all unsuccessful API endpoints. 
+        Contains a status code, timestamp, a unique request Id, and an error object. This error
+        object may contain the name of the error, and an array of details (if relevant).
+      allOf:
+        - type: object
+          required:
+            - "error"
+          properties:
+            statusCode:
+              type: integer
+            error:
+              type: object
+              properties:
+                name:
+                  type: string
+                details:
+                  type: array
+        - $ref: "#/components/schemas/ApiResponse"
+
+    SDBOutput:
+      description: >
+        An output object that is stored in the database. Contains all the information needed to 
+        create an output, including model, address, name, pin, if the output is a pwm, whether that
+        pwm value is should be inverted, and, optionally, color.
+      type: object
+      required:
+        - "model"
+        - "address"
+        - "name"
+        - "pin"
+        - "isPwm"
+        - "isInvertedPwm"
+      properties:
+        model:
+          type: string
+          example: "PCA9685"
+        address:
+          type: string
+          example: "0x40"
+        name:
+          type: string
+          example: "PCA9685"
+        pin:
+          type: number
+          example: 0
+        isPwm:
+          type: boolean
+          example: true
+        isInvertedPwm:
+          type: boolean
+          example: false
+        color:
+          type: string
+          example: "#ff0000"
+    
+    OutputBase:
+      description: >
+        A basic output object that is returned by the API. This expands upon SDBOutput, including the
+        id and state of the output.
+      allOf:
+        - $ref: "#/components/schemas/SDBOutput"
+        - type: object
+          required:
+            - "id"
+            - "name"
+            - "model"
+            - "address"
+            - "state"
+          properties:
+            id:
+              type: number
+              example: 1
+            state:
+              type: object
+              properties:
+                controlMode:
+                  type: string
+                  example: "manual"
+                manual:
+                  allOf:
+                    - $ref: "#/components/schemas/SDBOutputState"
+                schedule:
+                  allOf:
+                    - $ref: "#/components/schemas/SDBOutputState"
+
+    SDBOutputState:
+      description: >
+        An output state object that is stored in the database. Contains all the information needed to 
+        define an output's state, including control mode, value, and log time.
+      type: object
+      required:
+        - value
+        - logTime
+      properties:
+        controlMode:
+          type: string
+          example: "manual"
+        value:
+          type: number
+          example: 50
+        logTime:
+          type: string
+          example: "2021-01-01T00:00:00.000Z"
+        
+    SDBSensor:
+      description: >
+        A sensor object that is stored in the database. Contains all the information needed to 
+        create a sensor, including name, model, address, and, optionally, color.
+      type: object
+      required:
+        - "name"
+        - "model"
+        - "address"
+      properties:
+        name:
+          type: string
+          example: "Windowsill"
+        model:
+          type: string
+          example: "DS18B20"
+        address:
+          type: string
+          example: "28-00000"
+        color:
+          type: string
+          example: "#ff0000"
+
+    SensorBase:
+      description: >
+        A basic sensor object that is returned by the API. This expands upon SDBSensor, including the
+        last reading, last reading time, and units.
+      allOf:
+        - $ref: "#/components/schemas/SDBSensor"
+        - type: object
+          required:
+            - "id"
+            - "name"
+            - "model"
+            - "address"
+            - "lastReading"
+            - "lastReadingTime"
+            - "units"
+          properties:
+            id:
+              type: number
+              example: 1
+            lastReading:
+              type: object
+              properties:
+                temperature:
+                  type: string
+                  example: "23.5"
+            lastReadingTime:
+              type: string
+              format: date-time
+              nullable: true
+              example: "2021-01-01T00:00:00.000Z"
+            units:
+              type: object
+              properties:
+                temperature:
+                  type: string
+                  example: "C"
+
+    SupportedModels:
+      description: >
+        A list of supported device models.
+      type: array
+      items:
+        type: string
+    
+    DataPoint:
+      description: >
+        A data point for recharts.
+      type: object
+      required:
+        - "name"
+      properties:
+        name:
+          type: string
+        units:
+          type: string
+    
+    ChartSeries:
+      description: >
+        An object containing both a name and a color. Used to add flair to a line on a chart.
+      type: object
+      required:
+        - "name"
+        - "color"
+      properties:
+        name:
+          type: string
+        color:
+          type: string

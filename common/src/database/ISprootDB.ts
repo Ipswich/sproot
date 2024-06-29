@@ -3,7 +3,7 @@ import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
 import { SDBUser } from "@sproot/sproot-common/src/database/SDBUser";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { ControlMode, IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
 
 interface ISprootDB {
@@ -25,9 +25,11 @@ interface ISprootDB {
   addOutputAsync(output: SDBOutput): Promise<void>;
   updateOutputAsync(output: SDBOutput): Promise<void>;
   deleteOutputAsync(id: number): Promise<void>;
-  addOutputStateAsync(
-    output: IOutputBase | { id: number; value: number; controlMode: any },
-  ): Promise<void>;
+  addOutputStateAsync(output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void>;
   getOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
@@ -40,7 +42,6 @@ interface ISprootDB {
 
 /* istanbul ignore next */
 class MockSprootDB implements ISprootDB {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getOutputStatesAsync(
     _output: IOutputBase | { id: number },
     _since: Date,
@@ -50,8 +51,11 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async addOutputStateAsync(_output: IOutputBase): Promise<void> {
+  async addOutputStateAsync(_output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void> {
     return;
   }
 
@@ -59,7 +63,6 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getOutputAsync(_id: number): Promise<SDBOutput[]> {
     return [];
   }

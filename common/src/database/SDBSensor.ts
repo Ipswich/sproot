@@ -1,11 +1,11 @@
 import { RowDataPacket } from "mysql2";
 
-interface SDBSensor extends RowDataPacket {
+type SDBSensor = RowDataPacket & {
   id: number;
   name: string;
   model: string;
   address: string | null;
-  color?: string;
-}
+  color: string | null;
+};
 
 export type { SDBSensor };

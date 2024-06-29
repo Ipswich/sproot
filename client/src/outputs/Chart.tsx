@@ -1,7 +1,7 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
 // import { Paper, Text } from "@mantine/core";
-import { ChartData } from "@sproot/sproot-common/src/utility/IChartable";
+import { ChartData } from "@sproot/sproot-common/src/utility/ChartData";
 
 export interface OutputChartProps {
   chartData: ChartData;

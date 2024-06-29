@@ -1,9 +1,15 @@
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import {
+  IChartable,
+  ChartData,
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class SensorChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;
+  chartSeries: ChartSeries;
   readonly limit: number;
   readonly intervalMinutes: number;
   constructor(
@@ -31,31 +37,19 @@ export class SensorChartData implements IChartable {
         );
       }
     }
-  }
-
-  /**
-   * Gets a copy of a data series.
-   * @param key dataSeries key
-   * @returns a copy of the data series
-   */
-  getOne(key: ReadingType): DataSeries {
-    if (!this.chartData[key as ReadingType]) {
-      return [];
-    }
-
-    return [...this.chartData[key as ReadingType].get()];
+    this.chartSeries = { name: "", color: "" };
   }
 
   /**
    * Gets a copy of all data series.
    * @returns a copy of all data series.
    */
-  getAll(): Record<ReadingType, DataSeries> {
+  get(): { data: Record<ReadingType, DataSeries>; series: ChartSeries } {
     const res = {} as Record<ReadingType, DataSeries>;
     for (const key in this.chartData) {
-      res[key as ReadingType] = { ...this.chartData[key as ReadingType].get() };
+      res[key as ReadingType] = [...this.chartData[key as ReadingType].get()];
     }
-    return res;
+    return { data: res, series: this.chartSeries };
   }
 
   loadChartData(cache: SDBReading[], sensorName: string, key: ReadingType): void {
@@ -65,12 +59,16 @@ export class SensorChartData implements IChartable {
     }
     for (const reading of cache) {
       const formattedDate = ChartData.formatDateForChart(reading.logTime);
-      const value = this.getOne(key).find((x) => x.name == formattedDate);
+      const value = this.get().data[key].find((x) => x.name == formattedDate);
       if (value) {
         value.units = reading.units;
         value[sensorName] = ChartData.formatDecimalReadingForDisplay(reading.data);
       }
     }
+  }
+
+  loadChartSeries(series: ChartSeries): void {
+    this.chartSeries = series;
   }
 
   updateChartData(cache: SDBReading[], sensorName: string, key: ReadingType): void {

@@ -1,29 +1,43 @@
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { IChartable, ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/IChartable";
+import {
+  IChartable,
+  ChartData,
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/dist/utility/ChartData";
 
 export class OutputChartData implements IChartable {
   chartData: ChartData;
+  chartSeries: ChartSeries;
   intervalMinutes: number;
   limit: number;
   constructor(limit: number, intervalMinutes: number, dataSeries?: DataSeries) {
     this.limit = limit;
     this.intervalMinutes = intervalMinutes;
     this.chartData = new ChartData(limit, intervalMinutes, dataSeries);
+    this.chartSeries = { name: "", color: "" };
   }
 
-  get(): DataSeries {
-    return this.chartData.get();
+  get(): { data: DataSeries; series: ChartSeries } {
+    return {
+      data: this.chartData.get(),
+      series: this.chartSeries,
+    };
   }
 
   loadChartData(cache: SDBOutputState[], outputName: string): void {
     for (const state of cache) {
       const formattedDate = ChartData.formatDateForChart(state.logTime);
-      const value = this.get().findIndex((x) => x.name == formattedDate);
-      if (value >= 0 && this.get()[value]) {
-        this.get()[value]!.units = "%";
-        this.get()[value]![outputName] = state.value.toString();
+      const value = this.get().data.findIndex((x) => x.name == formattedDate);
+      if (value >= 0 && this.get().data[value]) {
+        this.get().data[value]!.units = "%";
+        this.get().data[value]![outputName] = state.value.toString();
       }
     }
+  }
+
+  loadChartSeries(series: ChartSeries): void {
+    this.chartSeries = series;
   }
 
   updateChartData(cache: SDBOutputState[], outputName: string): void {

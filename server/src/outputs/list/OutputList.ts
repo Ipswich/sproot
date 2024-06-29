@@ -5,30 +5,16 @@ import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
+import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
-
-const COLORS = [
-  "lime",
-  "green",
-  "teal",
-  "cyan",
-  "blue",
-  "indigo",
-  "violet",
-  "grape",
-  "pink",
-  "red",
-  "orange",
-  "yellow",
-];
 
 class OutputList {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
-  chartData: OutputListChartData;
-  colorIndex: number;
+  #chartData: OutputListChartData;
+  #colorIndex: number;
   maxCacheSize: number;
   initialCacheLookback: number;
   maxChartDataSize: number;
@@ -42,7 +28,7 @@ class OutputList {
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    this.colorIndex = 0;
+    this.#colorIndex = 0;
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
@@ -58,7 +44,7 @@ class OutputList {
     this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
     this.chartDataPointInterval = chartDataPointInterval;
-    this.chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
+    this.#chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
   }
 
   get outputs(): Record<string, OutputBase> {
@@ -68,7 +54,7 @@ class OutputList {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const { id, model, address, name, pin, isPwm, isInvertedPwm, state } = this.#outputs[
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state } = this.#outputs[
         key
       ] as IOutputBase;
       cleanObject[key] = {
@@ -79,10 +65,15 @@ class OutputList {
         pin,
         isPwm,
         isInvertedPwm,
+        color,
         state,
       };
     }
     return cleanObject;
+  }
+
+  get chartData(): OutputListChartData {
+    return this.#chartData;
   }
 
   updateControlMode(outputId: string, controlMode: ControlMode): void {
@@ -121,51 +112,50 @@ class OutputList {
     const profiler = this.#logger.startTimer();
     const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
 
+    const promises = [];
     for (const output of outputsFromDatabase) {
       const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
       if (key) {
-        //Update old ones
-        let update = false;
+        //Update if it exists
         if (this.#outputs[key]?.name != output.name) {
-          update = true;
+          outputListChanges = true;
           this.#outputs[key]!.name = output.name;
         }
 
         if (this.#outputs[key]?.isPwm != output.isPwm) {
-          update = true;
+          outputListChanges = true;
           this.#outputs[key]!.isPwm = output.isPwm;
         }
 
         if (this.#outputs[key]?.isInvertedPwm != output.isInvertedPwm) {
-          update = true;
+          outputListChanges = true;
           this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
         }
 
-        if (this.#outputs[key]?.color != output.color) {
-          update = true;
+        if (output.color != null && this.#outputs[key]?.color != output.color) {
+          outputListChanges = true;
           this.#outputs[key]!.color = output.color;
         }
 
-        if (update) {
+        if (outputListChanges) {
           this.#logger.info(
             `Updating output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
           );
-          outputListChanges = true;
         }
       } else {
-        //Add new ones
-        try {
-          this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
-
-          await this.#createOutputAsync(output);
-          outputListChanges = true;
-        } catch (err) {
-          this.#logger.error(
-            `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
-          );
-        }
+        //Create if it doesn't
+        this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
+        promises.push(
+          this.#createOutputAsync(output).catch((err) =>
+            this.#logger.error(
+              `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
+            ),
+          ),
+        );
+        outputListChanges = true;
       }
     }
+    await Promise.allSettled(promises);
 
     //Remove deleted ones
     const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
@@ -187,10 +177,12 @@ class OutputList {
     }
 
     if (outputListChanges) {
-      const dataSeries = Object.values(this.outputs).map((output) => output.chartData.get());
-      this.chartData.loadChartData(dataSeries, "output");
+      const data = Object.values(this.outputs).map((output) => output.chartData.get().data);
+      const series = Object.values(this.outputs).map((output) => output.chartData.get().series);
+      this.#chartData.loadChartData(data, "output");
+      this.#chartData.loadChartSeries(series);
       this.#logger.info(
-        `Loaded aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
+        `Loaded aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
       );
     }
 
@@ -206,12 +198,12 @@ class OutputList {
     });
 
     if (new Date().getMinutes() % 5 == 0) {
-      this.chartData.updateChartData(
-        Object.values(this.outputs).map((output) => output.chartData.get()),
+      this.#chartData.updateChartData(
+        Object.values(this.outputs).map((output) => output.chartData.get().data),
         "output",
       );
       this.#logger.info(
-        `Updated aggregate output chart data. Data count: ${Object.keys(this.chartData.chartData.get()).length}`,
+        `Updated aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
       );
     }
   }
@@ -231,6 +223,10 @@ class OutputList {
 
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | null = null;
+    if (output.color == undefined) {
+      output.color = DefaultColors[this.#colorIndex] ?? "#000000";
+      this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
+    }
     switch (output.model.toLowerCase()) {
       case "pca9685": {
         if (!output.address) {
@@ -239,15 +235,10 @@ class OutputList {
         newOutput = await this.#PCA9685.createOutput(output);
         break;
       }
-      default: {
+      default:
         throw new OutputListError(`Unrecognized output model ${output.model}`);
-      }
     }
     if (newOutput) {
-      if (!newOutput.color) {
-        newOutput.color = COLORS[this.colorIndex];
-        this.colorIndex = (this.colorIndex + 1) % COLORS.length;
-      }
       this.#outputs[output.id] = newOutput;
     }
   }

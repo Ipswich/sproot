@@ -1,4 +1,4 @@
-import { DataPoint, DataSeries } from "@sproot/utility/IChartable";
+import { DataPoint, DataSeries } from "@sproot/utility/ChartData";
 import { assert } from "chai";
 import { OutputListChartData } from "../OutputListChartData";
 

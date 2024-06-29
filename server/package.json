@@ -13,7 +13,8 @@
     "prettier:check": "npx --yes prettier . --check",
     "start": "npm run build && node ./dist/index.js",
     "start:dev": "npx nodemon --delay 3",
-    "test": "npm run prettier:check && npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
+    "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts",
+    "check": "npm run prettier:check && npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
   },
   "author": "Ben Steele",
   "license": "ISC",
@@ -55,6 +56,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-openapi-validator": "^5.2.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "mysql2": "^3.6.0",
