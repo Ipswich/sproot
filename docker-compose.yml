@@ -1,34 +1,34 @@
-version: "3"
 services:
   server:
     restart: unless-stopped
     depends_on:
       - db
     build:
+      tags:
+        - ${TAG}
       context: ./
       dockerfile: ./server/Dockerfile
     environment:
-      TZ: America/Los_Angeles
-      NODE_ENV: production
-      DEFAULT_USER: dev-test #Change this to something unique
-      DEFAULT_USER_EMAIL: dev-test@example.com 
-      DEFAULT_USER_PASSWORD: password #Change this to something long and unique
-      APPLICATION_PORT: 3000
-      AUTHENTICATION_ENABLED: false
-      JWT_SECRET: CHANGE ME #Change this to something long and unique
-      JWT_EXPIRATION: 3d
-      DATABASE_HOST: db
-      DATABASE_PORT: 3306
-      DATABASE_USER: root
-      DATABASE_PASSWORD: root #**MATCH ME**
-      DATABASE_NAME: sproot
-      STATE_UPDATE_INTERVAL: 1000
-      DATABASE_UPDATE_INTERVAL: 60000
-      MAX_CACHE_SIZE: 10080 #7 days worth of minutes
-      INITIAL_CACHE_LOOKBACK: 10080 #7 days in minutes
-      CHART_DATA_POINT_INTERVAL: 5 #5 minutes (i.e. 5 minutes between each data point)
-      MAX_CHART_DATA_POINTS: 2016
-
+      - TZ=${TZ}
+      - NODE_ENV=${NODE_ENV}
+      - DEFAULT_USER=${DEFAULT_USER}
+      - DEFAULT_USER_EMAIL=${DEFAULT_USER_EMAIL}
+      - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD}
+      - APPLICATION_PORT=${APPLICATION_PORT}
+      - AUTHENTICATION_ENABLED=${AUTHENTICATION_ENABLED}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - STATE_UPDATE_INTERVAL=${STATE_UPDATE_INTERVAL}
+      - DATABASE_UPDATE_INTERVAL=${DATABASE_UPDATE_INTERVAL}
+      - MAX_CACHE_SIZE=${MAX_CACHE_SIZE}
+      - INITIAL_CACHE_LOOKBACK=${INITIAL_CACHE_LOOKBACK}
+      - CHART_DATA_POINT_INTERVAL=${CHART_DATA_POINT_INTERVAL}
+      - MAX_CHART_DATA_POINTS=${MAX_CHART_DATA_POINTS}
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
@@ -43,17 +43,19 @@ services:
     depends_on:
       - server
     build:
+      tags:
+        - ${TAG}
       context: ./
       dockerfile: ./client/Dockerfile
       args:
-        VITE_PRECONFIGURED: "false"
-        VITE_CHART_DATA_POINT_INTERVAL: 5
-        VITE_MAX_CHART_DATA_POINTS: 10080 #7 days worth of minutes
-        VITE_API_SERVER_URL: "" #SET THIS TO YOUR SERVER'S PUBLIC IP (ex. http://192.168.1.2)
-        VITE_CLIENT_VERSION: $npm_package_version
+        - VITE_PRECONFIGURED=${PRECONFIGURED}
+        - VITE_CHART_DATA_POINT_INTERVAL=${CHART_DATA_POINT_INTERVAL}
+        - VITE_MAX_CHART_DATA_POINTS=${MAX_CHART_DATA_POINTS}
+        - VITE_API_SERVER_URL=${API_SERVER_URL}
+        - VITE_CLIENT_VERSION=${CLIENT_VERSION}
     environment:
-      TZ: America/Los_Angeles
-      NODE_ENV: production
+      - TZ=${TZ}
+      - NODE_ENV=${NODE_ENV}
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
     networks:
@@ -68,7 +70,7 @@ services:
       MARIADB_ROOT_PASSWORD: root #**MATCH ME**
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-      - ./sproot-schema.sql:/docker-entrypoint-initdb.d/sproot-schema.sql
+      - ${DATABASE_SCHEMA}:/docker-entrypoint-initdb.d/sproot-schema.sql
     networks:
       - sproot-network
     ports:
