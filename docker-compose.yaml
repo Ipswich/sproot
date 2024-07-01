@@ -1,5 +1,7 @@
 services:
   server:
+    env_file:
+      - .env.production
     restart: unless-stopped
     depends_on:
       - db
@@ -39,6 +41,8 @@ services:
     privileged: true
   
   client:
+    env_file:
+      - .env.production
     restart: unless-stopped
     depends_on:
       - server
