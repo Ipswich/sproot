@@ -3,7 +3,8 @@ services:
     depends_on:
       - db
     build:
-      tag: develop
+      tags:
+        - develop
       context: ./
       dockerfile: ./server/Dockerfile.development
     environment:
@@ -22,7 +23,6 @@ services:
       DATABASE_PASSWORD: root #**MATCH ME**
       DATABASE_NAME: sproot
       STATE_UPDATE_INTERVAL: 1000
-      DATABASE_UPDATE_INTERVAL: 60000
       MAX_CACHE_SIZE: 10080 #7 days worth of minutes
       INITIAL_CACHE_LOOKBACK: 10080 #7 days in minutes
       CHART_DATA_POINT_INTERVAL: 5 #5 minutes (i.e. 5 minutes between each data point)
@@ -41,7 +41,8 @@ services:
     depends_on:
       - server
     build:
-      tag: develop
+      tags: 
+        - develop
       context: ./
       dockerfile: ./client/Dockerfile.development
       args:

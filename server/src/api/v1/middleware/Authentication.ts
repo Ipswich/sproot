@@ -1,4 +1,3 @@
-import "dotenv/config";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import express, { Request, Response, NextFunction } from "express";

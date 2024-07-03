@@ -3,12 +3,10 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
-import morgan from "morgan";
 import mysql2 from "mysql2/promise";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import * as winston from "winston";
-import "winston-daily-rotate-file";
 
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
@@ -21,6 +19,7 @@ import outputRouter from "./api/v1/OutputRouter";
 import homeRouter from "./api/v1/HomeRouter";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import ApiRootV2 from "./api/v2/ApiRootV2";
+import setupLogger from "./logger";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
@@ -32,60 +31,7 @@ const mysqlConfig = {
 };
 
 const app = express();
-
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.combine(
-    winston.format.errors({ stack: true }),
-    winston.format.timestamp({
-      format: () => {
-        return new Date().toLocaleString("en-US", {
-          timeZone: process.env["TZ"],
-        });
-      },
-    }),
-    winston.format.colorize(),
-    winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`),
-  ),
-  transports: [
-    new winston.transports.DailyRotateFile({
-      filename: "logs/sproot-server-%DATE%.log",
-      datePattern: "YYYY-MM-DD",
-      maxFiles: "30d",
-    }),
-  ],
-});
-
-if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
-  logger.add(
-    new winston.transports.Console({
-      level: "debug",
-      format: winston.format.combine(
-        winston.format.errors({ stack: true }),
-        winston.format.colorize(),
-        winston.format.printf(formatForDebug),
-      ),
-    }),
-  );
-  logger.add(
-    new winston.transports.File({
-      filename: "logs/debug.log",
-      level: "debug",
-      format: winston.format.combine(
-        winston.format.errors({ stack: true }),
-        winston.format.colorize(),
-        winston.format.printf(formatForDebug),
-      ),
-    }),
-  );
-  app.use(
-    morgan("dev", {
-      stream: {
-        write: (message: string) => logger.http(message.trim()),
-      },
-    }),
-  );
-}
+const logger = setupLogger(app);
 
 (async () => {
   const profiler = logger.startTimer();
@@ -93,6 +39,7 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
   app.set("logger", logger);
+
   await defaultUserCheck(sprootDB, logger);
 
   logger.info("Creating sensor and output lists. . .");
@@ -128,22 +75,21 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
       outputList.initializeOrRegenerateAsync(),
     ]);
     logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
-    //Add triggers and shit here.
+    //Add triggers and whatnot here.
 
     //Execute any changes made to state.
     outputList.executeOutputState();
   }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
 
-  //  update loop
+  // Update loop - once a minute, that's the "frequency" of the system.
   const updateDatabaseLoop = setInterval(async () => {
     await sensorList.updateDataStoresAsync();
     await outputList.updateDataStoresAsync();
-  }, parseInt(process.env["DATABASE_UPDATE_INTERVAL"]!));
+  }, 60000);
 
   app.use(cors());
   app.use(cookieParser());
   app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
 
   // API v1
   app.use("/api/v1/authenticate", login);
@@ -205,14 +151,6 @@ if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
     });
   }
 })();
-
-function formatForDebug(info: winston.Logform.TransformableInfo): string {
-  let base = `[${info["timestamp"]}] ${info.level}: ${info.message}`;
-  if (info["durationMs"]) {
-    base += ` (${info["durationMs"]}ms)`;
-  }
-  return base;
-}
 
 async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
   const defaultUser = {

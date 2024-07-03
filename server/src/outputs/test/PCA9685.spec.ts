@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { PCA9685 } from "@sproot/sproot-server/src/outputs/PCA9685";

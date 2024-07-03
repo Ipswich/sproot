@@ -101,7 +101,6 @@ describe("SensorChartDataHandlers.ts tests", () => {
         },
         query: { latest: "true", readingType: "temperature" },
       } as unknown as Request;
-      console.log(chartData.data);
       const response = sensorChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
       assert.deepEqual(response.content?.data, {

@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { readFile } from "node:fs/promises";
 import winston from "winston";
 
