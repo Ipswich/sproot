@@ -5,12 +5,15 @@ import { Request, Response } from "express";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
-export async function authenticateAsync(
+export async function getTokenAsync(
   request: Request,
   response: Response,
+  isAuthEnabled: string,
+  jwtExpiration: string,
+  jwtSecret: string,
 ): Promise<SuccessResponse | ErrorResponse> {
   let authenticationResponse: SuccessResponse | ErrorResponse;
-  if (process.env["AUTHENTICATION_ENABLED"]?.toLowerCase() != "true") {
+  if (isAuthEnabled.toLowerCase() != "true") {
     authenticationResponse = {
       statusCode: 501,
       error: {
@@ -45,8 +48,8 @@ export async function authenticateAsync(
   const sprootDB = request.app.get("sprootDB") as ISprootDB;
   const user = await sprootDB.getUserAsync(request.body.username);
   if (user?.length > 0 && (await bcrypt.compare(request.body.password, user[0]!["hash"]))) {
-    const token = jwt.sign({ username: request.body.username }, process.env["JWT_SECRET"]!, {
-      expiresIn: process.env["JWT_EXPIRATION"]!,
+    const token = jwt.sign({ username: request.body.username }, jwtSecret, {
+      expiresIn: jwtExpiration,
     });
     authenticationResponse = {
       statusCode: 200,

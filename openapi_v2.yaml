@@ -11,13 +11,13 @@ info:
     can be used to generate client libraries, documentation, and other tools.
 
 paths:
-  /api/v2/authenticate:
+  /api/v2/authenticate/token:
     post:
       tags:
         - "Authentication"
       summary: Get an authentication token.
       description: >
-        Authenticates a user and returns a JWT token. This token is required to access the API.
+        Authenticates a user and returns a JWT token to be used as a Bearer Authorization header.
       requestBody:
         required: true
         content:
