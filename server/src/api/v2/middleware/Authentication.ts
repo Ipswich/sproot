@@ -16,7 +16,7 @@ export async function authenticate(request: Request, response: Response, next: N
     error: {
       name: "Unauthorized",
       url: request.originalUrl,
-      details: ["Invalid or Missing JWT."]
+      details: ["Invalid or Missing JWT."],
     },
     ...response.locals["defaultProperties"],
   };

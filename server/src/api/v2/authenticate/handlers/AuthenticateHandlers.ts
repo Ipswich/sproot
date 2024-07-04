@@ -6,7 +6,10 @@ import { Request, Response } from "express";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
-export async function authenticateAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+export async function authenticateAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
   let authenticationResponse: SuccessResponse | ErrorResponse;
   if (process.env["AUTHENTICATION_ENABLED"]?.toLowerCase() != "true") {
     authenticationResponse = {

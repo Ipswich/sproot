@@ -45,7 +45,7 @@ function ApiRootV2(app: Express) {
         url: req.originalUrl,
         details: err.errors ?? [],
       },
-      ...(res.locals["defaultProperties"]),
+      ...res.locals["defaultProperties"],
     };
 
     // Log 500s

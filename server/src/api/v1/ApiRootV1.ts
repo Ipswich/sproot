@@ -7,15 +7,14 @@ import sensorRouter from "./SensorRouter";
 import outputRouter from "./OutputRouter";
 import homeRouter from "./HomeRouter";
 
-
 function ApiRootV1(app: Express) {
   app.use("/api/v1/authenticate", login);
   app.use("/api/v1/", homeRouter);
   app.use("/api/v1/sensors", authenticate, sensorRouter);
   app.use("/api/v1/outputs", authenticate, outputRouter);
-  
+
   const openapi_v1_doc = YAML.load("../openapi_v1.yaml");
-  
+
   app.use(
     "/api/v1/docs",
     swaggerUi.serveFiles(openapi_v1_doc, {
