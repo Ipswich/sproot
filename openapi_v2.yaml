@@ -15,7 +15,7 @@ paths:
     post:
       tags:
         - "Authentication"
-      summary: Authenticate a user.
+      summary: Get an authentication token.
       description: >
         Authenticates a user and returns a JWT token. This token is required to access the API.
       requestBody:
