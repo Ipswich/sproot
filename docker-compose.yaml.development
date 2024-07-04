@@ -3,8 +3,6 @@ services:
     depends_on:
       - db
     build:
-      tags:
-        - sproot-server:develop
       context: ./
       dockerfile: ./server/Dockerfile.development
     environment:
@@ -41,8 +39,6 @@ services:
     depends_on:
       - server
     build:
-      tags: 
-        - sproot-client:develop
       context: ./
       dockerfile: ./client/Dockerfile.development
       args:
