@@ -3,10 +3,9 @@ import * as OpenApiValidator from "express-openapi-validator";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 
-import addDefaultProperties, {
-  createDefaultProperties,
-} from "./middleware/DefaultResponseProperties";
-import login from "./middleware/Authentication";
+import addDefaultProperties from "./middleware/DefaultResponseProperties";
+import { authenticate } from "./middleware/Authentication";
+import authenticateRouter from "./authenticate/authenticateRouter";
 import pingRouter from "./ping/PingRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
@@ -31,13 +30,13 @@ function ApiRootV2(app: Express) {
     swaggerUi.setup(openapi_v2_doc),
   );
 
-  app.use("/api/v2/authenticate", openApiValidator, addDefaultProperties, login);
+  app.use("/api/v2/authenticate", openApiValidator, addDefaultProperties, authenticateRouter);
   app.use("/api/v2/ping", openApiValidator, addDefaultProperties, pingRouter);
 
-  app.use("/api/v2/sensors", openApiValidator, addDefaultProperties, sensorsRouter);
-  app.use("/api/v2/outputs", openApiValidator, addDefaultProperties, outputsRouter);
+  app.use("/api/v2/sensors", openApiValidator, addDefaultProperties, authenticate, sensorsRouter);
+  app.use("/api/v2/outputs", openApiValidator, addDefaultProperties, authenticate, outputsRouter);
 
-  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  app.use(addDefaultProperties, (err: any, req: Request, res: Response, _next: NextFunction) => {
     // format error
     let errorResponse = {
       statusCode: err.status ?? 500,
@@ -46,7 +45,7 @@ function ApiRootV2(app: Express) {
         url: req.originalUrl,
         details: err.errors ?? [],
       },
-      ...(res.locals["defaultProperties"] ?? createDefaultProperties()),
+      ...(res.locals["defaultProperties"]),
     };
 
     // Log 500s

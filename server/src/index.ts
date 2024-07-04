@@ -1,25 +1,20 @@
+import "dotenv/config";
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import "dotenv/config";
 import express from "express";
 import mysql2 from "mysql2/promise";
-import swaggerUi from "swagger-ui-express";
-import YAML from "yamljs";
 import * as winston from "winston";
 
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
+import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
 import { OutputList } from "./outputs/list/OutputList";
 
-import login, { authenticate } from "./api/v1/middleware/Authentication";
-import sensorRouter from "./api/v1/SensorRouter";
-import outputRouter from "./api/v1/OutputRouter";
-import homeRouter from "./api/v1/HomeRouter";
-import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
-import ApiRootV2 from "./api/v2/ApiRootV2";
 import setupLogger from "./logger";
+import ApiRootV1 from "./api/v1/ApiRootV1";
+import ApiRootV2 from "./api/v2/ApiRootV2";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
@@ -92,20 +87,7 @@ const logger = setupLogger(app);
   app.use(express.json());
 
   // API v1
-  app.use("/api/v1/authenticate", login);
-  app.use("/api/v1/", homeRouter);
-  app.use("/api/v1/sensors", authenticate, sensorRouter);
-  app.use("/api/v1/outputs", authenticate, outputRouter);
-
-  const openapi_v1_doc = YAML.load("./openapi_v1.yaml");
-
-  app.use(
-    "/api/v1/docs",
-    swaggerUi.serveFiles(openapi_v1_doc, {
-      swaggerOptions: { defaultModelsExpandDepth: -1 },
-    }),
-    swaggerUi.setup(openapi_v1_doc),
-  );
+  ApiRootV1(app);
 
   // API v2
   ApiRootV2(app);

@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import supportedModelsHandler from "./handlers/SupportedModelsHandlers";
+import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
