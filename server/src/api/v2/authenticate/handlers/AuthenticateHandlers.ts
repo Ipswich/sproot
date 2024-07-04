@@ -52,7 +52,7 @@ export async function authenticateAsync(
     authenticationResponse = {
       statusCode: 200,
       content: {
-        data: { jwt: token },
+        data: { token: token },
       },
       ...response.locals["defaultProperties"],
     };
