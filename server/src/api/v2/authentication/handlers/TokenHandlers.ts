@@ -64,7 +64,7 @@ export async function getTokenAsync(
       error: {
         name: "Unauthorized",
         url: request.originalUrl,
-        details: ["Invalid credentials"],
+        details: ["Invalid username or password."],
       },
       ...response.locals["defaultProperties"],
     };
