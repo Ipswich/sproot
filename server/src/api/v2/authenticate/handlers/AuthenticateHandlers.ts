@@ -1,4 +1,3 @@
-import process from "process";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";

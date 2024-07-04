@@ -133,6 +133,8 @@ paths:
 
   /api/v2/outputs:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Outputs"
       summary: Get all outputs.
@@ -175,6 +177,8 @@ paths:
                             items:
                               example: "Invalid or Missing JWT."
     post:
+      security:
+        - bearerAuth: []
       tags:
         - "Outputs"
       summary: Add a new output.
@@ -268,6 +272,8 @@ paths:
 
   /api/v2/outputs/{id}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Outputs"
       summary: Get an output by id.
@@ -337,6 +343,8 @@ paths:
                             items:
                               example: "Output with Id -1 not found."
     patch:
+      security:
+        - bearerAuth: []
       tags:
         - "Outputs"
       summary: Update an output by Id.
@@ -472,6 +480,8 @@ paths:
                                 - "Failed to update output in database."
                                 - "Database connection failed."
     delete:
+      security:
+        - bearerAuth: []
       tags:
         - "Outputs"
       summary: Delete an output by id.
@@ -581,6 +591,8 @@ paths:
                                 - "Database connection failed."
   /api/v2/outputs/chart-data:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Outputs"
       summary: "Get all chart data."
@@ -651,6 +663,8 @@ paths:
                               example: "Invalid or Missing JWT."
   /api/v2/outputs/supported-models:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Outputs"
       summary: Get supported models.
@@ -695,6 +709,8 @@ paths:
 
   /api/v2/outputs/{id}/control-mode:
     put:
+      security:
+        - bearerAuth: []
       tags:
         - "Output State"
       summary: Set control mode for an output.
@@ -795,6 +811,8 @@ paths:
 
   /api/v2/outputs/{id}/manual-state:
     put:
+      security:
+        - bearerAuth: []
       tags:
         - "Output State"
       summary: Set manual state for an output.
@@ -894,6 +912,8 @@ paths:
 
   /api/v2/sensors:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Sensors"
       summary: Get all sensors.
@@ -936,6 +956,8 @@ paths:
                             items:
                               example: "Invalid or Missing JWT."
     post:
+      security:
+        - bearerAuth: []
       tags:
         - "Sensors"
       summary: Add a new sensor.
@@ -1027,6 +1049,8 @@ paths:
 
   /api/v2/sensors/{id}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Sensors"
       summary: Get a sensor by id.
@@ -1097,6 +1121,8 @@ paths:
                             items:
                               example: "Sensor with Id -1 not found."
     patch:
+      security:
+        - bearerAuth: []
       tags:
         - "Sensors"
       summary: Update a sensor by Id.
@@ -1223,6 +1249,8 @@ paths:
                                 - "Failed to update sensor in database."
                                 - "Database connection failed."
     delete:
+      security:
+        - bearerAuth: []
       tags:
         - "Sensors"
       summary: Delete a sensor by id.
@@ -1334,6 +1362,8 @@ paths:
 
   /api/v2/sensors/chart-data:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Sensors"
       summary: "Get all chart data."
@@ -1424,6 +1454,8 @@ paths:
 
   /api/v2/sensors/supported-models:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "Sensors"
       summary: Get supported models.
@@ -1717,3 +1749,9 @@ components:
           type: string
         color:
           type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

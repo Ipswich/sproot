@@ -1,4 +1,3 @@
-import process from "process";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 

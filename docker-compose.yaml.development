@@ -4,7 +4,7 @@ services:
       - db
     build:
       tags:
-        - develop
+        - sproot-server:develop
       context: ./
       dockerfile: ./server/Dockerfile.development
     environment:
@@ -42,7 +42,7 @@ services:
       - server
     build:
       tags: 
-        - develop
+        - sproot-client:develop
       context: ./
       dockerfile: ./client/Dockerfile.development
       args:

@@ -7,7 +7,7 @@ services:
       - db
     build:
       tags:
-        - ${TAG}
+        - sproot-server:${TAG}
       context: ./
       dockerfile: ./server/Dockerfile
     environment:
@@ -47,7 +47,7 @@ services:
       - server
     build:
       tags:
-        - ${TAG}
+        - sproot-client:${TAG}
       context: ./
       dockerfile: ./client/Dockerfile
       args:

@@ -2,7 +2,6 @@ import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import express, { Request, Response, NextFunction } from "express";
 import { SprootDB } from "@sproot/sproot-server/src/database/SprootDB";
-import process from "process";
 
 const router = express.Router();
 
