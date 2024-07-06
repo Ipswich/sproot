@@ -11,12 +11,13 @@ export function authenticate(isAuthEnabled: string, jwtSecret: string) {
       next();
       return;
     }
+    const details: string[] = [];
     errorResponse = {
       statusCode: 401,
       error: {
         name: "Unauthorized",
         url: request.originalUrl,
-        details: ["Invalid or Missing JWT."],
+        details: details,
       },
       ...response.locals["defaultProperties"],
     };
@@ -24,6 +25,7 @@ export function authenticate(isAuthEnabled: string, jwtSecret: string) {
     let token = request.headers["authorization"] ?? request.cookies["jwt_token"] ?? null;
 
     if (!token) {
+      details.push("Missing JWT.");
       response.status(401).json(errorResponse);
       return;
     }
@@ -31,11 +33,22 @@ export function authenticate(isAuthEnabled: string, jwtSecret: string) {
       if (token.startsWith("Bearer ")) {
         token = token.slice(7, token.length);
       }
-      const decoded = jwt.verify(token, jwtSecret);
-      response.locals["username"] = (decoded as JwtPayload)["username"];
+      const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+
+      if (decoded["csrf"]) {
+        const csrf = request.headers["x-csrf-token"];
+        if (csrf !== decoded["csrf"]) {
+          details.push("Invalid CSRF token.");
+          response.status(401).json(errorResponse);
+          return;
+        }
+      }
+
+      response.locals["username"] = decoded["username"];
       next();
       return;
     } catch (err) {
+      details.push("Invalid JWT.");
       response.status(401).json(errorResponse);
       return;
     }

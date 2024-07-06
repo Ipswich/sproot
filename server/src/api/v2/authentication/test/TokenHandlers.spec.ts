@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 import { Request, Response } from "express";
 import { assert } from "chai";
@@ -19,7 +19,7 @@ describe("TokenHandlers.ts tests", () => {
         email: "dev-test@example.com",
       } as SDBUser,
     ]);
-    const jwtExpiration = "1d";
+    const jwtExpiration = 259200000;
     const jwtSecret = "secret";
 
     it("should return a 200 and a token", async () => {
@@ -44,10 +44,44 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
+        false,
       )) as SuccessResponse;
       assert.equal(result.statusCode, 200);
-      const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as { username: string };
-      assert.equal("dev-test", jwtPayload.username);
+      const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
+      assert.equal("dev-test", jwtPayload["username"]);
+      assert.isUndefined(jwtPayload["csrf"]);
+      assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
+      assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
+    });
+
+    it("should return a 200 and a token with a CSRF value", async () => {
+      const request = {
+        body: { username: "dev-test", password: "password" },
+        app: {
+          get: (_dependency: string) => sprootDB,
+        },
+      } as unknown as Request;
+      const response = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const result = (await getTokenAsync(
+        request,
+        response,
+        "true",
+        jwtExpiration,
+        jwtSecret,
+        true,
+      )) as SuccessResponse;
+      assert.equal(result.statusCode, 200);
+      const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
+      assert.equal("dev-test", jwtPayload["username"]);
+      assert.isString(jwtPayload["csrf"]);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
@@ -74,6 +108,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
+        false,
       )) as ErrorResponse;
       assert.equal(result.statusCode, 400);
       assert.equal(result.error.name, "Bad Request");
@@ -104,6 +139,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
+        false,
       )) as ErrorResponse;
       assert.equal(result.statusCode, 401);
       assert.equal(result.error.name, "Unauthorized");
@@ -134,6 +170,7 @@ describe("TokenHandlers.ts tests", () => {
         "false",
         jwtExpiration,
         jwtSecret,
+        false,
       )) as ErrorResponse;
       assert.equal(result.statusCode, 501);
       assert.equal(result.error.name, "Not Implemented");

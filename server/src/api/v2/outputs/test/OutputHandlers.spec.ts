@@ -337,7 +337,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs",
-        params: { id: "string" },
+        params: {},
         body: updatedOutput,
       } as unknown as Request;
 
@@ -530,7 +530,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs",
-        params: { id: "string" },
+        params: {},
       } as unknown as Request;
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;

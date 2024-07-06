@@ -6,7 +6,7 @@ import YAML from "yamljs";
 import addDefaultProperties, {
   createDefaultProperties,
 } from "./middleware/DefaultResponseProperties";
-import { authenticate } from "./middleware/Authentication";
+import { authenticate } from "./middleware/Authenticate";
 import authenticationRouter from "./authentication/authenticationRouter";
 import pingRouter from "./ping/PingRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
@@ -47,7 +47,7 @@ function ApiRootV2(app: Express) {
     "/api/v2/authenticate",
     authenticationRouter(
       process.env["AUTHENTICATION_ENABLED"]!,
-      process.env["JWT_EXPIRATION"]!,
+      parseInt(process.env["JWT_EXPIRATION"]!),
       process.env["JWT_SECRET"]!,
     ),
   );

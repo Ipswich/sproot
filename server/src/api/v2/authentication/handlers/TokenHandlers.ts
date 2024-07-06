@@ -4,13 +4,15 @@ import { Request, Response } from "express";
 
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
+import { randomUUID } from "crypto";
 
 export async function getTokenAsync(
   request: Request,
   response: Response,
   isAuthEnabled: string,
-  jwtExpiration: string,
+  jwtExpiration: number,
   jwtSecret: string,
+  withCsrfToken: boolean,
 ): Promise<SuccessResponse | ErrorResponse> {
   let authenticationResponse: SuccessResponse | ErrorResponse;
   if (isAuthEnabled.toLowerCase() != "true") {
@@ -48,13 +50,31 @@ export async function getTokenAsync(
   const sprootDB = request.app.get("sprootDB") as ISprootDB;
   const user = await sprootDB.getUserAsync(request.body.username);
   if (user?.length > 0 && (await bcrypt.compare(request.body.password, user[0]!["hash"]))) {
-    const token = jwt.sign({ username: request.body.username }, jwtSecret, {
-      expiresIn: jwtExpiration,
-    });
+    let token: string;
+    let data = {};
+    if (withCsrfToken) {
+      const csrf = randomUUID();
+      token = jwt.sign({ username: request.body.username, csrf }, jwtSecret, {
+        expiresIn: jwtExpiration,
+      });
+
+      data = {
+        token,
+        csrf,
+      };
+    } else {
+      token = jwt.sign({ username: request.body.username }, jwtSecret, {
+        expiresIn: jwtExpiration,
+      });
+
+      data = {
+        token,
+      };
+    }
     authenticationResponse = {
       statusCode: 200,
       content: {
-        data: { token: token },
+        data,
       },
       ...response.locals["defaultProperties"],
     };

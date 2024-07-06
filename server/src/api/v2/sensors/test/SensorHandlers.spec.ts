@@ -306,7 +306,7 @@ describe("SensorHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/sensors",
-        params: { id: "string" },
+        params: {},
         body: updatedSensor,
       } as unknown as Request;
 
@@ -485,7 +485,7 @@ describe("SensorHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/sensors",
-        params: { id: "string" },
+        params: {},
       } as unknown as Request;
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;

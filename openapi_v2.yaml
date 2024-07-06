@@ -18,6 +18,7 @@ paths:
       summary: Get an authentication token.
       description: >
         Authenticates a user and returns a JWT token to be used as a Bearer Authorization header.
+        This is intended to be used for API access.
       requestBody:
         required: true
         content:
@@ -111,6 +112,113 @@ paths:
                           details:
                             example:
                               - "Authentication is not enabled."
+  /api/v2/authenticate/login:
+    post:
+      tags:
+        - "Authentication"
+      summary: Get an authentication token set as an httponly cookie, and a csrf cookie.
+      description: >
+        Authenticates a user and sets a JWT token as an httponly cookie, and returns a csrf cookie in the response body.
+        This is intended to be used for web-based front-ends. The csrf token should be included in the headers of all subsequent requests.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "username"
+                password:
+                  type: string
+                  example: "password"
+      responses:
+        200:
+          description: "Success"
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: string
+                example: jwt_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRldi10ZXN0IiwiY3NyZiI6ImQ4N2MyZGZiLTkyMTUtNGM3Yy04Mzg2LWM4NGU3ODk0ZjRkZSIsImlhdCI6MTcyMDIzOTE1MywiZXhwIjoxOTc5NDM5MTUzfQ.Kp4jyZoBXdrw6dVnk8DPw4hmfWEtFfz0sZoWxBcGjUw; Max-Age=259200; Path=/; Expires=Mon, 01 Jan 2024 00:00:00 GMT; HttpOnly; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              csrf-token:
+                                type: string
+                                example: "9a2eada2-4e6a-4a41-ae9e-fefaa2475175"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/authenticate"
+                          details:
+                            example:
+                              - "Missing username"
+                              - "Missing password"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/authenticate"
+                          details:
+                            items:
+                              example: "Invalid username or password."
+        501:
+          description: "Not Implemented"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 501
+                      error:
+                        properties:
+                          name:
+                            example: "Not Implemented"
+                          url:
+                            example: "/api/v2/authenticate"
+                          details:
+                            example:
+                              - "Authentication is not enabled."
   /api/v2/ping:
     get:
       tags:
@@ -138,12 +246,13 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Outputs"
       summary: Get all outputs.
-      description: > 
+      description: >
         Returns a list of all outputs. This includes basic information about each output, such as 
-        name, model, and address. 
+        name, model, and address.
       responses:
         200:
           description: "Success"
@@ -182,6 +291,7 @@ paths:
     post:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Outputs"
       summary: Add a new output.
@@ -250,7 +360,7 @@ paths:
                           url:
                             example: "/api/v2/outputs"
                           details:
-                              example: "Invalid or Missing JWT."
+                            example: "Invalid or Missing JWT."
         503:
           description: "Service unavailable"
           content:
@@ -277,6 +387,7 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Outputs"
       summary: Get an output by id.
@@ -348,6 +459,7 @@ paths:
     patch:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Outputs"
       summary: Update an output by Id.
@@ -485,6 +597,7 @@ paths:
     delete:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Outputs"
       summary: Delete an output by id.
@@ -512,8 +625,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: 
-                              "Output sucessfully deleted."
+                            example: "Output sucessfully deleted."
         400:
           description: "Bad request"
           content:
@@ -596,6 +708,7 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Outputs"
       summary: "Get all chart data."
@@ -668,10 +781,11 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Outputs"
       summary: Get supported models.
-      description: Returns a list of supported output models. 
+      description: Returns a list of supported output models.
       responses:
         200:
           description: "Success"
@@ -714,6 +828,7 @@ paths:
     put:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Output State"
       summary: Set control mode for an output.
@@ -752,7 +867,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: 
+                            example:
                               - "Control mode successfully updated."
         400:
           description: "Bad request"
@@ -816,11 +931,12 @@ paths:
     put:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Output State"
       summary: Set manual state for an output.
       description: >
-        Sets the manual state for the output with the given Id. 
+        Sets the manual state for the output with the given Id.
       parameters:
         - in: path
           name: id
@@ -853,7 +969,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: 
+                            example:
                               - "Manual state successfully updated."
         400:
           description: "Bad request"
@@ -917,10 +1033,11 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Sensors"
       summary: Get all sensors.
-      description: > 
+      description: >
         Returns a list of all sensors. This includes basic information about each sensor, such as 
         name, model, and address. Also contains the last reading and time of the last reading.
       responses:
@@ -961,6 +1078,7 @@ paths:
     post:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Sensors"
       summary: Add a new sensor.
@@ -1054,6 +1172,7 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Sensors"
       summary: Get a sensor by id.
@@ -1126,6 +1245,7 @@ paths:
     patch:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Sensors"
       summary: Update a sensor by Id.
@@ -1254,6 +1374,7 @@ paths:
     delete:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Sensors"
       summary: Delete a sensor by id.
@@ -1281,9 +1402,8 @@ paths:
                       content:
                         properties:
                           data:
-                            example: 
-                              "Sensor sucessfully deleted."
-                    
+                            example: "Sensor sucessfully deleted."
+
         400:
           description: "Bad request"
           content:
@@ -1367,6 +1487,7 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Sensors"
       summary: "Get all chart data."
@@ -1459,10 +1580,11 @@ paths:
     get:
       security:
         - bearerAuth: []
+        - cookieAuth: []
       tags:
         - "Sensors"
       summary: Get supported models.
-      description: Returns a list of supported sensor models. 
+      description: Returns a list of supported sensor models.
       responses:
         200:
           description: "Success"
@@ -1545,8 +1667,7 @@ components:
                         oneOf:
                           - $ref: "#/components/schemas/SensorBase"
                           - $ref: "#/components/schemas/OutputBase"
-                          
-                          
+
                     - type: string
                     - type: number
                     - type: integer
@@ -1611,7 +1732,7 @@ components:
         color:
           type: string
           example: "#ff0000"
-    
+
     OutputBase:
       description: >
         A basic output object that is returned by the API. This expands upon SDBOutput, including the
@@ -1660,7 +1781,7 @@ components:
         logTime:
           type: string
           example: "2021-01-01T00:00:00.000Z"
-        
+
     SDBSensor:
       description: >
         A sensor object that is stored in the database. Contains all the information needed to 
@@ -1727,7 +1848,7 @@ components:
       type: array
       items:
         type: string
-    
+
     DataPoint:
       description: >
         A data point for recharts.
@@ -1739,7 +1860,7 @@ components:
           type: string
         units:
           type: string
-    
+
     ChartSeries:
       description: >
         An object containing both a name and a color. Used to add flair to a line on a chart.
@@ -1758,3 +1879,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt_token
