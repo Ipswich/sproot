@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from "express";
 
 import { ErrorResponse } from "@sproot/api/v2/Responses";
 
-// Validates JWT tokens in either the Authorization header or cookies
-export function authenticate(isAuthEnabled: string, jwtSecret: string) {
+// Validates JWT tokens in either the Authorization header or cookie
+export function authorize(isAuthEnabled: string, jwtSecret: string) {
   return (request: Request, response: Response, next: NextFunction) => {
     let errorResponse: ErrorResponse;
     if (isAuthEnabled.toLowerCase() != "true") {

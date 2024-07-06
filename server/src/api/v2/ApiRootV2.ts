@@ -6,7 +6,7 @@ import YAML from "yamljs";
 import addDefaultProperties, {
   createDefaultProperties,
 } from "./middleware/DefaultResponseProperties";
-import { authenticate } from "./middleware/Authenticate";
+import { authorize } from "./middleware/Authorize";
 import authenticationRouter from "./authentication/authenticationRouter";
 import pingRouter from "./ping/PingRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
@@ -16,7 +16,7 @@ const openapi_v2_doc = YAML.load("../openapi_v2.yaml");
 const swaggerUiOptions = {
   swaggerOptions: { defaultModelsExpandDepth: -1 },
 };
-const authenticateMiddleware = authenticate(
+const authenticateMiddleware = authorize(
   process.env["AUTHENTICATION_ENABLED"]!,
   process.env["JWT_SECRET"]!,
 );

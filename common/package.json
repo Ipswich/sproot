@@ -8,6 +8,7 @@
     "build": "tsc --build --verbose",
     "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
     "lint": "npx eslint ./src",
+    "coverage": "nyc npm run test",
     "prettier:write": "npx --yes prettier . --write",
     "prettier:check": "npx --yes prettier . --check",
     "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts",

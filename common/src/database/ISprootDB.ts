@@ -40,7 +40,6 @@ interface ISprootDB {
   addUserAsync(user: SDBUser): Promise<void>;
 }
 
-/* istanbul ignore next */
 class MockSprootDB implements ISprootDB {
   async getOutputStatesAsync(
     _output: IOutputBase | { id: number },

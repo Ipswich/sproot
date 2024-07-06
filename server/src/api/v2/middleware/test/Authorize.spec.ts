@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 import sinon from "sinon";
 import { assert } from "chai";
-import { authenticate } from "../Authenticate";
+import { authorize } from "../Authorize";
 
 describe("Authenticate.ts tests", () => {
   const jwtSecret = "secret";
@@ -28,7 +28,7 @@ describe("Authenticate.ts tests", () => {
       const jsonStub = sinon.stub(response, "json").returns(response);
 
       const next = sinon.spy();
-      const authenticateMiddlewareFunction = authenticate("false", jwtSecret);
+      const authenticateMiddlewareFunction = authorize("false", jwtSecret);
       authenticateMiddlewareFunction(request, response, next);
 
       assert.isTrue(next.calledOnce);
@@ -61,7 +61,7 @@ describe("Authenticate.ts tests", () => {
       const jsonStub = sinon.stub(response, "json").returns(response);
 
       const next = sinon.spy();
-      const authenticateMiddlewareFunction = authenticate("true", jwtSecret);
+      const authenticateMiddlewareFunction = authorize("true", jwtSecret);
       authenticateMiddlewareFunction(request, response, next);
 
       assert.isTrue(next.calledOnce);
@@ -94,7 +94,7 @@ describe("Authenticate.ts tests", () => {
       const jsonStub = sinon.stub(response, "json").returns(response);
 
       const next = sinon.spy();
-      const authenticateMiddlewareFunction = authenticate("true", jwtSecret);
+      const authenticateMiddlewareFunction = authorize("true", jwtSecret);
       authenticateMiddlewareFunction(request, response, next);
 
       assert.isTrue(next.calledOnce);
@@ -123,7 +123,7 @@ describe("Authenticate.ts tests", () => {
       const jsonStub = sinon.stub(response, "json").returns(response);
 
       const next = sinon.spy();
-      const authenticateMiddlewareFunction = authenticate("true", jwtSecret);
+      const authenticateMiddlewareFunction = authorize("true", jwtSecret);
       authenticateMiddlewareFunction(request, response, next);
 
       assert.isTrue(next.notCalled);
@@ -156,7 +156,7 @@ describe("Authenticate.ts tests", () => {
       const jsonStub = sinon.stub(response, "json").returns(response);
 
       const next = sinon.spy();
-      const authenticateMiddlewareFunction = authenticate("true", "wrong-secret");
+      const authenticateMiddlewareFunction = authorize("true", "wrong-secret");
       authenticateMiddlewareFunction(request, response, next);
 
       assert.isTrue(next.notCalled);
@@ -189,7 +189,7 @@ describe("Authenticate.ts tests", () => {
       const jsonStub = sinon.stub(response, "json").returns(response);
 
       const next = sinon.spy();
-      const authenticateMiddlewareFunction = authenticate("true", jwtSecret);
+      const authenticateMiddlewareFunction = authorize("true", jwtSecret);
       authenticateMiddlewareFunction(request, response, next);
 
       assert.isTrue(next.notCalled);
