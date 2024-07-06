@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/SensorHandlers";
-import supportedModelsHandler from "./handlers/SupportedModelsHandlers";
+import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { sensorChartDataHandler } from "./handlers/SensorChartDataHandlers";
 
 const router = express.Router();

@@ -29,7 +29,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Output with Id ${request.params["id"]} not found.`],
+          details: [`Output with ID ${request.params["id"]} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -149,7 +149,7 @@ export async function updateAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid output Id."],
+        details: ["Invalid or missing output ID."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -165,7 +165,7 @@ export async function updateAsync(
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Output with Id ${outputId} not found.`],
+        details: [`Output with ID ${outputId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };
@@ -222,7 +222,7 @@ export async function deleteAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid output Id."],
+        details: ["Invalid or missing output ID."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -238,7 +238,7 @@ export async function deleteAsync(
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Output with Id ${outputId} not found.`],
+        details: [`Output with ID ${outputId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };

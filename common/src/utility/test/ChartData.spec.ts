@@ -77,6 +77,26 @@ describe("ChartData.ts tests", function () {
       });
     });
 
+    describe("shouldUpdateChartData", function () {
+      it("should return true because now is the same as the NMinuteDate", function () {
+        const now = new Date("2021-01-01T00:00:00Z");
+        let current = new Date("2021-01-01T00:04:00Z");
+        assert.isTrue(ChartData.shouldUpdateByInterval(now, 5, current));
+
+        current = new Date("2021-01-01T00:02:00Z");
+        assert.isTrue(ChartData.shouldUpdateByInterval(now, 3, current));
+      });
+
+      it("should return false because now is not the same as the NMinuteDate", function () {
+        const now = new Date("2021-01-01T00:01:00Z");
+        let current = new Date("2021-01-01T00:04:00Z");
+        assert.isFalse(ChartData.shouldUpdateByInterval(now, 5, current));
+
+        current = new Date("2021-01-01T00:02:00Z");
+        assert.isFalse(ChartData.shouldUpdateByInterval(now, 3, current));
+      });
+    });
+
     describe("constructor", function () {
       it("should create a new ChartData object", function () {
         let chartData = new ChartData(10, 5, undefined, new Date("2021-01-01T00:00:00Z"));

@@ -1,9 +1,7 @@
-import "dotenv/config";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import express, { Request, Response, NextFunction } from "express";
 import { SprootDB } from "@sproot/sproot-server/src/database/SprootDB";
-import process from "process";
 
 const router = express.Router();
 
@@ -29,7 +27,7 @@ router.post("/", async (req: Request, res: Response) => {
   const user = await sprootDB.getUserAsync(req.body.username);
   if (user?.length > 0 && (await bcrypt.compare(req.body.password, user[0]!["hash"]))) {
     const token = jwt.sign({ username: req.body.username }, process.env["JWT_SECRET"]!, {
-      expiresIn: process.env["JWT_EXPIRATION"]!,
+      expiresIn: parseInt(process.env["JWT_EXPIRATION"]!),
     });
     res
       .status(200)

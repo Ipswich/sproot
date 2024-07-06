@@ -70,42 +70,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(outputList.executeOutputState.calledTwice, true);
     });
 
-    it("should return a 404 and an error", () => {
-      const mockRequest = {
-        app: {
-          get: () => outputList,
-        },
-        params: {
-          id: -1,
-        },
-        originalUrl: "/outputs/-1/controlMode",
-        body: {
-          controlMode: ControlMode.manual,
-        },
-      } as unknown as Request;
-
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
-
-      const error = setControlMode(mockRequest, mockResponse) as ErrorResponse;
-
-      assert.equal(error.statusCode, 404);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Not Found");
-      assert.equal(error.error.url, "/outputs/-1/controlMode");
-      assert.deepEqual(error.error.details, ["Output with Id -1 not found."]);
-      assert.isTrue(outputList.updateControlMode.notCalled);
-      assert.isTrue(outputList.executeOutputState.notCalled);
-    });
-
-    it("should return a 400 and an error", () => {
+    it("should return a 400 and details for the invalid request", () => {
       const mockRequest = {
         app: {
           get: () => outputList,
@@ -136,6 +101,41 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/outputs/1/controlMode");
       assert.deepEqual(error.error.details, ["Invalid control mode."]);
+      assert.isTrue(outputList.updateControlMode.notCalled);
+      assert.isTrue(outputList.executeOutputState.notCalled);
+    });
+
+    it("should return a 404 and a 'Not Found' error", () => {
+      const mockRequest = {
+        app: {
+          get: () => outputList,
+        },
+        params: {
+          id: -1,
+        },
+        originalUrl: "/outputs/-1/controlMode",
+        body: {
+          controlMode: ControlMode.manual,
+        },
+      } as unknown as Request;
+
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const error = setControlMode(mockRequest, mockResponse) as ErrorResponse;
+
+      assert.equal(error.statusCode, 404);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Not Found");
+      assert.equal(error.error.url, "/outputs/-1/controlMode");
+      assert.deepEqual(error.error.details, ["Output with ID -1 not found."]);
       assert.isTrue(outputList.updateControlMode.notCalled);
       assert.isTrue(outputList.executeOutputState.notCalled);
     });
@@ -204,7 +204,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(outputList.executeOutputState.calledTwice, true);
     });
 
-    it("should return a 400 and an error", () => {
+    it("should return a 400 and details for the invalid request", () => {
       let mockRequest = {
         app: {
           get: () => outputList,
@@ -271,7 +271,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.isTrue(outputList.executeOutputState.notCalled);
     });
 
-    it("should return a 404 and an error", () => {
+    it("should return a 404 and a 'Not Found' error", () => {
       let mockRequest = {
         app: {
           get: () => outputList,
@@ -301,7 +301,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/outputs/-1/manual-state");
-      assert.deepEqual(error.error.details, ["Output with Id -1 not found."]);
+      assert.deepEqual(error.error.details, ["Output with ID -1 not found."]);
 
       assert.isTrue(outputList.setNewOutputState.notCalled);
       assert.isTrue(outputList.executeOutputState.notCalled);

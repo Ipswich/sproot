@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { OutputList } from "../OutputList";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
 import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";

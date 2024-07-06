@@ -5,7 +5,7 @@ import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
-import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { ChartData, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 
 class OutputList {
@@ -197,7 +197,7 @@ class OutputList {
       output.updateDataStoresAsync();
     });
 
-    if (new Date().getMinutes() % 5 == 0) {
+    if (ChartData.shouldUpdateByInterval(new Date(), this.chartDataPointInterval)) {
       this.#chartData.updateChartData(
         Object.values(this.outputs).map((output) => output.chartData.get().data),
         "output",

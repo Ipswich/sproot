@@ -3,11 +3,10 @@ import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { ChartData, DataSeries, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
-import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 class SensorList {
@@ -147,7 +146,7 @@ class SensorList {
       sensor.updateDataStoresAsync();
     });
 
-    if (new Date().getMinutes() % 5 == 0) {
+    if (ChartData.shouldUpdateByInterval(new Date(), this.#chartDataPointInterval)) {
       this.updateChartData();
     }
   };

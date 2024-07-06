@@ -25,7 +25,7 @@ export function setControlMode(
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Output with Id ${outputId} not found.`],
+        details: [`Output with ID ${outputId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };
@@ -97,7 +97,7 @@ export function setManualState(request: Request, response: Response) {
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Output with Id ${outputId} not found.`],
+        details: [`Output with ID ${outputId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };

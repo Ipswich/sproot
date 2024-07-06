@@ -1,0 +1,88 @@
+services:
+  server:
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    depends_on:
+      - db
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile
+    environment:
+      - TZ=${TZ}
+      - NODE_ENV=${NODE_ENV}
+      - DEFAULT_USER=${DEFAULT_USER}
+      - DEFAULT_USER_EMAIL=${DEFAULT_USER_EMAIL}
+      - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD}
+      - APPLICATION_PORT=${APPLICATION_PORT}
+      - AUTHENTICATION_ENABLED=${AUTHENTICATION_ENABLED}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - STATE_UPDATE_INTERVAL=${STATE_UPDATE_INTERVAL}
+      - MAX_CACHE_SIZE=${MAX_CACHE_SIZE}
+      - INITIAL_CACHE_LOOKBACK=${INITIAL_CACHE_LOOKBACK}
+      - CHART_DATA_POINT_INTERVAL=${CHART_DATA_POINT_INTERVAL}
+      - MAX_CHART_DATA_POINTS=${MAX_CHART_DATA_POINTS}
+    volumes:
+      - /sys:/sys
+      - ./docker_volumes/sproot/server/logs:/sproot/server/logs
+    networks:
+      - sproot-network
+    expose:
+      - "3000"
+    privileged: true
+  
+  client:
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    depends_on:
+      - server
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+      args:
+        - VITE_PRECONFIGURED=${PRECONFIGURED}
+        - VITE_CHART_DATA_POINT_INTERVAL=${CHART_DATA_POINT_INTERVAL}
+        - VITE_MAX_CHART_DATA_POINTS=${MAX_CHART_DATA_POINTS}
+        - VITE_API_SERVER_URL=${API_SERVER_URL}
+        - VITE_CLIENT_VERSION=${CLIENT_VERSION}
+    environment:
+      - TZ=${TZ}
+      - NODE_ENV=${NODE_ENV}
+    volumes:
+      - ./docker_volumes/sproot/client/logs:/sproot/logs
+    networks:
+      - sproot-network
+    ports:
+      - 80:80
+
+  db:
+    image: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root #**MATCH ME**
+    volumes:
+      - ./docker_volumes/mariadb/data:/var/lib/mysql
+      - ${DATABASE_SCHEMA}:/docker-entrypoint-initdb.d/sproot-schema.sql
+    networks:
+      - sproot-network
+    ports:
+      - 3306:3306
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    networks:
+      - sproot-network
+    ports:
+      - 3001:8080
+
+networks:
+  sproot-network:
+    driver: bridge

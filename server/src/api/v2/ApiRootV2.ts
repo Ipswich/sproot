@@ -6,7 +6,8 @@ import YAML from "yamljs";
 import addDefaultProperties, {
   createDefaultProperties,
 } from "./middleware/DefaultResponseProperties";
-import login from "./middleware/Authentication";
+import { authorize } from "./middleware/Authorize";
+import authenticationRouter from "./authentication/authenticationRouter";
 import pingRouter from "./ping/PingRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
@@ -15,28 +16,47 @@ const openapi_v2_doc = YAML.load("../openapi_v2.yaml");
 const swaggerUiOptions = {
   swaggerOptions: { defaultModelsExpandDepth: -1 },
 };
+const authenticateMiddleware = authorize(
+  process.env["AUTHENTICATION_ENABLED"]!,
+  process.env["JWT_SECRET"]!,
+);
 
 function ApiRootV2(app: Express) {
   let logger = app.get("logger");
 
-  // OpenAPI Validator
-  let openApiValidator = OpenApiValidator.middleware({
-    apiSpec: "../openapi_v2.yaml",
-    validateRequests: true,
-    validateResponses: true,
-  });
   app.use(
     "/api/v2/docs",
     swaggerUi.serveFiles(openapi_v2_doc, swaggerUiOptions),
     swaggerUi.setup(openapi_v2_doc),
   );
 
-  app.use("/api/v2/authenticate", openApiValidator, addDefaultProperties, login);
-  app.use("/api/v2/ping", openApiValidator, addDefaultProperties, pingRouter);
+  // OpenAPI Validator
+  app.use(
+    OpenApiValidator.middleware({
+      apiSpec: "../openapi_v2.yaml",
+      validateRequests: true,
+      validateResponses: true,
+      validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
+    }),
+  );
 
-  app.use("/api/v2/sensors", openApiValidator, addDefaultProperties, sensorsRouter);
-  app.use("/api/v2/outputs", openApiValidator, addDefaultProperties, outputsRouter);
+  app.use("/api/v2/", addDefaultProperties);
+  app.use("/api/v2/ping", pingRouter);
 
+  app.use(
+    "/api/v2/authenticate",
+    authenticationRouter(
+      process.env["AUTHENTICATION_ENABLED"]!,
+      parseInt(process.env["JWT_EXPIRATION"]!),
+      process.env["JWT_SECRET"]!,
+    ),
+  );
+
+  // The real data routes
+  app.use("/api/v2/sensors", authenticateMiddleware, sensorsRouter);
+  app.use("/api/v2/outputs", authenticateMiddleware, outputsRouter);
+
+  // Error handler - anything unexpected ends up here.
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     // format error
     let errorResponse = {

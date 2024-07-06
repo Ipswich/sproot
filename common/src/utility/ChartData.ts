@@ -146,6 +146,24 @@ export class ChartData {
 
     return result;
   }
+
+  static shouldUpdateByInterval(
+    now: Date,
+    intervalInMinutes: number,
+    current: Date = new Date(),
+  ): boolean {
+    const intervalInMs = intervalInMinutes * 60000;
+    let NMinuteDate = new Date(Math.floor(current.getTime() / intervalInMs) * intervalInMs);
+    if (now.getDate() == NMinuteDate.getDate()) {
+      if (now.getHours() == NMinuteDate.getHours()) {
+        if (now.getMinutes() == NMinuteDate.getMinutes()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
 }
 
 export type DataPoint = {

@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
 import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
