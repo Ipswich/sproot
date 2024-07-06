@@ -29,7 +29,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Sensor with Id ${request.params["id"]} not found.`],
+          details: [`Sensor with ID ${request.params["id"]} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -139,7 +139,7 @@ export async function updateAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid or missing sensor Id."],
+        details: ["Invalid or missing sensor ID."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -155,7 +155,7 @@ export async function updateAsync(
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Sensor with Id ${sensorId} not found.`],
+        details: [`Sensor with ID ${sensorId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };
@@ -214,7 +214,7 @@ export async function deleteAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid or missing sensor Id."],
+        details: ["Invalid or missing sensor ID."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -228,7 +228,7 @@ export async function deleteAsync(
       error: {
         name: "Not Found",
         url: request.originalUrl,
-        details: [`Sensor with Id ${sensorId} not found.`],
+        details: [`Sensor with ID ${sensorId} not found.`],
       },
       ...response.locals["defaultProperties"],
     };

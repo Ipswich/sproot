@@ -109,7 +109,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
-      assert.equal(error.error["details"].at(0), "Output with Id -1 not found.");
+      assert.equal(error.error["details"].at(0), "Output with ID -1 not found.");
     });
   });
 
@@ -347,7 +347,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs");
-      assert.deepEqual(error.error["details"], ["Invalid or missing output Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing output ID."]);
       assert.isTrue(sprootDB.updateOutputAsync.notCalled);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
@@ -389,7 +389,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
-      assert.deepEqual(error.error["details"], ["Output with Id -1 not found."]);
+      assert.deepEqual(error.error["details"], ["Output with ID -1 not found."]);
       assert.isTrue(sprootDB.updateOutputAsync.notCalled);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
@@ -539,7 +539,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs");
-      assert.deepEqual(error.error["details"], ["Invalid or missing output Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing output ID."]);
       assert.isTrue(sprootDB.deleteOutputAsync.notCalled);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
@@ -580,7 +580,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
-      assert.deepEqual(error.error["details"], ["Output with Id -1 not found."]);
+      assert.deepEqual(error.error["details"], ["Output with ID -1 not found."]);
       assert.isTrue(sprootDB.deleteOutputAsync.notCalled);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });

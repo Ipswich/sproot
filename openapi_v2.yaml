@@ -268,7 +268,7 @@ paths:
         - "Ping"
       summary: Ping the server.
       description: >
-        Returns a simple 'pong' response. Useful for checking if the server is running, or connectivity.
+        Returns a simple 'pong' response. Useful for checking for connectivity to the server.
       responses:
         200:
           description: "Success"
@@ -433,7 +433,7 @@ paths:
         - cookieAuth: []
       tags:
         - "Outputs"
-      summary: Get an output by id.
+      summary: Get an output by ID.
       description: >
         Returns data for the given output. This includes basic information, such as name, model, 
         and address. Also contains the current state of the output.
@@ -441,7 +441,7 @@ paths:
         - in: path
           name: id
           required: true
-          description: "Output Id"
+          description: "Output ID"
           schema:
             type: string
           example: "1"
@@ -498,21 +498,21 @@ paths:
                             example: "/api/v2/outputs/-1"
                           details:
                             items:
-                              example: "Output with Id -1 not found."
+                              example: "Output with ID -1 not found."
     patch:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
         - "Outputs"
-      summary: Update an output by Id.
+      summary: Update an output by ID.
       description: >
-        Updates an output with the given Id. This operation changes only the fields provided.
+        Updates an output with the given ID. This operation changes only the fields provided.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Output Id"
+          description: "Output ID"
           schema:
             type: string
           example: "1"
@@ -615,7 +615,7 @@ paths:
                             example: "/api/v2/outputs/-1"
                           details:
                             items:
-                              example: "Output with Id -1 not found."
+                              example: "Output with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -643,14 +643,14 @@ paths:
         - cookieAuth: []
       tags:
         - "Outputs"
-      summary: Delete an output by id.
+      summary: Delete an output by ID.
       description: >
-        Deletes an output with the given Id. This operation is permanent and cannot be undone.
+        Deletes an output with the given ID. This operation is permanent and cannot be undone.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Output Id"
+          description: "Output ID"
           schema:
             type: string
           example: "1"
@@ -725,7 +725,7 @@ paths:
                             example: "/api/v2/outputs/-1"
                           details:
                             items:
-                              example: "Output with Id -1 not found."
+                              example: "Output with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -876,13 +876,13 @@ paths:
         - "Output State"
       summary: Set control mode for an output.
       description: >
-        Sets the control mode for the output with the given Id. This operation changes the control mode
+        Sets the control mode for the output with the given ID. This operation changes the control mode
         for the output.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Output Id"
+          description: "Output ID"
           schema:
             type: string
           example: "1"
@@ -968,7 +968,7 @@ paths:
                             example: "/api/v2/outputs/-1/control-mode"
                           details:
                             items:
-                              example: "Output with Id -1 not found."
+                              example: "Output with ID -1 not found."
 
   /api/v2/outputs/{id}/manual-state:
     put:
@@ -979,12 +979,12 @@ paths:
         - "Output State"
       summary: Set manual state for an output.
       description: >
-        Sets the manual state for the output with the given Id.
+        Sets the manual state for the output with the given ID.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Output Id"
+          description: "Output ID"
           schema:
             type: string
           example: "1"
@@ -1070,7 +1070,7 @@ paths:
                             example: "/api/v2/outputs/-1/manual-state"
                           details:
                             items:
-                              example: "Output with Id -1 not found."
+                              example: "Output with ID -1 not found."
 
   /api/v2/sensors:
     get:
@@ -1218,7 +1218,7 @@ paths:
         - cookieAuth: []
       tags:
         - "Sensors"
-      summary: Get a sensor by id.
+      summary: Get a sensor by ID.
       description: >
         Returns data for the given sensor. This includes basic information, such as name, model, 
         and address. Also contains the last reading and time of the last reading.
@@ -1226,7 +1226,7 @@ paths:
         - in: path
           name: id
           required: true
-          description: "Sensor Id"
+          description: "Sensor ID"
           schema:
             type: string
           example: "1"
@@ -1284,21 +1284,21 @@ paths:
                             example: "/api/v2/sensors/-1"
                           details:
                             items:
-                              example: "Sensor with Id -1 not found."
+                              example: "Sensor with ID -1 not found."
     patch:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
         - "Sensors"
-      summary: Update a sensor by Id.
+      summary: Update a sensor by ID.
       description: >
-        Updates a sensor with the given Id. This operation changes only the fields provided.
+        Updates a sensor with the given ID. This operation changes only the fields provided.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Sensor Id"
+          description: "Sensor ID"
           schema:
             type: string
           example: "1"
@@ -1392,7 +1392,7 @@ paths:
                             example: "/api/v2/sensors/-1"
                           details:
                             items:
-                              example: "Sensor with Id -1 not found."
+                              example: "Sensor with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -1420,14 +1420,14 @@ paths:
         - cookieAuth: []
       tags:
         - "Sensors"
-      summary: Delete a sensor by id.
+      summary: Delete a sensor by ID.
       description: >
-        Deletes a sensor with the given Id. This operation is permanent and cannot be undone.
+        Deletes a sensor with the given ID. This operation is permanent and cannot be undone.
       parameters:
         - in: path
           name: id
           required: true
-          description: "Sensor Id"
+          description: "Sensor ID"
           schema:
             type: string
           example: "1"
@@ -1503,7 +1503,7 @@ paths:
                             example: "/api/v2/sensors/-1"
                           details:
                             items:
-                              example: "Sensor with Id -1 not found."
+                              example: "Sensor with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -1779,7 +1779,7 @@ components:
     OutputBase:
       description: >
         A basic output object that is returned by the API. This expands upon SDBOutput, including the
-        id and state of the output.
+        ID and state of the output. This maps to what the program keeps in memory.
       allOf:
         - $ref: "#/components/schemas/SDBOutput"
         - type: object
@@ -1851,7 +1851,7 @@ components:
     SensorBase:
       description: >
         A basic sensor object that is returned by the API. This expands upon SDBSensor, including the
-        last reading, last reading time, and units.
+        last reading, last reading time, and units. This maps to what the program keeps in memory.
       allOf:
         - $ref: "#/components/schemas/SDBSensor"
         - type: object

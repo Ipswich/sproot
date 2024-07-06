@@ -135,7 +135,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/outputs/-1/controlMode");
-      assert.deepEqual(error.error.details, ["Output with Id -1 not found."]);
+      assert.deepEqual(error.error.details, ["Output with ID -1 not found."]);
       assert.isTrue(outputList.updateControlMode.notCalled);
       assert.isTrue(outputList.executeOutputState.notCalled);
     });
@@ -301,7 +301,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/outputs/-1/manual-state");
-      assert.deepEqual(error.error.details, ["Output with Id -1 not found."]);
+      assert.deepEqual(error.error.details, ["Output with ID -1 not found."]);
 
       assert.isTrue(outputList.setNewOutputState.notCalled);
       assert.isTrue(outputList.executeOutputState.notCalled);

@@ -96,7 +96,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
-      assert.equal(error.error["details"].at(0), "Sensor with Id -1 not found.");
+      assert.equal(error.error["details"].at(0), "Sensor with ID -1 not found.");
     });
   });
 
@@ -316,7 +316,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], ["Invalid or missing sensor Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing sensor ID."]);
       assert.isTrue(sprootDB.updateSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
@@ -355,7 +355,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
-      assert.deepEqual(error.error["details"], ["Sensor with Id -1 not found."]);
+      assert.deepEqual(error.error["details"], ["Sensor with ID -1 not found."]);
       assert.isTrue(sprootDB.updateSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
@@ -494,7 +494,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], ["Invalid or missing sensor Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing sensor ID."]);
       assert.isTrue(sprootDB.deleteSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
@@ -532,7 +532,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
-      assert.deepEqual(error.error["details"], ["Sensor with Id -1 not found."]);
+      assert.deepEqual(error.error["details"], ["Sensor with ID -1 not found."]);
       assert.isTrue(sprootDB.deleteSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
