@@ -178,5 +178,37 @@ describe("TokenHandlers.ts tests", () => {
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
+
+    it("should return a 503 if the database is unreachable", async () => {
+      const request = {
+        body: { username: "dev-test", password: "password" },
+        app: {
+          get: (_dependency: string) => sprootDB,
+        },
+      } as unknown as Request;
+      const response = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      sprootDB.getUserAsync.rejects(new Error("Database error"));
+
+      const result = (await getTokenAsync(
+        request,
+        response,
+        "true",
+        jwtExpiration,
+        jwtSecret,
+        false,
+      )) as ErrorResponse;
+      assert.equal(result.statusCode, 503);
+      assert.equal(result.error.name, "Service Unavailable");
+      assert.deepEqual(result.error.details, ["Database error."]);
+      assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
+      assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
+    });
   });
 });

@@ -102,7 +102,7 @@ describe("Authenticate.ts tests", () => {
       assert.isTrue(jsonStub.notCalled);
     });
 
-    it("should return a 401 and an error response from a missing JWT", () => {
+    it("should return a 401 and an error response for a missing token", () => {
       const request = {
         headers: {},
         cookies: {},
@@ -131,7 +131,7 @@ describe("Authenticate.ts tests", () => {
       assert.isTrue(jsonStub.calledOnce);
     });
 
-    it("should return a 401 and an error response from an invalid JWT", () => {
+    it("should return a 401 and an error response for an invalid token", () => {
       const token = jwt.sign({ username: "dev-test", csrf: "csrf" }, jwtSecret, {
         expiresIn: 60000,
       });
@@ -164,7 +164,7 @@ describe("Authenticate.ts tests", () => {
       assert.isTrue(jsonStub.calledOnce);
     });
 
-    it("should return a 401 and an error response from a missing CSRF", () => {
+    it("should return a 401 and an error response for a missing CSRF with cookie", () => {
       const token = jwt.sign({ username: "dev-test", csrf: "csrf" }, jwtSecret, {
         expiresIn: 60000,
       });

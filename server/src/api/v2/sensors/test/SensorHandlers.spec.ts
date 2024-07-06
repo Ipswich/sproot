@@ -82,7 +82,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, Object.values(sensorData));
     });
 
-    it("should return a 404 and an error", () => {
+    it("should return a 404 and a 'Not Found' error", () => {
       const mockRequest = {
         app: {
           get: (_dependency: string) => sensorList,
@@ -188,7 +188,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 503 and an error", async () => {
+    it("should return a 503 if the database is unreachable", async () => {
       const newSensor = {
         name: "test sensor 4",
         model: "DS18B20",
@@ -282,7 +282,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sensorList.initializeOrRegenerateAsync.calledOnce);
     });
 
-    it("should return a 400 and an error", async () => {
+    it("should return a 400 and details for the invalid request", async () => {
       const updatedSensor = {
         1: {
           id: 1,
@@ -316,12 +316,12 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], ["Invalid sensor Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing sensor Id."]);
       assert.isTrue(sprootDB.updateSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 404 and an error", async () => {
+    it("should return a 404 and a 'Not Found' error", async () => {
       const updatedSensor = {
         1: {
           id: 1,
@@ -360,7 +360,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 503 and an error", async () => {
+    it("should return a 503 if the database is unreachable", async () => {
       const updatedSensor = {
         1: {
           id: 1,
@@ -461,7 +461,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sensorList.initializeOrRegenerateAsync.calledOnce);
     });
 
-    it("should return a 400 and an error", async () => {
+    it("should return a 400 and details for the invalid request", async () => {
       const deletedSensor = {
         1: {
           id: 1,
@@ -494,12 +494,12 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], ["Invalid sensor Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing sensor Id."]);
       assert.isTrue(sprootDB.deleteSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 404 and an error", async () => {
+    it("should return a 404 and a 'Not Found' error", async () => {
       const deletedSensor = {
         1: {
           id: 1,
@@ -537,7 +537,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 503 and an error", async () => {
+    it("should return a 503 if the database is unreachable", async () => {
       const deletedSensor = {
         1: {
           id: 1,

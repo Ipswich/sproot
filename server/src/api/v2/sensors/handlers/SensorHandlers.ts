@@ -139,7 +139,7 @@ export async function updateAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid sensor Id."],
+        details: ["Invalid or missing sensor Id."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -214,7 +214,7 @@ export async function deleteAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid sensor Id."],
+        details: ["Invalid or missing sensor Id."],
       },
       ...response.locals["defaultProperties"],
     };

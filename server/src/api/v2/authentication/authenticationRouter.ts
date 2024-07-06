@@ -8,12 +8,24 @@ export default function initializeAuthenticationRoutes(
 ): express.Router {
   const router = express.Router();
 
+  /**
+   * Possible statusCodes: 200, 400, 401, 501, 503
+   * @param request
+   * @param response
+   * @returns
+   */
   router.post("/token", async (req: Request, res: Response) => {
     const response = await getTokenAsync(req, res, isAuthEnabled, jwtExpiration, jwtSecret, false);
 
     res.status(response.statusCode).json(response);
   });
 
+  /**
+   * Possible statusCodes: 200, 400, 401, 501, 503
+   * @param request
+   * @param response
+   * @returns
+   */
   router.post("/login", async (req: Request, res: Response) => {
     const response = await getTokenAsync(req, res, isAuthEnabled, jwtExpiration, jwtSecret, true);
     if (response.statusCode === 200 && "content" in response) {

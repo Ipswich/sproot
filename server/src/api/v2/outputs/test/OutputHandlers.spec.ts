@@ -93,7 +93,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, Object.values(outputData));
     });
 
-    it("should return a 404 and an error", () => {
+    it("should return a 404 and a 'Not Found' error", () => {
       const mockRequest = {
         app: {
           get: (_dependency: string) => outputList,
@@ -207,7 +207,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 503 and an error", async () => {
+    it("should return a 503 if the database is unreachable", async () => {
       const newOutput = {
         model: "pca9685",
         address: "0x40",
@@ -310,7 +310,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(outputList.initializeOrRegenerateAsync.calledOnce);
     });
 
-    it("should return a 400 and an error", async () => {
+    it("should return a 400 and details for the invalid request", async () => {
       const updatedOutput = {
         1: {
           id: 1,
@@ -347,12 +347,12 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs");
-      assert.deepEqual(error.error["details"], ["Invalid output Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing output Id."]);
       assert.isTrue(sprootDB.updateOutputAsync.notCalled);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 404 and an error", async () => {
+    it("should return a 404 and a 'Not Found' error", async () => {
       const updatedOutput = {
         1: {
           id: 1,
@@ -394,7 +394,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 503 and an error", async () => {
+    it("should return a 503 if the database is unreachable", async () => {
       const updatedOutput = {
         1: {
           id: 1,
@@ -503,7 +503,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(outputList.initializeOrRegenerateAsync.calledOnce);
     });
 
-    it("should return a 400 and an error", async () => {
+    it("should return a 400 and details for the invalid request", async () => {
       const deletedOutput = {
         1: {
           id: 1,
@@ -539,12 +539,12 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs");
-      assert.deepEqual(error.error["details"], ["Invalid output Id."]);
+      assert.deepEqual(error.error["details"], ["Invalid or missing output Id."]);
       assert.isTrue(sprootDB.deleteOutputAsync.notCalled);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 404 and an error", async () => {
+    it("should return a 404 and a 'Not Found' error", async () => {
       const deletedOutput = {
         1: {
           id: 1,
@@ -585,7 +585,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
 
-    it("should return a 503 and an error", async () => {
+    it("should return a 503 if the database is unreachable", async () => {
       const deletedOutput = {
         1: {
           id: 1,

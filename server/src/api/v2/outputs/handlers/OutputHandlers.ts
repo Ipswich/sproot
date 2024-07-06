@@ -149,7 +149,7 @@ export async function updateAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid output Id."],
+        details: ["Invalid or missing output Id."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -222,7 +222,7 @@ export async function deleteAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid output Id."],
+        details: ["Invalid or missing output Id."],
       },
       ...response.locals["defaultProperties"],
     };

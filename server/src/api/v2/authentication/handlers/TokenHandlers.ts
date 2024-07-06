@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
 import { ISprootDB } from "@sproot/database/ISprootDB";
+import { SDBUser } from "@sproot/database/SDBUser";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { randomUUID } from "crypto";
 
@@ -48,7 +49,21 @@ export async function getTokenAsync(
     return authenticationResponse;
   }
   const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const user = await sprootDB.getUserAsync(request.body.username);
+  let user: SDBUser[];
+  try {
+    user = await sprootDB.getUserAsync(request.body.username);
+  } catch (error) {
+    authenticationResponse = {
+      statusCode: 503,
+      error: {
+        name: "Service Unavailable",
+        url: request.originalUrl,
+        details: ["Database error."],
+      },
+      ...response.locals["defaultProperties"],
+    };
+    return authenticationResponse;
+  }
   if (user?.length > 0 && (await bcrypt.compare(request.body.password, user[0]!["hash"]))) {
     let token: string;
     let data = {};
