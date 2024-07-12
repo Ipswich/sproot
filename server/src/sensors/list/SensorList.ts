@@ -52,9 +52,10 @@ class SensorList {
       const { id, name, model, address, color, lastReading, lastReadingTime, units } = this
         .#sensors[key] as ISensorBase;
       for (const readingType in lastReading) {
-        lastReading[readingType as ReadingType] = this.#formatReadingForDisplay(
-          lastReading[readingType as ReadingType],
-        );
+        const reading = lastReading[readingType as ReadingType];
+        if (reading !== undefined) {
+          lastReading[readingType as ReadingType] = this.#formatReadingForDisplay(reading);
+        }
       }
       cleanObject[key] = {
         id,

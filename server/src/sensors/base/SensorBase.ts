@@ -3,9 +3,9 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import winston from "winston";
-import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
 import { SensorChartData } from "./SensorChartData";
 import { ReadingType, Units } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SensorCache } from "./SensorCache";
 
 export abstract class SensorBase implements ISensorBase {
   id: number;
@@ -22,7 +22,7 @@ export abstract class SensorBase implements ISensorBase {
   initialCacheLookback: number;
   maxChartDataSize: number;
   chartDataPointInterval: number;
-  cacheData: Record<ReadingType, QueueCache<SDBReading>>;
+  cacheData: SensorCache;
   chartData: SensorChartData;
   updateInterval: NodeJS.Timeout | null = null;
 
@@ -52,11 +52,11 @@ export abstract class SensorBase implements ISensorBase {
     this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
     this.chartDataPointInterval = chartDataPointInterval;
-    this.cacheData = {} as Record<ReadingType, QueueCache<SDBReading>>;
     for (const readingType of readingTypes) {
       this.units[readingType as ReadingType] = Units[readingType as ReadingType];
-      this.cacheData[readingType as ReadingType] = new QueueCache<SDBReading>(maxCacheSize);
     }
+
+    this.cacheData = new SensorCache(maxCacheSize, sprootDB, logger);
     this.chartData = new SensorChartData(
       maxChartDataSize,
       chartDataPointInterval,
@@ -69,36 +69,24 @@ export abstract class SensorBase implements ISensorBase {
   abstract getReadingAsync(): Promise<void>;
 
   protected async intitializeCacheAndChartDataAsync(): Promise<void> {
-    await this.loadCachedReadingsFromDatabaseAsync(this.initialCacheLookback);
+    await this.loadCachedReadingsFromDatabaseAsync();
     this.loadChartData();
   }
 
-  protected async loadCachedReadingsFromDatabaseAsync(minutes: number): Promise<void> {
+  protected async loadCachedReadingsFromDatabaseAsync(): Promise<void> {
     try {
-      for (const readingType in this.cacheData) {
-        this.cacheData[readingType as ReadingType].clear();
-      }
-      //Fill cached readings with readings from database
-      const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
-        this,
-        new Date(),
-        minutes,
-        false,
-      );
-      for (const sdbReading of sdbReadings) {
-        const newReading = {
-          metric: sdbReading.metric,
-          data: sdbReading.data,
-          units: sdbReading.units,
-          logTime: sdbReading.logTime.replace(" ", "T") + "Z",
-        } as SDBReading;
-        this.cacheData[sdbReading.metric as ReadingType].addData(newReading);
-      }
+      this.cacheData.clear();
+      await this.cacheData.loadCacheFromDatabaseAsync(this.id, this.initialCacheLookback);
 
       let updateInfoString = "";
-      for (const readingType in this.cacheData) {
-        updateInfoString += `${readingType}: ${this.cacheData[readingType as ReadingType].length()}`;
-        if (readingType != Object.keys(this.cacheData)[Object.keys(this.cacheData).length - 1]) {
+      for (const readingType in this.units) {
+        updateInfoString += `${readingType}: ${this.cacheData.get(readingType as ReadingType).length}`;
+        if (
+          readingType !=
+          Object.keys(this.cacheData.queueCache)[
+            Object.keys(this.cacheData.queueCache).length - 1
+          ]
+        ) {
           updateInfoString += ", ";
         }
       }
@@ -113,8 +101,8 @@ export abstract class SensorBase implements ISensorBase {
   }
 
   protected updateCachedReadings(): void {
-    for (const readingType in this.cacheData) {
-      this.cacheData[readingType as ReadingType].addData({
+    for (const readingType in this.units) {
+      this.cacheData.addData({
         metric: readingType as ReadingType,
         data: this.lastReading[readingType as ReadingType],
         units: this.units[readingType as ReadingType],
@@ -123,9 +111,12 @@ export abstract class SensorBase implements ISensorBase {
     }
 
     let updateInfoString = "";
-    for (const readingType in this.cacheData) {
-      updateInfoString += `${readingType}: ${this.cacheData[readingType as ReadingType].length()}`;
-      if (readingType != Object.keys(this.cacheData)[Object.keys(this.cacheData).length - 1]) {
+    for (const readingType in this.units) {
+      updateInfoString += `${readingType}: ${this.cacheData.get(readingType as ReadingType).length}`;
+      if (
+        readingType !=
+        Object.keys(this.cacheData.queueCache)[Object.keys(this.cacheData.queueCache).length - 1]
+      ) {
         updateInfoString += ", ";
       }
     }
@@ -136,8 +127,8 @@ export abstract class SensorBase implements ISensorBase {
 
   async updateDataStoresAsync(): Promise<void> {
     this.updateCachedReadings();
-    for (const readingType in this.cacheData) {
-      const lastCacheData = this.cacheData[readingType as ReadingType].get().slice(-1)[0];
+    for (const readingType in this.units) {
+      const lastCacheData = this.cacheData.get(readingType as ReadingType).slice(-1)[0];
       //Only update chart if the most recent datapoint is N minutes after last cache
       if (this.chartData.shouldUpdateChartData(readingType as ReadingType, lastCacheData)) {
         this.updateChartData();
@@ -167,33 +158,18 @@ export abstract class SensorBase implements ISensorBase {
     }
   };
 
-  getCachedReadings(offset?: number, limit?: number): Record<string, SDBReading[]> {
+  getCachedReadings(offset?: number, limit?: number): Partial<Record<string, SDBReading[]>> {
     const result: Record<string, SDBReading[]> = {};
-    if (offset == undefined || offset == null || limit == undefined || limit == null) {
-      for (const key in this.cacheData) {
-        result[key] = this.cacheData[key as ReadingType].get();
-      }
-      return result;
-    }
-    if (offset < 0 || limit < 1) {
-      return result;
-    }
-    for (const key in this.cacheData) {
-      if (offset > this.cacheData[key as ReadingType].length()) {
-        return result;
-      }
-    }
-
-    for (const key in this.cacheData) {
-      result[key] = this.cacheData[key as ReadingType].get(offset, limit);
+    for (const key in this.units) {
+      result[key] = this.cacheData.get(key as ReadingType, offset, limit);
     }
     return result;
   }
 
   loadChartData(): void {
-    for (const readingType in this.cacheData) {
+    for (const readingType in this.units) {
       this.chartData.loadChartData(
-        this.cacheData[readingType as ReadingType].get(),
+        this.cacheData.get(readingType as ReadingType),
         this.name,
         readingType as ReadingType,
       );
@@ -205,9 +181,9 @@ export abstract class SensorBase implements ISensorBase {
   }
 
   updateChartData(): void {
-    for (const readingType in this.cacheData) {
+    for (const readingType in this.units) {
       this.chartData.updateChartData(
-        this.cacheData[readingType as ReadingType].get(),
+        this.cacheData.get(readingType as ReadingType),
         this.name,
         readingType as ReadingType,
       );

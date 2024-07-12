@@ -80,7 +80,8 @@ describe("BME280.ts tests", function () {
       5,
       logger,
     ).initAsync();
-    assert.equal(bme280Sensor!.cacheData[ReadingType.temperature].length(), 2);
+
+    assert.equal(bme280Sensor!.cacheData.get(ReadingType.temperature).length, 2);
     assert.isTrue(bme280Sensor instanceof BME280);
     assert.equal(bme280Sensor!.id, mockBME280Data.id);
     assert.equal(bme280Sensor!.name, mockBME280Data.name);

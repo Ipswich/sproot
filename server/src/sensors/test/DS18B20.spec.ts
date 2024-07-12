@@ -132,9 +132,9 @@ describe("DS18B20.ts tests", function () {
       logger,
     ).initAsync();
 
-    assert.equal(ds18b20Sensor!.cacheData[ReadingType.temperature].length(), recordsToLoad);
-    assert.equal(ds18b20Sensor!.cacheData[ReadingType.temperature].get()[0]!.data, "1");
-    assert.equal(ds18b20Sensor!.cacheData[ReadingType.temperature].get()[1]!.data, "2");
+    assert.equal(ds18b20Sensor!.cacheData.get(ReadingType.temperature).length, recordsToLoad);
+    assert.equal(ds18b20Sensor!.cacheData.get(ReadingType.temperature)[0]!.data, "1");
+    assert.equal(ds18b20Sensor!.cacheData.get(ReadingType.temperature)[1]!.data, "2");
 
     // Cleanup
     ds18b20Sensor!.disposeAsync();
