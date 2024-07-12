@@ -250,9 +250,7 @@ class DataSeriesStats {
   private calculateAverages() {
     const averages = {} as Record<string, number>;
     Object.keys(this.counts).forEach((key) => {
-      if (this.totals[key] !== undefined && this.counts[key] !== undefined) {
-        averages[key] = this.totals[key]! / this.counts[key]!;
-      }
+      averages[key] = this.totals[key]! / this.counts[key]!;
     });
     this.cumulativeAverage = this.cumulativeTotal / this.cumulativeCount;
     this.averages = averages;
