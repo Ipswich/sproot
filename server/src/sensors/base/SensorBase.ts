@@ -155,9 +155,8 @@ export abstract class SensorBase implements ISensorBase {
           this.updateMissCount = 0;
         }
       }
-
-      await this.addLastReadingToDatabaseAsync();
     }
+    await this.addLastReadingToDatabaseAsync();
   }
 
   addLastReadingToDatabaseAsync = async (): Promise<void> => {
