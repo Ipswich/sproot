@@ -30,23 +30,8 @@ class DS18B20 extends SensorBase {
     );
   }
 
-  async initAsync(): Promise<DS18B20 | null> {
-    const profiler = this.logger.startTimer();
-    try {
-      await this.intitializeCacheAndChartDataAsync();
-      this.updateInterval = setInterval(async () => {
-        await this.getReadingAsync();
-      }, this.MAX_SENSOR_READ_TIME);
-    } catch (err) {
-      this.logger.error(`Failed to create DS18B20 sensor ${this.id}. ${err}`);
-      return null;
-    } finally {
-      profiler.done({
-        message: `Initialization time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
-        level: "debug",
-      });
-    }
-    return this;
+  override async initAsync(): Promise<DS18B20 | null> {
+    return this.createSensorAsync("DS18B20", this.MAX_SENSOR_READ_TIME);
   }
 
   override async getReadingAsync(): Promise<void> {
@@ -89,11 +74,9 @@ async function readTemperatureFromDeviceAsync(address: string): Promise<number |
   const lines = data.split("\n");
   if (lines[0]?.includes("YES")) {
     const output = lines[1]?.match(/t=(-?\d+)/);
-    if (output) {
-      const temperature = parseInt(output[1] || "");
-      if (!isNaN(temperature)) {
-        return temperature / 100 / 10;
-      }
+    if (output && output[1] != null) {
+      const temperature = parseInt(output[1]);
+      return temperature / 100 / 10;
     }
   }
   return false;

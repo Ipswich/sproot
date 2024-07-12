@@ -28,23 +28,8 @@ class BME280 extends SensorBase {
     );
   }
 
-  async initAsync(): Promise<BME280 | null> {
-    const profiler = this.logger.startTimer();
-    try {
-      await this.intitializeCacheAndChartDataAsync();
-      this.updateInterval = setInterval(async () => {
-        await this.getReadingAsync();
-      }, this.MAX_SENSOR_READ_TIME);
-    } catch (err) {
-      this.logger.error(`Failed to create BME280 sensor ${this.id}. ${err}`);
-      return null;
-    } finally {
-      profiler.done({
-        message: `Initialization time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
-        level: "debug",
-      });
-    }
-    return this;
+  override async initAsync(): Promise<BME280 | null> {
+    return this.createSensorAsync("BME280", this.MAX_SENSOR_READ_TIME);
   }
 
   override async getReadingAsync(): Promise<void> {

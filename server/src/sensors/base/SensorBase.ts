@@ -65,8 +65,31 @@ export abstract class SensorBase implements ISensorBase {
     );
   }
 
+  abstract initAsync(): Promise<SensorBase | null>;
   abstract disposeAsync(): Promise<void>;
   abstract getReadingAsync(): Promise<void>;
+
+  protected async createSensorAsync(
+    sensorModel: string,
+    maxSensorReadTime: number,
+  ): Promise<this | null> {
+    const profiler = this.logger.startTimer();
+    try {
+      await this.intitializeCacheAndChartDataAsync();
+      this.updateInterval = setInterval(async () => {
+        await this.getReadingAsync();
+      }, maxSensorReadTime);
+    } catch (err) {
+      this.logger.error(`Failed to create ${sensorModel} sensor ${this.id}. ${err}`);
+      return null;
+    } finally {
+      profiler.done({
+        message: `Initialization time for sensor {${sensorModel}, id: ${this.id}, address: ${this.address}`,
+        level: "debug",
+      });
+    }
+    return this;
+  }
 
   protected async intitializeCacheAndChartDataAsync(): Promise<void> {
     await this.loadCachedReadingsFromDatabaseAsync();
