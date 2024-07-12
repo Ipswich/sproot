@@ -60,9 +60,7 @@ export class SensorCache {
 
   clear(): void {
     for (const key in this.queueCache) {
-      if (this.queueCache.hasOwnProperty(key)) {
-        this.queueCache[key as ReadingType].clear();
-      }
+      this.queueCache[key as ReadingType].clear();
     }
   }
 }

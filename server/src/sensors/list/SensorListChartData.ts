@@ -20,7 +20,7 @@ export class SensorListChartData implements IChartable {
       this.chartData[readingType as ReadingType] = new ChartData(
         limit,
         interval,
-        dataSeriesRecord ? dataSeriesRecord[readingType as ReadingType] : undefined,
+        dataSeriesRecord[readingType as ReadingType],
       );
     }
   }

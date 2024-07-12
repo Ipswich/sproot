@@ -60,6 +60,12 @@ describe("OutputCache.ts", function () {
   describe("addData", function () {
     it("should add data to the cache", function () {
       const outputCache = new OutputCache(2, mockSprootDB, logger);
+      //This one should get skipped
+      const badData = { controlMode: ControlMode.schedule } as SDBOutputState;
+      outputCache.addData(badData);
+      assert.isEmpty(outputCache.get());
+
+      //This one should be added
       const data = { controlMode: ControlMode.schedule, value: 100 } as SDBOutputState;
       outputCache.addData(data);
 

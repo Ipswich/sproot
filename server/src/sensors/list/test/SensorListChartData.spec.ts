@@ -144,6 +144,15 @@ describe("SensorListChartData.ts tests", function () {
         ReadingType.humidity,
       );
 
+      //Double up, this one should be ignored.
+      sensorListChartData.updateChartData(
+        [dataSeriesRecordBase.humidity],
+        "Test",
+        ReadingType.humidity,
+      );
+      //And this one is empty, and so should be ignored too.
+      sensorListChartData.updateChartData([], "Test", ReadingType.humidity);
+
       assert.equal(Object.keys(sensorListChartData.get().data).length, 1);
 
       sensorListChartData.updateChartData(

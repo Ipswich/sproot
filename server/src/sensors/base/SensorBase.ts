@@ -83,9 +83,7 @@ export abstract class SensorBase implements ISensorBase {
         updateInfoString += `${readingType}: ${this.cacheData.get(readingType as ReadingType).length}`;
         if (
           readingType !=
-          Object.keys(this.cacheData.queueCache)[
-            Object.keys(this.cacheData.queueCache).length - 1
-          ]
+          Object.keys(this.cacheData.queueCache)[Object.keys(this.cacheData.queueCache).length - 1]
         ) {
           updateInfoString += ", ";
         }
