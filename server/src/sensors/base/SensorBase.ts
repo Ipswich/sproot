@@ -149,7 +149,7 @@ export abstract class SensorBase implements ISensorBase {
         updateInfoString += `${readingType}: ${this.#cache.get(readingType as ReadingType).length}`;
         if (
           readingType !=
-          Object.keys(this.#cache.queueCache)[Object.keys(this.#cache.queueCache).length - 1]
+          Object.keys(this.units)[Object.keys(this.units).length - 1]
         ) {
           updateInfoString += ", ";
         }
@@ -179,7 +179,7 @@ export abstract class SensorBase implements ISensorBase {
       updateInfoString += `${readingType}: ${this.#cache.get(readingType as ReadingType).length}`;
       if (
         readingType !=
-        Object.keys(this.#cache.queueCache)[Object.keys(this.#cache.queueCache).length - 1]
+        Object.keys(this.units)[Object.keys(this.units).length - 1]
       ) {
         updateInfoString += ", ";
       }
