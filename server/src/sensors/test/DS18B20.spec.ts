@@ -64,7 +64,7 @@ describe("DS18B20.ts tests", function () {
     const readFileStub = sinon.stub(promises, "readFile").resolves(mockReading);
 
     let ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
-    await ds18b20Sensor.getReadingAsync();
+    await ds18b20Sensor.takeReadingAsync();
 
     assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(20.437));
 
@@ -73,7 +73,7 @@ describe("DS18B20.ts tests", function () {
     readFileStub.resolves(mockReading);
     ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
 
-    await ds18b20Sensor.getReadingAsync();
+    await ds18b20Sensor.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor.lastReading[ReadingType.temperature]);
     assert.isTrue(loggerSpy.calledOnce);
     loggerSpy.resetHistory();
@@ -83,7 +83,7 @@ describe("DS18B20.ts tests", function () {
     readFileStub.resolves(mockReading);
     ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
 
-    await ds18b20Sensor.getReadingAsync();
+    await ds18b20Sensor.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor.lastReading[ReadingType.temperature]);
     assert.isTrue(loggerSpy.calledOnce);
     loggerSpy.resetHistory();
@@ -93,7 +93,7 @@ describe("DS18B20.ts tests", function () {
     readFileStub.resolves(mockReading);
     ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
 
-    await ds18b20Sensor.getReadingAsync();
+    await ds18b20Sensor.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor.lastReading[ReadingType.temperature]);
     assert.isTrue(loggerSpy.calledOnce);
   });
@@ -153,9 +153,12 @@ describe("DS18B20.ts tests", function () {
       logger,
     ).initAsync();
 
-    assert.equal(ds18b20Sensor!.cacheData.get(ReadingType.temperature).length, recordsToLoad);
-    assert.equal(ds18b20Sensor!.cacheData.get(ReadingType.temperature)[0]!.data, "1");
-    assert.equal(ds18b20Sensor!.cacheData.get(ReadingType.temperature)[1]!.data, "2");
+    assert.equal(
+      ds18b20Sensor!.getCachedReadings()[ReadingType.temperature]!.length,
+      recordsToLoad,
+    );
+    assert.equal(ds18b20Sensor!.getCachedReadings()[ReadingType.temperature]![0]!.data, "1");
+    assert.equal(ds18b20Sensor!.getCachedReadings()[ReadingType.temperature]![1]!.data, "2");
 
     // Cleanup
     ds18b20Sensor!.disposeAsync();

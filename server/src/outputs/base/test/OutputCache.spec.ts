@@ -41,7 +41,7 @@ describe("OutputCache.ts", function () {
         } as SDBOutputState,
       ]);
       const outputCache = new OutputCache(2, mockSprootDB, logger);
-      await outputCache.loadCacheFromDatabaseAsync(1, 9000);
+      await outputCache.loadFromDatabaseAsync(1, 9000);
 
       assert.equal(outputCache.get().length, 2);
       assert.equal(outputCache.get()[0]!.controlMode, ControlMode.schedule);

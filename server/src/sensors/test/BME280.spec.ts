@@ -81,7 +81,7 @@ describe("BME280.ts tests", function () {
       logger,
     ).initAsync();
 
-    assert.equal(bme280Sensor!.cacheData.get(ReadingType.temperature).length, 2);
+    assert.equal(bme280Sensor!.getCachedReadings()[ReadingType.temperature]!.length, 2);
     assert.isTrue(bme280Sensor instanceof BME280);
     assert.equal(bme280Sensor!.id, mockBME280Data.id);
     assert.equal(bme280Sensor!.name, mockBME280Data.name);
@@ -134,7 +134,7 @@ describe("BME280.ts tests", function () {
       logger,
     ).initAsync();
 
-    await bme280Sensor!.getReadingAsync();
+    await bme280Sensor!.takeReadingAsync();
 
     assert.isTrue(readStub.calledOnce);
     assert.equal(
@@ -150,7 +150,7 @@ describe("BME280.ts tests", function () {
     bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger).initAsync();
 
     openStub.rejects(new Error("Failed to open sensor"));
-    await bme280Sensor!.getReadingAsync();
+    await bme280Sensor!.takeReadingAsync();
     assert.isUndefined(bme280Sensor!.lastReading[ReadingType.temperature]);
     assert.isUndefined(bme280Sensor!.lastReading[ReadingType.humidity]);
     assert.isUndefined(bme280Sensor!.lastReading[ReadingType.pressure]);

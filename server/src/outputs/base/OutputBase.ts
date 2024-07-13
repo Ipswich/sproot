@@ -6,25 +6,26 @@ import { OutputCache } from "./OutputCache";
 import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
+import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
   readonly model: string;
   readonly address: string;
-  name: string;
   readonly pin: number;
+  name: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
-  readonly sprootDB: ISprootDB;
   state: OutputState;
-  cache: OutputCache;
-  chartData: OutputChartData;
-  logger: winston.Logger;
   color: string | null;
-  private readonly chartDataPointInterval: number;
-  private readonly initialCacheLookback: number;
+  readonly sprootDB: ISprootDB;
+  readonly logger: winston.Logger;
+  #cache: OutputCache;
+  #initialCacheLookback: number;
+  #chartData: OutputChartData;
+  #chartDataPointInterval: number;
 
-  private updateMissCount = 0;
+  #updateMissCount = 0;
 
   constructor(
     sdbOutput: SDBOutput,
@@ -38,18 +39,18 @@ export abstract class OutputBase implements IOutputBase {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
     this.address = sdbOutput.address;
-    this.name = sdbOutput.name;
     this.pin = sdbOutput.pin;
+    this.name = sdbOutput.name;
     this.isPwm = sdbOutput.isPwm ? true : false;
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
-    this.sprootDB = sprootDB;
-    this.color = sdbOutput.color;
     this.state = new OutputState(sprootDB);
-    this.cache = new OutputCache(maxCacheSize, sprootDB, logger);
-    this.chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
+    this.color = sdbOutput.color;
+    this.sprootDB = sprootDB;
     this.logger = logger;
-    this.chartDataPointInterval = Number(chartDataPointInterval);
-    this.initialCacheLookback = initialCacheLookback;
+    this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
+    this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
+    this.#chartDataPointInterval = Number(chartDataPointInterval);
+    this.#initialCacheLookback = initialCacheLookback;
   }
 
   get value(): number {
@@ -81,24 +82,35 @@ export abstract class OutputBase implements IOutputBase {
     this.executeState();
   }
 
+  getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
+    return this.#cache.get(offset, limit);
+  }
+
+  getChartData(): {
+    data: DataSeries;
+    series: ChartSeries;
+  } {
+    return this.#chartData.get();
+  }
+
   async updateDataStoresAsync(): Promise<void> {
     this.addCurrentStateToCache();
-    const lastCacheData = this.cache.get().slice(-1)[0];
+    const lastCacheData = this.#cache.get().slice(-1)[0];
     //Only update chart if the most recent datapoint is N minutes after last cache
-    if (this.chartData.shouldUpdateChartData(lastCacheData)) {
-      this.updateChartData();
+    if (this.#chartData.shouldUpdateChartData(lastCacheData)) {
+      this.#updateChartData();
       //Reset miss count if successful
-      this.updateMissCount = 0;
+      this.#updateMissCount = 0;
     } else {
       //Increment miss count if unsuccessful. Easy CYA if things get out of sync.
-      this.updateMissCount++;
-      //If miss count exceeds 10 * N, force update (3 real tries, because intervals).
-      if (this.updateMissCount >= 3 * this.chartDataPointInterval) {
+      this.#updateMissCount++;
+      //If miss count exceeds 3 * N, force update (3 real tries, because intervals).
+      if (this.#updateMissCount >= 3 * this.#chartDataPointInterval) {
         this.logger.warn(
           `Chart data update miss count exceeded (3) for output {id: ${this.id}}. Forcing update to re-sync.`,
         );
-        this.updateChartData();
-        this.updateMissCount = 0;
+        this.#updateChartData();
+        this.#updateMissCount = 0;
       }
     }
 
@@ -110,39 +122,35 @@ export abstract class OutputBase implements IOutputBase {
   }
 
   protected addCurrentStateToCache(): void {
-    this.cache.addData(this.state.get());
+    this.#cache.addData(this.state.get());
     this.logger.info(
-      `Updated cached states for output {id: ${this.id}}. Cache size - ${this.cache.get().length}`,
+      `Updated cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`,
     );
   }
 
-  async loadCacheFromDatabaseAsync(): Promise<void> {
+  protected async loadCacheFromDatabaseAsync(): Promise<void> {
     try {
-      await this.cache.loadCacheFromDatabaseAsync(this.id, this.initialCacheLookback);
+      await this.#cache.loadFromDatabaseAsync(this.id, this.#initialCacheLookback);
       this.logger.info(
-        `Loaded cached states for output {id: ${this.id}}. Cache size - ${this.cache.get().length}`,
+        `Loaded cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`,
       );
     } catch (err) {
       this.logger.error(`Failed to load cached states for {id: ${this.id}}. ${err}`);
     }
   }
 
-  getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
-    return this.cache.get(offset, limit);
-  }
-
-  loadChartData(): void {
-    this.chartData.loadChartData(this.cache.get(), this.name);
-    this.chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
+  protected loadChartData(): void {
+    this.#chartData.loadChartData(this.#cache.get(), this.name);
+    this.#chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
     this.logger.info(
-      `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().data.length}`,
+      `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
     );
   }
 
-  updateChartData(): void {
-    this.chartData.updateChartData(this.cache.get(), this.name);
+  #updateChartData(): void {
+    this.#chartData.updateChartData(this.#cache.get(), this.name);
     this.logger.info(
-      `Updated chart data for output {id: ${this.id}}. Chart data size - ${this.chartData.get().data.length}`,
+      `Updated chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
     );
   }
 }

@@ -62,11 +62,13 @@ export class OutputState implements IOutputState {
   /**
    * Applies a new state to the object. This does NOT immediately execute the state, but merely updates the state object.
    * The executeState() method must be called to actually execute the state, and should be used in conjunction with this to
-   * ensure that the recorded state is always in sync with the actual state of the output.
+   * ensure that the recorded state is always in sync with the actual state of the output. This method rounds numbers below
+   * 0 to 0 and above 100 to 100.
    * @param newState New state to set
    * @param targetControlMode Determines which state will be overwritten
    */
   setNewState(newState: SDBOutputState, targetControlMode: ControlMode) {
+    newState.value = Math.min(100, Math.max(0, newState.value));
     switch (targetControlMode) {
       case ControlMode.manual:
         this.manual = { ...newState, controlMode: ControlMode.manual };

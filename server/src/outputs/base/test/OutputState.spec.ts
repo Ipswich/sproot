@@ -42,6 +42,14 @@ describe("OutputState.ts tests", () => {
       outputState.setNewState(manualState, ControlMode.manual);
       assert.deepEqual(outputState.schedule, scheduleState);
       assert.deepEqual(outputState.manual, manualState);
+
+      manualState.value = -1;
+      outputState.setNewState(manualState, ControlMode.manual);
+      assert.equal(outputState.manual.value, 0);
+
+      manualState.value = 101;
+      outputState.setNewState(manualState, ControlMode.manual);
+      assert.equal(outputState.manual.value, 100);
     });
   });
 

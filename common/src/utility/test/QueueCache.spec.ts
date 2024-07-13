@@ -13,14 +13,14 @@ describe("QueueCache.ts tests", function () {
     describe("constructor", function () {
       it("should create a new QueueCache object", function () {
         const queueCache = new QueueCache(10);
-        assert.equal(queueCache.limit, 10);
+        assert.equal(queueCache.maxSize, 10);
         assert.equal(queueCache.cache.length, 0);
       });
 
       it("should create a new QueueCache object with a cache", function () {
         const cache = [1, 2, 3, 4, 5];
         const queueCache = new QueueCache(10, cache);
-        assert.equal(queueCache.limit, 10);
+        assert.equal(queueCache.maxSize, 10);
         assert.equal(queueCache.cache.length, 5);
       });
 

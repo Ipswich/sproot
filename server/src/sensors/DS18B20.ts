@@ -34,7 +34,7 @@ class DS18B20 extends SensorBase {
     return this.createSensorAsync("DS18B20", this.MAX_SENSOR_READ_TIME);
   }
 
-  override async getReadingAsync(): Promise<void> {
+  override async takeReadingAsync(): Promise<void> {
     const profiler = this.logger.startTimer();
     await readTemperatureFromDeviceAsync(this.address!)
       .then(async (result) => {

@@ -10,6 +10,7 @@ import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
+import { OutputBase } from "../base/OutputBase";
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {
@@ -25,6 +26,9 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    // disposing with nothing shouldn't cause issues
+    pca9685.disposeOutput({} as OutputBase);
+
     const output1 = await pca9685.createOutput({
       id: 1,
       model: "pca9685",
@@ -71,6 +75,9 @@ describe("PCA9685.ts tests", function () {
     assert.equal(Object.keys(pca9685.outputs).length, 3);
     assert.equal(pca9685.usedPins["0x40"]!.length, 3);
     assert.isUndefined(pca9685.outputs["4"]);
+
+    // disposing with a non existent pin should also not cause issues
+    pca9685.disposeOutput({ pin: 3, address: "0x40" } as OutputBase);
 
     // Dispose the rest
     pca9685.disposeOutput(output1!);
@@ -202,5 +209,31 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.callCount, 6);
     assert.equal(setDutyCycleStub.getCall(5).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(5).args[1], 0);
+
+    //PWM error handling
+    pca9685.setNewOutputState("1", <SDBOutputState>{ value: -1 }, ControlMode.schedule);
+    pca9685.executeOutputState("1"); //Receives individual output id as well.
+    assert.equal(pca9685.outputs["1"]?.state.schedule.value, 0);
+    assert.equal(setDutyCycleStub.callCount, 7);
+
+    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 101 }, ControlMode.schedule);
+    pca9685.executeOutputState("1"); //Receives individual output id as well.
+    assert.equal(pca9685.outputs["1"]?.state.schedule.value, 100);
+    assert.equal(setDutyCycleStub.callCount, 8);
+
+    //Non-PWM error handling
+    pca9685.createOutput({
+      id: 2,
+      model: "pca9685",
+      name: "test output 1",
+      pin: 0,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput);
+
+    //Execute non-pwm output (not 0 or 100)
+    pca9685.setNewOutputState("2", <SDBOutputState>{ value: 75 }, ControlMode.schedule);
+    pca9685.executeOutputState("2");
+    assert.equal(setDutyCycleStub.callCount, 8);
   });
 });

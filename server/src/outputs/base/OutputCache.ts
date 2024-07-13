@@ -17,7 +17,7 @@ export class OutputCache {
     return this.queueCache.get(offset, limit);
   }
 
-  async loadCacheFromDatabaseAsync(outputId: number, minutes: number): Promise<void> {
+  async loadFromDatabaseAsync(outputId: number, minutes: number): Promise<void> {
     this.queueCache.clear();
     const sdbStates = await this.sprootDB.getOutputStatesAsync(
       { id: outputId },
