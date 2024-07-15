@@ -45,7 +45,7 @@ export default function PCA9685Form({
             disabled={!isPwm}
           />
         </Fragment>
-      ) : selectedOutput?.isPwm ?? false ? (
+      ) : (selectedOutput?.isPwm ?? false) ? (
         <Switch
           label="Invert PWM"
           defaultChecked={selectedOutput?.isInvertedPwm ?? false}
