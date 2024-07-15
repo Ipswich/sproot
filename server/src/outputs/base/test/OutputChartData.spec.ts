@@ -83,7 +83,7 @@ describe("OutputChartData.ts tests", function () {
       outputCache.addData(
         {
           logTime: "2024-03-03T18:45:01Z",
-          controlMode: ControlMode.schedule,
+          controlMode: ControlMode.automatic,
           value: 30,
         } as SDBOutputState,
         new Date("2024-03-03T18:45:01Z"),

@@ -60,7 +60,7 @@ export default function OutputCard({
                 value={controlMode}
                 data={[
                   { label: "Manual", value: ControlMode.manual },
-                  { label: "Schedule", value: ControlMode.schedule },
+                  { label: "Automatic", value: ControlMode.automatic },
                 ]}
                 disabled={isSegmentedControlDisabled}
                 onChange={async (value) => {
@@ -94,7 +94,7 @@ export default function OutputCard({
                     ) : (
                       <Group justify="space-around">
                         <StatsRing
-                          value={output.state.schedule.value}
+                          value={output.state.automatic.value}
                           color="teal"
                         />
                       </Group>
@@ -120,7 +120,7 @@ export default function OutputCard({
                     ) : (
                       <Fragment>
                         <StatsRing
-                          value={output.state.schedule.value}
+                          value={output.state.automatic.value}
                           color="teal"
                         />
                       </Fragment>

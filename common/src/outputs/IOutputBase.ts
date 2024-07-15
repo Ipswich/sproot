@@ -2,7 +2,7 @@ import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputStat
 
 enum ControlMode {
   manual = "manual",
-  schedule = "schedule",
+  automatic = "automatic",
 }
 
 interface IOutputBase {
@@ -19,7 +19,7 @@ interface IOutputBase {
 
 type IOutputState = {
   manual: SDBOutputState;
-  schedule: SDBOutputState;
+  automatic: SDBOutputState;
   controlMode: ControlMode;
   value: number;
 };

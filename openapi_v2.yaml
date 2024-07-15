@@ -1802,7 +1802,7 @@ components:
                 manual:
                   allOf:
                     - $ref: "#/components/schemas/SDBOutputState"
-                schedule:
+                automatic:
                   allOf:
                     - $ref: "#/components/schemas/SDBOutputState"
 

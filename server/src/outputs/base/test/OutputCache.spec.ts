@@ -30,7 +30,7 @@ describe("OutputCache.ts", function () {
     it("should load the cache from the database", async function () {
       sinon.stub(mockSprootDB, "getOutputStatesAsync").resolves([
         {
-          controlMode: ControlMode.schedule,
+          controlMode: ControlMode.automatic,
           value: 100,
           logTime: "2024-03-03T03:29:01Z",
         } as SDBOutputState,
@@ -44,7 +44,7 @@ describe("OutputCache.ts", function () {
       await outputCache.loadFromDatabaseAsync(1, 9000);
 
       assert.equal(outputCache.get().length, 2);
-      assert.equal(outputCache.get()[0]!.controlMode, ControlMode.schedule);
+      assert.equal(outputCache.get()[0]!.controlMode, ControlMode.automatic);
       assert.equal(outputCache.get()[0]!.value, 100);
       assert.isTrue(
         outputCache.get()[0]!.logTime.includes("Z") && outputCache.get()[0]!.logTime.includes("T"),
@@ -61,16 +61,16 @@ describe("OutputCache.ts", function () {
     it("should add data to the cache", function () {
       const outputCache = new OutputCache(2, mockSprootDB, logger);
       //This one should get skipped
-      const badData = { controlMode: ControlMode.schedule } as SDBOutputState;
+      const badData = { controlMode: ControlMode.automatic } as SDBOutputState;
       outputCache.addData(badData);
       assert.isEmpty(outputCache.get());
 
       //This one should be added
-      const data = { controlMode: ControlMode.schedule, value: 100 } as SDBOutputState;
+      const data = { controlMode: ControlMode.automatic, value: 100 } as SDBOutputState;
       outputCache.addData(data);
 
       assert.equal(outputCache.get().length, 1);
-      assert.equal(outputCache.get()[0]!.controlMode, ControlMode.schedule);
+      assert.equal(outputCache.get()[0]!.controlMode, ControlMode.automatic);
       assert.equal(outputCache.get()[0]!.value, 100);
       assert.isTrue(
         outputCache.get()[0]!.logTime.includes("Z") && outputCache.get()[0]!.logTime.includes("T"),

@@ -1052,7 +1052,7 @@ paths:
                   type: string
                   enum:
                     - "manual"
-                    - "schedule"
+                    - "automatic"
               required:
                 - controlMode
       responses:
@@ -1411,13 +1411,13 @@ components:
           properties:
             manual:
               $ref: "#/components/schemas/State"
-            schedule:
+            automatic:
               $ref: "#/components/schemas/State"
             controlMode:
               type: string
               enum:
                 - "manual"
-                - "schedule"
+                - "automatic"
               example: "manual"
 
     State:

@@ -4,7 +4,7 @@ import { IOutputState, ControlMode } from "@sproot/sproot-common/dist/outputs/IO
 
 export class OutputState implements IOutputState {
   manual: SDBOutputState;
-  schedule: SDBOutputState;
+  automatic: SDBOutputState;
   controlMode: ControlMode;
   #sprootDB: ISprootDB;
 
@@ -14,12 +14,12 @@ export class OutputState implements IOutputState {
       value: 0,
       logTime: new Date().toISOString(),
     } as SDBOutputState;
-    this.schedule = {
-      controlMode: ControlMode.schedule,
+    this.automatic = {
+      controlMode: ControlMode.automatic,
       value: 0,
       logTime: new Date().toISOString(),
     } as SDBOutputState;
-    this.controlMode = ControlMode.schedule;
+    this.controlMode = ControlMode.automatic;
     this.#sprootDB = sprootDB;
   }
 
@@ -27,8 +27,8 @@ export class OutputState implements IOutputState {
     switch (this.controlMode) {
       case ControlMode.manual:
         return this.manual;
-      case ControlMode.schedule:
-        return this.schedule;
+      case ControlMode.automatic:
+        return this.automatic;
     }
   }
 
@@ -36,8 +36,8 @@ export class OutputState implements IOutputState {
     switch (this.controlMode) {
       case ControlMode.manual:
         return this.manual.value;
-      case ControlMode.schedule:
-        return this.schedule.value;
+      case ControlMode.automatic:
+        return this.automatic.value;
     }
   }
 
@@ -45,13 +45,13 @@ export class OutputState implements IOutputState {
     switch (this.controlMode) {
       case ControlMode.manual:
         return this.manual.logTime;
-      case ControlMode.schedule:
-        return this.schedule.logTime;
+      case ControlMode.automatic:
+        return this.automatic.logTime;
     }
   }
 
   /**
-   * Updates the control mode for the output; used to switch between manual and schedule modes
+   * Updates the control mode for the output; used to switch between manual and automatic modes
    * @param controlMode Mode to give system control to.
    */
   updateControlMode(controlMode: ControlMode) {
@@ -74,8 +74,8 @@ export class OutputState implements IOutputState {
         this.manual = { ...newState, controlMode: ControlMode.manual };
         break;
 
-      case ControlMode.schedule:
-        this.schedule = { ...newState, controlMode: ControlMode.schedule };
+      case ControlMode.automatic:
+        this.automatic = { ...newState, controlMode: ControlMode.automatic };
         break;
     }
   }

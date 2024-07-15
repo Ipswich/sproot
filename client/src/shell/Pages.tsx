@@ -35,8 +35,8 @@ export class Pages {
       icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
     } as Page,
     // {
-    //   navLinkText: "Schedule",
-    //   headerText: "Schedule",
+    //   navLinkText: "Automatic",
+    //   headerText: "Automatic",
     //   icon: (props: TablerIconsProps | undefined) => (
     //     <IconCalendarStats {...props} />
     //   ),
