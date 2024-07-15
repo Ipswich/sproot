@@ -59,7 +59,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.deepEqual(success.content?.data, ["Control mode successfully updated."]);
 
-      mockRequest.body["controlMode"] = ControlMode.schedule;
+      mockRequest.body["controlMode"] = ControlMode.automatic;
       success = setControlMode(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);

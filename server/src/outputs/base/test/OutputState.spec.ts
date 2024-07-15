@@ -7,18 +7,12 @@ import { assert } from "chai";
 import sinon from "sinon";
 
 describe("OutputState.ts tests", () => {
-  // it("should initialize with default values", () => {
-  //   assert.typeOf(outputState.manual, SDBOutputState);
-  //   expect(outputState.schedule).toBeInstanceOf(SDBOutputState);
-  //   expect(outputState.controlMode).toBe(ControlMode.Manual);
-  // });
-
   describe("updateControlMode", () => {
     let sprootDB = {} as SprootDB;
     let outputState = new OutputState(sprootDB);
     it("should update control mode", () => {
-      outputState.updateControlMode(ControlMode.schedule);
-      assert.equal(ControlMode.schedule, outputState.controlMode);
+      outputState.updateControlMode(ControlMode.automatic);
+      assert.equal(ControlMode.automatic, outputState.controlMode);
       outputState.updateControlMode(ControlMode.manual);
       assert.equal(ControlMode.manual, outputState.controlMode);
     });
@@ -28,8 +22,8 @@ describe("OutputState.ts tests", () => {
     let sprootDB = {} as SprootDB;
     let outputState = new OutputState(sprootDB);
     it("should set new states", () => {
-      const scheduleState = {
-        controlMode: ControlMode.schedule,
+      const automaticState = {
+        controlMode: ControlMode.automatic,
         value: 50,
         logTime: "2022-01-01",
       } as SDBOutputState;
@@ -38,9 +32,9 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      outputState.setNewState(scheduleState, ControlMode.schedule);
+      outputState.setNewState(automaticState, ControlMode.automatic);
       outputState.setNewState(manualState, ControlMode.manual);
-      assert.deepEqual(outputState.schedule, scheduleState);
+      assert.deepEqual(outputState.automatic, automaticState);
       assert.deepEqual(outputState.manual, manualState);
 
       manualState.value = -1;
@@ -57,8 +51,8 @@ describe("OutputState.ts tests", () => {
     let sprootDB = {} as SprootDB;
     let outputState = new OutputState(sprootDB);
     it("should return the correct states", () => {
-      const scheduleState = {
-        controlMode: ControlMode.schedule,
+      const automaticState = {
+        controlMode: ControlMode.automatic,
         value: 50,
         logTime: "2022-01-01",
       } as SDBOutputState;
@@ -67,10 +61,10 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      outputState.setNewState(scheduleState, ControlMode.schedule);
+      outputState.setNewState(automaticState, ControlMode.automatic);
       outputState.setNewState(manualState, ControlMode.manual);
 
-      assert.deepEqual(outputState.get(), scheduleState);
+      assert.deepEqual(outputState.get(), automaticState);
       outputState.updateControlMode(ControlMode.manual);
       assert.deepEqual(outputState.get(), manualState);
     });
@@ -80,8 +74,8 @@ describe("OutputState.ts tests", () => {
     let sprootDB = {} as SprootDB;
     let outputState = new OutputState(sprootDB);
     it("should return the correct values", () => {
-      const scheduleState = {
-        controlMode: ControlMode.schedule,
+      const automaticState = {
+        controlMode: ControlMode.automatic,
         value: 50,
         logTime: "2022-01-01",
       } as SDBOutputState;
@@ -90,10 +84,10 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      outputState.setNewState(scheduleState, ControlMode.schedule);
+      outputState.setNewState(automaticState, ControlMode.automatic);
       outputState.setNewState(manualState, ControlMode.manual);
 
-      assert.deepEqual(outputState.value, scheduleState.value);
+      assert.deepEqual(outputState.value, automaticState.value);
       outputState.updateControlMode(ControlMode.manual);
       assert.deepEqual(outputState.value, manualState.value);
     });
@@ -103,8 +97,8 @@ describe("OutputState.ts tests", () => {
     let sprootDB = {} as SprootDB;
     let outputState = new OutputState(sprootDB);
     it("should return the correct logTimes", () => {
-      const scheduleState = {
-        controlMode: ControlMode.schedule,
+      const automaticState = {
+        controlMode: ControlMode.automatic,
         value: 50,
         logTime: "2022-01-01",
       } as SDBOutputState;
@@ -113,10 +107,10 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-02",
       } as SDBOutputState;
-      outputState.setNewState(scheduleState, ControlMode.schedule);
+      outputState.setNewState(automaticState, ControlMode.automatic);
       outputState.setNewState(manualState, ControlMode.manual);
 
-      assert.deepEqual(outputState.logTime, scheduleState.logTime);
+      assert.deepEqual(outputState.logTime, automaticState.logTime);
       outputState.updateControlMode(ControlMode.manual);
       assert.deepEqual(outputState.logTime, manualState.logTime);
     });
@@ -126,18 +120,18 @@ describe("OutputState.ts tests", () => {
     const localSprootDB = sinon.createStubInstance(SprootDB);
     const localOutputState = new OutputState(localSprootDB);
     it("should call addOutputStateAsync with the correct parameters", async () => {
-      const scheduleState = {
-        controlMode: ControlMode.schedule,
+      const automaticState = {
+        controlMode: ControlMode.automatic,
         value: 50,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      localOutputState.setNewState(scheduleState, ControlMode.schedule);
+      localOutputState.setNewState(automaticState, ControlMode.automatic);
 
       const addOutputStateAsyncStub = sinon.stub(localSprootDB, "addOutputStateAsync");
       await localOutputState.addCurrentStateToDatabaseAsync(1);
       sinon.assert.calledWith(addOutputStateAsyncStub, {
         id: 1,
-        controlMode: ControlMode.schedule,
+        controlMode: ControlMode.automatic,
         value: 50,
       });
       sinon.restore();

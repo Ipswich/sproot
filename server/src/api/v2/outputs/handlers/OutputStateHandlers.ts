@@ -36,8 +36,8 @@ export function setControlMode(
     case ControlMode.manual:
       outputList.updateControlMode(outputId, ControlMode.manual);
       break;
-    case ControlMode.schedule:
-      outputList.updateControlMode(outputId, ControlMode.schedule);
+    case ControlMode.automatic:
+      outputList.updateControlMode(outputId, ControlMode.automatic);
       break;
     default:
       controlModeResponse = {
