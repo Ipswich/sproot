@@ -10,7 +10,7 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install curl -y
 
 # Install NVM (and Node, npm)
-ENV NODE_VERSION=20.15.1
+ENV NODE_VERSION=22.5.0
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 ENV NVM_DIR=/root/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION} --latest-npm

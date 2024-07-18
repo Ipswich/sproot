@@ -10,7 +10,7 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install curl nano python3 make g++ git -y
 
 # Install NVM (and Node, npm)
-ENV NODE_VERSION=20.15.1
+ENV NODE_VERSION=22.5.0
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 ENV NVM_DIR=/root/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION} --latest-npm
@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y gh;
 
 # Copy project
 COPY .. ./sproot
+RUN cd ./sproot && npm run install:common
 RUN cd ./sproot && npm run install:server
 
 # Expose app ports
