@@ -5,7 +5,7 @@
   "description": "sproot-client, the frontend for the sproot project",
   "scripts": {
     "clean": "rimraf tsconfig.node.tsbuildinfo && rimraf ./dist",
-    "build": "tsc && vite build",
+    "build": "tsc --build --verbose && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "prettier:write": "npx --yes prettier . --write",
     "prettier:check": "npx --yes prettier . --check",
