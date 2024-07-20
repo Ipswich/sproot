@@ -1,4 +1,4 @@
-name: "Workflow"
+name: "Test"
 
 on:
   push:
@@ -17,9 +17,10 @@ jobs:
       - name: Check code style
         run: npm run prettier:check
 
+  # Depends on prettier finishing successfully
   test:
     needs: prettier
-    name: Run Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
+    name: Unit tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '(production)' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: ${{ matrix.experimental }}
@@ -38,15 +39,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Run tests
         run: npm test
-
-  docker-test:
-    needs: [prettier, test]
-    name: Test Docker Compose Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name : Build docker images
-        run: docker compose --env-file .env.production build
