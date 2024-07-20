@@ -1,7 +1,4 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Run Workflow
+name: "Workflow"
 
 on:
   push:
@@ -21,18 +18,19 @@ jobs:
         run: npm run prettier:check
 
   test:
-    name: Run tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
+    needs: prettier
+    name: Run Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18.x, 20.x, 22.x]
-        experimental: [true]
         include:
           - node-version: 22.5.1
             experimental: false
+          - node-version: 22.x
+            experimental: true
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -46,7 +44,7 @@ jobs:
 
   docker-test:
     needs: [prettier, test]
-    name: Build and test docker
+    name: Test Docker Compose Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
