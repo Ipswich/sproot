@@ -223,10 +223,10 @@ router.post("/:id/control-mode", async (req: Request, res: Response) => {
         ControlMode.manual,
       );
       break;
-    case ControlMode.schedule:
+    case ControlMode.automatic:
       (req.app.get("outputList") as OutputList).updateControlMode(
         String(req.params["id"]),
-        ControlMode.schedule,
+        ControlMode.automatic,
       );
       break;
     default:

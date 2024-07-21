@@ -153,7 +153,7 @@ export class ChartData {
     current: Date = new Date(),
   ): boolean {
     const intervalInMs = intervalInMinutes * 60000;
-    let NMinuteDate = new Date(Math.floor(current.getTime() / intervalInMs) * intervalInMs);
+    const NMinuteDate = new Date(Math.floor(current.getTime() / intervalInMs) * intervalInMs);
     if (now.getDate() == NMinuteDate.getDate()) {
       if (now.getHours() == NMinuteDate.getHours()) {
         if (now.getMinutes() == NMinuteDate.getMinutes()) {
@@ -213,7 +213,11 @@ class DataSeriesStats {
         }
         if (!this.counts[key]) {
           this.counts[key] = 0;
+        }
+        if (!this.totals[key]) {
           this.totals[key] = 0;
+        }
+        if (!this.averages[key]) {
           this.averages[key] = 0;
         }
 
@@ -250,9 +254,7 @@ class DataSeriesStats {
   private calculateAverages() {
     const averages = {} as Record<string, number>;
     Object.keys(this.counts).forEach((key) => {
-      if (this.totals[key] !== undefined && this.counts[key] !== undefined) {
-        averages[key] = this.totals[key]! / this.counts[key]!;
-      }
+      averages[key] = this.totals[key]! / this.counts[key]!;
     });
     this.cumulativeAverage = this.cumulativeTotal / this.cumulativeCount;
     this.averages = averages;

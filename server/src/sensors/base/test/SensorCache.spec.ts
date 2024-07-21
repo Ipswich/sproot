@@ -56,7 +56,7 @@ describe("SensorCache.ts tests", function () {
         } as SDBReading,
       ]);
       const sensorCache = new SensorCache(2, mockSprootDB, logger);
-      await sensorCache.loadCacheFromDatabaseAsync(1, 9000);
+      await sensorCache.loadFromDatabaseAsync(1, 9000);
 
       assert.equal(sensorCache.get(ReadingType.temperature).length, 2);
       assert.equal(sensorCache.get(ReadingType.humidity).length, 2);

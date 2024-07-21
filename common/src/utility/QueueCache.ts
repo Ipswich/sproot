@@ -1,9 +1,9 @@
 class QueueCache<T> {
   cache: T[];
-  readonly limit: number;
+  readonly maxSize: number;
 
-  constructor(limit: number, cache?: T[]) {
-    this.limit = limit;
+  constructor(maxSize: number, cache?: T[]) {
+    this.maxSize = maxSize;
 
     if (cache) {
       this.cache = cache;
@@ -11,14 +11,14 @@ class QueueCache<T> {
       this.cache = [];
     }
 
-    while (this.cache.length > this.limit) {
+    while (this.cache.length > this.maxSize) {
       this.cache.shift();
     }
   }
 
   public addData(data: T): void {
     this.cache.push(data);
-    while (this.cache.length > this.limit) {
+    while (this.cache.length > this.maxSize) {
       this.cache.shift();
     }
   }

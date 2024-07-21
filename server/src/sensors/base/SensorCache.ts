@@ -1,7 +1,7 @@
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
-import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
-import { QueueCache } from "@sproot/sproot-common/src/utility/QueueCache";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
 import winston from "winston";
 
 export class SensorCache {
@@ -23,7 +23,7 @@ export class SensorCache {
     return this.queueCache[key].get(offset, limit);
   }
 
-  async loadCacheFromDatabaseAsync(sensorId: number, minutes: number): Promise<void> {
+  async loadFromDatabaseAsync(sensorId: number, minutes: number): Promise<void> {
     this.clear();
     const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
       { id: sensorId },
@@ -60,9 +60,7 @@ export class SensorCache {
 
   clear(): void {
     for (const key in this.queueCache) {
-      if (this.queueCache.hasOwnProperty(key)) {
-        this.queueCache[key as ReadingType].clear();
-      }
+      this.queueCache[key as ReadingType].clear();
     }
   }
 }

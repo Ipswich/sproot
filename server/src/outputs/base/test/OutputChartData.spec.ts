@@ -83,7 +83,7 @@ describe("OutputChartData.ts tests", function () {
       outputCache.addData(
         {
           logTime: "2024-03-03T18:45:01Z",
-          controlMode: ControlMode.schedule,
+          controlMode: ControlMode.automatic,
           value: 30,
         } as SDBOutputState,
         new Date("2024-03-03T18:45:01Z"),
@@ -121,6 +121,15 @@ describe("OutputChartData.ts tests", function () {
   describe("updateChartData", function () {
     it("should update the chart data with the last entry in the passed cache", function () {
       const outputChartData = new OutputChartData(4, 5, []);
+      //No data should get nothing added
+      outputChartData.updateChartData([], "Test");
+      assert.isEmpty(outputChartData.get().data);
+
+      //Only one of these should be added.
+      outputChartData.updateChartData(
+        [{ value: 100, logTime: "2024-03-03T03:30:01Z" } as SDBOutputState],
+        "Test",
+      );
       outputChartData.updateChartData(
         [{ value: 100, logTime: "2024-03-03T03:30:01Z" } as SDBOutputState],
         "Test",

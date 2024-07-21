@@ -1,4 +1,4 @@
-FROM debian:latest AS build
+FROM debian:12.6-slim AS build
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
     echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
@@ -10,8 +10,8 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install curl -y
 
 # Install NVM (and Node, npm)
-ENV NODE_VERSION=21.7.0
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+ENV NODE_VERSION=22.5.1
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 ENV NVM_DIR=/root/.nvm
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION} --latest-npm
 RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
@@ -20,13 +20,13 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 
 # Copy project
 COPY .. ./sproot
-RUN cd ./sproot && npm run install:common
+WORKDIR /sproot
+RUN npm run install:common
 ARG VITE_CHART_DATA_POINT_INTERVAL
 ARG VITE_MAX_CHART_DATA_POINTS
 ARG VITE_API_SERVER_URL
 ARG VITE_CLIENT_VERSION
-RUN cd ./sproot && npm run install:client
-RUN cd ./sproot && npm run build:client
+RUN npm run install:client && npm run build:client
 
 FROM nginx:alpine
 COPY --from=build ./sproot/client/dist /usr/share/nginx/html

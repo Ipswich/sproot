@@ -25,16 +25,12 @@ export class SensorChartData implements IChartable {
       this.chartData[readingType as ReadingType] = new ChartData(
         limit,
         intervalMinutes,
-        dataSeriesRecord ? dataSeriesRecord[readingType as ReadingType] : undefined,
+        dataSeriesRecord[readingType as ReadingType],
       );
     }
     if (!dataSeriesRecord && readingTypes) {
       for (const readingType of readingTypes) {
-        this.chartData[readingType] = new ChartData(
-          limit,
-          intervalMinutes,
-          dataSeriesRecord ? dataSeriesRecord[readingType] : undefined,
-        );
+        this.chartData[readingType] = new ChartData(limit, intervalMinutes, undefined);
       }
     }
     this.chartSeries = { name: "", color: "" };
@@ -72,13 +68,14 @@ export class SensorChartData implements IChartable {
   }
 
   updateChartData(cache: SDBReading[], sensorName: string, key: ReadingType): void {
+    //If there isn't an existing ChartData for this key, create it
+    if (!this.chartData[key]) {
+      this.chartData[key] = new ChartData(this.limit, this.intervalMinutes);
+    }
+
     const lastCacheData = cache[cache.length - 1];
     if (lastCacheData) {
       const name = ChartData.formatDateForChart(lastCacheData.logTime);
-      //If there isn't an existing ChartData for this key, create it
-      if (!this.chartData[key]) {
-        this.chartData[key] = new ChartData(this.limit, this.intervalMinutes);
-      }
       //Add Only if not the same time stamp as the last data point
       if (name != this.chartData[key].get().slice(-1)[0]?.name) {
         this.chartData[key].addDataPoint({

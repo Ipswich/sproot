@@ -54,24 +54,19 @@ class PCA9685 {
     }
 
     const pca9685Driver = this.#boardRecord[output.address];
-    if (pca9685Driver) {
-      this.#outputs[output.id] = new PCA9685Output(
-        pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
-        output,
-        this.#sprootDB,
-        this.#maxCacheSize,
-        this.#initialCacheLookback,
-        this.#maxChartDataSize,
-        this.#chartDataPointInterval,
-        this.#logger,
-      );
-      await this.#outputs[output.id]?.initializeAsync();
-      this.#usedPins[output.address]?.push(output.pin);
-      return this.#outputs[output.id]!;
-    } else {
-      this.#logger.error(`Failed to create PCA9685 {id: ${output.id}}`);
-      return null;
-    }
+    this.#outputs[output.id] = new PCA9685Output(
+      pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
+      output,
+      this.#sprootDB,
+      this.#maxCacheSize,
+      this.#initialCacheLookback,
+      this.#maxChartDataSize,
+      this.#chartDataPointInterval,
+      this.#logger,
+    );
+    await this.#outputs[output.id]?.initializeAsync();
+    this.#usedPins[output.address]?.push(output.pin);
+    return this.#outputs[output.id]!;
   }
 
   get boardRecord(): Record<string, Pca9685Driver> {
@@ -108,7 +103,7 @@ class PCA9685 {
   disposeOutput(output: OutputBase) {
     const usedPins = this.#usedPins[output.address];
     if (usedPins) {
-      const index = usedPins.indexOf(this.#outputs[output.id]!.pin);
+      const index = usedPins.indexOf(output.pin);
       if (index !== -1) {
         usedPins.splice(index, 1);
         this.#outputs[output.id]!.dispose();
@@ -174,11 +169,11 @@ class PCA9685Output extends OutputBase {
         this.#setPwm(this.state.manual.value);
         break;
 
-      case ControlMode.schedule:
+      case ControlMode.automatic:
         this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.schedule.value}`,
+          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.automatic.value}`,
         );
-        this.#setPwm(this.state.schedule.value);
+        this.#setPwm(this.state.automatic.value);
         break;
     }
   }
@@ -191,12 +186,6 @@ class PCA9685Output extends OutputBase {
   #setPwm(value: number): void {
     if (!this.isPwm && value != 0 && value != 100) {
       this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
-      return;
-    }
-    if (value < 0 || value > 100) {
-      this.logger.error(
-        `Invalid PWM value for Output ${this.id}. PWM value must be between 0 and 100`,
-      );
       return;
     }
     const calculatedOutputValue = (this.isInvertedPwm ? 100 - value : value) / 100;

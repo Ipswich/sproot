@@ -11,6 +11,13 @@ describe("OutputListChartData", function () {
     });
   });
 
+  describe("get", function () {
+    it("should return chart data", function () {
+      const chartData = new OutputListChartData(3, 5);
+      assert.exists(chartData.get());
+    });
+  });
+
   describe("loadChartData", function () {
     it("should load chart data", async function () {
       const chartData = new OutputListChartData(3, 5);
@@ -44,6 +51,10 @@ describe("OutputListChartData", function () {
         ] as DataSeries,
       ] as DataSeries[];
       chartData.updateChartData(newData, "ignored");
+
+      //Empty data should be ignored
+      chartData.updateChartData([], "ignored");
+
       assert.exists(chartData.chartData);
       assert.equal(Object.keys(chartData.chartData.get()).length, 2);
       assert.equal(Object.keys(chartData.chartData.get()[1]!).length, 3);

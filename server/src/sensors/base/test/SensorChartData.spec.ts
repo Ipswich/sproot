@@ -130,7 +130,6 @@ describe("SensorChartData.ts tests", function () {
   describe("updateChartData", function () {
     it("should update the chart data with the last entry in the passed cache, adding a key if necessary", function () {
       const sensorChartData = new SensorChartData(4, 5);
-
       assert.equal(Object.keys(sensorChartData.get().data).length, 0);
 
       sensorChartData.updateChartData(
@@ -157,6 +156,21 @@ describe("SensorChartData.ts tests", function () {
         "Test",
         ReadingType.humidity,
       );
+
+      //These two should be ignored (duplicate entry, and empty cache data)
+      sensorChartData.updateChartData(
+        [
+          {
+            metric: ReadingType.humidity,
+            units: "%rH",
+            data: "30",
+            logTime: "2024-03-03T03:30:01Z",
+          } as SDBReading,
+        ],
+        "Test",
+        ReadingType.humidity,
+      );
+      sensorChartData.updateChartData([], "Test", ReadingType.temperature);
 
       assert.equal(Object.keys(sensorChartData.get().data).length, 2);
 

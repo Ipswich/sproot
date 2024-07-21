@@ -52,9 +52,10 @@ class SensorList {
       const { id, name, model, address, color, lastReading, lastReadingTime, units } = this
         .#sensors[key] as ISensorBase;
       for (const readingType in lastReading) {
-        lastReading[readingType as ReadingType] = this.#formatReadingForDisplay(
-          lastReading[readingType as ReadingType],
-        );
+        const reading = lastReading[readingType as ReadingType];
+        if (reading !== undefined) {
+          lastReading[readingType as ReadingType] = this.#formatReadingForDisplay(reading);
+        }
       }
       cleanObject[key] = {
         id,
@@ -161,7 +162,7 @@ class SensorList {
     for (const readingType in ReadingType) {
       const dataSeriesMap = Object.keys(this.#sensors)
         .map((key) => {
-          return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
+          return this.#sensors[key]?.getChartData().data[readingType as ReadingType];
         })
         .filter((x) => x != undefined) as DataSeries[];
       this.#chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
@@ -183,7 +184,7 @@ class SensorList {
   }
 
   loadChartSeries() {
-    const series = Object.values(this.#sensors).map((sensor) => sensor.chartData.get().series);
+    const series = Object.values(this.#sensors).map((sensor) => sensor.getChartData().series);
     this.#chartData.loadChartSeries(series);
   }
 
@@ -192,7 +193,7 @@ class SensorList {
     for (const readingType in ReadingType) {
       const dataSeriesMap = Object.keys(this.#sensors)
         .map((key) => {
-          return this.#sensors[key]?.chartData.get().data[readingType as ReadingType];
+          return this.#sensors[key]?.getChartData().data[readingType as ReadingType];
         })
         .filter((dataSeries) => dataSeries != undefined) as DataSeries[];
 

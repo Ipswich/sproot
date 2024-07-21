@@ -13,15 +13,23 @@ describe("QueueCache.ts tests", function () {
     describe("constructor", function () {
       it("should create a new QueueCache object", function () {
         const queueCache = new QueueCache(10);
-        assert.equal(queueCache.limit, 10);
+        assert.equal(queueCache.maxSize, 10);
         assert.equal(queueCache.cache.length, 0);
       });
 
       it("should create a new QueueCache object with a cache", function () {
         const cache = [1, 2, 3, 4, 5];
         const queueCache = new QueueCache(10, cache);
-        assert.equal(queueCache.limit, 10);
+        assert.equal(queueCache.maxSize, 10);
         assert.equal(queueCache.cache.length, 5);
+      });
+
+      it("should remove the oldest data when the cache is full", function () {
+        const cache = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const queueCache = new QueueCache(9, cache);
+        assert.equal(queueCache.cache.length, 9);
+        assert.equal(queueCache.cache[0], 2);
+        assert.equal(queueCache.cache[8], 10);
       });
     });
 
@@ -61,6 +69,14 @@ describe("QueueCache.ts tests", function () {
         assert.deepEqual(queueCache.get(2, 8), [3, 4, 5]);
         assert.deepEqual(queueCache.get(undefined, 3), [1, 2, 3]);
         assert.deepEqual(queueCache.get(5, 3), []);
+        assert.deepEqual(queueCache.get(-1, 3), []);
+      });
+    });
+
+    describe("length", function () {
+      it("should return the length of the cache", function () {
+        const queueCache = new QueueCache(10, [1, 2, 3, 4, 5]);
+        assert.equal(queueCache.length(), 5);
       });
     });
   });

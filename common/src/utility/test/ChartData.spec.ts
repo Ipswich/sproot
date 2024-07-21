@@ -57,6 +57,18 @@ describe("ChartData.ts tests", function () {
 
     describe("generateTimeSpansFromDataSeries", function () {
       it("should generate time spans from a DataSeries", function () {
+        const chartData = new ChartData(10, 5);
+        const dataSeries = ChartData.generateEmptyDataSeries(2016, 5);
+        const timeSpans = chartData.generateTimeSpansFromDataSeries(dataSeries);
+        assert.equal(Object.keys(timeSpans).length, 5);
+        assert.equal(timeSpans[0]!.length, 2016);
+        assert.equal(timeSpans[6]!.length, 72);
+        assert.equal(timeSpans[12]!.length, 144);
+        assert.equal(timeSpans[24]!.length, 288);
+        assert.equal(timeSpans[72]!.length, 864);
+      });
+
+      it("should generate time spans from a DataSeries (static)", function () {
         const dataSeries = ChartData.generateEmptyDataSeries(2016, 5);
         const timeSpans = ChartData.generateTimeSpansFromDataSeries(dataSeries, 5);
         assert.equal(Object.keys(timeSpans).length, 5);
@@ -77,11 +89,19 @@ describe("ChartData.ts tests", function () {
       });
     });
 
-    describe("shouldUpdateChartData", function () {
+    describe("shouldUpdateByInterval", function () {
       it("should return true because now is the same as the NMinuteDate", function () {
         const now = new Date("2021-01-01T00:00:00Z");
         let current = new Date("2021-01-01T00:04:00Z");
         assert.isTrue(ChartData.shouldUpdateByInterval(now, 5, current));
+
+        let future = new Date("2021-01-02T00:04:00Z");
+        assert.isFalse(ChartData.shouldUpdateByInterval(now, 5, future));
+        future = new Date("2021-01-01T01:04:00Z");
+        assert.isFalse(ChartData.shouldUpdateByInterval(now, 5, future));
+        future = new Date("2021-01-01T00:06:00Z");
+        assert.isFalse(ChartData.shouldUpdateByInterval(now, 5, future));
+        assert.isFalse(ChartData.shouldUpdateByInterval(now, 5));
 
         current = new Date("2021-01-01T00:02:00Z");
         assert.isTrue(ChartData.shouldUpdateByInterval(now, 3, current));
@@ -141,6 +161,27 @@ describe("ChartData.ts tests", function () {
         assert.equal(chartData.get().length, 1);
         assert.equal(chartData.get()[0]?.name, "test");
       });
+
+      it("should shift to keep the DataSeries at the limit", function () {
+        const dataSeries = [
+          {
+            name: "test1",
+            data: 1.234567,
+          } as DataPoint,
+          {
+            name: "test2",
+            data: 2.345678,
+          } as DataPoint,
+          {
+            name: "test3",
+            data: 3.456789,
+          } as DataPoint,
+        ];
+        const chartData = new ChartData(2, 5, dataSeries as DataSeries);
+        assert.equal(chartData.get().length, 2);
+        assert.equal(chartData.get()[0]?.name, "test2");
+        assert.equal(chartData.get()[1]?.name, "test3");
+      });
     });
 
     describe("addDataPoint", function () {
@@ -196,32 +237,41 @@ describe("ChartData.ts tests", function () {
         const series = [
           {
             name: "test1",
+            units: "dol",
             data1: 1.0,
             data2: 2.0,
           } as DataPoint,
           {
             name: "test2",
+            units: "dol",
+            data1: 2.0,
+            data2: 3.0,
+          } as DataPoint,
+          {
+            name: "test3",
+            units: "dol",
             data1: 2.0,
             data2: 3.0,
           } as DataPoint,
         ];
         const stats = ChartData.generateStatsForDataSeries(series);
 
-        assert.equal(stats.counts["data1"], 2);
-        assert.equal(stats.totals["data1"], 3.0);
+        assert.equal(stats.counts["data1"], 3);
+        assert.equal(stats.totals["data1"], 5.0);
         assert.equal(stats.minimums["data1"], 1.0);
         assert.equal(stats.maximums["data1"], 2.0);
-        assert.equal(stats.averages["data1"], 1.5);
+        assert.equal(stats.averages["data1"], 5 / 3);
 
-        assert.equal(stats.counts["data2"], 2);
-        assert.equal(stats.totals["data2"], 5.0);
+        assert.equal(stats.counts["data2"], 3);
+        assert.equal(stats.totals["data2"], 8.0);
         assert.equal(stats.minimums["data2"], 2.0);
         assert.equal(stats.maximums["data2"], 3.0);
-        assert.equal(stats.averages["data2"], 2.5);
+        assert.equal(stats.averages["data2"], 8 / 3);
 
+        assert.equal(stats.units, "dol");
         assert.equal(stats.cumulativeMin, 1.0);
         assert.equal(stats.cumulativeMax, 3.0);
-        assert.equal(stats.cumulativeAverage, 2.0);
+        assert.equal(stats.cumulativeAverage, 13 / 6);
       });
     });
   });

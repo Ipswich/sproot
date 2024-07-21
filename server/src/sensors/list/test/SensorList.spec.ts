@@ -62,10 +62,8 @@ describe("SensorList.ts tests", function () {
       lastReadingTime: null,
       units: { temperature: "°C", humidity: "%", pressure: "hPa" },
       disposeAsync: async () => {},
-      chartData: {
-        get: () => {
-          return { data: {} as Record<ReadingType, DataSeries>, series: {} as ChartSeries };
-        },
+      getChartData: () => {
+        return { data: {} as Record<ReadingType, DataSeries>, series: {} as ChartSeries };
       },
     } as BME280);
     const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
@@ -231,7 +229,7 @@ describe("SensorList.ts tests", function () {
     const logger = winston.createLogger();
     sinon.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([mockDS18B20Data]);
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
-    sinon.stub(DS18B20.prototype, "getReadingAsync").rejects();
+    sinon.stub(DS18B20.prototype, "takeReadingAsync").rejects();
 
     const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
     try {

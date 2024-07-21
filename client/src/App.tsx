@@ -69,7 +69,7 @@ function App() {
               ) : currentPage.navLinkText === "Output States" ? (
                 <OutputStates />
               ) : currentPage.navLinkText ===
-                "Schedule" ? undefined : currentPage.navLinkText ===
+                "Automatic" ? undefined : currentPage.navLinkText ===
                 "Triggers" ? undefined : currentPage.navLinkText ===
                 "Sensors" ? (
                 <SensorSettings />

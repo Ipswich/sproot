@@ -6,9 +6,9 @@ interface ISensorBase {
   model: string;
   address: string | null;
   color: string | null;
-  lastReading: Record<ReadingType, string>;
+  lastReading: Partial<Record<ReadingType, string>>;
   lastReadingTime: Date | null;
-  readonly units: Record<ReadingType, string>;
+  readonly units: Partial<Record<ReadingType, string>>;
 }
 
 export type { ISensorBase };

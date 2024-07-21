@@ -1,0 +1,21 @@
+
+name: "Smoke Test"
+on:
+  pull_request:
+    branches: main
+jobs:
+  docker-test:
+    timeout-minutes: 5
+    if: github.base_ref == 'main'
+    name: Service smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name : Build images
+        run: docker compose --env-file .env.production build
+      - name: Run containers
+        run: docker compose --env-file .env.production up -d
+      # - name: Run tests
+      #   run: TODO - write some tests that hit these containers
+      - name: Stop containers
+        run: docker compose --env-file .env.production down

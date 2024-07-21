@@ -177,8 +177,8 @@ class OutputList {
     }
 
     if (outputListChanges) {
-      const data = Object.values(this.outputs).map((output) => output.chartData.get().data);
-      const series = Object.values(this.outputs).map((output) => output.chartData.get().series);
+      const data = Object.values(this.outputs).map((output) => output.getChartData().data);
+      const series = Object.values(this.outputs).map((output) => output.getChartData().series);
       this.#chartData.loadChartData(data, "output");
       this.#chartData.loadChartSeries(series);
       this.#logger.info(
@@ -199,7 +199,7 @@ class OutputList {
 
     if (ChartData.shouldUpdateByInterval(new Date(), this.chartDataPointInterval)) {
       this.#chartData.updateChartData(
-        Object.values(this.outputs).map((output) => output.chartData.get().data),
+        Object.values(this.outputs).map((output) => output.getChartData().data),
         "output",
       );
       this.#logger.info(
@@ -229,9 +229,6 @@ class OutputList {
     }
     switch (output.model.toLowerCase()) {
       case "pca9685": {
-        if (!output.address) {
-          throw new OutputListError("PCA9685 address cannot be null");
-        }
         newOutput = await this.#PCA9685.createOutput(output);
         break;
       }
@@ -246,24 +243,20 @@ class OutputList {
   #deleteOutput(output: OutputBase): void {
     switch (output.model.toLowerCase()) {
       case "pca9685": {
-        if (!output.address) {
-          throw new OutputListError("PCA9685 address cannot be null");
-        }
         this.#PCA9685.disposeOutput(output);
-        delete this.#outputs[output.id];
         break;
       }
       default: {
-        throw new OutputListError(`Unrecognized output model ${output.model}`);
+        this.#outputs[output.id]?.dispose();
       }
     }
+    delete this.#outputs[output.id];
   }
 }
 
 class OutputListError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "BuildOutputError";
   }
 }
 
