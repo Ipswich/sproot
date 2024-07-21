@@ -3,6 +3,9 @@ name: "Smoke Test"
 on:
   pull_request:
     branches: main
+  push:
+    branches: main
+    
 jobs:
   docker-test:
     timeout-minutes: 5
