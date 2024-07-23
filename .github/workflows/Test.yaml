@@ -20,7 +20,7 @@ jobs:
   # Depends on prettier finishing successfully
   test:
     needs: prettier
-    name: Unit tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '(production)' }}
+    name: Unit tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: ${{ matrix.experimental }}
@@ -30,8 +30,8 @@ jobs:
         include:
           - node-version: 22.5.1
             experimental: false
-          - node-version: 22.x
-            experimental: true
+          # - node-version: 22.x
+          #   experimental: true
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
