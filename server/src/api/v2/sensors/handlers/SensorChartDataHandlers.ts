@@ -8,7 +8,7 @@ export function sensorChartDataHandler(
   response: Response,
 ): SuccessResponse | ErrorResponse {
   const sensorList = request.app.get("sensorList") as SensorList;
-  let getOutputResponse: SuccessResponse | ErrorResponse;
+  let getSensorChartDataResponse: SuccessResponse | ErrorResponse;
   const chartData = sensorList.chartData.get();
 
   //Filter out all values that aren't the requested readingType
@@ -27,12 +27,12 @@ export function sensorChartDataHandler(
     }
   }
 
-  getOutputResponse = {
+  getSensorChartDataResponse = {
     statusCode: 200,
     content: {
       data: chartData,
     },
     ...response.locals["defaultProperties"],
   };
-  return getOutputResponse;
+  return getSensorChartDataResponse;
 }

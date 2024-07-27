@@ -7,13 +7,15 @@ import sensorRouter from "./SensorRouter";
 import outputRouter from "./OutputRouter";
 import homeRouter from "./HomeRouter";
 
+const spec_path = "../api_spec/openapi_v1.yaml";
+
 function ApiRootV1(app: Express) {
   app.use("/api/v1/authenticate", login);
   app.use("/api/v1/", homeRouter);
   app.use("/api/v1/sensors", authenticate, sensorRouter);
   app.use("/api/v1/outputs", authenticate, outputRouter);
 
-  const openapi_v1_doc = YAML.load("../openapi_v1.yaml");
+  const openapi_v1_doc = YAML.load(spec_path);
 
   app.use(
     "/api/v1/docs",
