@@ -2,7 +2,7 @@ import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { Accordion, Badge } from "@mantine/core";
 import OutputCard from "./OutputCard";
 import { useEffect, useState } from "react";
-import { getOutputsAsync } from "../requests";
+import { getOutputsAsync } from "@sproot/sproot-client/src/requests/requests_v1";
 
 interface OutputAccordionProps {
   // chartSeries: { name: string; color: string }[];

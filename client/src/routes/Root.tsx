@@ -2,21 +2,18 @@ import { useState } from "react";
 import { MantineProvider, AppShell } from "@mantine/core";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
-// import classes from "./App.module.css";
 
-import SensorCarouselContainer from "./sensors/SensorCarouselContainer";
-import NavbarContents from "./shell/navbar/NavbarContents";
-import HeaderContents from "./shell/header/HeaderContents";
-import SensorSettings from "./settings/sensors/SensorSettings";
+import NavbarContents from "../shell/navbar/NavbarContents";
+import HeaderContents from "../shell/header/HeaderContents";
 
-import { Pages } from "./shell/Pages";
-import OutputSettings from "./settings/outputs/OutputSettings";
-import OutputStates from "./outputs/OutputStates";
+import { Pages } from "@sproot/sproot-client/src/shell/Pages";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { Outlet, useLoaderData } from "react-router-dom";
 
 const pages = new Pages();
 const homePage = pages.pages[0]!;
 
-function App() {
+export default function Root() {
   const [currentPage, setCurrentPage] = useState(homePage);
   const [isNavbarOpened, setIsNavbarOpened] = useState(false);
 
@@ -59,30 +56,17 @@ function App() {
               closeNavbar();
               setCurrentPage(view);
             }}
+            readingTypes={Object.keys(useLoaderData() as Partial<Record<ReadingType, string>>) as ReadingType[]}
           />
         </AppShell.Navbar>
         <AppShell.Main style={{ padding: "0 auto" }}>
           <>
             <div onClick={closeNavbar}>
-              {currentPage.navLinkText === "Current Conditions" ? (
-                <SensorCarouselContainer />
-              ) : currentPage.navLinkText === "Output States" ? (
-                <OutputStates />
-              ) : currentPage.navLinkText ===
-                "Automatic" ? undefined : currentPage.navLinkText ===
-                "Triggers" ? undefined : currentPage.navLinkText ===
-                "Sensors" ? (
-                <SensorSettings />
-              ) : currentPage.navLinkText === "Outputs" ? (
-                <OutputSettings />
-              ) : currentPage.navLinkText === "System" ? undefined : undefined}
+              <Outlet />
             </div>
-            {/* <ColorToggle /> */}
           </>
         </AppShell.Main>
       </AppShell>
     </MantineProvider>
   );
 }
-
-export default App;

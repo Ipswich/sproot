@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import OutputCard from "@sproot/sproot-client/src/outputs/OutputCard";
-import { getOutputsAsync } from "@sproot/sproot-client/src/requests";
+import { getOutputsAsync } from "@sproot/sproot-client/src/requests/requests_v1";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { Paper } from "@mantine/core";
 

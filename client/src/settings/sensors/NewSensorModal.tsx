@@ -1,6 +1,6 @@
 import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { addSensorAsync } from "@sproot/sproot-client/src/requests";
+import { addSensorAsync } from "@sproot/sproot-client/src/requests/requests_v1";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 

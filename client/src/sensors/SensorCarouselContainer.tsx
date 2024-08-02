@@ -10,7 +10,7 @@ import {
 import {
   getSensorsAsync,
   getSensorChartDataAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v1";
 import CarouselSlideContents from "@sproot/sproot-client/src/sensors/CarouselSlideContents";
 import { Box, LoadingOverlay } from "@mantine/core";
 

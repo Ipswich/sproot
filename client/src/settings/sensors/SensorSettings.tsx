@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import {
   getSensorsAsync,
   getSupportedSensorModelsAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v1";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";

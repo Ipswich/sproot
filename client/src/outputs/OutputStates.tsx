@@ -3,7 +3,7 @@ import { Box, Flex, Paper } from "@mantine/core";
 import OutputAccordion from "./OutputAccordion";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { useState, useEffect } from "react";
-import { getOutputChartDataAsync, getOutputsAsync } from "../requests";
+import { getOutputChartDataAsync, getOutputsAsync } from "@sproot/sproot-client/src/requests/requests_v1";
 import { ChartData } from "@sproot/sproot-common/src/utility/ChartData";
 import ChartContainer from "./ChartContainer";
 

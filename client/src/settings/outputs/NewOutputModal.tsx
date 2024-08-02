@@ -1,6 +1,6 @@
 import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { addOutputAsync } from "@sproot/sproot-client/src/requests";
+import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v1";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";

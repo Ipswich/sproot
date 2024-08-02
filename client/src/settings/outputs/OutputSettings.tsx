@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import {
   getOutputsAsync,
   getSupportedOutputModelsAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v1";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/settings/outputs/EditTable";

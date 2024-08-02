@@ -4,7 +4,7 @@ import { Fragment, useState } from "react";
 import {
   deleteSensorAsync,
   updateSensorAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v1";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";

@@ -5,7 +5,7 @@ import {
 import {
   setOutputControlModeAsync,
   setOutputManualStateAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v1";
 import { Fragment, useState } from "react";
 import {
   Group,
