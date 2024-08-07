@@ -3,15 +3,19 @@ import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import Root from "./routes/Root";
 import ErrorPage from "./error_pages/ErrorPage";
 
-import { outputChartDataLoader, rootLoader, sensorChartDataLoader } from "./routes/utility/Loaders";
+import { rootLoader, sensorChartDataLoader } from "./routes/utility/Loaders";
 
-import CurrentConditionsChart from "./routes/CurrentConditionsChart";
-import OutputStateChart from "./routes/OutputStatesChart";
+import CurrentConditions from "./routes/current-conditions/CurrentConditions";
+import OutputStates from "./routes/output-states/OutputStates";
 import OutputSettings from "./settings/outputs/OutputSettings";
 import SensorSettings from "./settings/sensors/SensorSettings";
 
@@ -24,14 +28,12 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/current-conditions/:readingType",
-        element: <CurrentConditionsChart />,
-        
+        element: <CurrentConditions />,
         loader: sensorChartDataLoader
       },
       {
         path: "/output-states",
-        element: <OutputStateChart />,
-        loader: outputChartDataLoader
+        element: <OutputStates />
       },
       {
         path: "/settings/outputs",
@@ -46,6 +48,9 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={new QueryClient()}>
+      <RouterProvider router={router} />
+      {import.meta.env["VITE_ENV"] === "development" && <ReactQueryDevtools initialIsOpen={false} />}
+    </QueryClientProvider>
   </React.StrictMode>,
 );

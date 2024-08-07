@@ -164,6 +164,21 @@ export class ChartData {
 
     return false;
   }
+
+  static filterChartData(chartData: DataSeries, filters: string[]): DataSeries {
+    const filteredChartData: DataSeries = [];
+    for (const datum of chartData) {
+      const cleanObject: DataPoint = {} as DataPoint;
+      for (const property in datum) {
+        if (filters.includes(property)) {
+          continue;
+        }
+        cleanObject[property] = datum[property]!;
+      }
+      filteredChartData.push(cleanObject);
+    }
+    return filteredChartData;
+  }
 }
 
 export type DataPoint = {
@@ -179,7 +194,7 @@ export type ChartSeries = {
   color: string;
 };
 
-class DataSeriesStats {
+export class DataSeriesStats {
   counts: Record<string, number>;
   totals: Record<string, number>;
   minimums: Record<string, number>;

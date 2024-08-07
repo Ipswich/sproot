@@ -71,6 +71,17 @@ export abstract class OutputBase implements IOutputBase {
   abstract executeState(): void;
   abstract dispose(): void;
 
+
+  updateName(name: string): void {
+    this.name = name;
+    this.#chartData.chartSeries.name = name;
+  }
+
+  updateColor(color: string): void {
+    this.color = color;
+    this.#chartData.chartSeries.color = color;
+  }
+
   /**
    * Sets a new state to the targeted control mode, and executes it. This keeps the physical state
    * of the output in sync with the logical state.

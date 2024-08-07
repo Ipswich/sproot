@@ -1,25 +1,20 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
-// import { Paper, Text } from "@mantine/core";
-import { ChartData } from "@sproot/sproot-common/src/utility/ChartData";
+import { DataSeries, ChartSeries } from "@sproot/sproot-common/src/utility/ChartData";
 
-export interface OutputChartProps {
-  chartData: ChartData;
-  chartSeries: { name: string; color: string }[];
+export interface StatesChartProps {
+  dataSeries: DataSeries;
+  chartSeries: ChartSeries[];
   chartRendering: boolean;
-  setChartRendering: (value: boolean) => void;
 }
 
-export default function OutputChart({
-  chartData,
+export default function StatesChart({
+  dataSeries,
   chartSeries,
-  chartRendering,
-}: OutputChartProps) {
-  if (!chartData) {
-    return null;
-  }
+  chartRendering
+}: StatesChartProps) {
 
-  const data = chartData.dataSeries.map((data) => {
+  const data = dataSeries.map((data) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { units: _, ...rest } = data;
     return rest;
@@ -62,7 +57,7 @@ export default function OutputChart({
         yAxisProps={{ domain: [0, 100] }}
         // unit={unit}
         dataKey="outputName"
-        series={chartSeries}
+        series={chartSeries ?? []}
       />
     </Box>
   );

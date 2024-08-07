@@ -41,10 +41,10 @@ export abstract class SensorBase implements ISensorBase {
     this.name = sdbSensor.name;
     this.model = sdbSensor.model;
     this.address = sdbSensor.address;
+    this.color = sdbSensor.color;
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.sprootDB = sprootDB;
-    this.color = sdbSensor.color;
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
     this.#initialCacheLookback = initialCacheLookback;
@@ -65,6 +65,16 @@ export abstract class SensorBase implements ISensorBase {
   abstract initAsync(): Promise<SensorBase | null>;
   abstract disposeAsync(): Promise<void>;
   abstract takeReadingAsync(): Promise<void>;
+
+  updateName(name: string): void {
+    this.name = name;
+    this.#chartData.chartSeries.name = name;
+  }
+
+  updateColor(color: string): void {
+    this.color = color;
+    this.#chartData.chartSeries.color = color;
+  }
 
   getCachedReadings(offset?: number, limit?: number): Partial<Record<string, SDBReading[]>> {
     const result: Record<string, SDBReading[]> = {};

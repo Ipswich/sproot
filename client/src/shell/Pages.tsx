@@ -31,7 +31,7 @@ export function getNavbarItems(readingTypes: ReadingType[]): Record<string, Page
       navLinkText: "Current Conditions",
       headerText: "Current Conditions",
       icon: (props: TablerIconsProps | undefined) => <IconChartLine {...props} />,
-      links: readingTypes.map((readingType) => curentConditionLinks[readingType])
+      links: readingTypes.map((readingType) => currentConditionLinks[readingType])
         .filter((link) => link !== undefined),
     },
     outputStates: {
@@ -74,7 +74,7 @@ export function getNavbarItems(readingTypes: ReadingType[]): Record<string, Page
   }
 }
 
-const curentConditionLinks: Record<ReadingType, Page> = {
+const currentConditionLinks: Record<ReadingType, Page> = {
   temperature: {
     navLinkText: "Temperature",
     headerText: "Current Conditions",
@@ -100,57 +100,3 @@ const curentConditionLinks: Record<ReadingType, Page> = {
     ),
   },
 };
-
-export class Pages {
-  public pages: Page[] = [
-    // {
-    //   navLinkText: "Dashboard",
-    //   headerText: "Dashboard",
-    //   icon: (props: TablerIconsProps | undefined) => <IconGauge {...props} />,
-    // } as Page,
-    {
-      navLinkText: "Current Conditions",
-      headerText: "Current Conditions",
-      icon: (props: TablerIconsProps | undefined) => (
-        // <IconTemperatureSun {...props} />
-        <IconChartLine {...props} />
-      ),
-      links: [
-        { navLinkText: "Sensors", headerText: "Sensor Settings" } as Page,
-        { navLinkText: "Outputs", headerText: "Output Settings" } as Page,
-        // { navLinkText: "System", headerText: "System Settings" } as Page,
-      ],
-    },
-    {
-      navLinkText: "Output States",
-      headerText: "Output States",
-      icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
-    },
-    // {
-    //   navLinkText: "Automatic",
-    //   headerText: "Automatic",
-    //   icon: (props: TablerIconsProps | undefined) => (
-    //     <IconCalendarStats {...props} />
-    //   ),
-    // } as Page,
-    // {
-    //   navLinkText: "Triggers",
-    //   headerText: "Triggers",
-    //   icon: (props: TablerIconsProps | undefined) => (
-    //     <IconArrowFork {...props} />
-    //   ),
-    // } as Page,
-    {
-      navLinkText: "Settings",
-      headerText: "Settings",
-      icon: (props: TablerIconsProps | undefined) => (
-        <IconAdjustments {...props} />
-      ),
-      links: [
-        { navLinkText: "Sensors", headerText: "Sensor Settings" } as Page,
-        { navLinkText: "Outputs", headerText: "Output Settings" } as Page,
-        // { navLinkText: "System", headerText: "System Settings" } as Page,
-      ],
-    },
-  ];
-}

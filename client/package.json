@@ -13,6 +13,7 @@
     "start:dev": "vite --host"
   },
   "devDependencies": {
+    "@tanstack/eslint-plugin-query": "^5.51.15",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@types/recharts": "^1.8.29",
@@ -31,15 +32,18 @@
   },
   "dependencies": {
     "@mantine/carousel": "^7.4.2",
-    "@mantine/charts": "^7.4.2",
+    "@mantine/charts": "^7.11.2",
     "@mantine/core": "^7.4.2",
     "@mantine/form": "^7.5.2",
     "@mantine/hooks": "^7.4.2",
     "@tabler/icons-react": "^2.47.0",
+    "@tanstack/react-query": "^5.51.21",
+    "@tanstack/react-query-devtools": "^5.51.21",
     "embla-carousel-react": "^7.1.0",
     "mysql2": "^3.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.25.1"
+    "react-router-dom": "^6.25.1",
+    "recharts": "^2.12.7"
   }
 }

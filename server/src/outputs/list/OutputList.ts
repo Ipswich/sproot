@@ -119,7 +119,8 @@ class OutputList {
         //Update if it exists
         if (this.#outputs[key]?.name != output.name) {
           outputListChanges = true;
-          this.#outputs[key]!.name = output.name;
+          //Also updates chartSeries data
+          this.#outputs[key]!.updateName(output.name);
         }
 
         if (this.#outputs[key]?.isPwm != output.isPwm) {
@@ -134,7 +135,8 @@ class OutputList {
 
         if (output.color != null && this.#outputs[key]?.color != output.color) {
           outputListChanges = true;
-          this.#outputs[key]!.color = output.color;
+          //Also updates chartSeries data
+          this.#outputs[key]!.updateColor(output.color);
         }
 
         if (outputListChanges) {

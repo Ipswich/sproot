@@ -1,31 +1,26 @@
-import { LookbackData } from "@sproot/sproot-common/src/api/ChartData";
 import { LineChart } from "@mantine/charts";
-import { Box, LoadingOverlay } from "@mantine/core";
-import { useEffect } from "react";
-import { Paper, Text } from "@mantine/core";
+import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
+import { DataSeries, ChartSeries, ChartData } from "@sproot/sproot-common/src/utility/ChartData";
 
-interface ChartProps {
-  lookback: LookbackData;
-  chartSeries: { name: string; color: string }[];
-  chartRendering: boolean;
-  setChartRendering: (value: boolean) => void;
+export interface ReadingsChartProps {
+  dataSeries: DataSeries;
+  chartSeries: ChartSeries[];
+  chartRendering: boolean
 }
 
-export default function Chart({
-  lookback,
+export default function ReadingsChart({
+  dataSeries,
   chartSeries,
-  chartRendering,
-  setChartRendering,
-}: ChartProps) {
-  useEffect(() => {
-    setChartRendering(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  chartRendering
+}: ReadingsChartProps) {
+  
+  const stats = ChartData.generateStatsForDataSeries(dataSeries);
+  const data = dataSeries.map((data) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { units: _, ...rest } = data;
+    return rest;
+  });
 
-  if (!lookback) {
-    return null;
-  }
-  const unit = lookback.chartData[0]?.units ?? "";
   return (
     <Box pos="relative">
       <LoadingOverlay
@@ -46,21 +41,17 @@ export default function Chart({
                   { name: string; color: string; value: string }
                 >[]
               }
+              units={stats.units}
             />
           ),
         }}
+        mt={12}
+        ml={-28}
+        curveType="linear"
         h={300}
-        data={lookback.chartData.map((data) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { units: _, ...rest } = data;
-          return rest;
-        })}
-        // unit={unit}
-        dataKey="sensorName"
-        series={chartSeries}
         dotProps={{ r: 0 }}
+        data={data}
         withLegend={false}
-        withTooltip={true}
         withXAxis
         withYAxis
         tickLine="xy"
@@ -68,22 +59,23 @@ export default function Chart({
         yAxisProps={{ domain: ["auto", "auto"] }}
         referenceLines={[
           {
-            y: lookback.average,
-            label: `Average: ${lookback.average}${unit}`,
+            y: stats.cumulativeAverage!,
+            label: `Average: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
             color: "red",
           },
           {
-            y: lookback.min,
-            label: `Min: ${lookback.min}${unit}`,
+            y: stats.cumulativeMin!,
+            label: `Min: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
             color: "blue",
           },
           {
-            y: lookback.max,
-            label: `Max: ${lookback.max}${unit}`,
+            y: stats.cumulativeMax!,
+            label: `Max: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
             color: "green",
           },
         ]}
-        style={{ marginTop: 5, marginBottom: 5 }}
+        dataKey="sensorName"
+        series={chartSeries ?? []}
       />
     </Box>
   );
@@ -94,9 +86,10 @@ interface ChartTooltipProps {
   payload:
     | Record<string, { name: string; color: string; value: string }>[]
     | undefined;
+  units: string;
 }
 
-function ChartTooltip({ label, payload }: ChartTooltipProps) {
+function ChartTooltip({ label, payload, units }: ChartTooltipProps) {
   if (!payload) return null;
 
   return (
@@ -106,7 +99,7 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
       </Text>
       {payload.map((item) => (
         <Text key={String(item["name"])} c={item["color"]!} fz="sm">
-          {String(item["name"])}: {String(item["value"])}
+          {String(item["name"])}: {String(item["value"] + String(units))}
         </Text>
       ))}
     </Paper>

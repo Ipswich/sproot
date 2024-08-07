@@ -2,18 +2,17 @@ import { Group, Code, ScrollArea } from "@mantine/core";
 import { LinksGroup } from "./NavbarLinksGroup";
 // import { Logo } from './Logo';
 import classes from "./css/NavbarContents.module.css";
-import { Page, getNavbarItems } from "../Pages";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { Page } from "../Pages";
+
 interface NavbarContentsProps {
   setCurrentPage: (page: Page) => void;
-  readingTypes: ReadingType[];
+  pages: Page[];
 }
 
 export default function NavbarContents({
   setCurrentPage,
-  readingTypes
+  pages
 }: NavbarContentsProps) {
-  const pages = Object.values(getNavbarItems(readingTypes));
 
   const links = pages.map((item: Page) => (
     <LinksGroup

@@ -6,6 +6,10 @@
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
+.hiddenTitle{
+  margin-left: -17px;
+}
+
 .inner {
   height: 72px;
   display: flex;

@@ -85,13 +85,15 @@ class SensorList {
       if (key) {
         //Update if it exists
         if (this.#sensors[key]!.name !== sensor.name) {
-          this.#sensors[key]!.name = sensor.name;
+          //Also updates chartSeries data
+          this.#sensors[key]!.updateName(sensor.name);
           sensorListChanges = true;
         }
 
         if (sensor.color != null && this.#sensors[key]?.color != sensor.color) {
+          //Also updates chartSeries data
+          this.#sensors[key]!.updateColor(sensor.color);
           sensorListChanges = true;
-          this.#sensors[key]!.color = sensor.color;
         }
 
         if (sensorListChanges) {

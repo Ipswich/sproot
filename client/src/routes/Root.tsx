@@ -1,30 +1,31 @@
 import { useState } from "react";
+import { Outlet, useLoaderData, useLocation } from "react-router-dom";
 import { MantineProvider, AppShell } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
 
-import NavbarContents from "../shell/navbar/NavbarContents";
+import { getNavbarItems } from "../shell/Pages";
 import HeaderContents from "../shell/header/HeaderContents";
+import NavbarContents from "../shell/navbar/NavbarContents";
 
-import { Pages } from "@sproot/sproot-client/src/shell/Pages";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { Outlet, useLoaderData } from "react-router-dom";
-
-const pages = new Pages();
-const homePage = pages.pages[0]!;
 
 export default function Root() {
-  const [currentPage, setCurrentPage] = useState(homePage);
-  const [isNavbarOpened, setIsNavbarOpened] = useState(false);
-
-  function toggleNavbar() {
-    setIsNavbarOpened(!isNavbarOpened);
-  }
+  const location = useLocation();
+  const readingTypes = Object.keys(useLoaderData() as Partial<Record<ReadingType, string>>) as ReadingType[];
+  const pages = Object.values(getNavbarItems(readingTypes));
+  const allPages = Object.values(getNavbarItems(readingTypes)).flatMap((page) => {
+    if (page.links) {
+      return [page, ...page.links];
+    }
+    return [page];
+  });
+  const [currentPage, setCurrentPage] = useState(allPages.filter((page) => page.href === location.pathname)[0]);
+  const [isNavbarOpened, setIsNavbarOpened] = useDisclosure(false);
 
   function closeNavbar() {
-    if (isNavbarOpened) {
-      setIsNavbarOpened(false);
-    }
+    setIsNavbarOpened.close();
   }
 
   return (
@@ -42,8 +43,8 @@ export default function Root() {
       >
         <AppShell.Header>
           <HeaderContents
-            currentPage={currentPage}
-            navbarToggle={toggleNavbar}
+            headerText={currentPage!.headerText}
+            navbarToggle={setIsNavbarOpened.toggle}
             navbarOpened={isNavbarOpened}
           />
         </AppShell.Header>
@@ -56,7 +57,7 @@ export default function Root() {
               closeNavbar();
               setCurrentPage(view);
             }}
-            readingTypes={Object.keys(useLoaderData() as Partial<Record<ReadingType, string>>) as ReadingType[]}
+            pages={pages}
           />
         </AppShell.Navbar>
         <AppShell.Main style={{ padding: "0 auto" }}>
