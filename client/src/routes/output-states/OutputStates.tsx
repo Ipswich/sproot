@@ -6,7 +6,8 @@ import { startTransition, useEffect, useState } from "react";
 
 export default function OutputStates() {
   const [chartInterval, setChartInterval] = useState("24");
-  const [segmentedControlValue, setSegmentedControlValue] = useState(chartInterval);
+  const [segmentedControlValue, setSegmentedControlValue] =
+    useState(chartInterval);
   const [chartRendering, setChartRendering] = useState(true);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function OutputStates() {
             chartRendering={chartRendering}
             setChartRendering={setChartRendering}
           />
-          <div style={{ height: '40px', marginTop: "8px" }}>
+          <div style={{ height: "40px", marginTop: "8px" }}>
             <SegmentedControl
               defaultValue={segmentedControlValue}
               value={segmentedControlValue}
@@ -31,22 +32,22 @@ export default function OutputStates() {
                 setChartRendering(true);
                 startTransition(() => {
                   setChartInterval(value);
-                })
+                });
               }}
-              color='blue'
+              color="blue"
               fullWidth
-              size='xs'
-              radius='md'
+              size="xs"
+              radius="md"
               data={[
-                { label: '6 Hours', value: '6' },
-                { label: '12 Hours', value: '12' },
-                { label: '1 Day', value: '24' },
-                { label: '3 Days', value: '72' },
-                { label: '1 Week', value: '0' },
-              ]}>
-            </SegmentedControl>
+                { label: "6 Hours", value: "6" },
+                { label: "12 Hours", value: "12" },
+                { label: "1 Day", value: "24" },
+                { label: "3 Days", value: "72" },
+                { label: "1 Week", value: "0" },
+              ]}
+            ></SegmentedControl>
           </div>
-          <StatesAccordion/>
+          <StatesAccordion />
         </Paper>
       </Box>
     </>

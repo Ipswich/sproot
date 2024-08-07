@@ -1,4 +1,7 @@
-import { ChartData, ChartSeries } from "@sproot/sproot-common/src/utility/ChartData";
+import {
+  ChartData,
+  ChartSeries,
+} from "@sproot/sproot-common/src/utility/ChartData";
 import { useQuery } from "@tanstack/react-query";
 import { getOutputChartDataAsync } from "../../../requests/requests_v2";
 import { Fragment, useEffect, useState } from "react";
@@ -14,12 +17,18 @@ interface StatesChartContainerProps {
 export default function StatesChartContainer({
   chartInterval,
   chartRendering,
-  setChartRendering
+  setChartRendering,
 }: StatesChartContainerProps) {
   const baseChartData = new ChartData(
     import.meta.env["VITE_MAX_CHART_DATA_POINTS"],
-    import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"]);
-  const [timeSpans, setTimeSpans] = useState(ChartData.generateTimeSpansFromDataSeries(baseChartData.get(), baseChartData.intervalMinutes));
+    import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"],
+  );
+  const [timeSpans, setTimeSpans] = useState(
+    ChartData.generateTimeSpansFromDataSeries(
+      baseChartData.get(),
+      baseChartData.intervalMinutes,
+    ),
+  );
   const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
 
   const chartDataQuery = useQuery({
@@ -33,8 +42,14 @@ export default function StatesChartContainer({
     const baseChartData = new ChartData(
       import.meta.env["VITE_MAX_CHART_DATA_POINTS"],
       import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"],
-      newData.data);
-    setTimeSpans(ChartData.generateTimeSpansFromDataSeries(baseChartData.get(), baseChartData.intervalMinutes));
+      newData.data,
+    );
+    setTimeSpans(
+      ChartData.generateTimeSpansFromDataSeries(
+        baseChartData.get(),
+        baseChartData.intervalMinutes,
+      ),
+    );
     setChartSeries(newData.series);
     setChartRendering(false);
   };
@@ -52,17 +67,14 @@ export default function StatesChartContainer({
   return (
     <Fragment>
       <Flex my={-12}>
-        <h2>
-          History
-        </h2>
-        <h5>
-          {"%"}
-        </h5>
+        <h2>History</h2>
+        <h5>{"%"}</h5>
       </Flex>
       <StatesChart
         dataSeries={timeSpans[parseInt(chartInterval)]!}
         chartSeries={chartSeries}
         chartRendering={chartDataQuery.isPending || chartRendering}
       />
-    </Fragment>)
+    </Fragment>
+  );
 }

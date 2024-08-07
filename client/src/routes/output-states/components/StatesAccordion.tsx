@@ -5,14 +5,13 @@ import { useEffect, useState } from "react";
 import { getOutputsAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 
-
 export default function OutputAccordion() {
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const getOutputsQuery = useQuery({
     queryKey: ["output-states-accordion"],
-    queryFn: () => getOutputsAsync()
+    queryFn: () => getOutputsAsync(),
   });
-  
+
   const updateOutputsAsync = async () => {
     setOutputs((await getOutputsQuery.refetch()).data!);
   };
@@ -24,7 +23,7 @@ export default function OutputAccordion() {
       updateOutputsAsync();
     }, 60000);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   let value = 0;
@@ -48,7 +47,10 @@ export default function OutputAccordion() {
       </Accordion.Item>
     );
   });
-  
 
-  return ((getOutputsQuery.isPending) ? <p>Loading...</p> : <Accordion>{items}</Accordion>);
+  return getOutputsQuery.isPending ? (
+    <p>Loading...</p>
+  ) : (
+    <Accordion>{items}</Accordion>
+  );
 }

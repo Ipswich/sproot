@@ -1,6 +1,9 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
-import { DataSeries, ChartSeries } from "@sproot/sproot-common/src/utility/ChartData";
+import {
+  DataSeries,
+  ChartSeries,
+} from "@sproot/sproot-common/src/utility/ChartData";
 
 export interface StatesChartProps {
   dataSeries: DataSeries;
@@ -11,9 +14,8 @@ export interface StatesChartProps {
 export default function StatesChart({
   dataSeries,
   chartSeries,
-  chartRendering
+  chartRendering,
 }: StatesChartProps) {
-
   const data = dataSeries.map((data) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { units: _, ...rest } = data;

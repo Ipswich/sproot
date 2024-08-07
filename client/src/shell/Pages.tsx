@@ -19,19 +19,26 @@ export interface Page {
   links?: Page[];
 }
 
-export function getNavbarItems(readingTypes: ReadingType[]): Record<string, Page> {
+export function getNavbarItems(
+  readingTypes: ReadingType[],
+): Record<string, Page> {
   return {
     dashboard: {
       navLinkText: "Dashboard",
       headerText: "Dashboard",
       href: "/",
-      icon: (props: TablerIconsProps | undefined) => <IconLayoutDashboard {...props} />,
+      icon: (props: TablerIconsProps | undefined) => (
+        <IconLayoutDashboard {...props} />
+      ),
     },
     currentConditions: {
       navLinkText: "Current Conditions",
       headerText: "Current Conditions",
-      icon: (props: TablerIconsProps | undefined) => <IconChartLine {...props} />,
-      links: readingTypes.map((readingType) => currentConditionLinks[readingType])
+      icon: (props: TablerIconsProps | undefined) => (
+        <IconChartLine {...props} />
+      ),
+      links: readingTypes
+        .map((readingType) => currentConditionLinks[readingType])
         .filter((link) => link !== undefined),
     },
     outputStates: {
@@ -71,7 +78,7 @@ export function getNavbarItems(readingTypes: ReadingType[]): Record<string, Page
         // } as Page,
       ],
     },
-  }
+  };
 }
 
 const currentConditionLinks: Record<ReadingType, Page> = {
@@ -87,9 +94,7 @@ const currentConditionLinks: Record<ReadingType, Page> = {
     navLinkText: "Humidity",
     headerText: "Current Conditions",
     href: "/current-conditions/humidity",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconDroplet {...props} />
-    ),
+    icon: (props: TablerIconsProps | undefined) => <IconDroplet {...props} />,
   },
   pressure: {
     navLinkText: "Pressure",

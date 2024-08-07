@@ -71,7 +71,6 @@ export abstract class OutputBase implements IOutputBase {
   abstract executeState(): void;
   abstract dispose(): void;
 
-
   updateName(name: string): void {
     this.name = name;
     this.#chartData.chartSeries.name = name;

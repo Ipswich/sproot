@@ -24,28 +24,28 @@ interface StateProps {
   updateOutputsAsync: () => Promise<void>;
 }
 
-export default function StateCard({
-  output,
-  updateOutputsAsync,
-}: StateProps) {
+export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const [controlMode, setControlMode] = useState(output.state.controlMode);
 
   const updateOutputControlModeMutation = useMutation({
-    mutationFn: async (newControlMode: { id: number, controlMode: string }) => {
-      await setOutputControlModeAsync(newControlMode.id, newControlMode.controlMode)
+    mutationFn: async (newControlMode: { id: number; controlMode: string }) => {
+      await setOutputControlModeAsync(
+        newControlMode.id,
+        newControlMode.controlMode,
+      );
     },
     onSettled: async () => {
       await updateOutputsAsync();
-    }
+    },
   });
 
   const updateOutputManualStateMutation = useMutation({
-    mutationFn: async (newState: { id: number, value: number }) => {
-      await setOutputManualStateAsync(newState.id, newState.value)
+    mutationFn: async (newState: { id: number; value: number }) => {
+      await setOutputManualStateAsync(newState.id, newState.value);
     },
     onSettled: async () => {
       await updateOutputsAsync();
-    }
+    },
   });
 
   function segmentedControlColor() {
@@ -85,7 +85,10 @@ export default function StateCard({
                 onChange={async (value) => {
                   isSegmentedControlDisabled = true;
                   setControlMode(value as ControlMode);
-                  await updateOutputControlModeMutation.mutateAsync({ id: output.id, controlMode: value });
+                  await updateOutputControlModeMutation.mutateAsync({
+                    id: output.id,
+                    controlMode: value,
+                  });
                   isSegmentedControlDisabled = false;
                 }}
               />
@@ -98,7 +101,10 @@ export default function StateCard({
                         disabled={controlMode !== ControlMode.manual}
                         label={(value) => `${value}%`}
                         onChangeEnd={async (value) => {
-                          await updateOutputManualStateMutation.mutateAsync({ id: output.id, value });
+                          await updateOutputManualStateMutation.mutateAsync({
+                            id: output.id,
+                            value,
+                          });
                         }}
                         size="xl"
                         color="blue"
@@ -127,7 +133,10 @@ export default function StateCard({
                         disabled={controlMode !== ControlMode.manual}
                         checked={output.state.manual.value === 100}
                         onChange={async (event) => {
-                          await updateOutputManualStateMutation.mutateAsync({ id: output.id, value: event.target.checked ? 100 : 0 });
+                          await updateOutputManualStateMutation.mutateAsync({
+                            id: output.id,
+                            value: event.target.checked ? 100 : 0,
+                          });
                         }}
                       />
                     ) : (

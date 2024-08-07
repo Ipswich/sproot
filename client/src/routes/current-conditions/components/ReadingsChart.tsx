@@ -1,19 +1,22 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
-import { DataSeries, ChartSeries, ChartData } from "@sproot/sproot-common/src/utility/ChartData";
+import {
+  DataSeries,
+  ChartSeries,
+  ChartData,
+} from "@sproot/sproot-common/src/utility/ChartData";
 
 export interface ReadingsChartProps {
   dataSeries: DataSeries;
   chartSeries: ChartSeries[];
-  chartRendering: boolean
+  chartRendering: boolean;
 }
 
 export default function ReadingsChart({
   dataSeries,
   chartSeries,
-  chartRendering
+  chartRendering,
 }: ReadingsChartProps) {
-  
   const stats = ChartData.generateStatsForDataSeries(dataSeries);
   const data = dataSeries.map((data) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

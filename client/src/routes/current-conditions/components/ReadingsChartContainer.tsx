@@ -1,7 +1,11 @@
-
-
-import { ChartSeries, ChartData } from "@sproot/sproot-common/src/utility/ChartData";
-import { ReadingType, Units } from "@sproot/sproot-common/src/sensors/ReadingType";
+import {
+  ChartSeries,
+  ChartData,
+} from "@sproot/sproot-common/src/utility/ChartData";
+import {
+  ReadingType,
+  Units,
+} from "@sproot/sproot-common/src/sensors/ReadingType";
 import { Fragment, useEffect, useState } from "react";
 import { getSensorChartDataAsync } from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
@@ -21,12 +25,18 @@ export default function ReadingsChartContainer({
   chartInterval,
   toggledSensors,
   chartRendering,
-  setChartRendering
+  setChartRendering,
 }: ReadingsChartContainerProps) {
   const baseChartData = new ChartData(
     import.meta.env["VITE_MAX_CHART_DATA_POINTS"],
-    import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"]);
-  const [timeSpans, setTimeSpans] = useState(ChartData.generateTimeSpansFromDataSeries(baseChartData.get(), baseChartData.intervalMinutes));
+    import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"],
+  );
+  const [timeSpans, setTimeSpans] = useState(
+    ChartData.generateTimeSpansFromDataSeries(
+      baseChartData.get(),
+      baseChartData.intervalMinutes,
+    ),
+  );
   const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
 
   const chartDataQuery = useQuery({
@@ -40,8 +50,14 @@ export default function ReadingsChartContainer({
     const baseChartData = new ChartData(
       import.meta.env["VITE_MAX_CHART_DATA_POINTS"],
       import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"],
-      newData.data[readingType as ReadingType]);
-    setTimeSpans(ChartData.generateTimeSpansFromDataSeries(baseChartData.get(), baseChartData.intervalMinutes));
+      newData.data[readingType as ReadingType],
+    );
+    setTimeSpans(
+      ChartData.generateTimeSpansFromDataSeries(
+        baseChartData.get(),
+        baseChartData.intervalMinutes,
+      ),
+    );
     setChartSeries(newData.series);
     setChartRendering(false);
   };
@@ -58,19 +74,18 @@ export default function ReadingsChartContainer({
 
   return (
     <Fragment>
-    <Flex my={-12}>
-      <h2>
-        {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
-      </h2>
-      <h5>
-        {Units[readingType as ReadingType]}
-      </h5>
-    </Flex>
-    <ReadingsChart
-      dataSeries={ChartData.filterChartData(timeSpans[parseInt(chartInterval)]!, toggledSensors)}
-      chartSeries={chartSeries}
-      chartRendering={chartDataQuery.isPending || chartRendering}
-    />
-  </Fragment>
+      <Flex my={-12}>
+        <h2>{readingType.charAt(0).toUpperCase() + readingType.slice(1)}</h2>
+        <h5>{Units[readingType as ReadingType]}</h5>
+      </Flex>
+      <ReadingsChart
+        dataSeries={ChartData.filterChartData(
+          timeSpans[parseInt(chartInterval)]!,
+          toggledSensors,
+        )}
+        chartSeries={chartSeries}
+        chartRendering={chartDataQuery.isPending || chartRendering}
+      />
+    </Fragment>
   );
 }

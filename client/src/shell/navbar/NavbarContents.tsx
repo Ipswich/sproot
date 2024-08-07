@@ -11,9 +11,8 @@ interface NavbarContentsProps {
 
 export default function NavbarContents({
   setCurrentPage,
-  pages
+  pages,
 }: NavbarContentsProps) {
-
   const links = pages.map((item: Page) => (
     <LinksGroup
       page={item}

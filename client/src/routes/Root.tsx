@@ -13,15 +13,21 @@ import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 export default function Root() {
   const location = useLocation();
-  const readingTypes = Object.keys(useLoaderData() as Partial<Record<ReadingType, string>>) as ReadingType[];
+  const readingTypes = Object.keys(
+    useLoaderData() as Partial<Record<ReadingType, string>>,
+  ) as ReadingType[];
   const pages = Object.values(getNavbarItems(readingTypes));
-  const allPages = Object.values(getNavbarItems(readingTypes)).flatMap((page) => {
-    if (page.links) {
-      return [page, ...page.links];
-    }
-    return [page];
-  });
-  const [currentPage, setCurrentPage] = useState(allPages.filter((page) => page.href === location.pathname)[0]);
+  const allPages = Object.values(getNavbarItems(readingTypes)).flatMap(
+    (page) => {
+      if (page.links) {
+        return [page, ...page.links];
+      }
+      return [page];
+    },
+  );
+  const [currentPage, setCurrentPage] = useState(
+    allPages.filter((page) => page.href === location.pathname)[0],
+  );
   const [isNavbarOpened, setIsNavbarOpened] = useDisclosure(false);
 
   function closeNavbar() {

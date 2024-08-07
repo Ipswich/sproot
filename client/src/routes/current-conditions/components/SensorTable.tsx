@@ -25,11 +25,12 @@ export default function SensorTable({
   });
 
   const updateSensorsAsync = async () => {
-    setSensors(Object.values((await getSensorsQuery.refetch()).data!)
-      .filter((sensor) => Object.keys(sensor.lastReading).includes(readingType),
-      )
+    setSensors(
+      Object.values((await getSensorsQuery.refetch()).data!).filter((sensor) =>
+        Object.keys(sensor.lastReading).includes(readingType),
+      ),
     );
-  }
+  };
 
   useEffect(() => {
     updateSensorsAsync();
@@ -44,11 +45,13 @@ export default function SensorTable({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, startTransition] = useTransition();
 
-
   return (
     <Fragment>
       <Center>
-        <h5>Last Updated: {`${new Date().toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}</h5>
+        <h5>
+          Last Updated:{" "}
+          {`${new Date().toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+        </h5>
       </Center>
       <Table
         highlightOnHover
@@ -62,11 +65,9 @@ export default function SensorTable({
             <Table.Th style={{ display: "flex", paddingLeft: 10 }}>
               <IconEyeOff />
             </Table.Th>
+            <Table.Th>Sensor</Table.Th>
             <Table.Th>
-                Sensor
-            </Table.Th>
-            <Table.Th>
-                {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
+              {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
             </Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -81,7 +82,10 @@ export default function SensorTable({
                     onChange={() => {
                       startTransition(() => {
                         if (toggleStates.includes(sensor.name)) {
-                          toggleStates.splice(toggleStates.indexOf(sensor.name), 1);
+                          toggleStates.splice(
+                            toggleStates.indexOf(sensor.name),
+                            1,
+                          );
                         } else {
                           toggleStates.push(sensor.name);
                         }

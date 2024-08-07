@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  Group,
-  Box,
-  Collapse,
-  ThemeIcon,
-  rem,
-} from "@mantine/core";
+import { Group, Box, Collapse, ThemeIcon, rem } from "@mantine/core";
 import { IconChevronRight, TablerIconsProps } from "@tabler/icons-react";
 import classes from "./css/NavbarLinksGroup.module.css";
 import { Page } from "../Pages";
@@ -41,7 +35,8 @@ export function LinksGroup({
 
   return (
     <>
-      <Link to={page.href ?? "#"}
+      <Link
+        to={page.href ?? "#"}
         className={classes["control"]!}
         onClick={() => {
           setOpened((o) => !o);
