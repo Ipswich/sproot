@@ -1,4 +1,3 @@
-import "@mantine/carousel/styles.css";
 import { Box, Paper, SegmentedControl } from "@mantine/core";
 import StatesChartContainer from "./components/StatesChartContainer";
 import StatesAccordion from "./components/StatesAccordion";
