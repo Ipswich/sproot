@@ -23,24 +23,22 @@ export default function SensorTable({
     queryFn: () => getSensorsAsync(),
     refetchInterval: 60000,
   });
-
   const updateSensorsAsync = async () => {
     setSensors(
-      Object.values((await getSensorsQuery.refetch()).data!).filter((sensor) =>
-        Object.keys(sensor.lastReading).includes(readingType),
-      ),
+      Object.values((await getSensorsQuery.refetch()).data!),
     );
   };
 
   useEffect(() => {
     updateSensorsAsync();
+    console.log("Effected")
 
     const interval = setInterval(() => {
       updateSensorsAsync();
     }, 60000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [readingType]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, startTransition] = useTransition();
@@ -72,33 +70,34 @@ export default function SensorTable({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {sensors.map((sensor) => (
-            <Table.Tr key={sensor.id}>
-              <Table.Td style={{ verticalAlign: "middle" }}>
-                <Flex style={{ alignContent: "center" }}>
-                  <Switch
-                    defaultChecked
-                    color={sensor.color!}
-                    onChange={() => {
-                      startTransition(() => {
-                        if (toggleStates.includes(sensor.name)) {
-                          toggleStates.splice(
-                            toggleStates.indexOf(sensor.name),
-                            1,
-                          );
-                        } else {
-                          toggleStates.push(sensor.name);
-                        }
-                        setToggleState([...toggleStates]);
-                      });
-                    }}
-                  />
-                </Flex>
-              </Table.Td>
-              <Table.Td>{sensor.name}</Table.Td>
-              <Table.Td>{`${sensor.lastReading[readingType]} ${sensor.units[readingType]}`}</Table.Td>
-            </Table.Tr>
-          ))}
+          {sensors.filter((sensor) =>
+            Object.keys(sensor.lastReading).includes(readingType)).map((sensor) => (
+              <Table.Tr key={sensor.id}>
+                <Table.Td style={{ verticalAlign: "middle" }}>
+                  <Flex style={{ alignContent: "center" }}>
+                    <Switch
+                      defaultChecked
+                      color={sensor.color!}
+                      onChange={() => {
+                        startTransition(() => {
+                          if (toggleStates.includes(sensor.name)) {
+                            toggleStates.splice(
+                              toggleStates.indexOf(sensor.name),
+                              1,
+                            );
+                          } else {
+                            toggleStates.push(sensor.name);
+                          }
+                          setToggleState([...toggleStates]);
+                        });
+                      }}
+                    />
+                  </Flex>
+                </Table.Td>
+                <Table.Td>{sensor.name}</Table.Td>
+                <Table.Td>{`${sensor.lastReading[readingType]} ${sensor.units[readingType]}`}</Table.Td>
+              </Table.Tr>
+            ))}
         </Table.Tbody>
       </Table>
     </Fragment>

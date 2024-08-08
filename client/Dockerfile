@@ -22,6 +22,7 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 COPY .. ./sproot
 WORKDIR /sproot
 RUN npm run install:common
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 ARG VITE_CHART_DATA_POINT_INTERVAL
 ARG VITE_MAX_CHART_DATA_POINTS
 ARG VITE_API_SERVER_URL
