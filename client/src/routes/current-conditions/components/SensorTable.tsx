@@ -24,14 +24,12 @@ export default function SensorTable({
     refetchInterval: 60000,
   });
   const updateSensorsAsync = async () => {
-    setSensors(
-      Object.values((await getSensorsQuery.refetch()).data!),
-    );
+    setSensors(Object.values((await getSensorsQuery.refetch()).data!));
   };
 
   useEffect(() => {
     updateSensorsAsync();
-    console.log("Effected")
+    console.log("Effected");
 
     const interval = setInterval(() => {
       updateSensorsAsync();
@@ -70,8 +68,11 @@ export default function SensorTable({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {sensors.filter((sensor) =>
-            Object.keys(sensor.lastReading).includes(readingType)).map((sensor) => (
+          {sensors
+            .filter((sensor) =>
+              Object.keys(sensor.lastReading).includes(readingType),
+            )
+            .map((sensor) => (
               <Table.Tr key={sensor.id}>
                 <Table.Td style={{ verticalAlign: "middle" }}>
                   <Flex style={{ alignContent: "center" }}>
