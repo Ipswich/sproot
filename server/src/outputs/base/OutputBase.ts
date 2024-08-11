@@ -17,7 +17,7 @@ export abstract class OutputBase implements IOutputBase {
   isPwm: boolean;
   isInvertedPwm: boolean;
   state: OutputState;
-  color: string | null;
+  color: string;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
   #cache: OutputCache;
@@ -151,7 +151,7 @@ export abstract class OutputBase implements IOutputBase {
 
   protected loadChartData(): void {
     this.#chartData.loadChartData(this.#cache.get(), this.name);
-    this.#chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
+    this.#chartData.loadChartSeries({ name: this.name, color: this.color });
     this.logger.info(
       `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
     );

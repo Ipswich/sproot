@@ -22,7 +22,7 @@ export interface Page {
 export function getNavbarItems(
   readingTypes: ReadingType[],
 ): Record<string, Page> {
-  return {
+  const pages = {
     dashboard: {
       navLinkText: "Dashboard",
       headerText: "Dashboard",
@@ -31,30 +31,28 @@ export function getNavbarItems(
         <IconLayoutDashboard {...props} />
       ),
     },
-    currentConditions: {
+  } as Record<string, Page>;
+
+  if (readingTypes.length > 0) {
+    pages["currentConditions"] = {
       navLinkText: "Current Conditions",
       headerText: "Current Conditions",
       icon: (props: TablerIconsProps | undefined) => (
         <IconChartLine {...props} />
       ),
-      links: readingTypes
-        .map((readingType) => currentConditionLinks[readingType])
-        .filter((link) => link !== undefined),
-    },
-    outputStates: {
-      navLinkText: "Output States",
-      headerText: "Output States",
-      href: "/output-states",
-      icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
-    },
-    // automatic: {
-    //     navLinkText: "Automatic",
-    //     headerText: "Automatic",
-    //     icon: (props: TablerIconsProps | undefined) => (
-    //       <IconAutomation {...props} />
-    //     ),
-    //   },
-    settings: {
+      links: readingTypes.map((readingType) => {
+        return currentConditionLinks[readingType];
+      }),
+    };
+  }
+
+  (pages["outputStates"] = {
+    navLinkText: "Output States",
+    headerText: "Output States",
+    href: "/output-states",
+    icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
+  }),
+    (pages["settings"] = {
       navLinkText: "Settings",
       headerText: "Settings",
       icon: (props: TablerIconsProps | undefined) => (
@@ -77,8 +75,9 @@ export function getNavbarItems(
         //   href: "/settings/system"
         // } as Page,
       ],
-    },
-  };
+    });
+
+  return pages;
 }
 
 const currentConditionLinks: Record<ReadingType, Page> = {

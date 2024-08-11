@@ -15,7 +15,7 @@ export abstract class SensorBase implements ISensorBase {
   name: string;
   lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
-  color: string | null;
+  color: string;
   readonly units: Record<ReadingType, string>;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
@@ -212,7 +212,7 @@ export abstract class SensorBase implements ISensorBase {
         `Loaded chart data for sensor {id: ${this.id}}. Chart data size - ${this.#chartData.get().data[readingType as ReadingType].length}`,
       );
     }
-    this.#chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
+    this.#chartData.loadChartSeries({ name: this.name, color: this.color });
   }
 
   #updateChartData(): void {

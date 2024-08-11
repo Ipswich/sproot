@@ -150,6 +150,7 @@ export async function addOutputAsync(
 export async function updateOutputAsync(
   output: IOutputBase,
 ): Promise<ApiResponse> {
+  console.log(output);
   const response = await fetch(`${SERVER_URL}/api/v1/outputs/${output.id}`, {
     method: "PUT",
     headers: {

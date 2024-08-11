@@ -5,7 +5,7 @@ interface ISensorBase {
   name: string;
   model: string;
   address: string | null;
-  color: string | null;
+  color: string;
   lastReading: Partial<Record<ReadingType, string>>;
   lastReadingTime: Date | null;
   readonly units: Partial<Record<ReadingType, string>>;

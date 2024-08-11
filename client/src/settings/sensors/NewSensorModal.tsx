@@ -1,35 +1,43 @@
-import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  Group,
+  Button,
+  Select,
+  ColorInput,
+} from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { addSensorAsync } from "@sproot/sproot-client/src/requests/requests_v1";
+import { addSensorAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 
 interface NewSensorModalProps {
-  sensors: Record<string, ISensorBase>;
-  editDisabled: Record<string, boolean>;
   supportedModels: string[];
   modalOpened: boolean;
   closeModal: () => void;
-  setSensors: (sensors: Record<string, ISensorBase>) => void;
-  setEditDisabled: (editDisabled: Record<string, boolean>) => void;
   setIsStale: (isStale: boolean) => void;
 }
 
 export default function NewSensorModal({
-  sensors,
-  editDisabled,
   supportedModels,
   modalOpened,
   closeModal,
-  setSensors,
-  setEditDisabled,
   setIsStale,
 }: NewSensorModalProps) {
-  const [addingSensor, setIsAdding] = useState(false);
+  const addSensorMutation = useMutation({
+    mutationFn: async (newSensorValues: ISensorBase) => {
+      await addSensorAsync(newSensorValues);
+    },
+    onSettled: () => {
+      setIsStale(true);
+    },
+  });
 
   const newSensorForm = useForm({
     initialValues: {
       name: "",
+      color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
     },
@@ -39,6 +47,10 @@ export default function NewSensorModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Name must be between 1 and 64 characters",
+      color: (value) =>
+        !value || (value.length > 0 && value.length <= 7)
+          ? null
+          : "Color must be a valid hex color",
       model: (value) =>
         value.length > 0 && value.length <= 64
           ? null
@@ -64,23 +76,8 @@ export default function NewSensorModal({
     >
       <form
         onSubmit={newSensorForm.onSubmit(async (values) => {
-          setIsAdding(true);
-          const uuid = String(Date.now());
-
-          setSensors({
-            ...sensors,
-            [String(uuid)]: {
-              ...sensors[uuid],
-              ...values,
-              id: Number(uuid),
-            } as ISensorBase,
-          });
-          setEditDisabled({ ...editDisabled, [uuid]: true });
-          await addSensorAsync(values as ISensorBase);
-          setIsAdding(false);
+          await addSensorMutation.mutateAsync(values as ISensorBase);
           closeModal();
-
-          setTimeout(() => setIsStale(true), 3000);
         })}
       >
         <TextInput
@@ -97,6 +94,15 @@ export default function NewSensorModal({
           required
           {...newSensorForm.getInputProps("model")}
         />
+        <ColorInput
+          label="Color"
+          required
+          closeOnColorSwatchClick
+          placeholder={newSensorForm.values.color}
+          defaultValue={newSensorForm.values.color}
+          swatches={[...DefaultColors]}
+          {...newSensorForm.getInputProps("color")}
+        />
         <TextInput
           maxLength={64}
           label="Address"
@@ -104,9 +110,7 @@ export default function NewSensorModal({
           {...newSensorForm.getInputProps("address")}
         />
         <Group justify="flex-end" mt="md">
-          <Button type="submit" disabled={addingSensor}>
-            Add Sensor
-          </Button>
+          <Button type="submit">Add Sensor</Button>
         </Group>
       </form>
     </Modal>

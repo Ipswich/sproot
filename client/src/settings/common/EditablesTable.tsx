@@ -5,16 +5,11 @@ import { IconEdit } from "@tabler/icons-react";
 
 interface EditablesTableProps {
   editables: Record<string, ISensorBase | IOutputBase>;
-  editDisabled: Record<string, boolean>;
-  onClick: (
-    editDisabled: Record<string, boolean>,
-    item: ISensorBase | IOutputBase,
-  ) => void;
+  onClick: (item: ISensorBase | IOutputBase) => void;
 }
 
 export default function EditablesTable({
   editables,
-  editDisabled,
   onClick,
 }: EditablesTableProps) {
   return (
@@ -37,9 +32,8 @@ export default function EditablesTable({
             <Table.Td align="center">{editable.name}</Table.Td>
             <Table.Td align="center">
               <ActionIcon
-                disabled={editDisabled[editable.id] ?? false}
                 onClick={() => {
-                  onClick(editDisabled, editable);
+                  onClick(editable);
                 }}
               >
                 <IconEdit />

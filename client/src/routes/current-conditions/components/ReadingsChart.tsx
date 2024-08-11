@@ -5,6 +5,7 @@ import {
   ChartSeries,
   ChartData,
 } from "@sproot/sproot-common/src/utility/ChartData";
+import { ResponsiveContainer } from "recharts";
 
 export interface ReadingsChartProps {
   dataSeries: DataSeries;
@@ -32,54 +33,56 @@ export default function ReadingsChart({
         zIndex={1000}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
-      <LineChart
-        tooltipProps={{
-          position: {},
-          content: ({ label, payload }) => (
-            <ChartTooltip
-              label={label}
-              payload={
-                (payload || []) as Record<
-                  string,
-                  { name: string; color: string; value: string }
-                >[]
-              }
-              units={stats.units}
-            />
-          ),
-        }}
-        mt={12}
-        ml={-28}
-        curveType="linear"
-        h={300}
-        dotProps={{ r: 0 }}
-        data={data}
-        withLegend={false}
-        withXAxis
-        withYAxis
-        tickLine="xy"
-        xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
-        yAxisProps={{ domain: ["auto", "auto"] }}
-        referenceLines={[
-          {
-            y: stats.cumulativeAverage!,
-            label: `Average: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
-            color: "red",
-          },
-          {
-            y: stats.cumulativeMin!,
-            label: `Min: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
-            color: "blue",
-          },
-          {
-            y: stats.cumulativeMax!,
-            label: `Max: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
-            color: "green",
-          },
-        ]}
-        dataKey="sensorName"
-        series={chartSeries ?? []}
-      />
+      <ResponsiveContainer height="300">
+        <LineChart
+          tooltipProps={{
+            position: {},
+            content: ({ label, payload }) => (
+              <ChartTooltip
+                label={label}
+                payload={
+                  (payload || []) as Record<
+                    string,
+                    { name: string; color: string; value: string }
+                  >[]
+                }
+                units={stats.units}
+              />
+            ),
+          }}
+          mt={12}
+          ml={-28}
+          curveType="linear"
+          h={300}
+          dotProps={{ r: 0 }}
+          data={data}
+          withLegend={false}
+          withXAxis
+          withYAxis
+          tickLine="xy"
+          xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
+          yAxisProps={{ domain: ["auto", "auto"] }}
+          referenceLines={[
+            {
+              y: stats.cumulativeAverage!,
+              label: `Average: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
+              color: "red",
+            },
+            {
+              y: stats.cumulativeMin!,
+              label: `Min: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
+              color: "blue",
+            },
+            {
+              y: stats.cumulativeMax!,
+              label: `Max: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
+              color: "green",
+            },
+          ]}
+          dataKey="sensorName"
+          series={chartSeries ?? []}
+        ></LineChart>
+      </ResponsiveContainer>
     </Box>
   );
 }

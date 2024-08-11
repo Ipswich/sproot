@@ -4,6 +4,7 @@ import {
   DataSeries,
   ChartSeries,
 } from "@sproot/sproot-common/src/utility/ChartData";
+import { ResponsiveContainer } from "recharts";
 
 export interface StatesChartProps {
   dataSeries: DataSeries;
@@ -30,37 +31,39 @@ export default function StatesChart({
         zIndex={1000}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
-      <LineChart
-        tooltipProps={{
-          position: {},
-          content: ({ label, payload }) => (
-            <ChartTooltip
-              label={label}
-              payload={
-                (payload || []) as Record<
-                  string,
-                  { name: string; color: string; value: string }
-                >[]
-              }
-            />
-          ),
-        }}
-        mt={12}
-        ml={-28}
-        curveType="linear"
-        h={300}
-        dotProps={{ r: 0 }}
-        data={data}
-        withLegend={false}
-        withXAxis
-        withYAxis
-        tickLine="xy"
-        xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
-        yAxisProps={{ domain: [0, 100] }}
-        // unit={unit}
-        dataKey="outputName"
-        series={chartSeries ?? []}
-      />
+      <ResponsiveContainer height="300">
+        <LineChart
+          tooltipProps={{
+            position: {},
+            content: ({ label, payload }) => (
+              <ChartTooltip
+                label={label}
+                payload={
+                  (payload || []) as Record<
+                    string,
+                    { name: string; color: string; value: string }
+                  >[]
+                }
+              />
+            ),
+          }}
+          mt={12}
+          ml={-28}
+          curveType="linear"
+          h={300}
+          dotProps={{ r: 0 }}
+          data={data}
+          withLegend={false}
+          withXAxis
+          withYAxis
+          tickLine="xy"
+          xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
+          yAxisProps={{ domain: [0, 100] }}
+          // unit={unit}
+          dataKey="outputName"
+          series={chartSeries ?? []}
+        />
+      </ResponsiveContainer>
     </Box>
   );
 }

@@ -2,12 +2,13 @@ import { Fragment, useEffect, useState } from "react";
 import {
   getSensorsAsync,
   getSupportedSensorModelsAsync,
-} from "@sproot/sproot-client/src/requests/requests_v1";
+} from "@sproot/sproot-client/src/requests/requests_v2";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/settings/sensors/EditTable";
 import NewSensorModal from "@sproot/sproot-client/src/settings/sensors/NewSensorModal";
+import { useQuery } from "@tanstack/react-query";
 
 export default function SensorSettings() {
   const [
@@ -17,21 +18,25 @@ export default function SensorSettings() {
   const [supportedModels, setSupportedModels] = useState([] as string[]);
   const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
   const [isStale, setIsStale] = useState(false);
-  const [editDisabled, setEditDisabled] = useState(
-    {} as Record<string, boolean>,
-  );
+
+  const getSensorsQuery = useQuery({
+    queryKey: ["sensor-settings-sensors"],
+    queryFn: () => getSensorsAsync(),
+    refetchInterval: 60000,
+  });
+
+  const getSupportedModelsQuery = useQuery({
+    queryKey: ["sensor-settings-supported-models"],
+    queryFn: () => getSupportedSensorModelsAsync(),
+    refetchInterval: 60000,
+  });
 
   const updateData = async () => {
-    getSensorsAsync().then((response) => {
-      setSensors(response.sensors);
-      const newEditDisabled = {} as Record<string, boolean>;
-      for (const key in response.sensors) {
-        newEditDisabled[key] = false;
-      }
-      setEditDisabled(newEditDisabled);
+    getSensorsQuery.refetch().then((response) => {
+      setSensors(response.data!);
     });
-    getSupportedSensorModelsAsync().then((response) => {
-      setSupportedModels(response.supportedModels);
+    getSupportedModelsQuery.refetch().then((response) => {
+      setSupportedModels(response.data!);
     });
   };
 
@@ -45,21 +50,14 @@ export default function SensorSettings() {
     <Fragment>
       <Stack h="600" justify="center" align="center">
         <NewSensorModal
-          sensors={sensors}
           supportedModels={supportedModels}
-          editDisabled={editDisabled}
           modalOpened={newSensorModalOpened}
           closeModal={newSensorModalClose}
-          setSensors={setSensors}
-          setEditDisabled={setEditDisabled}
           setIsStale={setIsStale}
         />
         <EditTable
           sensors={sensors}
           supportedModels={supportedModels}
-          editDisabled={editDisabled}
-          setSensors={setSensors}
-          setEditDisabled={setEditDisabled}
           setIsStale={setIsStale}
         />
         <Button size="xl" w={rem(300)} onClick={newSensorModalOpen}>

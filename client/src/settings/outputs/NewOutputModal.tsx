@@ -1,36 +1,45 @@
-import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  Group,
+  Button,
+  Select,
+  ColorInput,
+} from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v1";
+import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
-import { useState } from "react";
 import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";
 import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
+import { useMutation } from "@tanstack/react-query";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 
 interface NewOutputModalProps {
-  outputs: Record<string, IOutputBase>;
-  editDisabled: Record<string, boolean>;
   supportedModels: string[];
   modalOpened: boolean;
   closeModal: () => void;
-  setOutputs: (outputs: Record<string, IOutputBase>) => void;
-  setEditDisabled: (editDisabled: Record<string, boolean>) => void;
   setIsStale: (isStale: boolean) => void;
 }
 
 export default function NewOutputModal({
-  outputs,
-  editDisabled,
   supportedModels,
   modalOpened,
   closeModal,
-  setOutputs,
-  setEditDisabled,
   setIsStale,
 }: NewOutputModalProps) {
-  const [addingOutput, setIsAdding] = useState(false);
+  const addOutputMutation = useMutation({
+    mutationFn: async (newOutputValues: IOutputBase) => {
+      await addOutputAsync(newOutputValues);
+    },
+    onSettled: () => {
+      setIsStale(true);
+    },
+  });
+
   const newOutputForm = useForm({
     initialValues: {
       name: "",
+      color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
       pin: 0,
@@ -43,6 +52,10 @@ export default function NewOutputModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Name must be between 1 and 64 characters",
+      color: (value) =>
+        !value || (value.length > 0 && value.length <= 7)
+          ? null
+          : "Color must be a valid hex color",
       model: (value) =>
         value.length > 0 && value.length <= 64
           ? null
@@ -68,23 +81,8 @@ export default function NewOutputModal({
     >
       <form
         onSubmit={newOutputForm.onSubmit(async (values) => {
-          setIsAdding(true);
-          const uuid = String(Date.now());
-
-          setOutputs({
-            ...outputs,
-            [String(uuid)]: {
-              ...outputs[uuid],
-              ...values,
-              id: Number(uuid),
-            } as IOutputBase,
-          });
-          setEditDisabled({ ...editDisabled, [uuid]: true });
-          await addOutputAsync(values as IOutputBase);
-          setIsAdding(false);
+          await addOutputMutation.mutateAsync(values as IOutputBase);
           closeModal();
-
-          setTimeout(() => setIsStale(true), 3000);
         })}
       >
         <TextInput
@@ -101,6 +99,15 @@ export default function NewOutputModal({
           required
           {...newOutputForm.getInputProps("model")}
         />
+        <ColorInput
+          label="Color"
+          required
+          closeOnColorSwatchClick
+          placeholder={newOutputForm.values.color}
+          defaultValue={newOutputForm.values.color}
+          swatches={[...DefaultColors]}
+          {...newOutputForm.getInputProps("color")}
+        />
         <TextInput
           maxLength={64}
           label="Address"
@@ -111,9 +118,7 @@ export default function NewOutputModal({
           <PCA9685Form form={newOutputForm} />
         ) : null}
         <Group justify="flex-end" mt="md">
-          <Button type="submit" disabled={addingOutput}>
-            Add Output
-          </Button>
+          <Button type="submit">Add Output</Button>
         </Group>
       </form>
     </Modal>

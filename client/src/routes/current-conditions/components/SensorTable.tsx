@@ -29,14 +29,13 @@ export default function SensorTable({
 
   useEffect(() => {
     updateSensorsAsync();
-    console.log("Effected");
 
     const interval = setInterval(() => {
       updateSensorsAsync();
     }, 60000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType]);
+  }, [readingType, JSON.stringify(toggleStates)]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, startTransition] = useTransition();
@@ -78,7 +77,7 @@ export default function SensorTable({
                   <Flex style={{ alignContent: "center" }}>
                     <Switch
                       defaultChecked
-                      color={sensor.color!}
+                      color={sensor.color}
                       onChange={() => {
                         startTransition(() => {
                           if (toggleStates.includes(sensor.name)) {

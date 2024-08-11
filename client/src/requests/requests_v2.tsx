@@ -89,6 +89,61 @@ export async function getSensorsAsync(): Promise<Record<string, ISensorBase>> {
   return deserializedResponse.content?.data;
 }
 
+export async function getSupportedSensorModelsAsync(): Promise<string[]> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/sensors/supported-models`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching supported sensor models: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function addSensorAsync(sensor: ISensorBase): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/sensors`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sensor),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding sensor: ${response}`);
+  }
+}
+
+export async function updateSensorAsync(sensor: ISensorBase): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/sensors/${sensor.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sensor),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error updating sensor: ${response}`);
+  }
+}
+
+export async function deleteSensorAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/sensors/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting sensor: ${response}`);
+  }
+}
+
 export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
   const response = await fetch(`${SERVER_URL}/api/v2/outputs`, {
     method: "GET",
@@ -101,6 +156,61 @@ export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
+}
+
+export async function getSupportedOutputModelsAsync(): Promise<string[]> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/outputs/supported-models`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching supported output models: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function addOutputAsync(output: IOutputBase): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/outputs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(output),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding output: ${response}`);
+  }
+}
+
+export async function updateOutputAsync(output: IOutputBase): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/outputs/${output.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(output),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error updating output: ${response}`);
+  }
+}
+
+export async function deleteOutputAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/outputs/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting output: ${response}`);
+  }
 }
 
 export async function setOutputControlModeAsync(

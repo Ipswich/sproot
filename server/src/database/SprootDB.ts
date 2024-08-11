@@ -39,29 +39,16 @@ class SprootDB implements ISprootDB {
   }
 
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
-    if (sensor.color !== undefined) {
-      await this.#connection.execute(
-        "INSERT INTO sensors (name, model, address, color) VALUES (?, ?, ?, ?)",
-        [sensor.name, sensor.model, sensor.address, sensor.color],
-      );
-    } else {
-      await this.#connection.execute(
-        "INSERT INTO sensors (name, model, address) VALUES (?, ?, ?)",
-        [sensor.name, sensor.model, sensor.address],
-      );
-    }
+    await this.#connection.execute(
+      "INSERT INTO sensors (name, model, address, color) VALUES (?, ?, ?, ?)",
+      [sensor.name, sensor.model, sensor.address, sensor.color],
+    );
   }
 
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {
-    if (sensor.color !== undefined) {
-      await this.#connection.execute(
-        "UPDATE sensors SET name = ?, model = ?, address = ?, color = ? WHERE id = ?",
-        [sensor.name, sensor.model, sensor.address, sensor.color, sensor.id],
-      );
-    }
     await this.#connection.execute(
-      "UPDATE sensors SET name = ?, model = ?, address = ? WHERE id = ?",
-      [sensor.name, sensor.model, sensor.address, sensor.id],
+      "UPDATE sensors SET name = ?, model = ?, address = ?, color = ? WHERE id = ?",
+      [sensor.name, sensor.model, sensor.address, sensor.color, sensor.id],
     );
   }
 
@@ -84,18 +71,27 @@ class SprootDB implements ISprootDB {
 
   async addOutputAsync(output: SDBOutput): Promise<void> {
     await this.#connection.execute(
-      "INSERT INTO outputs (name, model, address, pin, isPwm, isInvertedPwm) VALUES (?, ?, ?, ?, ?, ?)",
-      [output.name, output.model, output.address, output.pin, output.isPwm, output.isInvertedPwm],
+      "INSERT INTO outputs (name, model, address, color, pin, isPwm, isInvertedPwm) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        output.name,
+        output.model,
+        output.address,
+        output.color,
+        output.pin,
+        output.isPwm,
+        output.isInvertedPwm,
+      ],
     );
   }
 
   async updateOutputAsync(output: SDBOutput): Promise<void> {
     await this.#connection.execute(
-      "UPDATE outputs SET name = ?, model = ?, address = ?, pin = ?, isPwm = ?, isInvertedPwm = ? WHERE id = ?",
+      "UPDATE outputs SET name = ?, model = ?, address = ?, color = ?, pin = ?, isPwm = ?, isInvertedPwm = ? WHERE id = ?",
       [
         output.name,
         output.model,
         output.address,
+        output.color,
         output.pin,
         output.isPwm,
         output.isInvertedPwm,

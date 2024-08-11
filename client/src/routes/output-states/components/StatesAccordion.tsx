@@ -37,7 +37,7 @@ export default function OutputAccordion() {
     return (
       <Accordion.Item key={output.name} value={`item-${value}`}>
         <Accordion.Control>
-          <Badge size="xl" radius="sm" color={output.color ?? ""}>
+          <Badge size="xl" radius="sm" color={output.color}>
             {output.name}
           </Badge>
         </Accordion.Control>

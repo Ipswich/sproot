@@ -276,17 +276,34 @@ export class DataSeriesStats {
   }
 }
 
+// export const DefaultColors = [
+//   "lime",
+//   "green",
+//   "teal",
+//   "cyan",
+//   "blue",
+//   "indigo",
+//   "violet",
+//   "grape",
+//   "pink",
+//   "red",
+//   "orange",
+//   "yellow",
+// ] as const;
+
 export const DefaultColors = [
-  "lime",
-  "green",
-  "teal",
-  "cyan",
-  "blue",
-  "indigo",
-  "violet",
-  "grape",
-  "pink",
-  "red",
-  "orange",
-  "yellow",
+  "#82c91e",
+  "#40c057",
+  "#12b886",
+  "#15aabf",
+  "#228be6",
+  "#4c6ef5",
+  "#7950f2",
+  "#be4bdb",
+  "#e64980",
+  "#fa5252",
+  "#fd7e14",
+  "#fab005",
+  "#868e96",
+  "#2e2e2e",
 ] as const;

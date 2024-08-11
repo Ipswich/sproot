@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `outputs` (
   `model` varchar(64) NOT NULL,
   `address` varchar(64) NOT NULL,
   `name` varchar(64) DEFAULT NULL,
-  `color` varchar(64) DEFAULT NULL,
+  `color` varchar(64) NOT NULL,
   `pin` int(11) NOT NULL,
   `isPwm` tinyint(1) NOT NULL,
   `isInvertedPwm` tinyint(1) NOT NULL,

@@ -1781,15 +1781,15 @@ components:
       description: >
         An output object that is stored in the database. Contains all the information needed to 
         create an output, including model, address, name, pin, if the output is a pwm, whether that
-        pwm value is should be inverted, and, optionally, color.
+        pwm value is should be inverted, and, color.
       type: object
       required:
         - "model"
         - "address"
-        - "name"
         - "pin"
         - "isPwm"
         - "isInvertedPwm"
+        - "color"
       properties:
         model:
           type: string
@@ -1865,12 +1865,13 @@ components:
     SDBSensor:
       description: >
         A sensor object that is stored in the database. Contains all the information needed to 
-        create a sensor, including name, model, address, and, optionally, color.
+        create a sensor, including name, model, address, and, color.
       type: object
       required:
         - "name"
         - "model"
         - "address"
+        - "color"
       properties:
         name:
           type: string
@@ -1895,6 +1896,7 @@ components:
           required:
             - "id"
             - "name"
+            - "color"
             - "model"
             - "address"
             - "lastReading"
