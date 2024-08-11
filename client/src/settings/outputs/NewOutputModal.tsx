@@ -5,6 +5,8 @@ import {
   Button,
   Select,
   ColorInput,
+  ScrollArea,
+  ColorPicker,
 } from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -13,6 +15,7 @@ import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA968
 import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
 import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import { Fragment } from "react";
 
 interface NewOutputModalProps {
   supportedModels: string[];
@@ -68,59 +71,71 @@ export default function NewOutputModal({
   });
 
   return (
-    <Modal
-      overlayProps={{
-        backgroundOpacity: 0.55,
-        blur: 3,
-      }}
-      centered
-      size="xs"
-      opened={modalOpened}
-      onClose={closeModal}
-      title="Add New"
-    >
-      <form
-        onSubmit={newOutputForm.onSubmit(async (values) => {
-          await addOutputMutation.mutateAsync(values as IOutputBase);
-          closeModal();
-        })}
+    <Fragment>
+      <meta name="viewport" content="width=device-width, user-scalable=no" />
+      <Modal
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+        scrollAreaComponent={ScrollArea.Autosize}
+        centered
+        size="xs"
+        opened={modalOpened}
+        onClose={closeModal}
+        title="Add New"
       >
-        <TextInput
-          maxLength={64}
-          label="Name"
-          placeholder="Output #1"
-          {...newOutputForm.getInputProps("name")}
-        />
-        <Select
-          label="Model"
-          data={supportedModels}
-          allowDeselect={false}
-          placeholder="Model Name"
-          required
-          {...newOutputForm.getInputProps("model")}
-        />
-        <ColorInput
-          label="Color"
-          required
-          closeOnColorSwatchClick
-          placeholder={newOutputForm.values.color}
-          defaultValue={newOutputForm.values.color}
-          swatches={[...DefaultColors]}
-          {...newOutputForm.getInputProps("color")}
-        />
-        <TextInput
-          maxLength={64}
-          label="Address"
-          placeholder="0x40"
-          {...newOutputForm.getInputProps("address")}
-        />
-        {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
-          <PCA9685Form form={newOutputForm} />
-        ) : null}
-        <Group justify="flex-end" mt="md">
-          <Button type="submit">Add Output</Button>
-        </Group>
-      </form>
-    </Modal>
+        <form
+          onSubmit={newOutputForm.onSubmit(async (values) => {
+            await addOutputMutation.mutateAsync(values as IOutputBase);
+            closeModal();
+          })}
+        >
+          <TextInput
+            maxLength={64}
+            label="Name"
+            placeholder="Output #1"
+            {...newOutputForm.getInputProps("name")}
+          />
+          <ColorInput
+            readOnly
+            label="Color"
+            required
+            // closeOnColorSwatchClick
+            placeholder={newOutputForm.values.color}
+            defaultValue={newOutputForm.values.color}
+            // swatches={[...DefaultColors]}
+            {...newOutputForm.getInputProps("color")}
+          />
+          <ColorPicker
+            size="xs"
+            fullWidth
+            defaultValue={newOutputForm.values.color}
+            swatches={[...DefaultColors]}
+            {...newOutputForm.getInputProps("color")}
+          />
+          <Select
+            label="Model"
+            data={supportedModels}
+            allowDeselect={false}
+            placeholder="Model Name"
+            required
+            {...newOutputForm.getInputProps("model")}
+          />
+          <TextInput
+            maxLength={64}
+            label="Address"
+            placeholder="0x40"
+            {...newOutputForm.getInputProps("address")}
+          />
+          {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
+            <PCA9685Form form={newOutputForm} />
+          ) : null}
+          <Group justify="flex-end" mt="md">
+            <Button type="submit">Add Output</Button>
+          </Group>
+        </form>
+      </Modal>
+    </Fragment>
   );
 }

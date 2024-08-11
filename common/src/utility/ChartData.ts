@@ -276,21 +276,6 @@ export class DataSeriesStats {
   }
 }
 
-// export const DefaultColors = [
-//   "lime",
-//   "green",
-//   "teal",
-//   "cyan",
-//   "blue",
-//   "indigo",
-//   "violet",
-//   "grape",
-//   "pink",
-//   "red",
-//   "orange",
-//   "yellow",
-// ] as const;
-
 export const DefaultColors = [
   "#82c91e",
   "#40c057",

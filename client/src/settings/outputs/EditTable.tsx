@@ -5,6 +5,8 @@ import {
   Group,
   Button,
   ColorInput,
+  ColorPicker,
+  ScrollArea,
 } from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
@@ -112,11 +114,13 @@ export default function EditTable({
 
   return (
     <Fragment>
+      <meta name="viewport" content="width=device-width, user-scalable=no" />
       <Modal
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        scrollAreaComponent={ScrollArea.Autosize}
         centered
         size="xs"
         opened={modalOpened}
@@ -144,11 +148,19 @@ export default function EditTable({
             {...updateOutputForm.getInputProps("name")}
           />
           <ColorInput
+            readOnly
             label="Color"
             required
-            closeOnColorSwatchClick
+            // closeOnColorSwatchClick
             defaultValue={selectedOutput.color}
             placeholder={selectedOutput.color}
+            // swatches={[...DefaultColors]}
+            {...updateOutputForm.getInputProps("color")}
+          />
+          <ColorPicker
+            size="xs"
+            fullWidth
+            defaultValue={selectedOutput.color}
             swatches={[...DefaultColors]}
             {...updateOutputForm.getInputProps("color")}
           />

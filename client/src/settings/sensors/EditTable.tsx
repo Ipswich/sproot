@@ -5,6 +5,8 @@ import {
   Group,
   Button,
   ColorInput,
+  ScrollArea,
+  ColorPicker,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
@@ -96,11 +98,13 @@ export default function EditTable({
 
   return (
     <Fragment>
+      <meta name="viewport" content="width=device-width, user-scalable=no" />
       <Modal
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        scrollAreaComponent={ScrollArea.Autosize}
         centered
         size="xs"
         opened={modalOpened}
@@ -127,20 +131,28 @@ export default function EditTable({
             placeholder={selectedSensor.name}
             {...updateSensorForm.getInputProps("name")}
           />
+          <ColorInput
+            readOnly
+            label="Color"
+            required
+            // closeOnColorSwatchClick
+            placeholder={selectedSensor.color}
+            defaultValue={selectedSensor.color}
+            // swatches={[...DefaultColors]}
+            {...updateSensorForm.getInputProps("color")}
+          />
+          <ColorPicker
+            size="xs"
+            fullWidth
+            defaultValue={selectedSensor.color}
+            swatches={[...DefaultColors]}
+            {...updateSensorForm.getInputProps("color")}
+          />
           <NativeSelect
             label="Model"
             data={supportedModels}
             required
             {...updateSensorForm.getInputProps("model")}
-          />
-          <ColorInput
-            label="Color"
-            required
-            closeOnColorSwatchClick
-            placeholder={updateSensorForm.values.color}
-            defaultValue={updateSensorForm.values.color}
-            swatches={[...DefaultColors]}
-            {...updateSensorForm.getInputProps("color")}
           />
           <TextInput
             maxLength={64}
