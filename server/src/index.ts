@@ -13,7 +13,6 @@ import { SensorList } from "./sensors/list/SensorList";
 import { OutputList } from "./outputs/list/OutputList";
 
 import setupLogger from "./logger";
-import ApiRootV1 from "./api/v1/ApiRootV1";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 
 const mysqlConfig = {
@@ -85,9 +84,6 @@ const logger = setupLogger(app);
   app.use(cors());
   app.use(cookieParser());
   app.use(express.json());
-
-  // API v1
-  ApiRootV1(app);
 
   // API v2
   ApiRootV2(app);
