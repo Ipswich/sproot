@@ -1,19 +1,19 @@
 import { Group, Code, ScrollArea } from "@mantine/core";
 import { LinksGroup } from "./NavbarLinksGroup";
 // import { Logo } from './Logo';
-import classes from "./NavbarContents.module.css";
-import { Page, Pages } from "../Pages";
+import classes from "./css/NavbarContents.module.css";
+import { Page } from "../Pages";
 
 interface NavbarContentsProps {
   setCurrentPage: (page: Page) => void;
+  pages: Page[];
 }
 
 export default function NavbarContents({
   setCurrentPage,
+  pages,
 }: NavbarContentsProps) {
-  const navLinks = new Pages().pages;
-
-  const links = navLinks.map((item: Page) => (
+  const links = pages.map((item: Page) => (
     <LinksGroup
       page={item}
       navLinkText={item.navLinkText}

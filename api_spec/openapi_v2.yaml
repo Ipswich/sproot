@@ -1666,6 +1666,59 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
+  
+  /api/v2/sensors/reading-types:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Sensors"
+      summary: Get active reading types and their units.
+      description: >
+        Returns a list of active sensor reading types and their units. These are the ones currently 
+        in use by the system.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            allOf:
+                              - $ref: "#/components/schemas/ReadingTypes"
+                            properties:
+                              temperature: 
+                                type: string
+                              humidity:
+                                type: string
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/sensors/reading-types"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
 
 components:
   schemas:
@@ -1690,7 +1743,7 @@ components:
 
     SuccessResponse:
       description: >
-        A generic success response object that is returned by all successful API endpoints. 
+        A success response object that is returned by all successful API requests. 
         Contains a status code, timestamp, a unique request Id, and, optionally, some content.
       allOf:
         - type: object
@@ -1701,27 +1754,11 @@ components:
               type: object
               required:
                 - "data"
-              properties:
-                data:
-                  anyOf:
-                    - $ref: "#/components/schemas/SupportedModels"
-                    - type: array
-                      items:
-                        oneOf:
-                          - $ref: "#/components/schemas/SensorBase"
-                          - $ref: "#/components/schemas/OutputBase"
-
-                    - type: string
-                    - type: number
-                    - type: integer
-                    - type: boolean
-                    - type: array
-                    - type: object
         - $ref: "#/components/schemas/ApiResponse"
 
     ErrorResponse:
       description: >
-        A generic error response object that is returned by all unsuccessful API endpoints. 
+        An error response object that is returned by all unsuccessful API requests. 
         Contains a status code, timestamp, a unique request Id, and an error object. This error
         object may contain the name of the error, and an array of details (if relevant).
       allOf:
@@ -1744,15 +1781,15 @@ components:
       description: >
         An output object that is stored in the database. Contains all the information needed to 
         create an output, including model, address, name, pin, if the output is a pwm, whether that
-        pwm value is should be inverted, and, optionally, color.
+        pwm value is should be inverted, and, color.
       type: object
       required:
         - "model"
         - "address"
-        - "name"
         - "pin"
         - "isPwm"
         - "isInvertedPwm"
+        - "color"
       properties:
         model:
           type: string
@@ -1779,7 +1816,7 @@ components:
     OutputBase:
       description: >
         A basic output object that is returned by the API. This expands upon SDBOutput, including the
-        ID and state of the output. This maps to what the program keeps in memory.
+        ID and state of the output. This maps to what the app keeps in memory.
       allOf:
         - $ref: "#/components/schemas/SDBOutput"
         - type: object
@@ -1828,12 +1865,13 @@ components:
     SDBSensor:
       description: >
         A sensor object that is stored in the database. Contains all the information needed to 
-        create a sensor, including name, model, address, and, optionally, color.
+        create a sensor, including name, model, address, and, color.
       type: object
       required:
         - "name"
         - "model"
         - "address"
+        - "color"
       properties:
         name:
           type: string
@@ -1851,13 +1889,14 @@ components:
     SensorBase:
       description: >
         A basic sensor object that is returned by the API. This expands upon SDBSensor, including the
-        last reading, last reading time, and units. This maps to what the program keeps in memory.
+        last reading, last reading time, and units. This maps to what the app keeps in memory.
       allOf:
         - $ref: "#/components/schemas/SDBSensor"
         - type: object
           required:
             - "id"
             - "name"
+            - "color"
             - "model"
             - "address"
             - "lastReading"
@@ -1891,6 +1930,11 @@ components:
       type: array
       items:
         type: string
+
+    ReadingTypes:
+      description: >
+        An obejct of active sensor reading types and their units.
+      type: object
 
     DataPoint:
       description: >

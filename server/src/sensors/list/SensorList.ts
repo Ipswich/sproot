@@ -3,7 +3,7 @@ import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ChartData, DataSeries, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
@@ -18,7 +18,6 @@ class SensorList {
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
   #chartData: SensorListChartData;
-  #colorIndex: number;
 
   constructor(
     sprootDB: ISprootDB,
@@ -28,7 +27,6 @@ class SensorList {
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    this.#colorIndex = 0;
     this.#sprootDB = sprootDB;
     this.#maxCacheSize = maxCacheSize;
     this.#initialCacheLookback = initialCacheLookback;
@@ -85,13 +83,15 @@ class SensorList {
       if (key) {
         //Update if it exists
         if (this.#sensors[key]!.name !== sensor.name) {
-          this.#sensors[key]!.name = sensor.name;
+          //Also updates chartSeries data
+          this.#sensors[key]!.updateName(sensor.name);
           sensorListChanges = true;
         }
 
-        if (sensor.color != null && this.#sensors[key]?.color != sensor.color) {
+        if (this.#sensors[key]?.color != sensor.color) {
+          //Also updates chartSeries data
+          this.#sensors[key]!.updateColor(sensor.color);
           sensorListChanges = true;
-          this.#sensors[key]!.color = sensor.color;
         }
 
         if (sensorListChanges) {
@@ -230,10 +230,6 @@ class SensorList {
 
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
-    if (sensor.color == undefined) {
-      sensor.color = DefaultColors[this.#colorIndex] ?? "#000000";
-      this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
-    }
     switch (sensor.model.toLowerCase()) {
       case "bme280":
         if (!sensor.address) {

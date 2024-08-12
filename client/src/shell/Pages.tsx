@@ -1,92 +1,106 @@
+import { ReadingType } from "@sproot/sensors/ReadingType";
 import {
   IconAdjustments,
-  // IconArrowFork,
   IconBolt,
-  // IconCalendarStats,
-  // IconGauge,
-  IconTemperatureSun,
+  IconChartBubble,
+  IconChartLine,
+  IconDroplet,
+  IconLayoutDashboard,
+  // IconPlant2,
+  IconTemperature,
   TablerIconsProps,
 } from "@tabler/icons-react";
 
 export interface Page {
   navLinkText: string;
   headerText: string;
+  href?: string;
   icon: (props: TablerIconsProps | undefined) => JSX.Element;
   links?: Page[];
 }
 
-export class Pages {
-  public pages: Page[] = [
-    // {
-    //   navLinkText: "Dashboard",
-    //   headerText: "Dashboard",
-    //   icon: (props: TablerIconsProps | undefined) => <IconGauge {...props} />,
-    // } as Page,
-    {
+export function getNavbarItems(
+  readingTypes: ReadingType[],
+): Record<string, Page> {
+  const pages = {
+    dashboard: {
+      navLinkText: "Dashboard",
+      headerText: "Dashboard",
+      href: "/",
+      icon: (props: TablerIconsProps | undefined) => (
+        <IconLayoutDashboard {...props} />
+      ),
+    },
+  } as Record<string, Page>;
+
+  if (readingTypes.length > 0) {
+    pages["currentConditions"] = {
       navLinkText: "Current Conditions",
       headerText: "Current Conditions",
       icon: (props: TablerIconsProps | undefined) => (
-        <IconTemperatureSun {...props} />
+        <IconChartLine {...props} />
       ),
-    } as Page,
-    {
-      navLinkText: "Output States",
-      headerText: "Output States",
-      icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
-    } as Page,
-    // {
-    //   navLinkText: "Automatic",
-    //   headerText: "Automatic",
-    //   icon: (props: TablerIconsProps | undefined) => (
-    //     <IconCalendarStats {...props} />
-    //   ),
-    // } as Page,
-    // {
-    //   navLinkText: "Triggers",
-    //   headerText: "Triggers",
-    //   icon: (props: TablerIconsProps | undefined) => (
-    //     <IconArrowFork {...props} />
-    //   ),
-    // } as Page,
-    {
+      links: readingTypes.map((readingType) => {
+        return currentConditionLinks[readingType];
+      }),
+    };
+  }
+
+  (pages["outputStates"] = {
+    navLinkText: "Output States",
+    headerText: "Output States",
+    href: "/output-states",
+    icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
+  }),
+    (pages["settings"] = {
       navLinkText: "Settings",
       headerText: "Settings",
       icon: (props: TablerIconsProps | undefined) => (
         <IconAdjustments {...props} />
       ),
       links: [
-        { navLinkText: "Sensors", headerText: "Sensor Settings" } as Page,
-        { navLinkText: "Outputs", headerText: "Output Settings" } as Page,
-        // { navLinkText: "System", headerText: "System Settings" } as Page,
+        {
+          navLinkText: "Sensors",
+          headerText: "Sensor Settings",
+          href: "/settings/sensors",
+        } as Page,
+        {
+          navLinkText: "Outputs",
+          headerText: "Output Settings",
+          href: "/settings/outputs",
+        } as Page,
+        // {
+        //   navLinkText: "System",
+        //   headerText: "System Settings",
+        //   href: "/settings/system"
+        // } as Page,
       ],
-    },
-  ];
+    });
 
-  getNavLinkText() {
-    return this.pages
-      .map((item) => {
-        let navLinks = [item.navLinkText];
-        if (item.links) {
-          navLinks = navLinks.concat(
-            item.links.map((subLink) => subLink.navLinkText),
-          );
-        }
-        return navLinks;
-      })
-      .flat();
-  }
-
-  getHeaderText() {
-    return this.pages
-      .map((item) => {
-        let headerTexts = [item.headerText];
-        if (item.links) {
-          headerTexts = headerTexts.concat(
-            item.links.map((subLink) => subLink.headerText),
-          );
-        }
-        return headerTexts;
-      })
-      .flat();
-  }
+  return pages;
 }
+
+const currentConditionLinks: Record<ReadingType, Page> = {
+  temperature: {
+    navLinkText: "Temperature",
+    headerText: "Current Conditions",
+    href: "/current-conditions/temperature",
+    icon: (props: TablerIconsProps | undefined) => (
+      <IconTemperature {...props} />
+    ),
+  },
+  humidity: {
+    navLinkText: "Humidity",
+    headerText: "Current Conditions",
+    href: "/current-conditions/humidity",
+    icon: (props: TablerIconsProps | undefined) => <IconDroplet {...props} />,
+  },
+  pressure: {
+    navLinkText: "Pressure",
+    headerText: "Current Conditions",
+    href: "/current-conditions/pressure",
+    icon: (props: TablerIconsProps | undefined) => (
+      <IconChartBubble {...props} />
+    ),
+  },
+};

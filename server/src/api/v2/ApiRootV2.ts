@@ -12,7 +12,9 @@ import pingRouter from "./ping/PingRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
 
-const openapi_v2_doc = YAML.load("../openapi_v2.yaml");
+const spec_path = "../api_spec/openapi_v2.yaml";
+
+const openapi_v2_doc = YAML.load(spec_path);
 const swaggerUiOptions = {
   swaggerOptions: { defaultModelsExpandDepth: -1 },
 };
@@ -33,7 +35,7 @@ function ApiRootV2(app: Express) {
   // OpenAPI Validator
   app.use(
     OpenApiValidator.middleware({
-      apiSpec: "../openapi_v2.yaml",
+      apiSpec: spec_path,
       validateRequests: true,
       validateResponses: true,
       validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",

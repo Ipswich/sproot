@@ -17,7 +17,7 @@ export abstract class OutputBase implements IOutputBase {
   isPwm: boolean;
   isInvertedPwm: boolean;
   state: OutputState;
-  color: string | null;
+  color: string;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
   #cache: OutputCache;
@@ -70,6 +70,16 @@ export abstract class OutputBase implements IOutputBase {
    */
   abstract executeState(): void;
   abstract dispose(): void;
+
+  updateName(name: string): void {
+    this.name = name;
+    this.#chartData.chartSeries.name = name;
+  }
+
+  updateColor(color: string): void {
+    this.color = color;
+    this.#chartData.chartSeries.color = color;
+  }
 
   /**
    * Sets a new state to the targeted control mode, and executes it. This keeps the physical state
@@ -141,7 +151,7 @@ export abstract class OutputBase implements IOutputBase {
 
   protected loadChartData(): void {
     this.#chartData.loadChartData(this.#cache.get(), this.name);
-    this.#chartData.loadChartSeries({ name: this.name, color: this.color ?? "dark" });
+    this.#chartData.loadChartSeries({ name: this.name, color: this.color });
     this.logger.info(
       `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
     );

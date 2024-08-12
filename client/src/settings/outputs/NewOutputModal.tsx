@@ -1,36 +1,48 @@
-import { Modal, TextInput, Group, Button, Select } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  Group,
+  Button,
+  Select,
+  ColorInput,
+  ScrollArea,
+  ColorPicker,
+} from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { addOutputAsync } from "@sproot/sproot-client/src/requests";
+import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
-import { useState } from "react";
 import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";
 import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
+import { useMutation } from "@tanstack/react-query";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import { Fragment } from "react";
 
 interface NewOutputModalProps {
-  outputs: Record<string, IOutputBase>;
-  editDisabled: Record<string, boolean>;
   supportedModels: string[];
   modalOpened: boolean;
   closeModal: () => void;
-  setOutputs: (outputs: Record<string, IOutputBase>) => void;
-  setEditDisabled: (editDisabled: Record<string, boolean>) => void;
   setIsStale: (isStale: boolean) => void;
 }
 
 export default function NewOutputModal({
-  outputs,
-  editDisabled,
   supportedModels,
   modalOpened,
   closeModal,
-  setOutputs,
-  setEditDisabled,
   setIsStale,
 }: NewOutputModalProps) {
-  const [addingOutput, setIsAdding] = useState(false);
+  const addOutputMutation = useMutation({
+    mutationFn: async (newOutputValues: IOutputBase) => {
+      await addOutputAsync(newOutputValues);
+    },
+    onSettled: () => {
+      setIsStale(true);
+    },
+  });
+
   const newOutputForm = useForm({
     initialValues: {
       name: "",
+      color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
       pin: 0,
@@ -43,6 +55,10 @@ export default function NewOutputModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Name must be between 1 and 64 characters",
+      color: (value) =>
+        !value || (value.length > 0 && value.length <= 7)
+          ? null
+          : "Color must be a valid hex color",
       model: (value) =>
         value.length > 0 && value.length <= 64
           ? null
@@ -55,67 +71,71 @@ export default function NewOutputModal({
   });
 
   return (
-    <Modal
-      overlayProps={{
-        backgroundOpacity: 0.55,
-        blur: 3,
-      }}
-      centered
-      size="xs"
-      opened={modalOpened}
-      onClose={closeModal}
-      title="Add New"
-    >
-      <form
-        onSubmit={newOutputForm.onSubmit(async (values) => {
-          setIsAdding(true);
-          const uuid = String(Date.now());
-
-          setOutputs({
-            ...outputs,
-            [String(uuid)]: {
-              ...outputs[uuid],
-              ...values,
-              id: Number(uuid),
-            } as IOutputBase,
-          });
-          setEditDisabled({ ...editDisabled, [uuid]: true });
-          await addOutputAsync(values as IOutputBase);
-          setIsAdding(false);
-          closeModal();
-
-          setTimeout(() => setIsStale(true), 3000);
-        })}
+    <Fragment>
+      <meta name="viewport" content="width=device-width, user-scalable=no" />
+      <Modal
+        overlayProps={{
+          backgroundOpacity: 0.55,
+          blur: 3,
+        }}
+        scrollAreaComponent={ScrollArea.Autosize}
+        centered
+        size="xs"
+        opened={modalOpened}
+        onClose={closeModal}
+        title="Add New"
       >
-        <TextInput
-          maxLength={64}
-          label="Name"
-          placeholder="Output #1"
-          {...newOutputForm.getInputProps("name")}
-        />
-        <Select
-          label="Model"
-          data={supportedModels}
-          allowDeselect={false}
-          placeholder="Model Name"
-          required
-          {...newOutputForm.getInputProps("model")}
-        />
-        <TextInput
-          maxLength={64}
-          label="Address"
-          placeholder="0x40"
-          {...newOutputForm.getInputProps("address")}
-        />
-        {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
-          <PCA9685Form form={newOutputForm} />
-        ) : null}
-        <Group justify="flex-end" mt="md">
-          <Button type="submit" disabled={addingOutput}>
-            Add Output
-          </Button>
-        </Group>
-      </form>
-    </Modal>
+        <form
+          onSubmit={newOutputForm.onSubmit(async (values) => {
+            await addOutputMutation.mutateAsync(values as IOutputBase);
+            closeModal();
+          })}
+        >
+          <TextInput
+            maxLength={64}
+            label="Name"
+            placeholder="Output #1"
+            {...newOutputForm.getInputProps("name")}
+          />
+          <ColorInput
+            readOnly
+            label="Color"
+            required
+            // closeOnColorSwatchClick
+            placeholder={newOutputForm.values.color}
+            defaultValue={newOutputForm.values.color}
+            // swatches={[...DefaultColors]}
+            {...newOutputForm.getInputProps("color")}
+          />
+          <ColorPicker
+            size="xs"
+            fullWidth
+            defaultValue={newOutputForm.values.color}
+            swatches={[...DefaultColors]}
+            {...newOutputForm.getInputProps("color")}
+          />
+          <Select
+            label="Model"
+            data={supportedModels}
+            allowDeselect={false}
+            placeholder="Model Name"
+            required
+            {...newOutputForm.getInputProps("model")}
+          />
+          <TextInput
+            maxLength={64}
+            label="Address"
+            placeholder="0x40"
+            {...newOutputForm.getInputProps("address")}
+          />
+          {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
+            <PCA9685Form form={newOutputForm} />
+          ) : null}
+          <Group justify="flex-end" mt="md">
+            <Button type="submit">Add Output</Button>
+          </Group>
+        </form>
+      </Modal>
+    </Fragment>
   );
 }

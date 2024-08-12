@@ -1,31 +1,36 @@
-import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  NativeSelect,
+  Group,
+  Button,
+  ColorInput,
+  ColorPicker,
+  ScrollArea,
+} from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
   deleteOutputAsync,
   updateOutputAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";
 import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import { useMutation } from "@tanstack/react-query";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
-  editDisabled: Record<string, boolean>;
   supportedModels: string[];
-  setOutputs: (outputs: Record<string, IOutputBase>) => void;
-  setEditDisabled: (editDisabled: Record<string, boolean>) => void;
   setIsStale: (isStale: boolean) => void;
 }
 
 export default function EditTable({
   outputs,
-  editDisabled,
   supportedModels,
-  setOutputs,
-  setEditDisabled,
   setIsStale,
 }: EditTableProps) {
   const [selectedOutput, setSelectedOutput] = useState({} as IOutputBase);
@@ -33,13 +38,29 @@ export default function EditTable({
     useDisclosure(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const initialState = {} as Record<string, boolean>;
-  Object.keys(outputs).map((key) => (initialState[key] = false));
+  const updateOutputMutation = useMutation({
+    mutationFn: async (newOutputValues: IOutputBase) => {
+      await updateOutputAsync(newOutputValues);
+    },
+    onSettled: () => {
+      setIsStale(true);
+    },
+  });
+
+  const deleteOutputMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await deleteOutputAsync(id);
+    },
+    onSettled: () => {
+      setIsStale(true);
+    },
+  });
 
   const updateOutputForm = useForm({
     initialValues: {
       id: selectedOutput.id,
       name: selectedOutput.name,
+      color: selectedOutput.color,
       model: selectedOutput.model,
       address: selectedOutput.address,
       pin: selectedOutput.pin,
@@ -55,6 +76,10 @@ export default function EditTable({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Name must be between 1 and 64 characters",
+      color: (value) =>
+        !value || (value.length > 0 && value.length <= 7)
+          ? null
+          : "Color must be a valid hex color",
       model: (value) =>
         value.length > 0 && value.length <= 64
           ? null
@@ -74,29 +99,28 @@ export default function EditTable({
     },
   });
 
-  const editTableOnClick = function (
-    editDisabled: Record<string, boolean>,
-    output: IOutputBase,
-  ) {
-    setEditDisabled({ ...editDisabled, [output.id]: false });
+  const editTableOnClick = function (output: IOutputBase) {
     setSelectedOutput(output);
-    updateOutputForm.setFieldValue("name", output.name!);
+    updateOutputForm.setFieldValue("name", output.name ?? "");
+    updateOutputForm.setFieldValue("color", output.color);
     updateOutputForm.setFieldValue("model", output.model);
-    updateOutputForm.setFieldValue("address", output.address ?? "");
+    updateOutputForm.setFieldValue("address", output.address);
     updateOutputForm.setFieldValue("id", output.id);
     updateOutputForm.setFieldValue("pin", output.pin);
-    updateOutputForm.setFieldValue("isPwm", !!output.isPwm);
-    updateOutputForm.setFieldValue("isInvertedPwm", !!output.isInvertedPwm);
+    updateOutputForm.setFieldValue("isPwm", output.isPwm);
+    updateOutputForm.setFieldValue("isInvertedPwm", output.isInvertedPwm);
     openModal();
   };
 
   return (
     <Fragment>
+      <meta name="viewport" content="width=device-width, user-scalable=no" />
       <Modal
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        scrollAreaComponent={ScrollArea.Autosize}
         centered
         size="xs"
         opened={modalOpened}
@@ -106,20 +130,10 @@ export default function EditTable({
         <form
           onSubmit={updateOutputForm.onSubmit(async (values) => {
             setIsUpdating(true);
-            await updateOutputAsync(values as IOutputBase);
-            const updatedOutputs = {
-              ...outputs,
-              [values.id!]: {
-                ...outputs[values.id!],
-                ...values,
-              } as IOutputBase,
-            };
-            setOutputs(updatedOutputs);
-            setEditDisabled({ ...editDisabled, [values.id!]: true });
+            await updateOutputMutation.mutateAsync(values as IOutputBase);
             setIsUpdating(false);
             setSelectedOutput({} as IOutputBase);
             closeModal();
-            setTimeout(() => setIsStale(true), 3000);
           })}
         >
           <TextInput
@@ -130,8 +144,25 @@ export default function EditTable({
           <TextInput
             maxLength={64}
             label="Name"
-            placeholder={selectedOutput.name ?? ""}
+            placeholder={selectedOutput.name || ""}
             {...updateOutputForm.getInputProps("name")}
+          />
+          <ColorInput
+            readOnly
+            label="Color"
+            required
+            // closeOnColorSwatchClick
+            defaultValue={selectedOutput.color}
+            placeholder={selectedOutput.color}
+            // swatches={[...DefaultColors]}
+            {...updateOutputForm.getInputProps("color")}
+          />
+          <ColorPicker
+            size="xs"
+            fullWidth
+            defaultValue={selectedOutput.color}
+            swatches={[...DefaultColors]}
+            {...updateOutputForm.getInputProps("color")}
           />
           {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
             <Fragment>
@@ -161,16 +192,11 @@ export default function EditTable({
                   color="red"
                   onClick={async () => {
                     setIsUpdating(true);
-                    await deleteOutputAsync(selectedOutput.id);
+                    await deleteOutputMutation.mutateAsync(selectedOutput.id);
                     delete outputs[selectedOutput.id];
-                    setEditDisabled({
-                      ...editDisabled,
-                      [selectedOutput.id]: true,
-                    });
                     setIsUpdating(false);
                     setSelectedOutput({} as IOutputBase);
                     closeModal();
-                    setTimeout(() => setIsStale(true), 3000);
                   }}
                 >
                   Delete
@@ -199,9 +225,8 @@ export default function EditTable({
       </Modal>
       <EditablesTable
         editables={outputs}
-        editDisabled={editDisabled}
-        onClick={(editDisabled, item) => {
-          editTableOnClick(editDisabled, item as IOutputBase);
+        onClick={(item) => {
+          editTableOnClick(item as IOutputBase);
         }}
       />
     </Fragment>

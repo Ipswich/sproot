@@ -1,29 +1,34 @@
-import { Modal, TextInput, NativeSelect, Group, Button } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  NativeSelect,
+  Group,
+  Button,
+  ColorInput,
+  ScrollArea,
+  ColorPicker,
+} from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
 import {
   deleteSensorAsync,
   updateSensorAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";
+import { useMutation } from "@tanstack/react-query";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
-  editDisabled: Record<string, boolean>;
   supportedModels: string[];
-  setSensors: (sensors: Record<string, ISensorBase>) => void;
-  setEditDisabled: (editDisabled: Record<string, boolean>) => void;
   setIsStale: (isStale: boolean) => void;
 }
 
 export default function EditTable({
   sensors,
-  editDisabled,
   supportedModels,
-  setSensors,
-  setEditDisabled,
   setIsStale,
 }: EditTableProps) {
   const [selectedSensor, setSelectedSensor] = useState({} as ISensorBase);
@@ -31,13 +36,29 @@ export default function EditTable({
     useDisclosure(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const initialState = {} as Record<string, boolean>;
-  Object.keys(sensors).map((key) => (initialState[key] = false));
+  const updateSensorMutation = useMutation({
+    mutationFn: async (newSensorValues: ISensorBase) => {
+      await updateSensorAsync(newSensorValues);
+    },
+    onSettled: () => {
+      setIsStale(true);
+    },
+  });
+
+  const deleteSensorMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await deleteSensorAsync(id);
+    },
+    onSettled: () => {
+      setIsStale(true);
+    },
+  });
 
   const updateSensorForm = useForm({
     initialValues: {
       id: selectedSensor.id,
       name: selectedSensor.name,
+      color: selectedSensor.color,
       model: selectedSensor.model,
       address: selectedSensor.address,
     },
@@ -50,6 +71,10 @@ export default function EditTable({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Name must be between 1 and 64 characters",
+      color: (value) =>
+        !value || (value.length > 0 && value.length <= 7)
+          ? null
+          : "Color must be a valid hex color",
       model: (value) =>
         value.length > 0 && value.length <= 64
           ? null
@@ -61,13 +86,10 @@ export default function EditTable({
     },
   });
 
-  const editTableOnClick = function (
-    editDisabled: Record<string, boolean>,
-    sensor: ISensorBase,
-  ) {
-    setEditDisabled({ ...editDisabled, [sensor.id]: false });
+  const editTableOnClick = function (sensor: ISensorBase) {
     setSelectedSensor(sensor);
     updateSensorForm.setFieldValue("name", sensor.name);
+    updateSensorForm.setFieldValue("color", sensor.color);
     updateSensorForm.setFieldValue("model", sensor.model);
     updateSensorForm.setFieldValue("address", sensor.address ?? "");
     updateSensorForm.setFieldValue("id", sensor.id);
@@ -76,11 +98,13 @@ export default function EditTable({
 
   return (
     <Fragment>
+      <meta name="viewport" content="width=device-width, user-scalable=no" />
       <Modal
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
         }}
+        scrollAreaComponent={ScrollArea.Autosize}
         centered
         size="xs"
         opened={modalOpened}
@@ -90,17 +114,10 @@ export default function EditTable({
         <form
           onSubmit={updateSensorForm.onSubmit(async (values) => {
             setIsUpdating(true);
-            await updateSensorAsync(values as ISensorBase);
-            const updatedSensors = {
-              ...sensors,
-              [values.id]: { ...sensors[values.id], ...values } as ISensorBase,
-            };
-            setSensors(updatedSensors);
-            setEditDisabled({ ...editDisabled, [values.id]: true });
+            await updateSensorMutation.mutateAsync(values as ISensorBase);
             setIsUpdating(false);
             setSelectedSensor({} as ISensorBase);
             closeModal();
-            setTimeout(() => setIsStale(true), 3000);
           })}
         >
           <TextInput
@@ -113,6 +130,23 @@ export default function EditTable({
             label="Name"
             placeholder={selectedSensor.name}
             {...updateSensorForm.getInputProps("name")}
+          />
+          <ColorInput
+            readOnly
+            label="Color"
+            required
+            // closeOnColorSwatchClick
+            placeholder={selectedSensor.color}
+            defaultValue={selectedSensor.color}
+            // swatches={[...DefaultColors]}
+            {...updateSensorForm.getInputProps("color")}
+          />
+          <ColorPicker
+            size="xs"
+            fullWidth
+            defaultValue={selectedSensor.color}
+            swatches={[...DefaultColors]}
+            {...updateSensorForm.getInputProps("color")}
           />
           <NativeSelect
             label="Model"
@@ -132,13 +166,11 @@ export default function EditTable({
               color="red"
               onClick={async () => {
                 setIsUpdating(true);
-                await deleteSensorAsync(selectedSensor.id);
+                await deleteSensorMutation.mutateAsync(selectedSensor.id);
                 delete sensors[selectedSensor.id];
-                setEditDisabled({ ...editDisabled, [selectedSensor.id]: true });
                 setIsUpdating(false);
                 setSelectedSensor({} as ISensorBase);
                 closeModal();
-                setTimeout(() => setIsStale(true), 3000);
               }}
             >
               Delete
@@ -151,9 +183,8 @@ export default function EditTable({
       </Modal>
       <EditablesTable
         editables={sensors}
-        editDisabled={editDisabled}
-        onClick={(editDisabled, item) => {
-          editTableOnClick(editDisabled, item as ISensorBase);
+        onClick={(item) => {
+          editTableOnClick(item as ISensorBase);
         }}
       />
     </Fragment>

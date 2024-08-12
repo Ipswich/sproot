@@ -5,7 +5,7 @@ import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
-import { ChartData, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 
 class OutputList {
@@ -14,7 +14,6 @@ class OutputList {
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
   #chartData: OutputListChartData;
-  #colorIndex: number;
   maxCacheSize: number;
   initialCacheLookback: number;
   maxChartDataSize: number;
@@ -28,7 +27,6 @@ class OutputList {
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
-    this.#colorIndex = 0;
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
@@ -119,7 +117,8 @@ class OutputList {
         //Update if it exists
         if (this.#outputs[key]?.name != output.name) {
           outputListChanges = true;
-          this.#outputs[key]!.name = output.name;
+          //Also updates chartSeries data
+          this.#outputs[key]!.updateName(output.name);
         }
 
         if (this.#outputs[key]?.isPwm != output.isPwm) {
@@ -132,9 +131,10 @@ class OutputList {
           this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
         }
 
-        if (output.color != null && this.#outputs[key]?.color != output.color) {
+        if (this.#outputs[key]?.color != output.color) {
           outputListChanges = true;
-          this.#outputs[key]!.color = output.color;
+          //Also updates chartSeries data
+          this.#outputs[key]!.updateColor(output.color);
         }
 
         if (outputListChanges) {
@@ -223,10 +223,6 @@ class OutputList {
 
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | null = null;
-    if (output.color == undefined) {
-      output.color = DefaultColors[this.#colorIndex] ?? "#000000";
-      this.#colorIndex = (this.#colorIndex + 1) % DefaultColors.length;
-    }
     switch (output.model.toLowerCase()) {
       case "pca9685": {
         newOutput = await this.#PCA9685.createOutput(output);

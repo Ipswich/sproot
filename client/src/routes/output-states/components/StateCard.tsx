@@ -5,7 +5,7 @@ import {
 import {
   setOutputControlModeAsync,
   setOutputManualStateAsync,
-} from "@sproot/sproot-client/src/requests";
+} from "@sproot/sproot-client/src/requests/requests_v2";
 import { Fragment, useState } from "react";
 import {
   Group,
@@ -17,17 +17,36 @@ import {
   rem,
 } from "@mantine/core";
 import { StatsRing } from "./StatsRing";
+import { useMutation } from "@tanstack/react-query";
 
-interface OutputCardProps {
+interface StateProps {
   output: IOutputBase;
   updateOutputsAsync: () => Promise<void>;
 }
 
-export default function OutputCard({
-  output,
-  updateOutputsAsync,
-}: OutputCardProps) {
+export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const [controlMode, setControlMode] = useState(output.state.controlMode);
+
+  const updateOutputControlModeMutation = useMutation({
+    mutationFn: async (newControlMode: { id: number; controlMode: string }) => {
+      await setOutputControlModeAsync(
+        newControlMode.id,
+        newControlMode.controlMode,
+      );
+    },
+    onSettled: async () => {
+      await updateOutputsAsync();
+    },
+  });
+
+  const updateOutputManualStateMutation = useMutation({
+    mutationFn: async (newState: { id: number; value: number }) => {
+      await setOutputManualStateAsync(newState.id, newState.value);
+    },
+    onSettled: async () => {
+      await updateOutputsAsync();
+    },
+  });
 
   function segmentedControlColor() {
     return output.state.controlMode == ControlMode.manual ? "blue" : "teal";
@@ -66,8 +85,10 @@ export default function OutputCard({
                 onChange={async (value) => {
                   isSegmentedControlDisabled = true;
                   setControlMode(value as ControlMode);
-                  await setOutputControlModeAsync(output.id, value);
-                  await updateOutputsAsync();
+                  await updateOutputControlModeMutation.mutateAsync({
+                    id: output.id,
+                    controlMode: value,
+                  });
                   isSegmentedControlDisabled = false;
                 }}
               />
@@ -80,8 +101,10 @@ export default function OutputCard({
                         disabled={controlMode !== ControlMode.manual}
                         label={(value) => `${value}%`}
                         onChangeEnd={async (value) => {
-                          await setOutputManualStateAsync(output.id, value);
-                          await updateOutputsAsync();
+                          await updateOutputManualStateMutation.mutateAsync({
+                            id: output.id,
+                            value,
+                          });
                         }}
                         size="xl"
                         color="blue"
@@ -110,11 +133,10 @@ export default function OutputCard({
                         disabled={controlMode !== ControlMode.manual}
                         checked={output.state.manual.value === 100}
                         onChange={async (event) => {
-                          await setOutputManualStateAsync(
-                            output.id,
-                            event.target.checked ? 100 : 0,
-                          );
-                          await updateOutputsAsync();
+                          await updateOutputManualStateMutation.mutateAsync({
+                            id: output.id,
+                            value: event.target.checked ? 100 : 0,
+                          });
                         }}
                       />
                     ) : (
