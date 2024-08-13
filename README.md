@@ -30,7 +30,7 @@ Navigate to the `sproot/client` directory. If your api server is running on a di
 ## Parts
 Foremost, I'd like to note that my implementation is soldered. This can still be implemented on a breadboard if that's more your speed, though it'll change what parts you truly need and make it "difficult" to attach it to the 3D printed mount.
 
-The parts used in my implementation of Sproot are fairly common and easily acquired. I've ordered everything off of Amazon, but you could likely just as easily source things from Digikey, Mouser, or any other electronics supply store. Any links to parts are intended to be used as references. For the most part, these are the parts I used - and I tend to order plenty of replacements. Use your best judgement for your purposes.
+The parts used in my implementation of Sproot are fairly common and easily acquired. I've ordered everything off of Amazon, but you could likely just as easily source things from Digikey, Mouser, or any other electronics supply store. Any links to parts are intended to be used as references. For the most part, these are the parts I used (I tend to order plenty of replacements).
 
 Lastly, this section is scoped for the `preconfigured` option, though you should be able to extrapolate fairly easily if you want to expand on what's here.
 
