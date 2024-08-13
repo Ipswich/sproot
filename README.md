@@ -45,11 +45,11 @@ Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've g
 * (1) [5x7cm Soldering Prototype Board](https://www.amazon.com/dp/B08WJCVJ1J)
 * (1x 3 pin, 1x 4pin) [Terminal Blocks](https://www.amazon.com/dp/B088LVP6ML)
 * (10)[Female Header Pins](https://www.amazon.com/dp/B09MY5MJ36)
-* (6) [Male Header Pins](https://www.amazon.com/dp/B06ZZN8L9S) - These make it easier to connect the PCA9685 to the opto-isolators and to power the relays.
+* (6) [Male Header Pins](https://www.amazon.com/dp/B06ZZN8L9S)
 * (16) [Female Socket Type Header Pins](https://www.amazon.com/dp/B012ACSO4Y) - Optional, but enable you to swap out PC817 opto-isolators if one should fail.
 * (1) [5v 4A Power Supply](https://www.amazon.com/dp/B087LY41PV)
-* (1) [Barrel Jack Pigtail](https://www.amazon.com/dp/B07CWQPPTW) - Please pay attention to the diameter/depth of the power supply!
-* (1) USB Pigtail - Raspberry Pis 3B+ (and older) and Raspberry pi Zeros use [Micro USB](https://www.amazon.com/dp/B09DKYPCXK); Raspberry Pis 4 and newer use [USB-C](https://www.amazon.com/dp/B0CMQ42P9Q)
+* (1) [Barrel Jack Pigtail](https://www.amazon.com/dp/B07CWQPPTW) - Please pay attention to the diameter and depth of the power supply plug!
+* (1) USB Pigtail - Raspberry Pis 3B+ and older (and Raspberry Pi Zeros) use [Micro USB](https://www.amazon.com/dp/B09DKYPCXK); Raspberry Pis 4 and newer use [USB-C](https://www.amazon.com/dp/B0CMQ42P9Q).
 * (8) [M2.5 x 10mm screws and nuts](https://www.amazon.com/dp/B09WJ4WF9K)
 * (16) [M3 x 10mm screws and nuts](https://www.amazon.com/dp/B08YYZSZVP)
 * (4x M2F, 11x F2F) [Jumper Wires](https://www.amazon.com/dp/B01EV70C78)
