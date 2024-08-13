@@ -34,7 +34,7 @@ The parts used in my implementation of Sproot are fairly common and easily acqui
 
 Lastly, this section is scoped for the `preconfigured` option, though you should be able to extrapolate fairly easily if you want to expand on what's here.
 
-#### Raspbery Pi
+#### Raspberry Pi
 Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've got a few lying around, but there's no reason this couldn't be implemented on something more modern, or maybe even less modern.
 
 #### Circuitry and Hardware
