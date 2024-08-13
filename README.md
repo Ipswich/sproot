@@ -41,6 +41,7 @@ Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've g
 * (1) [PCA9685 Board](https://www.amazon.com/dp/B08C9R9MZ2) - This is **NOT** the same as the bare chip. I'm not an electrical engineer, so it's easier for me to get a part that has the necessary circuitry rather than constructing it myself. I've been using generic ones from Amazon. Ultimately, they all seem to be more or less modeled after the one `Adafruit` designed.
 * (4) [5v Relays](https://www.amazon.com/dp/B07WQH63FB) - Again, this is **NOT** the same as the bare relay. There are loads of these on Amazon, and, if you want, you can get them as multi-channel boards. I've opted for single channel boards as I've historically had issues with a single relay dying on a board. Rather than having a 3-of-4 channel board, single channel boards are modular, and can be replaced easily.
 * (4) [PC817 Opto-isolators](https://www.amazon.com/dp/B0CBKK6T3D)
+* (1) [4.7k Ohm Resistor](https://www.amazon.com/dp/B07QJB3LGN)
 * (1) [5x7cm Soldering Prototype Board](https://www.amazon.com/dp/B08WJCVJ1J)
 * (1x 3 pin, 1x 4pin) [Terminal Blocks](https://www.amazon.com/dp/B088LVP6ML)
 * (10)[Female Header Pins](https://www.amazon.com/dp/B09MY5MJ36)
