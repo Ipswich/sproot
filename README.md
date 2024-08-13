@@ -35,7 +35,7 @@ The parts used in my implementation of Sproot are fairly common and easily acqui
 Lastly, this section is scoped for the `preconfigured` option, though you should be able to extrapolate fairly easily if you want to expand on what's here.
 
 #### Raspbery Pi
-Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've got a few lying around, but there's no reason this couldn't be implemented on something more modern, or maybe even less modern.
+Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've got a few lying around, but there's no reason this couldn't be implemented on something more modern, or maybe even less modern. The only thing to note is that 
 
 #### Circuitry and Hardware
 * (1) [PCA9685 Board](https://www.amazon.com/dp/B08C9R9MZ2) - This is **NOT** the same as the bare chip. I'm not an electrical engineer, so it's easier for me to get a part that has the necessary circuitry rather than constructing it myself. I've been using generic ones from Amazon. Ultimately, they all seem to be more or less modeled after the one `Adafruit` designed.
@@ -49,7 +49,7 @@ Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've g
 * (16) [Female Socket Type Header Pins](https://www.amazon.com/dp/B012ACSO4Y) - Optional, but enable you to swap out PC817 opto-isolators if one should fail.
 * (1) [5v 4A Power Supply](https://www.amazon.com/dp/B087LY41PV)
 * (1) [Barrel Jack Pigtail](https://www.amazon.com/dp/B07CWQPPTW) - Please pay attention to the diameter/depth of the power supply!
-* (1) [Micro USB Pigtail](https://www.amazon.com/dp/B09DKYPCXK)
+* (1) USB Pigtail - Raspberry Pis 3B+ (and older) and Raspberry pi Zeros use [Micro USB](https://www.amazon.com/dp/B09DKYPCXK); Raspberry Pis 4 and newer use [USB-C](https://www.amazon.com/dp/B0CMQ42P9Q)
 * (8) [M2.5 x 10mm screws and nuts](https://www.amazon.com/dp/B09WJ4WF9K)
 * (16) [M3 x 10mm screws and nuts](https://www.amazon.com/dp/B08YYZSZVP)
 * (4x M2F, 11x F2F) [Jumper Wires](https://www.amazon.com/dp/B01EV70C78)
