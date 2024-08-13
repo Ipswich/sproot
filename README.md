@@ -35,7 +35,7 @@ The parts used in my implementation of Sproot are fairly common and easily acqui
 Lastly, this section is scoped for the `preconfigured` option, though you should be able to extrapolate fairly easily if you want to expand on what's here.
 
 #### Raspbery Pi
-Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've got a few lying around, but there's no reason this couldn't be implemented on something more modern, or maybe even less modern. The only thing to note is that 
+Obviously, you need a Raspberry Pi. I've been using a Raspberry Pi 3B+ as I've got a few lying around, but there's no reason this couldn't be implemented on something more modern, or maybe even less modern.
 
 #### Circuitry and Hardware
 * (1) [PCA9685 Board](https://www.amazon.com/dp/B08C9R9MZ2) - This is **NOT** the same as the bare chip. I'm not an electrical engineer, so it's easier for me to get a part that has the necessary circuitry rather than constructing it myself. I've been using generic ones from Amazon. Ultimately, they all seem to be more or less modeled after the one `Adafruit` designed.
