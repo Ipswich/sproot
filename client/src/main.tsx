@@ -11,7 +11,7 @@ import ErrorPage from "./error_pages/ErrorPage";
 
 import { rootLoader, sensorChartDataLoader } from "./routes/utility/Loaders";
 
-import CurrentConditions from "./routes/sensor-data/SensorData";
+import SensorData from "./routes/sensor-data/SensorData";
 import OutputStates from "./routes/output-states/OutputStates";
 import OutputSettings from "./settings/outputs/OutputSettings";
 import SensorSettings from "./settings/sensors/SensorSettings";
@@ -25,7 +25,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/sensor-data/:readingType",
-        element: <CurrentConditions />,
+        element: <SensorData />,
         loader: sensorChartDataLoader,
       },
       {

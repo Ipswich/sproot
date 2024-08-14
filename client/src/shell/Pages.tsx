@@ -34,14 +34,14 @@ export function getNavbarItems(
   } as Record<string, Page>;
 
   if (readingTypes.length > 0) {
-    pages["currentConditions"] = {
+    pages["sensorData"] = {
       navLinkText: "Sensor Data",
       headerText: "Sensor Data",
       icon: (props: TablerIconsProps | undefined) => (
         <IconChartLine {...props} />
       ),
       links: readingTypes.map((readingType) => {
-        return currentConditionLinks[readingType];
+        return sensorDataLinks[readingType];
       }),
     };
   }
@@ -80,7 +80,7 @@ export function getNavbarItems(
   return pages;
 }
 
-const currentConditionLinks: Record<ReadingType, Page> = {
+const sensorDataLinks: Record<ReadingType, Page> = {
   temperature: {
     navLinkText: "Temperature",
     headerText: "Sensor Data",
