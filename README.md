@@ -49,7 +49,7 @@ You need one. I've been using a Raspberry Pi 3B+, but there's no reason this cou
 * (16) [Female Socket Type Header Pins](https://www.amazon.com/dp/B012ACSO4Y) - Optional, but enable you to swap out PC817 opto-isolators if one should fail.
 * (1) [5v 4A Power Supply](https://www.amazon.com/dp/B087LY41PV)
 * (1) [Female Barrel Jack Pigtail](https://www.amazon.com/dp/B07CWQPPTW) - Make sure to match the diameter and depth of the power supply plug.
-* (1) USB Pigtail - Raspberry Pis 3B+ and older (and Raspberry Pi Zeros) use [Micro USB](https://www.amazon.com/dp/B09DKYPCXK); Raspberry Pis 4 and newer use [USB-C](https://www.amazon.com/dp/B0CMQ42P9Q).
+* (1) USB Power Pigtail - Raspberry Pis 3B+ and older (and Raspberry Pi Zeros) use [Micro USB](https://www.amazon.com/dp/B09DKYPCXK); Raspberry Pis 4 and newer use [USB-C](https://www.amazon.com/dp/B0CMQ42P9Q).
 * (8) [M2.5 x 10mm screws and nuts](https://www.amazon.com/dp/B09WJ4WF9K)
 * (16) [M3 x 10mm screws and nuts](https://www.amazon.com/dp/B08YYZSZVP)
 * (4x M2F, 11x F2F) [Jumper Wires](https://www.amazon.com/dp/B01EV70C78)
