@@ -35,8 +35,8 @@ export function getNavbarItems(
 
   if (readingTypes.length > 0) {
     pages["currentConditions"] = {
-      navLinkText: "Current Conditions",
-      headerText: "Current Conditions",
+      navLinkText: "Sensor Data",
+      headerText: "Sensor Data",
       icon: (props: TablerIconsProps | undefined) => (
         <IconChartLine {...props} />
       ),
@@ -83,22 +83,22 @@ export function getNavbarItems(
 const currentConditionLinks: Record<ReadingType, Page> = {
   temperature: {
     navLinkText: "Temperature",
-    headerText: "Current Conditions",
-    href: "/current-conditions/temperature",
+    headerText: "Sensor Data",
+    href: "/sensor-data/temperature",
     icon: (props: TablerIconsProps | undefined) => (
       <IconTemperature {...props} />
     ),
   },
   humidity: {
     navLinkText: "Humidity",
-    headerText: "Current Conditions",
-    href: "/current-conditions/humidity",
+    headerText: "Sensor Data",
+    href: "/sensor-data/humidity",
     icon: (props: TablerIconsProps | undefined) => <IconDroplet {...props} />,
   },
   pressure: {
     navLinkText: "Pressure",
-    headerText: "Current Conditions",
-    href: "/current-conditions/pressure",
+    headerText: "Sensor Data",
+    href: "/sensor-data/pressure",
     icon: (props: TablerIconsProps | undefined) => (
       <IconChartBubble {...props} />
     ),
