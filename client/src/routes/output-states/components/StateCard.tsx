@@ -60,6 +60,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
           <Paper shadow="xs" radius="md" withBorder my="4" p="sm" w={rem(360)}>
             <Group justify="space-between" h="80">
               <SegmentedControl
+                w={"96px"}
                 styles={
                   controlMode === ControlMode.manual
                     ? {
@@ -73,7 +74,6 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                         },
                       }
                 }
-                w={"36%"}
                 color={segmentedControlColor()}
                 orientation="vertical"
                 value={controlMode}
@@ -92,7 +92,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                   isSegmentedControlDisabled = false;
                 }}
               />
-              <Stack justify="space-around" w={"58%"}>
+              <Stack justify="space-around" flex={1}>
                 {output.isPwm == true ? (
                   <Fragment>
                     {controlMode === ControlMode.manual ? (

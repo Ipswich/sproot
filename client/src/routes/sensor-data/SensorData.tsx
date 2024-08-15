@@ -11,7 +11,7 @@ import { useLoaderData } from "react-router-dom";
 import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import SensorTable from "./components/SensorTable";
 
-export default function CurrentConditions() {
+export default function SensorData() {
   const readingTypeString = useLoaderData() as string;
 
   const [chartInterval, setChartInterval] = useState("24");

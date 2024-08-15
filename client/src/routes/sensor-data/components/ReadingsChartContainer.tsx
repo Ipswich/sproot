@@ -40,7 +40,7 @@ export default function ReadingsChartContainer({
   const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
 
   const chartDataQuery = useQuery({
-    queryKey: ["current-conditions-chart"],
+    queryKey: ["sensor-data-chart"],
     queryFn: () => getSensorChartDataAsync(readingType),
     refetchInterval: 300000,
   });

@@ -19,7 +19,7 @@ export default function SensorTable({
 }: SensorTableProps) {
   const [sensors, setSensors] = useState([] as ISensorBase[]);
   const getSensorsQuery = useQuery({
-    queryKey: ["current-conditions-sensors"],
+    queryKey: ["sensor-data-sensors"],
     queryFn: () => getSensorsAsync(),
     refetchInterval: 60000,
   });
