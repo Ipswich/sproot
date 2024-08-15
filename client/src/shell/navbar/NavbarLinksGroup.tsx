@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Group, Box, Collapse, ThemeIcon, rem } from "@mantine/core";
 import { IconChevronRight, TablerIconsProps } from "@tabler/icons-react";
 import classes from "./css/NavbarLinksGroup.module.css";
@@ -10,6 +9,8 @@ interface LinksGroupProps {
   navLinkText: string;
   page: Page;
   setCurrentPage: (page: Page) => void;
+  openedLinkGroups: string[];
+  setOpenedLinkGroups: (linkGroups: string[]) => void;
 }
 
 export function LinksGroup({
@@ -17,15 +18,17 @@ export function LinksGroup({
   navLinkText,
   page,
   setCurrentPage,
+  openedLinkGroups,
+  setOpenedLinkGroups,
 }: LinksGroupProps) {
   const hasLinks = Array.isArray(page.links);
-  const [opened, setOpened] = useState(false);
   const items = (page.links ?? []).map((link) => (
     <Link
       className={classes["link"]!}
       to={link.href ?? "#"}
       key={link.navLinkText}
       onClick={() => {
+        setOpenedLinkGroups([]);
         setCurrentPage(link);
       }}
     >
@@ -39,8 +42,16 @@ export function LinksGroup({
         to={page.href ?? "#"}
         className={classes["control"]!}
         onClick={() => {
-          setOpened((o) => !o);
+          //If we have THIS link group opened, close it. Otherwise, open it.
+          if (openedLinkGroups.includes(page.navLinkText)) {
+            setOpenedLinkGroups(
+              openedLinkGroups.filter((item) => item !== page.navLinkText),
+            );
+          } else {
+            setOpenedLinkGroups([...openedLinkGroups, page.navLinkText]);
+          }
           if (!hasLinks) {
+            setOpenedLinkGroups([]);
             setCurrentPage(page);
           }
         }}
@@ -59,13 +70,19 @@ export function LinksGroup({
               style={{
                 width: rem(16),
                 height: rem(16),
-                transform: opened ? "rotate(90deg)" : "none",
+                transform: openedLinkGroups.includes(page.navLinkText)
+                  ? "rotate(90deg)"
+                  : "none",
               }}
             />
           )}
         </Group>
       </Link>
-      {hasLinks ? <Collapse in={opened}>{items}</Collapse> : null}
+      {hasLinks ? (
+        <Collapse in={openedLinkGroups.includes(page.navLinkText)}>
+          {items}
+        </Collapse>
+      ) : null}
     </>
   );
 }
