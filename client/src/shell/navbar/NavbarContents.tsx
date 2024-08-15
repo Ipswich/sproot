@@ -3,6 +3,7 @@ import { LinksGroup } from "./NavbarLinksGroup";
 // import { Logo } from './Logo';
 import classes from "./css/NavbarContents.module.css";
 import { Page } from "../Pages";
+import { useState } from "react";
 
 interface NavbarContentsProps {
   setCurrentPage: (page: Page) => void;
@@ -13,6 +14,7 @@ export default function NavbarContents({
   setCurrentPage,
   pages,
 }: NavbarContentsProps) {
+  const [openedLinkGroups, setOpenedLinkGroups] = useState([] as string[]);
   const links = pages.map((item: Page) => (
     <LinksGroup
       page={item}
@@ -20,6 +22,8 @@ export default function NavbarContents({
       icon={item.icon}
       setCurrentPage={setCurrentPage}
       key={item.navLinkText}
+      openedLinkGroups={openedLinkGroups}
+      setOpenedLinkGroups={setOpenedLinkGroups}
     />
   ));
 
