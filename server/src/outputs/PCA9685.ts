@@ -155,43 +155,16 @@ class PCA9685Output extends OutputBase {
     this.pca9685 = pca9685;
   }
 
-  async initializeAsync(): Promise<void> {
-    await this.loadCacheFromDatabaseAsync();
-    this.loadChartData();
-    await this.loadAutomationsAsync();
-  }
-
   executeState(): void {
-    switch (this.controlMode) {
-      case ControlMode.manual:
-        this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.manual.value}`,
-        );
-        this.#setPwm(this.state.manual.value);
-        break;
-
-      case ControlMode.automatic:
-        this.logger.verbose(
-          `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${this.state.automatic.value}`,
-        );
-        this.#setPwm(this.state.automatic.value);
-        break;
-    }
+    this.executeStateHelper((value) => {
+      this.pca9685.setDutyCycle(this.pin, value);
+    });
   }
 
   // Power down pin
   dispose = () => {
     this.pca9685.setDutyCycle(this.pin, 0);
   };
-
-  #setPwm(value: number): void {
-    if (!this.isPwm && value != 0 && value != 100) {
-      this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
-      return;
-    }
-    const calculatedOutputValue = (this.isInvertedPwm ? 100 - value : value) / 100;
-    this.pca9685.setDutyCycle(this.pin, calculatedOutputValue);
-  }
 }
 
 export { PCA9685, PCA9685Output };
