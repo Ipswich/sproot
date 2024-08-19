@@ -14,12 +14,12 @@ export function get(request: Request, response: Response): SuccessResponse | Err
   const sensorList = request.app.get("sensorList") as SensorList;
   let getSensorResponse: SuccessResponse | ErrorResponse;
 
-  if (request.params["id"] !== undefined) {
-    if (sensorList.sensorData[request.params["id"]]) {
+  if (request.params["sensorId"] !== undefined) {
+    if (sensorList.sensorData[request.params["sensorId"]]) {
       getSensorResponse = {
         statusCode: 200,
         content: {
-          data: [sensorList.sensorData[request.params["id"]]],
+          data: [sensorList.sensorData[request.params["sensorId"]]],
         },
         ...response.locals["defaultProperties"],
       };
@@ -29,7 +29,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Sensor with ID ${request.params["id"]} not found.`],
+          details: [`Sensor with ID ${request.params["sensorId"]} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -132,7 +132,7 @@ export async function updateAsync(
   const sensorList = request.app.get("sensorList") as SensorList;
   let updateSensorResponse: SuccessResponse | ErrorResponse;
 
-  const sensorId = parseInt(request.params["id"] ?? "");
+  const sensorId = parseInt(request.params["sensorId"] ?? "");
   if (isNaN(sensorId)) {
     updateSensorResponse = {
       statusCode: 400,
@@ -207,7 +207,7 @@ export async function deleteAsync(
   const sensorList = request.app.get("sensorList") as SensorList;
   let deleteSensorResponse: SuccessResponse | ErrorResponse;
 
-  const sensorId = parseInt(request.params["id"] ?? "");
+  const sensorId = parseInt(request.params["sensorId"] ?? "");
   if (isNaN(sensorId)) {
     deleteSensorResponse = {
       statusCode: 400,

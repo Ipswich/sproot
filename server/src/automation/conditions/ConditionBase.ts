@@ -1,4 +1,4 @@
-import { ICondition } from "@sproot/sproot-common/src/automation/ICondition";
+import { ICondition } from "@sproot/sproot-common/dist/automation/ICondition";
 import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
 

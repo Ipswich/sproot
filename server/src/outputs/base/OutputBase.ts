@@ -10,6 +10,7 @@ import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
 import AutomationManager from "../../automation/AutomationManager";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
+import { Automation } from "../../automation/Automation";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
@@ -113,6 +114,18 @@ export abstract class OutputBase implements IOutputBase {
     series: ChartSeries;
   } {
     return this.#chartData.get();
+  }
+
+  getAutomations(): Record<string, Automation> {
+    return this.#automationManager.automations;
+  }
+
+  async addAutomationAsync(automation: Automation) {
+    await this.#automationManager.addAsync(this.id, automation);
+  }
+
+  async updateAutomationAsync(automation: Automation) {
+    await this.#automationManager.updateAsync(this.id, automation);
   }
 
   async updateDataStoresAsync(): Promise<void> {

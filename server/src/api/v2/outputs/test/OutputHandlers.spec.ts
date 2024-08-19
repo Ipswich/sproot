@@ -63,7 +63,7 @@ describe("OutputHandlers.ts tests", () => {
         app: {
           get: (_dependency: string) => outputList,
         },
-        params: { id: 1 },
+        params: { outputId: 1 },
       } as unknown as Request;
 
       const success = get(mockRequest, mockResponse) as SuccessResponse;
@@ -99,7 +99,7 @@ describe("OutputHandlers.ts tests", () => {
           get: (_dependency: string) => outputList,
         },
         originalUrl: "/api/v2/outputs/-1",
-        params: { id: -1 },
+        params: { outputId: -1 },
       } as unknown as Request;
 
       const error = get(mockRequest, mockResponse) as ErrorResponse;
@@ -185,7 +185,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs",
-        params: { id: "string" },
+        params: { outputId: "string" },
         body: newOutput,
       } as unknown as Request;
 
@@ -230,7 +230,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs",
-        params: { id: 1 },
+        params: { outputId: 1 },
         body: newOutput,
       } as unknown as Request;
 
@@ -297,7 +297,7 @@ describe("OutputHandlers.ts tests", () => {
             }
           },
         },
-        params: { id: 1 },
+        params: { outputId: 1 },
         body: updatedOutput,
       } as unknown as Request;
 
@@ -379,7 +379,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs/-1",
-        params: { id: -1 },
+        params: { outputId: -1 },
         body: updatedOutput,
       } as unknown as Request;
 
@@ -421,7 +421,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs/1",
-        params: { id: 1 },
+        params: { outputId: 1 },
         body: updatedOutput,
       } as unknown as Request;
 
@@ -491,7 +491,7 @@ describe("OutputHandlers.ts tests", () => {
             }
           },
         },
-        params: { id: 1 },
+        params: { outputId: 1 },
       } as unknown as Request;
 
       const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
@@ -571,7 +571,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs/-1",
-        params: { id: -1 },
+        params: { outputId: -1 },
       } as unknown as Request;
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
@@ -612,7 +612,7 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/outputs/1",
-        params: { id: 1 },
+        params: { outputId: 1 },
       } as unknown as Request;
 
       sprootDB.deleteOutputAsync.rejects(new Error("DB Error"));

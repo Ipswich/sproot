@@ -8,6 +8,7 @@ import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
+import { Automation } from "../../automation/Automation";
 
 class OutputList {
   #sprootDB: ISprootDB;
@@ -99,6 +100,14 @@ class OutputList {
       : Object.values(this.#outputs).forEach((output) =>
           output.runAutomations(sensorList, this, now),
         );
+  }
+
+  getAutomations() {
+    const allAutomations = {} as Record<number, Record<string, Automation>>;
+    for (const output of Object.values(this.#outputs)) {
+      allAutomations[output.id] = output.getAutomations();
+    }
+    return allAutomations;
   }
 
   dispose(): void {

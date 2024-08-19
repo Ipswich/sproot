@@ -14,12 +14,12 @@ export function get(request: Request, response: Response): SuccessResponse | Err
   const outputList = request.app.get("outputList") as OutputList;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
-  if (request.params["id"] !== undefined) {
-    if (outputList.outputData[request.params["id"]]) {
+  if (request.params["outputId"] !== undefined) {
+    if (outputList.outputData[request.params["outputId"]]) {
       getOutputResponse = {
         statusCode: 200,
         content: {
-          data: [outputList.outputData[request.params["id"]]],
+          data: [outputList.outputData[request.params["outputId"]]],
         },
         ...response.locals["defaultProperties"],
       };
@@ -29,7 +29,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Output with ID ${request.params["id"]} not found.`],
+          details: [`Output with ID ${request.params["outputId"]} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -142,7 +142,7 @@ export async function updateAsync(
   const outputList = request.app.get("outputList") as OutputList;
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
-  const outputId = parseInt(request.params["id"] ?? "");
+  const outputId = parseInt(request.params["outputId"] ?? "");
   if (isNaN(outputId)) {
     updateOutputResponse = {
       statusCode: 400,
@@ -215,7 +215,7 @@ export async function deleteAsync(
   const outputList = request.app.get("outputList") as OutputList;
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 
-  const outputId = parseInt(request.params["id"] ?? "");
+  const outputId = parseInt(request.params["outputId"] ?? "");
   if (isNaN(outputId)) {
     deleteOutputResponse = {
       statusCode: 400,

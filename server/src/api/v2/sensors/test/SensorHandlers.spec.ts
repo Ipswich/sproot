@@ -52,7 +52,7 @@ describe("SensorHandlers.ts tests", () => {
         app: {
           get: (_dependency: string) => sensorList,
         },
-        params: { id: 1 },
+        params: { sensorId: 1 },
       } as unknown as Request;
 
       const success = get(mockRequest, mockResponse) as SuccessResponse;
@@ -88,7 +88,7 @@ describe("SensorHandlers.ts tests", () => {
           get: (_dependency: string) => sensorList,
         },
         originalUrl: "/api/v2/sensors/-1",
-        params: { id: "-1" },
+        params: { sensorId: "-1" },
       } as unknown as Request;
       const error = get(mockRequest, mockResponse) as ErrorResponse;
       assert.equal(error.statusCode, 404);
@@ -269,7 +269,7 @@ describe("SensorHandlers.ts tests", () => {
             }
           },
         },
-        params: { id: 1 },
+        params: { sensorId: 1 },
         body: updatedSensor,
       } as unknown as Request;
 
@@ -345,7 +345,7 @@ describe("SensorHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/sensors/-1",
-        params: { id: -1 },
+        params: { sensorId: -1 },
         body: updatedSensor,
       } as unknown as Request;
 
@@ -384,7 +384,7 @@ describe("SensorHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/sensors",
-        params: { id: 1 },
+        params: { sensorId: 1 },
         body: updatedSensor,
       } as unknown as Request;
 
@@ -449,7 +449,7 @@ describe("SensorHandlers.ts tests", () => {
             }
           },
         },
-        params: { id: 1 },
+        params: { sensorId: 1 },
       } as unknown as Request;
 
       const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
@@ -523,7 +523,7 @@ describe("SensorHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/sensors/-1",
-        params: { id: -1 },
+        params: { sensorId: -1 },
       } as unknown as Request;
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
@@ -561,7 +561,7 @@ describe("SensorHandlers.ts tests", () => {
           },
         },
         originalUrl: "/api/v2/sensors",
-        params: { id: 1 },
+        params: { sensorId: 1 },
       } as unknown as Request;
 
       sprootDB.deleteSensorAsync.rejects(new Error("DB Error"));

@@ -10,3 +10,12 @@ export interface ISDBCondition {
   operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual";
   comparisonValue: number;
 }
+
+export const ValidOperators = [
+  "equal",
+  "notEqual",
+  "greater",
+  "less",
+  "greaterOrEqual",
+  "lessOrEqual",
+] as const;

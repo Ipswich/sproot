@@ -15,7 +15,7 @@ export function setControlMode(
   response: Response,
 ): SuccessResponse | ErrorResponse {
   const outputList = request.app.get("outputList") as OutputList;
-  const outputId = String(request.params["id"]);
+  const outputId = String(request.params["outputId"]);
   const output = outputList.outputData[outputId];
   let controlModeResponse: SuccessResponse | ErrorResponse;
 
@@ -52,7 +52,7 @@ export function setControlMode(
       return controlModeResponse;
   }
 
-  outputList.executeOutputState(String(request.params["id"]));
+  outputList.executeOutputState(String(request.params["outputId"]));
   controlModeResponse = {
     statusCode: 200,
     content: {
@@ -71,7 +71,7 @@ export function setControlMode(
  */
 export function setManualState(request: Request, response: Response) {
   const outputList = request.app.get("outputList") as OutputList;
-  const outputId = String(request.params["id"]);
+  const outputId = String(request.params["outputId"]);
   const value = parseInt(request.body["value"]);
   const output = outputList.outputData[outputId];
   let manualStateResponse: SuccessResponse | ErrorResponse;
