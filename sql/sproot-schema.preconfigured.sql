@@ -21,6 +21,34 @@ CREATE TABLE IF NOT EXISTS `outputs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE `automations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `output_id` int(11) NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `value` int(11) NOT NULL,
+  `operator` varchar(6) NOT NULL,
+  `startTime` varchar(8) DEFAULT NULL,
+  `endTime` varchar(8) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `output_id` (`output_id`),
+  CONSTRAINT `automations_ibfk_2` FOREIGN KEY (`output_id`) REFERENCES `outputs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `output_automation_conditions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `automation_id` int(11) NOT NULL,
+  `type` varchar(6) NOT NULL,
+  `operator` varchar(16) NOT NULL,
+  `comparisonValue` int(11) NOT NULL,
+  `output_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `automation_id` (`automation_id`),
+  KEY `output_id` (`output_id`),
+  CONSTRAINT `output_automation_conditions_ibfk_1` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `output_automation_conditions_ibfk_2` FOREIGN KEY (`output_id`) REFERENCES `outputs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 CREATE TABLE IF NOT EXISTS `sensors` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -29,6 +57,22 @@ CREATE TABLE IF NOT EXISTS `sensors` (
   `address` varchar(64) DEFAULT NULL,
   `color` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `sensor_automation_conditions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `automation_id` int(11) NOT NULL,
+  `type` varchar(6) NOT NULL,
+  `operator` varchar(16) NOT NULL,
+  `comparisonValue` int(11) NOT NULL,
+  `sensor_id` int(11) NOT NULL,
+  `readingType` varchar(16) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `automation_id` (`automation_id`),
+  KEY `sensor_id` (`sensor_id`),
+  CONSTRAINT `sensor_automation_conditions_ibfk_1` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sensor_automation_conditions_ibfk_2` FOREIGN KEY (`sensor_id`) REFERENCES `sensors` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

@@ -158,6 +158,7 @@ class PCA9685Output extends OutputBase {
   async initializeAsync(): Promise<void> {
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
+    await this.loadAutomationsAsync();
   }
 
   executeState(): void {

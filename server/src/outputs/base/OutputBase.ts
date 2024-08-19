@@ -7,6 +7,9 @@ import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
+import AutomationManager from "../../automation/AutomationManager";
+import { SensorList } from "../../sensors/list/SensorList";
+import { OutputList } from "../list/OutputList";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
@@ -24,6 +27,7 @@ export abstract class OutputBase implements IOutputBase {
   #initialCacheLookback: number;
   #chartData: OutputChartData;
   #chartDataPointInterval: number;
+  #automationManager: AutomationManager;
 
   #updateMissCount = 0;
 
@@ -49,6 +53,7 @@ export abstract class OutputBase implements IOutputBase {
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
+    this.#automationManager = new AutomationManager(sprootDB);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
@@ -131,6 +136,20 @@ export abstract class OutputBase implements IOutputBase {
     }
   }
 
+  runAutomations(sensorList: SensorList, outputList: OutputList, now: Date): void {
+    const result = this.#automationManager.evaluate(sensorList, outputList, now);
+    if (result != null) {
+      this.state.setNewState(
+        {
+          value: result,
+          controlMode: ControlMode.automatic,
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        } as SDBOutputState,
+        ControlMode.automatic,
+      );
+    }
+  }
+
   protected addCurrentStateToCache(): void {
     this.#cache.addData(this.state.get());
     this.logger.info(
@@ -155,6 +174,10 @@ export abstract class OutputBase implements IOutputBase {
     this.logger.info(
       `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
     );
+  }
+
+  protected async loadAutomationsAsync(): Promise<void> {
+    await this.#automationManager.loadAsync(this.id);
   }
 
   #updateChartData(): void {

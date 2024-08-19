@@ -1,4 +1,4 @@
-import mysql2 from "mysql2/promise";
+import mysql2, { ResultSetHeader } from "mysql2/promise";
 
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
@@ -10,12 +10,148 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
 import { OutputBase } from "@sproot/sproot-server/src/outputs/base/OutputBase";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { ControlMode } from "@sproot/outputs/IOutputBase";
-
+import { SDBAutomation } from "@sproot/database/SDBAutomation";
+import { SDBOutputAutomationCondition } from "@sproot/database/SDBOutputAutomationCondition";
+import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomationCondition";
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
 
   constructor(connection: mysql2.Connection) {
     this.#connection = connection;
+  }
+  async getSensorAutomationConditionsAsync(
+    automationId: number,
+  ): Promise<SDBSensorAutomationCondition[]> {
+    const [rows] = await this.#connection.execute<SDBSensorAutomationCondition[]>(
+      "SELECT * FROM sensor_automation_conditions WHERE automation_id = ?",
+      [automationId],
+    );
+    return rows;
+  }
+  async addSensorAutomationConditionAsync(condition: SDBSensorAutomationCondition): Promise<void> {
+    await this.#connection.execute(
+      "INSERT INTO sensor_automation_conditions (automation_id, type, operator, comparisonValue, sensor_id, readingType) VALUES (?, ?, ?, ?, ?, ?)",
+      [
+        condition.automationId,
+        condition.type,
+        condition.operator,
+        condition.comparisonValue,
+        condition.sensorId,
+        condition.readingType,
+      ],
+    );
+  }
+  async updateSensorAutomationConditionAsync(
+    condition: SDBSensorAutomationCondition,
+  ): Promise<void> {
+    await this.#connection.execute(
+      "UPDATE sensor_automation_conditions SET automation_id = ?, type = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE id = ?",
+      [
+        condition.automationId,
+        condition.type,
+        condition.operator,
+        condition.comparisonValue,
+        condition.sensorId,
+        condition.readingType,
+        condition.id,
+      ],
+    );
+  }
+  async deleteSensorAutomationConditionAsync(conditionId: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM sensor_automation_conditions WHERE id = ?", [
+      conditionId,
+    ]);
+  }
+  async getOutputAutomationConditionsAsync(
+    automationId: number,
+  ): Promise<SDBOutputAutomationCondition[]> {
+    const [rows] = await this.#connection.execute<SDBOutputAutomationCondition[]>(
+      "SELECT * FROM output_automation_conditions WHERE automation_id = ?",
+      [automationId],
+    );
+    return rows;
+  }
+  async addOutputAutomationConditionAsync(condition: SDBOutputAutomationCondition): Promise<void> {
+    await this.#connection.execute(
+      "INSERT INTO output_automation_conditions (automation_id, type, operator, comparisonValue, output_id) VALUES (?, ?, ?, ?, ?)",
+      [
+        condition.automationId,
+        condition.type,
+        condition.operator,
+        condition.comparisonValue,
+        condition.outputId,
+      ],
+    );
+  }
+  async updateOutputAutomationConditionAsync(
+    condition: SDBOutputAutomationCondition,
+  ): Promise<void> {
+    await this.#connection.execute(
+      "UPDATE output_automation_conditions SET automation_id = ?, type = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE id = ?",
+      [
+        condition.automationId,
+        condition.type,
+        condition.operator,
+        condition.comparisonValue,
+        condition.outputId,
+        condition.id,
+      ],
+    );
+  }
+  async deleteOutputAutomationConditionAsync(conditionId: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM output_automation_conditions WHERE id = ?", [
+      conditionId,
+    ]);
+  }
+
+  async addAutomationAsync(automation: SDBAutomation): Promise<number> {
+    const result = await this.#connection.execute<ResultSetHeader>(
+      "INSERT INTO automations (name, output_id, value, operator, startTime, endTime) VALUES (?, ?, ?, ?, ?, ?)",
+      [
+        automation.name,
+        automation.outputId,
+        automation.value,
+        automation.operator,
+        automation.startTime,
+        automation.endTime,
+      ],
+    );
+    return result[0].insertId;
+  }
+
+  async updateAutomationAsync(automation: SDBAutomation): Promise<void> {
+    await this.#connection.execute(
+      "UPDATE automations SET name = ?, output_id = ?, value = ?, operator = ?, startTime = ?, endTime = ? WHERE id = ?",
+      [
+        automation.name,
+        automation.outputId,
+        automation.value,
+        automation.operator,
+        automation.startTime,
+        automation.endTime,
+        automation.id,
+      ],
+    );
+  }
+
+  async deleteAutomationAsync(automationId: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM automations WHERE id = ?", [automationId]);
+  }
+
+  async getAutomationsAsync(outputId: number): Promise<SDBAutomation[]> {
+    const [rows] = await this.#connection.execute<SDBAutomation[]>(
+      "SELECT * FROM automations WHERE output_id = ?",
+      [outputId],
+    );
+    return rows;
+  }
+
+  async getAutomationAsync(automationId: number): Promise<SDBAutomation[]> {
+    const [rows] = await this.#connection.execute<SDBAutomation[]>(
+      "SELECT * FROM automations WHERE id = ?",
+      [automationId],
+    );
+    return rows;
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {

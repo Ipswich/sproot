@@ -4,11 +4,12 @@ import { ConditionBase } from "./ConditionBase";
 export class OutputCondition extends ConditionBase {
   outputId: number;
   constructor(
+    id: number,
     outputId: number,
     operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual",
     rightHandSideComparison: number,
   ) {
-    super(operator, rightHandSideComparison);
+    super(id, operator, rightHandSideComparison);
     this.outputId = outputId;
   }
 

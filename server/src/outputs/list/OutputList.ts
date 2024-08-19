@@ -7,6 +7,7 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
 import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
+import { SensorList } from "../../sensors/list/SensorList";
 
 class OutputList {
   #sprootDB: ISprootDB;
@@ -89,7 +90,15 @@ class OutputList {
   executeOutputState(outputId?: string): void {
     outputId
       ? this.#outputs[outputId]?.executeState()
-      : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
+      : Object.values(this.#outputs).forEach((output) => output?.executeState());
+  }
+
+  runAutomations(sensorList: SensorList, now: Date, outputId?: number): void {
+    outputId
+      ? this.#outputs[outputId]?.runAutomations(sensorList, this, now)
+      : Object.values(this.#outputs).forEach((output) =>
+          output.runAutomations(sensorList, this, now),
+        );
   }
 
   dispose(): void {

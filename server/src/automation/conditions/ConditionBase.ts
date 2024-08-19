@@ -3,13 +3,16 @@ import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
 
 export abstract class ConditionBase implements ICondition {
+  id: number;
   rightHandSideComparison: number;
   operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual";
 
   constructor(
+    id: number,
     operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual",
     rightHandSideComparison: number,
   ) {
+    this.id = id;
     this.rightHandSideComparison = rightHandSideComparison;
     this.operator = operator;
   }

@@ -7,16 +7,15 @@ export class SensorCondition extends ConditionBase {
   readingType: ReadingType;
 
   constructor(
+    id: number,
     sensorId: number,
     readingType: ReadingType,
     operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual",
     rightHandSideComparison: number,
   ) {
-    super(operator, rightHandSideComparison);
+    super(id, operator, rightHandSideComparison);
     this.sensorId = sensorId;
     this.readingType = readingType;
-    this.rightHandSideComparison = rightHandSideComparison;
-    this.operator = operator;
   }
 
   evaluate(sensorList: SensorList): boolean {

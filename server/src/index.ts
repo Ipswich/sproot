@@ -71,6 +71,8 @@ const logger = setupLogger(app);
     logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
     //Add triggers and whatnot here.
 
+    outputList.runAutomations(sensorList, new Date());
+
     //Execute any changes made to state.
     outputList.executeOutputState();
   }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
