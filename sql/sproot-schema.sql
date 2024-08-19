@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `outputs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-CREATE TABLE `automations` (
+CREATE TABLE IF NOT EXISTS `automations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `output_id` int(11) NOT NULL,
   `name` varchar(64) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE `automations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-CREATE TABLE `output_automation_conditions` (
+CREATE TABLE IF NOT EXISTS `output_automation_conditions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `automation_id` int(11) NOT NULL,
   `type` varchar(6) NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `sensors` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-CREATE TABLE `sensor_automation_conditions` (
+CREATE TABLE IF NOT EXISTS `sensor_automation_conditions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `automation_id` int(11) NOT NULL,
   `type` varchar(6) NOT NULL,
