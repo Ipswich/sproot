@@ -65,14 +65,4 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-INSERT INTO `outputs` (`model`, `address`, `name`, `pin`, `isPwm`, `isInvertedPwm`) VALUES
-('pca9685',	'0x40',	'Relay #1',	0,	0,	0),
-('pca9685',	'0x40',	'Relay #2',	1,	0,	0),
-('pca9685',	'0x40',	'Relay #3',	2,	0,	0),
-('pca9685',	'0x40',	'Relay #4',	3,	0,	0),
-('pca9685',	'0x40',	'Pwm #1',	4,	1,	0),
-('pca9685',	'0x40',	'Pwm #2',	5,	1,	0),
-('pca9685',	'0x40',	'Pwm #3',	6,	1,	0),
-('pca9685',	'0x40',	'Pwm #4',	7,	1,	0);
-
 COMMIT;
