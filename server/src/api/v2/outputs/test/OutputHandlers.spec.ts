@@ -115,12 +115,12 @@ describe("OutputHandlers.ts tests", () => {
 
   describe("addAsync", () => {
     let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
-    let sensorList: sinon.SinonStubbedInstance<OutputList>;
+    let outputList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
       sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addSensorAsync.resolves();
-      sensorList = sinon.createStubInstance(OutputList);
-      sensorList.initializeOrRegenerateAsync.resolves();
+      sprootDB.addOutputAsync.resolves();
+      outputList = sinon.createStubInstance(OutputList);
+      outputList.initializeOrRegenerateAsync.resolves();
     });
 
     afterEach(() => {
@@ -154,7 +154,7 @@ describe("OutputHandlers.ts tests", () => {
               case "sprootDB":
                 return sprootDB;
               case "outputList":
-                return sensorList;
+                return outputList;
             }
           },
         },
@@ -167,7 +167,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.addOutputAsync.calledOnce);
-      assert.isTrue(sensorList.initializeOrRegenerateAsync.calledOnce);
+      assert.isTrue(outputList.initializeOrRegenerateAsync.calledOnce);
     });
 
     it("should return a 400 and details for each missing required field", async () => {
@@ -180,7 +180,7 @@ describe("OutputHandlers.ts tests", () => {
               case "sprootDB":
                 return sprootDB;
               case "outputList":
-                return sensorList;
+                return outputList;
             }
           },
         },
@@ -204,7 +204,7 @@ describe("OutputHandlers.ts tests", () => {
         "Missing required field: isInvertedPwm",
       ]);
       assert.isTrue(sprootDB.addOutputAsync.notCalled);
-      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+      assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -225,7 +225,7 @@ describe("OutputHandlers.ts tests", () => {
               case "sprootDB":
                 return sprootDB;
               case "outputList":
-                return sensorList;
+                return outputList;
             }
           },
         },
@@ -244,7 +244,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.url, "/api/v2/outputs");
       assert.deepEqual(error.error["details"], ["Failed to add output to database.", "DB Error"]);
       assert.isTrue(sprootDB.addOutputAsync.calledOnce);
-      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+      assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
     });
   });
 

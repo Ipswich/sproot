@@ -10,16 +10,16 @@ export class Automation implements IAutomation {
   name: string;
   value: number;
   rules: AutomationRules;
-  startTime?: string | undefined; //24 hour, e.g. "hh:mm" OR null
-  endTime?: string | undefined; //24 hour, e.g. "hh:mm" OR null
+  startTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
+  endTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
 
   constructor(
     id: number,
     name: string,
     value: number,
     conditions: AutomationRules,
-    startTime?: string,
-    endTime?: string,
+    startTime?: string | undefined | null,
+    endTime?: string | undefined | null,
   ) {
     this.id = id;
     this.name = name;
@@ -47,7 +47,7 @@ export class Automation implements IAutomation {
         return this.rules.evaluate(sensorList, outputList) ? this.value : null;
       }
     }
-    return null;
+    return null
   }
 }
 
@@ -77,6 +77,7 @@ export class AutomationRules implements IAutomationRules {
       if (condition instanceof OutputCondition) {
         return condition.evaluate(outputList);
       }
+      return false;
     };
 
     // If no conditions, obviously true.

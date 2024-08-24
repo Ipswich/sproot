@@ -9,6 +9,8 @@ import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomati
 import { ConditionBase } from "./conditions/ConditionBase";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { ReadingType } from "@sproot/sensors/ReadingType";
+import IAutomation from "@sproot/automation/IAutomation";
+import { ICondition } from "@sproot/automation/ICondition";
 
 export default class AutomationManager {
   #automations: Record<number, Automation>;
@@ -22,7 +24,13 @@ export default class AutomationManager {
   get automations() {
     return this.#automations;
   }
-
+/**
+ * If more than one automation evaluates to true, does nothing.
+ * @param sensorList 
+ * @param outputList 
+ * @param now 
+ * @returns 
+ */
   evaluate(sensorList: SensorList, outputList: OutputList, now: Date): number | null {
     const values = Object.values(this.#automations)
       .map((a) => a.evaluate(now, sensorList, outputList))
@@ -34,78 +42,79 @@ export default class AutomationManager {
     return {};
   }
 
-  async addAsync(outputId: number, automation: Automation) {
+  async addAsync(outputId: number, automation: IAutomation) {
     const sdbAutomation = {
       name: automation.name,
       outputId: outputId,
       value: automation.value,
       operator: automation.rules.operator,
-      startTime: automation.startTime,
-      endTime: automation.endTime,
+      startTime: automation.startTime || null,
+      endTime: automation.endTime || null,
     } as SDBAutomation;
-    // Add the automation to the database, and save the autoId it generates.
+    // Add the automation to the database, and save the autoId it generates (needed for adding rules to the database).
     const automationId = await this.#sprootDB.addAutomationAsync(sdbAutomation);
-
-    // That autoId is used as the key for tracking these internally
-    this.#automations[automationId] = automation;
 
     // And for associating the conditions with an automation. This helper function
     // abstracts the bulk of the work so that we only need to know the "type" of the condition
-    function addConditionToDatabase(
-      condition: ConditionBase,
-      type: string,
+    const addConditionToDatabase = (
+      condition: ICondition,
+      type: "allOf" | "anyOf" | "oneOf",
       sprootDB: ISprootDB,
-      promises: Promise<void>[],
-    ): void {
-      if (condition instanceof SensorCondition) {
+      rules: AutomationRules
+    ): Promise<number> | undefined => {
+      if ((condition as SensorCondition).sensorId && (condition as SensorCondition).readingType) {
         const sdbSensorCondition = {
           automationId,
           type,
           operator: condition.operator,
           comparisonValue: condition.rightHandSideComparison,
-          sensorId: condition.sensorId,
-          readingType: condition.readingType,
+          sensorId: (condition as SensorCondition).sensorId,
+          readingType: (condition as SensorCondition).readingType,
         } as SDBSensorAutomationCondition;
-        promises.push(sprootDB.addSensorAutomationConditionAsync(sdbSensorCondition));
+        return sprootDB.addSensorAutomationConditionAsync(sdbSensorCondition)
+          .then((value) => rules[type].push(new SensorCondition(value, (condition as SensorCondition).sensorId, (condition as SensorCondition).readingType, condition.operator, condition.rightHandSideComparison)));
       }
-      if (condition instanceof OutputCondition) {
+      if ((condition as OutputCondition).outputId) {
         const sdbOutputCondition = {
           automationId,
           type,
           operator: condition.operator,
           comparisonValue: condition.rightHandSideComparison,
-          outputId: condition.outputId,
+          outputId: (condition as OutputCondition).outputId,
         } as SDBOutputAutomationCondition;
-        promises.push(sprootDB.addOutputAutomationConditionAsync(sdbOutputCondition));
+        return sprootDB.addOutputAutomationConditionAsync(sdbOutputCondition)
+          .then((value) => rules[type].push(new OutputCondition(value, (condition as OutputCondition).outputId, condition.operator, condition.rightHandSideComparison)));
       }
     }
 
+    //Create an empty set of rules
+    const rules = new AutomationRules(automation.rules.operator, [], [], []);
     // Lot of database queries could happen here, so batch them together rather than waiting for them
     // to complete serially.
-    const promises: Promise<void>[] = [];
+    const promises: (Promise<number> | undefined)[] = [];
     for (const condition of Object.values(automation.rules.allOf)) {
-      addConditionToDatabase(condition, "allOf", this.#sprootDB, promises);
+      promises.push(addConditionToDatabase(condition, "allOf", this.#sprootDB, rules));
     }
     for (const condition of Object.values(automation.rules.anyOf)) {
-      addConditionToDatabase(condition, "anyOf", this.#sprootDB, promises);
+      promises.push(addConditionToDatabase(condition, "anyOf", this.#sprootDB, rules));
     }
     for (const condition of Object.values(automation.rules.oneOf)) {
-      addConditionToDatabase(condition, "oneOf", this.#sprootDB, promises);
+      promises.push(addConditionToDatabase(condition, "oneOf", this.#sprootDB, rules));
     }
 
     // Run the batch of queries.
     await Promise.allSettled(promises);
+
+    // That autoId is used as the key for tracking these internally
+    this.#automations[automationId] = new Automation(automationId, automation.name, automation.value, rules, automation.startTime, automation.endTime);
   }
 
-  async removeAsync(id: number) {
+  async deleteAsync(id: number) {
     delete this.#automations[id];
     await this.#sprootDB.deleteAutomationAsync(id);
   }
 
-  async updateAsync(outputId: number, automation: Automation) {
-    // Update the local one
-    this.#automations[automation.id] = automation;
-
+  async updateAsync(outputId: number, automation: IAutomation) {
     // Update the database one
     const sdbAutomation = {
       id: automation.id,
@@ -113,59 +122,99 @@ export default class AutomationManager {
       outputId: outputId,
       value: automation.value,
       operator: automation.rules.operator,
-      startTime: automation.startTime,
-      endTime: automation.endTime,
+      startTime: automation.startTime ?? null,
+      endTime: automation.endTime ?? null,
     } as SDBAutomation;
     await this.#sprootDB.updateAutomationAsync(sdbAutomation);
 
     // And for associating the conditions with an automation. This helper function
     // abstracts the bulk of the work so that we only need to know the "type" of the condition
-    function updateConditionInDatabase(
-      condition: ConditionBase,
-      type: string,
+    function updateOrAddConditionInDatabase(
+      condition: ICondition,
+      type: "allOf" | "anyOf" | "oneOf",
       sprootDB: ISprootDB,
-      promises: Promise<void>[],
-    ): void {
-      if (condition instanceof SensorCondition) {
+      rules: AutomationRules,
+      outputIds: number[],
+      sensorIds: number[]
+    ): Promise<void | number> | undefined {
+      if ((condition as SensorCondition).sensorId && (condition as SensorCondition).readingType) {
         const sdbSensorCondition = {
-          id: condition.id,
           automationId: automation.id,
           type,
           operator: condition.operator,
           comparisonValue: condition.rightHandSideComparison,
-          sensorId: condition.sensorId,
-          readingType: condition.readingType,
+          sensorId: (condition as SensorCondition).sensorId,
+          readingType: (condition as SensorCondition).readingType,
         } as SDBSensorAutomationCondition;
-        promises.push(sprootDB.updateSensorAutomationConditionAsync(sdbSensorCondition));
+        //If it has an ID, update, otherwise, add.
+        if ((condition as SensorCondition).id) {
+          sdbSensorCondition.id = (condition as SensorCondition).id;
+          return sprootDB.updateSensorAutomationConditionAsync(sdbSensorCondition)
+            .then(() => {
+              sensorIds.push((condition as SensorCondition).id)
+              rules[type].push(new SensorCondition((condition as SensorCondition).id, (condition as SensorCondition).sensorId, (condition as SensorCondition).readingType, condition.operator, condition.rightHandSideComparison))
+            });
+        } else {
+          return sprootDB.addSensorAutomationConditionAsync(sdbSensorCondition)
+            .then((value) => {
+              sensorIds.push(value)
+              rules[type].push(new SensorCondition(value, (condition as SensorCondition).sensorId, (condition as SensorCondition).readingType, condition.operator, condition.rightHandSideComparison))
+            });
+        }
       }
-      if (condition instanceof OutputCondition) {
+      if ((condition as OutputCondition).outputId) {
         const sdbOutputCondition = {
-          id: condition.id,
           automationId: automation.id,
           type,
           operator: condition.operator,
           comparisonValue: condition.rightHandSideComparison,
-          outputId: condition.outputId,
+          outputId: (condition as OutputCondition).outputId,
         } as SDBOutputAutomationCondition;
-        promises.push(sprootDB.updateOutputAutomationConditionAsync(sdbOutputCondition));
+        //If it has an ID, update, otherwise, add.
+        if ((condition as OutputCondition).id) {
+          sdbOutputCondition.id = (condition as OutputCondition).id;
+          return sprootDB.updateOutputAutomationConditionAsync(sdbOutputCondition)
+            .then(() => {
+              outputIds.push((condition as OutputCondition).id)
+              rules[type].push(new OutputCondition((condition as OutputCondition).id, (condition as OutputCondition).outputId, condition.operator, condition.rightHandSideComparison))
+            });
+        } else {
+          return sprootDB.addOutputAutomationConditionAsync(sdbOutputCondition)
+            .then((value) => {
+              outputIds.push(value)
+              rules[type].push(new OutputCondition(value, (condition as OutputCondition).outputId, condition.operator, condition.rightHandSideComparison))
+            });
+        }
       }
     }
 
     // Lot of database queries could happen here, so batch them together rather than waiting for them
     // to complete serially.
-    const promises: Promise<void>[] = [];
+    const rules = new AutomationRules(automation.rules.operator, [], [], []);
+    const outputIds: number[] = [];
+    const sensorIds: number[] = [];
+    const promises: (Promise<void | number> | undefined)[] = [];
     for (const condition of Object.values(automation.rules.allOf)) {
-      updateConditionInDatabase(condition, "allOf", this.#sprootDB, promises);
+      promises.push(updateOrAddConditionInDatabase(condition, "allOf", this.#sprootDB, rules, outputIds, sensorIds));
     }
     for (const condition of Object.values(automation.rules.anyOf)) {
-      updateConditionInDatabase(condition, "anyOf", this.#sprootDB, promises);
+      promises.push(updateOrAddConditionInDatabase(condition, "anyOf", this.#sprootDB, rules, outputIds, sensorIds));
     }
     for (const condition of Object.values(automation.rules.oneOf)) {
-      updateConditionInDatabase(condition, "oneOf", this.#sprootDB, promises);
+      promises.push(updateOrAddConditionInDatabase(condition, "oneOf", this.#sprootDB, rules, outputIds, sensorIds));
     }
 
-    // Run the batch of queries.
+    // Run the batch of add and update queries.
     await Promise.allSettled(promises);
+
+    // Delete IDs no longer associated with this automation
+    await Promise.allSettled([
+      this.#sprootDB.deleteSensorAutomationConditionsExceptAsync(automation.id, sensorIds),
+      this.#sprootDB.deleteOutputAutomationConditionsExceptAsync(automation.id, outputIds)
+    ])
+
+    // Update the local one
+    this.#automations[automation.id] = new Automation(automation.id, automation.name, automation.value, rules, automation.startTime, automation.endTime);
   }
 
   async loadAsync(outputId: number) {
@@ -219,12 +268,12 @@ export default class AutomationManager {
       );
 
       // Then map them by their types "types"
-      const outputAnyOf = createOutputsConditionsByType(allOutputConditions, "anyOf");
       const outputAllOf = createOutputsConditionsByType(allOutputConditions, "allOf");
+      const outputAnyOf = createOutputsConditionsByType(allOutputConditions, "anyOf");
       const outputOneOf = createOutputsConditionsByType(allOutputConditions, "oneOf");
 
-      const sensorAnyOf = createSensorConditionsByType(allSensorConditions, "anyOf");
       const sensorAllOf = createSensorConditionsByType(allSensorConditions, "allOf");
+      const sensorAnyOf = createSensorConditionsByType(allSensorConditions, "anyOf");
       const sensorOneOf = createSensorConditionsByType(allSensorConditions, "oneOf");
 
       // Then combine and create the rule set
@@ -245,8 +294,8 @@ export default class AutomationManager {
         automation.name,
         automation.value,
         automationRules,
-        automation.startTime ?? undefined,
-        automation.endTime ?? undefined,
+        automation.startTime ?? null,
+        automation.endTime ?? null,
       );
     }
   }

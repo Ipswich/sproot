@@ -3,15 +3,11 @@ import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
-
-import {
-  get as getAutomations,
-  addAsync as addAutomationAsync,
-  updateAsync as updateAutomationAsync,
-  deleteAsync as deleteAutomationAsync,
-} from "./automations/handlers/AutomationHandlers";
+import automationsRouter from "./automations/AutomationsRouter";
 
 const router = express.Router();
+
+automationsRouter(router);
 
 router.get("/supported-models", (_req: Request, res: Response) => {
   const response = supportedModelsHandler(res);
@@ -71,42 +67,6 @@ router.put("/:outputId/control-mode", (req: Request, res: Response) => {
 
 router.put("/:outputId/manual-state", (req: Request, res: Response) => {
   const response = setManualState(req, res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-// Automations
-router.get("/:outputId/automations", (req: Request, res: Response) => {
-  const response = getAutomations(req, res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.get("/:outputId/automations/:automationId", (req: Request, res: Response) => {
-  const response = getAutomations(req, res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.post("/:outputId/automations", async (req: Request, res: Response) => {
-  const response = await addAutomationAsync(req, res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.patch("/:outputId/automations/:automationId", async (req: Request, res: Response) => {
-  const response = await updateAutomationAsync(req, res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.delete("/:outputId/automations/:automationId", async (req: Request, res: Response) => {
-  const response = await deleteAutomationAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

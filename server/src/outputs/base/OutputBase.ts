@@ -11,6 +11,7 @@ import AutomationManager from "../../automation/AutomationManager";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { Automation } from "../../automation/Automation";
+import IAutomation from "@sproot/automation/IAutomation";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
@@ -120,12 +121,16 @@ export abstract class OutputBase implements IOutputBase {
     return this.#automationManager.automations;
   }
 
-  async addAutomationAsync(automation: Automation) {
+  async addAutomationAsync(automation: IAutomation) {
     await this.#automationManager.addAsync(this.id, automation);
   }
 
   async updateAutomationAsync(automation: Automation) {
     await this.#automationManager.updateAsync(this.id, automation);
+  }
+
+  async deleteAutomationAsync(automationId: number){
+    await this.#automationManager.deleteAsync(automationId);
   }
 
   async updateDataStoresAsync(): Promise<void> {
@@ -209,7 +214,7 @@ export abstract class OutputBase implements IOutputBase {
       }
       const validatedValue = (this.isInvertedPwm ? 100 - value : value) / 100;
       this.logger.verbose(
-        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
+        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue * 100}`,
       );
       return validatedValue;
     };

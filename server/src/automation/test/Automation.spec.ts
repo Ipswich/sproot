@@ -93,6 +93,11 @@ describe("Automation.ts tests", () => {
         assert.isNull(automation.evaluate(early, sensorListMock, outputListMock));
         assert.isNull(automation.evaluate(late, sensorListMock, outputListMock));
 
+        //yeet allOfs
+        conditions.allOf = [];
+        assert.isNull(automation.evaluate(early, sensorListMock, outputListMock));
+        assert.isNull(automation.evaluate(late, sensorListMock, outputListMock));
+
         //AND (reset)
         conditions = new AutomationRules(
           "and",
@@ -240,6 +245,13 @@ describe("Automation.ts tests", () => {
         assert.isNull(automation.evaluate(middle, sensorListMock, outputListMock));
         assert.isNull(automation.evaluate(late, sensorListMock, outputListMock));
 
+        //yeet allOfs
+        conditions.allOf = [];
+        assert.isNull(automation.evaluate(early, sensorListMock, outputListMock));
+        assert.isNull(automation.evaluate(start, sensorListMock, outputListMock));
+        assert.isNull(automation.evaluate(middle, sensorListMock, outputListMock));
+        assert.isNull(automation.evaluate(late, sensorListMock, outputListMock));
+
         //AND (reset)
         conditions = new AutomationRules(
           "and",
@@ -365,6 +377,10 @@ describe("Automation.ts tests", () => {
 
         // add another true oneOf
         conditions.oneOf.push(new OutputCondition(3, 1, "lessOrEqual", 51));
+        assert.isNull(automation.evaluate(now, sensorListMock, outputListMock));
+
+        //yeet allOfs
+        conditions.allOf = [];
         assert.isNull(automation.evaluate(now, sensorListMock, outputListMock));
 
         //AND (reset)

@@ -23,13 +23,13 @@ class SprootDB implements ISprootDB {
     automationId: number,
   ): Promise<SDBSensorAutomationCondition[]> {
     const [rows] = await this.#connection.execute<SDBSensorAutomationCondition[]>(
-      "SELECT * FROM sensor_automation_conditions WHERE automation_id = ?",
+      "SELECT id, automation_id as automationId, type, operator, comparisonValue, sensor_id as sensorId, readingType FROM sensor_automation_conditions WHERE automation_id = ?",
       [automationId],
     );
     return rows;
   }
-  async addSensorAutomationConditionAsync(condition: SDBSensorAutomationCondition): Promise<void> {
-    await this.#connection.execute(
+  async addSensorAutomationConditionAsync(condition: SDBSensorAutomationCondition): Promise<number> {
+    return (await this.#connection.execute<ResultSetHeader>(
       "INSERT INTO sensor_automation_conditions (automation_id, type, operator, comparisonValue, sensor_id, readingType) VALUES (?, ?, ?, ?, ?, ?)",
       [
         condition.automationId,
@@ -39,7 +39,7 @@ class SprootDB implements ISprootDB {
         condition.sensorId,
         condition.readingType,
       ],
-    );
+    ))[0].insertId;
   }
   async updateSensorAutomationConditionAsync(
     condition: SDBSensorAutomationCondition,
@@ -62,17 +62,27 @@ class SprootDB implements ISprootDB {
       conditionId,
     ]);
   }
+  async deleteSensorAutomationConditionsExceptAsync(automationId: number, exceptConditionIds: number[]): Promise<void> {
+    const questionMarkString = exceptConditionIds.map(_id => "?").join(", ")
+    await this.#connection.execute(
+      `DELETE FROM sensor_automation_conditions WHERE automation_id = ? AND id NOT IN (${questionMarkString})`,
+      [
+        automationId,
+        ...exceptConditionIds
+      ],
+    )
+  }
   async getOutputAutomationConditionsAsync(
     automationId: number,
   ): Promise<SDBOutputAutomationCondition[]> {
     const [rows] = await this.#connection.execute<SDBOutputAutomationCondition[]>(
-      "SELECT * FROM output_automation_conditions WHERE automation_id = ?",
+      "SELECT id, automation_id as automationId, type, operator, comparisonValue, output_id as outputId FROM output_automation_conditions WHERE automation_id = ?",
       [automationId],
     );
     return rows;
   }
-  async addOutputAutomationConditionAsync(condition: SDBOutputAutomationCondition): Promise<void> {
-    await this.#connection.execute(
+  async addOutputAutomationConditionAsync(condition: SDBOutputAutomationCondition): Promise<number> {
+    return (await this.#connection.execute<ResultSetHeader>(
       "INSERT INTO output_automation_conditions (automation_id, type, operator, comparisonValue, output_id) VALUES (?, ?, ?, ?, ?)",
       [
         condition.automationId,
@@ -81,7 +91,7 @@ class SprootDB implements ISprootDB {
         condition.comparisonValue,
         condition.outputId,
       ],
-    );
+    ))[0].insertId;
   }
   async updateOutputAutomationConditionAsync(
     condition: SDBOutputAutomationCondition,
@@ -103,6 +113,16 @@ class SprootDB implements ISprootDB {
       conditionId,
     ]);
   }
+  async deleteOutputAutomationConditionsExceptAsync(automationId: number, exceptConditionIds: number[]): Promise<void> {
+    const questionMarkString = exceptConditionIds.map(_id => "?").join(", ")
+    await this.#connection.execute(
+      `DELETE FROM output_automation_conditions WHERE automation_id = ? AND id NOT IN (${questionMarkString})`,
+      [
+        automationId,
+        ...exceptConditionIds
+      ],
+    )
+  }
 
   async addAutomationAsync(automation: SDBAutomation): Promise<number> {
     const result = await this.#connection.execute<ResultSetHeader>(
@@ -112,8 +132,8 @@ class SprootDB implements ISprootDB {
         automation.outputId,
         automation.value,
         automation.operator,
-        automation.startTime,
-        automation.endTime,
+        automation.startTime ?? null,
+        automation.endTime ?? null,
       ],
     );
     return result[0].insertId;
@@ -127,8 +147,8 @@ class SprootDB implements ISprootDB {
         automation.outputId,
         automation.value,
         automation.operator,
-        automation.startTime,
-        automation.endTime,
+        automation.startTime ?? null,
+        automation.endTime ?? null,
         automation.id,
       ],
     );

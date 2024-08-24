@@ -105,8 +105,12 @@ class OutputList {
   getAutomations() {
     const allAutomations = {} as Record<number, Record<string, Automation>>;
     for (const output of Object.values(this.#outputs)) {
-      allAutomations[output.id] = output.getAutomations();
+      const automations = output.getAutomations();
+      if (Object.keys(automations).length > 0) {
+        allAutomations[output.id] = automations;
+      }
     }
+    
     return allAutomations;
   }
 
