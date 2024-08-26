@@ -172,6 +172,15 @@ export abstract class OutputBase implements IOutputBase {
         } as SDBOutputState,
         ControlMode.automatic,
       );
+    } else {
+      this.state.setNewState(
+        {
+          value: 0,
+          controlMode: ControlMode.automatic,
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        } as SDBOutputState,
+        ControlMode.automatic,
+      );
     }
   }
 
