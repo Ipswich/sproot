@@ -45,14 +45,14 @@ class SprootDB implements ISprootDB {
     condition: SDBSensorAutomationCondition,
   ): Promise<void> {
     await this.#connection.execute(
-      "UPDATE sensor_automation_conditions SET automation_id = ?, type = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE id = ?",
+      "UPDATE sensor_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE automation_id = ? AND id = ?",
       [
-        condition.automationId,
         condition.type,
         condition.operator,
         condition.comparisonValue,
         condition.sensorId,
         condition.readingType,
+        condition.automationId,
         condition.id,
       ],
     );
@@ -97,13 +97,13 @@ class SprootDB implements ISprootDB {
     condition: SDBOutputAutomationCondition,
   ): Promise<void> {
     await this.#connection.execute(
-      "UPDATE output_automation_conditions SET automation_id = ?, type = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE id = ?",
+      "UPDATE output_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE automation_id = ? AND id = ?",
       [
-        condition.automationId,
         condition.type,
         condition.operator,
         condition.comparisonValue,
         condition.outputId,
+        condition.automationId,
         condition.id,
       ],
     );

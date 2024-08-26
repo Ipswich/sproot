@@ -455,7 +455,7 @@ paths:
                                 id:
                                   type: array
                                   items:
-                                    $ref: "#/components/schemas/Automation"
+                                    $ref: "#/components/schemas/AutomationWithRulesIds"
         401:
           description: "Unauthorized"
           content:
@@ -951,7 +951,7 @@ paths:
                         properties:
                           data:
                             items:
-                              $ref: "#/components/schemas/Automation"
+                              $ref: "#/components/schemas/AutomationWithRulesIds"
         401:
           description: "Unauthorized"
           content:
@@ -1008,7 +1008,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/Automation"
+                            $ref: "#/components/schemas/AutomationWithRulesIds"
         400:
           description: "Bad request"
           content:
@@ -1115,7 +1115,7 @@ paths:
                         properties:
                           data:
                             items:
-                              $ref: "#/components/schemas/Automation"
+                              $ref: "#/components/schemas/AutomationWithRulesIds"
         401:
           description: "Unauthorized"
           content:
@@ -1183,7 +1183,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateAutomation"
+              $ref: "#/components/schemas/AutomationWithRulesIds"
       responses:
         200:
           description: "Automation updated"
@@ -1198,7 +1198,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/Automation"
+                            $ref: "#/components/schemas/AutomationWithRulesIds"
         400:
           description: "Bad request"
           content:
@@ -2397,17 +2397,39 @@ components:
         logTime:
           type: string
           example: "2021-01-01T00:00:00.000Z"
-
-    UpdateAutomation:
-      allOf:
-        - required:
-            - id
-        - properties:
-            id:
-              type: number
-              example: 1
-        - $ref: "#/components/schemas/Automation"
           
+    AutomationWithRulesIds:
+      description: >
+        An automation object that is stored in the database. Contains all of the information needed to
+        create an automation, including a name, the automation value, and the conditions themselves. Optionally, start and end times (24 hour) can be provided to
+        trigger an event only during a certain time frame (if both are provider), or at an exact time (if
+        only startTime is provided).
+      type: object
+      required:
+        - "name"
+        - "value"
+        - "rules"
+      properties:
+        id:
+          readOnly: true
+          type: number
+          example: 1
+        name:
+          type: string
+          example: "Turn on light"
+        value:
+          type: number
+          example: 50
+        rules:
+          $ref: "#/components/schemas/AutomationRulesWithId"
+        startTime:
+          type: string
+          nullable: true
+          example: "6:00"
+        endTime:
+          type: string
+          nullable: true
+          example: "18:00"
 
     Automation:
       description: >
@@ -2420,11 +2442,7 @@ components:
         - "name"
         - "value"
         - "rules"
-      
       properties:
-        id: 
-          type: number
-          example: 1
         name:
           type: string
           example: "Turn on light"
@@ -2441,7 +2459,42 @@ components:
           type: string
           nullable: true
           example: "18:00"
-      
+
+    AutomationRulesWithId:
+      description: >
+        These rules define when an automation will run. They're composed of an operator that details how the
+        lists of conditions will be evaluated, allOf, anyOf, and oneOf. The operator must be either "and"
+        or "or".
+      type: object
+      required:
+        - "operator"
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        operator:
+          type: string
+          example: "or"
+        allOf:
+          type: array
+          items:
+            anyOf:
+              - $ref: "#/components/schemas/SensorConditionWithId"
+              - $ref: "#/components/schemas/OutputConditionWithId"
+        anyOf:
+          type: array
+          items:
+            anyOf:
+              - $ref: "#/components/schemas/SensorConditionWithId"
+              - $ref: "#/components/schemas/OutputConditionWithId"
+        oneOf:
+          type: array
+          items:
+            anyOf:
+              - $ref: "#/components/schemas/SensorConditionWithId"
+              - $ref: "#/components/schemas/OutputConditionWithId"
+
+
     AutomationRules:
       description: >
         These rules define when an automation will run. They're composed of an operator that details how the
@@ -2454,14 +2507,9 @@ components:
         - "anyOf"
         - "oneOf"
       properties:
-        id:
-          type: number
-          example: 1
         operator:
           type: string
           example: "or"
-        test:
-          type: string
         allOf:
           type: array
           items:
@@ -2489,15 +2537,23 @@ components:
         - rightHandSideComparison
         - operator
       properties:
-        id:
-          type: number
-          example: 1
         rightHandSideComparison:
           type: number
           example: 23
         operator:
           type: string
           example: "greater"
+
+    SensorConditionWithId:
+      description: >
+        Defines a condition based on a sensor value. 
+      allOf:
+        - type: object
+        - properties:
+            id:
+              type: number
+              example: 1
+        - $ref: "#/components/schemas/SensorCondition"
       
     SensorCondition:
       description: >
@@ -2515,6 +2571,17 @@ components:
             readingType:
               type: string
               example: "temperature"
+
+    OutputConditionWithId:
+      description: >
+        Defines a condition based on an output value.
+      allOf:
+        - type: object
+        - properties:
+            id:
+              type: number
+              example: 1
+        - $ref: "#/components/schemas/OutputCondition"
 
     OutputCondition:
       description: >

@@ -179,11 +179,12 @@ export async function addAsync(request: Request, response: Response) {
     }
 
     try {
-      await output.addAutomationAsync(newAutomation);
+      const createdAutomation = await output.addAutomationAsync(newAutomation);
+      console.log(createdAutomation)
       addAutomationResponse = {
         statusCode: 201,
         content: {
-          data: newAutomation,
+          data: createdAutomation,
         },
         ...response.locals["defaultProperties"],
       };

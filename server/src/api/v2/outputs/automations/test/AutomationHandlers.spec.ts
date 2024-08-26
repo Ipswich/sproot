@@ -178,8 +178,8 @@ describe("AutomationHandlers.ts", () => {
           getAutomations: function () {
             return {}
           },
-          addAutomationAsync: function () {
-            return Promise.resolve()
+          addAutomationAsync: function (automation: Automation) {
+            return Promise.resolve({ ...automation, id: 1 } as unknown as Automation);
           }
         }
       });
@@ -229,7 +229,7 @@ describe("AutomationHandlers.ts", () => {
 
       const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
-      assert.deepEqual(success.content?.data, { ...newAutomation, startTime: null, endTime: null });
+      assert.deepEqual(success.content?.data, { id: 1, ...newAutomation, startTime: null, endTime: null });
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
     });

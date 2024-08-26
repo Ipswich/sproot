@@ -42,7 +42,7 @@ export default class AutomationManager {
     return {};
   }
 
-  async addAsync(outputId: number, automation: IAutomation) {
+  async addAsync(outputId: number, automation: IAutomation): Promise<Automation> {
     const sdbAutomation = {
       name: automation.name,
       outputId: outputId,
@@ -107,6 +107,7 @@ export default class AutomationManager {
 
     // That autoId is used as the key for tracking these internally
     this.#automations[automationId] = new Automation(automationId, automation.name, automation.value, rules, automation.startTime, automation.endTime);
+    return this.#automations[automationId];
   }
 
   async deleteAsync(id: number) {

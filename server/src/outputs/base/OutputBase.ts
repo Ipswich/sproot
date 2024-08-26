@@ -121,11 +121,11 @@ export abstract class OutputBase implements IOutputBase {
     return this.#automationManager.automations;
   }
 
-  async addAutomationAsync(automation: IAutomation) {
-    await this.#automationManager.addAsync(this.id, automation);
+  async addAutomationAsync(automation: IAutomation): Promise<Automation> {
+    return await this.#automationManager.addAsync(this.id, automation);
   }
 
-  async updateAutomationAsync(automation: Automation) {
+  async updateAutomationAsync(automation: IAutomation) {
     await this.#automationManager.updateAsync(this.id, automation);
   }
 
