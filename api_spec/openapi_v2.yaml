@@ -3101,7 +3101,6 @@ components:
           type: number
           example: 50
         operator:
-          writeOnly: true
           type: string
           example: "or"
         rules:
@@ -3131,14 +3130,10 @@ components:
         or "or".
       type: object
       required:
-        - "operator"
         - "allOf"
         - "anyOf"
         - "oneOf"
       properties:
-        operator:
-          type: string
-          example: "or"
         allOf:
           type: array
           items:

@@ -37,7 +37,7 @@ export default function AutomationsRouter(router: Router): Router {
     return;
   });
 
-  router.put("/:outputId/automations/:automationId", async (req: Request, res: Response) => {
+  router.patch("/:outputId/automations/:automationId", async (req: Request, res: Response) => {
     const response = await updateAsync(req, res);
 
     res.status(response.statusCode).json(response);

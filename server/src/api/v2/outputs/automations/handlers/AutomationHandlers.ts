@@ -1,9 +1,8 @@
 import { OutputList } from "../../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-// import { Automation } from "../../../../../automation/Automation";
-import { ValidOperators } from "@sproot/sproot-common/dist/automation/ICondition";
 import IAutomation from "@sproot/automation/IAutomation";
+import { SDBAutomation } from "@sproot/database/SDBAutomation";
 
 /**
  * Possible statusCodes: 200, 404
@@ -107,10 +106,10 @@ export async function addAsync(request: Request, response: Response) {
     const newAutomation = {
       name: request.body["name"],
       value: request.body["value"],
-      rules: request.body["rules"],
+      operator: request.body["operator"],
       startTime: request.body["startTime"] ?? null,
       endTime: request.body["endTime"] ?? null,
-    } as IAutomation;
+    } as SDBAutomation;
     const missingFields: Array<string> = [];
     if (newAutomation.name == null) {
       missingFields.push("Missing required field: name");
@@ -122,47 +121,10 @@ export async function addAsync(request: Request, response: Response) {
     } else if (!output.isPwm && newAutomation.value != 0 && newAutomation.value != 100){
       missingFields.push("Invalid value (output is not PWM): must be a number equal to 0 and 100");
     }
-    if (newAutomation.rules == null) {
-      missingFields.push("Missing required field: rules");
-    } else {
-      if (newAutomation.rules["allOf"] == null) {
-        missingFields.push("Missing required field: rules.allOf");
-      } else {
-        for (const condition of newAutomation.rules.allOf) {
-          if (!ValidOperators.includes(condition.operator)) {
-            missingFields.push(
-              `A condition in 'rules.allOf' contains an invalid operator: ${condition.operator}`,
-            );
-          }
-        }
-      }
-      if (newAutomation.rules["anyOf"] == null) {
-        missingFields.push("Missing required field: rules.anyOf");
-      } else {
-        for (const condition of newAutomation.rules.anyOf) {
-          if (!ValidOperators.includes(condition.operator)) {
-            missingFields.push(
-              `A condition in 'rules.anyOf' contains an invalid operator: ${condition.operator}`,
-            );
-          }
-        }
-      }
-      if (newAutomation.rules["oneOf"] == null) {
-        missingFields.push("Missing required field: rules.oneOf");
-      } else {
-        for (const condition of newAutomation.rules.oneOf) {
-          if (!ValidOperators.includes(condition.operator)) {
-            missingFields.push(
-              `A condition in 'rules.oneOf'contains an invalid operator: ${condition.operator}`,
-            );
-          }
-        }
-      }
-      if (newAutomation.rules["operator"] == null) {
-        missingFields.push("Missing required field: rules.operator");
-      } else if (newAutomation.rules.operator != "and" && newAutomation.rules.operator != "or") {
-        missingFields.push("Invalid value for rules.operator: must be 'and' or 'or'");
-      }
+    if (newAutomation.operator == null) {
+      missingFields.push("Missing required field: operator");
+    } else if (newAutomation.operator != "and" && newAutomation.operator != "or") {
+      missingFields.push("Invalid value for operator: must be 'and' or 'or'");
     }
 
     if (missingFields.length > 0) {
@@ -180,7 +142,6 @@ export async function addAsync(request: Request, response: Response) {
 
     try {
       const createdAutomation = await output.addAutomationAsync(newAutomation);
-      console.log(createdAutomation)
       addAutomationResponse = {
         statusCode: 201,
         content: {
@@ -285,9 +246,10 @@ export async function updateAsync(request: Request, response: Response) {
   const output = outputList.outputs[request.params["outputId"]!]!;
   const automation = output.getAutomations()[request.params["automationId"]!]!;
 
+  automation.id = parseInt(request.params["automationId"]);
   automation.name = request.body["name"] ?? automation.name;
   automation.value = request.body["value"] ?? automation.value;
-  automation.rules = request.body["rules"] ?? automation.rules;
+  automation.operator = request.body["operator"] ?? automation.operator;
   automation.startTime = request.body["startTime"] ?? automation.startTime ?? null;
   automation.endTime = request.body["endTime"] ?? automation.endTime ?? null;
 
@@ -298,43 +260,10 @@ export async function updateAsync(request: Request, response: Response) {
   } else if (!output.isPwm && automation.value != 0 && automation.value != 100){
     invalidFields.push("Invalid value (output is not PWM): must be a number equal to 0 and 100");
   }
-  if (automation.rules["allOf"] == null) {
-    invalidFields.push("Missing required field: rules.allOf");
-  } else {
-    for (const condition of automation.rules.allOf) {
-      if (!ValidOperators.includes(condition.operator)) {
-        invalidFields.push(
-          `A condition in 'rules.allOf' contains an invalid operator: ${condition.operator}`,
-        );
-      }
-    }
-  }
-  if (automation.rules["anyOf"] == null) {
-    invalidFields.push("Missing required field: rules.anyOf");
-  } else {
-    for (const condition of automation.rules.anyOf) {
-      if (!ValidOperators.includes(condition.operator)) {
-        invalidFields.push(
-          `A condition in 'rules.anyOf' contains an invalid operator: ${condition.operator}`,
-        );
-      }
-    }
-  }
-  if (automation.rules["oneOf"] == null) {
-    invalidFields.push("Missing required field: rules.oneOf");
-  } else {
-    for (const condition of automation.rules.oneOf) {
-      if (!ValidOperators.includes(condition.operator)) {
-        invalidFields.push(
-          `A condition in 'rules.oneOf'contains an invalid operator: ${condition.operator}`,
-        );
-      }
-    }
-  }
-  if (automation.rules["operator"] == null) {
-    invalidFields.push("Missing required field: rules.operator");
-  } else if (automation.rules.operator != "and" && automation.rules.operator != "or") {
-    invalidFields.push("Invalid value for rules.operator: must be 'and' or 'or'");
+  if (automation.operator == null) {
+    invalidFields.push("Missing required field: operator");
+  } else if (automation.operator != "and" && automation.operator != "or") {
+    invalidFields.push("Invalid value for operator: must be 'and' or 'or'");
   }
 
   if (invalidFields.length > 0) {

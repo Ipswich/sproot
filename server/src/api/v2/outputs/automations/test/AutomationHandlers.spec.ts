@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { OutputList } from "../../../../../outputs/list/OutputList";
-import IAutomation, { IAutomationRules } from "@sproot/automation/IAutomation";
+import IAutomation from "@sproot/automation/IAutomation";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/AutomationHandlers";
 
 import { assert } from "chai";
@@ -25,8 +25,8 @@ describe("AutomationHandlers.ts", () => {
         id: 1,
         name: "test",
         value: 50,
+        operator: "or",
         rules: {
-          operator: "or",
           allOf: [],
           anyOf: [],
           oneOf: [],
@@ -38,8 +38,8 @@ describe("AutomationHandlers.ts", () => {
         id: 2,
         name: "test1",
         value: 51,
+        operator: "and",
         rules: {
-          operator: "and",
           allOf: [],
           anyOf: [],
           oneOf: [],
@@ -117,7 +117,7 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(Object.keys(success.content?.data).length, 1);
-      assert.deepEqual(success.content?.data, {"1": Object.values(automations)});
+      assert.deepEqual(success.content?.data, { "1": Object.values(automations) });
     })
 
     it("should return a 404 and a 'Not Found' error (no output)", () => {
@@ -202,12 +202,7 @@ describe("AutomationHandlers.ts", () => {
       const newAutomation = {
         name: "test",
         value: 100,
-        rules: {
-          operator: "or",
-          allOf: [{ operator: "greater", rightHandSideComparison: 50 } as unknown as ICondition],
-          anyOf: [{ operator: "greater", rightHandSideComparison: 50 } as unknown as ICondition],
-          oneOf: [{ operator: "greater", rightHandSideComparison: 50 } as unknown as ICondition],
-        },
+        operator: "or",
         startTime: undefined,
         endTime: undefined
       };
@@ -238,12 +233,7 @@ describe("AutomationHandlers.ts", () => {
       const newAutomation = {
         name: "test",
         value: 50,
-        rules: {
-          operator: "or",
-          allOf: [],
-          anyOf: [],
-          oneOf: [],
-        },
+        operator: "or",
         startTime: undefined,
         endTime: undefined
       };
@@ -311,12 +301,11 @@ describe("AutomationHandlers.ts", () => {
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
         "Missing required field: value",
-        "Missing required field: rules",
+        "Missing required field: operator",
       ]);
 
       newAutomation.name = "test";
       newAutomation.value = 50
-      newAutomation.rules = {} as IAutomationRules;
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 400);
@@ -326,19 +315,11 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(error.error.url, "/api/v2/outputs/1/automations");
       assert.deepEqual(error.error["details"], [
         "Invalid value (output is not PWM): must be a number equal to 0 and 100",
-        "Missing required field: rules.allOf",
-        "Missing required field: rules.anyOf",
-        "Missing required field: rules.oneOf",
-        "Missing required field: rules.operator",
+        "Missing required field: operator",
       ]);
 
       newAutomation.value = 101;
-      newAutomation.rules = {
-        operator: "huh?",
-        allOf: [{ operator: ">", rightHandSideComparison: 50 } as unknown as ICondition],
-        anyOf: [{ operator: ">", rightHandSideComparison: 50 } as unknown as ICondition],
-        oneOf: [{ operator: ">", rightHandSideComparison: 50 } as unknown as ICondition],
-      } as unknown as IAutomationRules;
+      newAutomation.operator = "huh?" as unknown as "and" | "or";
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 400);
@@ -348,10 +329,7 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(error.error.url, "/api/v2/outputs/1/automations");
       assert.deepEqual(error.error["details"], [
         "Invalid value: must be a number between 0 and 100",
-        "A condition in 'rules.allOf' contains an invalid operator: >",
-        "A condition in 'rules.anyOf' contains an invalid operator: >",
-        "A condition in 'rules.oneOf'contains an invalid operator: >",
-        "Invalid value for rules.operator: must be 'and' or 'or'"
+        "Invalid value for operator: must be 'and' or 'or'"
       ]);
     });
 
@@ -359,12 +337,7 @@ describe("AutomationHandlers.ts", () => {
       const newAutomation = {
         name: "test",
         value: 100,
-        rules: {
-          operator: "or",
-          allOf: [],
-          anyOf: [],
-          oneOf: [],
-        },
+        operator: "or",
         startTime: undefined,
         endTime: undefined
       };
@@ -414,8 +387,8 @@ describe("AutomationHandlers.ts", () => {
         id: 1,
         name: "test",
         value: 50,
+        operator: "or",
         rules: {
-          operator: "or",
           allOf: [],
           anyOf: [],
           oneOf: [],
@@ -427,8 +400,8 @@ describe("AutomationHandlers.ts", () => {
         id: 2,
         name: "test1",
         value: 51,
+        operator: "and",
         rules: {
-          operator: "and",
           allOf: [],
           anyOf: [],
           oneOf: [],
@@ -469,8 +442,8 @@ describe("AutomationHandlers.ts", () => {
         id: 1,
         name: "test",
         value: 50,
+        operator: "or",
         rules: {
-          operator: "or",
           allOf: [],
           anyOf: [],
           oneOf: [],
@@ -594,7 +567,7 @@ describe("AutomationHandlers.ts", () => {
           color: "red",
           state: 0,
           getAutomations: function () {
-            return { 1: automations[1] as unknown as Automation }
+            return { 1: {...automations[1]} as unknown as Automation }
           },
           updateAutomationAsync: function () {
             return Promise.resolve()
@@ -616,7 +589,6 @@ describe("AutomationHandlers.ts", () => {
         },
         body: {
           value: 101,
-          rules: {}
         },
         originalUrl: "/api/v2/outputs/1/automations/1",
       } as unknown as Request;
@@ -629,36 +601,10 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(error.error.url, "/api/v2/outputs/1/automations/1");
       assert.deepEqual(error.error["details"], [
         "Invalid value: must be a number between 0 and 100",
-        "Missing required field: rules.allOf",
-        "Missing required field: rules.anyOf",
-        "Missing required field: rules.oneOf",
-        "Missing required field: rules.operator",
-      ]);
-
-      mockRequest.body.value = undefined;
-      mockRequest.body.rules = undefined
-
-      error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/api/v2/outputs/1/automations/1");
-      assert.deepEqual(error.error["details"], [
-        "Invalid value: must be a number between 0 and 100",
-        "Missing required field: rules.allOf",
-        "Missing required field: rules.anyOf",
-        "Missing required field: rules.oneOf",
-        "Missing required field: rules.operator",
       ]);
 
       mockRequest.body.value = 50;
-      mockRequest.body.rules = {
-        operator: "huh?",
-        allOf: [{ operator: ">", rightHandSideComparison: 50 } as unknown as ICondition],
-        anyOf: [{ operator: ">", rightHandSideComparison: 50 } as unknown as ICondition],
-        oneOf: [{ operator: ">", rightHandSideComparison: 50 } as unknown as ICondition],
-      } as unknown as IAutomationRules;
+      mockRequest.body.operator = "huh?" as unknown as "and" | "or";
 
       error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
@@ -668,10 +614,7 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(error.error.url, "/api/v2/outputs/1/automations/1");
       assert.deepEqual(error.error["details"], [
         "Invalid value (output is not PWM): must be a number equal to 0 and 100",
-        "A condition in 'rules.allOf' contains an invalid operator: >",
-        "A condition in 'rules.anyOf' contains an invalid operator: >",
-        "A condition in 'rules.oneOf'contains an invalid operator: >",
-        "Invalid value for rules.operator: must be 'and' or 'or'",
+        "Invalid value for operator: must be 'and' or 'or'",
       ]);
     });
 
@@ -733,12 +676,7 @@ describe("AutomationHandlers.ts", () => {
         id: 1,
         name: "test",
         value: 50,
-        rules: {
-          operator: "or",
-          allOf: [],
-          anyOf: [],
-          oneOf: [],
-        }
+        operator: "or",
       } as IAutomation;
 
       sinon.stub(outputList, "outputs").value({
@@ -778,12 +716,7 @@ describe("AutomationHandlers.ts", () => {
         body: {
           name: "test",
           value: 100,
-          rules: {
-            operator: "or",
-            allOf: [],
-            anyOf: [],
-            oneOf: [],
-          },
+          operator: "or",
           startTime: null,
           endTime: null
         },
@@ -806,8 +739,8 @@ describe("AutomationHandlers.ts", () => {
         id: 1,
         name: "test",
         value: 50,
+        operator: "or",
         rules: {
-          operator: "or",
           allOf: [],
           anyOf: [],
           oneOf: [],
@@ -819,8 +752,8 @@ describe("AutomationHandlers.ts", () => {
         id: 2,
         name: "test1",
         value: 51,
+        operator: "and",
         rules: {
-          operator: "and",
           allOf: [],
           anyOf: [],
           oneOf: [],

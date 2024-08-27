@@ -9,6 +9,7 @@ export class Automation implements IAutomation {
   id: number;
   name: string;
   value: number;
+  operator: "and" | "or";
   rules: AutomationRules;
   startTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
   endTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
@@ -17,16 +18,17 @@ export class Automation implements IAutomation {
     id: number,
     name: string,
     value: number,
-    conditions: AutomationRules,
+    operator: "and" | "or",
     startTime?: string | undefined | null,
     endTime?: string | undefined | null,
   ) {
     this.id = id;
     this.name = name;
+    this.value = value;
+    this.operator = operator;
+    this.rules = new AutomationRules([], [], []);
     this.startTime = startTime;
     this.endTime = endTime;
-    this.value = value;
-    this.rules = conditions;
   }
 
   evaluate(now: Date, sensorList: SensorList, outputList: OutputList): number | null {
@@ -36,15 +38,15 @@ export class Automation implements IAutomation {
       this.endTime != null &&
       isBetweenTimeStamp(this.startTime, this.endTime, now)
     ) {
-      return this.rules.evaluate(sensorList, outputList) ? this.value : null;
+      return this.rules.evaluate(this.operator, sensorList, outputList) ? this.value : null;
     } // if no startTime and no endTime, evaluate
     else if (this.startTime == null && this.endTime == null) {
-      return this.rules.evaluate(sensorList, outputList) ? this.value : null;
+      return this.rules.evaluate(this.operator, sensorList, outputList) ? this.value : null;
     } //if startTime and no endTime and startTime is now, evaluate
     else if (this.startTime != null && this.endTime == null) {
       const [startHours, startMinutes] = this.startTime.split(":").map(Number);
       if (startHours == now.getHours() && startMinutes == now.getMinutes()) {
-        return this.rules.evaluate(sensorList, outputList) ? this.value : null;
+        return this.rules.evaluate(this.operator, sensorList, outputList) ? this.value : null;
       }
     }
     return null
@@ -52,24 +54,21 @@ export class Automation implements IAutomation {
 }
 
 export class AutomationRules implements IAutomationRules {
-  operator: "and" | "or";
   allOf: ConditionBase[];
   anyOf: ConditionBase[];
   oneOf: ConditionBase[];
 
   constructor(
-    operator: "and" | "or",
     allOf: ConditionBase[],
     anyOf: ConditionBase[],
     oneOf: ConditionBase[],
   ) {
-    this.operator = operator;
     this.allOf = allOf;
     this.anyOf = anyOf;
     this.oneOf = oneOf;
   }
 
-  evaluate(sensorList: SensorList, outputList: OutputList): boolean {
+  evaluate(operator: "and" | "or", sensorList: SensorList, outputList: OutputList): boolean {
     const evaluateByConditionType = (condition: ConditionBase) => {
       if (condition instanceof SensorCondition) {
         return condition.evaluate(sensorList);
@@ -90,7 +89,7 @@ export class AutomationRules implements IAutomationRules {
     // types is false). Conversely, if we default to returning false and the conditionOperator
     // is "false", it'll always result in false (even if one of the condition types is true).
     // Basically, we need to "ignore" empty condition types.
-    let defaultReturnValue = this.operator == "and";
+    let defaultReturnValue = operator == "and";
 
     const allOfEvaluationMap = this.allOf.map((c) => evaluateByConditionType(c));
     const allOfResult =
@@ -110,7 +109,7 @@ export class AutomationRules implements IAutomationRules {
         ? defaultReturnValue
         : oneOfEvaluationMap.filter((c) => c == true).length == 1;
 
-    switch (this.operator) {
+    switch (operator) {
       case "and":
         return allOfResult && anyOfResult && oneOfResult;
       case "or":

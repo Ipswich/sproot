@@ -11,7 +11,7 @@ import AutomationManager from "../../automation/AutomationManager";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { Automation } from "../../automation/Automation";
-import IAutomation from "@sproot/automation/IAutomation";
+import { SDBAutomation } from "@sproot/database/SDBAutomation";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
@@ -121,16 +121,16 @@ export abstract class OutputBase implements IOutputBase {
     return this.#automationManager.automations;
   }
 
-  async addAutomationAsync(automation: IAutomation): Promise<Automation> {
-    return await this.#automationManager.addAsync(this.id, automation);
+  async addAutomationAsync(automation: SDBAutomation): Promise<Automation> {
+    return await this.#automationManager.addAutomationAsync(this.id, automation);
   }
 
-  async updateAutomationAsync(automation: IAutomation) {
-    await this.#automationManager.updateAsync(this.id, automation);
+  async updateAutomationAsync(automation: Automation) {
+    await this.#automationManager.updateAutomationAsync(this.id, automation);
   }
 
   async deleteAutomationAsync(automationId: number){
-    await this.#automationManager.deleteAsync(automationId);
+    await this.#automationManager.deleteAutomationAsync(automationId);
   }
 
   async updateDataStoresAsync(): Promise<void> {
