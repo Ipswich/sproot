@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
-// import cors from "cors";
+import cors from "cors";
 import express from "express";
 import mysql2 from "mysql2/promise";
 import * as winston from "winston";
@@ -83,7 +83,7 @@ const logger = setupLogger(app);
     await outputList.updateDataStoresAsync();
   }, 60000);
 
-  // app.use(cors());
+  app.use(cors());
   app.use(cookieParser());
   app.use(express.json());
 
