@@ -34,7 +34,7 @@ router.get("/", (req: Request, res: Response) => {
   return;
 });
 
-router.get("/:id", (req: Request, res: Response) => {
+router.get("/:sensorId", (req: Request, res: Response) => {
   const response = get(req, res);
 
   res.status(response.statusCode).json(response);
@@ -48,14 +48,14 @@ router.post("/", async (req: Request, res: Response) => {
   return;
 });
 
-router.patch("/:id", async (req: Request, res: Response) => {
+router.patch("/:sensorId", async (req: Request, res: Response) => {
   const response = await updateAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:sensorId", async (req: Request, res: Response) => {
   const response = await deleteAsync(req, res);
 
   res.status(response.statusCode).json(response);

@@ -55,7 +55,6 @@ function ApiRootV2(app: Express) {
   );
 
   // The real data routes
-  app.use((req: Request, _res: Response, next: NextFunction) => {console.log(req.method, req.url); next();});
   app.use("/api/v2/sensors", authenticateMiddleware, sensorsRouter);
   app.use("/api/v2/outputs", authenticateMiddleware, outputsRouter);
 
