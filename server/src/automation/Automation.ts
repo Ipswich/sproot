@@ -1,6 +1,6 @@
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
-import IAutomation, { IAutomationRules } from "@sproot/automation/IAutomation";
+import { AutomationOperator, IAutomation, IAutomationRules } from "@sproot/automation/IAutomation";
 import { ConditionBase } from "./conditions/ConditionBase";
 import { OutputCondition } from "./conditions/OutputCondition";
 import { SensorCondition } from "./conditions/SensorCondition";
@@ -9,7 +9,7 @@ export class Automation implements IAutomation {
   id: number;
   name: string;
   value: number;
-  operator: "and" | "or";
+  operator: AutomationOperator;
   rules: AutomationRules;
   startTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
   endTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
@@ -18,7 +18,7 @@ export class Automation implements IAutomation {
     id: number,
     name: string,
     value: number,
-    operator: "and" | "or",
+    operator: AutomationOperator,
     startTime?: string | undefined | null,
     endTime?: string | undefined | null,
   ) {
@@ -68,7 +68,7 @@ export class AutomationRules implements IAutomationRules {
     this.oneOf = oneOf;
   }
 
-  evaluate(operator: "and" | "or", sensorList: SensorList, outputList: OutputList): boolean {
+  evaluate(operator: AutomationOperator, sensorList: SensorList, outputList: OutputList): boolean {
     const evaluateByConditionType = (condition: ConditionBase) => {
       if (condition instanceof SensorCondition) {
         return condition.evaluate(sensorList);

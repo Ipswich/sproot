@@ -1,10 +1,10 @@
 import { ICondition } from "./ICondition";
 
-export default interface IAutomation {
+export interface IAutomation {
   id: number;
   name: string;
   value: number;
-  operator: "and" | "or";
+  operator: AutomationOperator;
   rules: IAutomationRules;
   startTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
   endTime?: string | undefined | null; //24 hour, e.g. "hh:mm" OR null
@@ -15,3 +15,5 @@ export interface IAutomationRules {
   anyOf: ICondition[];
   oneOf: ICondition[];
 }
+
+export type AutomationOperator = "and" | "or";

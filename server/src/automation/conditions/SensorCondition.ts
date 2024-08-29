@@ -1,6 +1,7 @@
 import { SensorList } from "@sproot/sproot-server/src/sensors/list/SensorList";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { ConditionBase } from "./ConditionBase";
+import { ConditionOperator } from "@sproot/automation/ICondition";
 
 export class SensorCondition extends ConditionBase {
   sensorId: number;
@@ -10,7 +11,7 @@ export class SensorCondition extends ConditionBase {
     id: number,
     sensorId: number,
     readingType: ReadingType,
-    operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual",
+    operator: ConditionOperator,
     rightHandSideComparison: number,
   ) {
     super(id, operator, rightHandSideComparison);

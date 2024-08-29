@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomationCondition";
 import { SDBOutputAutomationCondition } from "@sproot/database/SDBOutputAutomationCondition";
-import IAutomation from "@sproot/automation/IAutomation";
+import { IAutomation } from "@sproot/automation/IAutomation";
 
 describe("AutomationManager.ts tests", () => {
   describe("AutomationManager", () => {
@@ -36,7 +36,7 @@ describe("AutomationManager.ts tests", () => {
           operator: "and",
           startTime: null,
           endTime: null
-      } as SDBAutomation;
+        } as SDBAutomation;
 
         sprootDB.addAutomationAsync.resolves(1);
         await automationManager.addAutomationAsync(1, sensorAutomation);
@@ -49,7 +49,7 @@ describe("AutomationManager.ts tests", () => {
         // Verify that the rules object has been created
         assert.equal(Object.keys(automationManager.automations[1]?.rules!).length, 3);
         assert.equal(Object.keys(automationManager.automations[2]?.rules!).length, 3);
-        
+
         // call evaluate on both automations
         automationManager.evaluate(sensorListStub, outputListStub, new Date());
         sinon.assert.calledTwice(automationSpy);

@@ -1,7 +1,7 @@
 import { OutputList } from "../../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import IAutomation from "@sproot/automation/IAutomation";
+import { IAutomation } from "@sproot/automation/IAutomation";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 
 /**

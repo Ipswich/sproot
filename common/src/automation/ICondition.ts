@@ -1,21 +1,14 @@
 export interface ICondition {
   rightHandSideComparison: number;
-  operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual";
+  operator: ConditionOperator
 }
 
 export interface ISDBCondition {
   id: number;
   automationId: number;
   type: string;
-  operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual";
+  operator: ConditionOperator;
   comparisonValue: number;
 }
 
-export const ValidOperators = [
-  "equal",
-  "notEqual",
-  "greater",
-  "less",
-  "greaterOrEqual",
-  "lessOrEqual",
-] as const;
+export type ConditionOperator = "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual";

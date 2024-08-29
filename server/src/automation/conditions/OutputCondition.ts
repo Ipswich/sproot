@@ -1,12 +1,13 @@
 import { OutputList } from "@sproot/sproot-server/src/outputs/list/OutputList";
 import { ConditionBase } from "./ConditionBase";
+import { ConditionOperator } from "@sproot/automation/ICondition";
 
 export class OutputCondition extends ConditionBase {
   outputId: number;
   constructor(
     id: number,
     outputId: number,
-    operator: "equal" | "notEqual" | "greater" | "less" | "greaterOrEqual" | "lessOrEqual",
+    operator: ConditionOperator,
     rightHandSideComparison: number,
   ) {
     super(id, operator, rightHandSideComparison);

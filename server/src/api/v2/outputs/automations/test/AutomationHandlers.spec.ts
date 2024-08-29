@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { OutputList } from "../../../../../outputs/list/OutputList";
-import IAutomation from "@sproot/automation/IAutomation";
+import { IAutomation } from "@sproot/automation/IAutomation";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/AutomationHandlers";
 
 import { assert } from "chai";
@@ -567,7 +567,7 @@ describe("AutomationHandlers.ts", () => {
           color: "red",
           state: 0,
           getAutomations: function () {
-            return { 1: {...automations[1]} as unknown as Automation }
+            return { 1: { ...automations[1] } as unknown as Automation }
           },
           updateAutomationAsync: function () {
             return Promise.resolve()

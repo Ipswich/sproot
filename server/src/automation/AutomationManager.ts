@@ -9,7 +9,7 @@ import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomati
 import { ConditionBase } from "./conditions/ConditionBase";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { ReadingType } from "@sproot/sensors/ReadingType";
-import IAutomation from "@sproot/automation/IAutomation";
+import { IAutomation } from "@sproot/automation/IAutomation";
 
 export default class AutomationManager {
   #automations: Record<number, Automation>;
