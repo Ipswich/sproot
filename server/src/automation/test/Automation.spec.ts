@@ -1,4 +1,4 @@
-// import { Automation, AutomationRules, isBetweenTimeStamp } from "../Automation";
+// import { Automation, AutomationConditions, isBetweenTimeStamp } from "../Automation";
 // import { SensorList } from "../../sensors/list/SensorList";
 // import { SensorBase } from "../../sensors/base/SensorBase";
 // import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
@@ -16,7 +16,7 @@
 //       it("should handle an automation without conditions", () => {
 //         const sensorListMock = sinon.createStubInstance(SensorList);
 //         const outputListMock = sinon.createStubInstance(OutputList);
-//         const conditions = new AutomationRules("or", [], [], []);
+//         const conditions = new AutomationConditions("or", [], [], []);
 
 //         const automation = new Automation(1, "test", 50, conditions);
 //         const now = new Date();
@@ -44,7 +44,7 @@
 //         sinon.stub(outputListMock, "outputs").value({ 1: outputMock });
 //         sinon.stub(outputMock, "value").value(51);
 
-//         let conditions = new AutomationRules(
+//         let conditions = new AutomationConditions(
 //           "or",
 //           [
 //             new SensorCondition(1, 1, ReadingType.temperature, "greater", 50),
@@ -99,7 +99,7 @@
 //         assert.isNull(automation.evaluate(late, sensorListMock, outputListMock));
 
 //         //AND (reset)
-//         conditions = new AutomationRules(
+//         conditions = new AutomationConditions(
 //           "and",
 //           [
 //             new SensorCondition(1, 1, ReadingType.temperature, "greater", 50),
@@ -144,7 +144,7 @@
 //       it("should handle an automation without conditions", () => {
 //         const sensorListMock = sinon.createStubInstance(SensorList);
 //         const outputListMock = sinon.createStubInstance(OutputList);
-//         const conditions = new AutomationRules("or", [], [], []);
+//         const conditions = new AutomationConditions("or", [], [], []);
 
 //         const automation = new Automation(1, "test", 50, conditions, "11:00", "2:00");
 //         const now = new Date();
@@ -178,7 +178,7 @@
 //         sinon.stub(outputListMock, "outputs").value({ 1: outputMock });
 //         sinon.stub(outputMock, "value").value(51);
 
-//         let conditions = new AutomationRules(
+//         let conditions = new AutomationConditions(
 //           "or",
 //           [
 //             new SensorCondition(1, 1, ReadingType.temperature, "greater", 50),
@@ -253,7 +253,7 @@
 //         assert.isNull(automation.evaluate(late, sensorListMock, outputListMock));
 
 //         //AND (reset)
-//         conditions = new AutomationRules(
+//         conditions = new AutomationConditions(
 //           "and",
 //           [
 //             new SensorCondition(1, 1, ReadingType.temperature, "greater", 50),
@@ -309,7 +309,7 @@
 //       it("should handle an automation without conditions", () => {
 //         const sensorListMock = sinon.createStubInstance(SensorList);
 //         const outputListMock = sinon.createStubInstance(OutputList);
-//         const conditions = new AutomationRules("or", [], [], []);
+//         const conditions = new AutomationConditions("or", [], [], []);
 
 //         const automation = new Automation(1, "test", 50, conditions, "11:00");
 //         const now = new Date();
@@ -337,7 +337,7 @@
 //         sinon.stub(outputListMock, "outputs").value({ 1: outputMock });
 //         sinon.stub(outputMock, "value").value(51);
 
-//         let conditions = new AutomationRules(
+//         let conditions = new AutomationConditions(
 //           "or",
 //           [
 //             new SensorCondition(1, 1, ReadingType.temperature, "greater", 50),
@@ -384,7 +384,7 @@
 //         assert.isNull(automation.evaluate(now, sensorListMock, outputListMock));
 
 //         //AND (reset)
-//         conditions = new AutomationRules(
+//         conditions = new AutomationConditions(
 //           "and",
 //           [
 //             new SensorCondition(1, 1, ReadingType.temperature, "greater", 50),

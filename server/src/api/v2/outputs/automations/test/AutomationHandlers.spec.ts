@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
 import { OutputList } from "../../../../../outputs/list/OutputList";
-import { IAutomation } from "@sproot/automation/IAutomation";
+import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/AutomationHandlers";
 
 import { assert } from "chai";
 import sinon from "sinon";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { Automation } from "../../../../../automation/Automation";
-import { ICondition } from "@sproot/automation/ICondition";
 
 describe("AutomationHandlers.ts", () => {
   describe("get", () => {
@@ -26,26 +25,22 @@ describe("AutomationHandlers.ts", () => {
         name: "test",
         value: 50,
         operator: "or",
-        rules: {
+        conditions: {
           allOf: [],
           anyOf: [],
           oneOf: [],
-        },
-        startTime: null,
-        endTIme: null
+        }
       } as IAutomation,
       2: {
         id: 2,
         name: "test1",
         value: 51,
         operator: "and",
-        rules: {
+        conditions: {
           allOf: [],
           anyOf: [],
           oneOf: [],
-        },
-        startTime: null,
-        endTIme: null
+        }
       } as IAutomation,
     }
 
@@ -179,7 +174,7 @@ describe("AutomationHandlers.ts", () => {
             return {}
           },
           addAutomationAsync: function (automation: Automation) {
-            return Promise.resolve({ ...automation, id: 1 } as unknown as Automation);
+            return Promise.resolve({ automation, id: 1 } as unknown as Automation);
           }
         }
       });
@@ -202,9 +197,7 @@ describe("AutomationHandlers.ts", () => {
       const newAutomation = {
         name: "test",
         value: 100,
-        operator: "or",
-        startTime: undefined,
-        endTime: undefined
+        operator: "or"
       };
 
       const mockRequest = {
@@ -224,7 +217,6 @@ describe("AutomationHandlers.ts", () => {
 
       const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
-      assert.deepEqual(success.content?.data, { id: 1, ...newAutomation, startTime: null, endTime: null });
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
     });
@@ -233,9 +225,7 @@ describe("AutomationHandlers.ts", () => {
       const newAutomation = {
         name: "test",
         value: 50,
-        operator: "or",
-        startTime: undefined,
-        endTime: undefined
+        operator: "or"
       };
 
       const mockRequest = {
@@ -319,7 +309,7 @@ describe("AutomationHandlers.ts", () => {
       ]);
 
       newAutomation.value = 101;
-      newAutomation.operator = "huh?" as unknown as "and" | "or";
+      newAutomation.operator = "huh?" as AutomationOperator;
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 400);
@@ -337,9 +327,7 @@ describe("AutomationHandlers.ts", () => {
       const newAutomation = {
         name: "test",
         value: 100,
-        operator: "or",
-        startTime: undefined,
-        endTime: undefined
+        operator: "or"
       };
 
       const mockRequest = {
@@ -388,26 +376,22 @@ describe("AutomationHandlers.ts", () => {
         name: "test",
         value: 50,
         operator: "or",
-        rules: {
+        conditions: {
           allOf: [],
           anyOf: [],
           oneOf: [],
-        },
-        startTime: null,
-        endTIme: null
+        }
       } as IAutomation,
       2: {
         id: 2,
         name: "test1",
         value: 51,
         operator: "and",
-        rules: {
+        conditions: {
           allOf: [],
           anyOf: [],
           oneOf: [],
-        },
-        startTime: null,
-        endTIme: null
+        }
       } as IAutomation,
     }
 
@@ -443,7 +427,7 @@ describe("AutomationHandlers.ts", () => {
         name: "test",
         value: 50,
         operator: "or",
-        rules: {
+        conditions: {
           allOf: [],
           anyOf: [],
           oneOf: [],
@@ -486,14 +470,7 @@ describe("AutomationHandlers.ts", () => {
         body: {
           name: "test",
           value: 100,
-          rules: {
-            operator: "or",
-            allOf: [{ operator: "greater", rightHandSideComparison: 50 } as unknown as ICondition],
-            anyOf: [{ operator: "greater", rightHandSideComparison: 50 } as unknown as ICondition],
-            oneOf: [{ operator: "greater", rightHandSideComparison: 50 } as unknown as ICondition],
-          },
-          startTime: null,
-          endTime: null
+          operator: "or"
         },
       } as unknown as Request;
 
@@ -501,7 +478,6 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.deepEqual(success.content?.data, { ...automation, startTime: null, endTime: null });
     });
 
     it("should return a 400 and details for the invalid request (invalid output ID)", async () => {
@@ -588,7 +564,6 @@ describe("AutomationHandlers.ts", () => {
           automationId: "1",
         },
         body: {
-          value: 101,
         },
         originalUrl: "/api/v2/outputs/1/automations/1",
       } as unknown as Request;
@@ -600,11 +575,23 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs/1/automations/1");
       assert.deepEqual(error.error["details"], [
+        "Invalid value (output is not PWM): must be a number equal to 0 and 100",
+      ]);
+      
+      mockRequest.body.value = 101,
+
+      error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/outputs/1/automations/1");
+      assert.deepEqual(error.error["details"], [
         "Invalid value: must be a number between 0 and 100",
       ]);
 
       mockRequest.body.value = 50;
-      mockRequest.body.operator = "huh?" as unknown as "and" | "or";
+      mockRequest.body.operator = "huh?" as AutomationOperator;
 
       error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
@@ -716,9 +703,7 @@ describe("AutomationHandlers.ts", () => {
         body: {
           name: "test",
           value: 100,
-          operator: "or",
-          startTime: null,
-          endTime: null
+          operator: "or"
         },
       } as unknown as Request;
 
@@ -740,26 +725,22 @@ describe("AutomationHandlers.ts", () => {
         name: "test",
         value: 50,
         operator: "or",
-        rules: {
+        conditions: {
           allOf: [],
           anyOf: [],
           oneOf: [],
-        },
-        startTime: null,
-        endTIme: null
+        }
       } as IAutomation,
       2: {
         id: 2,
         name: "test1",
         value: 51,
         operator: "and",
-        rules: {
+        conditions: {
           allOf: [],
           anyOf: [],
           oneOf: [],
-        },
-        startTime: null,
-        endTIme: null
+        }
       } as IAutomation,
     }
 

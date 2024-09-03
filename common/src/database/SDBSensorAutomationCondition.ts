@@ -1,15 +1,15 @@
 import { RowDataPacket } from "mysql2";
-import { ConditionOperator, ISDBCondition } from "../automation/ICondition";
+import { ConditionGroupType, ConditionOperator } from "../automation/ICondition";
+import { ReadingType } from "../sensors/ReadingType";
 
-type SDBSensorAutomationCondition = ISDBCondition &
-  RowDataPacket & {
-    id: number;
-    automationId: number;
-    type: string;
-    operator: ConditionOperator;
-    comparisonValue: number;
-    sensorId: number;
-    readingType: string;
-  };
+type SDBSensorAutomationCondition = RowDataPacket & {
+  id: number;
+  automationId: number;
+  type: ConditionGroupType;
+  operator: ConditionOperator;
+  comparisonValue: number;
+  sensorId: number;
+  readingType: ReadingType;
+};
 
 export type { SDBSensorAutomationCondition };

@@ -3,7 +3,7 @@ import mysql2, { ResultSetHeader } from "mysql2/promise";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
@@ -13,6 +13,12 @@ import { ControlMode } from "@sproot/outputs/IOutputBase";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { SDBOutputAutomationCondition } from "@sproot/database/SDBOutputAutomationCondition";
 import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomationCondition";
+import { SDBTimeAutomationCondition } from "@sproot/database/SDBTimeAutomationCondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
+import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
+import { TimeCondition } from "../automation/conditions/time/TimeCondition";
+import { OutputCondition } from "../automation/conditions/outputs/OutputCondition";
+import { SensorCondition } from "../automation/conditions/sensors/SensorCondition";
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
 
@@ -28,21 +34,28 @@ class SprootDB implements ISprootDB {
     );
     return rows;
   }
-  async addSensorAutomationConditionAsync(condition: SDBSensorAutomationCondition): Promise<number> {
+  async addSensorAutomationConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    sensorId: number,
+    readingType: string): Promise<number> {
     return (await this.#connection.execute<ResultSetHeader>(
       "INSERT INTO sensor_automation_conditions (automation_id, type, operator, comparisonValue, sensor_id, readingType) VALUES (?, ?, ?, ?, ?, ?)",
       [
-        condition.automationId,
-        condition.type,
-        condition.operator,
-        condition.comparisonValue,
-        condition.sensorId,
-        condition.readingType,
+        automationId,
+        type,
+        operator,
+        comparisonValue,
+        sensorId,
+        readingType,
       ],
     ))[0].insertId;
   }
   async updateSensorAutomationConditionAsync(
-    condition: SDBSensorAutomationCondition,
+    automationId: number,
+    condition: SensorCondition,
   ): Promise<void> {
     await this.#connection.execute(
       "UPDATE sensor_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE automation_id = ? AND id = ?",
@@ -52,7 +65,7 @@ class SprootDB implements ISprootDB {
         condition.comparisonValue,
         condition.sensorId,
         condition.readingType,
-        condition.automationId,
+        automationId,
         condition.id,
       ],
     );
@@ -62,16 +75,7 @@ class SprootDB implements ISprootDB {
       conditionId,
     ]);
   }
-  async deleteSensorAutomationConditionsExceptAsync(automationId: number, exceptConditionIds: number[]): Promise<void> {
-    const questionMarkString = exceptConditionIds.map(_id => "?").join(", ")
-    await this.#connection.execute(
-      `DELETE FROM sensor_automation_conditions WHERE automation_id = ? AND id NOT IN (${questionMarkString})`,
-      [
-        automationId,
-        ...exceptConditionIds
-      ],
-    )
-  }
+
   async getOutputAutomationConditionsAsync(
     automationId: number,
   ): Promise<SDBOutputAutomationCondition[]> {
@@ -81,20 +85,26 @@ class SprootDB implements ISprootDB {
     );
     return rows;
   }
-  async addOutputAutomationConditionAsync(condition: SDBOutputAutomationCondition): Promise<number> {
+  async addOutputAutomationConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    outputId: number): Promise<number> {
     return (await this.#connection.execute<ResultSetHeader>(
       "INSERT INTO output_automation_conditions (automation_id, type, operator, comparisonValue, output_id) VALUES (?, ?, ?, ?, ?)",
       [
-        condition.automationId,
-        condition.type,
-        condition.operator,
-        condition.comparisonValue,
-        condition.outputId,
+        automationId,
+        type,
+        operator,
+        comparisonValue,
+        outputId,
       ],
     ))[0].insertId;
   }
   async updateOutputAutomationConditionAsync(
-    condition: SDBOutputAutomationCondition,
+    automationId: number,
+    condition: OutputCondition,
   ): Promise<void> {
     await this.#connection.execute(
       "UPDATE output_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE automation_id = ? AND id = ?",
@@ -103,7 +113,7 @@ class SprootDB implements ISprootDB {
         condition.operator,
         condition.comparisonValue,
         condition.outputId,
-        condition.automationId,
+        automationId,
         condition.id,
       ],
     );
@@ -113,42 +123,73 @@ class SprootDB implements ISprootDB {
       conditionId,
     ]);
   }
-  async deleteOutputAutomationConditionsExceptAsync(automationId: number, exceptConditionIds: number[]): Promise<void> {
-    const questionMarkString = exceptConditionIds.map(_id => "?").join(", ")
-    await this.#connection.execute(
-      `DELETE FROM output_automation_conditions WHERE automation_id = ? AND id NOT IN (${questionMarkString})`,
+  
+  async getTimeAutomationConditionsAsync(
+    automationId: number,
+  ): Promise<SDBTimeAutomationCondition[]> {
+    const [rows] = await this.#connection.execute<SDBTimeAutomationCondition[]>(
+      "SELECT id, automation_id as automationId, type, startTime, endTime FROM time_automation_conditions WHERE automation_id = ?",
+      [automationId],
+    );
+    return rows;
+  }
+  async addTimeAutomationConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    startTime: string | null,
+    endTime: string | null
+  ): Promise<number> {
+    return (await this.#connection.execute<ResultSetHeader>(
+      "INSERT INTO time_automation_conditions (automation_id, type, startTime, endTime) VALUES (?, ?, ?, ?)",
       [
         automationId,
-        ...exceptConditionIds
+        type,
+        startTime,
+        endTime
       ],
-    )
+    ))[0].insertId;
+  }
+  async updateTimeAutomationConditionAsync(
+    automationId: number,
+    condition: TimeCondition,
+  ): Promise<void> {
+    await this.#connection.execute(
+      "UPDATE time_automation_conditions SET type = ?, startTime = ?, endTime = ?, WHERE automation_id = ? AND id = ?",
+      [
+        condition.type,
+        condition.startTime,
+        condition.endTime,
+        automationId,
+        condition.id,
+      ],
+    );
+  }
+  async deleteTimeAutomationConditionAsync(conditionId: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM time_automation_conditions WHERE id = ?", [
+      conditionId,
+    ]);
   }
 
-  async addAutomationAsync(automation: SDBAutomation): Promise<number> {
+  async addAutomationAsync(name: string, outputId: number, value: number, operator: AutomationOperator): Promise<number> {
     const result = await this.#connection.execute<ResultSetHeader>(
-      "INSERT INTO automations (name, output_id, value, operator, startTime, endTime) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO automations (name, output_id, value, operator) VALUES (?, ?, ?, ?)",
       [
-        automation.name,
-        automation.outputId,
-        automation.value,
-        automation.operator,
-        automation.startTime ?? null,
-        automation.endTime ?? null,
+        name,
+        outputId,
+        value,
+        operator
       ],
     );
     return result[0].insertId;
   }
 
-  async updateAutomationAsync(automation: SDBAutomation): Promise<void> {
+  async updateAutomationAsync(automation: IAutomation): Promise<void> {
     await this.#connection.execute(
-      "UPDATE automations SET name = ?, output_id = ?, value = ?, operator = ?, startTime = ?, endTime = ? WHERE id = ?",
+      "UPDATE automations SET name = ?, value = ?, operator = ? WHERE id = ?",
       [
         automation.name,
-        automation.outputId,
         automation.value,
         automation.operator,
-        automation.startTime ?? null,
-        automation.endTime ?? null,
         automation.id,
       ],
     );

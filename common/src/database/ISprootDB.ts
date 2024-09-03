@@ -5,9 +5,15 @@ import { SDBUser } from "@sproot/sproot-common/src/database/SDBUser";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { ControlMode, IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
-import { SDBAutomation } from "./SDBAutomation";
-import { SDBSensorAutomationCondition } from "./SDBSensorAutomationCondition";
-import { SDBOutputAutomationCondition } from "./SDBOutputAutomationCondition";
+import { SDBAutomation } from "@sproot/sproot-common/src/database/SDBAutomation";
+import { SDBSensorAutomationCondition } from "@sproot/sproot-common/src/database/SDBSensorAutomationCondition";
+import { SDBOutputAutomationCondition } from "@sproot/sproot-common/src/database/SDBOutputAutomationCondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/sproot-common/src/automation/ICondition";
+import { SDBTimeAutomationCondition } from "@sproot/sproot-common/src/database/SDBTimeAutomationCondition";
+import { AutomationOperator, IAutomation } from "@sproot/sproot-common/src/automation/IAutomation";
+import { ITimeCondition } from "../automation/ITimeCondition";
+import { IOutputCondition } from "../automation/IOutputCondition";
+import { ISensorCondition } from "../automation/ISensorCondition";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -42,28 +48,59 @@ interface ISprootDB {
 
   getAutomationsAsync(outputId: number): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
-  addAutomationAsync(automation: SDBAutomation): Promise<number>;
-  updateAutomationAsync(automation: SDBAutomation): Promise<void>;
+  addAutomationAsync(name: string, outputId: number, value: number, operator: AutomationOperator): Promise<number>;
+  updateAutomationAsync(automation: IAutomation): Promise<void>;
   deleteAutomationAsync(automationId: number): Promise<void>;
 
   getSensorAutomationConditionsAsync(automationId: number): Promise<SDBSensorAutomationCondition[]>;
-  addSensorAutomationConditionAsync(condition: SDBSensorAutomationCondition): Promise<number>;
-  updateSensorAutomationConditionAsync(condition: SDBSensorAutomationCondition): Promise<void>;
+  addSensorAutomationConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    sensorId: number,
+    readingType: string): Promise<number>;
+  updateSensorAutomationConditionAsync(automationId: number, condition: ISensorCondition): Promise<void>;
   deleteSensorAutomationConditionAsync(conditionId: number): Promise<void>;
-  deleteSensorAutomationConditionsExceptAsync(automationId: number, exceptConditionIds: number[]): Promise<void>
 
   getOutputAutomationConditionsAsync(automationId: number): Promise<SDBOutputAutomationCondition[]>;
-  addOutputAutomationConditionAsync(condition: SDBOutputAutomationCondition): Promise<number>;
-  updateOutputAutomationConditionAsync(condition: SDBOutputAutomationCondition): Promise<void>;
+  addOutputAutomationConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    outputId: number): Promise<number>;
+  updateOutputAutomationConditionAsync(automationId: number, condition: IOutputCondition): Promise<void>;
   deleteOutputAutomationConditionAsync(conditionId: number): Promise<void>;
-  deleteOutputAutomationConditionsExceptAsync(automationId: number, exceptConditionIds: number[]): Promise<void>
+
+  getTimeAutomationConditionsAsync(automationId: number): Promise<SDBTimeAutomationCondition[]>;
+  addTimeAutomationConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    startTime: string | undefined | null,
+    endTime: string | undefined | null,
+  ): Promise<number>;
+  updateTimeAutomationConditionAsync(automationId: number, condition: ITimeCondition): Promise<void>;
+  deleteTimeAutomationConditionAsync(conditionId: number): Promise<void>;
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
-async deleteSensorAutomationConditionsExceptAsync(_automationId: number, _exceptConditionIds: number[]): Promise<void> {
+  async getTimeAutomationConditionsAsync(_automationId: number): Promise<SDBTimeAutomationCondition[]> {
+    throw new Error("Method not implemented.");
+  }
+  async addTimeAutomationConditionAsync(_automationId: number, _type: ConditionGroupType, _startTime: string | null, _endTime: string | null): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
+  async updateTimeAutomationConditionAsync(_automationId: number, _condition: ITimeCondition): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  async deleteTimeAutomationConditionAsync(_conditionId: number): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  async deleteSensorAutomationConditionsExceptAsync(_automationId: number, _exceptConditionIds: number[]): Promise<void> {
     return;
   }
   async deleteOutputAutomationConditionsExceptAsync(_automationId: number, _exceptConditionIds: number[]): Promise<void> {
@@ -75,7 +112,7 @@ async deleteSensorAutomationConditionsExceptAsync(_automationId: number, _except
   async getAutomationAsync(_automationId: number): Promise<SDBAutomation[]> {
     return [];
   }
-  async addAutomationAsync(_automation: SDBAutomation): Promise<number> {
+  async addAutomationAsync(_name: string, _outputId: number, _value: number, _operator: AutomationOperator): Promise<number> {
     return 0;
   }
   async updateAutomationAsync(_automation: SDBAutomation): Promise<void> {
@@ -89,11 +126,19 @@ async deleteSensorAutomationConditionsExceptAsync(_automationId: number, _except
   ): Promise<SDBSensorAutomationCondition[]> {
     return [];
   }
-  async addSensorAutomationConditionAsync(_condition: SDBSensorAutomationCondition): Promise<number> {
+  async addSensorAutomationConditionAsync(
+    _automationId: number,
+    _type: ConditionGroupType,
+    _operator: ConditionOperator,
+    _comparisonValue: number,
+    _sensorId: number,
+    _readingType: string,
+  ): Promise<number> {
     return 0;
   }
   async updateSensorAutomationConditionAsync(
-    _condition: SDBSensorAutomationCondition,
+    _automationId: number,
+    _condition: ISensorCondition,
   ): Promise<void> {
     return;
   }
@@ -105,11 +150,18 @@ async deleteSensorAutomationConditionsExceptAsync(_automationId: number, _except
   ): Promise<SDBOutputAutomationCondition[]> {
     return [];
   }
-  async addOutputAutomationConditionAsync(_condition: SDBOutputAutomationCondition): Promise<number> {
+  async addOutputAutomationConditionAsync(
+    _automationId: number,
+    _type: ConditionGroupType,
+    _operator: ConditionOperator,
+    _comparisonValue: number,
+    _outputId: number,
+  ): Promise<number> {
     return 0;
   }
   async updateOutputAutomationConditionAsync(
-    _condition: SDBOutputAutomationCondition,
+    _automationId: number,
+    _condition: IOutputCondition,
   ): Promise<void> {
     return;
   }

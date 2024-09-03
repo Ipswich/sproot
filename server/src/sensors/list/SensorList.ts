@@ -2,7 +2,7 @@ import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";

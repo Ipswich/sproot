@@ -1,5 +1,5 @@
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { PCA9685 } from "@sproot/sproot-server/src/outputs/PCA9685";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";

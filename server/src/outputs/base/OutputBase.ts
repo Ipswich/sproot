@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
@@ -11,7 +11,7 @@ import AutomationManager from "../../automation/AutomationManager";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { Automation } from "../../automation/Automation";
-import { SDBAutomation } from "@sproot/database/SDBAutomation";
+import { AutomationOperator } from "@sproot/automation/IAutomation";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
@@ -121,12 +121,12 @@ export abstract class OutputBase implements IOutputBase {
     return this.#automationManager.automations;
   }
 
-  async addAutomationAsync(automation: SDBAutomation): Promise<Automation> {
-    return await this.#automationManager.addAutomationAsync(this.id, automation);
+  async addAutomationAsync(name: string, value: number, operator: AutomationOperator): Promise<Automation> {
+    return await this.#automationManager.addAutomationAsync(name, this.id, value, operator);
   }
 
   async updateAutomationAsync(automation: Automation) {
-    await this.#automationManager.updateAutomationAsync(this.id, automation);
+    await this.#automationManager.updateAutomationAsync(automation);
   }
 
   async deleteAutomationAsync(automationId: number){

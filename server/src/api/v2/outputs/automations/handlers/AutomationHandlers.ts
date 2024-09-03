@@ -2,10 +2,9 @@ import { OutputList } from "../../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { IAutomation } from "@sproot/automation/IAutomation";
-import { SDBAutomation } from "@sproot/database/SDBAutomation";
 
 /**
- * Possible statusCodes: 200, 404
+ * Possible statusCodes: 200, 401, 404
  * @param request
  * @param response
  * @returns
@@ -77,8 +76,8 @@ export function get(request: Request, response: Response): SuccessResponse | Err
 }
 
 /**
- * 
- * @param request Possible statusCodes: 201, 400, 503
+ * Possible statusCodes: 201, 400, 401, 503
+ * @param request 
  * @param response 
  * @returns 
  */
@@ -106,10 +105,8 @@ export async function addAsync(request: Request, response: Response) {
     const newAutomation = {
       name: request.body["name"],
       value: request.body["value"],
-      operator: request.body["operator"],
-      startTime: request.body["startTime"] ?? null,
-      endTime: request.body["endTime"] ?? null,
-    } as SDBAutomation;
+      operator: request.body["operator"]
+    };
     const missingFields: Array<string> = [];
     if (newAutomation.name == null) {
       missingFields.push("Missing required field: name");
@@ -118,7 +115,7 @@ export async function addAsync(request: Request, response: Response) {
       missingFields.push("Missing required field: value");
     } else if (isNaN(newAutomation.value) || newAutomation.value < 0 || newAutomation.value > 100) {
       missingFields.push("Invalid value: must be a number between 0 and 100");
-    } else if (!output.isPwm && newAutomation.value != 0 && newAutomation.value != 100){
+    } else if (!output.isPwm && newAutomation.value != 0 && newAutomation.value != 100) {
       missingFields.push("Invalid value (output is not PWM): must be a number equal to 0 and 100");
     }
     if (newAutomation.operator == null) {
@@ -141,7 +138,7 @@ export async function addAsync(request: Request, response: Response) {
     }
 
     try {
-      const createdAutomation = await output.addAutomationAsync(newAutomation);
+      const createdAutomation = await output.addAutomationAsync(newAutomation.name, newAutomation.value, newAutomation.operator);
       addAutomationResponse = {
         statusCode: 201,
         content: {
@@ -178,8 +175,8 @@ export async function addAsync(request: Request, response: Response) {
 }
 
 /**
- * 
- * @param request Possible statusCodes: 201, 400, 404, 503
+ * Possible statusCodes: 201, 400, 401, 404, 503
+ * @param request 
  * @param response 
  * @returns 
  */
@@ -250,19 +247,15 @@ export async function updateAsync(request: Request, response: Response) {
   automation.name = request.body["name"] ?? automation.name;
   automation.value = request.body["value"] ?? automation.value;
   automation.operator = request.body["operator"] ?? automation.operator;
-  automation.startTime = request.body["startTime"] ?? automation.startTime ?? null;
-  automation.endTime = request.body["endTime"] ?? automation.endTime ?? null;
 
   const invalidFields: Array<string> = [];
-  
+
   if (isNaN(automation.value) || automation.value < 0 || automation.value > 100) {
     invalidFields.push("Invalid value: must be a number between 0 and 100");
-  } else if (!output.isPwm && automation.value != 0 && automation.value != 100){
+  } else if (!output.isPwm && automation.value != 0 && automation.value != 100) {
     invalidFields.push("Invalid value (output is not PWM): must be a number equal to 0 and 100");
   }
-  if (automation.operator == null) {
-    invalidFields.push("Missing required field: operator");
-  } else if (automation.operator != "and" && automation.operator != "or") {
+  if (automation.operator != "and" && automation.operator != "or") {
     invalidFields.push("Invalid value for operator: must be 'and' or 'or'");
   }
 
@@ -304,8 +297,8 @@ export async function updateAsync(request: Request, response: Response) {
 }
 
 /**
- * 
- * @param request Possible statusCodes: 200, 400, 404, 503
+ * Possible statusCodes: 200, 400, 401, 404, 503
+ * @param request
  * @param response 
  * @returns 
  */

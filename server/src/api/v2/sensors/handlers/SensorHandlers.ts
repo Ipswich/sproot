@@ -1,5 +1,5 @@
 import { SensorList } from "../../../../sensors/list/SensorList";
-import { ISprootDB } from "@sproot/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";

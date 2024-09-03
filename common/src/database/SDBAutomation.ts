@@ -7,8 +7,6 @@ type SDBAutomation = RowDataPacket & {
   outputId: number;
   value: number;
   operator: AutomationOperator;
-  startTime: string | null;
-  endTime: string | null;
 };
 
 export type { SDBAutomation };

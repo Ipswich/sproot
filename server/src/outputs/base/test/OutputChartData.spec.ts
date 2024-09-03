@@ -4,7 +4,7 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { assert } from "chai";
 import { OutputCache } from "../OutputCache";
 import { OutputChartData } from "../OutputChartData";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import winston from "winston";
 
 describe("OutputChartData.ts tests", function () {
