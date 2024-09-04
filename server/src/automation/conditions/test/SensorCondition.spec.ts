@@ -1,6 +1,6 @@
-import { SensorList } from "../../../../sensors/list/SensorList";
-import { SensorBase } from "../../../../sensors/base/SensorBase";
-import { SensorCondition } from "../../sensors/SensorCondition";
+import { SensorList } from "../../../sensors/list/SensorList";
+import { SensorBase } from "../../../sensors/base/SensorBase";
+import { SensorCondition } from "../SensorCondition";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 import { assert } from "chai";

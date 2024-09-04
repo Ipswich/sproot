@@ -4,10 +4,12 @@ import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandle
 import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
 import automationsRouter from "./automations/AutomationsRouter";
+import conditionsRouter from "./automations/ConditionsRouter";
 
 const router = express.Router();
 
 automationsRouter(router);
+conditionsRouter(router);
 
 router.get("/supported-models", (_req: Request, res: Response) => {
   const response = supportedModelsHandler(res);

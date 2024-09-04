@@ -1578,8 +1578,7 @@ paths:
                           details:
                             items:
                               example: "Automation with ID -1 not found."
-    
-  /api/v2/outputs/{outputId}/automations/{automationId}/conditions/{type}/{conditionId}:    
+  /api/v2/outputs/{outputId}/automations/{automationId}/conditions/{type}:
     get:
       security:
         - bearerAuth: []
@@ -1614,13 +1613,6 @@ paths:
               - "sensor"
               - "output"
               - "time"
-        - in: path
-          name: conditionId
-          required: true
-          description: "Condition ID"
-          schema:
-            type: string
-          example: "1"
       responses:
         200:
           description: "Success"
@@ -1635,10 +1627,11 @@ paths:
                       content:
                         properties:
                           data:
-                            anyOf:
-                              - $ref: "#/components/schemas/SensorCondition"
-                              - $ref: "#/components/schemas/OutputCondition"
-                              - $ref: "#/components/schemas/TimeCondition"
+                            items:
+                              anyOf:
+                                - $ref: "#/components/schemas/SensorCondition"
+                                - $ref: "#/components/schemas/OutputCondition"
+                                - $ref: "#/components/schemas/TimeCondition"
         401:
           description: "Unauthorized"
           content:
@@ -1677,7 +1670,6 @@ paths:
                           details:
                             items:
                               example: "Condition with ID -1 not found."
-
     post:
       security:
         - bearerAuth: []
@@ -1819,6 +1811,108 @@ paths:
                               example:
                                 - "Failed to add condition to database."
                                 - "Database connection failed."
+
+  /api/v2/outputs/{outputId}/automations/{automationId}/conditions/{type}/{conditionId}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automation Conditions"
+      summary: Get a condition by ID.
+      description: >
+        Returns data for the given condition.
+      parameters:
+        - in: path
+          name: outputId
+          required: true
+          description: "Output ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: type
+          required: true
+          description: "Condition Type"
+          schema:
+            type: string
+            enum:
+              - "sensor"
+              - "output"
+              - "time"
+        - in: path
+          name: conditionId
+          required: true
+          description: "Condition ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              anyOf:
+                                - $ref: "#/components/schemas/SensorCondition"
+                                - $ref: "#/components/schemas/OutputCondition"
+                                - $ref: "#/components/schemas/TimeCondition"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/outputs/1/automations/1/conditions/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Condition not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/1/automations/1/conditions/-1"
+                          details:
+                            items:
+                              example: "Condition with ID -1 not found."
+
+    
     patch:
       security:
         - bearerAuth: []
@@ -2103,138 +2197,6 @@ paths:
                               example:
                                 - "Failed to delete condition from database."
                                 - "Database connection failed."
-
-
-  # /api/v2/outputs/{outputId}/automations/{automationId}/conditions/groups/{group}:
-  #   delete:
-  #     security:
-  #       - bearerAuth: []
-  #       - cookieAuth: []
-  #     tags:
-  #       - "Automation Conditions"
-  #     summary: Delete all conditions of the provided group for an automation.
-  #     description: >
-  #       Deletes all conditions of the provided group for the automation with the given ID. This operation is permanent and cannot be undone.
-  #     parameters:
-  #       - in: path
-  #         name: outputId
-  #         required: true
-  #         description: "Output ID"
-  #         schema:
-  #           type: string
-  #         example: "1"
-  #       - in: path
-  #         name: automationId
-  #         required: true
-  #         description: "Automation ID"
-  #         schema:
-  #           type: string
-  #         example: "1"
-  #       - in: path
-  #         name: group
-  #         required: true
-  #         description: "Condition Group"
-  #         schema:
-  #           type: string
-  #           enum:
-  #             - "allOf"
-  #             - "anyOf"
-  #             - "oneOf"
-  #     responses:
-  #       200:
-  #         description: "Condition deleted"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               allOf:
-  #                 - $ref: "#/components/schemas/SuccessResponse"
-  #                 - properties:
-  #                     statusCode:
-  #                       example: 200
-  #                     content:
-  #                       properties:
-  #                         data:
-  #                           example: "'allOf' conditions sucessfully deleted."
-  #       400:
-  #         description: "Bad request"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               allOf:
-  #                 - $ref: "#/components/schemas/ErrorResponse"
-  #                 - properties:
-  #                     statusCode:
-  #                       example: 400
-  #                     error:
-  #                       properties:
-  #                         name:
-  #                           example: "Bad Request"
-  #                         url:
-  #                           example: "/api/v2/outputs/1/automations/1/conditions/allOf"
-  #                         details:
-  #                           example:
-  #                             - "Invalid or missing output Id."
-  #                             - "Invalid or missing automation Id."
-  #                             - "Invalid group provided."
-  #       401:
-  #         description: "Unauthorized"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               allOf:
-  #                 - $ref: "#/components/schemas/ErrorResponse"
-  #                 - properties:
-  #                     statusCode:
-  #                       example: 401
-  #                     error:
-  #                       properties:
-  #                         name:
-  #                           example: "Unauthorized"
-  #                         url:
-  #                           example: "/api/v2/outputs/1/automations/1/conditions/allOf"
-  #                         details:
-  #                           items:
-  #                             example: "Invalid or Missing JWT."
-  #       404:
-  #         description: "Not Found"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               allOf:
-  #                 - $ref: "#/components/schemas/ErrorResponse"
-  #                 - properties:
-  #                     statusCode:
-  #                       example: 404
-  #                     error:
-  #                       properties:
-  #                         name:
-  #                           example: "Not Found"
-  #                         url:
-  #                           example: "/api/v2/outputs/1/automations/-1/conditions/allOf"
-  #                         details:
-  #                           items:
-  #                             example: "Automation with ID -1 not found."
-  #       503:
-  #         description: "Service unavailable"
-  #         content:
-  #           application/json:
-  #             schema:
-  #               allOf:
-  #                 - $ref: "#/components/schemas/ErrorResponse"
-  #                 - properties:
-  #                     statusCode:
-  #                       example: 503
-  #                     error:
-  #                       properties:
-  #                         name:
-  #                           example: "Service Unavailable"
-  #                         url:
-  #                           example: "/api/v2/outputs/1/automations/1/conditions/allOf"
-  #                         details:
-  #                           items:
-  #                             example:
-  #                               - "Failed to delete condition from database."
-  #                               - "Database connection failed."
 
   /api/v2/outputs/{outputId}/control-mode:
     put:
@@ -3262,65 +3224,71 @@ components:
     AutomationConditions:
       description: >
         These conditions define when an automation will run.
-      required:
-        - sensor
-        - output
-        - time
+      readOnly: true
       properties:
         sensor:
           type: object
           properties:
             allOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
             anyOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
             oneOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
         output:
           type: object
           properties:
             allOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
             anyOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
             oneOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
         time:
           type: object
           properties:
             allOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
             anyOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
             oneOf:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/SensorCondition"
+                  - $ref: "#/components/schemas/OutputCondition"
+                  - $ref: "#/components/schemas/TimeCondition"
       
     SensorCondition:
       description: >
@@ -3328,6 +3296,8 @@ components:
       allOf:
         - type: object
           required:
+            - operator
+            - comparisonValue
             - sensorId
             - readingType
         - properties:
@@ -3335,6 +3305,18 @@ components:
               type: number
               readOnly: true
               example: 1
+            group: 
+              type: string
+              enum:
+                - allOf
+                - anyOf
+                - oneOf
+            operator:
+              type: string
+              example: "greaterOrEqual"
+            comparisonValue:
+              type: number
+              example: 50
             sensorId:
               type: number
               example: 1
@@ -3348,12 +3330,26 @@ components:
       allOf:
       - type: object
         required:
+          - operator
+          - comparisonValue
           - outputId
       - properties:
           id:
             type: number
             readOnly: true
             example: 1
+          group: 
+            type: string
+            enum:
+              - allOf
+              - anyOf
+              - oneOf
+          operator:
+            type: string
+            example: "greaterOrEqual"
+          comparisonValue:
+            type: number
+            example: 50
           outputId:
             type: number
             example: 1
@@ -3368,6 +3364,12 @@ components:
             type: number
             readOnly: true
             example: 1
+          group: 
+            type: string
+            enum:
+              - allOf
+              - anyOf
+              - oneOf
           startTime:
             nullable: true
             type: string

@@ -4,9 +4,9 @@ import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
 
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
-import { OutputCondition } from "./outputs/OutputCondition";
-import { SensorCondition } from "./sensors/SensorCondition";
-import { TimeCondition } from "./time/TimeCondition";
+import { OutputCondition } from "./OutputCondition";
+import { SensorCondition } from "./SensorCondition";
+import { TimeCondition } from "./TimeCondition";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 
 export class Conditions {
@@ -34,54 +34,50 @@ export class Conditions {
   } {
     return {
       sensor: {
-        allOf: [...Object.values(this.#sensorConditions)].filter((c) => c.type == "allOf"),
-        anyOf: [...Object.values(this.#sensorConditions)].filter((c) => c.type == "anyOf"),
-        oneOf: [...Object.values(this.#sensorConditions)].filter((c) => c.type == "oneOf")
+        allOf: [...Object.values(this.#sensorConditions)].filter((c) => c.group == "allOf"),
+        anyOf: [...Object.values(this.#sensorConditions)].filter((c) => c.group == "anyOf"),
+        oneOf: [...Object.values(this.#sensorConditions)].filter((c) => c.group == "oneOf")
       },
       output: {
-        allOf: [...Object.values(this.#outputConditions)].filter((c) => c.type == "allOf"),
-        anyOf: [...Object.values(this.#outputConditions)].filter((c) => c.type == "anyOf"),
-        oneOf: [...Object.values(this.#outputConditions)].filter((c) => c.type == "oneOf")
+        allOf: [...Object.values(this.#outputConditions)].filter((c) => c.group == "allOf"),
+        anyOf: [...Object.values(this.#outputConditions)].filter((c) => c.group == "anyOf"),
+        oneOf: [...Object.values(this.#outputConditions)].filter((c) => c.group == "oneOf")
       },
       time: {
-        allOf: [...Object.values(this.#timeConditions)].filter((c) => c.type == "allOf"),
-        anyOf: [...Object.values(this.#timeConditions)].filter((c) => c.type == "anyOf"),
-        oneOf: [...Object.values(this.#timeConditions)].filter((c) => c.type == "oneOf")
+        allOf: [...Object.values(this.#timeConditions)].filter((c) => c.group == "allOf"),
+        anyOf: [...Object.values(this.#timeConditions)].filter((c) => c.group == "anyOf"),
+        oneOf: [...Object.values(this.#timeConditions)].filter((c) => c.group == "oneOf")
       }
     };
   }
 
   get allOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
-    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.type == "allOf");
+    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.group == "allOf");
   }
 
   get anyOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
-    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.type == "anyOf");
+    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.group == "anyOf");
   }
 
   get oneOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
-    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.type == "oneOf");
+    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.group == "oneOf");
   }
 
-  evaluate(operator: AutomationOperator, sensorList: SensorList, outputList: OutputList, now: Date = new Date()): boolean {
+  evaluate(operator: AutomationOperator, sensorList: SensorList, outputList: OutputList, now: Date): boolean {
     const evaluateByConditionFlavor = (condition: SensorCondition | OutputCondition | TimeCondition) => {
-      if (condition instanceof OutputCondition) {
-        return condition.evaluate(outputList);
-      }
       if (condition instanceof SensorCondition) {
         return condition.evaluate(sensorList);
+      }
+      if (condition instanceof OutputCondition) {
+        return condition.evaluate(outputList);
       }
       if (condition instanceof TimeCondition) {
         return condition.evaluate(now);
       }
     }
-    const groupedConditions = [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)];
-    const allOfConditions = groupedConditions.filter((c) => c.type == "allOf");
-    const anyOfConditions = groupedConditions.filter((c) => c.type == "anyOf");
-    const oneOfConditions = groupedConditions.filter((c) => c.type == "oneOf");
-
+    
     // If no conditions, false.
-    if (Object.keys(allOfConditions).length == 0 && Object.keys(anyOfConditions).length == 0 && Object.keys(oneOfConditions).length == 0) {
+    if (Object.keys(this.allOf).length == 0 && Object.keys(this.anyOf).length == 0 && Object.keys(this.oneOf).length == 0) {
       return false;
     }
 
@@ -92,19 +88,19 @@ export class Conditions {
     // Basically, we need to "ignore" empty condition types.
     let defaultReturnValue = operator == "and";
 
-    const allOfEvaluationMap = allOfConditions.map((c) => evaluateByConditionFlavor(c));
+    const allOfEvaluationMap = this.allOf.map((c) => evaluateByConditionFlavor(c));
     const allOfResult =
       allOfEvaluationMap.length == 0
         ? defaultReturnValue
         : allOfEvaluationMap.every((c) => c == true);
 
-    const anyOfEvaluationMap = anyOfConditions.map((c) => evaluateByConditionFlavor(c));
+    const anyOfEvaluationMap = this.anyOf.map((c) => evaluateByConditionFlavor(c));
     const anyOfResult =
       anyOfEvaluationMap.length == 0
         ? defaultReturnValue
         : anyOfEvaluationMap.some((c) => c == true);
 
-    const oneOfEvaluationMap = oneOfConditions.map((c) => evaluateByConditionFlavor(c));
+    const oneOfEvaluationMap = this.oneOf.map((c) => evaluateByConditionFlavor(c));
     const oneOfResult =
       oneOfEvaluationMap.length == 0
         ? defaultReturnValue
@@ -117,26 +113,38 @@ export class Conditions {
         return allOfResult || anyOfResult || oneOfResult;
     }
   }
-  async addSensorConditionAsync(type: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, sensorId: number, readingType: ReadingType): Promise<void> {
-    await this.#sprootDB.addSensorAutomationConditionAsync(this.#automationId, type, operator, comparisonValue, sensorId, readingType);
+
+  async addSensorConditionAsync(group: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, sensorId: number, readingType: ReadingType): Promise<SensorCondition> {
+    const newSensorConditionId = await this.#sprootDB.addSensorAutomationConditionAsync(this.#automationId, group, operator, comparisonValue, sensorId, readingType);
+    const newSensorCondition = new SensorCondition(newSensorConditionId, group, sensorId, readingType, operator, comparisonValue);
+    this.#sensorConditions[newSensorConditionId] = newSensorCondition;
+    return newSensorCondition;
   }
 
-  async addOutputConditionAsync(type: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: number): Promise<void> {
-    await this.#sprootDB.addOutputAutomationConditionAsync(this.#automationId, type, operator, comparisonValue, outputId);
+  async addOutputConditionAsync(group: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: number): Promise<OutputCondition> {
+    const newOutputConditionId = await this.#sprootDB.addOutputAutomationConditionAsync(this.#automationId, group, operator, comparisonValue, outputId);
+    const newOutputCondition = new OutputCondition(newOutputConditionId, group, outputId, operator, comparisonValue);
+    this.#outputConditions[newOutputConditionId] = newOutputCondition;
+    return newOutputCondition;
   }
 
-  async addTimeConditionAsync(type: ConditionGroupType, startTime: string, endTime: string): Promise<void> {
-    await this.#sprootDB.addTimeAutomationConditionAsync(this.#automationId, type, startTime, endTime);
+  async addTimeConditionAsync(group: ConditionGroupType, startTime: string | undefined | null, endTime: string | undefined | null): Promise<TimeCondition> {
+    const newTimeConditionId = await this.#sprootDB.addTimeAutomationConditionAsync(this.#automationId, group, startTime, endTime);
+    const newTimeCondition = new TimeCondition(newTimeConditionId, group, startTime, endTime);
+    this.#timeConditions[newTimeConditionId] = newTimeCondition;
+    return this.#timeConditions[newTimeConditionId];
   }
 
   async updateConditionAsync(condition: OutputCondition | SensorCondition | TimeCondition): Promise<void> {
     if (condition instanceof SensorCondition) {
       await this.#sprootDB.updateSensorAutomationConditionAsync(this.#automationId, condition);
       this.#sensorConditions[condition.id] = condition;
-    } else if (condition instanceof OutputCondition) {
+    }
+    if (condition instanceof OutputCondition) {
       await this.#sprootDB.updateOutputAutomationConditionAsync(this.#automationId, condition);
       this.#outputConditions[condition.id] = condition;
-    } else if (condition instanceof TimeCondition) {
+    }
+    if (condition instanceof TimeCondition) {
       await this.#sprootDB.updateTimeAutomationConditionAsync(this.#automationId, condition);
       this.#timeConditions[condition.id] = condition;
     }

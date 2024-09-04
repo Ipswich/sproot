@@ -18,14 +18,22 @@ export function evaluateNumber(reading: number, operator: ConditionOperator, com
 }
 
 export function evaluateTime(now: Date, startTime?: string | null, endTime?: string | null): boolean {
+  const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+
   if (startTime == null && endTime == null) {
     // if neither startTime nor endTime, return true
     return true;
   } else if (startTime != null && endTime != null) {
     // if both startTime and endTime and, check if it's between those two
-    return isBetweenTimeStamp(startTime, endTime, new Date());
+    if (!regex.test(startTime) || !regex.test(endTime)) {
+      return false;
+    }
+    return isBetweenTimeStamp(startTime, endTime, now);
   } else if (startTime != null && endTime == null) {
     // if only startTime and startTime is now, return true
+    if (!regex.test(startTime)) {
+      return false;
+    }
     const [startHours, startMinutes] = startTime.split(":").map(Number);
     return startHours == now.getHours() && startMinutes == now.getMinutes();
   }

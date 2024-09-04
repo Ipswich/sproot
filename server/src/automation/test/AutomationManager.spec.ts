@@ -1,439 +1,365 @@
-// `import { SprootDB } from "../../database/SprootDB";
-// import AutomationManager from "../AutomationManager";
-// import { Automation } from "../Automation";
-// import { SensorList } from "../../sensors/list/SensorList";
-// import { OutputList } from "../../outputs/list/OutputList";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { SprootDB } from "../../database/SprootDB";
+import AutomationManager from "../AutomationManager";
 
-// import { assert } from "chai";
-// import sinon from "sinon";
-// import { SDBAutomation } from "@sproot/database/SDBAutomation";
-// import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomationCondition";
-// import { SDBOutputAutomationCondition } from "@sproot/database/SDBOutputAutomationCondition";
-// import { IAutomation } from "@sproot/automation/IAutomation";
-// import { SensorCondition } from "../conditions/sensors/SensorConditionGroups";
-// import { OutputCondition } from "../conditions/groups/OutputConditionsGroup";
+import { assert } from "chai";
+import sinon from "sinon";
+import { SDBAutomation } from "@sproot/database/SDBAutomation";
+import { SDBTimeAutomationCondition } from "@sproot/database/SDBTimeAutomationCondition";
+import { SDBOutputAutomationCondition } from "@sproot/database/SDBOutputAutomationCondition";
+import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomationCondition";
+import { OutputList } from "../../outputs/list/OutputList";
+import { SensorList } from "../../sensors/list/SensorList";
 
-// describe("AutomationManager.ts tests", () => {
-//   describe("AutomationManager", () => {
-//     describe("addAsync", () => {
-//       it('should add two basic automations (and call evaluate on them)', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const sensorListStub = sinon.createStubInstance(SensorList);
-//         const outputListStub = sinon.createStubInstance(OutputList);
+describe("AutomationManager.ts tests", () => {
 
-//         const automationManager = new AutomationManager(sprootDB);
-//         const automationSpy = sinon.spy(Automation.prototype, "evaluate");
-//         const sensorAutomation = {
-//           id: 1,
-//           name: "sensorAutomation",
-//           value: 50,
-//           operator: "and"
-//         } as SDBAutomation;
-//         const outputAutomation = {
-//           id: 2,
-//           name: "outputAutomation",
-//           value: 75,
-//           operator: "and"
-//         } as SDBAutomation;
-
-//         sprootDB.addAutomationAsync.resolves(1);
-//         await automationManager.addAutomationAsync(1, sensorAutomation);
-//         sprootDB.addAutomationAsync.resolves(2);
-//         await automationManager.addAutomationAsync(1, outputAutomation);
-//         // added two automations, verify
-//         assert.equal(Object.keys(automationManager.automations).length, 2);
-//         assert.equal(sprootDB.addAutomationAsync.callCount, 2);
-
-//         // Verify that the rules object has been created
-//         assert.equal(Object.keys(automationManager.automations[1]?.conditions!).length, 3);
-//         assert.equal(Object.keys(automationManager.automations[2]?.conditions!).length, 3);
-
-//         // call evaluate on both automations
-//         automationManager.evaluate(sensorListStub, outputListStub, new Date());
-//         sinon.assert.calledTwice(automationSpy);
-//       })
-//     });
-
-//     describe("deleteAsync", () => {
-//       it('should add one automation and then remove it.', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const outputAutomation = {
-//           id: 1,
-//           name: "sensorAutomation",
-//           value: 50,
-//           operator: "or"
-//         } as SDBAutomation;
-
-//         sprootDB.addAutomationAsync.resolves(1);
-//         await automationManager.addAutomationAsync(1, outputAutomation);
-
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(sprootDB.addAutomationAsync.callCount, 1);
-
-//         await automationManager.deleteAutomationAsync(1);
-//         assert.equal(Object.keys(automationManager.automations).length, 0);
-//         assert.equal(sprootDB.deleteAutomationAsync.callCount, 1);
-//       })
-//     });
-
-//     describe("updateAsync", () => {
-//       it('should add one automation and then update it.', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const sensorAutomation = {
-//           id: 1,
-//           name: "sensorAutomation",
-//           value: 50,
-//           operator: "or"
-//         } as SDBAutomation;
-
-//         sprootDB.addAutomationAsync.resolves(1);
-//         sprootDB.updateSensorAutomationConditionAsync.resolves();
-//         sprootDB.updateOutputAutomationConditionAsync.resolves();
-
-//         sprootDB.addSensorAutomationConditionAsync.resolves(2);
-//         sprootDB.addOutputAutomationConditionAsync.resolves(2);
-//         await automationManager.addAutomationAsync(1, sensorAutomation);
-
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(automationManager.automations[1]!.name, "sensorAutomation");
-//         assert.equal(automationManager.automations[1]!.value, 50);
-//         assert.equal(automationManager.automations[1]!.operator, "or");
-
-//         const updatedAutomation = {
-//           id: 1,
-//           name: "sensorAutomation, yo",
-//           value: 55,
-//           operator: "and"
-//         } as IAutomation;
-
-//         await automationManager.updateAutomationAsync(1, updatedAutomation);
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(sprootDB.updateAutomationAsync.callCount, 1);
-
-//         assert.equal(automationManager.automations[1]!.name, "sensorAutomation, yo");
-//         assert.equal(automationManager.automations[1]!.value, 55);
-//         assert.equal(automationManager.automations[1]!.operator, "and");
-//       });
-
-//       it('should do nothing if the automation does not exist', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const sensorAutomation = {
-//           id: 1,
-//           name: "sensorAutomation",
-//           value: 50,
-//           operator: "or"
-//         } as SDBAutomation;
-
-//         sprootDB.addAutomationAsync.resolves(1);
-//         sprootDB.updateSensorAutomationConditionAsync.resolves();
-//         sprootDB.updateOutputAutomationConditionAsync.resolves();
-
-//         sprootDB.addSensorAutomationConditionAsync.resolves(2);
-//         sprootDB.addOutputAutomationConditionAsync.resolves(2);
-//         await automationManager.addAutomationAsync(1, sensorAutomation);
-
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(automationManager.automations[1]!.name, "sensorAutomation");
-//         assert.equal(automationManager.automations[1]!.value, 50);
-//         assert.equal(automationManager.automations[1]!.operator, "or");
-
-//         const updatedAutomation = {
-//           id: 2,
-//           name: "sensorAutomation, yo",
-//           value: 55,
-//           operator: "and"
-//         } as IAutomation;
-
-//         await automationManager.updateAutomationAsync(1, updatedAutomation);
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(sprootDB.updateAutomationAsync.callCount, 0);
-
-//         assert.equal(automationManager.automations[1]!.name, "sensorAutomation");
-//         assert.equal(automationManager.automations[1]!.value, 50);
-//         assert.equal(automationManager.automations[1]!.operator, "or");
-//       });
-//     });
-
-//     describe("addConditionAsync", () => {
-//       it('should do nothing with an invalid automationId', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const condition = {
-
-//           sensorId: 1,
-//           readingType: "temperature",
-//           operator: "equal",
-//           comparisonValue: 50
-//         } as SensorCondition
-
-//         await automationManager.addCondition(1, condition, "allOf");
-//         assert.equal(sprootDB.addSensorAutomationConditionAsync.callCount, 0);
-//       });
-
-//       it('should add a SensorCondition to an automation', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const sensorAutomation = {
-//           id: 1,
-//           name: "sensorAutomation",
-//           value: 50,
-//           operator: "or"
-//         } as SDBAutomation;
-
-//         sprootDB.addAutomationAsync.resolves(1);
-//         sprootDB.addSensorAutomationConditionAsync.resolves(1);
-//         await automationManager.addAutomationAsync(1, sensorAutomation);
-
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(automationManager.automations[1]!.name, "sensorAutomation");
-//         assert.equal(automationManager.automations[1]!.value, 50);
-//         assert.equal(automationManager.automations[1]!.operator, "or");
-
-//         const condition = {
-//           sensorId: 1,
-//           readingType: "temperature",
-//           operator: "equal",
-//           comparisonValue: 50
-//         } as SensorCondition
-
-//         await automationManager.addCondition(1, condition, "allOf");
-//         assert.equal(Object.keys(automationManager.automations[1]!.conditions.allOf).length, 1);
-//         assert.equal(sprootDB.addSensorAutomationConditionAsync.callCount, 1);
-//         console.log(automationManager.automations[1]!.conditions.allOf);
-//         assert.equal(automationManager.automations[1]!.conditions.allOf[0]!.operator, "equal");
-//         assert.equal(automationManager.automations[1]!.conditions.allOf[0]!.comparisonValue, 50);
-//       });
-
-//       it('should add an OutputCondition to an automation', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const outputAutomation = {
-//           id: 1,
-//           name: "outputAutomation",
-//           value: 50,
-//           operator: "or"
-//         } as SDBAutomation;
-
-//         sprootDB.addAutomationAsync.resolves(1);
-//         sprootDB.addOutputAutomationConditionAsync.resolves(1);
-//         await automationManager.addAutomationAsync(1, outputAutomation);
-
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(automationManager.automations[1]!.name, "outputAutomation");
-//         assert.equal(automationManager.automations[1]!.value, 50);
-//         assert.equal(automationManager.automations[1]!.operator, "or");
-
-//         const condition = {
-//           outputId: 1,
-//           operator: "equal",
-//           comparisonValue: 50
-//         } as OutputCondition
-
-//         await automationManager.addCondition(1, condition, "allOf");
-//         assert.equal(Object.keys(automationManager.automations[1]!.conditions.allOf).length, 1);
-//         assert.equal(sprootDB.addOutputAutomationConditionAsync.callCount, 1);
-//         assert.equal(automationManager.automations[1]!.conditions.allOf[1]!.operator, "equal");
-//         assert.equal(automationManager.automations[1]!.conditions.allOf[1]!.comparisonValue, 50);
-//       });
-//     })
-
-//     describe("updateAutomationConditionAsync", () => {
-//       it('should do nothing with an invalid automationId', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const condition = {
-//           id: 1,
-//           sensorId: 1,
-//           readingType: "temperature",
-//           operator: "equal",
-//           comparisonValue: 50
-//         } as SensorCondition
-
-//         await automationManager.updateConditionAsync(1, condition, "allOf");
-//         assert.equal(sprootDB.updateSensorAutomationConditionAsync.callCount, 0);
-//       });
-
-//       it('should do nothing with an invalid conditionId', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
-
-//         const sensorAutomation = {
-//           id: 1,
-//           name: "sensorAutomation",
-//           value: 50,
-//           operator: "or"
-//         } as SDBAutomation;
-
-//         sprootDB.addAutomationAsync.resolves(1);
-//         sprootDB.addSensorAutomationConditionAsync.resolves(1);
-//         await automationManager.addAutomationAsync(1, sensorAutomation);
-
-//         const condition = {
-//           id: 1,
-//           sensorId: 1,
-//           readingType: "temperature",
-//           operator: "equal",
-//           comparisonValue: 50
-//         } as SensorCondition
-
-//         await automationManager.addCondition(1, condition, "allOf");
-//         assert.equal(Object.keys(automationManager.automations[1]!.conditions.allOf).length, 1);
-
-//         condition.id = 2;
-//         await automationManager.updateConditionAsync(1, condition, "allOf");
-//         assert.equal(sprootDB.updateSensorAutomationConditionAsync.callCount, 0);
-//       });
+  describe("evaluate", () => {
+    it("should return the automation's value (conditions met)", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
       
-//       it('should update a SensorCondition rule in an automation', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves(1);
+      await automationManager.addTimeConditionAsync(1, "allOf", null, null);
 
-//         const sensorAutomation = {
-//           id: 1,
-//           name: "sensorAutomation",
-//           value: 50,
-//           operator: "or"
-//         } as SDBAutomation;
+      assert.equal(automationManager.evaluate(sensorListMock, outputListMock), 75);
+    });
 
-//         sprootDB.addAutomationAsync.resolves(1);
-//         sprootDB.addSensorAutomationConditionAsync.resolves(1);
-//         await automationManager.addAutomationAsync(1, sensorAutomation);
+    it("should return null (conditions not met)", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+      const now = new Date();
+      now.setHours(12);
+      
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves(1);
+      await automationManager.addTimeConditionAsync(1, "allOf", "13:00", null);
 
-//         assert.equal(Object.keys(automationManager.automations).length, 1);
-//         assert.equal(automationManager.automations[1]!.name, "sensorAutomation");
-//         assert.equal(automationManager.automations[1]!.value, 50);
-//         assert.equal(automationManager.automations[1]!.operator, "or");
+      assert.isNull(automationManager.evaluate(sensorListMock, outputListMock, now));
+    })
 
-//         const condition = {
-//           id: 1,
-//           sensorId: 1,
-//           readingType: "temperature",
-//           operator: "equal",
-//           comparisonValue: 50
-//         } as SensorCondition
+    it("should return null (more than one automation evaluates to true)", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+      
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves(1);
+      await automationManager.addTimeConditionAsync(1, "allOf", null, null);
 
-//         await automationManager.addConditionAsync(1, "allOf", condition);
-//         assert.equal(Object.keys(automationManager.automations[1]!.conditions.allOf).length, 1);
-//         assert.equal(sprootDB.addSensorAutomationConditionAsync.callCount, 1);
+      sprootDB.addAutomationAsync.resolves(2);
+      await automationManager.addAutomationAsync("test2", 1, 50, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves(2);
+      await automationManager.addTimeConditionAsync(2, "allOf", null, null);
 
-//         const updatedCondition = {
-//           id: 1,
-//           sensorId: 1,
-//           readingType: "temperature",
-//           operator: "equal",
-//           comparisonValue: 55
-//         } as SensorCondition
+      assert.isNull(automationManager.evaluate(sensorListMock, outputListMock));
+    });
+  });
 
-//         await automationManager.updateConditionAsync(1, "allOf", updatedCondition);
-//         assert.equal(automationManager.automations[1]!.conditions.allOf[1]!.comparisonValue, 55);
-//         assert.equal(sprootDB.updateSensorAutomationConditionAsync.callCount, 1);
-//       });
-//     });
+  describe("addAutomationAsync", () => {
+    it("should add an automation to the manager", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
 
-//     describe("loadAsync", () => {
-//       it('should load two automations, assigning conditions to their respective type', async () => {
-//         const sprootDB = sinon.createStubInstance(SprootDB);
-//         const automationManager = new AutomationManager(sprootDB);
+      sprootDB.addAutomationAsync.resolves(1);
+      const result = await automationManager.addAutomationAsync("test", 1, 75, "or");
+      
+      assert.equal(result.id, 1);
+      assert.equal(result.name, "test");
+      assert.equal(result.value, 75);
+      assert.equal(result.operator, "or");
+    });
+  });
 
-//         sprootDB.getAutomationsAsync.resolves([
-//           {
-//             id: 1,
-//             name: "sensorAutomation",
-//             outputId: 1,
-//             value: 50,
-//             operator: "and"
-//           } as SDBAutomation,
-//           {
-//             id: 2,
-//             name: "outputAutomation",
-//             outputId: 1,
-//             value: 75,
-//             operator: "or"
-//           } as SDBAutomation
-//         ]);
+  describe("deleteAutomationAsync", () => {
+    it("should delete an automation from the manager", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+      
+      sprootDB.addAutomationAsync.resolves(1);
+      sprootDB.deleteAutomationAsync.resolves();
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      await automationManager.deleteAutomationAsync(1);
 
-//         sprootDB.getSensorAutomationConditionsAsync.onFirstCall().resolves([
-//           {
-//             id: 1,
-//             automationId: 1,
-//             type: "allOf",
-//             sensorId: 1,
-//             readingType: "temperature",
-//             operator: "equal",
-//             comparisonValue: 50
-//           } as SDBSensorAutomationCondition,
-//           {
-//             id: 2,
-//             automationId: 1,
-//             type: "anyOf",
-//             sensorId: 1,
-//             readingType: "temperature",
-//             operator: "equal",
-//             comparisonValue: 50
-//           } as SDBSensorAutomationCondition,
-//           {
-//             id: 3,
-//             automationId: 1,
-//             type: "oneOf",
-//             sensorId: 1,
-//             readingType: "temperature",
-//             operator: "equal",
-//             comparisonValue: 50
-//           } as SDBSensorAutomationCondition
-//         ]);
-//         sprootDB.getSensorAutomationConditionsAsync.onSecondCall().resolves([]);
+      assert.isEmpty(Object.values(automationManager.automations));
+    });
+  });
 
-//         sprootDB.getOutputAutomationConditionsAsync.onFirstCall().resolves([]);
-//         sprootDB.getOutputAutomationConditionsAsync.onSecondCall().resolves([
-//           {
-//             id: 1,
-//             automationId: 2,
-//             type: "allOf",
-//             outputId: 1,
-//             operator: "equal",
-//             comparisonValue: 50
-//           } as SDBOutputAutomationCondition,
-//           {
-//             id: 2,
-//             automationId: 2,
-//             type: "anyOf",
-//             outputId: 1,
-//             operator: "equal",
-//             comparisonValue: 50
-//           } as SDBOutputAutomationCondition,
-//           {
-//             id: 3,
-//             automationId: 2,
-//             type: "oneOf",
-//             outputId: 1,
-//             operator: "equal",
-//             comparisonValue: 50
-//           } as SDBOutputAutomationCondition
-//         ]);
+  describe("updateAutomationAsync", () => {
+    it('should update an automation in the manager', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
 
-//         await automationManager.loadAsync(1);
+      sprootDB.addAutomationAsync.resolves(1);
+      sprootDB.updateAutomationAsync.resolves();
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      await automationManager.updateAutomationAsync({ id: 1, name: "test2", value: 50, operator: "and" });
 
-//         assert.equal(Object.keys(automationManager.automations).length, 2);
-//         assert.equal(Object.keys(automationManager.automations[1]!.conditions.allOf).length, 1);
-//         assert.equal(Object.keys(automationManager.automations[1]!.conditions.anyOf).length, 1);
-//         assert.equal(Object.keys(automationManager.automations[1]!.conditions.oneOf).length, 1);
-//         assert.equal(Object.keys(automationManager.automations[2]!.conditions.allOf).length, 1);
-//         assert.equal(Object.keys(automationManager.automations[2]!.conditions.anyOf).length, 1);
-//         assert.equal(Object.keys(automationManager.automations[2]!.conditions.oneOf).length, 1);
-//         assert.equal(sprootDB.getAutomationsAsync.callCount, 1);
-//         assert.equal(sprootDB.getSensorAutomationConditionsAsync.callCount, 2);
-//         assert.equal(sprootDB.getOutputAutomationConditionsAsync.callCount, 2);
-//       });
-//     });
-//   })
-// })`
+      const automation = automationManager.automations[1];
+      assert.equal(automation?.name, "test2");
+      assert.equal(automation?.value, 50);
+      assert.equal(automation?.operator, "and");
+    });
+
+    it("should not update an automation that does not exist", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.updateAutomationAsync.resolves();
+      await automationManager.updateAutomationAsync({ id: 1, name: "test2", value: 50, operator: "and" });
+
+      assert.isUndefined(automationManager.automations[1]);
+    });
+  });
+
+  describe("addSensorConditionAsync", () => {
+    it('should add a sensor condition to an automation', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addSensorAutomationConditionAsync.resolves();
+      await automationManager.addSensorConditionAsync(1, "allOf", "equal", 50, 1, ReadingType.temperature);
+
+      const automation = automationManager.automations[1];
+      assert.equal(automation?.conditions.groupedConditions.sensor.allOf.length, 1);
+    });
+
+    it('should not add a sensor condition to an automation that does not exist', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addSensorAutomationConditionAsync.resolves();
+      await automationManager.addSensorConditionAsync(1, "allOf", "equal", 50, 1, ReadingType.temperature);
+
+      const automation = automationManager.automations[1];
+      assert.isUndefined(automation);
+    });
+  });
+
+  describe("addOutputConditionAsync", () => {
+    it('should add an output condition to an automation', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addOutputAutomationConditionAsync.resolves();
+      await automationManager.addOutputConditionAsync(1, "allOf", "equal", 50, 1);
+
+      const automation = automationManager.automations[1];
+      assert.equal(automation?.conditions.groupedConditions.output.allOf.length, 1);
+    });
+
+    it('should not add an output condition to an automation that does not exist', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addOutputAutomationConditionAsync.resolves();
+      await automationManager.addOutputConditionAsync(1, "allOf", "equal", 50, 1);
+
+      const automation = automationManager.automations[1];
+      assert.isUndefined(automation);
+    });
+  });
+
+  describe("addTimeConditionAsync", () => {
+    it('should add a time condition to an automation', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves();
+      await automationManager.addTimeConditionAsync(1, "allOf", "12:00", "13:00");
+
+      const automation = automationManager.automations[1];
+      assert.equal(automation?.conditions.groupedConditions.time.allOf.length, 1);
+    });
+
+    it('should not add a time condition to an automation that does not exist', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addTimeAutomationConditionAsync.resolves();
+      await automationManager.addTimeConditionAsync(1, "allOf", "12:00", "13:00");
+
+      const automation = automationManager.automations[1];
+      assert.isUndefined(automation);
+    });
+  });
+
+  describe("updateConditionAsync", () => {
+    it('should update a condition in an automation', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves(1);
+      const condition = await automationManager.addTimeConditionAsync(1, "allOf", "12:00", "13:00");
+
+      condition!.group = "anyOf";
+      condition!.startTime = "13:00";
+      condition!.endTime = "14:00";
+      sprootDB.updateTimeAutomationConditionAsync.resolves();
+      await automationManager.updateConditionAsync(1, condition!);
+
+      assert.equal(automationManager.automations[1]?.conditions.groupedConditions.time.anyOf[0]!.group, "anyOf");
+      assert.equal(automationManager.automations[1]?.conditions.groupedConditions.time.anyOf[0]!.startTime, "13:00");
+      assert.equal(automationManager.automations[1]?.conditions.groupedConditions.time.anyOf[0]!.endTime, "14:00");
+    });
+
+    it('should not update a condition in an automation that does not exist', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves(1);
+      const condition = await automationManager.addTimeConditionAsync(1, "allOf", "12:00", "13:00");
+
+      sprootDB.updateTimeAutomationConditionAsync.resolves();
+      await automationManager.updateConditionAsync(2, condition!);
+
+      assert.isUndefined(automationManager.automations[2])
+    });
+  });
+
+  describe("deleteSensorConditionAsync", () => {
+    it('should delete a sensor condition from an automation', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addSensorAutomationConditionAsync.resolves(1);
+      await automationManager.addSensorConditionAsync(1, "allOf", "equal", 50, 1, ReadingType.temperature);
+
+      sprootDB.deleteSensorAutomationConditionAsync.resolves();
+      await automationManager.deleteSensorConditionAsync(1, 1);
+
+      assert.isEmpty(automationManager.automations[1]?.conditions.groupedConditions.sensor.allOf);
+    });
+
+    it('should not delete a sensor condition from an automation that does not exist', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.deleteSensorAutomationConditionAsync.resolves();
+      await automationManager.deleteSensorConditionAsync(1, 1);
+
+      assert.isUndefined(automationManager.automations[1]);
+    });
+  });
+
+  describe("deleteOutputConditionAsync", () => {
+    it('should delete an output condition from an automation', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addOutputAutomationConditionAsync.resolves(1);
+      await automationManager.addOutputConditionAsync(1, "allOf", "equal", 50, 1);
+
+      sprootDB.deleteOutputAutomationConditionAsync.resolves();
+      await automationManager.deleteOutputConditionAsync(1, 1);
+
+      assert.isEmpty(automationManager.automations[1]?.conditions.groupedConditions.output.allOf);
+    });
+
+    it('should not delete an output condition from an automation that does not exist', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.deleteOutputAutomationConditionAsync.resolves();
+      await automationManager.deleteOutputConditionAsync(1, 1);
+
+      assert.isUndefined(automationManager.automations[1]);
+    });
+  });
+
+  describe("deleteTimeConditionAsync", () => {
+    it('should delete a time condition from an automation', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.addAutomationAsync.resolves(1);
+      await automationManager.addAutomationAsync("test", 1, 75, "or");
+      sprootDB.addTimeAutomationConditionAsync.resolves(1);
+      await automationManager.addTimeConditionAsync(1, "allOf", "12:00", "13:00");
+
+      sprootDB.deleteTimeAutomationConditionAsync.resolves();
+      await automationManager.deleteTimeConditionAsync(1, 1);
+
+      assert.isEmpty(automationManager.automations[1]?.conditions.groupedConditions.time.allOf);
+    });
+
+    it('should not delete a time condition from an automation that does not exist', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.deleteTimeAutomationConditionAsync.resolves();
+      await automationManager.deleteTimeConditionAsync(1, 1);
+
+      assert.isUndefined(automationManager.automations[1]);
+    });
+  });
+
+  describe("loadAsync", () => {
+    it('should load all automations from the database', async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new AutomationManager(sprootDB);
+
+      sprootDB.getAutomationsAsync.resolves([
+        { id: 1, name: "test", outputId: 1, value: 75, operator: "or" } as SDBAutomation,
+        { id: 2, name: "test2", outputId: 1, value: 50, operator: "and" } as SDBAutomation
+      ]);
+
+      // Sensor conditions
+      sprootDB.getSensorAutomationConditionsAsync.onFirstCall().resolves([
+        { id: 1, automationId: 1, type: "allOf", sensorId: 1, readingType: ReadingType.temperature, operator: "equal", comparisonValue: 50 } as SDBSensorAutomationCondition
+      ]);
+      sprootDB.getSensorAutomationConditionsAsync.onSecondCall().resolves([]);
+
+      // Output conditions
+      sprootDB.getOutputAutomationConditionsAsync.onFirstCall().resolves([]);
+      sprootDB.getOutputAutomationConditionsAsync.onSecondCall().resolves([
+        { id: 1, automationId: 2, type: "anyOf", outputId: 1, operator: "equal", comparisonValue: 50 } as SDBOutputAutomationCondition
+      ]);
+
+      //Time conditions
+      sprootDB.getTimeAutomationConditionsAsync.onFirstCall().resolves([
+        { id: 1, automationId: 1, type: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeAutomationCondition,
+        { id: 2, automationId: 1, type: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeAutomationCondition
+      ]);
+      sprootDB.getTimeAutomationConditionsAsync.onSecondCall().resolves([]);
+
+      await automationManager.loadAsync(1);
+
+      assert.equal(Object.keys(automationManager.automations).length, 2);
+
+      assert.equal(automationManager.automations[1]!.id, 1);
+      assert.equal(automationManager.automations[1]?.name, "test");
+      assert.equal(automationManager.automations[1]?.value, 75);
+      assert.equal(automationManager.automations[1]?.operator, "or");
+      assert.equal(automationManager.automations[1]?.conditions.allOf.length, 3);
+
+      assert.equal(automationManager.automations[2]?.id, 2);
+      assert.equal(automationManager.automations[2]?.name, "test2");
+      assert.equal(automationManager.automations[2]?.value, 50);
+      assert.equal(automationManager.automations[2]?.operator, "and");
+      assert.equal(automationManager.automations[2]?.conditions.anyOf.length, 1);
+    });
+  });
+})

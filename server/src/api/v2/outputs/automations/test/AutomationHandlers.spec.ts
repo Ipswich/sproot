@@ -173,8 +173,26 @@ describe("AutomationHandlers.ts", () => {
           getAutomations: function () {
             return {}
           },
-          addAutomationAsync: function (automation: Automation) {
-            return Promise.resolve({ automation, id: 1 } as unknown as Automation);
+          addAutomationAsync: function (name: string, value: number, operator: string) {
+            return Promise.resolve({
+              name, value, operator, conditions: {
+                sensor: {
+                  allOf: [],
+                  anyOf: [],
+                  oneOf: [],
+                },
+                output: {
+                  allOf: [],
+                  anyOf: [],
+                  oneOf: [],
+                },
+                time: {
+                  allOf: [],
+                  anyOf: [],
+                  oneOf: [],
+                }
+              }, id: 1
+            } as unknown as Automation);
           }
         }
       });
@@ -219,6 +237,11 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(success.statusCode, 201);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.content?.data?.name, newAutomation.name);
+      assert.equal(success.content?.data?.value, newAutomation.value);
+      assert.equal(success.content?.data?.operator, newAutomation.operator);
+      assert.equal(Object.values(success.content?.data?.conditions).length, 3);
+      assert.equal(Object.values(success.content?.data?.conditions.sensor).length, 3);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -577,10 +600,10 @@ describe("AutomationHandlers.ts", () => {
       assert.deepEqual(error.error["details"], [
         "Invalid value (output is not PWM): must be a number equal to 0 and 100",
       ]);
-      
+
       mockRequest.body.value = 101,
 
-      error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+        error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);

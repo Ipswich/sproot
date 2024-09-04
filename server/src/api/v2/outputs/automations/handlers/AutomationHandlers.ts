@@ -142,7 +142,7 @@ export async function addAsync(request: Request, response: Response) {
       addAutomationResponse = {
         statusCode: 201,
         content: {
-          data: createdAutomation,
+          data: {...createdAutomation, ...createdAutomation.conditions.groupedConditions},
         },
         ...response.locals["defaultProperties"],
       };

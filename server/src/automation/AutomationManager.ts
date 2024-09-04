@@ -4,9 +4,9 @@ import { Automation } from "./Automation";
 import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
-import { TimeCondition } from "./conditions/time/TimeCondition";
-import { SensorCondition } from "./conditions/sensors/SensorCondition";
-import { OutputCondition } from "./conditions/outputs/OutputCondition";
+import { TimeCondition } from "./conditions/TimeCondition";
+import { SensorCondition } from "./conditions/SensorCondition";
+import { OutputCondition } from "./conditions/OutputCondition";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 
 export default class AutomationManager {
@@ -28,7 +28,7 @@ export default class AutomationManager {
    * @param now 
    * @returns 
    */
-  evaluate(sensorList: SensorList, outputList: OutputList, now: Date): number | null {
+  evaluate(sensorList: SensorList, outputList: OutputList, now: Date = new Date()): number | null {
     const values = Object.values(this.#automations)
       .map((automation) => automation.evaluate(sensorList, outputList, now))
       .filter((r) => r != null);
@@ -44,7 +44,6 @@ export default class AutomationManager {
     // Add the automation to the database, and save the autoId it generates.
     const automationId = await this.#sprootDB.addAutomationAsync(name, outputId, value, operator);
     this.#automations[automationId] = new Automation(automationId, name, value, operator, this.#sprootDB);
-    await this.#automations[automationId].conditions.loadAsync();
     return this.#automations[automationId];
   }
 
@@ -71,21 +70,21 @@ export default class AutomationManager {
     if (this.#automations[automationId] == null) {
       return;
     }
-    await this.#automations[automationId].conditions.addSensorConditionAsync(type, operator, comparisonValue, sensorId, readingType);
+    return await this.#automations[automationId].conditions.addSensorConditionAsync(type, operator, comparisonValue, sensorId, readingType);
   }
 
   async addOutputConditionAsync(automationId: number, type: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: number) {
     if (this.#automations[automationId] == null) {
       return;
     }
-    await this.#automations[automationId].conditions.addOutputConditionAsync(type, operator, comparisonValue, outputId);
+    return await this.#automations[automationId].conditions.addOutputConditionAsync(type, operator, comparisonValue, outputId);
   }
 
-  async addTimeConditionAsync(automationId: number, type: ConditionGroupType, startTime: string, endTime: string) {
+  async addTimeConditionAsync(automationId: number, type: ConditionGroupType, startTime: string | null | undefined, endTime: string | null | undefined) {
     if (this.#automations[automationId] == null) {
       return;
     }
-    await this.#automations[automationId].conditions.addTimeConditionAsync(type, startTime, endTime);
+    return await this.#automations[automationId].conditions.addTimeConditionAsync(type, startTime, endTime);
   }
 
   async updateConditionAsync(automationId: number, condition: OutputCondition | SensorCondition | TimeCondition) {

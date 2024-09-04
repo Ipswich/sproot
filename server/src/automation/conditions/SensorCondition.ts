@@ -1,12 +1,12 @@
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
 import { ReadingType } from "@sproot/sensors/ReadingType";
-import { SensorList } from "../../../sensors/list/SensorList";
-import { evaluateNumber } from "../ConditionUtils";
+import { SensorList } from "../../sensors/list/SensorList";
+import { evaluateNumber } from "./ConditionUtils";
 import { ISensorCondition } from "@sproot/automation/ISensorCondition";
 
 export class SensorCondition implements ISensorCondition{
   id: number;
-  type: ConditionGroupType;
+  group: ConditionGroupType;
   sensorId: number;
   readingType: ReadingType;
   operator: ConditionOperator;
@@ -14,14 +14,14 @@ export class SensorCondition implements ISensorCondition{
 
   constructor(
     id: number,
-    type: ConditionGroupType,
+    group: ConditionGroupType,
     sensorId: number,
     readingType: ReadingType,
     operator: ConditionOperator,
     comparisonValue: number,
   ) {
     this.id = id;
-    this.type = type;
+    this.group = group;
     this.sensorId = sensorId;
     this.readingType = readingType;
     this.operator = operator;

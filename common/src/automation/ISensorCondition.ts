@@ -3,7 +3,7 @@ import { ConditionGroupType } from "./ICondition";
 
 interface ISensorCondition {
   id: number;
-  type: ConditionGroupType;
+  group: ConditionGroupType;
   sensorId: number;
   readingType: ReadingType;
   comparisonValue: number;

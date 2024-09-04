@@ -16,9 +16,9 @@ import { SDBSensorAutomationCondition } from "@sproot/database/SDBSensorAutomati
 import { SDBTimeAutomationCondition } from "@sproot/database/SDBTimeAutomationCondition";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
 import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
-import { TimeCondition } from "../automation/conditions/time/TimeCondition";
-import { OutputCondition } from "../automation/conditions/outputs/OutputCondition";
-import { SensorCondition } from "../automation/conditions/sensors/SensorCondition";
+import { TimeCondition } from "../automation/conditions/TimeCondition";
+import { OutputCondition } from "../automation/conditions/OutputCondition";
+import { SensorCondition } from "../automation/conditions/SensorCondition";
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
 
@@ -60,7 +60,7 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute(
       "UPDATE sensor_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE automation_id = ? AND id = ?",
       [
-        condition.type,
+        condition.group,
         condition.operator,
         condition.comparisonValue,
         condition.sensorId,
@@ -109,7 +109,7 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute(
       "UPDATE output_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE automation_id = ? AND id = ?",
       [
-        condition.type,
+        condition.group,
         condition.operator,
         condition.comparisonValue,
         condition.outputId,
@@ -156,7 +156,7 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute(
       "UPDATE time_automation_conditions SET type = ?, startTime = ?, endTime = ?, WHERE automation_id = ? AND id = ?",
       [
-        condition.type,
+        condition.group,
         condition.startTime,
         condition.endTime,
         automationId,
