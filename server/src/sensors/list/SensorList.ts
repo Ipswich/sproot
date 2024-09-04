@@ -3,7 +3,7 @@ import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
-import { ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
+import { ChartData, DataSeries, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
@@ -283,6 +283,7 @@ class SensorList {
             name: `New DS18B20 ..${address.slice(-4)}`,
             model: "DS18B20",
             address: address,
+            color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)]
           } as SDBSensor),
         );
       }
