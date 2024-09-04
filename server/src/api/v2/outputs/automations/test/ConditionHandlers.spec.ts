@@ -435,7 +435,7 @@ describe("ConditionHandlers.ts", () => {
         }
       } as unknown as Request;
 
-      const success = await addAsync(mockRequest, mockResponse) as SuccessResponse;
+      let success = await addAsync(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 201);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -443,6 +443,17 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.content?.data.groupType, "allOf");
       assert.equal(success.content?.data.startTime, "12:00");
       assert.equal(success.content?.data.endTime, "13:00");
+
+      mockRequest.body.startTime = null;
+      mockRequest.body.endTime = null;
+      success = await addAsync(mockRequest, mockResponse) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.content?.data.id, 1);
+      assert.equal(success.content?.data.groupType, "allOf");
+      assert.isNull(success.content?.data.startTime);
+      assert.isNull(success.content?.data.endTime);
     });
 
     it('should return a 400 if the outputId is invalid', async () => {

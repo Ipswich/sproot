@@ -36,9 +36,12 @@ export default class AutomationManager {
   }
 
   // TODO: Implement this
-  checkForCollisions(): Record<number, Automation> {
-    return {};
-  }
+  // It'd be good to have something that can check if there's a collision between different automations.
+  // At this point, we just return null if there's more than one automation that evaluates to true to keep
+  // things predictable, but that doesn't feel like the best solution.
+  // checkForCollisions(): Record<number, Automation> {
+  //   return {};
+  // }
 
   async addAutomationAsync(name: string, outputId: number, value: number, operator: AutomationOperator): Promise<Automation> {
     // Add the automation to the database, and save the autoId it generates.
