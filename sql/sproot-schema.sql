@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `automations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-CREATE TABLE IF NOT EXISTS`time_automation_conditions` (
+CREATE TABLE IF NOT EXISTS `time_automation_conditions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `automation_id` int(11) NOT NULL,
   `type` varchar(6) NOT NULL,

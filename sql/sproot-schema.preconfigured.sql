@@ -34,15 +34,15 @@ CREATE TABLE IF NOT EXISTS `automations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-CREATE TABLE IF NOT EXISTS`time_automation_conditiosn` (
+CREATE TABLE IF NOT EXISTS `time_automation_conditions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `automation_Id` int(11) NOT NULL,
+  `automation_id` int(11) NOT NULL,
   `type` varchar(6) NOT NULL,
   `startTime` varchar(8) DEFAULT NULL,
   `endTime` varchar(8) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `automationId` (`automationId`),
-  CONSTRAINT `time_automation_condition_ibfk_1` FOREIGN KEY (`automation_Id`) REFERENCES `automations` (`id`) ON DELETE CASCADE
+  KEY `automation_id` (`automation_id`),
+  CONSTRAINT `time_automation_condition_ibfk_1` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
