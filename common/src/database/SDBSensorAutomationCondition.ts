@@ -5,7 +5,7 @@ import { ReadingType } from "../sensors/ReadingType";
 type SDBSensorAutomationCondition = RowDataPacket & {
   id: number;
   automationId: number;
-  type: ConditionGroupType;
+  groupType: ConditionGroupType;
   operator: ConditionOperator;
   comparisonValue: number;
   sensorId: number;

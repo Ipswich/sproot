@@ -1202,7 +1202,7 @@ paths:
                           details:
                             items:
                               example: "Automation with ID -1 not found."
-    patch:
+    put:
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1913,7 +1913,7 @@ paths:
                               example: "Condition with ID -1 not found."
 
     
-    patch:
+    put:
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3305,7 +3305,7 @@ components:
               type: number
               readOnly: true
               example: 1
-            group: 
+            groupType: 
               type: string
               enum:
                 - allOf
@@ -3338,7 +3338,7 @@ components:
             type: number
             readOnly: true
             example: 1
-          group: 
+          groupType: 
             type: string
             enum:
               - allOf
@@ -3364,7 +3364,7 @@ components:
             type: number
             readOnly: true
             example: 1
-          group: 
+          groupType: 
             type: string
             enum:
               - allOf

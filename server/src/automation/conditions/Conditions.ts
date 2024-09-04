@@ -34,33 +34,33 @@ export class Conditions {
   } {
     return {
       sensor: {
-        allOf: [...Object.values(this.#sensorConditions)].filter((c) => c.group == "allOf"),
-        anyOf: [...Object.values(this.#sensorConditions)].filter((c) => c.group == "anyOf"),
-        oneOf: [...Object.values(this.#sensorConditions)].filter((c) => c.group == "oneOf")
+        allOf: [...Object.values(this.#sensorConditions)].filter((c) => c.groupType == "allOf"),
+        anyOf: [...Object.values(this.#sensorConditions)].filter((c) => c.groupType == "anyOf"),
+        oneOf: [...Object.values(this.#sensorConditions)].filter((c) => c.groupType == "oneOf")
       },
       output: {
-        allOf: [...Object.values(this.#outputConditions)].filter((c) => c.group == "allOf"),
-        anyOf: [...Object.values(this.#outputConditions)].filter((c) => c.group == "anyOf"),
-        oneOf: [...Object.values(this.#outputConditions)].filter((c) => c.group == "oneOf")
+        allOf: [...Object.values(this.#outputConditions)].filter((c) => c.groupType == "allOf"),
+        anyOf: [...Object.values(this.#outputConditions)].filter((c) => c.groupType == "anyOf"),
+        oneOf: [...Object.values(this.#outputConditions)].filter((c) => c.groupType == "oneOf")
       },
       time: {
-        allOf: [...Object.values(this.#timeConditions)].filter((c) => c.group == "allOf"),
-        anyOf: [...Object.values(this.#timeConditions)].filter((c) => c.group == "anyOf"),
-        oneOf: [...Object.values(this.#timeConditions)].filter((c) => c.group == "oneOf")
+        allOf: [...Object.values(this.#timeConditions)].filter((c) => c.groupType == "allOf"),
+        anyOf: [...Object.values(this.#timeConditions)].filter((c) => c.groupType == "anyOf"),
+        oneOf: [...Object.values(this.#timeConditions)].filter((c) => c.groupType == "oneOf")
       }
     };
   }
 
   get allOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
-    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.group == "allOf");
+    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.groupType == "allOf");
   }
 
   get anyOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
-    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.group == "anyOf");
+    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.groupType == "anyOf");
   }
 
   get oneOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
-    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.group == "oneOf");
+    return [...Object.values(this.#sensorConditions), ...Object.values(this.#outputConditions), ...Object.values(this.#timeConditions)].filter((c) => c.groupType == "oneOf");
   }
 
   evaluate(operator: AutomationOperator, sensorList: SensorList, outputList: OutputList, now: Date): boolean {
@@ -114,23 +114,23 @@ export class Conditions {
     }
   }
 
-  async addSensorConditionAsync(group: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, sensorId: number, readingType: ReadingType): Promise<SensorCondition> {
-    const newSensorConditionId = await this.#sprootDB.addSensorAutomationConditionAsync(this.#automationId, group, operator, comparisonValue, sensorId, readingType);
-    const newSensorCondition = new SensorCondition(newSensorConditionId, group, sensorId, readingType, operator, comparisonValue);
+  async addSensorConditionAsync(groupType: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, sensorId: number, readingType: ReadingType): Promise<SensorCondition> {
+    const newSensorConditionId = await this.#sprootDB.addSensorAutomationConditionAsync(this.#automationId, groupType, operator, comparisonValue, sensorId, readingType);
+    const newSensorCondition = new SensorCondition(newSensorConditionId, groupType, sensorId, readingType, operator, comparisonValue);
     this.#sensorConditions[newSensorConditionId] = newSensorCondition;
     return newSensorCondition;
   }
 
-  async addOutputConditionAsync(group: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: number): Promise<OutputCondition> {
-    const newOutputConditionId = await this.#sprootDB.addOutputAutomationConditionAsync(this.#automationId, group, operator, comparisonValue, outputId);
-    const newOutputCondition = new OutputCondition(newOutputConditionId, group, outputId, operator, comparisonValue);
+  async addOutputConditionAsync(groupType: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: number): Promise<OutputCondition> {
+    const newOutputConditionId = await this.#sprootDB.addOutputAutomationConditionAsync(this.#automationId, groupType, operator, comparisonValue, outputId);
+    const newOutputCondition = new OutputCondition(newOutputConditionId, groupType, outputId, operator, comparisonValue);
     this.#outputConditions[newOutputConditionId] = newOutputCondition;
     return newOutputCondition;
   }
 
-  async addTimeConditionAsync(group: ConditionGroupType, startTime: string | undefined | null, endTime: string | undefined | null): Promise<TimeCondition> {
-    const newTimeConditionId = await this.#sprootDB.addTimeAutomationConditionAsync(this.#automationId, group, startTime, endTime);
-    const newTimeCondition = new TimeCondition(newTimeConditionId, group, startTime, endTime);
+  async addTimeConditionAsync(groupType: ConditionGroupType, startTime: string | undefined | null, endTime: string | undefined | null): Promise<TimeCondition> {
+    const newTimeConditionId = await this.#sprootDB.addTimeAutomationConditionAsync(this.#automationId, groupType, startTime, endTime);
+    const newTimeCondition = new TimeCondition(newTimeConditionId, groupType, startTime, endTime);
     this.#timeConditions[newTimeConditionId] = newTimeCondition;
     return this.#timeConditions[newTimeConditionId];
   }
@@ -175,15 +175,15 @@ export class Conditions {
     const promises = [];
     promises.push(this.#sprootDB.getSensorAutomationConditionsAsync(this.#automationId)
       .then((sensorConditions) => {
-        sensorConditions.map((sensorCondition) => { this.#sensorConditions[sensorCondition.id] = new SensorCondition(sensorCondition.id, sensorCondition.type, sensorCondition.sensorId, sensorCondition.readingType, sensorCondition.operator, sensorCondition.comparisonValue) });
+        sensorConditions.map((sensorCondition) => { this.#sensorConditions[sensorCondition.id] = new SensorCondition(sensorCondition.id, sensorCondition.groupType, sensorCondition.sensorId, sensorCondition.readingType, sensorCondition.operator, sensorCondition.comparisonValue) });
       }));
     promises.push(this.#sprootDB.getOutputAutomationConditionsAsync(this.#automationId)
       .then((outputConditions) => {
-        outputConditions.map((outputCondition) => { this.#outputConditions[outputCondition.id] = new OutputCondition(outputCondition.id, outputCondition.type, outputCondition.outputId, outputCondition.operator, outputCondition.comparisonValue) });
+        outputConditions.map((outputCondition) => { this.#outputConditions[outputCondition.id] = new OutputCondition(outputCondition.id, outputCondition.groupType, outputCondition.outputId, outputCondition.operator, outputCondition.comparisonValue) });
       }));
     promises.push(this.#sprootDB.getTimeAutomationConditionsAsync(this.#automationId)
       .then((timeConditions) => {
-        timeConditions.map((timeCondition) => { this.#timeConditions[timeCondition.id] = new TimeCondition(timeCondition.id, timeCondition.type, timeCondition.startTime, timeCondition.endTime) });
+        timeConditions.map((timeCondition) => { this.#timeConditions[timeCondition.id] = new TimeCondition(timeCondition.id, timeCondition.groupType, timeCondition.startTime, timeCondition.endTime) });
       }));
 
     await Promise.all(promises);

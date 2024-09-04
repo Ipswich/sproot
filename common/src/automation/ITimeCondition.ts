@@ -2,7 +2,7 @@ import { ConditionGroupType } from "./ICondition";
 
 interface ITimeCondition {
   id: number;
-  group: ConditionGroupType;
+  groupType: ConditionGroupType;
   startTime?: string | null;
   endTime?: string | null;
 }

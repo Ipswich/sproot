@@ -29,23 +29,23 @@ class SprootDB implements ISprootDB {
     automationId: number,
   ): Promise<SDBSensorAutomationCondition[]> {
     const [rows] = await this.#connection.execute<SDBSensorAutomationCondition[]>(
-      "SELECT id, automation_id as automationId, type, operator, comparisonValue, sensor_id as sensorId, readingType FROM sensor_automation_conditions WHERE automation_id = ?",
+      "SELECT id, automation_id as automationId, groupType, operator, comparisonValue, sensor_id as sensorId, readingType FROM sensor_automation_conditions WHERE automation_id = ?",
       [automationId],
     );
     return rows;
   }
   async addSensorAutomationConditionAsync(
     automationId: number,
-    type: ConditionGroupType,
+    groupType: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
     sensorId: number,
     readingType: string): Promise<number> {
     return (await this.#connection.execute<ResultSetHeader>(
-      "INSERT INTO sensor_automation_conditions (automation_id, type, operator, comparisonValue, sensor_id, readingType) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO sensor_automation_conditions (automation_id, groupType, operator, comparisonValue, sensor_id, readingType) VALUES (?, ?, ?, ?, ?, ?)",
       [
         automationId,
-        type,
+        groupType,
         operator,
         comparisonValue,
         sensorId,
@@ -58,9 +58,9 @@ class SprootDB implements ISprootDB {
     condition: SensorCondition,
   ): Promise<void> {
     await this.#connection.execute(
-      "UPDATE sensor_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE automation_id = ? AND id = ?",
+      "UPDATE sensor_automation_conditions SET groupType = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE automation_id = ? AND id = ?",
       [
-        condition.group,
+        condition.groupType,
         condition.operator,
         condition.comparisonValue,
         condition.sensorId,
@@ -80,22 +80,22 @@ class SprootDB implements ISprootDB {
     automationId: number,
   ): Promise<SDBOutputAutomationCondition[]> {
     const [rows] = await this.#connection.execute<SDBOutputAutomationCondition[]>(
-      "SELECT id, automation_id as automationId, type, operator, comparisonValue, output_id as outputId FROM output_automation_conditions WHERE automation_id = ?",
+      "SELECT id, automation_id as automationId, groupType, operator, comparisonValue, output_id as outputId FROM output_automation_conditions WHERE automation_id = ?",
       [automationId],
     );
     return rows;
   }
   async addOutputAutomationConditionAsync(
     automationId: number,
-    type: ConditionGroupType,
+    groupType: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
     outputId: number): Promise<number> {
     return (await this.#connection.execute<ResultSetHeader>(
-      "INSERT INTO output_automation_conditions (automation_id, type, operator, comparisonValue, output_id) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO output_automation_conditions (automation_id, groupType, operator, comparisonValue, output_id) VALUES (?, ?, ?, ?, ?)",
       [
         automationId,
-        type,
+        groupType,
         operator,
         comparisonValue,
         outputId,
@@ -107,9 +107,9 @@ class SprootDB implements ISprootDB {
     condition: OutputCondition,
   ): Promise<void> {
     await this.#connection.execute(
-      "UPDATE output_automation_conditions SET type = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE automation_id = ? AND id = ?",
+      "UPDATE output_automation_conditions SET groupType = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE automation_id = ? AND id = ?",
       [
-        condition.group,
+        condition.groupType,
         condition.operator,
         condition.comparisonValue,
         condition.outputId,
@@ -128,22 +128,22 @@ class SprootDB implements ISprootDB {
     automationId: number,
   ): Promise<SDBTimeAutomationCondition[]> {
     const [rows] = await this.#connection.execute<SDBTimeAutomationCondition[]>(
-      "SELECT id, automation_id as automationId, type, startTime, endTime FROM time_automation_conditions WHERE automation_id = ?",
+      "SELECT id, automation_id as automationId, groupType, startTime, endTime FROM time_automation_conditions WHERE automation_id = ?",
       [automationId],
     );
     return rows;
   }
   async addTimeAutomationConditionAsync(
     automationId: number,
-    type: ConditionGroupType,
+    groupType: ConditionGroupType,
     startTime: string | null,
     endTime: string | null
   ): Promise<number> {
     return (await this.#connection.execute<ResultSetHeader>(
-      "INSERT INTO time_automation_conditions (automation_id, type, startTime, endTime) VALUES (?, ?, ?, ?)",
+      "INSERT INTO time_automation_conditions (automation_id, groupType, startTime, endTime) VALUES (?, ?, ?, ?)",
       [
         automationId,
-        type,
+        groupType,
         startTime,
         endTime
       ],
@@ -154,9 +154,9 @@ class SprootDB implements ISprootDB {
     condition: TimeCondition,
   ): Promise<void> {
     await this.#connection.execute(
-      "UPDATE time_automation_conditions SET type = ?, startTime = ?, endTime = ?, WHERE automation_id = ? AND id = ?",
+      "UPDATE time_automation_conditions SET groupType = ?, startTime = ?, endTime = ? WHERE automation_id = ? AND id = ?",
       [
-        condition.group,
+        condition.groupType,
         condition.startTime,
         condition.endTime,
         automationId,

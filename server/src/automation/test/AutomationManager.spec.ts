@@ -208,13 +208,13 @@ describe("AutomationManager.ts tests", () => {
       sprootDB.addTimeAutomationConditionAsync.resolves(1);
       const condition = await automationManager.addTimeConditionAsync(1, "allOf", "12:00", "13:00");
 
-      condition!.group = "anyOf";
+      condition!.groupType = "anyOf";
       condition!.startTime = "13:00";
       condition!.endTime = "14:00";
       sprootDB.updateTimeAutomationConditionAsync.resolves();
       await automationManager.updateConditionAsync(1, condition!);
 
-      assert.equal(automationManager.automations[1]?.conditions.groupedConditions.time.anyOf[0]!.group, "anyOf");
+      assert.equal(automationManager.automations[1]?.conditions.groupedConditions.time.anyOf[0]!.groupType, "anyOf");
       assert.equal(automationManager.automations[1]?.conditions.groupedConditions.time.anyOf[0]!.startTime, "13:00");
       assert.equal(automationManager.automations[1]?.conditions.groupedConditions.time.anyOf[0]!.endTime, "14:00");
     });
@@ -328,20 +328,20 @@ describe("AutomationManager.ts tests", () => {
 
       // Sensor conditions
       sprootDB.getSensorAutomationConditionsAsync.onFirstCall().resolves([
-        { id: 1, automationId: 1, type: "allOf", sensorId: 1, readingType: ReadingType.temperature, operator: "equal", comparisonValue: 50 } as SDBSensorAutomationCondition
+        { id: 1, automationId: 1, groupType: "allOf", sensorId: 1, readingType: ReadingType.temperature, operator: "equal", comparisonValue: 50 } as SDBSensorAutomationCondition
       ]);
       sprootDB.getSensorAutomationConditionsAsync.onSecondCall().resolves([]);
 
       // Output conditions
       sprootDB.getOutputAutomationConditionsAsync.onFirstCall().resolves([]);
       sprootDB.getOutputAutomationConditionsAsync.onSecondCall().resolves([
-        { id: 1, automationId: 2, type: "anyOf", outputId: 1, operator: "equal", comparisonValue: 50 } as SDBOutputAutomationCondition
+        { id: 1, automationId: 2, groupType: "anyOf", outputId: 1, operator: "equal", comparisonValue: 50 } as SDBOutputAutomationCondition
       ]);
 
       //Time conditions
       sprootDB.getTimeAutomationConditionsAsync.onFirstCall().resolves([
-        { id: 1, automationId: 1, type: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeAutomationCondition,
-        { id: 2, automationId: 1, type: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeAutomationCondition
+        { id: 1, automationId: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeAutomationCondition,
+        { id: 2, automationId: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeAutomationCondition
       ]);
       sprootDB.getTimeAutomationConditionsAsync.onSecondCall().resolves([]);
 

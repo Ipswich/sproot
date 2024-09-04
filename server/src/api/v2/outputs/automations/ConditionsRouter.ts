@@ -38,7 +38,7 @@ export default function conditionsRouter(router: Router): Router {
     return
   });
 
-  router.patch("/:outputId/automations/:automationId/conditions/:type/:conditionId", async (req: Request, res: Response) => {
+  router.put("/:outputId/automations/:automationId/conditions/:type/:conditionId", async (req: Request, res: Response) => {
     const response = await updateAsync(req, res);
 
     res.status(response.statusCode).json(response);

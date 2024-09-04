@@ -22,7 +22,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
           getAutomationsResponse = {
             statusCode: 200,
             content: {
-              data: [automation],
+              data: [{...automation, conditions: {...automation.conditions.groupedConditions}}],
             },
             ...response.locals["defaultProperties"],
           };
@@ -41,7 +41,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         getAutomationsResponse = {
           statusCode: 200,
           content: {
-            data: Object.values(output.getAutomations()),
+            data: Object.values(output.getAutomations()).map((a) => {return {...a, conditions: {...a.conditions.groupedConditions}}})
           },
           ...response.locals["defaultProperties"],
         };
@@ -63,7 +63,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
   const allAutomations = outputList.getAutomations();
   const returnedAutomations = {} as Record<number, IAutomation[]>;
   for (const outputId in allAutomations) {
-    returnedAutomations[outputId] = Object.values(allAutomations[outputId]!);
+    returnedAutomations[outputId] = Object.values(allAutomations[outputId]!).map((a) => {return {...a, conditions: {...a.conditions.groupedConditions}}});
   }
   getAutomationsResponse = {
     statusCode: 200,

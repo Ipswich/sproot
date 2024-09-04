@@ -7,9 +7,11 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { Automation } from "../../../../../automation/Automation";
+import { SprootDB } from "../../../../../database/SprootDB";
 
 describe("AutomationHandlers.ts", () => {
   describe("get", () => {
+    const sprootDB = sinon.createStubInstance(SprootDB);
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     const mockResponse = {
       locals: {
@@ -20,28 +22,8 @@ describe("AutomationHandlers.ts", () => {
       },
     } as unknown as Response;
     const automations = {
-      1: {
-        id: 1,
-        name: "test",
-        value: 50,
-        operator: "or",
-        conditions: {
-          allOf: [],
-          anyOf: [],
-          oneOf: [],
-        }
-      } as IAutomation,
-      2: {
-        id: 2,
-        name: "test1",
-        value: 51,
-        operator: "and",
-        conditions: {
-          allOf: [],
-          anyOf: [],
-          oneOf: [],
-        }
-      } as IAutomation,
+      1: new Automation(1, "test", 50, "or", sprootDB),
+      2: new Automation(2, "test1", 51, "and", sprootDB),
     }
 
     beforeEach(() => {
@@ -81,8 +63,8 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal((success.content?.data as Array<IAutomation>).length, 1);
-      assert.deepEqual(success.content?.data, [automations[1]]);
+      assert.equal((success.content?.data as Array<Automation>).length, 1);
+      assert.deepEqual(success.content?.data, [{...automations[1], conditions: automations[1].conditions.groupedConditions}]);
     });
 
     it("should return a 200 and all automations for an output", () => {
@@ -98,7 +80,7 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal((success.content?.data as Array<IAutomation>).length, 2);
-      assert.deepEqual(success.content?.data, Object.values(automations));
+      assert.deepEqual(success.content?.data, Object.values(automations).map((a) => ({...a, conditions: a.conditions.groupedConditions})));
     });
 
     it("should return a 200 and all automations", () => {
@@ -112,7 +94,7 @@ describe("AutomationHandlers.ts", () => {
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(Object.keys(success.content?.data).length, 1);
-      assert.deepEqual(success.content?.data, { "1": Object.values(automations) });
+      assert.deepEqual(success.content?.data, { "1": Object.values(automations).map((a) => ({...a, conditions: a.conditions.groupedConditions})) });
     })
 
     it("should return a 404 and a 'Not Found' error (no output)", () => {

@@ -216,8 +216,8 @@ export async function addAsync(request: Request, response: Response): Promise<Su
     const invalidFields = []
     let creationResult: SensorCondition | OutputCondition | TimeCondition | undefined = undefined;
     
-    if (!["allOf", "anyOf", "oneOf"].includes(request.body.group)) {
-      invalidFields.push("Invalid or missing condition group.");
+    if (!["allOf", "anyOf", "oneOf"].includes(request.body.groupType)) {
+      invalidFields.push("Invalid or missing condition groupType.");
     }
     switch (conditionType) {
       case "sensor":
@@ -237,7 +237,7 @@ export async function addAsync(request: Request, response: Response): Promise<Su
           break;
         }
         creationResult = await automation.conditions.addSensorConditionAsync(
-          request.body.group,
+          request.body.groupType,
           request.body.operator,
           request.body.comparisonValue,
           request.body.sensorId,
@@ -258,7 +258,7 @@ export async function addAsync(request: Request, response: Response): Promise<Su
           break;
         }
         creationResult = await automation.conditions.addOutputConditionAsync(
-          request.body.group,
+          request.body.groupType,
           request.body.operator,
           request.body.comparisonValue,
           request.body.outputId,
@@ -276,9 +276,9 @@ export async function addAsync(request: Request, response: Response): Promise<Su
           break;
         }
         creationResult = await automation.conditions.addTimeConditionAsync(
-          request.body.group,
-          request.body.startTime,
-          request.body.endTime
+          request.body.groupType,
+          request.body.startTime ?? null,
+          request.body.endTime ?? null
         );
         break;
     }
@@ -409,9 +409,9 @@ export async function updateAsync(request: Request, response: Response): Promise
 
   try {
     let updateResult: SensorCondition | OutputCondition | TimeCondition | undefined = undefined;
-    condition.group = request.body.group ?? condition.group;
-    if (!["allOf", "anyOf", "oneOf"].includes(condition.group)) {
-      invalidDetails.push("Invalid or missing condition group.");
+    condition.groupType = request.body.groupType ?? condition.groupType;
+    if (!["allOf", "anyOf", "oneOf"].includes(condition.groupType)) {
+      invalidDetails.push("Invalid or missing condition groupType.");
     }
     switch (conditionType) {
       case "sensor":
@@ -461,8 +461,12 @@ export async function updateAsync(request: Request, response: Response): Promise
         break;
       case "time":
         condition = condition as TimeCondition;
-        condition.startTime = request.body.startTime ?? condition.startTime;
-        condition.endTime = request.body.endTime ?? condition.endTime;
+        if (request.body.startTime !== undefined) {
+          condition.startTime = request.body.startTime;
+        }
+        if (request.body.endTime !== undefined) {
+          condition.endTime = request.body.endTime;
+        }
         const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
         if (condition.startTime != null && !regex.test(condition.startTime)) {
           invalidDetails.push("Invalid start time.");

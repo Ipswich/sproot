@@ -6,7 +6,7 @@ import { ISensorCondition } from "@sproot/automation/ISensorCondition";
 
 export class SensorCondition implements ISensorCondition{
   id: number;
-  group: ConditionGroupType;
+  groupType: ConditionGroupType;
   sensorId: number;
   readingType: ReadingType;
   operator: ConditionOperator;
@@ -14,14 +14,14 @@ export class SensorCondition implements ISensorCondition{
 
   constructor(
     id: number,
-    group: ConditionGroupType,
+    groupType: ConditionGroupType,
     sensorId: number,
     readingType: ReadingType,
     operator: ConditionOperator,
     comparisonValue: number,
   ) {
     this.id = id;
-    this.group = group;
+    this.groupType = groupType;
     this.sensorId = sensorId;
     this.readingType = readingType;
     this.operator = operator;

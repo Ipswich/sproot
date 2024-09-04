@@ -4,7 +4,7 @@ import { ConditionGroupType } from "../automation/ICondition";
 type SDBTimeAutomationCondition = RowDataPacket & {
   id: number;
   automationId: number;
-  type: ConditionGroupType;
+  groupType: ConditionGroupType;
   startTime: string | null;
   endTime: string | null;
 };

@@ -90,7 +90,7 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.sensor.allOf.length, 1);
       assert.equal(conditions.allOf.length, 1);
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.id, 1);
-      assert.equal(conditions.groupedConditions.sensor.allOf[0]?.group, "allOf");
+      assert.equal(conditions.groupedConditions.sensor.allOf[0]?.groupType, "allOf");
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.operator, "equal");
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.comparisonValue, 50);
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.sensorId, 1);
@@ -109,7 +109,7 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.output.anyOf.length, 1);
       assert.equal(conditions.anyOf.length, 1);
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.id, 1);
-      assert.equal(conditions.groupedConditions.output.anyOf[0]?.group, "anyOf");
+      assert.equal(conditions.groupedConditions.output.anyOf[0]?.groupType, "anyOf");
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.operator, "equal");
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.comparisonValue, 50);
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.outputId, 1);
@@ -127,7 +127,7 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.time.oneOf.length, 1);
       assert.equal(conditions.oneOf.length, 1);
       assert.equal(conditions.groupedConditions.time.oneOf[0]?.id, 1);
-      assert.equal(conditions.groupedConditions.time.oneOf[0]?.group, "oneOf");
+      assert.equal(conditions.groupedConditions.time.oneOf[0]?.groupType, "oneOf");
       assert.equal(conditions.groupedConditions.time.oneOf[0]?.startTime, "00:00");
       assert.equal(conditions.groupedConditions.time.oneOf[0]?.endTime, "01:00");
     });
@@ -141,14 +141,14 @@ describe("Conditions.ts tests", () => {
       const conditions = new Conditions(1, sprootDB);
       const sensorCondition = await conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
 
-      sensorCondition.group = "anyOf";
+      sensorCondition.groupType = "anyOf";
       sensorCondition.operator = "greater";
       sensorCondition.comparisonValue = 60;
       sensorCondition.sensorId = 2;
       sensorCondition.readingType = ReadingType.humidity;
       await conditions.updateConditionAsync(sensorCondition);
 
-      assert.equal(conditions.groupedConditions.sensor.anyOf[0]?.group, "anyOf");
+      assert.equal(conditions.groupedConditions.sensor.anyOf[0]?.groupType, "anyOf");
       assert.equal(conditions.groupedConditions.sensor.anyOf[0]?.operator, "greater");
       assert.equal(conditions.groupedConditions.sensor.anyOf[0]?.comparisonValue, 60);
       assert.equal(conditions.groupedConditions.sensor.anyOf[0]?.sensorId, 2);
@@ -162,13 +162,13 @@ describe("Conditions.ts tests", () => {
       const conditions = new Conditions(1, sprootDB);
       const outputCondition = await conditions.addOutputConditionAsync("allOf", "equal", 50, 1);
 
-      outputCondition.group = "anyOf";
+      outputCondition.groupType = "anyOf";
       outputCondition.operator = "greater";
       outputCondition.comparisonValue = 60;
       outputCondition.outputId = 2;
       await conditions.updateConditionAsync(outputCondition);
 
-      assert.equal(conditions.groupedConditions.output.anyOf[0]?.group, "anyOf");
+      assert.equal(conditions.groupedConditions.output.anyOf[0]?.groupType, "anyOf");
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.operator, "greater");
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.comparisonValue, 60);
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.outputId, 2);
@@ -181,12 +181,12 @@ describe("Conditions.ts tests", () => {
       const conditions = new Conditions(1, sprootDB);
       const timeCondition = await conditions.addTimeConditionAsync("allOf", "00:00", "01:00");
 
-      timeCondition.group = "anyOf";
+      timeCondition.groupType = "anyOf";
       timeCondition.startTime = "01:00";
       timeCondition.endTime = null;
       await conditions.updateConditionAsync(timeCondition);
 
-      assert.equal(conditions.groupedConditions.time.anyOf[0]?.group, "anyOf");
+      assert.equal(conditions.groupedConditions.time.anyOf[0]?.groupType, "anyOf");
       assert.equal(conditions.groupedConditions.time.anyOf[0]?.startTime, "01:00");
       assert.equal(conditions.groupedConditions.time.anyOf[0]?.endTime, null);
     });
@@ -277,14 +277,14 @@ describe("Conditions.ts tests", () => {
     it("should load all conditions from the database", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       sprootDB.getSensorAutomationConditionsAsync.resolves([
-        { id: 1, type: "allOf", sensorId: 1, readingType: ReadingType.temperature, operator: "equal", comparisonValue: 50 } as SDBSensorAutomationCondition
+        { id: 1, groupType: "allOf", sensorId: 1, readingType: ReadingType.temperature, operator: "equal", comparisonValue: 50 } as SDBSensorAutomationCondition
       ]);
       sprootDB.getOutputAutomationConditionsAsync.resolves([
-        { id: 1, type: "anyOf", outputId: 1, operator: "equal", comparisonValue: 50 } as SDBOutputAutomationCondition
+        { id: 1, groupType: "anyOf", outputId: 1, operator: "equal", comparisonValue: 50 } as SDBOutputAutomationCondition
       ]);
       sprootDB.getTimeAutomationConditionsAsync.resolves([
-        { id: 1, type: "oneOf", startTime: "00:00", endTime: "01:00" } as SDBTimeAutomationCondition,
-        { id: 2, type: "anyOf", startTime: "00:00", endTime: "01:00" } as SDBTimeAutomationCondition
+        { id: 1, groupType: "oneOf", startTime: "00:00", endTime: "01:00" } as SDBTimeAutomationCondition,
+        { id: 2, groupType: "anyOf", startTime: "00:00", endTime: "01:00" } as SDBTimeAutomationCondition
       ]);
 
       const conditions = new Conditions(1, sprootDB);
@@ -292,7 +292,7 @@ describe("Conditions.ts tests", () => {
 
       assert.equal(conditions.groupedConditions.sensor.allOf.length, 1);
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.id, 1);
-      assert.equal(conditions.groupedConditions.sensor.allOf[0]?.group, "allOf");
+      assert.equal(conditions.groupedConditions.sensor.allOf[0]?.groupType, "allOf");
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.sensorId, 1);
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.readingType, ReadingType.temperature);
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.operator, "equal");
@@ -300,20 +300,20 @@ describe("Conditions.ts tests", () => {
 
       assert.equal(conditions.groupedConditions.output.anyOf.length, 1);
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.id, 1);
-      assert.equal(conditions.groupedConditions.output.anyOf[0]?.group, "anyOf");
+      assert.equal(conditions.groupedConditions.output.anyOf[0]?.groupType, "anyOf");
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.outputId, 1);
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.operator, "equal");
       assert.equal(conditions.groupedConditions.output.anyOf[0]?.comparisonValue, 50);
 
       assert.equal(conditions.groupedConditions.time.oneOf.length, 1);
       assert.equal(conditions.groupedConditions.time.oneOf[0]?.id, 1);
-      assert.equal(conditions.groupedConditions.time.oneOf[0]?.group, "oneOf");
+      assert.equal(conditions.groupedConditions.time.oneOf[0]?.groupType, "oneOf");
       assert.equal(conditions.groupedConditions.time.oneOf[0]?.startTime, "00:00");
       assert.equal(conditions.groupedConditions.time.oneOf[0]?.endTime, "01:00");
 
       assert.equal(conditions.groupedConditions.time.anyOf.length, 1);
       assert.equal(conditions.groupedConditions.time.anyOf[0]?.id, 2);
-      assert.equal(conditions.groupedConditions.time.anyOf[0]?.group, "anyOf");
+      assert.equal(conditions.groupedConditions.time.anyOf[0]?.groupType, "anyOf");
       assert.equal(conditions.groupedConditions.time.anyOf[0]?.startTime, "00:00");
       assert.equal(conditions.groupedConditions.time.anyOf[0]?.endTime, "01:00");
 

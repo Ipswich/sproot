@@ -5,20 +5,20 @@ import { IOutputCondition } from "@sproot/automation/IOutputCondition";
 
 export class OutputCondition implements IOutputCondition{
   id: number;
-  group: ConditionGroupType;
+  groupType: ConditionGroupType;
   outputId: number;
   operator: ConditionOperator;
   comparisonValue: number;
 
   constructor(
     id: number,
-    group: ConditionGroupType,
+    groupType: ConditionGroupType,
     outputId: number,
     operator: ConditionOperator,
     comparisonValue: number,
   ) {
     this.id = id;
-    this.group = group;
+    this.groupType = groupType;
     this.outputId = outputId;
     this.operator = operator;
     this.comparisonValue = comparisonValue;

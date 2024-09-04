@@ -74,7 +74,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.statusCode, 200);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.deepEqual(success.content?.data, [{ "1": { "sensor": { "allOf": [{ "id": 1, "group": "allOf", "sensorId": 1, "readingType": "temperature", "operator": "equal", "comparisonValue": 50 }], "anyOf": [], "oneOf": [] }, "output": { "allOf": [], "anyOf": [], "oneOf": [] }, "time": { "allOf": [], "anyOf": [], "oneOf": [] } } }]);
+      assert.deepEqual(success.content?.data, [{ "1": { "sensor": { "allOf": [{ "id": 1, "groupType": "allOf", "sensorId": 1, "readingType": "temperature", "operator": "equal", "comparisonValue": 50 }], "anyOf": [], "oneOf": [] }, "output": { "allOf": [], "anyOf": [], "oneOf": [] }, "time": { "allOf": [], "anyOf": [], "oneOf": [] } } }]);
     });
 
     it('should return a 200 and a list of conditions for a given automation and type', () => {
@@ -98,7 +98,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.statusCode, 200);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.deepEqual(success.content?.data, [{ "1": { "allOf": [{ "id": 1, "group": "allOf", "sensorId": 1, "readingType": "temperature", "operator": "equal", "comparisonValue": 50 }], "anyOf": [], "oneOf": [] } }]);
+      assert.deepEqual(success.content?.data, [{ "1": { "allOf": [{ "id": 1, "groupType": "allOf", "sensorId": 1, "readingType": "temperature", "operator": "equal", "comparisonValue": 50 }], "anyOf": [], "oneOf": [] } }]);
     });
 
     it('should return a 200 and a list of conditions for a given automation, type, and conditionId', () => {
@@ -123,7 +123,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.statusCode, 200);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.deepEqual(success.content?.data, [{ "id": 1, "group": "allOf", "sensorId": 1, "readingType": "temperature", "operator": "equal", "comparisonValue": 50 }]);
+      assert.deepEqual(success.content?.data, [{ "id": 1, "groupType": "allOf", "sensorId": 1, "readingType": "temperature", "operator": "equal", "comparisonValue": 50 }]);
     });
 
     it('should return a 400 if the outputId is invalid', () => {
@@ -359,7 +359,7 @@ describe("ConditionHandlers.ts", () => {
           type: "sensor",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           sensorId: 1,
@@ -372,7 +372,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "allOf");
+      assert.equal(success.content?.data.groupType, "allOf");
       assert.equal(success.content?.data.sensorId, 1);
       assert.equal(success.content?.data.readingType, "temperature");
       assert.equal(success.content?.data.operator, "equal");
@@ -395,7 +395,7 @@ describe("ConditionHandlers.ts", () => {
           type: "output",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           outputId: 1
@@ -407,7 +407,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "allOf");
+      assert.equal(success.content?.data.groupType, "allOf");
       assert.equal(success.content?.data.outputId, 1);
       assert.equal(success.content?.data.operator, "equal");
       assert.equal(success.content?.data.comparisonValue, 50);
@@ -429,7 +429,7 @@ describe("ConditionHandlers.ts", () => {
           type: "time",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           startTime: "12:00",
           endTime: "13:00"
         }
@@ -440,7 +440,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "allOf");
+      assert.equal(success.content?.data.groupType, "allOf");
       assert.equal(success.content?.data.startTime, "12:00");
       assert.equal(success.content?.data.endTime, "13:00");
     });
@@ -461,7 +461,7 @@ describe("ConditionHandlers.ts", () => {
           type: "sensor",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           sensorId: 1,
@@ -493,7 +493,7 @@ describe("ConditionHandlers.ts", () => {
           type: "sensor",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           sensorId: 1,
@@ -525,7 +525,7 @@ describe("ConditionHandlers.ts", () => {
           type: "test",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           sensorId: 1,
@@ -557,7 +557,7 @@ describe("ConditionHandlers.ts", () => {
           type: "sensor",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           sensorId: 1,
@@ -589,7 +589,7 @@ describe("ConditionHandlers.ts", () => {
           type: "sensor",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           sensorId: 1,
@@ -629,7 +629,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Invalid or missing condition group.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing sensor ID.", "Invalid or missing reading type."]);
+      assert.deepEqual(error.error.details, ["Invalid or missing condition groupType.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing sensor ID.", "Invalid or missing reading type."]);
     });
 
     it('should return a 400 and details for the invalid request (output)', async () => {
@@ -656,7 +656,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Invalid or missing condition group.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing output ID."]);
+      assert.deepEqual(error.error.details, ["Invalid or missing condition groupType.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing output ID."]);
     });
 
     it('should return a 400 and details for the invalid request (time)', async () => {
@@ -685,7 +685,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Invalid or missing condition group.", "Invalid start time.", "Invalid end time."]);
+      assert.deepEqual(error.error.details, ["Invalid or missing condition groupType.", "Invalid start time.", "Invalid end time."]);
     });
 
     it('should return a 503 if the database is unreachable', async () => {
@@ -707,7 +707,7 @@ describe("ConditionHandlers.ts", () => {
           type: "sensor",
         },
         body: {
-          group: "allOf",
+          groupType: "allOf",
           operator: "equal",
           comparisonValue: 50,
           sensorId: 1,
@@ -798,14 +798,14 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "allOf");
+      assert.equal(success.content?.data.groupType, "allOf");
       assert.equal(success.content?.data.sensorId, 1);
       assert.equal(success.content?.data.readingType, "temperature");
       assert.equal(success.content?.data.operator, "greater");
       assert.equal(success.content?.data.comparisonValue, 50);
 
       mockRequest.body = {
-        group: "anyOf",
+        groupType: "anyOf",
         operator: "equal",
         comparisonValue: 51,
         sensorId: 2,
@@ -817,7 +817,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "anyOf");
+      assert.equal(success.content?.data.groupType, "anyOf");
       assert.equal(success.content?.data.sensorId, 2);
       assert.equal(success.content?.data.readingType, "humidity");
       assert.equal(success.content?.data.operator, "equal");
@@ -851,13 +851,13 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "anyOf");
+      assert.equal(success.content?.data.groupType, "anyOf");
       assert.equal(success.content?.data.outputId, 1);
       assert.equal(success.content?.data.operator, "less");
       assert.equal(success.content?.data.comparisonValue, 50);
 
       mockRequest.body = {
-        group: "anyOf",
+        groupType: "anyOf",
         operator: "equal",
         comparisonValue: 51,
         outputId: 2
@@ -867,7 +867,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "anyOf");
+      assert.equal(success.content?.data.groupType, "anyOf");
       assert.equal(success.content?.data.outputId, 2);
       assert.equal(success.content?.data.operator, "equal");
       assert.equal(success.content?.data.comparisonValue, 51);
@@ -900,12 +900,12 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "oneOf");
+      assert.equal(success.content?.data.groupType, "oneOf");
       assert.equal(success.content?.data.startTime, "12:00");
       assert.equal(success.content?.data.endTime, "13:00");
 
       mockRequest.body = {
-        group: "anyOf",
+        groupType: "anyOf",
         startTime: "13:00",
         endTime: "14:00"
       }
@@ -914,7 +914,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.content?.data.id, 1);
-      assert.equal(success.content?.data.group, "anyOf");
+      assert.equal(success.content?.data.groupType, "anyOf");
       assert.equal(success.content?.data.startTime, "13:00");
       assert.equal(success.content?.data.endTime, "14:00");
     });
@@ -952,7 +952,7 @@ describe("ConditionHandlers.ts", () => {
       };
 
       mockRequest.body = {
-        group: "",
+        groupType: "",
         operator: "",
         comparisonValue: "test",
         sensorId: "test",
@@ -964,11 +964,11 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Invalid or missing condition group.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing sensor ID.", "Invalid or missing reading type."]);
+      assert.deepEqual(error.error.details, ["Invalid or missing condition groupType.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing sensor ID.", "Invalid or missing reading type."]);
 
       mockRequest.params["type"] = "output";
       mockRequest.body = {
-        group: "",
+        groupType: "",
         operator: "",
         comparisonValue: "test",
         outputId: "test"
@@ -978,11 +978,11 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Invalid or missing condition group.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing output ID."]);
+      assert.deepEqual(error.error.details, ["Invalid or missing condition groupType.", "Invalid or missing operator.", "Invalid or missing comparison value.", "Invalid or missing output ID."]);
 
       mockRequest.params["type"] = "time";
       mockRequest.body = {
-        group: "",
+        groupType: "",
         startTime: "test",
         endTime: "test"
       }
@@ -991,7 +991,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Invalid or missing condition group.", "Invalid start time.", "Invalid end time."]);
+      assert.deepEqual(error.error.details, ["Invalid or missing condition groupType.", "Invalid start time.", "Invalid end time."]);
     });
 
 
@@ -1014,7 +1014,7 @@ describe("ConditionHandlers.ts", () => {
           conditionId: "1"
         },
         body: {
-          group: "anyOf",
+          groupType: "anyOf",
           operator: "equal",
           comparisonValue: 51,
           sensorId: 2,
@@ -1049,7 +1049,7 @@ describe("ConditionHandlers.ts", () => {
           conditionId: "1"
         },
         body: {
-          group: "anyOf",
+          groupType: "anyOf",
           operator: "equal",
           comparisonValue: 51,
           sensorId: 2,
@@ -1084,7 +1084,7 @@ describe("ConditionHandlers.ts", () => {
           conditionId: "2"
         },
         body: {
-          group: "anyOf",
+          groupType: "anyOf",
           operator: "equal",
           comparisonValue: 51,
           sensorId: 2,
@@ -1120,7 +1120,7 @@ describe("ConditionHandlers.ts", () => {
           conditionId: "1"
         },
         body: {
-          group: "anyOf",
+          groupType: "anyOf",
           operator: "equal",
           comparisonValue: 51,
           sensorId: 2,

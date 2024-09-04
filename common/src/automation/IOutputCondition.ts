@@ -2,7 +2,7 @@ import { ConditionGroupType } from "./ICondition";
 
 interface IOutputCondition {
   id: number;
-  group: ConditionGroupType;
+  groupType: ConditionGroupType;
   outputId: number;
   comparisonValue: number;
   operator: string;
