@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `automations` (
 CREATE TABLE IF NOT EXISTS `time_automation_conditions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `automation_id` int(11) NOT NULL,
-  `type` varchar(6) NOT NULL,
+  `groupType` varchar(6) NOT NULL,
   `startTime` varchar(8) DEFAULT NULL,
   `endTime` varchar(8) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS `time_automation_conditions` (
 CREATE TABLE IF NOT EXISTS `output_automation_conditions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `automation_id` int(11) NOT NULL,
-  `type` varchar(6) NOT NULL,
+  `groupType` varchar(6) NOT NULL,
   `operator` varchar(16) NOT NULL,
   `comparisonValue` int(11) NOT NULL,
   `output_id` int(11) NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `sensors` (
 CREATE TABLE IF NOT EXISTS `sensor_automation_conditions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `automation_id` int(11) NOT NULL,
-  `type` varchar(6) NOT NULL,
+  `groupType` varchar(6) NOT NULL,
   `operator` varchar(16) NOT NULL,
   `comparisonValue` int(11) NOT NULL,
   `sensor_id` int(11) NOT NULL,
