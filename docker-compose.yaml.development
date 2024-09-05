@@ -57,7 +57,7 @@ services:
       - 80:80
 
   db:
-    image: mariadb
+    image: mariadb:11.5.2-noble
     restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: root #**MATCH ME**
