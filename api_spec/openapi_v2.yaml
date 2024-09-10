@@ -425,56 +425,56 @@ paths:
                               example:
                                 - "Failed to add output to database."
                                 - "Database connection failed."
-  /api/v2/outputs/automations:
-    get:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automations"
-      summary: Get all automations.
-      description: >
-        Returns a list of all automations. This includes basic information about each automation, such as name, value, and conditions.
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            items:
-                              type: object
-                              properties:
-                                id:
-                                  type: array
-                                  items:
-                                    $ref: "#/components/schemas/Automation"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/automations"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
+  # /api/v2/outputs/automations:
+  #   get:
+  #     security:
+  #       - bearerAuth: []
+  #       - cookieAuth: []
+  #     tags:
+  #       - "Automations"
+  #     summary: Get all automations.
+  #     description: >
+  #       Returns a list of all automations. This includes basic information about each automation, such as name, value, and conditions.
+  #     responses:
+  #       200:
+  #         description: "Success"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               allOf:
+  #                 - $ref: "#/components/schemas/SuccessResponse"
+  #                 - properties:
+  #                     statusCode:
+  #                       example: 200
+  #                     content:
+  #                       properties:
+  #                         data:
+  #                           items:
+  #                             type: object
+  #                             properties:
+  #                               id:
+  #                                 type: array
+  #                                 items:
+  #                                   $ref: "#/components/schemas/OutputAutomation"
+  #       401:
+  #         description: "Unauthorized"
+  #         content:
+  #           application/json:
+  #             schema:
+  #               allOf:
+  #                 - $ref: "#/components/schemas/ErrorResponse"
+  #                 - properties:
+  #                     statusCode:
+  #                       example: 401
+  #                     error:
+  #                       properties:
+  #                         name:
+  #                           example: "Unauthorized"
+  #                         url:
+  #                           example: "/api/v2/outputs/automations"
+  #                         details:
+  #                           items:
+  #                             example: "Invalid or Missing JWT."
 
   /api/v2/outputs/{outputId}:
     get:
@@ -917,1287 +917,6 @@ paths:
                             items:
                               example: "Invalid or Missing JWT."
 
-  /api/v2/outputs/{outputId}/automations:
-    get:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automations"
-      summary: Get all automations for an output.
-      description: >
-        Returns a list of all automations for the output with the given ID. This includes basic information
-        about each automation, such as name, value, and conditions.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            items:
-                              $ref: "#/components/schemas/Automation"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-        404: 
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/-1/automations"
-                          details:
-                            items:
-                              example: "Output with ID -1 not found."
-    post:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automations"
-      summary: Add a new automation.
-      description: >
-        Creates a new, empty automation for the output with the given ID. Returns the new automation.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Automation"
-      responses:
-        201:
-          description: "Automation created"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 201
-                      content:
-                        properties:
-                          data:
-                            allOf:
-                              - $ref: "#/components/schemas/Automation"
-                              - properties:
-                                  conditions:
-                                    readOnly: true
-                                    allOf:
-                                      - $ref: "#/components/schemas/AutomationConditions"
-                                      - properties:
-                                          allOf:
-                                            example: []
-                                          anyOf:
-                                            example: []
-                                          oneOf:
-                                            example: []
-                            
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/outputs/1/automations"
-                          details:
-                            example:
-                              - "Missing required field: name"
-                              - "Missing required field: value"
-                              - "Missing required field: operator"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations"
-                          details:
-                            example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/-1/automations"
-                          details:
-                            items:
-                              example: "Output with ID -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/outputs/1/automations"
-                          details:
-                            items:
-                              example:
-                                - "Failed to add output to database."
-                                - "Database connection failed."
-  
-  /api/v2/outputs/{outputId}/automations/{automationId}:
-    get:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automations"
-      summary: Get an automation by ID.
-      description: >
-        Returns data for the given automation. This includes basic information, such as name, value, 
-        and conditions.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            items:
-                              $ref: "#/components/schemas/Automation"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-        404:
-          description: "Automation not found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/-1"
-                          details:
-                            items:
-                              example: "Automation with ID -1 not found."
-    put:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automations"
-      summary: Update an automation by ID.
-      description: >
-        Updates an automation with the given ID. This operation changes only the fields provided.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Automation"
-      responses:
-        200:
-          description: "Automation updated"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            $ref: "#/components/schemas/Automation"
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1"
-                          details:
-                            example:
-                              - "Missing required field: name"
-                              - "Missing required field: value"
-                              - "Missing required field: operator"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/-1"
-                          details:
-                            items:
-                              example: "Automation with ID -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1"
-                          details:
-                            items:
-                              example:
-                                - "Failed to update automation in database."
-                                - "Database connection failed."
-    delete:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automations"
-      summary: Delete an automation by ID.
-      description: >
-        Deletes an automation with the given ID. This operation is permanent and cannot be undone.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Automation deleted"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            example: "Automation sucessfully deleted."
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1"
-                          details:
-                            example:
-                              - "Invalid or missing output Id."
-                              - "Invalid or missing automation Id."
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/-1"
-                          details:
-                            items:
-                              example: "Automation with ID -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1"
-                          details:
-                            items:
-                              example:
-                                - "Failed to delete automation from database."
-                                - "Database connection failed."
-
-  /api/v2/outputs/{outputId}/automations/{automationId}/conditions:
-    get:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automation Conditions"
-      summary: Get all conditions for an automation.
-      description: >
-        Returns conditions for the automation with the given ID. This includes each type ("allOf", "anyOf", "oneOf") and the conditions for each type.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            properties:
-                              sensor:
-                                type: object
-                                properties:
-                                  allOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                                  anyOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                                  oneOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                              output:
-                                type: object
-                                properties:
-                                  allOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                                  anyOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                                  oneOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                              time:
-                                type: object
-                                properties:
-                                  allOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                                  anyOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-                                  oneOf:
-                                    anyOf:
-                                      - $ref: "#/components/schemas/SensorCondition"
-                                      - $ref: "#/components/schemas/OutputCondition"
-                                      - $ref: "#/components/schemas/TimeCondition"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/-1/conditions"
-                          details:
-                            items:
-                              example: "Automation with ID -1 not found."
-  /api/v2/outputs/{outputId}/automations/{automationId}/conditions/{type}:
-    get:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automation Conditions"
-      summary: Get a condition by ID.
-      description: >
-        Returns data for the given condition.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: type
-          required: true
-          description: "Condition Type"
-          schema:
-            type: string
-            enum:
-              - "sensor"
-              - "output"
-              - "time"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            items:
-                              anyOf:
-                                - $ref: "#/components/schemas/SensorCondition"
-                                - $ref: "#/components/schemas/OutputCondition"
-                                - $ref: "#/components/schemas/TimeCondition"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/1"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-        404:
-          description: "Condition not found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/-1"
-                          details:
-                            items:
-                              example: "Condition with ID -1 not found."
-    post:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automation Conditions"
-      summary: Add a new conditions of the provided type.
-      description: >
-        Adds a new conditions of the provided type to the automation with the given ID. Returns the new condition.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: type
-          required: true
-          description: "Condition Type"
-          schema:
-            type: string
-            enum:
-              - "sensor"
-              - "output"
-              - "time"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
-      responses:
-        201:
-          description: "Condition created"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 201
-                      content:
-                        properties:
-                          data:
-                            anyOf:
-                              - $ref: "#/components/schemas/SensorCondition"
-                              - $ref: "#/components/schemas/OutputCondition"
-                              - $ref: "#/components/schemas/TimeCondition"
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/time"
-                          details:
-                            example:
-                              - "Missing required field: sensorId"
-                              - "Missing required field: readingType"
-                              - "Missing required field: operator"
-                              - "Missing required field: value"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/time"
-                          details:
-                            example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/-1/conditions/time"
-                          details:
-                            items:
-                              example: "Automation with ID -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/time"
-                          details:
-                            items:
-                              example:
-                                - "Failed to add condition to database."
-                                - "Database connection failed."
-
-  /api/v2/outputs/{outputId}/automations/{automationId}/conditions/{type}/{conditionId}:
-    get:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automation Conditions"
-      summary: Get a condition by ID.
-      description: >
-        Returns data for the given condition.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: type
-          required: true
-          description: "Condition Type"
-          schema:
-            type: string
-            enum:
-              - "sensor"
-              - "output"
-              - "time"
-        - in: path
-          name: conditionId
-          required: true
-          description: "Condition ID"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            items:
-                              anyOf:
-                                - $ref: "#/components/schemas/SensorCondition"
-                                - $ref: "#/components/schemas/OutputCondition"
-                                - $ref: "#/components/schemas/TimeCondition"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/1"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-        404:
-          description: "Condition not found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/-1"
-                          details:
-                            items:
-                              example: "Condition with ID -1 not found."
-
-    
-    put:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automation Conditions"
-      summary: Update a condition by ID.
-      description: >
-        Updates a condition with the given ID.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: type
-          required: true
-          description: "Condition Type"
-          schema:
-            type: string
-            enum:
-              - "sensor"
-              - "output"
-              - "time"
-        - in: path
-          name: conditionId
-          required: true
-          description: "Condition ID"
-          schema:
-            type: string
-          example: "1"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
-      responses:
-        200:
-          description: "Condition updated"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            anyOf:
-                              - $ref: "#/components/schemas/SensorCondition"
-                              - $ref: "#/components/schemas/OutputCondition"
-                              - $ref: "#/components/schemas/TimeCondition"
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/1"
-                          details:
-                            example:
-                              - "Missing required field: sensorId"
-                              - "Missing required field: readingType"
-                              - "Missing required field: outputId"
-                              - "Missing required field: operator"
-                              - "Missing required field: value"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/1"
-                          details:
-                            example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/-1/coditions/1"
-                          details:
-                            items:
-                              example: "Condition with ID -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/condition/1"
-                          details:
-                            items:
-                              example:
-                                - "Failed to update condition in database."
-                                - "Database connection failed."
-    delete:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Automation Conditions"
-      summary: Delete a condition by ID.
-      description: >
-        Deletes a condition with the given ID. This operation is permanent and cannot be undone.
-      parameters:
-        - in: path
-          name: outputId
-          required: true
-          description: "Output ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: automationId
-          required: true
-          description: "Automation ID"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: type
-          required: true
-          description: "Condition Type"
-          schema:
-            type: string
-            enum:
-              - "sensor"
-              - "output"
-              - "time"
-        - in: path
-          name: conditionId
-          required: true
-          description: "Condition ID"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Condition deleted"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            example: "Condition sucessfully deleted."
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/condition/1"
-                          details:
-                            example:
-                              - "Invalid or missing output Id."
-                              - "Invalid or missing automation Id."
-                              - "Invalid or missing condition Id."
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url: 
-                            example: "/api/v2/outputs/1/automations/1/condition/1"
-                          details:
-                            example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/conditions/-1"
-                          details:
-                            items:
-                              example: "Condition with ID -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/outputs/1/automations/1/condition/1"
-                          details:
-                            items:
-                              example:
-                                - "Failed to delete condition from database."
-                                - "Database connection failed."
-
   /api/v2/outputs/{outputId}/control-mode:
     put:
       security:
@@ -2402,6 +1121,1506 @@ paths:
                           details:
                             items:
                               example: "Output with ID -1 not found."
+
+  /api/v2/automations:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automations"
+      summary: Get all automations.
+      description: >
+        Returns a list of all automations. This includes basic information about each automation, such as the name,
+        the operator, and the conditions for each automation.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/Automation"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations"
+                          details:
+                            items:
+                              example:
+                                - "Failed to retrieve automations from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automations"
+      summary: Add a new automation.
+      description: >
+        Adds a new automation to the service, and regenerates the list of automations. Returns the information
+        used to create the automation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Automation"
+      responses:
+        201:
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/Automation"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations"
+                          details:
+                            example:
+                              - "Invalid name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add automation to database."
+                                - "Database connection failed."
+    
+  /api/v2/automations/{automationId}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automations"
+      summary: Get an automation by ID.
+      description: >
+        Returns the automation with the given ID. This includes the name, the operator, and the conditions for the automation.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/Automation"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/-1"
+                          details:
+                            items:
+                              example: "Automation with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to retrieve automation from database."
+                                - "Database connection failed."
+    delete: 
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automations"
+      summary: Delete an automation by ID.
+      description: >
+        Deletes an automation with the given ID. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Automation sucessfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url: 
+                            example: "/api/v2/automations/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/-1"
+                          details:
+                            items:
+                              example: "Automation with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete automation from database."
+                                - "Database connection failed."
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automations"
+      summary: Update an automation by ID.
+      description: >
+        Updates an automation with the given ID.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Automation"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/Automation"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/-1"
+                          details:
+                            items:
+                              example: "Automation with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content: 
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update automation in database."
+                                - "Database connection failed."
+  /api/v2/automations/{automationId}/conditions:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automation Conditions"
+      summary: Get all conditions for an automation.
+      description: >
+        Returns a list of all conditions for the given automation. This includes basic information about each condition,
+        such as the type, the operator, and the value.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              anyOf:
+                                - $ref: "#/components/schemas/SensorCondition"
+                                - $ref: "#/components/schemas/OutputCondition"
+                                - $ref: "#/components/schemas/TimeCondition"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/conditions"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/1/conditions"
+                          details:
+                            items:
+                              example: "Automation with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/conditions"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get conditions from database."
+                                - "Database connection failed."
+  /api/v2/automations/{automationId}/conditions/{type}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automation Conditions"
+      summary: Get all conditions for an automation.
+      description: >
+        Returns a list of all conditions for the given automation. This includes basic information about each condition,
+        such as the type, the operator, and the value.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: type
+          required: true
+          description: "Condition Type"
+          schema:
+            type: string
+            enum:
+              - "sensor"
+              - "output"
+              - "time"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              anyOf:
+                                - $ref: "#/components/schemas/SensorCondition"
+                                - $ref: "#/components/schemas/OutputCondition"
+                                - $ref: "#/components/schemas/TimeCondition"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+                              - "Invalid or missing condition type."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor"
+                          details:
+                            items:
+                              example: "Automation with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get conditions from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automation Conditions"
+      summary: Add a new condition to an automation.
+      description: >
+        Adds a new condition to the given automation. Returns the information used to create the condition.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: type
+          required: true
+          description: "Condition Type"
+          schema:
+            type: string
+            enum:
+              - "sensor"
+              - "output"
+              - "time"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "#/components/schemas/SensorCondition"
+                - $ref: "#/components/schemas/OutputCondition"
+                - $ref: "#/components/schemas/TimeCondition"
+      responses:
+        201:
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            anyOf:
+                              - $ref: "#/components/schemas/SensorCondition"
+                              - $ref: "#/components/schemas/OutputCondition"
+                              - $ref: "#/components/schemas/TimeCondition"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+                              - "Invalid or missing condition type."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor"
+                          details:
+                            example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add condition to database."
+                                - "Database connection failed."
+  /api/v2/automations/{automationId}/conditions/{type}/{conditionId}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automation Conditions"
+      summary: Get a condition by ID.
+      description: >
+        Returns the condition with the given ID. This includes the type, the operator, and the value of the condition.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: type
+          required: true
+          description: "Condition Type"
+          schema:
+            type: string
+            enum:
+              - "sensor"
+              - "output"
+              - "time"
+        - in: path
+          name: conditionId
+          required: true
+          description: "Condition ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            anyOf:
+                              - $ref: "#/components/schemas/SensorCondition"
+                              - $ref: "#/components/schemas/OutputCondition"
+                              - $ref: "#/components/schemas/TimeCondition"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/-1"
+                          details:
+                            items:
+                              example: "Condition with ID #-1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get condition from database."
+                                - "Database connection failed."
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automation Conditions"
+      summary: Update a condition by ID.
+      description: >
+        Updates a condition with the given ID.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: type
+          required: true
+          description: "Condition Type"
+          schema:
+            type: string
+            enum:
+              - "sensor"
+              - "output"
+              - "time"
+        - in: path
+          name: conditionId
+          required: true
+          description: "Condition ID"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: "#/components/schemas/SensorCondition"
+                - $ref: "#/components/schemas/OutputCondition"
+                - $ref: "#/components/schemas/TimeCondition"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            anyOf:
+                              - $ref: "#/components/schemas/SensorCondition"
+                              - $ref: "#/components/schemas/OutputCondition"
+                              - $ref: "#/components/schemas/TimeCondition"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+                              - "Invalid or missing condition type."
+                              - "Invalid or missing condition Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/-1"
+                          details:
+                            items:
+                              example: "Condition with ID #-1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update condition in database."
+                                - "Database connection failed."
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Automation Conditions"
+      summary: Delete a condition by ID.
+      description: >
+        Deletes a condition with the given ID. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: type
+          required: true
+          description: "Condition Type"
+          schema:
+            type: string
+            enum:
+              - "sensor"
+              - "output"
+              - "time"
+        - in: path
+          name: conditionId
+          required: true
+          description: "Condition ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Condition sucessfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+                              - "Invalid or missing condition type."
+                              - "Invalid or missing condition Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema: 
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/-1"
+                          details:
+                            items:
+                              example: "Condition with ID #-1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete condition from database."
+                                - "Database connection failed."
+
+
+  /api/v2/outputs/{outputId}/automations:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Output Automations"
+      summary: Get all automations for an output.
+      description: >
+        Returns a list of all automations for the given output. This includes basic information about each automation,
+        such as the name, the operator, and the conditions for each automation.
+      parameters:
+        - in: path
+          name: outputId
+          required: true
+          description: "Output ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/Automation"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/outputs/1/automations"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/outputs/-1/automations"
+                          details:
+                            items:
+                              example: "Output with ID -1 not found."
+  
+  /api/v2/automations/{automationId}/outputs/{outputId}:
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Output Automations"
+      summary: Add an output to an automation.
+      description: >
+        Adds an output to the given automation.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: outputId
+          required: true
+          description: "Output ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            example: "Output successfully added to automation."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1/output/1"
+                          details:
+                            example:
+                              - "Invalid or missing output Id."
+                              - "Invalid or missing automation Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/output/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/1/output/-1"
+                          details:
+                            items:
+                              example: "Automation with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/output/1/"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add output to automation."
+                                - "Database connection failed."
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Output Automations"
+      summary: Remove an output from an automation.
+      description: >
+        Removes an output from the given automation. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: automationId
+          required: true
+          description: "Automation ID"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: outputId
+          required: true
+          description: "Output ID"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Output successfully removed from automation."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1/output/1"
+                          details:
+                            example:
+                              - "Invalid or missing output Id."
+                              - "Invalid or missing automation Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/automations/1/output/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/1/output/-1"
+                          details:
+                            items:
+                              example: "Automation with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/automations/1/output/1/"
+                          details:
+                            items:
+                              example:
+                                - "Failed to remove output from automation."
+                                - "Database connection failed."
+  
+
 
   /api/v2/sensors:
     get:
@@ -3195,13 +3414,11 @@ components:
 
     Automation:
       description: >
-        An automation object that is stored in the database. Contains all of the information needed to
-        create an automation, including a name, and the automation value.
+        A generic automation object stored in the database. This is the base object that all automations
+        are built from. Contains a just a name and an ID.
       type: object
       required:
         - "name"
-        - "value"
-        - "operator"
       properties:
         id:
           readOnly: true
@@ -3210,9 +3427,6 @@ components:
         name:
           type: string
           example: "Turn on light"
-        value:
-          type: number
-          example: 50
         operator:
           type: string
           example: "or"
@@ -3220,6 +3434,24 @@ components:
           readOnly: true
           allOf:
             - $ref: "#/components/schemas/AutomationConditions"
+
+    OutputAutomation:
+      description: >
+        An automation object that is stored in the database. Contains all of the information needed to
+        create an output automation, including an automation ID to relate it to, and an operator and the value.
+      type: object
+      required:
+        - "value"
+        - "operator"
+      allOf:
+        - $ref: "#/components/schemas/Automation"
+      properties:
+        automation_id:
+          type: number
+          example: 1
+        value:
+          type: number
+          example: 50
     
     AutomationConditions:
       description: >

@@ -1,4 +1,4 @@
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { OutputList } from "../../outputs/list/OutputList";
 import { evaluateNumber } from "./ConditionUtils";
 import { IOutputCondition } from "@sproot/automation/IOutputCondition";

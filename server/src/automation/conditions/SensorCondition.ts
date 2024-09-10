@@ -1,4 +1,4 @@
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SensorList } from "../../sensors/list/SensorList";
 import { evaluateNumber } from "./ConditionUtils";

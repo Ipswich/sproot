@@ -3,11 +3,9 @@ import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
 
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ICondition";
 import { OutputCondition } from "./OutputCondition";
 import { SensorCondition } from "./SensorCondition";
 import { TimeCondition } from "./TimeCondition";
-import { ReadingType } from "@sproot/sensors/ReadingType";
 
 export class Conditions {
   #automationId: number;
@@ -86,7 +84,7 @@ export class Conditions {
     // types is false). Conversely, if we default to returning false and the conditionOperator
     // is "false", it'll always result in false (even if one of the condition types is true).
     // Basically, we need to "ignore" empty condition types.
-    let defaultReturnValue = operator == "and";
+    const defaultReturnValue = operator == "and";
 
     const allOfEvaluationMap = this.allOf.map((c) => evaluateByConditionFlavor(c));
     const allOfResult =
@@ -114,74 +112,22 @@ export class Conditions {
     }
   }
 
-  async addSensorConditionAsync(groupType: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, sensorId: number, readingType: ReadingType): Promise<SensorCondition> {
-    const newSensorConditionId = await this.#sprootDB.addSensorAutomationConditionAsync(this.#automationId, groupType, operator, comparisonValue, sensorId, readingType);
-    const newSensorCondition = new SensorCondition(newSensorConditionId, groupType, sensorId, readingType, operator, comparisonValue);
-    this.#sensorConditions[newSensorConditionId] = newSensorCondition;
-    return newSensorCondition;
-  }
-
-  async addOutputConditionAsync(groupType: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: number): Promise<OutputCondition> {
-    const newOutputConditionId = await this.#sprootDB.addOutputAutomationConditionAsync(this.#automationId, groupType, operator, comparisonValue, outputId);
-    const newOutputCondition = new OutputCondition(newOutputConditionId, groupType, outputId, operator, comparisonValue);
-    this.#outputConditions[newOutputConditionId] = newOutputCondition;
-    return newOutputCondition;
-  }
-
-  async addTimeConditionAsync(groupType: ConditionGroupType, startTime: string | undefined | null, endTime: string | undefined | null): Promise<TimeCondition> {
-    const newTimeConditionId = await this.#sprootDB.addTimeAutomationConditionAsync(this.#automationId, groupType, startTime, endTime);
-    const newTimeCondition = new TimeCondition(newTimeConditionId, groupType, startTime, endTime);
-    this.#timeConditions[newTimeConditionId] = newTimeCondition;
-    return this.#timeConditions[newTimeConditionId];
-  }
-
-  async updateConditionAsync(condition: OutputCondition | SensorCondition | TimeCondition): Promise<void> {
-    if (condition instanceof SensorCondition) {
-      await this.#sprootDB.updateSensorAutomationConditionAsync(this.#automationId, condition);
-      this.#sensorConditions[condition.id] = condition;
-    }
-    if (condition instanceof OutputCondition) {
-      await this.#sprootDB.updateOutputAutomationConditionAsync(this.#automationId, condition);
-      this.#outputConditions[condition.id] = condition;
-    }
-    if (condition instanceof TimeCondition) {
-      await this.#sprootDB.updateTimeAutomationConditionAsync(this.#automationId, condition);
-      this.#timeConditions[condition.id] = condition;
-    }
-  }
-
-  async deleteSensorConditionAsync(id: number): Promise<void> {
-    if (this.#sensorConditions[id]) {
-      delete this.#sensorConditions[id];
-      await this.#sprootDB.deleteSensorAutomationConditionAsync(id);
-    }
-  }
-
-  async deleteOutputConditionAsync(id: number): Promise<void> {
-    if (this.#outputConditions[id]) {
-      delete this.#outputConditions[id];
-      await this.#sprootDB.deleteOutputAutomationConditionAsync(id);
-    }
-  }
-
-  async deleteTimeConditionAsync(id: number): Promise<void> {
-    if (this.#timeConditions[id]) {
-      delete this.#timeConditions[id];
-      await this.#sprootDB.deleteTimeAutomationConditionAsync(id);
-    }
-  }
-
   async loadAsync(): Promise<void> {
+    //Clear any old ones out
+    this.#sensorConditions = {};
+    this.#outputConditions = {};
+    this.#timeConditions = {};
+    
     const promises = [];
-    promises.push(this.#sprootDB.getSensorAutomationConditionsAsync(this.#automationId)
+    promises.push(this.#sprootDB.getSensorConditionsAsync(this.#automationId)
       .then((sensorConditions) => {
         sensorConditions.map((sensorCondition) => { this.#sensorConditions[sensorCondition.id] = new SensorCondition(sensorCondition.id, sensorCondition.groupType, sensorCondition.sensorId, sensorCondition.readingType, sensorCondition.operator, sensorCondition.comparisonValue) });
       }));
-    promises.push(this.#sprootDB.getOutputAutomationConditionsAsync(this.#automationId)
+    promises.push(this.#sprootDB.getOutputConditionsAsync(this.#automationId)
       .then((outputConditions) => {
         outputConditions.map((outputCondition) => { this.#outputConditions[outputCondition.id] = new OutputCondition(outputCondition.id, outputCondition.groupType, outputCondition.outputId, outputCondition.operator, outputCondition.comparisonValue) });
       }));
-    promises.push(this.#sprootDB.getTimeAutomationConditionsAsync(this.#automationId)
+    promises.push(this.#sprootDB.getTimeConditionsAsync(this.#automationId)
       .then((timeConditions) => {
         timeConditions.map((timeCondition) => { this.#timeConditions[timeCondition.id] = new TimeCondition(timeCondition.id, timeCondition.groupType, timeCondition.startTime, timeCondition.endTime) });
       }));

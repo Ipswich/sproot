@@ -1,7 +1,7 @@
 import { RowDataPacket } from "mysql2";
-import { ConditionGroupType, ConditionOperator } from "../automation/ICondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/sproot-common/src/automation/ConditionTypes";
 
-type SDBOutputAutomationCondition = RowDataPacket & {
+type SDBOutputCondition = RowDataPacket & {
   id: number;
   automationId: number;
   groupType: ConditionGroupType;
@@ -10,4 +10,4 @@ type SDBOutputAutomationCondition = RowDataPacket & {
   outputId: number;
 };
 
-export type { SDBOutputAutomationCondition };
+export type { SDBOutputCondition };

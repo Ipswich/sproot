@@ -1,8 +1,8 @@
 import { RowDataPacket } from "mysql2";
-import { ConditionGroupType, ConditionOperator } from "../automation/ICondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/sproot-common/src/automation/ConditionTypes";
 import { ReadingType } from "../sensors/ReadingType";
 
-type SDBSensorAutomationCondition = RowDataPacket & {
+type SDBSensorCondition = RowDataPacket & {
   id: number;
   automationId: number;
   groupType: ConditionGroupType;
@@ -12,4 +12,4 @@ type SDBSensorAutomationCondition = RowDataPacket & {
   readingType: ReadingType;
 };
 
-export type { SDBSensorAutomationCondition };
+export type { SDBSensorCondition };

@@ -1,7 +1,7 @@
 import { RowDataPacket } from "mysql2";
-import { ConditionGroupType } from "../automation/ICondition";
+import { ConditionGroupType } from "@sproot/sproot-common/src/automation/ConditionTypes";
 
-type SDBTimeAutomationCondition = RowDataPacket & {
+type SDBTimeCondition = RowDataPacket & {
   id: number;
   automationId: number;
   groupType: ConditionGroupType;
@@ -9,4 +9,4 @@ type SDBTimeAutomationCondition = RowDataPacket & {
   endTime: string | null;
 };
 
-export type { SDBTimeAutomationCondition };
+export type { SDBTimeCondition };

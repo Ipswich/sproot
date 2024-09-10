@@ -1,4 +1,4 @@
-import { ConditionGroupType } from "./ICondition";
+import { ConditionGroupType } from "./ConditionTypes";
 
 interface IOutputCondition {
   id: number;

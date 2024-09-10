@@ -14,6 +14,7 @@ import { OutputList } from "./outputs/list/OutputList";
 
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
+import { AutomationDataManager } from "./automation/AutomationDataManager";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
@@ -61,6 +62,9 @@ const logger = setupLogger(app);
     sensorList.initializeOrRegenerateAsync(),
     outputList.initializeOrRegenerateAsync(),
   ]);
+
+  const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+  app.set("automationDataManager", automationDataManager);
 
   //State update loop
   const updateStateLoop = setInterval(async () => {

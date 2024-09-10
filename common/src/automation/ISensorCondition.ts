@@ -1,5 +1,5 @@
 import { ReadingType } from "../sensors/ReadingType";
-import { ConditionGroupType } from "./ICondition";
+import { ConditionGroupType } from "./ConditionTypes";
 
 interface ISensorCondition {
   id: number;

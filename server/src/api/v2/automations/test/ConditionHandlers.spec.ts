@@ -1,21 +1,21 @@
 import { Request, Response } from "express";
-import { OutputList } from "../../../../../outputs/list/OutputList";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/ConditionHandlers";
 import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/src/api/v2/Responses";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { SprootDB } from "../../../../../database/SprootDB";
-import { Automation } from "../../../../../automation/Automation";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { SprootDB } from "../../../../database/SprootDB";
+import { OutputList } from "../../../../outputs/list/OutputList";
+import { OutputAutomation } from "../../../../automation/outputs/OutputAutomation";
 
 describe("ConditionHandlers.ts", () => {
   describe("get", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     let sprootDB = sinon.createStubInstance(SprootDB);
-    sprootDB.addSensorAutomationConditionAsync.resolves(1);
-    sprootDB.addOutputAutomationConditionAsync.resolves(1);
-    sprootDB.addTimeAutomationConditionAsync.resolves(1);
+    sprootDB.addSensorConditionAsync.resolves(1);
+    sprootDB.addOutputConditionAsync.resolves(1);
+    sprootDB.addTimeConditionAsync.resolves(1);
     const mockResponse = {
       locals: {
         defaultProperties: {
@@ -24,10 +24,10 @@ describe("ConditionHandlers.ts", () => {
         }
       }
     } as unknown as Response;
-    const automation1 = new Automation(1, "Automation 1", 1, "and", sprootDB);
-    automation1.conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
-    const automation2 = new Automation(2, "Automation 2", 2, "or", sprootDB);
-    automation2.conditions.addOutputConditionAsync("anyOf", "equal", 50, 1);
+    const automation1 = new OutputAutomation(1, "Automation 1", 1, "and", sprootDB);
+    automation1.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
+    const automation2 = new OutputAutomation(2, "Automation 2", 2, "or", sprootDB);
+    automation2.addOutputConditionAsync("anyOf", "equal", 50, 1);
 
     const automations = {
       "1": automation1,
@@ -315,11 +315,11 @@ describe("ConditionHandlers.ts", () => {
     beforeEach(() => {
       outputList = sinon.createStubInstance(OutputList);
       sprootDB = sinon.createStubInstance(SprootDB);
-      sprootDB.addSensorAutomationConditionAsync.resolves(1);
-      sprootDB.addOutputAutomationConditionAsync.resolves(1);
-      sprootDB.addTimeAutomationConditionAsync.resolves(1);
-      const automation1 = new Automation(1, "Automation 1", 1, "and", sprootDB);
-      const automation2 = new Automation(2, "Automation 2", 2, "or", sprootDB);
+      sprootDB.addSensorConditionAsync.resolves(1);
+      sprootDB.addOutputConditionAsync.resolves(1);
+      sprootDB.addTimeConditionAsync.resolves(1);
+      const automation1 = new OutputAutomation(1, "Automation 1", 1, "and", sprootDB);
+      const automation2 = new OutputAutomation(2, "Automation 2", 2, "or", sprootDB);
 
       const automations = {
         "1": automation1,
@@ -700,7 +700,7 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it('should return a 503 if the database is unreachable', async () => {
-      sprootDB.addSensorAutomationConditionAsync.rejects(new Error("Test error"));
+      sprootDB.addSensorConditionAsync.rejects(new Error("Test error"));
       const mockRequest = {
         app: {
           get: (_dependency: string) => {
@@ -750,13 +750,13 @@ describe("ConditionHandlers.ts", () => {
     beforeEach(async () => {
       outputList = sinon.createStubInstance(OutputList);
       sprootDB = sinon.createStubInstance(SprootDB);
-      sprootDB.addSensorAutomationConditionAsync.resolves(1);
-      sprootDB.addOutputAutomationConditionAsync.resolves(1);
-      sprootDB.addTimeAutomationConditionAsync.resolves(1);
-      sprootDB.updateSensorAutomationConditionAsync.resolves();
-      sprootDB.updateOutputAutomationConditionAsync.resolves();
-      sprootDB.updateTimeAutomationConditionAsync.resolves();
-      const automation1 = new Automation(1, "Automation 1", 1, "and", sprootDB);
+      sprootDB.addSensorConditionAsync.resolves(1);
+      sprootDB.addOutputConditionAsync.resolves(1);
+      sprootDB.addTimeConditionAsync.resolves(1);
+      sprootDB.updateSensorConditionAsync.resolves();
+      sprootDB.updateOutputConditionAsync.resolves();
+      sprootDB.updateTimeConditionAsync.resolves();
+      const automation1 = new OutputAutomation(1, "Automation 1", 1, "and", sprootDB);
       await automation1.conditions.addSensorConditionAsync("allOf", "greater", 50, 1, ReadingType.temperature);
       await automation1.conditions.addOutputConditionAsync("anyOf", "less", 50, 1);
       await automation1.conditions.addTimeConditionAsync("oneOf", "12:00", "13:00");
@@ -1112,7 +1112,7 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it('should return a 503 if the database is unreachable', async () => {
-      sprootDB.updateSensorAutomationConditionAsync.rejects(new Error("Test error"));
+      sprootDB.updateSensorConditionAsync.rejects(new Error("Test error"));
       const mockRequest = {
         app: {
           get: (_dependency: string) => {
@@ -1163,10 +1163,10 @@ describe("ConditionHandlers.ts", () => {
     beforeEach(async () => {
       outputList = sinon.createStubInstance(OutputList);
       sprootDB = sinon.createStubInstance(SprootDB);
-      sprootDB.addSensorAutomationConditionAsync.resolves(1);
-      sprootDB.addOutputAutomationConditionAsync.resolves(1);
-      sprootDB.addTimeAutomationConditionAsync.resolves(1);
-      const automation1 = new Automation(1, "Automation 1", 1, "and", sprootDB);
+      sprootDB.addSensorConditionAsync.resolves(1);
+      sprootDB.addOutputConditionAsync.resolves(1);
+      sprootDB.addTimeConditionAsync.resolves(1);
+      const automation1 = new OutputAutomation(1, "Automation 1", 1, "and", sprootDB);
       await automation1.conditions.addSensorConditionAsync("allOf", "equal", 50, 1, ReadingType.temperature);
 
       const automations = {
@@ -1219,7 +1219,7 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it('should return a 200 and delete an output condition', async () => {
-      const automation1 = new Automation(1, "Automation 1", 1, "and", sprootDB);
+      const automation1 = new OutputAutomation(1, "Automation 1", 1, "and", sprootDB);
       await automation1.conditions.addOutputConditionAsync("anyOf", "equal", 50, 1);
       const automations = {
         "1": automation1
@@ -1269,7 +1269,7 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it('should return a 200 and delete a time condition', async () => {
-      const automation1 = new Automation(1, "Automation 1", 1, "and", sprootDB);
+      const automation1 = new OutputAutomation(1, "Automation 1", 1, "and", sprootDB);
       await automation1.conditions.addTimeConditionAsync("oneOf", "12:00", "13:00");
       const automations = {
         "1": automation1
@@ -1431,7 +1431,7 @@ describe("ConditionHandlers.ts", () => {
     });
 
     it('should return a 503 if the database is unreachable', async () => {
-      sprootDB.deleteSensorAutomationConditionAsync.rejects(new Error("Test error"));
+      sprootDB.deleteSensorConditionAsync.rejects(new Error("Test error"));
       const mockRequest = {
         app: {
           get: (_dependency: string) => {

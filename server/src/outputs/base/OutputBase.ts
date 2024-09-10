@@ -7,11 +7,10 @@ import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
-import AutomationManager from "../../automation/AutomationManager";
+import OutputAutomationManager from "../../automation/outputs/OutputAutomationManager";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
-import { Automation } from "../../automation/Automation";
-import { AutomationOperator } from "@sproot/automation/IAutomation";
+import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
@@ -29,7 +28,7 @@ export abstract class OutputBase implements IOutputBase {
   #initialCacheLookback: number;
   #chartData: OutputChartData;
   #chartDataPointInterval: number;
-  #automationManager: AutomationManager;
+  #automationManager: OutputAutomationManager;
 
   #updateMissCount = 0;
 
@@ -55,7 +54,7 @@ export abstract class OutputBase implements IOutputBase {
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
-    this.#automationManager = new AutomationManager(sprootDB);
+    this.#automationManager = new OutputAutomationManager(sprootDB);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
@@ -87,12 +86,12 @@ export abstract class OutputBase implements IOutputBase {
 
   updateName(name: string): void {
     this.name = name;
-    this.#chartData.chartSeries.name = name;
+    this.loadChartData();
   }
 
   updateColor(color: string): void {
     this.color = color;
-    this.#chartData.chartSeries.color = color;
+    this.loadChartData();
   }
 
   /**
@@ -117,20 +116,8 @@ export abstract class OutputBase implements IOutputBase {
     return this.#chartData.get();
   }
 
-  getAutomations(): Record<string, Automation> {
+  getAutomations(): Record<string, OutputAutomation> {
     return this.#automationManager.automations;
-  }
-
-  async addAutomationAsync(name: string, value: number, operator: AutomationOperator): Promise<Automation> {
-    return await this.#automationManager.addAutomationAsync(name, this.id, value, operator);
-  }
-
-  async updateAutomationAsync(automation: Automation) {
-    await this.#automationManager.updateAutomationAsync(automation);
-  }
-
-  async deleteAutomationAsync(automationId: number){
-    await this.#automationManager.deleteAutomationAsync(automationId);
   }
 
   async updateDataStoresAsync(): Promise<void> {

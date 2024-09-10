@@ -1,4 +1,4 @@
-import { ConditionOperator } from "@sproot/sproot-common/dist/automation/ICondition";
+import { ConditionOperator } from "@sproot/sproot-common/dist/automation/ConditionTypes";
 
 export function evaluateNumber(reading: number, operator: ConditionOperator, comparisonValue: number): boolean {
   switch (operator) {

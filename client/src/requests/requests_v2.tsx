@@ -158,6 +158,20 @@ export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
   return deserializedResponse.content?.data;
 }
 
+export async function getAutomationsByOutputIdAsync(id: number): Promise<Record<string, IOutputBase>> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching automations: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
 export async function getSupportedOutputModelsAsync(): Promise<string[]> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/outputs/supported-models`,

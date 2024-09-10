@@ -7,6 +7,8 @@ import {
   IconDroplet,
   IconLayoutDashboard,
   // IconPlant2,
+  // IconSeeding,
+  IconSettingsAutomation,
   IconTemperature,
   TablerIconsProps,
 } from "@tabler/icons-react";
@@ -46,36 +48,44 @@ export function getNavbarItems(
     };
   }
 
-  (pages["outputStates"] = {
+  pages["outputStates"] = {
     navLinkText: "Output States",
     headerText: "Output States",
     href: "/output-states",
     icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
-  }),
-    (pages["settings"] = {
-      navLinkText: "Settings",
-      headerText: "Settings",
-      icon: (props: TablerIconsProps | undefined) => (
-        <IconAdjustments {...props} />
-      ),
-      links: [
-        {
-          navLinkText: "Sensors",
-          headerText: "Sensor Settings",
-          href: "/settings/sensors",
-        } as Page,
-        {
-          navLinkText: "Outputs",
-          headerText: "Output Settings",
-          href: "/settings/outputs",
-        } as Page,
-        // {
-        //   navLinkText: "System",
-        //   headerText: "System Settings",
-        //   href: "/settings/system"
-        // } as Page,
-      ],
-    });
+  }
+
+  pages["automations"] = {
+    navLinkText: "Automations",
+    headerText: "Automations",
+    href: "/automations",
+    icon: (props: TablerIconsProps | undefined) => <IconSettingsAutomation {...props} />,
+  }
+
+  pages["settings"] = {
+    navLinkText: "Settings",
+    headerText: "Settings",
+    icon: (props: TablerIconsProps | undefined) => (
+      <IconAdjustments {...props} />
+    ),
+    links: [
+      {
+        navLinkText: "Sensors",
+        headerText: "Sensor Settings",
+        href: "/settings/sensors",
+      } as Page,
+      {
+        navLinkText: "Outputs",
+        headerText: "Output Settings",
+        href: "/settings/outputs",
+      } as Page,
+      // {
+      //   navLinkText: "System",
+      //   headerText: "System Settings",
+      //   href: "/settings/system"
+      // } as Page,
+    ],
+  };
 
   return pages;
 }

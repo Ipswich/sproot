@@ -8,7 +8,7 @@ import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
-import { Automation } from "../../automation/Automation";
+import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 
 class OutputList {
   #sprootDB: ISprootDB;
@@ -103,7 +103,7 @@ class OutputList {
   }
 
   getAutomations() {
-    const allAutomations = {} as Record<number, Record<string, Automation>>;
+    const allAutomations = {} as Record<number, Record<string, OutputAutomation>>;
     for (const output of Object.values(this.#outputs)) {
       const automations = output.getAutomations();
       if (Object.keys(automations).length > 0) {
@@ -139,7 +139,7 @@ class OutputList {
         //Update if it exists
         if (this.#outputs[key]?.name != output.name) {
           outputListChanges = true;
-          //Also updates chartSeries data
+          //Also updates chart data (and series)
           this.#outputs[key]!.updateName(output.name);
         }
 
@@ -155,7 +155,7 @@ class OutputList {
 
         if (this.#outputs[key]?.color != output.color) {
           outputListChanges = true;
-          //Also updates chartSeries data
+          //Also updates chart data (and series)
           this.#outputs[key]!.updateColor(output.color);
         }
 

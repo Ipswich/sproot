@@ -79,25 +79,28 @@ class SensorList {
 
     const promises = [];
     for (const sensor of sensorsFromDatabase) {
+      let sensorChanges = false;
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
         //Update if it exists
-        if (this.#sensors[key]!.name !== sensor.name) {
+        if (this.#sensors[key]?.name != sensor.name) {
           //Also updates chartSeries data
-          this.#sensors[key]!.updateName(sensor.name);
-          sensorListChanges = true;
+          this.#sensors[key]?.updateName(sensor.name);
+          sensorChanges = true;
         }
-
+        
         if (this.#sensors[key]?.color != sensor.color) {
           //Also updates chartSeries data
-          this.#sensors[key]!.updateColor(sensor.color);
-          sensorListChanges = true;
+          this.#sensors[key]?.updateColor(sensor.color);
+          sensorChanges = true;
         }
 
-        if (sensorListChanges) {
+        if (sensorChanges) {
+          //TODO:Reload chart data.
           this.#logger.info(
             `Updating sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
           );
+          sensorListChanges = true;
         }
       } else {
         //Create if it doesn't
