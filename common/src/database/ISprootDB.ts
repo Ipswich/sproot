@@ -10,11 +10,11 @@ import { SDBSensorCondition } from "@sproot/sproot-common/src/database/SDBSensor
 import { SDBOutputCondition } from "@sproot/sproot-common/src/database/SDBOutputCondition";
 import { ConditionGroupType, ConditionOperator } from "@sproot/sproot-common/src/automation/ConditionTypes";
 import { SDBTimeCondition } from "@sproot/sproot-common/src/database/SDBTimeCondition";
-import { AutomationOperator, IAutomation } from "@sproot/sproot-common/src/automation/IAutomation";
+import { AutomationOperator } from "@sproot/sproot-common/src/automation/IAutomation";
 import { ITimeCondition } from "../automation/ITimeCondition";
 import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
-import { SDBOutputAutomation } from "./SDBOutputAutomation";
+import { SDBOutputAutomation, SDBOutputAutomationView } from "./SDBOutputAutomation";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -50,12 +50,18 @@ interface ISprootDB {
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
   addAutomationAsync(name: string, operator: AutomationOperator): Promise<number>;
-  updateAutomationAsync(automation: IAutomation): Promise<void>;
+  updateAutomationAsync(name: string, operator: AutomationOperator, id: number): Promise<void>;
   deleteAutomationAsync(automationId: number): Promise<void>;
 
-  getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputAutomation[]>;
-  addOutputToAutomationAsync(automationId: number, outputId: number): Promise<void>;
-  deleteOutputFromAutomationAsync(automationId: number, outputId: number): Promise<void>;
+  getOutputAutomationsAsync(): Promise<SDBOutputAutomation[]>;
+  getOutputAutomationAsync(id: number): Promise<SDBOutputAutomation[]>;
+  addOutputAutomationAsync(automationId: number, value: number): Promise<number>;
+  updateOutputAutomationAsync(id: number, automationId: number, value: number): Promise<void>;
+  deleteOutputAutomationAsync(id: number): Promise<void>;
+
+  getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputAutomationView[]>;
+  addOutputToOutputAutomationAsync(automationId: number, outputId: number): Promise<void>;
+  deleteOutputFromOutputAutomationAsync(automationId: number, outputId: number): Promise<void>;
 
   getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]>;
   addSensorConditionAsync(
@@ -93,13 +99,28 @@ interface ISprootDB {
 }
 
 class MockSprootDB implements ISprootDB {
-  async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputAutomation[]> {
+  async getOutputAutomationsAsync(): Promise<SDBOutputAutomation[]> {
     return []
   }
-  async addOutputToAutomationAsync(_outputId: number, _automationId: number): Promise<void> {
+  async getOutputAutomationAsync(_id: number): Promise<SDBOutputAutomation[]> {
+    return []
+  }
+  async addOutputAutomationAsync(_automationId: number, _value: number): Promise<number> {
+    return 0;
+  }
+  async updateOutputAutomationAsync(_id: number, _automationId: number, _value: number): Promise<void> {
     return;
   }
-  async deleteOutputFromAutomationAsync(_outputId: number, _automationId: number): Promise<void> {
+  async deleteOutputAutomationAsync(_id: number): Promise<void> {
+    return;
+  }
+  async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputAutomationView[]> {
+    return []
+  }
+  async addOutputToOutputAutomationAsync(_outputId: number, _automationId: number): Promise<void> {
+    return;
+  }
+  async deleteOutputFromOutputAutomationAsync(_outputId: number, _automationId: number): Promise<void> {
     return;
   }
   async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {
@@ -129,7 +150,7 @@ class MockSprootDB implements ISprootDB {
   async addAutomationAsync(_name: string, _operator: AutomationOperator): Promise<number> {
     return 0;
   }
-  async updateAutomationAsync(_automation: IAutomation): Promise<void> {
+  async updateAutomationAsync(_name: string, _operator: AutomationOperator, _id: number): Promise<void> {
     return;
   }
   async deleteAutomationAsync(_automationId: number): Promise<void> {

@@ -9,6 +9,7 @@ import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
+import { SensorList } from "../../../../sensors/list/SensorList";
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -20,14 +21,10 @@ export async function getAllAsync(request: Request, response: Response): Promise
   let getAllConditionsResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
-  const type = request.params["type"] ?? "";
 
   const invalidFields = [];
   if (isNaN(automationId)) {
     invalidFields.push("Invalid or missing automation Id.");
-  }
-  if (!["sensor", "output", "time"].includes(type)) {
-    invalidFields.push("Invalid or missing condition type.");
   }
 
   if (invalidFields.length > 0) {
@@ -51,7 +48,7 @@ export async function getAllAsync(request: Request, response: Response): Promise
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with id ${automationId} not found`],
+          details: [`Automation with Id ${automationId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -64,7 +61,21 @@ export async function getAllAsync(request: Request, response: Response): Promise
     getAllConditionsResponse = {
       statusCode: 200,
       content: {
-        data: { sensorConditions, outputConditions, timeConditions },
+        data: {
+          sensor: {
+            allOf: sensorConditions.filter((c) => c.groupType == "allOf"),
+            anyOf: sensorConditions.filter((c) => c.groupType == "anyOf"),
+            oneOf: sensorConditions.filter((c) => c.groupType == "oneOf")
+          }, output: {
+            allOf: outputConditions.filter((c) => c.groupType == "allOf"),
+            anyOf: outputConditions.filter((c) => c.groupType == "anyOf"),
+            oneOf: outputConditions.filter((c) => c.groupType == "oneOf")
+          }, time: {
+            allOf: timeConditions.filter((c) => c.groupType == "allOf"),
+            anyOf: timeConditions.filter((c) => c.groupType == "anyOf"),
+            oneOf: timeConditions.filter((c) => c.groupType == "oneOf")
+          }
+        },
       },
       ...response.locals["defaultProperties"],
     };
@@ -88,7 +99,7 @@ export async function getAllAsync(request: Request, response: Response): Promise
  * @param response 
  * @returns 
  */
-export async function getTypeAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+export async function getByTypeAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get("sprootDB") as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
@@ -124,14 +135,14 @@ export async function getTypeAsync(request: Request, response: Response): Promis
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with id ${automationId} not found`],
+          details: [`Automation with Id ${automationId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
       return getConditionResponse;
     }
 
-    let conditions;
+    let conditions: SDBSensorCondition[] | SDBOutputCondition[] | SDBTimeCondition[] = [];
     switch (type) {
       case "sensor":
         conditions = await sprootDB.getSensorConditionsAsync(automationId);
@@ -147,7 +158,11 @@ export async function getTypeAsync(request: Request, response: Response): Promis
     getConditionResponse = {
       statusCode: 200,
       content: {
-        data: conditions,
+        data: {
+          allOf: conditions.filter((c) => c.groupType == "allOf"),
+          anyOf: conditions.filter((c) => c.groupType == "anyOf"),
+          oneOf: conditions.filter((c) => c.groupType == "oneOf")
+        },
       },
       ...response.locals["defaultProperties"],
     };
@@ -171,7 +186,7 @@ export async function getTypeAsync(request: Request, response: Response): Promis
  * @param response 
  * @returns 
  */
-export async function getOneOfTypeAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+export async function getOneOfByTypeAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get("sprootDB") as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
@@ -211,14 +226,14 @@ export async function getOneOfTypeAsync(request: Request, response: Response): P
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with id ${automationId} not found`],
+          details: [`Automation with Id ${automationId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
       return getConditionResponse;
     }
 
-    let condition;
+    let condition: SDBSensorCondition[] | SDBOutputCondition[] | SDBTimeCondition[] = [];
     switch (type) {
       case "sensor":
         condition = (await sprootDB.getSensorConditionsAsync(automationId)).filter((conditions) => conditions.id == conditionId);
@@ -231,13 +246,13 @@ export async function getOneOfTypeAsync(request: Request, response: Response): P
         break;
     }
 
-    if (condition && condition.length == 0) {
+    if (condition.length == 0) {
       getConditionResponse = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Condition with id ${conditionId} not found`],
+          details: [`Condition with Id ${conditionId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -246,7 +261,7 @@ export async function getOneOfTypeAsync(request: Request, response: Response): P
       getConditionResponse = {
         statusCode: 200,
         content: {
-          data: condition,
+          data: condition[0],
         },
         ...response.locals["defaultProperties"],
       };
@@ -282,7 +297,7 @@ export async function addAsync(request: Request, response: Response): Promise<Su
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
-    invalidDetails.push("Invalid or missing automation ID.");
+    invalidDetails.push("Invalid or missing automation Id.");
   }
   if (!["sensor", "output", "time"].includes(conditionType)) {
     invalidDetails.push("Invalid or missing condition type.");
@@ -310,7 +325,7 @@ export async function addAsync(request: Request, response: Response): Promise<Su
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with ID ${automationId} not found.`],
+          details: [`Automation with Id ${automationId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -333,8 +348,10 @@ export async function addAsync(request: Request, response: Response): Promise<Su
         if (request.body.comparisonValue == null) {
           invalidFields.push("Invalid or missing comparison value.");
         }
-        if (isNaN(request.body.sensorId)) {
-          invalidFields.push("Invalid or missing sensor ID.");
+        if (request.body.sensorId == null || isNaN(request.body.sensorId)) {
+          invalidFields.push("Invalid or missing sensor Id.");
+        } else if ((request.app.get("sensorList") as SensorList).sensors[request.body.sensorId] == null) {
+          invalidFields.push("Sensor does not exist.");
         }
         if (request.body.readingType == null) {
           invalidFields.push("Invalid or missing reading type.");
@@ -350,7 +367,7 @@ export async function addAsync(request: Request, response: Response): Promise<Su
           request.body.sensorId,
           request.body.readingType
         );
-        creationResult = new SensorCondition(resultId, request.body.groupType, request.body.operator, request.body.comparisonValue, request.body.sensorId, request.body.readingType);
+        creationResult = new SensorCondition(resultId, request.body.groupType, request.body.sensorId, request.body.readingType, request.body.operator, request.body.comparisonValue);
         break;
       case "output":
         if (request.body.operator == null) {
@@ -359,8 +376,10 @@ export async function addAsync(request: Request, response: Response): Promise<Su
         if (request.body.comparisonValue == null) {
           invalidFields.push("Invalid or missing comparison value.");
         }
-        if (isNaN(request.body.outputId)) {
-          invalidFields.push("Invalid or missing output ID.");
+        if (request.body.outputId == null || isNaN(request.body.outputId)) {
+          invalidFields.push("Invalid or missing output Id.");
+        } else if (request.app.get("outputList").outputs[request.body.outputId] == null) {
+          invalidFields.push("Output does not exist.");
         }
         if (invalidFields.length > 0) {
           break;
@@ -372,15 +391,15 @@ export async function addAsync(request: Request, response: Response): Promise<Su
           request.body.comparisonValue,
           request.body.outputId,
         );
-        creationResult = new OutputCondition(resultId, request.body.groupType, request.body.operator, request.body.comparisonValue, request.body.outputId);
+        creationResult = new OutputCondition(resultId, request.body.groupType, request.body.outputId, request.body.operator, request.body.comparisonValue);
         break;
       case "time":
         const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
         if (request.body.startTime != null && !regex.test(request.body.startTime)) {
-          invalidFields.push("Invalid start time.");
+          invalidFields.push("Invalid or missing start time.");
         }
         if (request.body.endTime != null && !regex.test(request.body.endTime)) {
-          invalidFields.push("Invalid end time.");
+          invalidFields.push("Invalid or missing end time.");
         }
         if (invalidFields.length > 0) {
           break;
@@ -441,17 +460,17 @@ export async function updateAsync(request: Request, response: Response): Promise
 
   const automationId = parseInt(request.params["automationId"] ?? "");
   const conditionId = parseInt(request.params["conditionId"] ?? "");
-  const conditionType = request.params["type"] as "sensor" | "output" | "time";
+  const conditionType = request.params["type"] ?? ""
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
-    invalidDetails.push("Invalid or missing automation ID.");
+    invalidDetails.push("Invalid or missing automation Id.");
   }
   if (!["sensor", "output", "time"].includes(conditionType)) {
     invalidDetails.push("Invalid or missing condition type.");
   }
   if (isNaN(conditionId)) {
-    invalidDetails.push("Invalid or missing condition ID.");
+    invalidDetails.push("Invalid or missing condition Id.");
   }
 
   if (invalidDetails.length > 0) {
@@ -469,15 +488,14 @@ export async function updateAsync(request: Request, response: Response): Promise
   }
 
   try {
-
     const automation = await sprootDB.getAutomationAsync(automationId);
-    if (!automation) {
+    if (automation.length == 0) {
       updateConditionResponse = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with ID ${automationId} not found.`],
+          details: [`Automation with Id ${automationId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -505,7 +523,7 @@ export async function updateAsync(request: Request, response: Response): Promise
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`${conditionType.charAt(0).toUpperCase() + conditionType.slice(1)} condition with ID ${conditionId} not found.`],
+          details: [`${conditionType.charAt(0).toUpperCase() + conditionType.slice(1)} condition with Id ${conditionId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -521,22 +539,24 @@ export async function updateAsync(request: Request, response: Response): Promise
     }
     switch (conditionType) {
       case "sensor":
-        condition = new SensorCondition(sdbcondition.id, sdbcondition.groupType, sdbcondition.operator, sdbcondition.comparisonValue, sdbcondition.sensorId, sdbcondition.readingType);
+        condition = new SensorCondition(sdbcondition.id, sdbcondition.groupType, sdbcondition.sensorId, sdbcondition.readingType, sdbcondition.operator, sdbcondition.comparisonValue);
         condition.operator = request.body.operator ?? condition.operator;
         condition.comparisonValue = request.body.comparisonValue ?? condition.comparisonValue;
         condition.sensorId = request.body.sensorId ?? condition.sensorId;
         condition.readingType = request.body.readingType ?? condition.readingType;
         if (!["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(condition.operator)) {
-          invalidDetails.push("Invalid or missing operator.");
+          invalidDetails.push("Invalid operator.");
         }
         if (isNaN(condition.comparisonValue)) {
-          invalidDetails.push("Invalid or missing comparison value.");
+          invalidDetails.push("Invalid comparison value.");
         }
         if (isNaN(condition.sensorId)) {
-          invalidDetails.push("Invalid or missing sensor ID.");
+          invalidDetails.push("Invalid sensor Id.");
+        } else if ((request.app.get("sensorList") as SensorList).sensors[condition.sensorId] == null) {
+          invalidDetails.push("Sensor does not exist.");
         }
         if (!Object.keys(ReadingType).includes(condition.readingType)) {
-          invalidDetails.push("Invalid or missing reading type.");
+          invalidDetails.push("Invalid reading type.");
         }
         if (invalidDetails.length > 0) {
           break;
@@ -545,18 +565,20 @@ export async function updateAsync(request: Request, response: Response): Promise
         updateResult = condition;
         break;
       case "output":
-        condition = new OutputCondition(sdbcondition.id, sdbcondition.groupType, sdbcondition.operator, sdbcondition.comparisonValue, sdbcondition.outputId);
+        condition = new OutputCondition(sdbcondition.id, sdbcondition.groupType, sdbcondition.outputId, sdbcondition.operator, sdbcondition.comparisonValue);
         condition.operator = request.body.operator ?? condition.operator;
         condition.comparisonValue = request.body.comparisonValue ?? condition.comparisonValue;
         condition.outputId = request.body.outputId ?? condition.outputId;
-        if (!condition.operator) {
-          invalidDetails.push("Invalid or missing operator.");
+        if (!["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(condition.operator)) {
+          invalidDetails.push("Invalid operator.");
         }
         if (isNaN(condition.comparisonValue)) {
-          invalidDetails.push("Invalid or missing comparison value.");
+          invalidDetails.push("Invalid comparison value.");
         }
         if (isNaN(condition.outputId)) {
-          invalidDetails.push("Invalid or missing output ID.");
+          invalidDetails.push("Invalid output Id.");
+        } else if (request.app.get("outputList").outputs[condition.outputId] == null) {
+          invalidDetails.push("Output does not exist.");
         }
         if (invalidDetails.length > 0) {
           break;
@@ -638,13 +660,13 @@ export async function deleteAsync(request: Request, response: Response): Promise
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
-    invalidDetails.push("Invalid or missing automation ID.");
+    invalidDetails.push("Invalid or missing automation Id.");
   }
   if (!["sensor", "output", "time"].includes(conditionType)) {
     invalidDetails.push("Invalid or missing condition type.");
   }
   if (isNaN(conditionId)) {
-    invalidDetails.push("Invalid or missing condition ID.");
+    invalidDetails.push("Invalid or missing condition Id.");
   }
 
   if (invalidDetails.length > 0) {
@@ -661,50 +683,50 @@ export async function deleteAsync(request: Request, response: Response): Promise
     return deleteConditionResponse;
   }
 
-  const automation = await sprootDB.getAutomationAsync(automationId);
-  if (!automation) {
-    deleteConditionResponse = {
-      statusCode: 404,
-      error: {
-        name: "Not Found",
-        url: request.originalUrl,
-        details: [`Automation with ID ${automationId} not found.`],
-      },
-      ...response.locals["defaultProperties"],
-    };
-
-    return deleteConditionResponse;
-  }
-
-  let conditions: SDBSensorCondition[] | SDBOutputCondition[] | SDBTimeCondition[] = [];
-  switch (conditionType) {
-    case "sensor":
-      conditions = await sprootDB.getSensorConditionsAsync(automationId);
-      break;
-    case "output":
-      conditions = await sprootDB.getOutputConditionsAsync(automationId);
-      break;
-    case "time":
-      conditions = await sprootDB.getTimeConditionsAsync(automationId);
-      break;
-  }
-
-  const sdbcondition = conditions.find((condition) => condition.id == conditionId);
-  if (!sdbcondition) {
-    deleteConditionResponse = {
-      statusCode: 404,
-      error: {
-        name: "Not Found",
-        url: request.originalUrl,
-        details: [`${conditionType.charAt(0).toUpperCase() + conditionType.slice(1)} condition with ID ${conditionId} not found.`],
-      },
-      ...response.locals["defaultProperties"],
-    };
-
-    return deleteConditionResponse;
-  }
-
   try {
+    const automation = await sprootDB.getAutomationAsync(automationId);
+    if (automation.length == 0) {
+      deleteConditionResponse = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: request.originalUrl,
+          details: [`Automation with Id ${automationId} not found.`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+
+      return deleteConditionResponse;
+    }
+
+    let conditions: SDBSensorCondition[] | SDBOutputCondition[] | SDBTimeCondition[] = [];
+    switch (conditionType) {
+      case "sensor":
+        conditions = await sprootDB.getSensorConditionsAsync(automationId);
+        break;
+      case "output":
+        conditions = await sprootDB.getOutputConditionsAsync(automationId);
+        break;
+      case "time":
+        conditions = await sprootDB.getTimeConditionsAsync(automationId);
+        break;
+    }
+
+    const sdbcondition = conditions.find((condition) => condition.id == conditionId);
+    if (!sdbcondition) {
+      deleteConditionResponse = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: request.originalUrl,
+          details: [`${conditionType.charAt(0).toUpperCase() + conditionType.slice(1)} condition with Id ${conditionId} not found.`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+
+      return deleteConditionResponse;
+    }
+
     if (conditionType === "sensor") {
       await automationDataManager.deleteSensorConditionAsync(conditionId);
     }

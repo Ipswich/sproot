@@ -6,12 +6,11 @@ import { TimeCondition } from "./conditions/TimeCondition";
 import { SensorCondition } from "./conditions/SensorCondition";
 import { OutputCondition } from "./conditions/OutputCondition";
 import { ReadingType } from "@sproot/sensors/ReadingType";
-import { IOutputAutomation } from "@sproot/automation/IOutputAutomation";
 
 /**
  * This class serves as an interface between changes in automation data and the things
  * that depend on that data. Effectively, it serves as a way to ensure that when a change
- * in an automation is made, its dependents reflect those changes.
+ * in an automation or condition is made, its dependents reflect those changes.
  */
 class AutomationDataManager {
   #sprootDB: ISprootDB;
@@ -40,18 +39,34 @@ class AutomationDataManager {
     await this.#outputList.initializeOrRegenerateAsync();
   }
 
-  async updateAutomationAsync(automation: IOutputAutomation) {
-    await this.#sprootDB.updateAutomationAsync(automation);
+  async updateAutomationAsync(name:string, operator: AutomationOperator, id: number) {
+    await this.#sprootDB.updateAutomationAsync(name, operator, id);
     await this.#outputList.initializeOrRegenerateAsync();
   }
 
-  async addOutputToAutomationAsync(automationId: number, outputId: number) {
-    await this.#sprootDB.addOutputToAutomationAsync(outputId, automationId);
+  async addOutputAutomationAsync(automationId: number, value: number) {
+    const result = this.#sprootDB.addOutputAutomationAsync(automationId, value);
+    await this.#outputList.initializeOrRegenerateAsync();
+    return result;
+  }
+
+  async updateOutputAutomationAsync(outputAutomationId: number, automationId: number, value: number) {
+    await this.#sprootDB.updateOutputAutomationAsync(outputAutomationId, automationId, value);
     await this.#outputList.initializeOrRegenerateAsync();
   }
 
-  async deleteOutputFromAutomationAsync(outputId: number, automationId: number) {
-    await this.#sprootDB.deleteOutputFromAutomationAsync(outputId, automationId);
+  async deleteOutputAutomationAsync(outputAutomationId: number) {
+    await this.#sprootDB.deleteOutputAutomationAsync(outputAutomationId);
+    await this.#outputList.initializeOrRegenerateAsync();
+  }
+
+  async addOutputToOutputAutomationAsync(automationId: number, outputId: number) {
+    await this.#sprootDB.addOutputToOutputAutomationAsync(outputId, automationId);
+    await this.#outputList.initializeOrRegenerateAsync();
+  }
+
+  async deleteOutputFromOutputAutomationAsync(outputId: number, automationId: number) {
+    await this.#sprootDB.deleteOutputFromOutputAutomationAsync(outputId, automationId);
     await this.#outputList.initializeOrRegenerateAsync();
   }
 
@@ -102,6 +117,9 @@ class AutomationDataManager {
     await this.#sprootDB.deleteTimeConditionAsync(id);
     await this.#outputList.initializeOrRegenerateAsync();
   }
+
 }
+
+
 
 export { AutomationDataManager };

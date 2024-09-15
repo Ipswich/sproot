@@ -11,6 +11,8 @@ import authenticationRouter from "./authentication/authenticationRouter";
 import pingRouter from "./ping/PingRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
+import automationsRouter from "./automations/AutomationsRouter";
+import outputAutomationsRouter from "./automations/OutputAutomationsRouter";
 
 const spec_path = "../api_spec/openapi_v2.yaml";
 
@@ -57,6 +59,8 @@ function ApiRootV2(app: Express) {
   // The real data routes
   app.use("/api/v2/sensors", authenticateMiddleware, sensorsRouter);
   app.use("/api/v2/outputs", authenticateMiddleware, outputsRouter);
+  app.use("/api/v2/automations", authenticateMiddleware, automationsRouter);
+  app.use("/api/v2/output-automations", authenticateMiddleware, outputAutomationsRouter);
 
   // Error handler - anything unexpected ends up here.
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {

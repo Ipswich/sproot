@@ -1,55 +1,51 @@
-// import { Request, Response } from "express";
+import express, { Request, Response } from "express";
 
-// import { Router } from "express"
-// import {
-//   get,
-//   addAsync,
-//   updateAsync,
-//   deleteAsync,
-// } from "./handlers/AutomationHandlers";
+import {
+  getAsync,
+  getByIdAsync,
+  addAsync,
+  updateAsync,
+  deleteAsync,
+} from "./handlers/AutomationHandlers";
+import conditionsRouter from "./ConditionsRouter";
 
-// export default function AutomationsRouter(router: Router): Router {
-//   router.get("/automations", (req: Request, res: Response) => {
-//     const response = get(req, res);
+const router = express.Router();
 
-//     res.status(response.statusCode).json(response);
-//     return;
-//   });
+router.get("/", async (req: Request, res: Response) => {
+  const response = await getAsync(req, res);
 
-//   router.get("/:outputId/automations", (req: Request, res: Response) => {
-//     const response = get(req, res);
+  res.status(response.statusCode).json(response);
+  return;
+});
 
-//     res.status(response.statusCode).json(response);
-//     return;
-//   });
+router.get("/:automationId", async (req: Request, res: Response) => {
+  const response = await getByIdAsync(req, res);
 
-//   router.get("/:outputId/automations/:automationId", (req: Request, res: Response) => {
-//     const response = get(req, res);
+  res.status(response.statusCode).json(response);
+  return;
+});
 
-//     res.status(response.statusCode).json(response);
-//     return;
-//   });
+router.post("/", async (req: Request, res: Response) => {
+  const response = await addAsync(req, res);
 
-//   router.post("/:outputId/automations", async (req: Request, res: Response) => {
-//     const response = await addAsync(req, res);
+  res.status(response.statusCode).json(response);
+  return;
+});
 
-//     res.status(response.statusCode).json(response);
-//     return;
-//   });
+router.patch("/:automationId", async (req: Request, res: Response) => {
+  const response = await updateAsync(req, res);
 
-//   router.put("/:outputId/automations/:automationId", async (req: Request, res: Response) => {
-//     const response = await updateAsync(req, res);
+  res.status(response.statusCode).json(response);
+  return;
+});
 
-//     res.status(response.statusCode).json(response);
-//     return;
-//   });
+router.delete("/:automationId", async (req: Request, res: Response) => {
+  const response = await deleteAsync(req, res);
 
-//   router.delete("/:outputId/automations/:automationId", async (req: Request, res: Response) => {
-//     const response = await deleteAsync(req, res);
+  res.status(response.statusCode).json(response);
+  return;
+});
 
-//     res.status(response.statusCode).json(response);
-//     return;
-//   });
+conditionsRouter(router);
 
-//   return router;
-// }
+export default router

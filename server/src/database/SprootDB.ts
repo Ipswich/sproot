@@ -15,11 +15,11 @@ import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutpu
 import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
 import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
-import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
+import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { TimeCondition } from "../automation/conditions/TimeCondition";
 import { OutputCondition } from "../automation/conditions/OutputCondition";
 import { SensorCondition } from "../automation/conditions/SensorCondition";
-import { SDBOutputAutomation } from "@sproot/database/SDBOutputAutomation";
+import { SDBOutputAutomation, SDBOutputAutomationView } from "@sproot/database/SDBOutputAutomation";
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
 
@@ -124,7 +124,7 @@ class SprootDB implements ISprootDB {
       conditionId,
     ]);
   }
-  
+
   async getTimeConditionsAsync(
     automationId: number,
   ): Promise<SDBTimeCondition[]> {
@@ -197,13 +197,13 @@ class SprootDB implements ISprootDB {
     return result[0].insertId;
   }
 
-  async updateAutomationAsync(automation: IAutomation): Promise<void> {
+  async updateAutomationAsync(name: string, operator: string, id: number): Promise<void> {
     await this.#connection.execute(
       "UPDATE automations SET name = ?, operator = ? WHERE id = ?",
       [
-        automation.name,
-        automation.operator,
-        automation.id,
+        name,
+        operator,
+        id,
       ],
     );
   }
@@ -212,22 +212,47 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute("DELETE FROM automations WHERE id = ?", [automationId]);
   }
 
-  async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputAutomation[]> {
+
+  async getOutputAutomationsAsync(): Promise<SDBOutputAutomation[]> {
     const [rows] = await this.#connection.execute<SDBOutputAutomation[]>(
+      "SELECT id, automation_id as automationId, value FROM output_automations",
+    );
+    return rows;
+  }
+  async getOutputAutomationAsync(id: number): Promise<SDBOutputAutomation[]> {
+    const [rows] = await this.#connection.execute<SDBOutputAutomation[]>(
+      "SELECT id, automation_id as automationId, value FROM output_automations WHERE id = ?",
+      [id],
+    );
+    return rows;
+  }
+  async addOutputAutomationAsync(automationId: number, value: number): Promise<number> {
+    const result = await this.#connection.execute<ResultSetHeader>("INSERT INTO output_automations (automation_Id, value) VALUES (?, ?)", [automationId, value]);
+    return result[0].insertId;
+  }
+  async updateOutputAutomationAsync(id: number, automationId: number, value: number): Promise<void> {
+    await this.#connection.execute("UPDATE output_automations SET automationId = ?, value = ? WHERE id = ?", [automationId, value, id]);
+  }
+  async deleteOutputAutomationAsync(id: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM output_automations WHERE id = ?", [id]);
+  }
+
+  async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputAutomationView[]> {
+    const [rows] = await this.#connection.execute<SDBOutputAutomationView[]>(
       "SELECT * FROM output_automations_view WHERE outputId = ?",
       [outputId],
     );
     return rows;
   }
 
-  async addOutputToAutomationAsync(outputId: number, outputAutomationId: number): Promise<void> {
+  async addOutputToOutputAutomationAsync(outputId: number, outputAutomationId: number): Promise<void> {
     await this.#connection.execute(
       "INSERT INTO output_automations_lookup (output_id, automation_id) VALUES (?, ?)",
       [outputId, outputAutomationId],
     );
   }
 
-  async deleteOutputFromAutomationAsync(outputId: number, automationId: number): Promise<void> {
+  async deleteOutputFromOutputAutomationAsync(outputId: number, automationId: number): Promise<void> {
     await this.#connection.execute(
       "DELETE FROM output_automations_lookup WHERE output_id = ? AND automation_id = ?",
       [outputId, automationId],
