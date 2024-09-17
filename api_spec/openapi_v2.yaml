@@ -1578,11 +1578,8 @@ paths:
                       content:
                         properties:
                           data:
-                            items:
-                              anyOf:
-                                - $ref: "#/components/schemas/SensorCondition"
-                                - $ref: "#/components/schemas/OutputCondition"
-                                - $ref: "#/components/schemas/TimeCondition"
+                            anyOf:
+                              - $ref: "#/components/schemas/AutomationConditions"
         401:
           description: "Unauthorized"
           content:
@@ -3798,10 +3795,10 @@ components:
         operator:
           type: string
           example: "or"
-        conditions:
-          readOnly: true
-          allOf:
-            - $ref: "#/components/schemas/AutomationConditions"
+        # conditions:
+        #   readOnly: true
+        #   allOf:
+        #     - $ref: "#/components/schemas/AutomationConditions"
 
     OutputAutomation:
       description: >
@@ -3922,6 +3919,10 @@ components:
             sensorId:
               type: number
               example: 1
+            sensorName:
+              readOnly: true
+              type: string
+              example: "Windowsill"
             readingType:
               type: string
               example: "temperature"
@@ -3955,6 +3956,10 @@ components:
           outputId:
             type: number
             example: 1
+          outputName:
+            readOnly: true
+            type: string
+            example: "Relay #1"
       
     TimeCondition:
       description: >

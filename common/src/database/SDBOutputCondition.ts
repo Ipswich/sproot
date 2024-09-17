@@ -8,6 +8,7 @@ type SDBOutputCondition = RowDataPacket & {
   operator: ConditionOperator
   comparisonValue: number;
   outputId: number;
+  outputName: string;
 };
 
 export type { SDBOutputCondition };

@@ -9,6 +9,7 @@ type SDBSensorCondition = RowDataPacket & {
   operator: ConditionOperator;
   comparisonValue: number;
   sensorId: number;
+  sensorName: string;
   readingType: ReadingType;
 };
 
