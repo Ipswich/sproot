@@ -16,7 +16,7 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
-import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";
+import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
 import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 
@@ -182,7 +182,7 @@ export default function EditTable({
         </form>
       </Modal>
       <EditablesTable
-        editables={sensors}
+        editables={Object.values(sensors)}
         onClick={(item) => {
           editTableOnClick(item as ISensorBase);
         }}

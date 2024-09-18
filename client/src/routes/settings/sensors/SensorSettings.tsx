@@ -6,8 +6,8 @@ import {
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import EditTable from "@sproot/sproot-client/src/settings/sensors/EditTable";
-import NewSensorModal from "@sproot/sproot-client/src/settings/sensors/NewSensorModal";
+import EditTable from "@sproot/sproot-client/src/routes/settings/sensors/EditTable";
+import NewSensorModal from "@sproot/sproot-client/src/routes/settings/sensors/NewSensorModal";
 import { useQuery } from "@tanstack/react-query";
 
 export default function SensorSettings() {

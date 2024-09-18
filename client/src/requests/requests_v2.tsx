@@ -1,5 +1,9 @@
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { ISensorBase } from "@sproot/sensors/ISensorBase";
+import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
+import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
+import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
+import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SuccessResponse } from "@sproot/sproot-common/src/api/v2/Responses";
 import {
@@ -158,8 +162,23 @@ export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
   return deserializedResponse.content?.data;
 }
 
-export async function getAutomationsByOutputIdAsync(id: number): Promise<Record<string, IOutputBase>> {
-  const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
+
+// export async function getAutomationsByOutputIdAsync(id: number): Promise<Record<string, IOutputBase>> {
+//   const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
+//     method: "GET",
+//     headers: {},
+//     mode: "cors",
+//     // credentials: "include",
+//   });
+//   if (!response.ok) {
+//     console.error(`Error fetching automations: ${response}`);
+//   }
+//   const deserializedResponse = (await response.json()) as SuccessResponse;
+//   return deserializedResponse.content?.data;
+// }
+
+export async function getAutomationsAsync(): Promise<IAutomation[]> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations`, {
     method: "GET",
     headers: {},
     mode: "cors",
@@ -167,6 +186,63 @@ export async function getAutomationsByOutputIdAsync(id: number): Promise<Record<
   });
   if (!response.ok) {
     console.error(`Error fetching automations: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function addAutomationAsync(name: string, operator: AutomationOperator): Promise<IAutomation> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    mode: "cors",
+    body: JSON.stringify({ name, operator }),
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding automation: ${response}`);
+  }
+  return (await response.json()).content.data;
+}
+
+export async function updateAutomationAsync(id: number, name: string, operator: AutomationOperator): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    mode: "cors",
+    body: JSON.stringify({ name, operator }),
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error updating automation: ${response}`);
+  }
+}
+
+export async function deleteAutomationAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting automation: ${response}`);
+  }
+}
+
+export async function getConditionsAsync(automationId: number): Promise<{
+  sensor: { allOf: SDBSensorCondition[], anyOf: SDBSensorCondition[], oneOf: SDBSensorCondition[] },
+  output: { allOf: SDBOutputCondition[], anyOf: SDBOutputCondition[], oneOf: SDBOutputCondition[] },
+  time: { allOf: SDBTimeCondition[], anyOf: SDBTimeCondition[], oneOf: SDBTimeCondition[] }
+}> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching sensor conditions: ${response}`);
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;

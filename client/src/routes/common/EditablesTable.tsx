@@ -1,11 +1,12 @@
 import { Table, ActionIcon } from "@mantine/core";
+import { IAutomation } from "@sproot/automation/IAutomation";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { IconEdit } from "@tabler/icons-react";
 
 interface EditablesTableProps {
-  editables: Record<string, ISensorBase | IOutputBase>;
-  onClick: (item: ISensorBase | IOutputBase) => void;
+  editables: ISensorBase[] | IOutputBase[] | IAutomation[];
+  onClick: (item: ISensorBase | IOutputBase | IAutomation) => void;
 }
 
 export default function EditablesTable({
