@@ -4,7 +4,8 @@ import {
   ScrollArea,
   Group,
   Modal,
-  NativeSelect,
+  SegmentedControl,
+  Space,
 } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addAutomationAsync, deleteAutomationAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -27,8 +28,11 @@ export default function EditAutomationModal({
   closeModal: closeModal,
   setAutomationsAsStale: setAutomationsAsStale,
 }: EditAutomationModalProps) {
+  const [automation, setAutomation] = useState<IAutomation | null>(existingAutomation);
   const queryClient = useQueryClient();
+
   const editAutomationForm = useForm({
+    mode: "uncontrolled",
     initialValues: {
       name: "",
       operator: "or",
@@ -46,11 +50,13 @@ export default function EditAutomationModal({
     },
   });
 
-  const [automation, setAutomation] = useState<IAutomation | null>(existingAutomation);
+  if (existingAutomation) {
+    editAutomationForm.setFieldValue("name", existingAutomation.name);
+    editAutomationForm.setFieldValue("operator", existingAutomation.operator);
+  }
+
   useEffect(() => {
     setAutomation(existingAutomation);
-    editAutomationForm.setFieldValue("name", existingAutomation?.name ?? "");
-    editAutomationForm.setFieldValue("operator", existingAutomation?.operator ?? "or");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingAutomation]);
 
@@ -96,10 +102,13 @@ export default function EditAutomationModal({
         scrollAreaComponent={ScrollArea.Autosize}
         centered
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          closeModal()
+        }}
         title={automation ? "Edit Automation" : "Add Automation"}
       >
         <form
+          id="edit-automation-form"
           onSubmit={editAutomationForm.onSubmit(async (values) => {
             if (automation) {
               updateAutomationMutation.mutate({ id: automation.id, ...values } as IAutomation);
@@ -114,37 +123,40 @@ export default function EditAutomationModal({
             required
             {...editAutomationForm.getInputProps("name")}
           />
-          <NativeSelect
-            data={[
-              { value: "or", label: "Or" },
-              { value: "and", label: "And" },
-            ]}
-            label="Condition Group Interaction"
-            required
-            {...editAutomationForm.getInputProps("operator")}
-          />
-          {automation != null ?
-            <Fragment>
-              <ConditionsTable automationId={automation.id}/>
-              <Group justify="space-between" mt="md">
-                <Button
-                  color="red"
-                  onClick={() => {
-                    deleteAutomationMutation.mutate(automation.id);
-                    closeModal();
-                  }}
-                >
-                  Delete
-                </Button>
-                <Button type="submit">Update</Button>
-              </Group>
-            </Fragment>
-            : <Group justify="flex-end" mt="md">
-              <Button type="submit">Add</Button>
-            </Group>
-          }
+          <Space h="xs" />
+          <Group>
+            <SegmentedControl
+              color={"blue"}
+              w={"100%"}
+              radius="md"
+              data={[
+                { value: "or", label: "Or" },
+                { value: "and", label: "And" },
+              ]}
+              {...editAutomationForm.getInputProps("operator")}
+            />
+          </Group>
         </form>
-
+        {automation != null ?
+          <Fragment>
+            <ConditionsTable automationId={automation.id} />
+            <Group justify="space-between" mt="md">
+              <Button
+                color="red"
+                onClick={() => {
+                  deleteAutomationMutation.mutate(automation.id);
+                  closeModal();
+                }}
+              >
+                Delete
+              </Button>
+              <Button type="submit" form="edit-automation-form">Update</Button>
+            </Group>
+          </Fragment>
+          : <Group justify="flex-end" mt="md">
+            <Button type="submit" form="edit-automation-form">Add</Button>
+          </Group>
+        }
       </Modal>
     </Fragment>
   )

@@ -30,7 +30,7 @@ class SprootDB implements ISprootDB {
     automationId: number,
   ): Promise<SDBSensorCondition[]> {
     const [rows] = await this.#connection.execute<SDBSensorCondition[]>(
-      "SELECT sc.id, sc.automation_id AS automationId, sc.groupType, sc.operator, sc.comparisonValue, sc.sensor_id AS sensorId, s.name as sensorName FROM sensor_conditions as sc INNER JOIN sensors as s ON sc.sensor_id = s.id WHERE automation_id = 1",
+      "SELECT sc.id, sc.automation_id AS automationId, sc.groupType, sc.operator, sc.comparisonValue, sc.sensor_id AS sensorId, sc.readingType, s.name as sensorName FROM sensor_conditions as sc INNER JOIN sensors as s ON sc.sensor_id = s.id WHERE automation_id = ?",
       [automationId],
     );
     return rows;

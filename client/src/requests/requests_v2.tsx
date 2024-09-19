@@ -10,6 +10,7 @@ import {
   ChartSeries,
   DataSeries,
 } from "@sproot/sproot-common/src/utility/ChartData";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -226,7 +227,7 @@ export async function deleteAutomationAsync(id: number): Promise<void> {
     // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error deleting automation: ${response}`);
+  console.error(`Error deleting automation: ${response}`);
   }
 }
 
@@ -245,7 +246,80 @@ export async function getConditionsAsync(automationId: number): Promise<{
     console.error(`Error fetching sensor conditions: ${response}`);
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
+  console.log(deserializedResponse.content?.data);
   return deserializedResponse.content?.data;
+}
+
+export async function addSensorConditionAsync(automationId: number, groupType: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, sensorId: string, readingType: ReadingType): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions/sensor`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ groupType, operator, comparisonValue, sensorId, readingType }),
+    mode: "cors",
+    // credentials: "include",
+  });
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function deleteSensorConditionAsync(automationId: number, id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions/sensor/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting sensor condition: ${response}`);
+  }
+}
+
+export async function addOutputConditionAsync(automationId: number, groupType: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: string): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions/output`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ groupType, operator, comparisonValue, outputId }),
+    mode: "cors",
+    // credentials: "include",
+  });
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function deleteOutputConditionAsync(automationId: number, id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions/output/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting output condition: ${response}`);
+  }
+}
+
+export async function addTimeConditionAsync(automationId: number, groupType: ConditionGroupType, startTime: string, endTime: string): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions/time`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ groupType, startTime, endTime }),
+    mode: "cors",
+    // credentials: "include",
+  });
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function deleteTimeConditionAsync(automationId: number, id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions/time/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting time condition: ${response}`);
+  }
 }
 
 export async function getSupportedOutputModelsAsync(): Promise<string[]> {
