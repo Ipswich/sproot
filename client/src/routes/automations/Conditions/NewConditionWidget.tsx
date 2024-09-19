@@ -40,12 +40,11 @@ export default function ConditionsPicker({ automationId, toggleAddNewCondition }
     <Fragment>
       <Group justify="space-between">
         <Select
-          // clearable={false}
           allowDeselect={false}
           w={"45%"}
           label="Condition Type"
           value={conditionType}
-          // filter={optionsFilter}
+          filter={optionsFilter}
           data={[
             { value: "Time", label: "Time", disabled: false },
             { value: "Sensor", label: "Sensor", disabled: !getSensorsQuery.isSuccess || Object.keys(getSensorsQuery.data).length == 0 },

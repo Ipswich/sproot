@@ -6,6 +6,7 @@ import {
   Modal,
   SegmentedControl,
   Space,
+  Title,
 } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addAutomationAsync, deleteAutomationAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -117,9 +118,9 @@ export default function EditAutomationModal({
             addAutomationMutation.mutate(values as IAutomation);
           })}
         >
+          <Title order={4}>Name</Title>
           <TextInput
             maxLength={64}
-            label="Name"
             required
             {...editAutomationForm.getInputProps("name")}
           />
