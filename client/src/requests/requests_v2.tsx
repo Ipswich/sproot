@@ -246,7 +246,6 @@ export async function getConditionsAsync(automationId: number): Promise<{
     console.error(`Error fetching sensor conditions: ${response}`);
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
-  console.log(deserializedResponse.content?.data);
   return deserializedResponse.content?.data;
 }
 
@@ -298,7 +297,7 @@ export async function deleteOutputConditionAsync(automationId: number, id: numbe
   }
 }
 
-export async function addTimeConditionAsync(automationId: number, groupType: ConditionGroupType, startTime: string, endTime: string): Promise<void> {
+export async function addTimeConditionAsync(automationId: number, groupType: ConditionGroupType, startTime: string | null, endTime: string | null): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/automations/${automationId}/conditions/time`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

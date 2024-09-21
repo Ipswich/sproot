@@ -7,8 +7,9 @@ import {
   SegmentedControl,
   Space,
   Title,
+  Accordion,
 } from "@mantine/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { addAutomationAsync, deleteAutomationAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import { Fragment } from "react/jsx-runtime";
@@ -30,9 +31,8 @@ export default function EditAutomationModal({
   setAutomationsAsStale: setAutomationsAsStale,
 }: EditAutomationModalProps) {
   const [automation, setAutomation] = useState<IAutomation | null>(existingAutomation);
-  const queryClient = useQueryClient();
 
-  const editAutomationForm = useForm({
+  const mutateAutomationForm = useForm({
     mode: "uncontrolled",
     initialValues: {
       name: "",
@@ -52,8 +52,11 @@ export default function EditAutomationModal({
   });
 
   if (existingAutomation) {
-    editAutomationForm.setFieldValue("name", existingAutomation.name);
-    editAutomationForm.setFieldValue("operator", existingAutomation.operator);
+    mutateAutomationForm.setFieldValue("name", existingAutomation.name);
+    mutateAutomationForm.setFieldValue("operator", existingAutomation.operator);
+  } else {
+    mutateAutomationForm.setFieldValue("name", "");
+    mutateAutomationForm.setFieldValue("operator", "or");
   }
 
   useEffect(() => {
@@ -62,20 +65,19 @@ export default function EditAutomationModal({
   }, [existingAutomation]);
 
   const addAutomationMutation = useMutation({
-    mutationFn: async (newAutomationValues: IAutomation) => {
-      const newAutomation = await addAutomationAsync(newAutomationValues.name, newAutomationValues.operator);
-      setAutomation(newAutomation)
+    mutationFn: (newAutomationValues: IAutomation) => {
+      return addAutomationAsync(newAutomationValues.name, newAutomationValues.operator);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["conditions"] });
+    onSuccess: (data) => {
       setAutomationsAsStale(true);
-    },
+      setAutomation(data);
+    }
   });
 
   const updateAutomationMutation = useMutation({
-    mutationFn: async (updatedAutomationValues: IAutomation) => {
-      await updateAutomationAsync(updatedAutomationValues.id, updatedAutomationValues.name, updatedAutomationValues.operator);
-      setAutomation(updatedAutomationValues);
+    mutationFn: (updatedAutomationValues: IAutomation) => {
+      return updateAutomationAsync(updatedAutomationValues.id, updatedAutomationValues.name, updatedAutomationValues.operator);
+      // setAutomation(updatedAutomationValues);
     },
     onSettled: () => {
       setAutomationsAsStale(true);
@@ -83,10 +85,11 @@ export default function EditAutomationModal({
   });
 
   const deleteAutomationMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await deleteAutomationAsync(id);
+    mutationFn: (id: number) => {
+      return deleteAutomationAsync(id);
     },
     onSettled: () => {
+      setAutomation(null);
       setAutomationsAsStale(true);
     },
   });
@@ -109,12 +112,8 @@ export default function EditAutomationModal({
         title={automation ? "Edit Automation" : "Add Automation"}
       >
         <form
-          id="edit-automation-form"
-          onSubmit={editAutomationForm.onSubmit(async (values) => {
-            if (automation) {
-              updateAutomationMutation.mutate({ id: automation.id, ...values } as IAutomation);
-              return;
-            }
+          id="add-automation-form"
+          onSubmit={mutateAutomationForm.onSubmit((values) => {
             addAutomationMutation.mutate(values as IAutomation);
           })}
         >
@@ -122,25 +121,51 @@ export default function EditAutomationModal({
           <TextInput
             maxLength={64}
             required
-            {...editAutomationForm.getInputProps("name")}
+            {...mutateAutomationForm.getInputProps("name")}
           />
-          <Space h="xs" />
-          <Group>
-            <SegmentedControl
-              color={"blue"}
-              w={"100%"}
-              radius="md"
-              data={[
-                { value: "or", label: "Or" },
-                { value: "and", label: "And" },
-              ]}
-              {...editAutomationForm.getInputProps("operator")}
-            />
-          </Group>
         </form>
         {automation != null ?
           <Fragment>
-            <ConditionsTable automationId={automation.id} />
+            <form
+              id="edit-automation-form"
+              onSubmit={mutateAutomationForm.onSubmit((values) => {
+                updateAutomationMutation.mutate({ id: automation.id, ...values } as IAutomation);
+              })}
+            >
+              <Space h="xs" />
+              <Group>
+                <SegmentedControl
+                  color={"blue"}
+                  w={"100%"}
+                  radius="md"
+                  data={[
+                    { value: "or", label: "Or" },
+                    { value: "and", label: "And" },
+                  ]}
+                  {...mutateAutomationForm.getInputProps("operator")}
+                />
+              </Group>
+            </form>
+            <Group justify="space-around">
+              <Accordion defaultValue={["Conditions"]} multiple={true} w={"100%"}>
+                <Accordion.Item key={"Conditions"} value="Conditions">
+                  <Accordion.Control pl={"0px"}>
+                    <Title order={4}>Conditions</Title>
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <ConditionsTable automationId={automation.id} />
+                  </Accordion.Panel>
+                </Accordion.Item>
+                <Accordion.Item key={"Jobs"} value="Jobs">
+                  <Accordion.Control pl={"0px"}>
+                    <Title order={4}>Actions</Title>
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    Jorbs
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
+            </Group>
             <Group justify="space-between" mt="md">
               <Button
                 color="red"
@@ -155,7 +180,7 @@ export default function EditAutomationModal({
             </Group>
           </Fragment>
           : <Group justify="flex-end" mt="md">
-            <Button type="submit" form="edit-automation-form">Add</Button>
+            <Button type="submit" form="add-automation-form">Add</Button>
           </Group>
         }
       </Modal>

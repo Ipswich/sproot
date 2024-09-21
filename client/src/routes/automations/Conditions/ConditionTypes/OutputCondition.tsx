@@ -1,8 +1,8 @@
 import { Button, Group, Select, Slider, Stack, Space } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
-import { addOutputConditionAsync } from "../../../../requests/requests_v2";
+import { addOutputConditionAsync, getConditionsAsync } from "../../../../requests/requests_v2";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 
 export interface OutputConditionProps {
@@ -13,11 +13,16 @@ export interface OutputConditionProps {
 }
 
 export default function OutputCondition({ toggleAddNewCondition, automationId, groupType, outputs }: OutputConditionProps) {
+  const condtionsQuery = useQuery({
+    queryKey: ["conditions"],
+    queryFn: () => getConditionsAsync(automationId),
+  })
   const addOutputMutation = useMutation({
     mutationFn: async (outputCondition: { operator: ConditionOperator, comparisonValue: number, outputId: string }) => {
       await addOutputConditionAsync(automationId, groupType, outputCondition.operator, outputCondition.comparisonValue, outputCondition.outputId);
     },
     onSettled: () => {
+      condtionsQuery.refetch();
     },
   });
 

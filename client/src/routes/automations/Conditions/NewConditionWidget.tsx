@@ -7,13 +7,14 @@ import { getOutputsAsync, getSensorsAsync } from "../../../requests/requests_v2"
 import { useQuery } from "@tanstack/react-query";
 import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
 import { ReadingType } from "@sproot/sensors/ReadingType";
+import TimeCondition from "./ConditionTypes/TimeCondition";
 
-export interface ConditionsPickerProps {
+export interface NewConditionWidgetProps {
   automationId: number;
   toggleAddNewCondition: () => void;
 }
 
-export default function ConditionsPicker({ automationId, toggleAddNewCondition }: ConditionsPickerProps) {
+export default function NewConditionWidget({ automationId, toggleAddNewCondition }: NewConditionWidgetProps) {
   const [conditionType, setConditionType] = useState<string | null>("Time");
   const [groupType, setGroupType] = useState<string | null>("allOf");
 
@@ -87,7 +88,7 @@ function updateDisplayedCondition(
     case "Output":
       return <OutputCondition toggleAddNewCondition={toggleAddNewCondition} automationId={automationId} groupType={groupType} outputs={outputs} />;
     case "Time":
-      return "TIME!"//<TimeCondition />;
+      return <TimeCondition toggleAddNewCondition={toggleAddNewCondition} automationId={automationId} groupType={groupType} />;
   }
   return <></>
 }

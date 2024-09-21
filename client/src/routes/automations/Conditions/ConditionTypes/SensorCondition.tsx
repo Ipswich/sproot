@@ -1,8 +1,8 @@
 import { Button, Group, Select, Stack, Space, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
-import { addSensorConditionAsync } from "../../../../requests/requests_v2";
+import { addSensorConditionAsync, getConditionsAsync } from "../../../../requests/requests_v2";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 
@@ -14,11 +14,16 @@ export interface SensorConditionProps {
 }
 
 export default function SensorCondition({ toggleAddNewCondition, automationId, groupType, sensors }: SensorConditionProps) {
+  const condtionsQuery = useQuery({
+    queryKey: ["conditions"],
+    queryFn: () => getConditionsAsync(automationId),
+  })
   const addSensorMutation = useMutation({
     mutationFn: async (sensorCondition: { operator: ConditionOperator, comparisonValue: number, sensorId: string, readingType: ReadingType }) => {
       await addSensorConditionAsync(automationId, groupType, sensorCondition.operator, sensorCondition.comparisonValue, sensorCondition.sensorId, sensorCondition.readingType);
     },
     onSettled: () => {
+      condtionsQuery.refetch();
     },
   });
 
