@@ -9,8 +9,8 @@ import {
   Title,
   Accordion,
 } from "@mantine/core";
-import { useMutation } from "@tanstack/react-query";
-import { addAutomationAsync, deleteAutomationAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { addAutomationAsync, deleteAutomationAsync, getAutomationsAsync, getOutputsAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import { Fragment } from "react/jsx-runtime";
 import { useForm } from "@mantine/form";
@@ -22,24 +22,17 @@ interface EditAutomationModalProps {
   existingAutomation: IAutomation | null;
   modalOpened: boolean;
   closeModal: () => void;
-  setAutomationsAsStale: (isStale: boolean) => void;
 }
 
 export default function EditAutomationModal({
   existingAutomation: existingAutomation,
   modalOpened: modalOpened,
   closeModal: closeModal,
-  setAutomationsAsStale: setAutomationsAsStale,
 }: EditAutomationModalProps) {
   const [automation, setAutomation] = useState<IAutomation | null>(existingAutomation);
 
   const mutateAutomationForm = useForm({
     mode: "uncontrolled",
-    initialValues: {
-      name: "",
-      operator: "or",
-    },
-
     validate: {
       name: (value) =>
         !value || (value.length > 0 && value.length <= 64)
@@ -53,9 +46,11 @@ export default function EditAutomationModal({
   });
 
   if (existingAutomation) {
+    mutateAutomationForm.setInitialValues({name: existingAutomation.name, operator: existingAutomation.operator});
     mutateAutomationForm.setFieldValue("name", existingAutomation.name);
     mutateAutomationForm.setFieldValue("operator", existingAutomation.operator);
   } else {
+    mutateAutomationForm.setInitialValues({name: "", operator: "or"});
     mutateAutomationForm.setFieldValue("name", "");
     mutateAutomationForm.setFieldValue("operator", "or");
   }
@@ -67,21 +62,23 @@ export default function EditAutomationModal({
 
   const addAutomationMutation = useMutation({
     mutationFn: (newAutomationValues: IAutomation) => {
+      console.log(newAutomationValues);
       return addAutomationAsync(newAutomationValues.name, newAutomationValues.operator);
     },
     onSuccess: (data) => {
-      setAutomationsAsStale(true);
+      getAutomationsQuery.refetch();
       setAutomation(data);
     }
   });
 
   const updateAutomationMutation = useMutation({
     mutationFn: (updatedAutomationValues: IAutomation) => {
+      console.log(updatedAutomationValues);
       return updateAutomationAsync(updatedAutomationValues.id, updatedAutomationValues.name, updatedAutomationValues.operator);
       // setAutomation(updatedAutomationValues);
     },
     onSettled: () => {
-      setAutomationsAsStale(true);
+      getAutomationsQuery.refetch();
     },
   });
 
@@ -91,8 +88,19 @@ export default function EditAutomationModal({
     },
     onSettled: () => {
       setAutomation(null);
-      setAutomationsAsStale(true);
+      getAutomationsQuery.refetch();
+      closeModal();
     },
+  });
+
+  const getAutomationsQuery = useQuery({
+    queryKey: ["automations"],
+    queryFn: () => getAutomationsAsync(),
+  });
+
+  const getOutputsQuery = useQuery({
+    queryKey: ["outputs"],
+    queryFn: () => getOutputsAsync(),
   });
 
   return (
@@ -115,6 +123,8 @@ export default function EditAutomationModal({
         <form
           id="add-automation-form"
           onSubmit={mutateAutomationForm.onSubmit((values) => {
+            console.log("new")
+            console.log(values)
             addAutomationMutation.mutate(values as IAutomation);
           })}
         >
@@ -144,6 +154,7 @@ export default function EditAutomationModal({
                     { value: "and", label: "And" },
                   ]}
                   {...mutateAutomationForm.getInputProps("operator")}
+                  onChange={(value) => { mutateAutomationForm.setFieldValue("operator", value) }}
                 />
               </Group>
             </form>
@@ -162,7 +173,10 @@ export default function EditAutomationModal({
                     <Title order={4}>Actions</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
-                    <OutputActionsTable automationId={automation.id} />
+                    {getOutputsQuery.data == null || Object.keys(getOutputsQuery.data).length === 0 ?
+                      null :
+                      (<OutputActionsTable automationId={automation.id} outputs={Object.values(getOutputsQuery.data ?? {})} />)
+                    }
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>

@@ -1,52 +1,64 @@
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import DeletablesTable from "../../common/DeletablesTable";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
-import { getOutputActionsAsync, deleteOutputActionAsync, getOutputsAsync } from "../../../requests/requests_v2";
-
+import { getOutputActionsByAutomationIdAsync, deleteOutputActionAsync } from "../../../requests/requests_v2";
+import { Button, Collapse, Group, Space } from "@mantine/core";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
+import { Fragment } from "react/jsx-runtime";
+import DeletablesTable from "../../common/DeletablesTable";
+import NewOutputActionWidget from "./NewOutputActionWidget";
 
 export interface OutputActionsTableProps {
   automationId: number;
+  outputs: IOutputBase[]
 }
 
-export default function OutputActionsTable({ automationId }: OutputActionsTableProps) {
+export default function OutputActionsTable({ automationId, outputs }: OutputActionsTableProps) {
   const [addNewOutputActionOpened, { toggle: toggleAddNewOutputAction }] = useDisclosure(false);
   const outputActionsQueryFn = useQuery({
     queryKey: ["outputActions"],
-    queryFn: () => getOutputActionsAsync(automationId),
+    queryFn: () => getOutputActionsByAutomationIdAsync(automationId),
   })
 
-  const outputsQueryFn = useQuery({
-    queryKey: ["outputs"],
-    queryFn: () => getOutputsAsync(),
-  });
-
-  console.log(outputActionsQueryFn.data);
   const deleteOutputActionMutation = useMutation({
     mutationFn: async (outputActionId: number) => {
-    await deleteOutputActionAsync(automationId, outputActionId);
+      await deleteOutputActionAsync(outputActionId);
     },
     onSettled: () => {
       outputActionsQueryFn.refetch();
     },
   });
-
-  //local helper function
-  function mapToDeleteOutputActionMutationAsync(outputAction: SDBOutputAction): (id: number) => Promise<void> {
-    return async (outputActionId: number) => {
-      await deleteOutputActionMutation.mutateAsync(outputActionId);
-    };
-  }
-
   return (
-    <DeletablesTable
-      deletableName="Output Action"
-      deletables={outputActionsQueryFn.data?.map((outputAction) => ({
-        displayLabel: outputAction.outputName,
-        id: outputAction.id,
-        deleteFn: mapToDeleteOutputActionMutationAsync(outputAction),
-      })) || []}
-    />
+    <Fragment>
+      {(outputActionsQueryFn.isLoading) ? <div>Loading...</div> :
+      <DeletablesTable
+        deletableName="Output Action"
+        deletables={Object.values(outputActionsQueryFn.data ?? {}).map((outputAction) => ({
+          displayLabel: OutputActionRow(outputAction, outputs.find((output) => output.id == outputAction.outputId)!),
+          id: outputAction.id,
+          deleteFn: (id: number) => deleteOutputActionMutation.mutateAsync(id),
+        })) || []}
+      />}
+      <Group justify="center">
+        <Button size="sm" w={"100%"} color="green" onClick={() => { toggleAddNewOutputAction() }}>Add Action</Button>
+      </Group>
+      <Collapse in={addNewOutputActionOpened} transitionDuration={300}>
+        <Space h={12} />
+        {outputActionsQueryFn.isLoading ? <div>Loading...</div> :
+          <NewOutputActionWidget automationId={automationId} outputs={outputs.map((output) => { return { id: output.id, isPwm: output.isPwm, name: output.name ?? "" } }) ?? []} toggleAddNewOutputAction={toggleAddNewOutputAction} />
+        }
+      </Collapse>
+    </Fragment>
   );
+}
 
+function OutputActionRow(outputAction: SDBOutputAction, output: IOutputBase) {
+  return (
+    <Group>
+      {output?.isPwm ?
+        (`Set ${output?.name ?? `Output Id: ${output.id}`} to ${String(outputAction.value)}%`) :
+        (`Turn ${output?.name ?? `Output Id: ${output.id}`} ${outputAction.value == 100 ? "On" : "Off"}`)
+      }
+    </Group>
+  );
 }
