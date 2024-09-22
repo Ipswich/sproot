@@ -235,7 +235,7 @@ class SprootDB implements ISprootDB {
 
   async addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number> {
     const result = await this.#connection.execute<ResultSetHeader>(
-      "INSERT INTO output_actions (output_id, automation_id, value) VALUES (?, ?, ?)",
+      "INSERT INTO output_actions (automation_id, output_id, value) VALUES (?, ?, ?)",
       [automationId, outputId, value],
     );
     return result[0].insertId;

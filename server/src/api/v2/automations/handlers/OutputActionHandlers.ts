@@ -181,7 +181,6 @@ export async function addAsync(request: Request, response: Response): Promise<Su
       return automationResponse;
     }
 
-
     const automation = await automationDataManager.addOutputActionAsync(automationId, outputId, value);
     automationResponse = {
       statusCode: 201,
