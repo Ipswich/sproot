@@ -1,7 +1,7 @@
 import { Fragment } from "react/jsx-runtime";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { deleteOutputConditionAsync, deleteSensorConditionAsync, deleteTimeConditionAsync, getConditionsAsync } from "../../../requests/requests_v2";
-import { Button, Code, Collapse, Divider, Group, Space, Title, rem } from "@mantine/core";
+import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";

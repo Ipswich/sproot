@@ -2257,19 +2257,17 @@ paths:
                                 - "Failed to delete condition from database."
                                 - "Database connection failed."
 
-  /api/v2/output-automations:
+  /api/v2/output-actions:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Output Automations"
-      summary: Get output automations.
+        - "Output Actions"
+      summary: Get output actions.
       description: >
-        Returns a list of output automations. This includes basic information about each automation, 
-        such as the Id, the automation Id, and the value that will be set when the base automation is triggered. 
-        This list can be filtered to contain output automations associated with the provided automation Id, 
-        and/or filtered to contain output automations associated with the provided output Id.
+        Returns a list of output actions. This includes basic information about each action, 
+        such as the Id, the output Id, and the value that will be set when the linked automation is triggered.
       responses:
         200:
           description: "Success"
@@ -2285,7 +2283,7 @@ paths:
                         properties:
                           data:
                             items:
-                              $ref: "#/components/schemas/OutputAutomation"
+                              $ref: "#/components/schemas/OutputAction"
         401:
           description: "Unauthorized"
           content:
@@ -2301,7 +2299,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/output-automations"
+                            example: "/api/v2/output-actions"
                           details:
                             example: "Invalid or Missing JWT."
         503:
@@ -2319,27 +2317,27 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/output-automations"
+                            example: "/api/v2/output-actions"
                           details:
                             items:
                               example:
-                                - "Failed to get output automations from database."
+                                - "Failed to get output actions from database."
                                 - "Database connection failed."
     post:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Output Automations"
-      summary: Create a new output based automation.
+        - "Output Actions"
+      summary: Create a new output based action.
       description: >
-        Creates a new output automation. This will effect a change in any linked outputs when the provided automation triggers.
+        Creates a new output action. This will effect a change in the output when the linked automation triggers.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OutputAutomation"
+              $ref: "#/components/schemas/OutputAction"
       responses:
         201:
           description: "Created"
@@ -2354,7 +2352,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/OutputAutomation"
+                            $ref: "#/components/schemas/OutputAction"
         400:
           description: "Bad request"
           content:
@@ -2370,7 +2368,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/automations/1/output-automations"
+                            example: "/api/v2/actions/"
                           details:
                             example:
                               - "Invalid or missing automation Id."
@@ -2390,7 +2388,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/output-automations"
+                            example: "/api/v2/output-actions"
                           details:
                             example: "Invalid or Missing JWT."
         404:
@@ -2427,28 +2425,28 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/automations/1/output-automations"
+                            example: "/api/v2/output-actions"
                           details:
                             items:
                               example:
-                                - "Failed to create output automation."
+                                - "Failed to create output action."
                                 - "Database connection failed."
 
-  /api/v2/output-automations/{outputAutomationId}:
+  /api/v2/output-actions/{outputActionId}:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Output Automations"
-      summary: Get an output automation by Id.
+        - "Output Actions"
+      summary: Get an output action by Id.
       description: >
-        Returns the output automation with the given Id. This includes the Id, the automation Id, and the value that will be set when the base automation is triggered.
+        Returns the output action with the given Id. This includes the Id, the output Id, and the value that will be set when the linked automation is triggered.
       parameters:
         - in: path
-          name: outputAutomationId
+          name: outputActionId
           required: true
-          description: "Output Automation Id"
+          description: "Output Action Id"
           schema:
             type: string
           example: "1"
@@ -2466,7 +2464,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/OutputAutomation"
+                            $ref: "#/components/schemas/OutputAction"
         401:
           description: "Unauthorized"
           content:
@@ -2482,7 +2480,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/output-automations/1"
+                            example: "/api/v2/output-actions/1"
                           details:
                             example: "Invalid or Missing JWT."
         404:
@@ -2500,10 +2498,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/output-automations/-1"
+                            example: "/api/v2/output-actions/-1"
                           details:
                             items:
-                              example: "Output automation with Id -1 not found."
+                              example: "Output action with Id -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -2519,141 +2517,27 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/output-automations/1"
+                            example: "/api/v2/output-actions/1"
                           details:
                             items:
                               example:
-                                - "Failed to get output automation from database."
+                                - "Failed to get output action from database."
                                 - "Database connection failed."
-    patch:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Output Automations"
-      summary: Update an output automation by Id.
-      description: >
-        Updates an output automation with the given Id.
-      parameters:
-        - in: path
-          name: outputAutomationId
-          required: true
-          description: "Output Automation Id"
-          schema:
-            type: string
-          example: "1"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/OutputAutomation"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            $ref: "#/components/schemas/OutputAutomation"
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/output-automations/1"
-                          details:
-                            example:
-                              - "Invalid or missing output automation Id."
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/output-automations/1"
-                          details:
-                            example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/output-automations/-1"
-                          details:
-                            items:
-                              example: "Output automation with Id -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/output-automations/1"
-                          details:
-                            items:
-                              example:
-                                - "Failed to update output automation in database."
-                                - "Database connection failed."
+   
     delete:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Output Automations"
-      summary: Delete an output automation by Id.
+        - "Output Actions"
+      summary: Delete an output action by Id.
       description: >
-        Deletes an output automation with the given Id. This operation is permanent and cannot be undone.
+        Deletes an output action with the given Id. This operation is permanent and cannot be undone.
       parameters:
         - in: path
-          name: outputAutomationId
+          name: outputActionId
           required: true
-          description: "Output Automation Id"
+          description: "Output Action Id"
           schema:
             type: string
           example: "1"
@@ -2671,7 +2555,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: "Output automation successfully deleted."
+                            example: "Output action successfully deleted."
         400:
           description: "Bad request"
           content:
@@ -2687,10 +2571,10 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/output-automations/1"
+                            example: "/api/v2/output-actions/1"
                           details:
                             example:
-                              - "Invalid or missing output automation Id."
+                              - "Invalid or missing output action Id."
         401:
           description: "Unauthorized"
           content:
@@ -2706,7 +2590,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/output-automations/1"
+                            example: "/api/v2/output-actions/1"
                           details:
                             example: "Invalid or Missing JWT."
         404:
@@ -2724,10 +2608,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/output-automations/-1"
+                            example: "/api/v2/output-actions/-1"
                           details:
                             items:
-                              example: "Output automation with ID -1 not found."
+                              example: "Output action with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -2743,249 +2627,14 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/output-automations/1"
+                            example: "/api/v2/output-actions/1"
                           details:
                             items:
                               example:
-                                - "Failed to delete output automation from database."
+                                - "Failed to delete output action from database."
                                 - "Database connection failed."
 
-  /api/v2/output-automations/{outputAutomationId}/outputs/{outputId}:
-    put:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Output Automations"
-      summary: Add an output to an output automation.
-      description: >
-        Adds an output to the given output automation.
-      parameters:
-        - in: path
-          name: outputAutomationId
-          required: true
-          description: "Output Automation Id"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: outputId
-          required: true
-          description: "Output Id"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 201
-                      content:
-                        properties:
-                          data:
-                            example: "Output successfully added to output automation."
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/output-automations/1/output/1"
-                          details:
-                            example:
-                              - "Invalid or missing output automation Id."
-                              - "Invalid or missing output Id."
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/output-automations/1/output/1"
-                          details:
-                            example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/output-automations/1/output/-1"
-                          details:
-                            items:
-                              example: "Output automation with Id -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/output-automations/1/output/1/"
-                          details:
-                            items:
-                              example:
-                                - "Failed to add output to automation."
-                                - "Database connection failed."
-    delete:
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Output Automations"
-      summary: Remove an output from an output automation.
-      description: >
-        Removes an output from the given output automation. This operation is permanent and cannot be undone.
-      parameters:
-        - in: path
-          name: outputAutomationId
-          required: true
-          description: "Output Automation Id"
-          schema:
-            type: string
-          example: "1"
-        - in: path
-          name: outputId
-          required: true
-          description: "Output Id"
-          schema:
-            type: string
-          example: "1"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            example: "Output successfully removed from output automation."
-        400:
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 400
-                      error:
-                        properties:
-                          name:
-                            example: "Bad Request"
-                          url:
-                            example: "/api/v2/output-automations/1/output/1"
-                          details:
-                            example:
-                              - "Invalid or missing output automation Id."
-                              - "Invalid or missing output Id."
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/output-automations/1/output/1"
-                          details:
-                            example: "Invalid or Missing JWT."
-        404:
-          description: "Not Found"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 404
-                      error:
-                        properties:
-                          name:
-                            example: "Not Found"
-                          url:
-                            example: "/api/v2/output-automations/1/output/-1"
-                          details:
-                            items:
-                              example: "Output automation with Id -1 not found."
-        503:
-          description: "Service unavailable"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 503
-                      error:
-                        properties:
-                          name:
-                            example: "Service Unavailable"
-                          url:
-                            example: "/api/v2/output-automations/1/output/1/"
-                          details:
-                            items:
-                              example:
-                                - "Failed to remove output from output-automation."
-                                - "Database connection failed."
-
+  
 
   /api/v2/sensors:
     get:
@@ -3800,10 +3449,10 @@ components:
         #   allOf:
         #     - $ref: "#/components/schemas/AutomationConditions"
 
-    OutputAutomation:
+    OutputAction:
       description: >
-        An automation object that is stored in the database. Contains the information needed to
-        create an output automation based on an existing automation.
+        An action object that is stored in the database. Contains the information needed to
+        create an output action based on an existing automation.
       type: object
       required:
         - "automationId"
@@ -3814,6 +3463,9 @@ components:
           type: number
           example: 1
         automationId:
+          type: number
+          example: 1
+        outputId:
           type: number
           example: 1
         value:
