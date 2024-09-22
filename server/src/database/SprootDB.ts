@@ -217,6 +217,14 @@ class SprootDB implements ISprootDB {
     return rows;
   }
 
+  async getOutputActionsByAutomationIdAsync(automationId: number): Promise<SDBOutputAction[]> {
+    const [rows] = await this.#connection.execute<SDBOutputAction[]>(
+      "SELECT id, automation_id as automationId, output_id as outputId, value FROM output_actions WHERE automation_id = ?",
+      [automationId],
+    );
+    return rows;
+  }
+
   async getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]> {
     const [rows] = await this.#connection.execute<SDBOutputAction[]>(
       "SELECT id, automation_id as automationId, output_id as outputId, value FROM output_actions WHERE id = ?",

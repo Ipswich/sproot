@@ -16,6 +16,7 @@ import { Fragment } from "react/jsx-runtime";
 import { useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
 import ConditionsTable from "./Conditions/ConditionsTable";
+import OutputActionsTable from "./Actions/OutputActionsTable";
 
 interface EditAutomationModalProps {
   existingAutomation: IAutomation | null;
@@ -161,7 +162,7 @@ export default function EditAutomationModal({
                     <Title order={4}>Actions</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
-                    Jorbs
+                    <OutputActionsTable automationId={automation.id} />
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>

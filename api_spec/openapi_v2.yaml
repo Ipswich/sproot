@@ -2265,6 +2265,14 @@ paths:
       tags:
         - "Output Actions"
       summary: Get output actions.
+      parameters:
+        - in: query
+          name: automationId
+          required: false
+          description: "Automation Id"
+          schema:
+            type: string
+          example: "1"
       description: >
         Returns a list of output actions. This includes basic information about each action, 
         such as the Id, the output Id, and the value that will be set when the linked automation is triggered.

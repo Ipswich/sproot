@@ -14,6 +14,17 @@ export async function getAsync(request: Request, response: Response): Promise<Su
   let automationResponse: SuccessResponse | ErrorResponse;
 
   try {
+    if (request.query["automationId"] != null && !isNaN(parseInt(request.query["automationId"] as string))) {
+      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(parseInt(request.query["automationId"] as string));
+      automationResponse = {
+        statusCode: 200,
+        content: {
+          data: automations,
+        },
+        ...response.locals["defaultProperties"],
+      };
+    }
+
     const actions = await sprootDB.getOutputActionsAsync();
     console.log(actions)
     automationResponse = {

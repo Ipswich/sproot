@@ -4,6 +4,7 @@ import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation"
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
+import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SuccessResponse } from "@sproot/sproot-common/src/api/v2/Responses";
 import {
@@ -227,7 +228,7 @@ export async function deleteAutomationAsync(id: number): Promise<void> {
     // credentials: "include",
   });
   if (!response.ok) {
-  console.error(`Error deleting automation: ${response}`);
+    console.error(`Error deleting automation: ${response}`);
   }
 }
 
@@ -318,6 +319,45 @@ export async function deleteTimeConditionAsync(automationId: number, id: number)
   });
   if (!response.ok) {
     console.error(`Error deleting time condition: ${response}`);
+  }
+}
+
+export async function getOutputActionsAsync(): Promise<Record<string, SDBOutputAction>> {
+  const response = await fetch(`${SERVER_URL}/api/v2/output-actions`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching output actions: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function addOutputActionAsync(automationId: number, outputId: number, value: number) {
+  const response = await fetch(`${SERVER_URL}/api/v2/output-actions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ automationId, outputId, value }),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding output action: ${response}`);
+  }
+}
+
+export async function deleteOutputActionAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/output-actions/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting output action: ${response}`);
   }
 }
 
