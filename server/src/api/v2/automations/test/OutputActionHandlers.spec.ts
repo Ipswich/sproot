@@ -36,14 +36,61 @@ describe("OutputActionHandlers.ts tests", () => {
               return sprootDB;
             }
           }
+        },
+        query: {}
+      } as unknown as Request;
+
+      const success = await getAsync(mockRequest, mockResponse) as SuccessResponse;
+      assert.isTrue(sprootDB.getOutputActionsByAutomationIdAsync.notCalled);
+      assert.isTrue(sprootDB.getOutputActionsAsync.calledOnce);
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.deepEqual(success.content?.data, [{
+        id: 1,
+        outputId: 1,
+        automationId: 1,
+        value: 100,
+      }]);
+    });
+
+    it('should return a 200 and a list of OutputActions for a specific automation', async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          }
+        }
+      } as unknown as Response;
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      sprootDB.getOutputActionsByAutomationIdAsync.resolves([{
+        id: 1,
+        automationId: 1,
+        outputId: 1,
+        value: 100,
+      } as SDBOutputAction]);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "sprootDB") {
+              return sprootDB;
+            }
+          },
+        },
+        query: {
+          automationId: "1"
         }
       } as unknown as Request;
 
-      const error = await getAsync(mockRequest, mockResponse) as SuccessResponse;
-      assert.equal(error.statusCode, 200);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.deepEqual(error.content?.data, [{
+      const success = await getAsync(mockRequest, mockResponse) as SuccessResponse;
+      assert.isTrue(sprootDB.getOutputActionsByAutomationIdAsync.calledOnce);
+      assert.isTrue(sprootDB.getOutputActionsAsync.notCalled);
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.deepEqual(success.content?.data, [{
         id: 1,
         outputId: 1,
         automationId: 1,
@@ -71,7 +118,8 @@ describe("OutputActionHandlers.ts tests", () => {
             }
           }
         },
-        originalUrl: "/api/v2/output-action"
+        originalUrl: "/api/v2/output-action",
+        query: {}
       } as unknown as Request;
 
       const error = await getAsync(mockRequest, mockResponse) as ErrorResponse;

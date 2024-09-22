@@ -23,10 +23,10 @@ export async function getAsync(request: Request, response: Response): Promise<Su
         },
         ...response.locals["defaultProperties"],
       };
+      return automationResponse;
     }
 
     const actions = await sprootDB.getOutputActionsAsync();
-    console.log(actions)
     automationResponse = {
       statusCode: 200,
       content: {
