@@ -19,7 +19,7 @@ import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { TimeCondition } from "../automation/conditions/TimeCondition";
 import { OutputCondition } from "../automation/conditions/OutputCondition";
 import { SensorCondition } from "../automation/conditions/SensorCondition";
-import { SDBOutputAutomation, SDBOutputAutomationView } from "@sproot/database/SDBOutputAutomation";
+import { SDBOutputAction, SDBOutputActionView } from "@sproot/sproot-common/dist/database/SDBOutputAction";
 class SprootDB implements ISprootDB {
   #connection: mysql2.Connection;
 
@@ -212,51 +212,37 @@ class SprootDB implements ISprootDB {
     await this.#connection.execute("DELETE FROM automations WHERE id = ?", [automationId]);
   }
 
+  async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
+    const [rows] = await this.#connection.execute<SDBOutputAction[]>("SELECT id, automation_id as automationId, output_id as outputId, value FROM output_actions");
+    return rows;
+  }
 
-  async getOutputAutomationsAsync(): Promise<SDBOutputAutomation[]> {
-    const [rows] = await this.#connection.execute<SDBOutputAutomation[]>(
-      "SELECT id, automation_id as automationId, value FROM output_automations",
+  async getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]> {
+    const [rows] = await this.#connection.execute<SDBOutputAction[]>(
+      "SELECT id, automation_id as automationId, output_id as outputId, value FROM output_actions WHERE id = ?",
+      [outputActionId],
     );
     return rows;
   }
-  async getOutputAutomationAsync(id: number): Promise<SDBOutputAutomation[]> {
-    const [rows] = await this.#connection.execute<SDBOutputAutomation[]>(
-      "SELECT id, automation_id as automationId, value FROM output_automations WHERE id = ?",
-      [id],
+
+  async addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number> {
+    const result = await this.#connection.execute<ResultSetHeader>(
+      "INSERT INTO output_actions (output_id, automation_id, value) VALUES (?, ?, ?)",
+      [automationId, outputId, value],
     );
-    return rows;
-  }
-  async addOutputAutomationAsync(automationId: number, value: number): Promise<number> {
-    const result = await this.#connection.execute<ResultSetHeader>("INSERT INTO output_automations (automation_Id, value) VALUES (?, ?)", [automationId, value]);
     return result[0].insertId;
   }
-  async updateOutputAutomationAsync(id: number, automationId: number, value: number): Promise<void> {
-    await this.#connection.execute("UPDATE output_automations SET automationId = ?, value = ? WHERE id = ?", [automationId, value, id]);
-  }
-  async deleteOutputAutomationAsync(id: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM output_automations WHERE id = ?", [id]);
+
+  async deleteOutputActionAsync(outputActionId: number): Promise<void> {
+    await this.#connection.execute("DELETE FROM output_actions WHERE id = ?", [outputActionId]);
   }
 
-  async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputAutomationView[]> {
-    const [rows] = await this.#connection.execute<SDBOutputAutomationView[]>(
-      "SELECT * FROM output_automations_view WHERE outputId = ?",
+  async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]> {
+    const [rows] = await this.#connection.execute<SDBOutputActionView[]>(
+      "SELECT * FROM output_actions_view WHERE outputId = ?",
       [outputId],
     );
     return rows;
-  }
-
-  async addOutputToOutputAutomationAsync(outputId: number, outputAutomationId: number): Promise<void> {
-    await this.#connection.execute(
-      "INSERT INTO output_automations_lookup (output_id, automation_id) VALUES (?, ?)",
-      [outputId, outputAutomationId],
-    );
-  }
-
-  async deleteOutputFromOutputAutomationAsync(outputId: number, automationId: number): Promise<void> {
-    await this.#connection.execute(
-      "DELETE FROM output_automations_lookup WHERE output_id = ? AND automation_id = ?",
-      [outputId, automationId],
-    );
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {

@@ -44,29 +44,14 @@ class AutomationDataManager {
     await this.#outputList.initializeOrRegenerateAsync();
   }
 
-  async addOutputAutomationAsync(automationId: number, value: number) {
-    const result = this.#sprootDB.addOutputAutomationAsync(automationId, value);
+  async addOutputActionAsync(automationId: number, outputId: number, value: number) {
+    const result = this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
     await this.#outputList.initializeOrRegenerateAsync();
     return result;
   }
 
-  async updateOutputAutomationAsync(outputAutomationId: number, automationId: number, value: number) {
-    await this.#sprootDB.updateOutputAutomationAsync(outputAutomationId, automationId, value);
-    await this.#outputList.initializeOrRegenerateAsync();
-  }
-
-  async deleteOutputAutomationAsync(outputAutomationId: number) {
-    await this.#sprootDB.deleteOutputAutomationAsync(outputAutomationId);
-    await this.#outputList.initializeOrRegenerateAsync();
-  }
-
-  async addOutputToOutputAutomationAsync(automationId: number, outputId: number) {
-    await this.#sprootDB.addOutputToOutputAutomationAsync(outputId, automationId);
-    await this.#outputList.initializeOrRegenerateAsync();
-  }
-
-  async deleteOutputFromOutputAutomationAsync(outputId: number, automationId: number) {
-    await this.#sprootDB.deleteOutputFromOutputAutomationAsync(outputId, automationId);
+  async deleteOutputActionAsync(outputActionId: number) {
+    await this.#sprootDB.deleteOutputActionAsync(outputActionId);
     await this.#outputList.initializeOrRegenerateAsync();
   }
 

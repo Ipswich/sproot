@@ -1,16 +1,17 @@
 import { RowDataPacket } from "mysql2";
 import { SDBAutomation } from "./SDBAutomation";
 
-type SDBOutputAutomation = RowDataPacket & {
+type SDBOutputAction = RowDataPacket & {
   id: number;
+  outputId: number;
   automationId: number;
   value: number;
 }
 
-type SDBOutputAutomationView = SDBAutomation & {
+type SDBOutputActionView = SDBAutomation & {
   outputAutomationId: string;
   outputId: string;
   value: number;
 };
 
-export type { SDBOutputAutomation, SDBOutputAutomationView };
+export type { SDBOutputAction, SDBOutputActionView };

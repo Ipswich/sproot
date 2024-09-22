@@ -14,7 +14,7 @@ import { AutomationOperator } from "@sproot/sproot-common/src/automation/IAutoma
 import { ITimeCondition } from "../automation/ITimeCondition";
 import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
-import { SDBOutputAutomation, SDBOutputAutomationView } from "./SDBOutputAutomation";
+import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -53,15 +53,12 @@ interface ISprootDB {
   updateAutomationAsync(name: string, operator: AutomationOperator, id: number): Promise<void>;
   deleteAutomationAsync(automationId: number): Promise<void>;
 
-  getOutputAutomationsAsync(): Promise<SDBOutputAutomation[]>;
-  getOutputAutomationAsync(id: number): Promise<SDBOutputAutomation[]>;
-  addOutputAutomationAsync(automationId: number, value: number): Promise<number>;
-  updateOutputAutomationAsync(id: number, automationId: number, value: number): Promise<void>;
-  deleteOutputAutomationAsync(id: number): Promise<void>;
+  getOutputActionsAsync(): Promise<SDBOutputAction[]>;
+  getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]>;
+  addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number>;
+  deleteOutputActionAsync(outputActionId: number): Promise<void>;
 
-  getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputAutomationView[]>;
-  addOutputToOutputAutomationAsync(automationId: number, outputId: number): Promise<void>;
-  deleteOutputFromOutputAutomationAsync(automationId: number, outputId: number): Promise<void>;
+  getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
 
   getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]>;
   addSensorConditionAsync(
@@ -99,30 +96,23 @@ interface ISprootDB {
 }
 
 class MockSprootDB implements ISprootDB {
-  async getOutputAutomationsAsync(): Promise<SDBOutputAutomation[]> {
-    return []
+  async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
+    return [];
   }
-  async getOutputAutomationAsync(_id: number): Promise<SDBOutputAutomation[]> {
-    return []
+  async getOutputActionAsync(_outputActionId: number): Promise<SDBOutputAction[]> {
+    return [];
   }
-  async addOutputAutomationAsync(_automationId: number, _value: number): Promise<number> {
+  async addOutputActionAsync(_automationId: number, _outputId: number, _value: number): Promise<number> {
     return 0;
   }
-  async updateOutputAutomationAsync(_id: number, _automationId: number, _value: number): Promise<void> {
+  async deleteOutputActionAsync(_outputActionId: number): Promise<void> {
     return;
   }
-  async deleteOutputAutomationAsync(_id: number): Promise<void> {
-    return;
+
+  async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputActionView[]> {
+    return [];
   }
-  async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputAutomationView[]> {
-    return []
-  }
-  async addOutputToOutputAutomationAsync(_outputId: number, _automationId: number): Promise<void> {
-    return;
-  }
-  async deleteOutputFromOutputAutomationAsync(_outputId: number, _automationId: number): Promise<void> {
-    return;
-  }
+
   async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {
     return []
   }

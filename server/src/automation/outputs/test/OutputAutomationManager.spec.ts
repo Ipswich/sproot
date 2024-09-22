@@ -7,7 +7,7 @@ import sinon from "sinon";
 import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
 import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
-import { SDBOutputAutomationView } from "@sproot/database/SDBOutputAutomation";
+import { SDBOutputActionView } from "@sproot/sproot-common/dist/database/SDBOutputAction";
 import { OutputList } from "../../../outputs/list/OutputList";
 import { SensorList } from "../../../sensors/list/SensorList";
 
@@ -20,7 +20,7 @@ describe("OutputAutomationManager.ts tests", () => {
       const outputListMock = sinon.createStubInstance(OutputList);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputAutomationView,
+        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
       ]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
@@ -42,7 +42,7 @@ describe("OutputAutomationManager.ts tests", () => {
         now.setHours(12);
 
         sprootDB.getAutomationsForOutputAsync.resolves([
-          { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputAutomationView,
+          { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
         ]);
   
         sprootDB.getSensorConditionsAsync.resolves([]);
@@ -62,8 +62,8 @@ describe("OutputAutomationManager.ts tests", () => {
       const outputListMock = sinon.createStubInstance(OutputList);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputAutomationView,
-        { automationId: 2, outputAutomationId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputAutomationView
+        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
+        { automationId: 2, outputAutomationId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
       ]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
@@ -87,8 +87,8 @@ describe("OutputAutomationManager.ts tests", () => {
       const automationManager = new OutputAutomationManager(sprootDB);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputAutomationView,
-        { automationId: 2, outputAutomationId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputAutomationView
+        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
+        { automationId: 2, outputAutomationId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
       ]);
 
       // Sensor conditions
