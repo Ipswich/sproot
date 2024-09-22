@@ -132,12 +132,26 @@ export async function addAsync(request: Request, response: Response): Promise<Su
   }
   if (isNaN(outputId)) {
     invalidFields.push("Invalid or missing output Id.");
+  } else if (outputList.outputs[outputId] == null) {
+    automationResponse = {
+      statusCode: 404,
+      error: {
+        name: "Not Found",
+        url: request.originalUrl,
+        details: ["Output not found."],
+      },
+      ...response.locals["defaultProperties"],
+    };
+    return automationResponse;
   }
   if (isNaN(value)) {
     invalidFields.push("Invalid or missing value.");
   } else {
     if (value < 0 || value > 100) {
       invalidFields.push("Value must be between 0 and 100.");
+    }
+    if (!outputList.outputs[outputId]?.isPwm && (value != 0 && value != 100)) {
+      invalidFields.push("Value must be 0 or 100 for PWM outputs.");
     }
   }
   if (invalidFields.length > 0) {
@@ -154,19 +168,6 @@ export async function addAsync(request: Request, response: Response): Promise<Su
   }
 
   try {
-    if (outputList.outputs[outputId] == null) {
-      automationResponse = {
-        statusCode: 404,
-        error: {
-          name: "Not Found",
-          url: request.originalUrl,
-          details: ["Output not found."],
-        },
-        ...response.locals["defaultProperties"],
-      };
-      return automationResponse;
-    }
-
     if ((await sprootDB.getAutomationAsync(automationId)).length == 0) {
       automationResponse = {
         statusCode: 404,
