@@ -2,16 +2,10 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
 --
 -- Database: `sproot`
 --
-CREATE DATABASE IF NOT EXISTS `sproot` DEFAULT CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci;
+CREATE DATABASE IF NOT EXISTS `sproot` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `sproot`;
 
 -- --------------------------------------------------------
@@ -72,29 +66,33 @@ CREATE TABLE IF NOT EXISTS `outputs` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `output_automations`
+-- Table structure for table `output_actions`
 --
 
-CREATE TABLE IF NOT EXISTS `output_automations` (
+CREATE TABLE IF NOT EXISTS `output_actions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `automation_id` int(11) NOT NULL,
+  `output_id` int(11) NOT NULL,
   `value` int(11) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `automation_id` (`automation_id`)
+  KEY `automation_id` (`automation_id`),
+  KEY `output_id` (`output_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `output_automation_lookup`
+-- Stand-in structure for view `output_actions_view`
+-- (See below for the actual view)
 --
-
-CREATE TABLE IF NOT EXISTS `output_automation_lookup` (
-  `output_id` int(11) NOT NULL,
-  `automation_id` int(11) NOT NULL,
-  PRIMARY KEY (`automation_id`,`output_id`),
-  KEY `output_id` (`output_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE IF NOT EXISTS `output_actions_view` (
+`automationId` int(11)
+,`outputId` int(11)
+,`id` int(11)
+,`name` varchar(32)
+,`value` int(11)
+,`operator` varchar(6)
+);
 
 -- --------------------------------------------------------
 
@@ -210,12 +208,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Structure for view `output_automations_view`
---
-DROP TABLE IF EXISTS `output_automations_view`;
+-- --------------------------------------------------------
 
-CREATE VIEW `output_automations_view`  AS SELECT `automations`.`id` AS `automationId`, `output_automation_lookup`.`output_id` AS `outputId`, `output_automations`.`outputAutomationId` AS `outputAutomationId`, `automations`.`name` AS `name`, `output_automations`.`value` AS `value`, `automations`.`operator` AS `operator` FROM ((`automations` join `output_automations` on(`automations`.`id` = `output_automations`.`id`)) join `output_automation_lookup` on(`output_automations`.`id` = `output_automation_lookup`.`automation_id`)) ;
+--
+-- Structure for view `output_actions_view`
+--
+DROP TABLE IF EXISTS `output_actions_view`;
+
+CREATE VIEW `output_actions_view`  AS SELECT `automations`.`id` AS `automationId`, `output_actions`.`output_id` AS `outputId`, `output_actions`.`id` AS `id`, `automations`.`name` AS `name`, `output_actions`.`value` AS `value`, `automations`.`operator` AS `operator` FROM (`automations` join `output_actions` on(`automations`.`id` = `output_actions`.`automation_id`)) ;
 
 --
 -- Constraints for dumped tables
@@ -229,18 +229,11 @@ ALTER TABLE `automation_tag_lookup`
   ADD CONSTRAINT `automation_tag_lookup_ibfk_3` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `output_automations`
+-- Constraints for table `output_actions`
 --
-ALTER TABLE `output_automations`
-  ADD CONSTRAINT `output_automations_ibfk_1` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `output_automation_lookup`
---
-ALTER TABLE `output_automation_lookup`
-  ADD CONSTRAINT `output_automation_lookup_ibfk_1` FOREIGN KEY (`output_id`) REFERENCES `outputs` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `output_automation_lookup_ibfk_2` FOREIGN KEY (`output_id`) REFERENCES `outputs` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `output_automation_lookup_ibfk_3` FOREIGN KEY (`automation_id`) REFERENCES `output_automations` (`id`) ON DELETE CASCADE;
+ALTER TABLE `output_actions`
+  ADD CONSTRAINT `output_actions_ibfk_1` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `output_actions_ibfk_2` FOREIGN KEY (`output_id`) REFERENCES `outputs` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `output_conditions`
@@ -273,9 +266,4 @@ ALTER TABLE `sensor_data`
 --
 ALTER TABLE `time_conditions`
   ADD CONSTRAINT `time_conditions_ibfk_1` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
 COMMIT;
