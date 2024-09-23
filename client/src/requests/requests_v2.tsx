@@ -322,8 +322,8 @@ export async function deleteTimeConditionAsync(automationId: number, id: number)
   }
 }
 
-export async function getOutputActionsAsync(): Promise<Record<string, SDBOutputAction>> {
-  const response = await fetch(`${SERVER_URL}/api/v2/output-actions`, {
+export async function getOutputActionsByAutomationIdAsync(automationId: number): Promise<SDBOutputAction[]> {
+  const response = await fetch(`${SERVER_URL}/api/v2/output-actions?automationId=${automationId}`, {
     method: "GET",
     headers: {},
     mode: "cors",

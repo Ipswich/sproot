@@ -9,37 +9,34 @@ import {
   Title,
   Accordion,
 } from "@mantine/core";
-import { useMutation } from "@tanstack/react-query";
-import { addAutomationAsync, deleteAutomationAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
-import { IAutomation } from "@sproot/automation/IAutomation";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { addAutomationAsync, deleteAutomationAsync, getAutomationsAsync, getOutputsAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
+import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
 import { Fragment } from "react/jsx-runtime";
 import { useForm } from "@mantine/form";
-import { useEffect, useState } from "react";
 import ConditionsTable from "./Conditions/ConditionsTable";
 import OutputActionsTable from "./Actions/OutputActionsTable";
+import { useEffect } from "react";
 
 interface EditAutomationModalProps {
-  existingAutomation: IAutomation | null;
+  targetAutomation: IAutomation | null;
+  setTargetAutomation: (automation: IAutomation | null) => void;
   modalOpened: boolean;
   closeModal: () => void;
-  setAutomationsAsStale: (isStale: boolean) => void;
 }
 
 export default function EditAutomationModal({
-  existingAutomation: existingAutomation,
+  targetAutomation: targetAutomation,
+  setTargetAutomation: setTargetAutomation,
   modalOpened: modalOpened,
   closeModal: closeModal,
-  setAutomationsAsStale: setAutomationsAsStale,
 }: EditAutomationModalProps) {
-  const [automation, setAutomation] = useState<IAutomation | null>(existingAutomation);
-
+  console.log(targetAutomation);
   const mutateAutomationForm = useForm({
-    mode: "uncontrolled",
     initialValues: {
-      name: "",
-      operator: "or",
+      name: targetAutomation?.name ?? "",
+      operator: targetAutomation?.operator ?? "or"
     },
-
     validate: {
       name: (value) =>
         !value || (value.length > 0 && value.length <= 64)
@@ -52,36 +49,31 @@ export default function EditAutomationModal({
     },
   });
 
-  if (existingAutomation) {
-    mutateAutomationForm.setFieldValue("name", existingAutomation.name);
-    mutateAutomationForm.setFieldValue("operator", existingAutomation.operator);
-  } else {
-    mutateAutomationForm.setFieldValue("name", "");
-    mutateAutomationForm.setFieldValue("operator", "or");
-  }
-
   useEffect(() => {
-    setAutomation(existingAutomation);
+    setTargetAutomation(targetAutomation);
+    mutateAutomationForm.setValues({
+      name: targetAutomation?.name ?? "",
+      operator: targetAutomation?.operator ?? "or"
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingAutomation]);
+  }, [targetAutomation]);
 
   const addAutomationMutation = useMutation({
     mutationFn: (newAutomationValues: IAutomation) => {
       return addAutomationAsync(newAutomationValues.name, newAutomationValues.operator);
     },
     onSuccess: (data) => {
-      setAutomationsAsStale(true);
-      setAutomation(data);
+      getAutomationsQuery.refetch();
+      setTargetAutomation(data);
     }
   });
 
   const updateAutomationMutation = useMutation({
     mutationFn: (updatedAutomationValues: IAutomation) => {
       return updateAutomationAsync(updatedAutomationValues.id, updatedAutomationValues.name, updatedAutomationValues.operator);
-      // setAutomation(updatedAutomationValues);
     },
     onSettled: () => {
-      setAutomationsAsStale(true);
+      getAutomationsQuery.refetch();
     },
   });
 
@@ -90,9 +82,20 @@ export default function EditAutomationModal({
       return deleteAutomationAsync(id);
     },
     onSettled: () => {
-      setAutomation(null);
-      setAutomationsAsStale(true);
+      setTargetAutomation(null);
+      getAutomationsQuery.refetch();
+      closeModal();
     },
+  });
+
+  const getAutomationsQuery = useQuery({
+    queryKey: ["automations"],
+    queryFn: () => getAutomationsAsync(),
+  });
+
+  const getOutputsQuery = useQuery({
+    queryKey: ["outputs"],
+    queryFn: () => getOutputsAsync(),
   });
 
   return (
@@ -110,7 +113,7 @@ export default function EditAutomationModal({
         onClose={() => {
           closeModal()
         }}
-        title={automation ? "Edit Automation" : "Add Automation"}
+        title={targetAutomation ? "Edit Automation" : "Add Automation"}
       >
         <form
           id="add-automation-form"
@@ -125,12 +128,12 @@ export default function EditAutomationModal({
             {...mutateAutomationForm.getInputProps("name")}
           />
         </form>
-        {automation != null ?
+        {targetAutomation != null ?
           <Fragment>
             <form
               id="edit-automation-form"
               onSubmit={mutateAutomationForm.onSubmit((values) => {
-                updateAutomationMutation.mutate({ id: automation.id, ...values } as IAutomation);
+                updateAutomationMutation.mutate({ id: targetAutomation.id, ...values } as IAutomation);
               })}
             >
               <Space h="xs" />
@@ -144,6 +147,7 @@ export default function EditAutomationModal({
                     { value: "and", label: "And" },
                   ]}
                   {...mutateAutomationForm.getInputProps("operator")}
+                  onChange={(value) => { mutateAutomationForm.setFieldValue("operator", value as AutomationOperator) }}
                 />
               </Group>
             </form>
@@ -154,7 +158,10 @@ export default function EditAutomationModal({
                     <Title order={4}>Conditions</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
-                    <ConditionsTable automationId={automation.id} />
+                    {targetAutomation.id == null ?
+                      null :
+                      <ConditionsTable automationId={targetAutomation.id} />
+                    }
                   </Accordion.Panel>
                 </Accordion.Item>
                 <Accordion.Item key={"Jobs"} value="Jobs">
@@ -162,7 +169,10 @@ export default function EditAutomationModal({
                     <Title order={4}>Actions</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
-                    <OutputActionsTable automationId={automation.id} />
+                    {getOutputsQuery.data == null || Object.keys(getOutputsQuery.data).length === 0 ?
+                      null :
+                      (<OutputActionsTable automationId={targetAutomation.id} outputs={Object.values(getOutputsQuery.data ?? {})} />)
+                    }
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>
@@ -171,7 +181,7 @@ export default function EditAutomationModal({
               <Button
                 color="red"
                 onClick={() => {
-                  deleteAutomationMutation.mutate(automation.id);
+                  deleteAutomationMutation.mutate(targetAutomation.id);
                   closeModal();
                 }}
               >

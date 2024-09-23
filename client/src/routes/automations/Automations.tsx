@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
@@ -9,9 +9,7 @@ import { IAutomation } from "@sproot/automation/IAutomation";
 import EditAutomationModal from "./EditAutomationModal";
 
 export default function Automations() {
-  const [automations, setAutomations] = useState([] as IAutomation[]);
-  const [editingAutomation, setEditingAutomation] = useState<IAutomation | null>(null);
-  const [isStale, setIsStale] = useState(false);
+  const [targetAutomation, setTargetAutomation] = useState<IAutomation | null>(null);
 
   const getAutomationsQuery = useQuery({
     queryKey: ["automations"],
@@ -19,44 +17,36 @@ export default function Automations() {
   });
 
   const [
-    newAutomationModalOpened,
-    { open: newAutomationModalOpen, close: newAutomationModalClose },
+    editAutomationModalOpened,
+    { open: editAutomationModalOpen, close: editAutomationModalClose },
   ] = useDisclosure(false);
-
-  const updateData = async () => {
-    getAutomationsQuery.refetch().then((response) => {
-      setAutomations(response.data!);
-    });
-  };
-
-  useEffect(() => {
-    updateData();
-    setIsStale(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStale]);
 
   return (
     <Fragment>
       <Stack h="600" justify="center" align="center">
         <EditAutomationModal
-          modalOpened={newAutomationModalOpened}
-          closeModal={newAutomationModalClose}
-          setAutomationsAsStale={setIsStale}
-          existingAutomation={editingAutomation}
+          modalOpened={editAutomationModalOpened}
+          closeModal={editAutomationModalClose}
+          targetAutomation={targetAutomation}
+          setTargetAutomation={setTargetAutomation}
         />
-        <EditablesTable
-          editables={automations}
-          onClick={(item) => {
-            setEditingAutomation(item as IAutomation);
-            newAutomationModalOpen();
-          }}
-        />
-        <Button size="xl" w={rem(300)} onClick={() => {
-          setEditingAutomation(null);
-          newAutomationModalOpen()
-        }}>
-          Add New
-        </Button>
+        {getAutomationsQuery.isLoading ? <div>Loading...</div> :
+          <Fragment>
+            <EditablesTable
+              editables={getAutomationsQuery.data ?? []}
+              onClick={(item) => {
+                setTargetAutomation(item as IAutomation);
+                editAutomationModalOpen();
+              }}
+            />
+            <Button size="xl" w={rem(300)} onClick={() => {
+              setTargetAutomation(null);
+              editAutomationModalOpen()
+            }}>
+              Add New
+            </Button>
+          </Fragment>
+        }
       </Stack>
     </Fragment>
   )
