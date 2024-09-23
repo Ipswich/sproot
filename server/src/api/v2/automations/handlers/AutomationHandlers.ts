@@ -1,8 +1,8 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { SprootDB } from "../../../../database/SprootDB";
-import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { IAutomation } from "@sproot/automation/IAutomation";
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -130,7 +130,7 @@ export async function addAsync(request: Request, response: Response) {
     addAutomationResponse = {
       statusCode: 201,
       content: {
-        data: { automationId: createdAutomationId, name: request.body["name"], operator: request.body["operator"] } as SDBAutomation,
+        data: { id: createdAutomationId, name: request.body["name"], operator: request.body["operator"] } as IAutomation,
       },
       ...response.locals["defaultProperties"],
     };
