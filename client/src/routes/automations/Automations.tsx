@@ -9,7 +9,7 @@ import { IAutomation } from "@sproot/automation/IAutomation";
 import EditAutomationModal from "./EditAutomationModal";
 
 export default function Automations() {
-  const [editingAutomation, setEditingAutomation] = useState<IAutomation | null>(null);
+  const [targetAutomation, setTargetAutomation] = useState<IAutomation | null>(null);
 
   const getAutomationsQuery = useQuery({
     queryKey: ["automations"],
@@ -17,31 +17,31 @@ export default function Automations() {
   });
 
   const [
-    newAutomationModalOpened,
-    { open: newAutomationModalOpen, close: newAutomationModalClose },
+    editAutomationModalOpened,
+    { open: editAutomationModalOpen, close: editAutomationModalClose },
   ] = useDisclosure(false);
-
 
   return (
     <Fragment>
       <Stack h="600" justify="center" align="center">
         <EditAutomationModal
-          modalOpened={newAutomationModalOpened}
-          closeModal={newAutomationModalClose}
-          existingAutomation={editingAutomation}
+          modalOpened={editAutomationModalOpened}
+          closeModal={editAutomationModalClose}
+          targetAutomation={targetAutomation}
+          setTargetAutomation={setTargetAutomation}
         />
         {getAutomationsQuery.isLoading ? <div>Loading...</div> :
           <Fragment>
             <EditablesTable
               editables={getAutomationsQuery.data ?? []}
               onClick={(item) => {
-                setEditingAutomation(item as IAutomation);
-                newAutomationModalOpen();
+                setTargetAutomation(item as IAutomation);
+                editAutomationModalOpen();
               }}
             />
             <Button size="xl" w={rem(300)} onClick={() => {
-              setEditingAutomation(null);
-              newAutomationModalOpen()
+              setTargetAutomation(null);
+              editAutomationModalOpen()
             }}>
               Add New
             </Button>

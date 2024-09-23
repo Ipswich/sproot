@@ -17,7 +17,6 @@ export default function NewOutputActionWidget({ automationId, outputs, toggleAdd
   });
   const addOutputActionMutation = useMutation({
     mutationFn: async (outputAction: { outputId: string, value: number }) => {
-      console.log(outputAction);
       await addOutputActionAsync(automationId, parseInt(outputAction.outputId), outputAction.value);
     },
     onSettled: () => {
