@@ -267,7 +267,7 @@ describe("AutomationHandlers", () => {
       assert.equal(success.statusCode, 201);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(success.content?.data.automationId, 1);
+      assert.equal(success.content?.data.id, 1);
     });
 
     it('should return a 400 and an error message', async () => {

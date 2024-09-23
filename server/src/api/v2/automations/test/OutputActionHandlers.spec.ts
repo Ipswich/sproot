@@ -330,6 +330,8 @@ describe("OutputActionHandlers.ts tests", () => {
     });
 
     it("should return a 400 and details for the invalid request", async () => {
+      const outputList = sinon.createStubInstance(OutputList);
+      sinon.stub(outputList, "outputs").value({1: { id: 1, name: "test", type: "test" }});
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -346,7 +348,7 @@ describe("OutputActionHandlers.ts tests", () => {
               case "sprootDB":
                 return {};
               case "outputList":
-                return {};
+                return outputList;
               case "automationDataManager":
                 return {};
             }
@@ -371,7 +373,7 @@ describe("OutputActionHandlers.ts tests", () => {
       mockRequest.body.value = -1;
       const error2 = await addAsync(mockRequest, mockResponse) as ErrorResponse;
       assert.equal(error2.statusCode, 400);
-      assert.deepEqual(error2.error.details, ["Invalid or missing automation Id.", "Invalid or missing output Id.", "Value must be between 0 and 100."]);
+      assert.deepEqual(error2.error.details, ["Invalid or missing automation Id.", "Invalid or missing output Id.", "Value must be between 0 and 100.", "Value must be 0 or 100 for PWM outputs."]);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
