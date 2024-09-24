@@ -225,7 +225,7 @@ export default function EditTable({
       </Modal>
       <EditablesTable
         editables={Object.values(outputs)}
-        onClick={(item) => {
+        onEditClick={(item) => {
           editTableOnClick(item as IOutputBase);
         }}
       />

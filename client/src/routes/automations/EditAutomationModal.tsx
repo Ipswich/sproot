@@ -19,19 +19,20 @@ import OutputActionsTable from "./Actions/OutputActionsTable";
 import { useEffect } from "react";
 
 interface EditAutomationModalProps {
-  targetAutomation: IAutomation | null;
+  editAutomation: IAutomation | null;
   setTargetAutomation: (automation: IAutomation | null) => void;
   modalOpened: boolean;
   closeModal: () => void;
+  readOnly?: boolean
 }
 
 export default function EditAutomationModal({
-  targetAutomation: targetAutomation,
+  editAutomation: targetAutomation,
   setTargetAutomation: setTargetAutomation,
   modalOpened: modalOpened,
   closeModal: closeModal,
+  readOnly = false,
 }: EditAutomationModalProps) {
-  console.log(targetAutomation);
   const mutateAutomationForm = useForm({
     initialValues: {
       name: targetAutomation?.name ?? "",
@@ -39,7 +40,7 @@ export default function EditAutomationModal({
     },
     validate: {
       name: (value) =>
-        !value || (value.length > 0 && value.length <= 64)
+        (value.length > 0 && value.length <= 64)
           ? null
           : "Name must be between 1 and 64 characters",
       operator: (value) =>
@@ -113,7 +114,7 @@ export default function EditAutomationModal({
         onClose={() => {
           closeModal()
         }}
-        title={targetAutomation ? "Edit Automation" : "Add Automation"}
+        title={readOnly ? <Title order={4}>{targetAutomation?.name}</Title> : targetAutomation ? "Edit Automation" : "Add Automation"}
       >
         <form
           id="add-automation-form"
@@ -121,12 +122,16 @@ export default function EditAutomationModal({
             addAutomationMutation.mutate(values as IAutomation);
           })}
         >
-          <Title order={4}>Name</Title>
-          <TextInput
-            maxLength={64}
-            required
-            {...mutateAutomationForm.getInputProps("name")}
-          />
+          {readOnly ? null
+            : <Fragment>
+              <Title order={4}>Name</Title>
+              <TextInput
+                maxLength={64}
+                required
+                {...mutateAutomationForm.getInputProps("name")}
+              />
+            </Fragment>
+          }
         </form>
         {targetAutomation != null ?
           <Fragment>
@@ -134,65 +139,81 @@ export default function EditAutomationModal({
               id="edit-automation-form"
               onSubmit={mutateAutomationForm.onSubmit((values) => {
                 updateAutomationMutation.mutate({ id: targetAutomation.id, ...values } as IAutomation);
+                closeModal();
               })}
             >
-              <Space h="xs" />
-              <Group>
-                <SegmentedControl
-                  color={"blue"}
-                  w={"100%"}
-                  radius="md"
-                  data={[
-                    { value: "or", label: "Or" },
-                    { value: "and", label: "And" },
-                  ]}
-                  {...mutateAutomationForm.getInputProps("operator")}
-                  onChange={(value) => { mutateAutomationForm.setFieldValue("operator", value as AutomationOperator) }}
-                />
-              </Group>
+              {
+                readOnly ? null :
+                  <Fragment>
+                    <Space h="xs" />
+                    <Group>
+                      <SegmentedControl
+                        readOnly={readOnly}
+                        color={"blue"}
+                        w={"100%"}
+                        radius="md"
+                        data={[
+                          { value: "or", label: "Any Group" },
+                          { value: "and", label: "All Groups" },
+                        ]}
+                        {...mutateAutomationForm.getInputProps("operator")}
+                        onChange={(value) => { mutateAutomationForm.setFieldValue("operator", value as AutomationOperator) }}
+                      />
+                    </Group>
+                  </Fragment>
+              }
             </form>
             <Group justify="space-around">
-              <Accordion defaultValue={["Conditions"]} multiple={true} w={"100%"}>
+              <Accordion defaultValue={readOnly ? ["Conditions", "Actions"] : []} multiple={true} w={"100%"}>
                 <Accordion.Item key={"Conditions"} value="Conditions">
                   <Accordion.Control pl={"0px"}>
-                    <Title order={4}>Conditions</Title>
+                    <Title order={4}>Conditions {readOnly ? `(${targetAutomation.operator == "or" ? "any group" : "all groups"})` : null}</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
                     {targetAutomation.id == null ?
                       null :
-                      <ConditionsTable automationId={targetAutomation.id} />
+                      <ConditionsTable automationId={targetAutomation.id} readOnly={readOnly} />
                     }
                   </Accordion.Panel>
                 </Accordion.Item>
-                <Accordion.Item key={"Jobs"} value="Jobs">
+                <Accordion.Item key={"Actions"} value="Actions">
                   <Accordion.Control pl={"0px"}>
                     <Title order={4}>Actions</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
                     {getOutputsQuery.data == null || Object.keys(getOutputsQuery.data).length === 0 ?
                       null :
-                      (<OutputActionsTable automationId={targetAutomation.id} outputs={Object.values(getOutputsQuery.data ?? {})} />)
+                      (<OutputActionsTable automationId={targetAutomation.id} outputs={Object.values(getOutputsQuery.data ?? {})} readOnly={readOnly} />)
                     }
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>
             </Group>
-            <Group justify="space-between" mt="md">
-              <Button
-                color="red"
-                onClick={() => {
-                  deleteAutomationMutation.mutate(targetAutomation.id);
-                  closeModal();
-                }}
-              >
-                Delete
-              </Button>
-              <Button type="submit" form="edit-automation-form">Update</Button>
-            </Group>
+            {readOnly ?
+              null
+              : <Group justify="space-between" mt="md">
+                <Button
+                  color="red"
+                  onClick={() => {
+                    deleteAutomationMutation.mutate(targetAutomation.id);
+                    closeModal();
+                  }}
+                >
+                  Delete
+                </Button>
+                <Button type="submit" form="edit-automation-form">Update</Button>
+              </Group>
+            }
           </Fragment>
-          : <Group justify="flex-end" mt="md">
-            <Button type="submit" form="add-automation-form">Add</Button>
-          </Group>
+          :
+          <Fragment>
+            {readOnly ?
+              null
+              : <Group justify="flex-end" mt="md">
+                <Button type="submit" form="add-automation-form">Next</Button>
+              </Group>
+            }
+          </Fragment>
         }
       </Modal>
     </Fragment>

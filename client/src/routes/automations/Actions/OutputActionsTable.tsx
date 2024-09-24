@@ -11,9 +11,10 @@ import NewOutputActionWidget from "./NewOutputActionWidget";
 export interface OutputActionsTableProps {
   automationId: number;
   outputs: IOutputBase[]
+  readOnly?: boolean;
 }
 
-export default function OutputActionsTable({ automationId, outputs }: OutputActionsTableProps) {
+export default function OutputActionsTable({ automationId, outputs, readOnly = false }: OutputActionsTableProps) {
   const [addNewOutputActionOpened, { toggle: toggleAddNewOutputAction }] = useDisclosure(false);
   const outputActionsQueryFn = useQuery({
     queryKey: ["outputActions"],
@@ -31,23 +32,31 @@ export default function OutputActionsTable({ automationId, outputs }: OutputActi
   return (
     <Fragment>
       {(outputActionsQueryFn.isLoading) ? <div>Loading...</div> :
-      <DeletablesTable
-        deletableName="Output Action"
-        deletables={Object.values(outputActionsQueryFn.data ?? {}).map((outputAction) => ({
-          displayLabel: OutputActionRow(outputAction, outputs.find((output) => output.id == outputAction.outputId)!),
-          id: outputAction.id,
-          deleteFn: (id: number) => deleteOutputActionMutation.mutateAsync(id),
-        })) || []}
-      />}
-      <Group justify="center">
-        <Button size="sm" w={"100%"} color="green" onClick={() => { toggleAddNewOutputAction() }}>Add Action</Button>
-      </Group>
-      <Collapse in={addNewOutputActionOpened} transitionDuration={300}>
-        <Space h={12} />
-        {outputActionsQueryFn.isLoading ? <div>Loading...</div> :
-          <NewOutputActionWidget automationId={automationId} outputs={outputs.map((output) => { return { id: output.id, isPwm: output.isPwm, name: output.name ?? "" } }) ?? []} toggleAddNewOutputAction={toggleAddNewOutputAction} />
-        }
-      </Collapse>
+        <Fragment>
+          {Object.keys(outputActionsQueryFn.data ?? {}).length == 0 && readOnly && <div>None</div>}
+          <DeletablesTable
+            deletables={Object.values(outputActionsQueryFn.data ?? {}).map((outputAction) => ({
+              displayLabel: OutputActionRow(outputAction, outputs.find((output) => output.id == outputAction.outputId)!),
+              id: outputAction.id,
+              deleteFn: (id: number) => deleteOutputActionMutation.mutateAsync(id),
+            })) || []}
+            readOnly={readOnly}
+          />
+        </Fragment>}
+      {readOnly ?
+        null :
+        <Fragment>
+          <Group justify="center">
+            <Button size="sm" w={"100%"} color="green" onClick={() => { toggleAddNewOutputAction() }}>Add Action</Button>
+          </Group>
+          <Collapse in={addNewOutputActionOpened} transitionDuration={300}>
+            <Space h={12} />
+            {outputActionsQueryFn.isLoading ? <div>Loading...</div> :
+              <NewOutputActionWidget automationId={automationId} outputs={outputs.map((output) => { return { id: output.id, isPwm: output.isPwm, name: output.name ?? "" } }) ?? []} toggleAddNewOutputAction={toggleAddNewOutputAction} />
+            }
+          </Collapse>
+        </Fragment>
+      }
     </Fragment>
   );
 }

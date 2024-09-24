@@ -14,9 +14,10 @@ import NewConditionWidget from "./NewConditionWidget";
 
 export interface ConditionsTableProps {
   automationId: number;
+  readOnly?: boolean;
 }
 
-export default function ConditionsTable({ automationId }: ConditionsTableProps) {
+export default function ConditionsTable({ automationId, readOnly }: ConditionsTableProps) {
   const [addNewConditionOpened, { toggle: toggleAddNewCondition }] = useDisclosure(false);
   const conditionsQueryFn = useQuery({
     queryKey: ["conditions"],
@@ -78,28 +79,35 @@ export default function ConditionsTable({ automationId }: ConditionsTableProps) 
   const oneOfConditions = Object.values(conditionsQueryFn.data ?? {}).map((conditionType) => conditionType.oneOf).flat();
   return (
     <Fragment>
+      {conditionsQueryFn.isLoading ? <div>Loading...</div> : null}
       {allOfConditions.length != 0 &&
         <Fragment>
           <Title order={6}>All Of</Title>
-          <DeletablesTable deletableName="All Of" deletables={allOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} />
+          <DeletablesTable deletables={allOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
         </Fragment>}
       {anyOfConditions.length != 0 &&
         <Fragment>
           <Title order={6}>Any Of</Title>
-          <DeletablesTable deletableName="Any Of" deletables={anyOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} />
+          <DeletablesTable deletables={anyOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
         </Fragment>}
       {oneOfConditions.length != 0 &&
         <Fragment>
           <Title order={6}>One Of</Title>
-          <DeletablesTable deletableName="One Of" deletables={oneOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} />
+          <DeletablesTable deletables={oneOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
         </Fragment>}
-      <Group justify="center">
-        <Button size="sm" w={"100%"} color="green" onClick={() => {toggleAddNewCondition()}}>Add Condition</Button>
-      </Group>
-      <Collapse in={addNewConditionOpened} transitionDuration={300}>
-        <Space h={12} />
-        <NewConditionWidget automationId={automationId} toggleAddNewCondition={toggleAddNewCondition} />
-      </Collapse>
+      {allOfConditions.length == 0 && anyOfConditions.length == 0 && oneOfConditions.length == 0 && readOnly && 
+      <div>None</div>}
+      {readOnly ? null
+        : <Fragment>
+          <Group justify="center">
+            <Button size="sm" w={"100%"} color="green" onClick={() => { toggleAddNewCondition() }}>Add Condition</Button>
+          </Group>
+          <Collapse in={addNewConditionOpened} transitionDuration={300}>
+            <Space h={12} />
+            <NewConditionWidget automationId={automationId} toggleAddNewCondition={toggleAddNewCondition} />
+          </Collapse>
+        </Fragment>
+      }
     </Fragment>
   )
 }
@@ -150,8 +158,8 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
   return (
     <Group>
       {!timeCondition.startTime && !timeCondition.endTime && "Always"}
-      {timeCondition.startTime && !timeCondition.endTime && `Server time is ${timeCondition.startTime}`}
-      {timeCondition.startTime && timeCondition.endTime && `Server time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
+      {timeCondition.startTime && !timeCondition.endTime && `Time is ${timeCondition.startTime}`}
+      {timeCondition.startTime && timeCondition.endTime && `Time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
     </Group>
   )
 }

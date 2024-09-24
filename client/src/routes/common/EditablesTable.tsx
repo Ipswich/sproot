@@ -6,12 +6,14 @@ import { IconEdit } from "@tabler/icons-react";
 
 interface EditablesTableProps {
   editables: ISensorBase[] | IOutputBase[] | IAutomation[];
-  onClick: (item: ISensorBase | IOutputBase | IAutomation) => void;
+  onEditClick: (item: ISensorBase | IOutputBase | IAutomation) => void;
+  onNameClick?: (item: ISensorBase | IOutputBase | IAutomation) => void;
 }
 
 export default function EditablesTable({
   editables,
-  onClick,
+  onEditClick,
+  onNameClick = undefined,
 }: EditablesTableProps) {
   return (
     <Table
@@ -30,11 +32,13 @@ export default function EditablesTable({
       <Table.Tbody>
         {Object.values(editables).map((editable) => (
           <Table.Tr key={editable.id}>
-            <Table.Td align="center">{editable.name}</Table.Td>
+            <Table.Td align="center" onClick={onNameClick ? () => {onNameClick(editable)} : undefined}>
+              {editable.name}
+              </Table.Td>
             <Table.Td align="center">
               <ActionIcon
                 onClick={() => {
-                  onClick(editable);
+                  onEditClick(editable);
                 }}
               >
                 <IconEdit />

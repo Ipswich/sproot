@@ -183,7 +183,7 @@ export default function EditTable({
       </Modal>
       <EditablesTable
         editables={Object.values(sensors)}
-        onClick={(item) => {
+        onEditClick={(item) => {
           editTableOnClick(item as ISensorBase);
         }}
       />

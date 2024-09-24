@@ -3,12 +3,13 @@ import { IconTrash } from "@tabler/icons-react";
 import { ReactNode } from "react";
 
 interface DeletablesTableProps {
-  deletableName: string;
-  deletables: {displayLabel: ReactNode, id: number, deleteFn: (id: number) => Promise<void>}[];
+  deletables: { displayLabel: ReactNode, id: number, deleteFn: (id: number) => Promise<void> }[];
+  readOnly?: boolean;
 }
 
 export default function DeletablesTable({
   deletables,
+  readOnly = false,
 }: DeletablesTableProps) {
   return (
     <Table
@@ -22,11 +23,11 @@ export default function DeletablesTable({
         <Table.Tr>
         </Table.Tr>
       </Table.Thead>
-      <Table.Tbody>
+      <Table.Tbody >
         {Object.values(deletables).map((deletable) => (
           <Table.Tr key={deletable.id}>
-            <Table.Td align="center">{deletable.displayLabel}</Table.Td>
-            <Table.Td align="center" w={"40px"}>
+            <Table.Td px="0px" align="center">{deletable.displayLabel}</Table.Td>
+            {!readOnly && <Table.Td align="center" w={"40px"}>
               <ActionIcon
                 color="grey"
                 onClick={async () => {
@@ -35,7 +36,7 @@ export default function DeletablesTable({
               >
                 <IconTrash />
               </ActionIcon>
-            </Table.Td>
+            </Table.Td>}
           </Table.Tr>
         ))}
       </Table.Tbody>
