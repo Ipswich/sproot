@@ -197,7 +197,7 @@ export abstract class OutputBase implements IOutputBase {
     );
   }
 
-  protected async loadAutomationsAsync(): Promise<void> {
+  async loadAutomationsAsync(): Promise<void> {
     await this.#automationManager.loadAsync(this.id);
   }
 
