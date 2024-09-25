@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 --
 DROP TABLE IF EXISTS `output_actions_view`;
 
-CREATE VIEW `output_actions_view`  AS SELECT `automations`.`id` AS `automationId`, `output_actions`.`output_id` AS `outputId`, `output_actions`.`id` AS `id`, `automations`.`name` AS `name`, `output_actions`.`value` AS `value`, `automations`.`operator` AS `operator` FROM (`automations` join `output_actions` on(`automations`.`id` = `output_actions`.`automation_id`)) ;
+CREATE VIEW IF NOT EXISTS `output_actions_view`  AS SELECT `automations`.`id` AS `automationId`, `output_actions`.`output_id` AS `outputId`, `output_actions`.`id` AS `id`, `automations`.`name` AS `name`, `output_actions`.`value` AS `value`, `automations`.`operator` AS `operator` FROM (`automations` join `output_actions` on(`automations`.`id` = `output_actions`.`automation_id`)) ;
 
 --
 -- Constraints for dumped tables
