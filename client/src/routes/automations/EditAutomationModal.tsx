@@ -8,6 +8,7 @@ import {
   Space,
   Title,
   Accordion,
+  ActionIcon,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { addAutomationAsync, deleteAutomationAsync, getAutomationsAsync, getOutputsAsync, updateAutomationAsync } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -17,6 +18,7 @@ import { useForm } from "@mantine/form";
 import ConditionsTable from "./Conditions/ConditionsTable";
 import OutputActionsTable from "./Actions/OutputActionsTable";
 import { useEffect } from "react";
+import { IconDeviceFloppy } from "@tabler/icons-react";
 
 interface EditAutomationModalProps {
   editAutomation: IAutomation | null;
@@ -126,6 +128,14 @@ export default function EditAutomationModal({
             : <Fragment>
               <Title order={4}>Name</Title>
               <TextInput
+                rightSection={targetAutomation == null ? null :
+                  <ActionIcon
+                    onClick={() => {
+                      updateAutomationMutation.mutate({ id: targetAutomation.id, operator: targetAutomation.operator, name: mutateAutomationForm.values.name });
+                    }}>
+                    <IconDeviceFloppy />
+                  </ActionIcon>
+                }
                 maxLength={64}
                 required
                 {...mutateAutomationForm.getInputProps("name")}
@@ -135,44 +145,40 @@ export default function EditAutomationModal({
         </form>
         {targetAutomation != null ?
           <Fragment>
-            <form
-              id="edit-automation-form"
-              onSubmit={mutateAutomationForm.onSubmit((values) => {
-                updateAutomationMutation.mutate({ id: targetAutomation.id, ...values } as IAutomation);
-                closeModal();
-              })}
-            >
-              {
-                readOnly ? null :
-                  <Fragment>
-                    <Space h="xs" />
-                    <Group>
-                      <SegmentedControl
-                        readOnly={readOnly}
-                        color={"blue"}
-                        w={"100%"}
-                        radius="md"
-                        data={[
-                          { value: "or", label: "Any Group" },
-                          { value: "and", label: "All Groups" },
-                        ]}
-                        {...mutateAutomationForm.getInputProps("operator")}
-                        onChange={(value) => { mutateAutomationForm.setFieldValue("operator", value as AutomationOperator) }}
-                      />
-                    </Group>
-                  </Fragment>
-              }
-            </form>
             <Group justify="space-around">
               <Accordion defaultValue={readOnly ? ["Conditions", "Actions"] : []} multiple={true} w={"100%"}>
                 <Accordion.Item key={"Conditions"} value="Conditions">
                   <Accordion.Control pl={"0px"}>
-                    <Title order={4}>Conditions {readOnly ? `(${targetAutomation.operator == "or" ? "any group" : "all groups"})` : null}</Title>
+                    <Title order={4}>Conditions {readOnly ? `(${targetAutomation.operator == "or" ? "match any group" : "match all groups"})` : null}</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
                     {targetAutomation.id == null ?
                       null :
-                      <ConditionsTable automationId={targetAutomation.id} readOnly={readOnly} />
+                      <Fragment>
+                        {
+                          readOnly ? null :
+                            <Fragment>
+                              <SegmentedControl
+                                size="xs"
+                                readOnly={readOnly}
+                                color={"blue"}
+                                w={"100%"}
+                                radius="md"
+                                data={[
+                                  { value: "or", label: "Match Any Group" },
+                                  { value: "and", label: "Match All Groups" },
+                                ]}
+                                {...mutateAutomationForm.getInputProps("operator")}
+                                onChange={(value) => {
+                                  updateAutomationMutation.mutate({ id: targetAutomation.id, operator: value as AutomationOperator, name: targetAutomation.name })
+                                  mutateAutomationForm.setFieldValue("operator", value as AutomationOperator);
+                                }}
+                              />
+                              <Space h={12} />
+                            </Fragment>
+                        }
+                        <ConditionsTable automationId={targetAutomation.id} readOnly={readOnly} />
+                      </Fragment>
                     }
                   </Accordion.Panel>
                 </Accordion.Item>
@@ -201,7 +207,6 @@ export default function EditAutomationModal({
                 >
                   Delete
                 </Button>
-                <Button type="submit" form="edit-automation-form">Update</Button>
               </Group>
             }
           </Fragment>

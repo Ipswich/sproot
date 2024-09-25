@@ -79,33 +79,37 @@ export default function ConditionsTable({ automationId, readOnly }: ConditionsTa
   const oneOfConditions = Object.values(conditionsQueryFn.data ?? {}).map((conditionType) => conditionType.oneOf).flat();
   return (
     <Fragment>
-      {conditionsQueryFn.isLoading ? <div>Loading...</div> : null}
-      {allOfConditions.length != 0 &&
-        <Fragment>
-          <Title order={6}>All Of</Title>
-          <DeletablesTable deletables={allOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
-        </Fragment>}
-      {anyOfConditions.length != 0 &&
-        <Fragment>
-          <Title order={6}>Any Of</Title>
-          <DeletablesTable deletables={anyOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
-        </Fragment>}
-      {oneOfConditions.length != 0 &&
-        <Fragment>
-          <Title order={6}>One Of</Title>
-          <DeletablesTable deletables={oneOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
-        </Fragment>}
-      {allOfConditions.length == 0 && anyOfConditions.length == 0 && oneOfConditions.length == 0 && readOnly && 
-      <div>None</div>}
-      {readOnly ? null
+      {conditionsQueryFn.isLoading ? 
+      <Fragment>Loading...</Fragment>
         : <Fragment>
-          <Group justify="center">
-            <Button size="sm" w={"100%"} color="green" onClick={() => { toggleAddNewCondition() }}>Add Condition</Button>
-          </Group>
-          <Collapse in={addNewConditionOpened} transitionDuration={300}>
-            <Space h={12} />
-            <NewConditionWidget automationId={automationId} toggleAddNewCondition={toggleAddNewCondition} />
-          </Collapse>
+          {allOfConditions.length != 0 &&
+            <Fragment>
+              <Title order={6}>All Of</Title>
+              <DeletablesTable deletables={allOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
+            </Fragment>}
+          {anyOfConditions.length != 0 &&
+            <Fragment>
+              <Title order={6}>Any Of</Title>
+              <DeletablesTable deletables={anyOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
+            </Fragment>}
+          {oneOfConditions.length != 0 &&
+            <Fragment>
+              <Title order={6}>One Of</Title>
+              <DeletablesTable deletables={oneOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
+            </Fragment>}
+          {allOfConditions.length == 0 && anyOfConditions.length == 0 && oneOfConditions.length == 0 && readOnly &&
+            <div>None</div>}
+          {readOnly ? null
+            : <Fragment>
+              <Group justify="center">
+                <Button size="sm" w={"100%"} color="green" onClick={() => { toggleAddNewCondition() }}>Add Condition</Button>
+              </Group>
+              <Collapse in={addNewConditionOpened} transitionDuration={300}>
+                <Space h={12} />
+                <NewConditionWidget automationId={automationId} toggleAddNewCondition={toggleAddNewCondition} />
+              </Collapse>
+            </Fragment>
+          }
         </Fragment>
       }
     </Fragment>
