@@ -36,7 +36,7 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.value, 75);
     });
 
-      it("should return null (conditions not met)", async () => {
+      it("should return a result with null (conditions not met)", async () => {
         const sprootDB = sinon.createStubInstance(SprootDB);
         const automationManager = new OutputAutomationManager(sprootDB);
         const sensorListMock = sinon.createStubInstance(SensorList);
@@ -55,7 +55,9 @@ describe("OutputAutomationManager.ts tests", () => {
         ]);
   
         await automationManager.loadAsync(1);
-        assert.isNull(automationManager.evaluate(sensorListMock, outputListMock, now));
+        const result = automationManager.evaluate(sensorListMock, outputListMock, now);
+        assert.equal(result?.names.length, 0);
+        assert.isNull(result.value);
       })
 
     it("should return a value (more than one automation evaluates to true (same values))", async () => {
@@ -87,7 +89,7 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.value, 50);
     });
     
-    it("should return null (more than one automation evaluates to true (different values))", async () => {
+    it("should return a result with null (more than one automation evaluates to true (different values))", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       const automationManager = new OutputAutomationManager(sprootDB);
       const sensorListMock = sinon.createStubInstance(SensorList);
@@ -109,7 +111,11 @@ describe("OutputAutomationManager.ts tests", () => {
 
       await automationManager.loadAsync(1);
 
-      assert.isNull(automationManager.evaluate(sensorListMock, outputListMock));
+      const result = automationManager.evaluate(sensorListMock, outputListMock);
+      assert.equal(result?.names.length, 2);
+      assert.equal(result?.names[0], "test");
+      assert.equal(result?.names[1], "test2");
+      assert.isNull(result.value);
     });
   });
 

@@ -24,7 +24,7 @@ export default class OutputAutomationManager {
    * @param now 
    * @returns 
    */
-  evaluate(sensorList: SensorList, outputList: OutputList, now: Date = new Date()): { names: string[], value: number } | null {
+  evaluate(sensorList: SensorList, outputList: OutputList, now: Date = new Date()): { names: string[], value: number | null } {
     const evaluatedAutomations = Object.values(this.#automations)
       .map((automation) => { return { name: automation.name, value: automation.evaluate(sensorList, outputList, now) } })
       .filter((r) => r.value != null) as { name: string, value: number }[];
@@ -32,14 +32,16 @@ export default class OutputAutomationManager {
     if (evaluatedAutomations.length > 1) {
       const firstValue = evaluatedAutomations[0]!.value;
       if (evaluatedAutomations.every((automation) => automation.value == firstValue)) {
+        //No collisions between these
         return { names: evaluatedAutomations.map((automation) => automation.name), value: firstValue };
       } else {
-        return null;
+        //Collisions between these
+        return { names: evaluatedAutomations.map((automation) => automation.name), value: null}
       }
     } else if (evaluatedAutomations.length == 1) {
       return { names: [evaluatedAutomations[0]!.name], value: evaluatedAutomations[0]!.value };
     } else {
-      return null;
+      return { names: [], value: null }
     }
   }
 

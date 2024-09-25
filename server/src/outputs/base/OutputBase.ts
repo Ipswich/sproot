@@ -150,7 +150,7 @@ export abstract class OutputBase implements IOutputBase {
 
   runAutomations(sensorList: SensorList, outputList: OutputList, now: Date): void {
     const result = this.#automationManager.evaluate(sensorList, outputList, now);
-    if (result != null) {
+    if (result.value != null) {
       this.state.setNewState(
         {
           value: result.value,
