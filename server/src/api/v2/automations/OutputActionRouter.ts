@@ -1,11 +1,6 @@
 import express, { Request, Response } from "express";
 
-import {
-  getAsync,
-  getByIdAsync,
-  addAsync,
-  deleteAsync,
-} from "./handlers/OutputActionHandlers";
+import { getAsync, getByIdAsync, addAsync, deleteAsync } from "./handlers/OutputActionHandlers";
 
 const router = express.Router();
 router.get("/", async (req: Request, res: Response) => {
@@ -36,4 +31,4 @@ router.delete("/:outputActionId", async (req: Request, res: Response) => {
   return;
 });
 
-export default router
+export default router;

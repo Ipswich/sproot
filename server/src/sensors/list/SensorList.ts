@@ -88,7 +88,7 @@ class SensorList {
           this.#sensors[key]?.updateName(sensor.name);
           sensorChanges = true;
         }
-        
+
         if (this.#sensors[key]?.color != sensor.color) {
           //Also updates chartSeries data
           this.#sensors[key]?.updateColor(sensor.color);
@@ -286,7 +286,7 @@ class SensorList {
             name: `New DS18B20 ..${address.slice(-4)}`,
             model: "DS18B20",
             address: address,
-            color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)]
+            color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
           } as SDBSensor),
         );
       }

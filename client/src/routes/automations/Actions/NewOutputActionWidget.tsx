@@ -2,22 +2,33 @@ import { Button, Group, Select, Slider, Stack, Switch } from "@mantine/core";
 import { Fragment } from "react/jsx-runtime";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { addOutputActionAsync, getOutputActionsByAutomationIdAsync } from "../../../requests/requests_v2";
+import {
+  addOutputActionAsync,
+  getOutputActionsByAutomationIdAsync,
+} from "../../../requests/requests_v2";
 
 export interface NewOutputActionWidgetProps {
-  automationId: number,
-  outputs: { id: number, name: string, isPwm: boolean }[];
+  automationId: number;
+  outputs: { id: number; name: string; isPwm: boolean }[];
   toggleAddNewOutputAction: () => void;
 }
 
-export default function NewOutputActionWidget({ automationId, outputs, toggleAddNewOutputAction }: NewOutputActionWidgetProps) {
+export default function NewOutputActionWidget({
+  automationId,
+  outputs,
+  toggleAddNewOutputAction,
+}: NewOutputActionWidgetProps) {
   const outputActionsQueryFn = useQuery({
     queryKey: ["outputActions"],
     queryFn: () => getOutputActionsByAutomationIdAsync(automationId),
   });
   const addOutputActionMutation = useMutation({
-    mutationFn: async (outputAction: { outputId: string, value: number }) => {
-      await addOutputActionAsync(automationId, parseInt(outputAction.outputId), outputAction.value);
+    mutationFn: async (outputAction: { outputId: string; value: number }) => {
+      await addOutputActionAsync(
+        automationId,
+        parseInt(outputAction.outputId),
+        outputAction.value,
+      );
     },
     onSettled: () => {
       outputActionsQueryFn.refetch();
@@ -36,9 +47,7 @@ export default function NewOutputActionWidget({ automationId, outputs, toggleAdd
           ? null
           : "Output Id must be provided",
       value: (value) =>
-        value != null && value != undefined
-          ? null
-          : "Value must be provided",
+        value != null && value != undefined ? null : "Value must be provided",
     },
   });
 
@@ -53,12 +62,17 @@ export default function NewOutputActionWidget({ automationId, outputs, toggleAdd
       >
         <Stack>
           <Select
-            data={outputs.map((output) => { return { value: String(output.id), label: output.name } })}
+            data={outputs.map((output) => {
+              return { value: String(output.id), label: output.name };
+            })}
             label="Output"
             value={outputActionForm.values.outputId}
             {...outputActionForm.getInputProps("outputId")}
           />
-          {outputActionForm.values.outputId && outputs.find((output) => output.id == parseInt(outputActionForm.values.outputId))?.isPwm ? (
+          {outputActionForm.values.outputId &&
+          outputs.find(
+            (output) => output.id == parseInt(outputActionForm.values.outputId),
+          )?.isPwm ? (
             <Slider
               min={0}
               max={100}
@@ -67,7 +81,7 @@ export default function NewOutputActionWidget({ automationId, outputs, toggleAdd
               marks={[
                 { value: 20, label: "20%" },
                 { value: 50, label: "50%" },
-                { value: 80, label: "80%" }
+                { value: 80, label: "80%" },
               ]}
               {...outputActionForm.getInputProps("value")}
             />
@@ -80,9 +94,13 @@ export default function NewOutputActionWidget({ automationId, outputs, toggleAdd
                 checked={outputActionForm.values.value === 100}
                 {...outputActionForm.getInputProps("value")}
                 onChange={(event) => {
-                  outputActionForm.setFieldValue("value", event.target.checked ? 100 : 0);
+                  outputActionForm.setFieldValue(
+                    "value",
+                    event.target.checked ? 100 : 0,
+                  );
                 }}
-              /></Group>
+              />
+            </Group>
           )}
           <Group justify="center" mt="md">
             <Button type="submit">Save</Button>

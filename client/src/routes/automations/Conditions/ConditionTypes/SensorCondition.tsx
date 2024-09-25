@@ -1,32 +1,65 @@
-import { Button, Group, Select, Stack, Space, NumberInput } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Select,
+  Stack,
+  Space,
+  NumberInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
-import { addSensorConditionAsync, getConditionsAsync } from "../../../../requests/requests_v2";
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
+import {
+  addSensorConditionAsync,
+  getConditionsAsync,
+} from "../../../../requests/requests_v2";
+import {
+  ConditionGroupType,
+  ConditionOperator,
+} from "@sproot/automation/ConditionTypes";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 
 export interface SensorConditionProps {
   toggleAddNewCondition: () => void;
   automationId: number;
   groupType: ConditionGroupType;
-  sensors: { id: number, units: Partial<Record<ReadingType, string>>, name: string }[];
+  sensors: {
+    id: number;
+    units: Partial<Record<ReadingType, string>>;
+    name: string;
+  }[];
 }
 
-export default function SensorCondition({ toggleAddNewCondition, automationId, groupType, sensors }: SensorConditionProps) {
+export default function SensorCondition({
+  toggleAddNewCondition,
+  automationId,
+  groupType,
+  sensors,
+}: SensorConditionProps) {
   const condtionsQuery = useQuery({
     queryKey: ["conditions"],
     queryFn: () => getConditionsAsync(automationId),
-  })
+  });
   const addSensorMutation = useMutation({
-    mutationFn: async (sensorCondition: { operator: ConditionOperator, comparisonValue: number, sensorId: string, readingType: ReadingType }) => {
-      await addSensorConditionAsync(automationId, groupType, sensorCondition.operator, sensorCondition.comparisonValue, sensorCondition.sensorId, sensorCondition.readingType);
+    mutationFn: async (sensorCondition: {
+      operator: ConditionOperator;
+      comparisonValue: number;
+      sensorId: string;
+      readingType: ReadingType;
+    }) => {
+      await addSensorConditionAsync(
+        automationId,
+        groupType,
+        sensorCondition.operator,
+        sensorCondition.comparisonValue,
+        sensorCondition.sensorId,
+        sensorCondition.readingType,
+      );
     },
     onSettled: () => {
       condtionsQuery.refetch();
     },
   });
-
 
   const sensorConditionForm = useForm({
     initialValues: {
@@ -46,7 +79,14 @@ export default function SensorCondition({ toggleAddNewCondition, automationId, g
           ? null
           : "Reading type must be provided",
       operator: (value) =>
-        ["less", "lessOrEqual", "greater", "greaterOrEqual", "equal", "notEqual"].includes(value)
+        [
+          "less",
+          "lessOrEqual",
+          "greater",
+          "greaterOrEqual",
+          "equal",
+          "notEqual",
+        ].includes(value)
           ? null
           : "Invalid operator",
       comparisonValue: (value) =>
@@ -68,19 +108,28 @@ export default function SensorCondition({ toggleAddNewCondition, automationId, g
           toggleAddNewCondition();
         })}
       >
-
         <Stack>
           <Select
             flex={1}
             required
             allowDeselect={false}
-            data={sensors.map((sensor) => { return { label: sensor.name, value: String(sensor.id) } })}
+            data={sensors.map((sensor) => {
+              return { label: sensor.name, value: String(sensor.id) };
+            })}
             {...sensorConditionForm.getInputProps("sensorId")}
             onChange={(value) => {
               sensorConditionForm.setFieldValue("sensorId", value!);
-              const readingTypes = Object.keys(sensors.filter((sensor) => sensor.id == Number(value))[0]!.units);
-              if (!readingTypes.includes(sensorConditionForm.values.readingType!)) {
-                sensorConditionForm.setFieldValue("readingType", readingTypes[0]!);
+              const readingTypes = Object.keys(
+                sensors.filter((sensor) => sensor.id == Number(value))[0]!
+                  .units,
+              );
+              if (
+                !readingTypes.includes(sensorConditionForm.values.readingType!)
+              ) {
+                sensorConditionForm.setFieldValue(
+                  "readingType",
+                  readingTypes[0]!,
+                );
               }
             }}
           />
@@ -89,7 +138,18 @@ export default function SensorCondition({ toggleAddNewCondition, automationId, g
               flex={1}
               required
               allowDeselect={false}
-              data={Object.keys(sensors.filter((sensor) => sensor.id == Number(sensorConditionForm.values.sensorId))[0]!.units).map((readingType) => { return { label: readingType.charAt(0).toUpperCase() + readingType.slice(1), value: readingType } })}
+              data={Object.keys(
+                sensors.filter(
+                  (sensor) =>
+                    sensor.id == Number(sensorConditionForm.values.sensorId),
+                )[0]!.units,
+              ).map((readingType) => {
+                return {
+                  label:
+                    readingType.charAt(0).toUpperCase() + readingType.slice(1),
+                  value: readingType,
+                };
+              })}
               {...sensorConditionForm.getInputProps("readingType")}
             />
             is
@@ -97,30 +157,32 @@ export default function SensorCondition({ toggleAddNewCondition, automationId, g
               w={"30%"}
               required
               allowDeselect={false}
-              data={[{
-                label: "<",
-                value: "less",
-              },
-              {
-                label: "<=",
-                value: "lessOrEqual",
-              },
-              {
-                label: ">",
-                value: "greater",
-              },
-              {
-                label: ">=",
-                value: "greaterOrEqual",
-              },
-              {
-                label: "=",
-                value: "equal",
-              },
-              {
-                label: "!=",
-                value: "notEqual",
-              }]}
+              data={[
+                {
+                  label: "<",
+                  value: "less",
+                },
+                {
+                  label: "<=",
+                  value: "lessOrEqual",
+                },
+                {
+                  label: ">",
+                  value: "greater",
+                },
+                {
+                  label: ">=",
+                  value: "greaterOrEqual",
+                },
+                {
+                  label: "=",
+                  value: "equal",
+                },
+                {
+                  label: "!=",
+                  value: "notEqual",
+                },
+              ]}
               {...sensorConditionForm.getInputProps("operator")}
             />
           </Group>
@@ -132,12 +194,21 @@ export default function SensorCondition({ toggleAddNewCondition, automationId, g
               decimalScale={3}
               stepHoldDelay={500}
               stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-              suffix={sensors.filter((sensor) => sensor.id == Number(sensorConditionForm.values.sensorId))[0]!.units[sensorConditionForm.values.readingType as ReadingType]!}
+              suffix={
+                sensors.filter(
+                  (sensor) =>
+                    sensor.id == Number(sensorConditionForm.values.sensorId),
+                )[0]!.units[
+                  sensorConditionForm.values.readingType as ReadingType
+                ]!
+              }
               {...sensorConditionForm.getInputProps("comparisonValue")}
             />
           </Group>
           <Group justify="center">
-            <Button justify="center" type="submit">Save</Button>
+            <Button justify="center" type="submit">
+              Save
+            </Button>
           </Group>
         </Stack>
         <Space h={"12px"} />

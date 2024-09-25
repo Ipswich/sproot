@@ -13,35 +13,44 @@ export default class OutputAutomationManager {
   }
 
   get automations() {
-    return this.#automations
+    return this.#automations;
   }
   /**
-   * Checks all automations to see if any of them evaluate to true. 
+   * Checks all automations to see if any of them evaluate to true.
    * If more than one does, and their values are different, return null.
    * Otherwise return the value of the automation(s) that evaluate to true.
-   * @param sensorList 
-   * @param outputList 
-   * @param now 
-   * @returns 
+   * @param sensorList
+   * @param outputList
+   * @param now
+   * @returns
    */
-  evaluate(sensorList: SensorList, outputList: OutputList, now: Date = new Date()): { names: string[], value: number | null } {
+  evaluate(
+    sensorList: SensorList,
+    outputList: OutputList,
+    now: Date = new Date(),
+  ): { names: string[]; value: number | null } {
     const evaluatedAutomations = Object.values(this.#automations)
-      .map((automation) => { return { name: automation.name, value: automation.evaluate(sensorList, outputList, now) } })
-      .filter((r) => r.value != null) as { name: string, value: number }[];
+      .map((automation) => {
+        return { name: automation.name, value: automation.evaluate(sensorList, outputList, now) };
+      })
+      .filter((r) => r.value != null) as { name: string; value: number }[];
 
     if (evaluatedAutomations.length > 1) {
       const firstValue = evaluatedAutomations[0]!.value;
       if (evaluatedAutomations.every((automation) => automation.value == firstValue)) {
         //No collisions between these
-        return { names: evaluatedAutomations.map((automation) => automation.name), value: firstValue };
+        return {
+          names: evaluatedAutomations.map((automation) => automation.name),
+          value: firstValue,
+        };
       } else {
         //Collisions between these
-        return { names: evaluatedAutomations.map((automation) => automation.name), value: null}
+        return { names: evaluatedAutomations.map((automation) => automation.name), value: null };
       }
     } else if (evaluatedAutomations.length == 1) {
       return { names: [evaluatedAutomations[0]!.name], value: evaluatedAutomations[0]!.value };
     } else {
-      return { names: [], value: null }
+      return { names: [], value: null };
     }
   }
 
@@ -67,10 +76,10 @@ export default class OutputAutomationManager {
         automation.name,
         automation.value,
         automation.operator,
-        this.#sprootDB
+        this.#sprootDB,
       );
 
-      // And load its conditions 
+      // And load its conditions
       loadPromises.push(this.#automations[automation.automationId]!.conditions.loadAsync());
     }
 

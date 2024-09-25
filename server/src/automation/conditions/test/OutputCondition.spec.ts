@@ -7,7 +7,7 @@ import { OutputCondition } from "../OutputCondition";
 describe("OutputCondition.ts tests", () => {
   describe("evaluateNumber", () => {
     it("should return true or false, depending on the condition and comparator", () => {
-      const outputCondition = new OutputCondition(1, "allOf", 1,"equal", 50);
+      const outputCondition = new OutputCondition(1, "allOf", 1, "equal", 50);
       const outputListMock = sinon.createStubInstance(OutputList);
       const outputMock = sinon.createStubInstance(OutputBase);
       sinon.stub(outputListMock, "outputs").value({ 1: outputMock });

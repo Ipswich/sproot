@@ -1,6 +1,10 @@
 import { ConditionOperator } from "@sproot/sproot-common/dist/automation/ConditionTypes";
 
-export function evaluateNumber(reading: number, operator: ConditionOperator, comparisonValue: number): boolean {
+export function evaluateNumber(
+  reading: number,
+  operator: ConditionOperator,
+  comparisonValue: number,
+): boolean {
   switch (operator) {
     case "equal":
       return reading == comparisonValue;
@@ -17,7 +21,11 @@ export function evaluateNumber(reading: number, operator: ConditionOperator, com
   }
 }
 
-export function evaluateTime(now: Date, startTime?: string | null, endTime?: string | null): boolean {
+export function evaluateTime(
+  now: Date,
+  startTime?: string | null,
+  endTime?: string | null,
+): boolean {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
 
   if (startTime == null && endTime == null) {
@@ -67,4 +75,3 @@ function isBetweenTimeStamp(startTime: string, endTime: string, now: Date): bool
 
   return nowDate >= start && nowDate < end;
 }
-

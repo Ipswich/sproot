@@ -6,9 +6,9 @@ import { IAutomation } from "@sproot/automation/IAutomation";
 
 /**
  * Possible statusCodes: 200, 401, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
 export async function getAsync(request: Request, response: Response) {
   const sprootDB = request.app.get("sprootDB") as SprootDB;
@@ -38,9 +38,9 @@ export async function getAsync(request: Request, response: Response) {
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
 export async function getByIdAsync(request: Request, response: Response) {
   const sprootDB = request.app.get("sprootDB") as SprootDB;
@@ -59,7 +59,9 @@ export async function getByIdAsync(request: Request, response: Response) {
   }
 
   try {
-    const automation = (await sprootDB.getAutomationAsync(parseInt(request.params["automationId"])))[0];
+    const automation = (
+      await sprootDB.getAutomationAsync(parseInt(request.params["automationId"]))
+    )[0];
     if (automation == null) {
       return {
         statusCode: 404,
@@ -94,9 +96,9 @@ export async function getByIdAsync(request: Request, response: Response) {
 
 /**
  * Possible statusCodes: 201, 400, 401, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
 export async function addAsync(request: Request, response: Response) {
   const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
@@ -126,11 +128,18 @@ export async function addAsync(request: Request, response: Response) {
   }
 
   try {
-    const createdAutomationId = await automationDataManager.addAutomationAsync(request.body["name"], request.body["operator"]);
+    const createdAutomationId = await automationDataManager.addAutomationAsync(
+      request.body["name"],
+      request.body["operator"],
+    );
     addAutomationResponse = {
       statusCode: 201,
       content: {
-        data: { id: createdAutomationId, name: request.body["name"], operator: request.body["operator"] } as IAutomation,
+        data: {
+          id: createdAutomationId,
+          name: request.body["name"],
+          operator: request.body["operator"],
+        } as IAutomation,
       },
       ...response.locals["defaultProperties"],
     };
@@ -150,9 +159,9 @@ export async function addAsync(request: Request, response: Response) {
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
 export async function updateAsync(request: Request, response: Response) {
   const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
@@ -172,7 +181,9 @@ export async function updateAsync(request: Request, response: Response) {
   }
 
   try {
-    const automation = (await sprootDB.getAutomationAsync(parseInt(request.params["automationId"])))[0];
+    const automation = (
+      await sprootDB.getAutomationAsync(parseInt(request.params["automationId"]))
+    )[0];
     if (automation == null) {
       updateAutomationResponse = {
         statusCode: 404,
@@ -188,11 +199,15 @@ export async function updateAsync(request: Request, response: Response) {
 
     automation.name = request.body["name"] ?? automation.name;
     automation.operator = request.body["operator"] ?? automation.operator;
-    await automationDataManager.updateAutomationAsync(automation.name, automation.operator, parseInt(request.params["automationId"]));
+    await automationDataManager.updateAutomationAsync(
+      automation.name,
+      automation.operator,
+      parseInt(request.params["automationId"]),
+    );
     updateAutomationResponse = {
       statusCode: 200,
       content: {
-        data: automation
+        data: automation,
       },
       ...response.locals["defaultProperties"],
     };
@@ -212,9 +227,9 @@ export async function updateAsync(request: Request, response: Response) {
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
 export async function deleteAsync(request: Request, response: Response) {
   const automationDatamanager = request.app.get("automationDataManager") as AutomationDataManager;

@@ -31,7 +31,7 @@ class AutomationDataManager {
 
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
     const resultId = await this.#sprootDB.addAutomationAsync(name, operator);
-    return resultId
+    return resultId;
   }
 
   async deleteAutomationAsync(id: number) {
@@ -39,7 +39,7 @@ class AutomationDataManager {
     await this.#outputList.initializeOrRegenerateAsync();
   }
 
-  async updateAutomationAsync(name:string, operator: AutomationOperator, id: number) {
+  async updateAutomationAsync(name: string, operator: AutomationOperator, id: number) {
     await this.#sprootDB.updateAutomationAsync(name, operator, id);
     await this.#outputList.initializeOrRegenerateAsync();
   }
@@ -55,32 +55,69 @@ class AutomationDataManager {
     await this.#outputList.initializeOrRegenerateAsync();
   }
 
-  async addSensorConditionAsync(automationId: number, type: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, sensorId: number, readingType: ReadingType) {
-    const resultId = await this.#sprootDB.addSensorConditionAsync(automationId, type, operator, comparisonValue, sensorId, readingType);
+  async addSensorConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    sensorId: number,
+    readingType: ReadingType,
+  ) {
+    const resultId = await this.#sprootDB.addSensorConditionAsync(
+      automationId,
+      type,
+      operator,
+      comparisonValue,
+      sensorId,
+      readingType,
+    );
     await this.#outputList.initializeOrRegenerateAsync();
-    return resultId
+    return resultId;
   }
 
-  async addOutputConditionAsync(automationId: number, type: ConditionGroupType, operator: ConditionOperator, comparisonValue: number, outputId: number) {
-    const resultId = await this.#sprootDB.addOutputConditionAsync(automationId, type, operator, comparisonValue, outputId);
+  async addOutputConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    operator: ConditionOperator,
+    comparisonValue: number,
+    outputId: number,
+  ) {
+    const resultId = await this.#sprootDB.addOutputConditionAsync(
+      automationId,
+      type,
+      operator,
+      comparisonValue,
+      outputId,
+    );
     await this.#outputList.initializeOrRegenerateAsync();
-    return resultId
+    return resultId;
   }
 
-  async addTimeConditionAsync(automationId: number, type: ConditionGroupType, startTime: string | null | undefined, endTime: string | null | undefined) {
-    const resultId = await this.#sprootDB.addTimeConditionAsync(automationId, type, startTime, endTime);
+  async addTimeConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    startTime: string | null | undefined,
+    endTime: string | null | undefined,
+  ) {
+    const resultId = await this.#sprootDB.addTimeConditionAsync(
+      automationId,
+      type,
+      startTime,
+      endTime,
+    );
     await this.#outputList.initializeOrRegenerateAsync();
-    return resultId
+    return resultId;
   }
 
-  async updateConditionAsync(automationId: number, condition: OutputCondition | SensorCondition | TimeCondition) {
+  async updateConditionAsync(
+    automationId: number,
+    condition: OutputCondition | SensorCondition | TimeCondition,
+  ) {
     if (condition instanceof SensorCondition) {
       await this.#sprootDB.updateSensorConditionAsync(automationId, condition);
-    }
-    else if (condition instanceof OutputCondition) {
+    } else if (condition instanceof OutputCondition) {
       await this.#sprootDB.updateOutputConditionAsync(automationId, condition);
-    }
-    else if (condition instanceof TimeCondition) {
+    } else if (condition instanceof TimeCondition) {
       await this.#sprootDB.updateTimeConditionAsync(automationId, condition);
     } else {
       return;
@@ -102,9 +139,6 @@ class AutomationDataManager {
     await this.#sprootDB.deleteTimeConditionAsync(id);
     await this.#outputList.initializeOrRegenerateAsync();
   }
-
 }
-
-
 
 export { AutomationDataManager };

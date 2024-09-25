@@ -3,7 +3,7 @@ import { OutputList } from "../../outputs/list/OutputList";
 import { evaluateNumber } from "./ConditionUtils";
 import { IOutputCondition } from "@sproot/automation/IOutputCondition";
 
-export class OutputCondition implements IOutputCondition{
+export class OutputCondition implements IOutputCondition {
   id: number;
   groupType: ConditionGroupType;
   outputId: number;
@@ -26,6 +26,8 @@ export class OutputCondition implements IOutputCondition{
 
   evaluate(outputList: OutputList): boolean {
     const outputValue = outputList.outputs[this.outputId]?.value;
-    return outputValue != null ? evaluateNumber(outputValue, this.operator, this.comparisonValue) : false;
+    return outputValue != null
+      ? evaluateNumber(outputValue, this.operator, this.comparisonValue)
+      : false;
   }
 }

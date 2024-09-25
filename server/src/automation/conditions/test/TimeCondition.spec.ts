@@ -4,14 +4,14 @@ import { assert } from "chai";
 
 describe("TimeCondition.ts tests", () => {
   describe("evaluate", () => {
-    it ("should always return true (no startTime or endTime)", () => {
+    it("should always return true (no startTime or endTime)", () => {
       const timeCondition = new TimeCondition(1, "allOf");
       const now = new Date();
       assert.isTrue(timeCondition.evaluate(now));
 
       now.setHours(10);
       assert.isTrue(timeCondition.evaluate(now));
-      
+
       now.setHours(22);
       assert.isTrue(timeCondition.evaluate(now));
     });
@@ -50,7 +50,7 @@ describe("TimeCondition.ts tests", () => {
       assert.isFalse(wrappingTimeCondition.evaluate(now));
     });
 
-    it ("should return true if startTime is now (only startTime)", () => {
+    it("should return true if startTime is now (only startTime)", () => {
       const timeCondition = new TimeCondition(1, "allOf", "10:09");
       const now = new Date();
       now.setHours(10);

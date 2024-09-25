@@ -3,7 +3,10 @@ import { TimeInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
-import { addTimeConditionAsync, getConditionsAsync } from "../../../../requests/requests_v2";
+import {
+  addTimeConditionAsync,
+  getConditionsAsync,
+} from "../../../../requests/requests_v2";
 import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
 import { useState } from "react";
 
@@ -13,17 +16,29 @@ export interface TimeConditionProps {
   groupType: ConditionGroupType;
 }
 
-export default function TimeCondition({ toggleAddNewCondition, automationId, groupType }: TimeConditionProps) {
+export default function TimeCondition({
+  toggleAddNewCondition,
+  automationId,
+  groupType,
+}: TimeConditionProps) {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
   const [timeConditionType, setTimeConditionType] = useState("Between");
   const condtionsQuery = useQuery({
     queryKey: ["conditions"],
     queryFn: () => getConditionsAsync(automationId),
-  })
+  });
 
   const addTimeMutation = useMutation({
-    mutationFn: async (timeCondition: { startTime: string | null, endTime: string | null }) => {
-      await addTimeConditionAsync(automationId, groupType, timeCondition.startTime || null, timeCondition.endTime || null);
+    mutationFn: async (timeCondition: {
+      startTime: string | null;
+      endTime: string | null;
+    }) => {
+      await addTimeConditionAsync(
+        automationId,
+        groupType,
+        timeCondition.startTime || null,
+        timeCondition.endTime || null,
+      );
     },
     onSettled: () => {
       condtionsQuery.refetch();
@@ -77,7 +92,12 @@ export default function TimeCondition({ toggleAddNewCondition, automationId, gro
                 <TimeInput
                   required
                   label="Run at"
-                  onChange={(value) => { timeConditionForm.setFieldValue("startTime", value.currentTarget.value) }}
+                  onChange={(value) => {
+                    timeConditionForm.setFieldValue(
+                      "startTime",
+                      value.currentTarget.value,
+                    );
+                  }}
                 />
               </Fragment>
             )}
@@ -88,20 +108,26 @@ export default function TimeCondition({ toggleAddNewCondition, automationId, gro
                   required
                   value={timeConditionForm.values.startTime}
                   onChange={(value) => {
-                    timeConditionForm.setFieldValue("startTime", value.currentTarget.value)
+                    timeConditionForm.setFieldValue(
+                      "startTime",
+                      value.currentTarget.value,
+                    );
                   }}
                 />
                 <TimeInput
                   label="End time"
                   required
                   value={timeConditionForm.values.endTime}
-                  onChange={(value) => timeConditionForm.setFieldValue("endTime", value.currentTarget.value)}
+                  onChange={(value) =>
+                    timeConditionForm.setFieldValue(
+                      "endTime",
+                      value.currentTarget.value,
+                    )
+                  }
                 />
               </Fragment>
             )}
-            {timeConditionType === "Always" && (
-              <Fragment />
-            )}
+            {timeConditionType === "Always" && <Fragment />}
           </Group>
           <Group justify="center" mt="md">
             <Button type="submit">Save</Button>

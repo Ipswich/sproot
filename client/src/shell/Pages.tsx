@@ -53,14 +53,16 @@ export function getNavbarItems(
     headerText: "Output States",
     href: "/output-states",
     icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
-  }
+  };
 
   pages["automations"] = {
     navLinkText: "Automations",
     headerText: "Automations",
     href: "/automations",
-    icon: (props: TablerIconsProps | undefined) => <IconSettingsAutomation {...props} />,
-  }
+    icon: (props: TablerIconsProps | undefined) => (
+      <IconSettingsAutomation {...props} />
+    ),
+  };
 
   pages["settings"] = {
     navLinkText: "Settings",

@@ -9,7 +9,14 @@ import sinon from "sinon";
 describe("SensorCondition.ts tests", () => {
   describe("evaluate", () => {
     it("should return true or false, depending on the condition and comparator", () => {
-      const sensorCondition = new SensorCondition(1, "allOf", 1, ReadingType.temperature, "equal", 50);
+      const sensorCondition = new SensorCondition(
+        1,
+        "allOf",
+        1,
+        ReadingType.temperature,
+        "equal",
+        50,
+      );
       const sensorListMock = sinon.createStubInstance(SensorList);
       const sensorMock = sinon.createStubInstance(SensorBase);
       sinon.stub(sensorListMock, "sensors").value({ 1: sensorMock });

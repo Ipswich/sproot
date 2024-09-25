@@ -1,5 +1,8 @@
 import { RowDataPacket } from "mysql2";
-import { ConditionGroupType, ConditionOperator } from "@sproot/sproot-common/src/automation/ConditionTypes";
+import {
+  ConditionGroupType,
+  ConditionOperator,
+} from "@sproot/sproot-common/src/automation/ConditionTypes";
 import { ReadingType } from "../sensors/ReadingType";
 
 type SDBSensorCondition = RowDataPacket & {

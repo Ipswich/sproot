@@ -20,13 +20,26 @@ describe("OutputAutomationManager.ts tests", () => {
       const outputListMock = sinon.createStubInstance(OutputList);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 75,
+          operator: "or",
+        } as SDBOutputActionView,
       ]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
       sprootDB.getOutputConditionsAsync.resolves([]);
       sprootDB.getTimeConditionsAsync.onFirstCall().resolves([
-        { id: 1, automationId: 1, groupType: "allOf", startTime: null, endTime: null } as SDBTimeCondition,
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+        } as SDBTimeCondition,
       ]);
 
       await automationManager.loadAsync(1);
@@ -36,29 +49,42 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.value, 75);
     });
 
-      it("should return a result with null (conditions not met)", async () => {
-        const sprootDB = sinon.createStubInstance(SprootDB);
-        const automationManager = new OutputAutomationManager(sprootDB);
-        const sensorListMock = sinon.createStubInstance(SensorList);
-        const outputListMock = sinon.createStubInstance(OutputList);
-        const now = new Date();
-        now.setHours(12);
+    it("should return a result with null (conditions not met)", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB);
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+      const now = new Date();
+      now.setHours(12);
 
-        sprootDB.getAutomationsForOutputAsync.resolves([
-          { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
-        ]);
-  
-        sprootDB.getSensorConditionsAsync.resolves([]);
-        sprootDB.getOutputConditionsAsync.resolves([]);
-        sprootDB.getTimeConditionsAsync.onFirstCall().resolves([
-          { id: 1, automationId: 1, groupType: "allOf", startTime: "13:00", endTime: null } as SDBTimeCondition,
-        ]);
-  
-        await automationManager.loadAsync(1);
-        const result = automationManager.evaluate(sensorListMock, outputListMock, now);
-        assert.equal(result?.names.length, 0);
-        assert.isNull(result.value);
-      })
+      sprootDB.getAutomationsForOutputAsync.resolves([
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 75,
+          operator: "or",
+        } as SDBOutputActionView,
+      ]);
+
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.onFirstCall().resolves([
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: "13:00",
+          endTime: null,
+        } as SDBTimeCondition,
+      ]);
+
+      await automationManager.loadAsync(1);
+      const result = automationManager.evaluate(sensorListMock, outputListMock, now);
+      assert.equal(result?.names.length, 0);
+      assert.isNull(result.value);
+    });
 
     it("should return a value (more than one automation evaluates to true (same values))", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
@@ -67,17 +93,43 @@ describe("OutputAutomationManager.ts tests", () => {
       const outputListMock = sinon.createStubInstance(OutputList);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 50, operator: "or" } as SDBOutputActionView,
-        { automationId: 2, actionId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 50,
+          operator: "or",
+        } as SDBOutputActionView,
+        {
+          automationId: 2,
+          actionId: "2",
+          name: "test2",
+          outputId: "1",
+          value: 50,
+          operator: "and",
+        } as SDBOutputActionView,
       ]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
       sprootDB.getOutputConditionsAsync.resolves([]);
       sprootDB.getTimeConditionsAsync.onFirstCall().resolves([
-        { id: 1, automationId: 1, groupType: "allOf", startTime: null, endTime: null } as SDBTimeCondition,
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+        } as SDBTimeCondition,
       ]);
       sprootDB.getTimeConditionsAsync.onSecondCall().resolves([
-        { id: 2, automationId: 2, groupType: "allOf", startTime: null, endTime: null } as SDBTimeCondition
+        {
+          id: 2,
+          automationId: 2,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+        } as SDBTimeCondition,
       ]);
 
       await automationManager.loadAsync(1);
@@ -88,7 +140,7 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.names[1], "test2");
       assert.equal(result?.value, 50);
     });
-    
+
     it("should return a result with null (more than one automation evaluates to true (different values))", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       const automationManager = new OutputAutomationManager(sprootDB);
@@ -96,17 +148,43 @@ describe("OutputAutomationManager.ts tests", () => {
       const outputListMock = sinon.createStubInstance(OutputList);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
-        { automationId: 2, actionId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 75,
+          operator: "or",
+        } as SDBOutputActionView,
+        {
+          automationId: 2,
+          actionId: "2",
+          name: "test2",
+          outputId: "1",
+          value: 50,
+          operator: "and",
+        } as SDBOutputActionView,
       ]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
       sprootDB.getOutputConditionsAsync.resolves([]);
       sprootDB.getTimeConditionsAsync.onFirstCall().resolves([
-        { id: 1, automationId: 1, groupType: "allOf", startTime: null, endTime: null } as SDBTimeCondition,
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+        } as SDBTimeCondition,
       ]);
       sprootDB.getTimeConditionsAsync.onSecondCall().resolves([
-        { id: 2, automationId: 2, groupType: "allOf", startTime: null, endTime: null } as SDBTimeCondition
+        {
+          id: 2,
+          automationId: 2,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+        } as SDBTimeCondition,
       ]);
 
       await automationManager.loadAsync(1);
@@ -120,31 +198,72 @@ describe("OutputAutomationManager.ts tests", () => {
   });
 
   describe("loadAsync", () => {
-    it('should load all automations from the database', async () => {
+    it("should load all automations from the database", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       const automationManager = new OutputAutomationManager(sprootDB);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
-        { automationId: 2, actionId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 75,
+          operator: "or",
+        } as SDBOutputActionView,
+        {
+          automationId: 2,
+          actionId: "2",
+          name: "test2",
+          outputId: "1",
+          value: 50,
+          operator: "and",
+        } as SDBOutputActionView,
       ]);
 
       // Sensor conditions
       sprootDB.getSensorConditionsAsync.onFirstCall().resolves([
-        { id: 1, automationId: 1, groupType: "allOf", sensorId: 1, readingType: ReadingType.temperature, operator: "equal", comparisonValue: 50 } as SDBSensorCondition
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          sensorId: 1,
+          readingType: ReadingType.temperature,
+          operator: "equal",
+          comparisonValue: 50,
+        } as SDBSensorCondition,
       ]);
       sprootDB.getSensorConditionsAsync.onSecondCall().resolves([]);
 
       // Output conditions
       sprootDB.getOutputConditionsAsync.onFirstCall().resolves([]);
       sprootDB.getOutputConditionsAsync.onSecondCall().resolves([
-        { id: 1, automationId: 2, groupType: "anyOf", outputId: 1, operator: "equal", comparisonValue: 50 } as SDBOutputCondition
+        {
+          id: 1,
+          automationId: 2,
+          groupType: "anyOf",
+          outputId: 1,
+          operator: "equal",
+          comparisonValue: 50,
+        } as SDBOutputCondition,
       ]);
 
       //Time conditions
       sprootDB.getTimeConditionsAsync.onFirstCall().resolves([
-        { id: 1, automationId: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
-        { id: 2, automationId: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: "12:00",
+          endTime: "13:00",
+        } as SDBTimeCondition,
+        {
+          id: 2,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: "12:00",
+          endTime: "13:00",
+        } as SDBTimeCondition,
       ]);
       sprootDB.getTimeConditionsAsync.onSecondCall().resolves([]);
 
@@ -165,4 +284,4 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(automationManager.automations[2]?.conditions.anyOf.length, 1);
     });
   });
-})
+});

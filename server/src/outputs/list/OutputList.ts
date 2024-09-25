@@ -110,7 +110,7 @@ class OutputList {
         allAutomations[output.id] = automations;
       }
     }
-    
+
     return allAutomations;
   }
 
@@ -138,7 +138,7 @@ class OutputList {
       if (key) {
         //Update if it exists
         await this.#outputs[key]!.loadAutomationsAsync();
-        
+
         if (this.#outputs[key]?.name != output.name) {
           outputListChanges = true;
           //Also updates chart data (and series)

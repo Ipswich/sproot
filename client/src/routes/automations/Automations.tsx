@@ -9,8 +9,12 @@ import { IAutomation } from "@sproot/automation/IAutomation";
 import EditAutomationModal from "./EditAutomationModal";
 
 export default function Automations() {
-  const [viewAutomation, setViewAutomation] = useState<IAutomation | null>(null);
-  const [editAutomation, setEditAutomation] = useState<IAutomation | null>(null);
+  const [viewAutomation, setViewAutomation] = useState<IAutomation | null>(
+    null,
+  );
+  const [editAutomation, setEditAutomation] = useState<IAutomation | null>(
+    null,
+  );
 
   const getAutomationsQuery = useQuery({
     queryKey: ["automations"],
@@ -43,7 +47,9 @@ export default function Automations() {
           editAutomation={editAutomation}
           setTargetAutomation={setEditAutomation}
         />
-        {getAutomationsQuery.isLoading ? <div>Loading...</div> :
+        {getAutomationsQuery.isLoading ? (
+          <div>Loading...</div>
+        ) : (
           <Fragment>
             <EditablesTable
               editables={getAutomationsQuery.data ?? []}
@@ -56,15 +62,19 @@ export default function Automations() {
                 viewAutomationModal();
               }}
             />
-            <Button size="xl" w={rem(300)} onClick={() => {
-              setEditAutomation(null);
-              editAutomationModal()
-            }}>
+            <Button
+              size="xl"
+              w={rem(300)}
+              onClick={() => {
+                setEditAutomation(null);
+                editAutomationModal();
+              }}
+            >
               Add New
             </Button>
           </Fragment>
-        }
+        )}
       </Stack>
     </Fragment>
-  )
+  );
 }

@@ -6,16 +6,24 @@ import { SprootDB } from "../../../../database/SprootDB";
 
 /**
  * Possible statusCodes: 200, 401, 503
- * @param request 
- * @param response 
+ * @param request
+ * @param response
  */
-export async function getAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+export async function getAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get("sprootDB") as SprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   try {
-    if (request.query["automationId"] != null && !isNaN(parseInt(request.query["automationId"] as string))) {
-      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(parseInt(request.query["automationId"] as string));
+    if (
+      request.query["automationId"] != null &&
+      !isNaN(parseInt(request.query["automationId"] as string))
+    ) {
+      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(
+        parseInt(request.query["automationId"] as string),
+      );
       automationResponse = {
         statusCode: 200,
         content: {
@@ -50,15 +58,21 @@ export async function getAsync(request: Request, response: Response): Promise<Su
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
-export async function getByIdAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+export async function getByIdAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get("sprootDB") as SprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
 
-  if (request.params["outputActionId"] == null || isNaN(parseInt(request.params["outputActionId"]))) {
+  if (
+    request.params["outputActionId"] == null ||
+    isNaN(parseInt(request.params["outputActionId"]))
+  ) {
     automationResponse = {
       statusCode: 400,
       error: {
@@ -111,11 +125,14 @@ export async function getByIdAsync(request: Request, response: Response): Promis
 
 /**
  * Possible statusCodes: 201, 400, 401, 404, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
-export async function addAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+export async function addAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get("outputList") as OutputList;
   const sprootDB = request.app.get("sprootDB") as SprootDB;
   const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
@@ -124,7 +141,6 @@ export async function addAsync(request: Request, response: Response): Promise<Su
   const automationId = parseInt(request.body["automationId"] ?? "");
   const outputId = parseInt(request.body["outputId"] ?? "");
   const value = parseInt(request.body["value"] ?? "");
-
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -150,7 +166,7 @@ export async function addAsync(request: Request, response: Response): Promise<Su
     if (value < 0 || value > 100) {
       invalidFields.push("Value must be between 0 and 100.");
     }
-    if (!outputList.outputs[outputId]?.isPwm && (value != 0 && value != 100)) {
+    if (!outputList.outputs[outputId]?.isPwm && value != 0 && value != 100) {
       invalidFields.push("Value must be 0 or 100 for PWM outputs.");
     }
   }
@@ -181,7 +197,11 @@ export async function addAsync(request: Request, response: Response): Promise<Su
       return automationResponse;
     }
 
-    const automation = await automationDataManager.addOutputActionAsync(automationId, outputId, value);
+    const automation = await automationDataManager.addOutputActionAsync(
+      automationId,
+      outputId,
+      value,
+    );
     automationResponse = {
       statusCode: 201,
       content: {
@@ -205,16 +225,22 @@ export async function addAsync(request: Request, response: Response): Promise<Su
 
 /**
  * Possible statusCodes: 200, 400, 401, 503
- * @param request 
- * @param response 
- * @returns 
+ * @param request
+ * @param response
+ * @returns
  */
-export async function deleteAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+export async function deleteAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get("sprootDB") as SprootDB;
   const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
   let automationResponse: SuccessResponse | ErrorResponse;
 
-  if (request.params["outputActionId"] == null || isNaN(parseInt(request.params["outputActionId"]))) {
+  if (
+    request.params["outputActionId"] == null ||
+    isNaN(parseInt(request.params["outputActionId"]))
+  ) {
     automationResponse = {
       statusCode: 400,
       error: {

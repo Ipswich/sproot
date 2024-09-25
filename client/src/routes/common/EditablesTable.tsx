@@ -32,9 +32,18 @@ export default function EditablesTable({
       <Table.Tbody>
         {Object.values(editables).map((editable) => (
           <Table.Tr key={editable.id}>
-            <Table.Td align="center" onClick={onNameClick ? () => {onNameClick(editable)} : undefined}>
+            <Table.Td
+              align="center"
+              onClick={
+                onNameClick
+                  ? () => {
+                      onNameClick(editable);
+                    }
+                  : undefined
+              }
+            >
               {editable.name}
-              </Table.Td>
+            </Table.Td>
             <Table.Td align="center">
               <ActionIcon
                 onClick={() => {

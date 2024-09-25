@@ -9,19 +9,19 @@ export class OutputAutomation implements IAutomation {
   name: string;
   value: number;
   operator: AutomationOperator;
-  conditions: Conditions
+  conditions: Conditions;
 
   constructor(
     id: number,
     name: string,
     value: number,
     operator: AutomationOperator,
-    sprootDB: ISprootDB
+    sprootDB: ISprootDB,
   ) {
     this.id = id;
     this.name = name;
     this.value = value;
-    this.operator = operator
+    this.operator = operator;
     this.conditions = new Conditions(this.id, sprootDB);
   }
 

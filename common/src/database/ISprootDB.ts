@@ -8,7 +8,10 @@ import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputStat
 import { SDBAutomation } from "@sproot/sproot-common/src/database/SDBAutomation";
 import { SDBSensorCondition } from "@sproot/sproot-common/src/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/sproot-common/src/database/SDBOutputCondition";
-import { ConditionGroupType, ConditionOperator } from "@sproot/sproot-common/src/automation/ConditionTypes";
+import {
+  ConditionGroupType,
+  ConditionOperator,
+} from "@sproot/sproot-common/src/automation/ConditionTypes";
 import { SDBTimeCondition } from "@sproot/sproot-common/src/database/SDBTimeCondition";
 import { AutomationOperator } from "@sproot/sproot-common/src/automation/IAutomation";
 import { ITimeCondition } from "../automation/ITimeCondition";
@@ -68,7 +71,8 @@ interface ISprootDB {
     operator: ConditionOperator,
     comparisonValue: number,
     sensorId: number,
-    readingType: string): Promise<number>;
+    readingType: string,
+  ): Promise<number>;
   updateSensorConditionAsync(automationId: number, condition: ISensorCondition): Promise<void>;
   deleteSensorConditionAsync(conditionId: number): Promise<void>;
 
@@ -78,7 +82,8 @@ interface ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
-    outputId: number): Promise<number>;
+    outputId: number,
+  ): Promise<number>;
   updateOutputConditionAsync(automationId: number, condition: IOutputCondition): Promise<void>;
   deleteOutputConditionAsync(conditionId: number): Promise<void>;
 
@@ -106,7 +111,11 @@ class MockSprootDB implements ISprootDB {
   async getOutputActionAsync(_outputActionId: number): Promise<SDBOutputAction[]> {
     return [];
   }
-  async addOutputActionAsync(_automationId: number, _outputId: number, _value: number): Promise<number> {
+  async addOutputActionAsync(
+    _automationId: number,
+    _outputId: number,
+    _value: number,
+  ): Promise<number> {
     return 0;
   }
   async deleteOutputActionAsync(_outputActionId: number): Promise<void> {
@@ -118,9 +127,14 @@ class MockSprootDB implements ISprootDB {
   }
 
   async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {
-    return []
+    return [];
   }
-  async addTimeConditionAsync(_automationId: number, _type: ConditionGroupType, _startTime: string | null, _endTime: string | null): Promise<number> {
+  async addTimeConditionAsync(
+    _automationId: number,
+    _type: ConditionGroupType,
+    _startTime: string | null,
+    _endTime: string | null,
+  ): Promise<number> {
     return 1;
   }
   async updateTimeConditionAsync(_automationId: number, _condition: ITimeCondition): Promise<void> {
@@ -129,10 +143,16 @@ class MockSprootDB implements ISprootDB {
   async deleteTimeConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
-  async deleteSensorAutomationConditionsExceptAsync(_automationId: number, _exceptConditionIds: number[]): Promise<void> {
+  async deleteSensorAutomationConditionsExceptAsync(
+    _automationId: number,
+    _exceptConditionIds: number[],
+  ): Promise<void> {
     return;
   }
-  async deleteOutputAutomationConditionsExceptAsync(_automationId: number, _exceptConditionIds: number[]): Promise<void> {
+  async deleteOutputAutomationConditionsExceptAsync(
+    _automationId: number,
+    _exceptConditionIds: number[],
+  ): Promise<void> {
     return;
   }
   async getAutomationsAsync(): Promise<SDBAutomation[]> {
@@ -144,15 +164,17 @@ class MockSprootDB implements ISprootDB {
   async addAutomationAsync(_name: string, _operator: AutomationOperator): Promise<number> {
     return 0;
   }
-  async updateAutomationAsync(_name: string, _operator: AutomationOperator, _id: number): Promise<void> {
+  async updateAutomationAsync(
+    _name: string,
+    _operator: AutomationOperator,
+    _id: number,
+  ): Promise<void> {
     return;
   }
   async deleteAutomationAsync(_automationId: number): Promise<void> {
     return;
   }
-  async getSensorConditionsAsync(
-    _automationId: number,
-  ): Promise<SDBSensorCondition[]> {
+  async getSensorConditionsAsync(_automationId: number): Promise<SDBSensorCondition[]> {
     return [];
   }
   async addSensorConditionAsync(
@@ -174,9 +196,7 @@ class MockSprootDB implements ISprootDB {
   async deleteSensorConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
-  async getOutputConditionsAsync(
-    _automationId: number,
-  ): Promise<SDBOutputCondition[]> {
+  async getOutputConditionsAsync(_automationId: number): Promise<SDBOutputCondition[]> {
     return [];
   }
   async addOutputConditionAsync(

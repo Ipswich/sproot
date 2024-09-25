@@ -48,4 +48,4 @@ router.delete("/:automationId", async (req: Request, res: Response) => {
 
 conditionsRouter(router);
 
-export default router
+export default router;

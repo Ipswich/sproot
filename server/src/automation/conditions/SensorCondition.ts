@@ -4,7 +4,7 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { evaluateNumber } from "./ConditionUtils";
 import { ISensorCondition } from "@sproot/automation/ISensorCondition";
 
-export class SensorCondition implements ISensorCondition{
+export class SensorCondition implements ISensorCondition {
   id: number;
   groupType: ConditionGroupType;
   sensorId: number;
@@ -30,6 +30,8 @@ export class SensorCondition implements ISensorCondition{
 
   evaluate(sensorList: SensorList): boolean {
     const reading = sensorList.sensors[this.sensorId]?.lastReading[this.readingType];
-    return reading != null ? evaluateNumber(parseFloat(reading), this.operator, this.comparisonValue) : false;
+    return reading != null
+      ? evaluateNumber(parseFloat(reading), this.operator, this.comparisonValue)
+      : false;
   }
 }

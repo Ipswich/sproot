@@ -2,24 +2,45 @@ import { Button, Group, Select, Slider, Stack, Space } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
-import { addOutputConditionAsync, getConditionsAsync } from "../../../../requests/requests_v2";
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
+import {
+  addOutputConditionAsync,
+  getConditionsAsync,
+} from "../../../../requests/requests_v2";
+import {
+  ConditionGroupType,
+  ConditionOperator,
+} from "@sproot/automation/ConditionTypes";
 
 export interface OutputConditionProps {
   toggleAddNewCondition: () => void;
   automationId: number;
   groupType: ConditionGroupType;
-  outputs: { id: number, name: string }[];
+  outputs: { id: number; name: string }[];
 }
 
-export default function OutputCondition({ toggleAddNewCondition, automationId, groupType, outputs }: OutputConditionProps) {
+export default function OutputCondition({
+  toggleAddNewCondition,
+  automationId,
+  groupType,
+  outputs,
+}: OutputConditionProps) {
   const condtionsQuery = useQuery({
     queryKey: ["conditions"],
     queryFn: () => getConditionsAsync(automationId),
-  })
+  });
   const addOutputMutation = useMutation({
-    mutationFn: async (outputCondition: { operator: ConditionOperator, comparisonValue: number, outputId: string }) => {
-      await addOutputConditionAsync(automationId, groupType, outputCondition.operator, outputCondition.comparisonValue, outputCondition.outputId);
+    mutationFn: async (outputCondition: {
+      operator: ConditionOperator;
+      comparisonValue: number;
+      outputId: string;
+    }) => {
+      await addOutputConditionAsync(
+        automationId,
+        groupType,
+        outputCondition.operator,
+        outputCondition.comparisonValue,
+        outputCondition.outputId,
+      );
     },
     onSettled: () => {
       condtionsQuery.refetch();
@@ -39,7 +60,14 @@ export default function OutputCondition({ toggleAddNewCondition, automationId, g
           ? null
           : "Output Id must be provided",
       operator: (value) =>
-        ["less", "lessOrEqual", "greater", "greaterOrEqual", "equal", "notEqual"].includes(value)
+        [
+          "less",
+          "lessOrEqual",
+          "greater",
+          "greaterOrEqual",
+          "equal",
+          "notEqual",
+        ].includes(value)
           ? null
           : "Invalid operator",
       comparisonValue: (value) =>
@@ -58,14 +86,15 @@ export default function OutputCondition({ toggleAddNewCondition, automationId, g
           toggleAddNewCondition();
         })}
       >
-
         <Stack>
           <Group>
             <Select
               flex={1}
               required
               allowDeselect={false}
-              data={outputs.map((output) => { return { label: output.name, value: String(output.id) } })}
+              data={outputs.map((output) => {
+                return { label: output.name, value: String(output.id) };
+              })}
               {...outputConditionForm.getInputProps("outputId")}
             />
             is
@@ -73,45 +102,47 @@ export default function OutputCondition({ toggleAddNewCondition, automationId, g
               w={"30%"}
               required
               allowDeselect={false}
-              data={[{
-                label: "<",
-                value: "less",
-              },
-              {
-                label: "<=",
-                value: "lessOrEqual",
-              },
-              {
-                label: ">",
-                value: "greater",
-              },
-              {
-                label: ">=",
-                value: "greaterOrEqual",
-              },
-              {
-                label: "=",
-                value: "equal",
-              },
-              {
-                label: "!=",
-                value: "notEqual",
-              }]}
+              data={[
+                {
+                  label: "<",
+                  value: "less",
+                },
+                {
+                  label: "<=",
+                  value: "lessOrEqual",
+                },
+                {
+                  label: ">",
+                  value: "greater",
+                },
+                {
+                  label: ">=",
+                  value: "greaterOrEqual",
+                },
+                {
+                  label: "=",
+                  value: "equal",
+                },
+                {
+                  label: "!=",
+                  value: "notEqual",
+                },
+              ]}
               {...outputConditionForm.getInputProps("operator")}
             />
           </Group>
-            <Slider
-              min={0}
-              max={100}
-              step={1}
-              label={(value) => `${value}%`}
-              marks={[
-                { value: 20, label: "20%" },
-                { value: 50, label: "50%" },
-                { value: 80, label: "80%" }
-              ]}
-              {...outputConditionForm.getInputProps("comparisonValue")}
-            />
+          <Slider
+            min={0}
+            max={100}
+            step={1}
+            label={(value) => `${value}%`}
+            marks={[
+              { value: 20, label: "20%" },
+              { value: 50, label: "50%" },
+              { value: 80, label: "80%" },
+            ]}
+            {...outputConditionForm.getInputProps("comparisonValue")}
+          />
           <Group justify="center" mt="md">
             <Button type="submit">Save</Button>
           </Group>

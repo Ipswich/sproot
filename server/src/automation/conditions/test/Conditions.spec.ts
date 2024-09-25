@@ -45,40 +45,96 @@ describe("Conditions.ts tests", () => {
       sprootDB.getTimeConditionsAsync.resolves(timeConditions);
 
       // Add some sensor Conditions
-      sensorConditions.push({ automationId: 1, id: 1, groupType: "allOf", operator: "equal", comparisonValue: 50, sensorId: 1, readingType: ReadingType.temperature } as SDBSensorCondition);
+      sensorConditions.push({
+        automationId: 1,
+        id: 1,
+        groupType: "allOf",
+        operator: "equal",
+        comparisonValue: 50,
+        sensorId: 1,
+        readingType: ReadingType.temperature,
+      } as SDBSensorCondition);
       await conditions.loadAsync();
       assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
-      sensorConditions.push({ automationId: 1, id: 2, groupType: "allOf", operator: "greater", comparisonValue: 50, sensorId: 1, readingType: ReadingType.pressure } as SDBSensorCondition);
+      sensorConditions.push({
+        automationId: 1,
+        id: 2,
+        groupType: "allOf",
+        operator: "greater",
+        comparisonValue: 50,
+        sensorId: 1,
+        readingType: ReadingType.pressure,
+      } as SDBSensorCondition);
       await conditions.loadAsync();
       assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
       //This one is false, but the previous one is true
-      sensorConditions.push({ automationId: 1, id: 3, groupType: "allOf", operator: "less", comparisonValue: 48, sensorId: 1, readingType: ReadingType.humidity } as SDBSensorCondition);
+      sensorConditions.push({
+        automationId: 1,
+        id: 3,
+        groupType: "allOf",
+        operator: "less",
+        comparisonValue: 48,
+        sensorId: 1,
+        readingType: ReadingType.humidity,
+      } as SDBSensorCondition);
       await conditions.loadAsync();
       assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
-      
+
       // Clean up that last one
       sensorConditions.pop();
       sprootDB.deleteSensorConditionAsync.resolves();
-      
+
       // Add some output Conditions
-      outputConditions.push({ automationId: 1, id: 1, groupType: "anyOf", operator: "greaterOrEqual", comparisonValue: 50, outputId: 1 } as SDBOutputCondition);
+      outputConditions.push({
+        automationId: 1,
+        id: 1,
+        groupType: "anyOf",
+        operator: "greaterOrEqual",
+        comparisonValue: 50,
+        outputId: 1,
+      } as SDBOutputCondition);
       await conditions.loadAsync();
       assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
       //This one is false, but the previous one is true
-      outputConditions.push({ automationId: 1, id: 2, groupType: "anyOf", operator: "notEqual", comparisonValue: 50, outputId: 1 } as SDBOutputCondition);
+      outputConditions.push({
+        automationId: 1,
+        id: 2,
+        groupType: "anyOf",
+        operator: "notEqual",
+        comparisonValue: 50,
+        outputId: 1,
+      } as SDBOutputCondition);
       await conditions.loadAsync();
       assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
-      
+
       // Add some time Conditions
-      timeConditions.push({ automationId: 1, id: 1, groupType: "oneOf", startTime:"12:00", endTime:null } as SDBTimeCondition);
+      timeConditions.push({
+        automationId: 1,
+        id: 1,
+        groupType: "oneOf",
+        startTime: "12:00",
+        endTime: null,
+      } as SDBTimeCondition);
       await conditions.loadAsync();
       assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
       //This one is false, but the previous one is true
-      timeConditions.push({ automationId: 1, id: 2, groupType: "oneOf", startTime: "13:00", endTime: "14:00" } as SDBTimeCondition);
+      timeConditions.push({
+        automationId: 1,
+        id: 2,
+        groupType: "oneOf",
+        startTime: "13:00",
+        endTime: "14:00",
+      } as SDBTimeCondition);
       await conditions.loadAsync();
       assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
       //This one is also true (and should make this all return false)
-      timeConditions.push({ automationId: 1, id: 3, groupType: "oneOf", startTime: "16:00", endTime: "13:00" } as SDBTimeCondition);
+      timeConditions.push({
+        automationId: 1,
+        id: 3,
+        groupType: "oneOf",
+        startTime: "16:00",
+        endTime: "13:00",
+      } as SDBTimeCondition);
       await conditions.loadAsync();
       assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
 
@@ -285,14 +341,27 @@ describe("Conditions.ts tests", () => {
     it("should load all conditions from the database", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       sprootDB.getSensorConditionsAsync.resolves([
-        { id: 1, groupType: "allOf", sensorId: 1, readingType: ReadingType.temperature, operator: "equal", comparisonValue: 50 } as SDBSensorCondition
+        {
+          id: 1,
+          groupType: "allOf",
+          sensorId: 1,
+          readingType: ReadingType.temperature,
+          operator: "equal",
+          comparisonValue: 50,
+        } as SDBSensorCondition,
       ]);
       sprootDB.getOutputConditionsAsync.resolves([
-        { id: 1, groupType: "anyOf", outputId: 1, operator: "equal", comparisonValue: 50 } as SDBOutputCondition
+        {
+          id: 1,
+          groupType: "anyOf",
+          outputId: 1,
+          operator: "equal",
+          comparisonValue: 50,
+        } as SDBOutputCondition,
       ]);
       sprootDB.getTimeConditionsAsync.resolves([
         { id: 1, groupType: "oneOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
-        { id: 2, groupType: "anyOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition
+        { id: 2, groupType: "anyOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
       ]);
 
       const conditions = new Conditions(1, sprootDB);
@@ -302,7 +371,10 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.id, 1);
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.groupType, "allOf");
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.sensorId, 1);
-      assert.equal(conditions.groupedConditions.sensor.allOf[0]?.readingType, ReadingType.temperature);
+      assert.equal(
+        conditions.groupedConditions.sensor.allOf[0]?.readingType,
+        ReadingType.temperature,
+      );
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.operator, "equal");
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.comparisonValue, 50);
 

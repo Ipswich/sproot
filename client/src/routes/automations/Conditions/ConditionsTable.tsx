@@ -1,6 +1,11 @@
 import { Fragment } from "react/jsx-runtime";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { deleteOutputConditionAsync, deleteSensorConditionAsync, deleteTimeConditionAsync, getConditionsAsync } from "../../../requests/requests_v2";
+import {
+  deleteOutputConditionAsync,
+  deleteSensorConditionAsync,
+  deleteTimeConditionAsync,
+  getConditionsAsync,
+} from "../../../requests/requests_v2";
 import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
@@ -17,12 +22,16 @@ export interface ConditionsTableProps {
   readOnly?: boolean;
 }
 
-export default function ConditionsTable({ automationId, readOnly }: ConditionsTableProps) {
-  const [addNewConditionOpened, { toggle: toggleAddNewCondition }] = useDisclosure(false);
+export default function ConditionsTable({
+  automationId,
+  readOnly,
+}: ConditionsTableProps) {
+  const [addNewConditionOpened, { toggle: toggleAddNewCondition }] =
+    useDisclosure(false);
   const conditionsQueryFn = useQuery({
     queryKey: ["conditions"],
     queryFn: () => getConditionsAsync(automationId),
-  })
+  });
 
   const deleteSensorConditionMutation = useMutation({
     mutationFn: async (conditionId: number) => {
@@ -51,80 +60,134 @@ export default function ConditionsTable({ automationId, readOnly }: ConditionsTa
     },
   });
 
-
   //local helper function
-  function mapToDeleteConditionMutationAsync(condition: SDBSensorCondition | SDBOutputCondition | SDBTimeCondition): (id: number) => Promise<void> {
-    if ('sensorId' in condition && 'readingType' in condition) {
+  function mapToDeleteConditionMutationAsync(
+    condition: SDBSensorCondition | SDBOutputCondition | SDBTimeCondition,
+  ): (id: number) => Promise<void> {
+    if ("sensorId" in condition && "readingType" in condition) {
       return async (conditionId: number) => {
         await deleteSensorConditionMutation.mutateAsync(conditionId);
       };
-    } else if ('outputId' in condition) {
+    } else if ("outputId" in condition) {
       return async (conditionId: number) => {
         await deleteOutputConditionMutation.mutateAsync(conditionId);
       };
-    } else if ('startTime' in condition && 'endTime' in condition) {
+    } else if ("startTime" in condition && "endTime" in condition) {
       return async (conditionId: number) => {
         await deleteTimeConditionMutation.mutateAsync(conditionId);
       };
     }
-    return async () => { };
+    return async () => {};
   }
 
   useEffect(() => {
     conditionsQueryFn.refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [automationId])
-  const allOfConditions = Object.values(conditionsQueryFn.data ?? {}).map((conditionType) => conditionType.allOf).flat();
-  const anyOfConditions = Object.values(conditionsQueryFn.data ?? {}).map((conditionType) => conditionType.anyOf).flat();
-  const oneOfConditions = Object.values(conditionsQueryFn.data ?? {}).map((conditionType) => conditionType.oneOf).flat();
+  }, [automationId]);
+  const allOfConditions = Object.values(conditionsQueryFn.data ?? {})
+    .map((conditionType) => conditionType.allOf)
+    .flat();
+  const anyOfConditions = Object.values(conditionsQueryFn.data ?? {})
+    .map((conditionType) => conditionType.anyOf)
+    .flat();
+  const oneOfConditions = Object.values(conditionsQueryFn.data ?? {})
+    .map((conditionType) => conditionType.oneOf)
+    .flat();
   return (
     <Fragment>
-      {conditionsQueryFn.isLoading ? 
-      <Fragment>Loading...</Fragment>
-        : <Fragment>
-          {allOfConditions.length != 0 &&
+      {conditionsQueryFn.isLoading ? (
+        <Fragment>Loading...</Fragment>
+      ) : (
+        <Fragment>
+          {allOfConditions.length != 0 && (
             <Fragment>
               <Title order={6}>All Of</Title>
-              <DeletablesTable deletables={allOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
-            </Fragment>}
-          {anyOfConditions.length != 0 &&
+              <DeletablesTable
+                deletables={allOfConditions.map((condition) => {
+                  return {
+                    displayLabel: mapToType(condition),
+                    id: condition.id,
+                    deleteFn: mapToDeleteConditionMutationAsync(condition),
+                  };
+                })}
+                readOnly={readOnly ?? false}
+              />
+            </Fragment>
+          )}
+          {anyOfConditions.length != 0 && (
             <Fragment>
               <Title order={6}>Any Of</Title>
-              <DeletablesTable deletables={anyOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
-            </Fragment>}
-          {oneOfConditions.length != 0 &&
+              <DeletablesTable
+                deletables={anyOfConditions.map((condition) => {
+                  return {
+                    displayLabel: mapToType(condition),
+                    id: condition.id,
+                    deleteFn: mapToDeleteConditionMutationAsync(condition),
+                  };
+                })}
+                readOnly={readOnly ?? false}
+              />
+            </Fragment>
+          )}
+          {oneOfConditions.length != 0 && (
             <Fragment>
               <Title order={6}>One Of</Title>
-              <DeletablesTable deletables={oneOfConditions.map((condition) => { return { displayLabel: mapToType(condition), id: condition.id, deleteFn: mapToDeleteConditionMutationAsync(condition) } })} readOnly={readOnly ?? false} />
-            </Fragment>}
-          {allOfConditions.length == 0 && anyOfConditions.length == 0 && oneOfConditions.length == 0 && readOnly &&
-            <div>None</div>}
-          {readOnly ? null
-            : <Fragment>
+              <DeletablesTable
+                deletables={oneOfConditions.map((condition) => {
+                  return {
+                    displayLabel: mapToType(condition),
+                    id: condition.id,
+                    deleteFn: mapToDeleteConditionMutationAsync(condition),
+                  };
+                })}
+                readOnly={readOnly ?? false}
+              />
+            </Fragment>
+          )}
+          {allOfConditions.length == 0 &&
+            anyOfConditions.length == 0 &&
+            oneOfConditions.length == 0 &&
+            readOnly && <div>None</div>}
+          {readOnly ? null : (
+            <Fragment>
               <Group justify="center">
-                <Button size="sm" w={"100%"} color="green" onClick={() => { toggleAddNewCondition() }}>Add Condition</Button>
+                <Button
+                  size="sm"
+                  w={"100%"}
+                  color="green"
+                  onClick={() => {
+                    toggleAddNewCondition();
+                  }}
+                >
+                  Add Condition
+                </Button>
               </Group>
               <Collapse in={addNewConditionOpened} transitionDuration={300}>
                 <Space h={12} />
-                <NewConditionWidget automationId={automationId} toggleAddNewCondition={toggleAddNewCondition} />
+                <NewConditionWidget
+                  automationId={automationId}
+                  toggleAddNewCondition={toggleAddNewCondition}
+                />
               </Collapse>
             </Fragment>
-          }
+          )}
         </Fragment>
-      }
+      )}
     </Fragment>
-  )
+  );
 }
 
-function mapToType(condition: SDBSensorCondition | SDBOutputCondition | SDBTimeCondition): ReactNode {
-  if ('sensorId' in condition && 'readingType' in condition) {
-    return <SensorConditionRow {...condition as SDBSensorCondition} />;
-  } else if ('outputId' in condition) {
-    return <OutputConditionRow {...condition as SDBOutputCondition} />;
-  } else if ('startTime' in condition && 'endTime' in condition) {
-    return <TimeConditionRow {...condition as SDBTimeCondition} />;
+function mapToType(
+  condition: SDBSensorCondition | SDBOutputCondition | SDBTimeCondition,
+): ReactNode {
+  if ("sensorId" in condition && "readingType" in condition) {
+    return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
+  } else if ("outputId" in condition) {
+    return <OutputConditionRow {...(condition as SDBOutputCondition)} />;
+  } else if ("startTime" in condition && "endTime" in condition) {
+    return <TimeConditionRow {...(condition as SDBTimeCondition)} />;
   }
-  return <></>
+  return <></>;
 }
 
 function mapOperatorToText(operator: ConditionOperator) {
@@ -147,23 +210,34 @@ function mapOperatorToText(operator: ConditionOperator) {
 function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
   return (
     <Group>
-      {sensorCondition.sensorName} is {mapOperatorToText(sensorCondition.operator)} {String(sensorCondition.comparisonValue)}{Units[sensorCondition.readingType]}
+      {sensorCondition.sensorName} is{" "}
+      {mapOperatorToText(sensorCondition.operator)}{" "}
+      {String(sensorCondition.comparisonValue)}
+      {Units[sensorCondition.readingType]}
     </Group>
-  )
+  );
 }
 
 function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
   return (
-    <Group>{outputCondition.outputName} is {mapOperatorToText(outputCondition.operator)} {String(outputCondition.comparisonValue)}%</Group>
-  )
+    <Group>
+      {outputCondition.outputName} is{" "}
+      {mapOperatorToText(outputCondition.operator)}{" "}
+      {String(outputCondition.comparisonValue)}%
+    </Group>
+  );
 }
 
 function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
   return (
     <Group>
       {!timeCondition.startTime && !timeCondition.endTime && "Always"}
-      {timeCondition.startTime && !timeCondition.endTime && `Time is ${timeCondition.startTime}`}
-      {timeCondition.startTime && timeCondition.endTime && `Time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
+      {timeCondition.startTime &&
+        !timeCondition.endTime &&
+        `Time is ${timeCondition.startTime}`}
+      {timeCondition.startTime &&
+        timeCondition.endTime &&
+        `Time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
     </Group>
-  )
+  );
 }
