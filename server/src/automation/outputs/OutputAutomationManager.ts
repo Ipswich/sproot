@@ -16,17 +16,31 @@ export default class OutputAutomationManager {
     return this.#automations
   }
   /**
-   * If more than one automation evaluates to true, does nothing.
+   * Checks all automations to see if any of them evaluate to true. 
+   * If more than one does, and their values are different, return null.
+   * Otherwise return the value of the automation(s) that evaluate to true.
    * @param sensorList 
    * @param outputList 
    * @param now 
    * @returns 
    */
-  evaluate(sensorList: SensorList, outputList: OutputList, now: Date = new Date()): number | null {
-    const values = Object.values(this.#automations)
-      .map((automation) => automation.evaluate(sensorList, outputList, now))
-      .filter((r) => r != null);
-    return values.length == 1 && values[0] != null ? values[0] : null;
+  evaluate(sensorList: SensorList, outputList: OutputList, now: Date = new Date()): { names: string[], value: number } | null {
+    const evaluatedAutomations = Object.values(this.#automations)
+      .map((automation) => { return { name: automation.name, value: automation.evaluate(sensorList, outputList, now) } })
+      .filter((r) => r.value != null) as { name: string, value: number }[];
+
+    if (evaluatedAutomations.length > 1) {
+      const firstValue = evaluatedAutomations[0]!.value;
+      if (evaluatedAutomations.every((automation) => automation.value == firstValue)) {
+        return { names: evaluatedAutomations.map((automation) => automation.name), value: firstValue };
+      } else {
+        return null;
+      }
+    } else if (evaluatedAutomations.length == 1) {
+      return { names: [evaluatedAutomations[0]!.name], value: evaluatedAutomations[0]!.value };
+    } else {
+      return null;
+    }
   }
 
   // TODO: Implement this

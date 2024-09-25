@@ -20,7 +20,7 @@ describe("OutputAutomationManager.ts tests", () => {
       const outputListMock = sinon.createStubInstance(OutputList);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
+        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
       ]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
@@ -30,7 +30,10 @@ describe("OutputAutomationManager.ts tests", () => {
       ]);
 
       await automationManager.loadAsync(1);
-      assert.equal(automationManager.evaluate(sensorListMock, outputListMock), 75);
+      const result = automationManager.evaluate(sensorListMock, outputListMock);
+      assert.equal(result?.names.length, 1);
+      assert.equal(result?.names[0], "test");
+      assert.equal(result?.value, 75);
     });
 
       it("should return null (conditions not met)", async () => {
@@ -42,7 +45,7 @@ describe("OutputAutomationManager.ts tests", () => {
         now.setHours(12);
 
         sprootDB.getAutomationsForOutputAsync.resolves([
-          { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
+          { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
         ]);
   
         sprootDB.getSensorConditionsAsync.resolves([]);
@@ -55,15 +58,44 @@ describe("OutputAutomationManager.ts tests", () => {
         assert.isNull(automationManager.evaluate(sensorListMock, outputListMock, now));
       })
 
-    it("should return null (more than one automation evaluates to true)", async () => {
+    it("should return a value (more than one automation evaluates to true (same values))", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       const automationManager = new OutputAutomationManager(sprootDB);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
-        { automationId: 2, outputAutomationId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
+        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 50, operator: "or" } as SDBOutputActionView,
+        { automationId: 2, actionId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
+      ]);
+
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.onFirstCall().resolves([
+        { id: 1, automationId: 1, groupType: "allOf", startTime: null, endTime: null } as SDBTimeCondition,
+      ]);
+      sprootDB.getTimeConditionsAsync.onSecondCall().resolves([
+        { id: 2, automationId: 2, groupType: "allOf", startTime: null, endTime: null } as SDBTimeCondition
+      ]);
+
+      await automationManager.loadAsync(1);
+
+      const result = automationManager.evaluate(sensorListMock, outputListMock);
+      assert.equal(result?.names.length, 2);
+      assert.equal(result?.names[0], "test");
+      assert.equal(result?.names[1], "test2");
+      assert.equal(result?.value, 50);
+    });
+    
+    it("should return null (more than one automation evaluates to true (different values))", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB);
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+
+      sprootDB.getAutomationsForOutputAsync.resolves([
+        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
+        { automationId: 2, actionId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
       ]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
@@ -87,8 +119,8 @@ describe("OutputAutomationManager.ts tests", () => {
       const automationManager = new OutputAutomationManager(sprootDB);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
-        { automationId: 1, outputAutomationId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
-        { automationId: 2, outputAutomationId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
+        { automationId: 1, actionId: "1", name: "test", outputId: "1", value: 75, operator: "or" } as SDBOutputActionView,
+        { automationId: 2, actionId: "2", name: "test2", outputId: "1", value: 50, operator: "and" } as SDBOutputActionView
       ]);
 
       // Sensor conditions

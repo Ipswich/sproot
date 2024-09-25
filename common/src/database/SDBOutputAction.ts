@@ -9,7 +9,7 @@ type SDBOutputAction = RowDataPacket & {
 }
 
 type SDBOutputActionView = SDBAutomation & {
-  outputAutomationId: string;
+  actionId: string;
   outputId: string;
   value: number;
 };

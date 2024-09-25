@@ -153,7 +153,7 @@ export abstract class OutputBase implements IOutputBase {
     if (result != null) {
       this.state.setNewState(
         {
-          value: result,
+          value: result.value,
           controlMode: ControlMode.automatic,
           logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
         } as SDBOutputState,
