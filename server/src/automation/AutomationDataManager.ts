@@ -21,14 +21,6 @@ class AutomationDataManager {
     this.#outputList = outputList;
   }
 
-  // TODO: Implement this
-  // It'd be good to have something that can check if there's a collision between different automations.
-  // At this point, we just return null if there's more than one automation that evaluates to true to keep
-  // things predictable, but that doesn't feel like the best solution.
-  // checkForCollisions(): Record<number, Automation> {
-  //   return {};
-  // }
-
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
     const resultId = await this.#sprootDB.addAutomationAsync(name, operator);
     return resultId;
@@ -36,23 +28,12 @@ class AutomationDataManager {
 
   async deleteAutomationAsync(id: number) {
     await this.#sprootDB.deleteAutomationAsync(id);
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
   }
 
   async updateAutomationAsync(name: string, operator: AutomationOperator, id: number) {
     await this.#sprootDB.updateAutomationAsync(name, operator, id);
-    await this.#outputList.initializeOrRegenerateAsync();
-  }
-
-  async addOutputActionAsync(automationId: number, outputId: number, value: number) {
-    const result = this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
-    await this.#outputList.initializeOrRegenerateAsync();
-    return result;
-  }
-
-  async deleteOutputActionAsync(outputActionId: number) {
-    await this.#sprootDB.deleteOutputActionAsync(outputActionId);
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
   }
 
   async addSensorConditionAsync(
@@ -71,7 +52,7 @@ class AutomationDataManager {
       sensorId,
       readingType,
     );
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
     return resultId;
   }
 
@@ -89,7 +70,7 @@ class AutomationDataManager {
       comparisonValue,
       outputId,
     );
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
     return resultId;
   }
 
@@ -105,7 +86,7 @@ class AutomationDataManager {
       startTime,
       endTime,
     );
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
     return resultId;
   }
 
@@ -122,21 +103,37 @@ class AutomationDataManager {
     } else {
       return;
     }
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
   }
 
   async deleteSensorConditionAsync(id: number) {
     await this.#sprootDB.deleteSensorConditionAsync(id);
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
   }
 
   async deleteOutputConditionAsync(id: number) {
     await this.#sprootDB.deleteOutputConditionAsync(id);
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#postAutomationChangeFunctionAsync()
   }
 
   async deleteTimeConditionAsync(id: number) {
     await this.#sprootDB.deleteTimeConditionAsync(id);
+    await this.#postAutomationChangeFunctionAsync()
+  }
+  
+  // Output actions
+  async addOutputActionAsync(automationId: number, outputId: number, value: number) {
+    const result = this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
+    await this.#outputList.initializeOrRegenerateAsync();
+    return result;
+  }
+
+  async deleteOutputActionAsync(outputActionId: number) {
+    await this.#sprootDB.deleteOutputActionAsync(outputActionId);
+    await this.#outputList.initializeOrRegenerateAsync();
+  }
+
+  async #postAutomationChangeFunctionAsync() {
     await this.#outputList.initializeOrRegenerateAsync();
   }
 }

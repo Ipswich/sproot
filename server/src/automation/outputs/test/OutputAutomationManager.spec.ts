@@ -49,6 +49,67 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.value, 75);
     });
 
+    it("should return the last result (not runnable)", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB);
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+
+      const now = new Date();
+
+      sprootDB.getAutomationsForOutputAsync.resolves([
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 75,
+          operator: "or",
+        } as SDBOutputActionView,
+      ]);
+
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+        } as SDBTimeCondition,
+      ]);
+
+      await automationManager.loadAsync(1);
+      let result = automationManager.evaluate(sensorListMock, outputListMock, now);
+      assert.equal(result?.names.length, 1);
+      assert.equal(result?.names[0], "test");
+      assert.equal(result?.value, 75);
+      
+      //New value, same time, not runnable
+      sprootDB.getAutomationsForOutputAsync.resolves([
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 25,
+          operator: "or",
+        } as SDBOutputActionView,
+      ]);
+      await automationManager.loadAsync(1);
+      result = automationManager.evaluate(sensorListMock, outputListMock, now);
+      assert.equal(result?.names.length, 1);
+      assert.equal(result?.names[0], "test");
+      assert.equal(result?.value, 75);
+
+      //Add some time, this should make the automation runnable again
+      result = automationManager.evaluate(sensorListMock, outputListMock, new Date(now.getTime() + 60000));
+      assert.equal(result?.names.length, 1);
+      assert.equal(result?.names[0], "test");
+      assert.equal(result?.value, 25);
+    });
+
     it("should return a result with null (conditions not met)", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       const automationManager = new OutputAutomationManager(sprootDB);

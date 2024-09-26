@@ -4,8 +4,11 @@ import { OutputAutomation } from "./OutputAutomation";
 import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 
 export default class OutputAutomationManager {
+  #EXPIRATION_TIMER = 60000; // 1 minute
   #automations: Record<number, OutputAutomation>;
   #sprootDB: ISprootDB;
+  #runnableAt: number = new Date().getTime() - this.#EXPIRATION_TIMER;
+  #lastEvaluation: { names: string[]; value: number | null } = { names: [], value: null };
 
   constructor(sprootDB: ISprootDB) {
     this.#automations = {};
@@ -29,29 +32,36 @@ export default class OutputAutomationManager {
     outputList: OutputList,
     now: Date = new Date(),
   ): { names: string[]; value: number | null } {
+    //If not runnable, return the last result
+    if (!this.#isRunnable(now)) {
+      return this.#lastEvaluation;
+    } else {
+      this.#runnableAt = now.getTime();
+    }
     const evaluatedAutomations = Object.values(this.#automations)
       .map((automation) => {
-        return { name: automation.name, value: automation.evaluate(sensorList, outputList, now) };
+        return { id: automation.id, name: automation.name, value: automation.evaluate(sensorList, outputList, now) };
       })
-      .filter((r) => r.value != null) as { name: string; value: number }[];
+      .filter((r) => r.value != null) as { id: number, name: string; value: number }[];
 
     if (evaluatedAutomations.length > 1) {
+      //More than one automation evaluated to true
       const firstValue = evaluatedAutomations[0]!.value;
       if (evaluatedAutomations.every((automation) => automation.value == firstValue)) {
         //No collisions between these
-        return {
-          names: evaluatedAutomations.map((automation) => automation.name),
-          value: firstValue,
-        };
+        this.#lastEvaluation = { names: evaluatedAutomations.map((automation) => automation.name), value: firstValue };
       } else {
         //Collisions between these
-        return { names: evaluatedAutomations.map((automation) => automation.name), value: null };
+        this.#lastEvaluation = { names: evaluatedAutomations.map((automation) => automation.name), value: null };
       }
     } else if (evaluatedAutomations.length == 1) {
-      return { names: [evaluatedAutomations[0]!.name], value: evaluatedAutomations[0]!.value };
+      //Only one automation evaluated to true
+      this.#lastEvaluation = { names: [evaluatedAutomations[0]!.name], value: evaluatedAutomations[0]!.value };
     } else {
-      return { names: [], value: null };
+      //No automations evaluated to true
+      this.#lastEvaluation = { names: [], value: null };
     }
+    return this.#lastEvaluation
   }
 
   // TODO: Implement this
@@ -84,5 +94,9 @@ export default class OutputAutomationManager {
     }
 
     await Promise.all(loadPromises);
+  }
+
+  #isRunnable(now: Date): boolean {
+    return this.#runnableAt + this.#EXPIRATION_TIMER <= now.getTime();
   }
 }
