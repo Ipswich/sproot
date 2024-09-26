@@ -28,12 +28,12 @@ class AutomationDataManager {
 
   async deleteAutomationAsync(id: number) {
     await this.#sprootDB.deleteAutomationAsync(id);
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
   }
 
   async updateAutomationAsync(name: string, operator: AutomationOperator, id: number) {
     await this.#sprootDB.updateAutomationAsync(name, operator, id);
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
   }
 
   async addSensorConditionAsync(
@@ -52,7 +52,7 @@ class AutomationDataManager {
       sensorId,
       readingType,
     );
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
@@ -70,7 +70,7 @@ class AutomationDataManager {
       comparisonValue,
       outputId,
     );
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
@@ -86,7 +86,7 @@ class AutomationDataManager {
       startTime,
       endTime,
     );
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
@@ -103,24 +103,24 @@ class AutomationDataManager {
     } else {
       return;
     }
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteSensorConditionAsync(id: number) {
     await this.#sprootDB.deleteSensorConditionAsync(id);
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteOutputConditionAsync(id: number) {
     await this.#sprootDB.deleteOutputConditionAsync(id);
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteTimeConditionAsync(id: number) {
     await this.#sprootDB.deleteTimeConditionAsync(id);
-    await this.#postAutomationChangeFunctionAsync()
+    await this.#postAutomationChangeFunctionAsync();
   }
-  
+
   // Output actions
   async addOutputActionAsync(automationId: number, outputId: number, value: number) {
     const result = this.#sprootDB.addOutputActionAsync(automationId, outputId, value);

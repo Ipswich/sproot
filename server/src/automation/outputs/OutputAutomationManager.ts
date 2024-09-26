@@ -40,28 +40,41 @@ export default class OutputAutomationManager {
     }
     const evaluatedAutomations = Object.values(this.#automations)
       .map((automation) => {
-        return { id: automation.id, name: automation.name, value: automation.evaluate(sensorList, outputList, now) };
+        return {
+          id: automation.id,
+          name: automation.name,
+          value: automation.evaluate(sensorList, outputList, now),
+        };
       })
-      .filter((r) => r.value != null) as { id: number, name: string; value: number }[];
+      .filter((r) => r.value != null) as { id: number; name: string; value: number }[];
 
     if (evaluatedAutomations.length > 1) {
       //More than one automation evaluated to true
       const firstValue = evaluatedAutomations[0]!.value;
       if (evaluatedAutomations.every((automation) => automation.value == firstValue)) {
         //No collisions between these
-        this.#lastEvaluation = { names: evaluatedAutomations.map((automation) => automation.name), value: firstValue };
+        this.#lastEvaluation = {
+          names: evaluatedAutomations.map((automation) => automation.name),
+          value: firstValue,
+        };
       } else {
         //Collisions between these
-        this.#lastEvaluation = { names: evaluatedAutomations.map((automation) => automation.name), value: null };
+        this.#lastEvaluation = {
+          names: evaluatedAutomations.map((automation) => automation.name),
+          value: null,
+        };
       }
     } else if (evaluatedAutomations.length == 1) {
       //Only one automation evaluated to true
-      this.#lastEvaluation = { names: [evaluatedAutomations[0]!.name], value: evaluatedAutomations[0]!.value };
+      this.#lastEvaluation = {
+        names: [evaluatedAutomations[0]!.name],
+        value: evaluatedAutomations[0]!.value,
+      };
     } else {
       //No automations evaluated to true
       this.#lastEvaluation = { names: [], value: null };
     }
-    return this.#lastEvaluation
+    return this.#lastEvaluation;
   }
 
   // TODO: Implement this

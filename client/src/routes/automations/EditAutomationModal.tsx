@@ -131,6 +131,10 @@ export default function EditAutomationModal({
         opened={modalOpened}
         onClose={() => {
           closeModal();
+          mutateAutomationForm.setValues({
+            name: targetAutomation?.name ?? "",
+            operator: targetAutomation?.operator ?? "or",
+          });
         }}
         title={
           readOnly ? (

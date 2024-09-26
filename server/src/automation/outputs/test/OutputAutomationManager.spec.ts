@@ -85,7 +85,7 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
-      
+
       //New value, same time, not runnable
       sprootDB.getAutomationsForOutputAsync.resolves([
         {
@@ -104,7 +104,11 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.value, 75);
 
       //Add some time, this should make the automation runnable again
-      result = automationManager.evaluate(sensorListMock, outputListMock, new Date(now.getTime() + 60000));
+      result = automationManager.evaluate(
+        sensorListMock,
+        outputListMock,
+        new Date(now.getTime() + 60000),
+      );
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 25);
