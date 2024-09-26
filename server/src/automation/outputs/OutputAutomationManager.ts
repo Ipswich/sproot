@@ -7,7 +7,7 @@ export default class OutputAutomationManager {
   #EXPIRATION_TIMER = 60000; // 1 minute
   #automations: Record<number, OutputAutomation>;
   #sprootDB: ISprootDB;
-  #runnableAt: number = new Date().getTime() - this.#EXPIRATION_TIMER;
+  #lastRunAt: number | null = null;
   #lastEvaluation: { names: string[]; value: number | null } = { names: [], value: null };
 
   constructor(sprootDB: ISprootDB) {
@@ -36,7 +36,7 @@ export default class OutputAutomationManager {
     if (!this.#isRunnable(now)) {
       return this.#lastEvaluation;
     } else {
-      this.#runnableAt = now.getTime();
+      this.#lastRunAt = now.getTime();
     }
     const evaluatedAutomations = Object.values(this.#automations)
       .map((automation) => {
@@ -110,6 +110,6 @@ export default class OutputAutomationManager {
   }
 
   #isRunnable(now: Date): boolean {
-    return this.#runnableAt + this.#EXPIRATION_TIMER <= now.getTime();
+    return this.#lastRunAt == null || this.#lastRunAt + this.#EXPIRATION_TIMER <= now.getTime();
   }
 }
