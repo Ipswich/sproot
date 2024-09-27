@@ -16,6 +16,7 @@ import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
+import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -212,7 +213,7 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
     <Group>
       {sensorCondition.sensorName} is{" "}
       {mapOperatorToText(sensorCondition.operator)}{" "}
-      {String(sensorCondition.comparisonValue)}
+      {formatDecimalReadingForDisplay(String(sensorCondition.comparisonValue))}
       {Units[sensorCondition.readingType]}
     </Group>
   );
@@ -223,7 +224,7 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
     <Group>
       {outputCondition.outputName} is{" "}
       {mapOperatorToText(outputCondition.operator)}{" "}
-      {String(outputCondition.comparisonValue)}%
+      {formatDecimalReadingForDisplay(String(outputCondition.comparisonValue))}%
     </Group>
   );
 }

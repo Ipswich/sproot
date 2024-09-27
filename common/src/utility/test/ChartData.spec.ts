@@ -2,6 +2,7 @@ import { ChartData, DataPoint, DataSeries } from "@sproot/sproot-common/src/util
 
 import { assert } from "chai";
 import * as sinon from "sinon";
+import { formatDateForChart, formatDecimalReadingForDisplay } from "../DisplayFormats";
 const sandbox = sinon.createSandbox();
 
 describe("ChartData.ts tests", function () {
@@ -17,21 +18,21 @@ describe("ChartData.ts tests", function () {
         //Because timezones suck butts, use regex to verify it's the proper shape.
         const regex = /(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2}) (am|pm)/;
 
-        assert.isTrue(regex.test(ChartData.formatDateForChart(dateString)));
-        assert.isTrue(regex.test(ChartData.formatDateForChart(date)));
+        assert.isTrue(regex.test(formatDateForChart(dateString)));
+        assert.isTrue(regex.test(formatDateForChart(date)));
 
         dateString = "2021-01-01T12:00:00Z";
         date = new Date(dateString);
-        assert.isTrue(regex.test(ChartData.formatDateForChart(dateString)));
-        assert.isTrue(regex.test(ChartData.formatDateForChart(date)));
+        assert.isTrue(regex.test(formatDateForChart(dateString)));
+        assert.isTrue(regex.test(formatDateForChart(date)));
       });
     });
 
     describe("formatDecimalReadingForDisplay", function () {
       it("should format a decimal reading for display", function () {
-        assert.equal(ChartData.formatDecimalReadingForDisplay("1.234567"), "1.235");
-        assert.equal(ChartData.formatDecimalReadingForDisplay("1.2"), "1.200");
-        assert.equal(ChartData.formatDecimalReadingForDisplay("1"), "1.000");
+        assert.equal(formatDecimalReadingForDisplay("1.234567"), "1.235");
+        assert.equal(formatDecimalReadingForDisplay("1.2"), "1.200");
+        assert.equal(formatDecimalReadingForDisplay("1"), "1.000");
       });
     });
 
@@ -123,11 +124,11 @@ describe("ChartData.ts tests", function () {
         assert.equal(chartData.get().length, 10);
         assert.equal(
           chartData.get()[9]?.name,
-          ChartData.formatDateForChart(new Date("2021-01-01T00:00:00Z")),
+          formatDateForChart(new Date("2021-01-01T00:00:00Z")),
         );
         assert.equal(
           chartData.get()[8]?.name,
-          ChartData.formatDateForChart(new Date("2021-12-31T23:55:00Z")),
+          formatDateForChart(new Date("2021-12-31T23:55:00Z")),
         );
 
         // Different length, different interval
@@ -135,11 +136,11 @@ describe("ChartData.ts tests", function () {
         assert.equal(chartData.get().length, 13);
         assert.equal(
           chartData.get()[12]?.name,
-          ChartData.formatDateForChart(new Date("2021-01-01T00:00:00Z")),
+          formatDateForChart(new Date("2021-01-01T00:00:00Z")),
         );
         assert.equal(
           chartData.get()[11]?.name,
-          ChartData.formatDateForChart(new Date("2021-12-31T23:50:00Z")),
+          formatDateForChart(new Date("2021-12-31T23:50:00Z")),
         );
       });
 

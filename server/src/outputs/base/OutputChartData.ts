@@ -5,6 +5,7 @@ import {
   DataSeries,
   ChartSeries,
 } from "@sproot/sproot-common/dist/utility/ChartData";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
 
 export class OutputChartData implements IChartable {
   chartData: ChartData;
@@ -27,7 +28,7 @@ export class OutputChartData implements IChartable {
 
   loadChartData(cache: SDBOutputState[], outputName: string): void {
     for (const state of cache) {
-      const formattedDate = ChartData.formatDateForChart(state.logTime);
+      const formattedDate = formatDateForChart(state.logTime);
       const value = this.get().data.findIndex((x) => x.name == formattedDate);
       if (value >= 0 && this.get().data[value]) {
         this.get().data[value]!.units = "%";
@@ -43,7 +44,7 @@ export class OutputChartData implements IChartable {
   updateChartData(cache: SDBOutputState[], outputName: string): void {
     const lastCacheData = cache[cache.length - 1];
     if (lastCacheData) {
-      const name = ChartData.formatDateForChart(lastCacheData.logTime);
+      const name = formatDateForChart(lastCacheData.logTime);
       //Add Only if not the same time stamp as the last data point
       if (name != this.chartData.get().slice(-1)[0]?.name) {
         this.chartData.addDataPoint({
@@ -61,7 +62,7 @@ export class OutputChartData implements IChartable {
       lastChartData &&
       lastCacheData &&
       lastChartData.name ==
-        ChartData.formatDateForChart(
+        formatDateForChart(
           new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
         )
     ) {

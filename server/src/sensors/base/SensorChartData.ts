@@ -6,6 +6,10 @@ import {
   DataSeries,
   ChartSeries,
 } from "@sproot/sproot-common/dist/utility/ChartData";
+import {
+  formatDateForChart,
+  formatDecimalReadingForDisplay,
+} from "@sproot/sproot-common/dist/utility/DisplayFormats";
 
 export class SensorChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;
@@ -54,11 +58,11 @@ export class SensorChartData implements IChartable {
       this.chartData[key] = new ChartData(this.limit, this.intervalMinutes);
     }
     for (const reading of cache) {
-      const formattedDate = ChartData.formatDateForChart(reading.logTime);
+      const formattedDate = formatDateForChart(reading.logTime);
       const value = this.get().data[key].find((x) => x.name == formattedDate);
       if (value) {
         value.units = reading.units;
-        value[sensorName] = ChartData.formatDecimalReadingForDisplay(reading.data);
+        value[sensorName] = formatDecimalReadingForDisplay(reading.data);
       }
     }
   }
@@ -75,13 +79,13 @@ export class SensorChartData implements IChartable {
 
     const lastCacheData = cache[cache.length - 1];
     if (lastCacheData) {
-      const name = ChartData.formatDateForChart(lastCacheData.logTime);
+      const name = formatDateForChart(lastCacheData.logTime);
       //Add Only if not the same time stamp as the last data point
       if (name != this.chartData[key].get().slice(-1)[0]?.name) {
         this.chartData[key].addDataPoint({
           name,
           units: lastCacheData.units,
-          [sensorName]: ChartData.formatDecimalReadingForDisplay(lastCacheData.data),
+          [sensorName]: formatDecimalReadingForDisplay(lastCacheData.data),
         });
       }
     }
@@ -93,7 +97,7 @@ export class SensorChartData implements IChartable {
       lastChartData &&
       lastCacheData &&
       lastChartData.name ==
-        ChartData.formatDateForChart(
+        formatDateForChart(
           new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
         )
     ) {
