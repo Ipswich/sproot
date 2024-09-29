@@ -54,10 +54,7 @@ export default function Root() {
             navbarOpened={isNavbarOpened}
           />
         </AppShell.Header>
-        <AppShell.Navbar
-          style={{ width: "250px", opacity: "95%", zIndex: 202 }}
-          p="md"
-        >
+        <AppShell.Navbar style={{ width: "250px", opacity: "95%" }} p="md">
           <NavbarContents
             setCurrentPage={(view) => {
               closeNavbar();

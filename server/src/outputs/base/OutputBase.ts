@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
@@ -7,6 +7,10 @@ import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
+import OutputAutomationManager from "../../automation/outputs/OutputAutomationManager";
+import { SensorList } from "../../sensors/list/SensorList";
+import { OutputList } from "../list/OutputList";
+import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
@@ -24,6 +28,7 @@ export abstract class OutputBase implements IOutputBase {
   #initialCacheLookback: number;
   #chartData: OutputChartData;
   #chartDataPointInterval: number;
+  #automationManager: OutputAutomationManager;
 
   #updateMissCount = 0;
 
@@ -49,6 +54,7 @@ export abstract class OutputBase implements IOutputBase {
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
+    this.#automationManager = new OutputAutomationManager(sprootDB);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
@@ -71,14 +77,21 @@ export abstract class OutputBase implements IOutputBase {
   abstract executeState(): void;
   abstract dispose(): void;
 
+  /** Initializes all of the data for this output */
+  async initializeAsync() {
+    await this.loadCacheFromDatabaseAsync();
+    this.loadChartData();
+    await this.loadAutomationsAsync();
+  }
+
   updateName(name: string): void {
     this.name = name;
-    this.#chartData.chartSeries.name = name;
+    this.loadChartData();
   }
 
   updateColor(color: string): void {
     this.color = color;
-    this.#chartData.chartSeries.color = color;
+    this.loadChartData();
   }
 
   /**
@@ -101,6 +114,10 @@ export abstract class OutputBase implements IOutputBase {
     series: ChartSeries;
   } {
     return this.#chartData.get();
+  }
+
+  getAutomations(): Record<string, OutputAutomation> {
+    return this.#automationManager.automations;
   }
 
   async updateDataStoresAsync(): Promise<void> {
@@ -131,6 +148,29 @@ export abstract class OutputBase implements IOutputBase {
     }
   }
 
+  runAutomations(sensorList: SensorList, outputList: OutputList, now: Date): void {
+    const result = this.#automationManager.evaluate(sensorList, outputList, now);
+    if (result.value != null) {
+      this.state.setNewState(
+        {
+          value: result.value,
+          controlMode: ControlMode.automatic,
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        } as SDBOutputState,
+        ControlMode.automatic,
+      );
+    } else {
+      this.state.setNewState(
+        {
+          value: 0,
+          controlMode: ControlMode.automatic,
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        } as SDBOutputState,
+        ControlMode.automatic,
+      );
+    }
+  }
+
   protected addCurrentStateToCache(): void {
     this.#cache.addData(this.state.get());
     this.logger.info(
@@ -157,6 +197,10 @@ export abstract class OutputBase implements IOutputBase {
     );
   }
 
+  async loadAutomationsAsync(): Promise<void> {
+    await this.#automationManager.loadAsync(this.id);
+  }
+
   protected executeStateHelper(executionFn: (value: number) => void): void {
     //Local helper function
     const validateAndFixValue = (value: number) => {
@@ -166,7 +210,7 @@ export abstract class OutputBase implements IOutputBase {
       }
       const validatedValue = (this.isInvertedPwm ? 100 - value : value) / 100;
       this.logger.verbose(
-        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
+        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue * 100}`,
       );
       return validatedValue;
     };

@@ -6,7 +6,7 @@ import express from "express";
 import mysql2 from "mysql2/promise";
 import * as winston from "winston";
 
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
@@ -14,6 +14,7 @@ import { OutputList } from "./outputs/list/OutputList";
 
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
+import { AutomationDataManager } from "./automation/AutomationDataManager";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
@@ -62,6 +63,9 @@ const logger = setupLogger(app);
     outputList.initializeOrRegenerateAsync(),
   ]);
 
+  const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+  app.set("automationDataManager", automationDataManager);
+
   //State update loop
   const updateStateLoop = setInterval(async () => {
     await Promise.all([
@@ -70,6 +74,8 @@ const logger = setupLogger(app);
     ]);
     logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
     //Add triggers and whatnot here.
+
+    outputList.runAutomations(sensorList, new Date());
 
     //Execute any changes made to state.
     outputList.executeOutputState();

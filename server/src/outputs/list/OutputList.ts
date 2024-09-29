@@ -7,6 +7,8 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
 import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
+import { SensorList } from "../../sensors/list/SensorList";
+import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 
 class OutputList {
   #sprootDB: ISprootDB;
@@ -89,7 +91,27 @@ class OutputList {
   executeOutputState(outputId?: string): void {
     outputId
       ? this.#outputs[outputId]?.executeState()
-      : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
+      : Object.values(this.#outputs).forEach((output) => output?.executeState());
+  }
+
+  runAutomations(sensorList: SensorList, now: Date, outputId?: number): void {
+    outputId
+      ? this.#outputs[outputId]?.runAutomations(sensorList, this, now)
+      : Object.values(this.#outputs).forEach((output) =>
+          output.runAutomations(sensorList, this, now),
+        );
+  }
+
+  getAutomations() {
+    const allAutomations = {} as Record<number, Record<string, OutputAutomation>>;
+    for (const output of Object.values(this.#outputs)) {
+      const automations = output.getAutomations();
+      if (Object.keys(automations).length > 0) {
+        allAutomations[output.id] = automations;
+      }
+    }
+
+    return allAutomations;
   }
 
   dispose(): void {
@@ -115,9 +137,11 @@ class OutputList {
       const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
       if (key) {
         //Update if it exists
+        await this.#outputs[key]!.loadAutomationsAsync();
+
         if (this.#outputs[key]?.name != output.name) {
           outputListChanges = true;
-          //Also updates chartSeries data
+          //Also updates chart data (and series)
           this.#outputs[key]!.updateName(output.name);
         }
 
@@ -133,7 +157,7 @@ class OutputList {
 
         if (this.#outputs[key]?.color != output.color) {
           outputListChanges = true;
-          //Also updates chartSeries data
+          //Also updates chart data (and series)
           this.#outputs[key]!.updateColor(output.color);
         }
 

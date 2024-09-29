@@ -5,9 +5,9 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import EditTable from "@sproot/sproot-client/src/settings/outputs/EditTable";
+import EditTable from "@sproot/sproot-client/src/routes/settings/outputs/EditTable";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import NewOutputModal from "@sproot/sproot-client/src/settings/outputs/NewOutputModal";
+import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/NewOutputModal";
 import { useQuery } from "@tanstack/react-query";
 
 export interface FormValues {

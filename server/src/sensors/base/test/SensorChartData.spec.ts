@@ -1,13 +1,14 @@
-import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { SensorChartData } from "../SensorChartData";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
-import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorCache } from "../SensorCache";
-import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
 
 describe("SensorChartData.ts tests", function () {
   const mockSprootDB = new MockSprootDB();
@@ -100,9 +101,9 @@ describe("SensorChartData.ts tests", function () {
 
       const dataSeriesRecord = {} as Record<ReadingType, DataSeries>;
       dataSeriesRecord.temperature = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")) },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:50:01Z")) },
       ];
 
       const sensorChartData = new SensorChartData(4, 5, dataSeriesRecord);
@@ -188,7 +189,7 @@ describe("SensorChartData.ts tests", function () {
     it("should return true if the last entry in the cache is different from the last entry in the chart data", function () {
       const dataSeriesRecord = {} as Record<ReadingType, DataSeries>;
       dataSeriesRecord.temperature = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
       ];
       const sensorChartData = new SensorChartData(4, 5, dataSeriesRecord);
 
@@ -214,7 +215,7 @@ describe("SensorChartData.ts tests", function () {
     it("should return false if the last entry in the cache is the same as the last entry in the chart data", function () {
       const dataSeriesRecord = {} as Record<ReadingType, DataSeries>;
       dataSeriesRecord.temperature = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
       ];
       const sensorChartData = new SensorChartData(4, 5, dataSeriesRecord);
 

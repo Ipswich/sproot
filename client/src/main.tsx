@@ -13,8 +13,9 @@ import { rootLoader, sensorChartDataLoader } from "./routes/utility/Loaders";
 
 import SensorData from "./routes/sensor-data/SensorData";
 import OutputStates from "./routes/output-states/OutputStates";
-import OutputSettings from "./settings/outputs/OutputSettings";
-import SensorSettings from "./settings/sensors/SensorSettings";
+import Automations from "./routes/automations/Automations";
+import OutputSettings from "./routes/settings/outputs/OutputSettings";
+import SensorSettings from "./routes/settings/sensors/SensorSettings";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: "/output-states",
         element: <OutputStates />,
+      },
+      {
+        path: "/automations",
+        element: <Automations />,
       },
       {
         path: "/settings/outputs",

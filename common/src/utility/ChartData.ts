@@ -1,3 +1,5 @@
+import { formatDateForChart } from "./DisplayFormats";
+
 export interface IChartable {
   chartData: Record<string | number | symbol, ChartData> | ChartData;
   chartSeries: ChartSeries[] | ChartSeries;
@@ -85,36 +87,18 @@ export class ChartData {
     const newDataSeries: DataSeries = [];
     let NMinuteDate = new Date(Math.floor(now.getTime() / intervalInMs) * intervalInMs);
 
-    const newDataId = this.formatDateForChart(NMinuteDate) + limit + intervalMinutes;
+    const newDataId = formatDateForChart(NMinuteDate) + limit + intervalMinutes;
     if (newDataId === this.cachedEmptyDataSeriesID) {
       return this.cachedEmptyDataSeries.map((x) => ({ ...x }));
     }
     this.cachedEmptyDataSeriesID = newDataId;
 
     for (let i = 0; i < limit; i++) {
-      newDataSeries.unshift({ name: this.formatDateForChart(NMinuteDate) });
+      newDataSeries.unshift({ name: formatDateForChart(NMinuteDate) });
       NMinuteDate = new Date(NMinuteDate.getTime() - intervalInMs);
     }
     this.cachedEmptyDataSeries = newDataSeries;
     return newDataSeries;
-  }
-
-  static formatDateForChart(date: Date | string): string {
-    if (typeof date === "string") {
-      date = new Date(date);
-    }
-    let hours = date.getHours();
-    const amOrPm = hours >= 12 ? "pm" : "am";
-    hours = hours % 12 || 12;
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-
-    return `${month}/${day} ${hours}:${minutes} ${amOrPm}`;
-  }
-
-  static formatDecimalReadingForDisplay(data: string): string {
-    return parseFloat(data).toFixed(3);
   }
 
   static combineDataSeries(data: DataSeries[]): DataSeries {

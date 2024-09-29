@@ -27,7 +27,7 @@ router.get("/", (req: Request, res: Response) => {
   return;
 });
 
-router.get("/:id", (req: Request, res: Response) => {
+router.get("/:outputId", (req: Request, res: Response) => {
   const response = get(req, res);
 
   res.status(response.statusCode).json(response);
@@ -41,28 +41,28 @@ router.post("/", async (req: Request, res: Response) => {
   return;
 });
 
-router.patch("/:id", async (req: Request, res: Response) => {
+router.patch("/:outputId", async (req: Request, res: Response) => {
   const response = await updateAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:outputId", async (req: Request, res: Response) => {
   const response = await deleteAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.put("/:id/control-mode", (req: Request, res: Response) => {
+router.put("/:outputId/control-mode", (req: Request, res: Response) => {
   const response = setControlMode(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.put("/:id/manual-state", (req: Request, res: Response) => {
+router.put("/:outputId/manual-state", (req: Request, res: Response) => {
   const response = setManualState(req, res);
 
   res.status(response.statusCode).json(response);

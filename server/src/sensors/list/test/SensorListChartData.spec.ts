@@ -1,7 +1,8 @@
 import { assert } from "chai";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
-import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorListChartData } from "../SensorListChartData";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
 
 describe("SensorListChartData.ts tests", function () {
   describe("constructor", function () {
@@ -43,24 +44,24 @@ describe("SensorListChartData.ts tests", function () {
       const humidityDataSeriesRecord2 = {} as Record<ReadingType, DataSeries>;
       const humidityDataSeriesRecord3 = {} as Record<ReadingType, DataSeries>;
       temperatureDataSeriesRecord.temperature = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")), base: 100 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), base: 30 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")), base: 3 },
+        { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")), base: 100 },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")), base: 30 },
+        { name: formatDateForChart(new Date("2024-03-03T18:50:01Z")), base: 3 },
       ];
       humidityDataSeriesRecord1.humidity = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")), one: 99 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), one: 29 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")), one: 2 },
+        { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")), one: 99 },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")), one: 29 },
+        { name: formatDateForChart(new Date("2024-03-03T18:50:01Z")), one: 2 },
       ];
       humidityDataSeriesRecord2.humidity = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")), two: 98 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), two: 29 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")), two: 1 },
+        { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")), two: 98 },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")), two: 29 },
+        { name: formatDateForChart(new Date("2024-03-03T18:50:01Z")), two: 1 },
       ];
       humidityDataSeriesRecord3.humidity = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")), three: 97 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), three: 29 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")), three: 0 },
+        { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")), three: 97 },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")), three: 29 },
+        { name: formatDateForChart(new Date("2024-03-03T18:50:01Z")), three: 0 },
       ];
 
       const sensorListChartData = new SensorListChartData(4, 5, humidityDataSeriesRecord1);
@@ -107,15 +108,15 @@ describe("SensorListChartData.ts tests", function () {
       const dataSeriesRecordBase = {} as Record<ReadingType, DataSeries>;
       dataSeriesRecordBase.temperature = [
         {
-          name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")),
+          name: formatDateForChart(new Date("2024-03-03T18:40:01Z")),
           base: 100,
           one: 98,
         },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), base: 30 },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")), base: 3 },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")), base: 30 },
+        { name: formatDateForChart(new Date("2024-03-03T18:50:01Z")), base: 3 },
       ];
       dataSeriesRecordBase.humidity = [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")), one: 99 },
+        { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")), one: 99 },
       ];
 
       sensorListChartData.updateChartData(
@@ -125,7 +126,7 @@ describe("SensorListChartData.ts tests", function () {
       );
 
       dataSeriesRecordBase.humidity.push({
-        name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")),
+        name: formatDateForChart(new Date("2024-03-03T18:45:01Z")),
         one: 29,
       });
       sensorListChartData.updateChartData(
@@ -135,7 +136,7 @@ describe("SensorListChartData.ts tests", function () {
       );
 
       dataSeriesRecordBase.humidity.push({
-        name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")),
+        name: formatDateForChart(new Date("2024-03-03T18:50:01Z")),
         one: 2,
       });
       sensorListChartData.updateChartData(

@@ -1,11 +1,11 @@
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { assert } from "chai";
 import { OutputCache } from "../OutputCache";
 import { OutputChartData } from "../OutputChartData";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
 
 describe("OutputChartData.ts tests", function () {
   const mockSprootDB = new MockSprootDB();
@@ -105,9 +105,9 @@ describe("OutputChartData.ts tests", function () {
         new Date("2024-03-03T18:50:01Z"),
       );
       const outputChartData = new OutputChartData(4, 5, [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:40:01Z")) },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:50:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")) },
+        { name: formatDateForChart(new Date("2024-03-03T18:50:01Z")) },
       ]);
       outputChartData.loadChartData(outputCache.get(), "Test");
 
@@ -144,7 +144,7 @@ describe("OutputChartData.ts tests", function () {
   describe("shouldUpdateChartData", function () {
     it("should return true if the last entry in the cache is different from the last entry in the chart data", function () {
       const outputChartData = new OutputChartData(4, 5, [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), Test: 200 },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")), Test: 200 },
       ]);
 
       const outputCache = new OutputCache(4, mockSprootDB, logger);
@@ -162,7 +162,7 @@ describe("OutputChartData.ts tests", function () {
 
     it("should return false if the last entry in the cache is the same as the last entry in the chart data", function () {
       const outputChartData = new OutputChartData(4, 5, [
-        { name: ChartData.formatDateForChart(new Date("2024-03-03T18:45:01Z")), Test: 100 },
+        { name: formatDateForChart(new Date("2024-03-03T18:45:01Z")), Test: 100 },
       ]);
 
       const outputCache = new OutputCache(4, mockSprootDB, logger);

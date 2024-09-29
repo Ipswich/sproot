@@ -15,10 +15,10 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
-import EditablesTable from "@sproot/sproot-client/src/settings/common/EditablesTable";
+import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";
-import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
+import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms/PCA9685Form";
+import { FormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation } from "@tanstack/react-query";
 
@@ -224,8 +224,8 @@ export default function EditTable({
         </form>
       </Modal>
       <EditablesTable
-        editables={outputs}
-        onClick={(item) => {
+        editables={Object.values(outputs)}
+        onEditClick={(item) => {
           editTableOnClick(item as IOutputBase);
         }}
       />

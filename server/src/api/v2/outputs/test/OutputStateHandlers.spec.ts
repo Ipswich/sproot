@@ -14,10 +14,10 @@ describe("OutputStateHandlers.ts tests", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     const outputData = {
       1: {
-        id: 1,
+        outputId: 1,
       },
       2: {
-        id: 2,
+        outputId: 2,
       },
     } as unknown as { [key: string]: SensorBase };
 
@@ -36,7 +36,7 @@ describe("OutputStateHandlers.ts tests", () => {
           get: () => outputList,
         },
         params: {
-          id: "1",
+          outputId: "1",
         },
         body: {
           controlMode: ControlMode.manual,
@@ -76,7 +76,7 @@ describe("OutputStateHandlers.ts tests", () => {
           get: () => outputList,
         },
         params: {
-          id: "1",
+          outputId: "1",
         },
         originalUrl: "/outputs/1/controlMode",
         body: {
@@ -111,7 +111,7 @@ describe("OutputStateHandlers.ts tests", () => {
           get: () => outputList,
         },
         params: {
-          id: -1,
+          outputId: -1,
         },
         originalUrl: "/outputs/-1/controlMode",
         body: {
@@ -145,11 +145,11 @@ describe("OutputStateHandlers.ts tests", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     const outputData = {
       1: {
-        id: 1,
+        outputId: 1,
         isPwm: true,
       },
       2: {
-        id: 2,
+        outputId: 2,
         ispwm: false,
       },
     } as unknown as { [key: string]: SensorBase };
@@ -169,7 +169,7 @@ describe("OutputStateHandlers.ts tests", () => {
           get: () => outputList,
         },
         params: {
-          id: "1",
+          outputId: "1",
         },
         body: {
           value: 50,
@@ -210,7 +210,7 @@ describe("OutputStateHandlers.ts tests", () => {
           get: () => outputList,
         },
         params: {
-          id: "1",
+          outputId: "1",
         },
         originalUrl: "/outputs/1/manual-state",
         body: {
@@ -252,7 +252,7 @@ describe("OutputStateHandlers.ts tests", () => {
         "Value must be a number between 0 and 100.",
       ]);
 
-      mockRequest.params["id"] = "2";
+      mockRequest.params["outputId"] = "2";
       mockRequest.originalUrl = "/outputs/2/manual-state";
       mockRequest.body["value"] = 50;
       error = setManualState(mockRequest, mockResponse) as ErrorResponse;
@@ -277,7 +277,7 @@ describe("OutputStateHandlers.ts tests", () => {
           get: () => outputList,
         },
         params: {
-          id: -1,
+          outputId: -1,
         },
         originalUrl: "/outputs/-1/manual-state",
         body: {

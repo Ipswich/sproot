@@ -11,8 +11,8 @@ import {
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
-import PCA9685Form from "@sproot/sproot-client/src/settings/outputs/forms/PCA9685Form";
-import { FormValues } from "@sproot/sproot-client/src/settings/outputs/OutputSettings";
+import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms/PCA9685Form";
+import { FormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
 import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";

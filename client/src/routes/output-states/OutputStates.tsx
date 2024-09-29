@@ -44,7 +44,7 @@ export default function OutputStates() {
                 { label: "3 Days", value: "72" },
                 { label: "1 Week", value: "0" },
               ]}
-            ></SegmentedControl>
+            />
           </div>
           <StatesAccordion />
         </Paper>

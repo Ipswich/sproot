@@ -2,8 +2,8 @@ import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ChartData, DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
+import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ChartData, DataSeries, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
@@ -79,25 +79,28 @@ class SensorList {
 
     const promises = [];
     for (const sensor of sensorsFromDatabase) {
+      let sensorChanges = false;
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
       if (key) {
         //Update if it exists
-        if (this.#sensors[key]!.name !== sensor.name) {
+        if (this.#sensors[key]?.name != sensor.name) {
           //Also updates chartSeries data
-          this.#sensors[key]!.updateName(sensor.name);
-          sensorListChanges = true;
+          this.#sensors[key]?.updateName(sensor.name);
+          sensorChanges = true;
         }
 
         if (this.#sensors[key]?.color != sensor.color) {
           //Also updates chartSeries data
-          this.#sensors[key]!.updateColor(sensor.color);
-          sensorListChanges = true;
+          this.#sensors[key]?.updateColor(sensor.color);
+          sensorChanges = true;
         }
 
-        if (sensorListChanges) {
+        if (sensorChanges) {
+          //TODO:Reload chart data.
           this.#logger.info(
             `Updating sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
           );
+          sensorListChanges = true;
         }
       } else {
         //Create if it doesn't
@@ -283,6 +286,7 @@ class SensorList {
             name: `New DS18B20 ..${address.slice(-4)}`,
             model: "DS18B20",
             address: address,
+            color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
           } as SDBSensor),
         );
       }

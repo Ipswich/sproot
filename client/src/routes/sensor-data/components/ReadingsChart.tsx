@@ -5,6 +5,7 @@ import {
   ChartSeries,
   ChartData,
 } from "@sproot/sproot-common/src/utility/ChartData";
+import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { ResponsiveContainer } from "recharts";
 
 export interface ReadingsChartProps {
@@ -65,17 +66,17 @@ export default function ReadingsChart({
           referenceLines={[
             {
               y: stats.cumulativeAverage!,
-              label: `Average: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
+              label: `Average: ${formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
               color: "red",
             },
             {
               y: stats.cumulativeMin!,
-              label: `Min: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
+              label: `Min: ${formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
               color: "blue",
             },
             {
               y: stats.cumulativeMax!,
-              label: `Max: ${ChartData.formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
+              label: `Max: ${formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
               color: "green",
             },
           ]}

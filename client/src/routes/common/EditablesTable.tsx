@@ -1,16 +1,19 @@
 import { Table, ActionIcon } from "@mantine/core";
+import { IAutomation } from "@sproot/automation/IAutomation";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { IconEdit } from "@tabler/icons-react";
 
 interface EditablesTableProps {
-  editables: Record<string, ISensorBase | IOutputBase>;
-  onClick: (item: ISensorBase | IOutputBase) => void;
+  editables: ISensorBase[] | IOutputBase[] | IAutomation[];
+  onEditClick: (item: ISensorBase | IOutputBase | IAutomation) => void;
+  onNameClick?: (item: ISensorBase | IOutputBase | IAutomation) => void;
 }
 
 export default function EditablesTable({
   editables,
-  onClick,
+  onEditClick,
+  onNameClick = undefined,
 }: EditablesTableProps) {
   return (
     <Table
@@ -29,11 +32,22 @@ export default function EditablesTable({
       <Table.Tbody>
         {Object.values(editables).map((editable) => (
           <Table.Tr key={editable.id}>
-            <Table.Td align="center">{editable.name}</Table.Td>
+            <Table.Td
+              align="center"
+              onClick={
+                onNameClick
+                  ? () => {
+                      onNameClick(editable);
+                    }
+                  : undefined
+              }
+            >
+              {editable.name}
+            </Table.Td>
             <Table.Td align="center">
               <ActionIcon
                 onClick={() => {
-                  onClick(editable);
+                  onEditClick(editable);
                 }}
               >
                 <IconEdit />
