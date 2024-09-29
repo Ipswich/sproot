@@ -2,7 +2,7 @@ openapi: "3.0.1"
 
 info:
   title: "sproot"
-  version: "0.0.1"
+  version: "0.1.0"
   description: >
     Sproot is a general purpose environmental management system with a focus on greenhouse and garden.
     The system is intended to be used to monitor and control various environmental parameters, to 

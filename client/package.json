@@ -1,6 +1,6 @@
 {
   "name": "@sproot/sproot-client",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "description": "sproot-client, the frontend for the sproot project",
   "scripts": {
