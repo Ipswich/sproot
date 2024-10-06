@@ -1,6 +1,6 @@
 # sproot
 
-Garden Automation Management.
+sproot is a Raspberry pi-based greenhouse controller and monitoring system with an eye towards extensibility and ease of maintenance. By utilizing 3D printed parts, easy to acquire electronics, and flexible software, sproot aims to be a comprehensive approach to hands-off environmental regulation.
 
 ## Running for Production
 
