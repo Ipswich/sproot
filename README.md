@@ -5,9 +5,9 @@ sproot is a Raspberry Pi-based greenhouse controller and monitoring system with 
 <img width="24%" alt="Sproot Sensor Data" src="https://github.com/user-attachments/assets/cfcabea1-d3f1-4c3e-8f6c-60efe2253d15">
 <img width="24%" alt="Sproot Output States" src="https://github.com/user-attachments/assets/d1644bdf-5cb3-4d67-860c-a31eff10b263">
 <img width="24%" alt="Sproot Automations" src="https://github.com/user-attachments/assets/65346d8b-369a-4e5e-bdfc-b3f72ad1faaa">
-<img width="24%" alt="Sproot Settings" src="https://github.com/user-attachments/assets/bb603f1b-ab8b-4f2a-98eb-1a69a7d6eeea">
-
+<img width="24%" alt="Screenshot 2024-10-07 at 12-29-57 Sproot" src="https://github.com/user-attachments/assets/d201f88c-0763-4337-b846-a01e5a2bfd29">
 </div>
+
 
 ## Running for Production
 
