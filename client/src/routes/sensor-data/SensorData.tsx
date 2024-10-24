@@ -14,7 +14,9 @@ import SensorTable from "./components/SensorTable";
 export default function SensorData() {
   const readingTypeString = useLoaderData() as string;
 
-  const [chartInterval, setChartInterval] = useState("24");
+  const [chartInterval, setChartInterval] = useState(
+    localStorage.getItem("sensorChartInterval") ?? "24",
+  );
   const [segmentedControlValue, setSegmentedControlValue] =
     useState(chartInterval);
   const [chartRendering, setChartRendering] = useState(true);
@@ -43,6 +45,7 @@ export default function SensorData() {
             defaultValue={segmentedControlValue}
             value={segmentedControlValue}
             onChange={(value) => {
+              localStorage.setItem("sensorChartInterval", value);
               setSegmentedControlValue(value);
               setChartRendering(true);
               startTransition(() => {
