@@ -4,7 +4,9 @@ import StatesAccordion from "./components/StatesAccordion";
 import { startTransition, useEffect, useState } from "react";
 
 export default function OutputStates() {
-  const [chartInterval, setChartInterval] = useState("24");
+  const [chartInterval, setChartInterval] = useState(
+    localStorage.getItem("outputChartInterval") ?? "24",
+  );
   const [segmentedControlValue, setSegmentedControlValue] =
     useState(chartInterval);
   const [chartRendering, setChartRendering] = useState(true);
@@ -27,6 +29,7 @@ export default function OutputStates() {
               defaultValue={segmentedControlValue}
               value={segmentedControlValue}
               onChange={(value) => {
+                localStorage.setItem("outputChartInterval", value);
                 setSegmentedControlValue(value);
                 setChartRendering(true);
                 startTransition(() => {
