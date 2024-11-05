@@ -67,6 +67,21 @@ export abstract class OutputBase implements IOutputBase {
     return this.state.controlMode;
   }
 
+  get outputData(): IOutputBase {
+    const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state } = this;
+    return {
+      id,
+      model,
+      address,
+      name,
+      pin,
+      isPwm,
+      isInvertedPwm,
+      color,
+      state,
+    };
+  }
+
   /**
    * Executes the current state of the output, setting the physical state of the output to the recorded state
    * (respecting the current ControlMode). This should be called after state.setNewState() to ensure that the
