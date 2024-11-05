@@ -69,7 +69,7 @@ export async function addAsync(
     isPwm: request.body["isPwm"],
     isInvertedPwm: request.body["isInvertedPwm"],
     color: request.body["color"],
-    automationTimeout: request.body["automationTimeout"]
+    automationTimeout: request.body["automationTimeout"],
   } as SDBOutput;
 
   const missingFields: Array<string> = [];
@@ -92,7 +92,7 @@ export async function addAsync(
     missingFields.push("Missing required field: isInvertedPwm");
   }
   if (newOutput.automationTimeout == undefined || newOutput.automationTimeout == null) {
-    missingFields.push("Missing required field: automationTimeout")
+    missingFields.push("Missing required field: automationTimeout");
   }
 
   if (missingFields.length > 0) {
@@ -184,7 +184,7 @@ export async function updateAsync(
   outputData.isPwm = request.body["isPwm"] ?? outputData.isPwm;
   outputData.isInvertedPwm = request.body["isInvertedPwm"] ?? outputData.isInvertedPwm;
   outputData.color = request.body["color"] ?? outputData.color;
-  outputData.automationTimeout = request.body["automationTimeout"] ?? outputData.automationTimeout
+  outputData.automationTimeout = request.body["automationTimeout"] ?? outputData.automationTimeout;
 
   try {
     await sprootDB.updateOutputAsync(outputData);
