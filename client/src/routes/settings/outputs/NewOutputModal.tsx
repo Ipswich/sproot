@@ -139,7 +139,6 @@ export default function NewOutputModal({
             {...newOutputForm.getInputProps("address")}
           />
           <NumberInput
-            maxLength={11}
             min={0}
             max={999999999}
             step={1}

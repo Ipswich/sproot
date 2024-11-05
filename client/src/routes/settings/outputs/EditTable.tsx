@@ -190,7 +190,6 @@ export default function EditTable({
                 {...updateOutputForm.getInputProps("address")}
               />
               <NumberInput
-                maxLength={10}
                 min={0}
                 max={999999999}
                 step={1}
