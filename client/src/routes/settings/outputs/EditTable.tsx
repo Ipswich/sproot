@@ -195,6 +195,8 @@ export default function EditTable({
                 step={1}
                 label="Automation Timeout"
                 suffix=" seconds"
+                stepHoldDelay={500}
+                stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
                 required
                 {...updateOutputForm.getInputProps("automationTimeout")}
               />
