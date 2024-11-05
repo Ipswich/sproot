@@ -19,6 +19,7 @@ export interface FormValues {
   pin?: number;
   isPwm?: boolean;
   isInvertedPwm?: boolean;
+  automationTimeout?: number;
 }
 
 export default function OutputSettings() {

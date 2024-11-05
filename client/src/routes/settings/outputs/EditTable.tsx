@@ -7,6 +7,7 @@ import {
   ColorInput,
   ColorPicker,
   ScrollArea,
+  NumberInput,
 } from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
@@ -66,7 +67,9 @@ export default function EditTable({
       pin: selectedOutput.pin,
       isPwm: selectedOutput.isPwm,
       isInvertedPwm: selectedOutput.isInvertedPwm,
+      automationTimeout: selectedOutput.automationTimeout,
     } as FormValues,
+
     validate: {
       id: (value) =>
         value || value != selectedOutput.id
@@ -92,10 +95,14 @@ export default function EditTable({
         value != null && value != undefined && value >= 0
           ? null
           : "Pin must be a number",
-      isInvertedPwm: (value) =>
-        value === true || value === false ? null : "Must be true or false",
       isPwm: (value) =>
         value === true || value === false ? null : "Must be true or false",
+      isInvertedPwm: (value) =>
+        value === true || value === false ? null : "Must be true or false",
+      automationTimeout: (value) =>
+        value != null && value != undefined && value >= 0 && value <= 9999999999
+          ? null
+          : "Must be between 0 and 99999999",
     },
   });
 
@@ -109,6 +116,10 @@ export default function EditTable({
     updateOutputForm.setFieldValue("pin", output.pin);
     updateOutputForm.setFieldValue("isPwm", output.isPwm);
     updateOutputForm.setFieldValue("isInvertedPwm", output.isInvertedPwm);
+    updateOutputForm.setFieldValue(
+      "automationTimeout",
+      output.automationTimeout,
+    );
     openModal();
   };
 
@@ -178,7 +189,16 @@ export default function EditTable({
                 placeholder={selectedOutput.address ?? ""}
                 {...updateOutputForm.getInputProps("address")}
               />
-
+              <NumberInput
+                maxLength={10}
+                min={0}
+                max={999999999}
+                step={1}
+                label="Automation Timeout"
+                suffix=" seconds"
+                required
+                {...updateOutputForm.getInputProps("automationTimeout")}
+              />
               {selectedOutput.model?.toLowerCase() === "pca9685" ? (
                 <PCA9685Form
                   selectedOutput={selectedOutput}
