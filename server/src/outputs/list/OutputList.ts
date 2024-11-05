@@ -54,7 +54,7 @@ class OutputList {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state } = this.#outputs[
+      const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state, automationTimeout } = this.#outputs[
         key
       ] as IOutputBase;
       cleanObject[key] = {
@@ -67,6 +67,7 @@ class OutputList {
         isInvertedPwm,
         color,
         state,
+        automationTimeout
       };
     }
     return cleanObject;

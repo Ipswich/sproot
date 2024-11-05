@@ -43,7 +43,7 @@ describe("OutputAutomationManager.ts tests", () => {
       ]);
 
       await automationManager.loadAsync(1);
-      const result = automationManager.evaluate(sensorListMock, outputListMock);
+      const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
@@ -81,7 +81,7 @@ describe("OutputAutomationManager.ts tests", () => {
       ]);
 
       await automationManager.loadAsync(1);
-      let result = automationManager.evaluate(sensorListMock, outputListMock, now);
+      let result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
@@ -98,7 +98,7 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBOutputActionView,
       ]);
       await automationManager.loadAsync(1);
-      result = automationManager.evaluate(sensorListMock, outputListMock, now);
+      result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
@@ -107,6 +107,7 @@ describe("OutputAutomationManager.ts tests", () => {
       result = automationManager.evaluate(
         sensorListMock,
         outputListMock,
+        60,
         new Date(now.getTime() + 60000),
       );
       assert.equal(result?.names.length, 1);
@@ -146,7 +147,7 @@ describe("OutputAutomationManager.ts tests", () => {
       ]);
 
       await automationManager.loadAsync(1);
-      const result = automationManager.evaluate(sensorListMock, outputListMock, now);
+      const result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
       assert.equal(result?.names.length, 0);
       assert.isNull(result.value);
     });
@@ -199,7 +200,7 @@ describe("OutputAutomationManager.ts tests", () => {
 
       await automationManager.loadAsync(1);
 
-      const result = automationManager.evaluate(sensorListMock, outputListMock);
+      const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
       assert.equal(result?.names.length, 2);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.names[1], "test2");
@@ -254,7 +255,7 @@ describe("OutputAutomationManager.ts tests", () => {
 
       await automationManager.loadAsync(1);
 
-      const result = automationManager.evaluate(sensorListMock, outputListMock);
+      const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
       assert.equal(result?.names.length, 2);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.names[1], "test2");

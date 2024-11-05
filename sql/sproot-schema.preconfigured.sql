@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS `outputs` (
   `pin` int(11) NOT NULL,
   `isPwm` tinyint(1) NOT NULL,
   `isInvertedPwm` tinyint(1) NOT NULL,
+  `automationTimeout` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -267,15 +268,15 @@ ALTER TABLE `sensor_data`
 ALTER TABLE `time_conditions`
   ADD CONSTRAINT `time_conditions_ibfk_1` FOREIGN KEY (`automation_id`) REFERENCES `automations` (`id`) ON DELETE CASCADE;
 
-INSERT INTO `outputs` (`id`, `model`, `address`, `name`, `color`, `pin`, `isPwm`, `isInvertedPwm`) VALUES
-(1,	'pca9685',	'0x40',	'Relay #1', "#82c91e",	0,	0,	0),
-(2,	'pca9685',	'0x40',	'Relay #2', "#40c057",	1,	0,	0),
-(3,	'pca9685',	'0x40',	'Relay #3', "#12b886",	2,	0,	0),
-(4,	'pca9685',	'0x40',	'Relay #4', "#15aabf",	3,	0,	0),
-(5,	'pca9685',	'0x40',	'Pwm #1', "#228be6",	4,	1,	0),
-(6,	'pca9685',	'0x40',	'Pwm #2', "#4c6ef5",	5,	1,	0),
-(7,	'pca9685',	'0x40',	'Pwm #3', "#7950f2",	6,	1,	0),
-(8,	'pca9685',	'0x40',	'Pwm #4', "#be4bdb",	7,	1,	0);
+INSERT INTO `outputs` (`id`, `model`, `address`, `name`, `color`, `pin`, `isPwm`, `isInvertedPwm`, `automationTimeout`) VALUES
+(1,	'pca9685',	'0x40',	'Relay #1', "#82c91e",	0,	0,	0, 1),
+(2,	'pca9685',	'0x40',	'Relay #2', "#40c057",	1,	0,	0, 1),
+(3,	'pca9685',	'0x40',	'Relay #3', "#12b886",	2,	0,	0, 1),
+(4,	'pca9685',	'0x40',	'Relay #4', "#15aabf",	3,	0,	0, 1),
+(5,	'pca9685',	'0x40',	'Pwm #1', "#228be6",	4,	1,	0, 1),
+(6,	'pca9685',	'0x40',	'Pwm #2', "#4c6ef5",	5,	1,	0, 1),
+(7,	'pca9685',	'0x40',	'Pwm #3', "#7950f2",	6,	1,	0, 1),
+(8,	'pca9685',	'0x40',	'Pwm #4', "#be4bdb",	7,	1,	0, 1);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
