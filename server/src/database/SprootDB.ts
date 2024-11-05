@@ -276,7 +276,7 @@ class SprootDB implements ISprootDB {
 
   async addOutputAsync(output: SDBOutput): Promise<void> {
     await this.#connection.execute(
-      "INSERT INTO outputs (name, model, address, color, pin, isPwm, isInvertedPwm) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO outputs (name, model, address, color, pin, isPwm, isInvertedPwm, automationTimeout) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
         output.name,
         output.model,
@@ -285,13 +285,14 @@ class SprootDB implements ISprootDB {
         output.pin,
         output.isPwm,
         output.isInvertedPwm,
+        output.automationTimeout,
       ],
     );
   }
 
   async updateOutputAsync(output: SDBOutput): Promise<void> {
     await this.#connection.execute(
-      "UPDATE outputs SET name = ?, model = ?, address = ?, color = ?, pin = ?, isPwm = ?, isInvertedPwm = ? WHERE id = ?",
+      "UPDATE outputs SET name = ?, model = ?, address = ?, color = ?, pin = ?, isPwm = ?, isInvertedPwm = ?, automationTimeout = ? WHERE id = ?",
       [
         output.name,
         output.model,
@@ -300,6 +301,7 @@ class SprootDB implements ISprootDB {
         output.pin,
         output.isPwm,
         output.isInvertedPwm,
+        output.automationTimeout,
         output.id,
       ],
     );

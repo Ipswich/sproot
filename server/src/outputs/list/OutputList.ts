@@ -150,7 +150,7 @@ class OutputList {
           this.#outputs[key]!.updateColor(output.color);
         }
 
-        if (this.#outputs[key]?.automationTimeout != output.automationTimeout){
+        if (this.#outputs[key]?.automationTimeout != output.automationTimeout) {
           outputListChanges = true;
           this.#outputs[key]!.automationTimeout = output.automationTimeout;
         }
