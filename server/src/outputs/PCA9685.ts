@@ -82,21 +82,9 @@ class PCA9685 {
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
     for (const key in this.#outputs) {
-      const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state, automationTimeout } = this.#outputs[
-        key
-      ] as IOutputBase;
-      cleanObject[key] = {
-        id,
-        model,
-        address,
-        name,
-        pin,
-        isPwm,
-        isInvertedPwm,
-        color,
-        state,
-        automationTimeout
-      };
+      if (this.#outputs[key]) {
+        cleanObject[key] = this.#outputs[key]?.outputData;
+      }
     }
     return cleanObject;
   }
