@@ -69,7 +69,8 @@ export abstract class OutputBase implements IOutputBase {
   }
 
   get outputData(): IOutputBase {
-    const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state, automationTimeout } = this;
+    const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state, automationTimeout } =
+      this;
     return {
       id,
       model,
@@ -80,7 +81,7 @@ export abstract class OutputBase implements IOutputBase {
       isInvertedPwm,
       color,
       state,
-      automationTimeout
+      automationTimeout,
     };
   }
 
@@ -166,7 +167,12 @@ export abstract class OutputBase implements IOutputBase {
   }
 
   runAutomations(sensorList: SensorList, outputList: OutputList, now: Date): void {
-    const result = this.#automationManager.evaluate(sensorList, outputList, this.automationTimeout, now);
+    const result = this.#automationManager.evaluate(
+      sensorList,
+      outputList,
+      this.automationTimeout,
+      now,
+    );
     if (result.value != null) {
       this.state.setNewState(
         {

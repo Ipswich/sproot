@@ -103,7 +103,18 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
 
-      //Add some time, this should make the automation runnable again
+      //Add some time (longer automationInterval), not runnable
+      result = automationManager.evaluate(
+        sensorListMock,
+        outputListMock,
+        61,
+        new Date(now.getTime() + 60000),
+      );
+      assert.equal(result?.names.length, 1);
+      assert.equal(result?.names[0], "test");
+      assert.equal(result?.value, 75);
+
+      //Add same time, this should make the automation runnable again
       result = automationManager.evaluate(
         sensorListMock,
         outputListMock,

@@ -110,6 +110,6 @@ export default class OutputAutomationManager {
   }
 
   #isRunnable(now: Date, automationTimeout: number): boolean {
-    return this.#lastRunAt == null || this.#lastRunAt + automationTimeout <= now.getTime();
+    return this.#lastRunAt == null || this.#lastRunAt + automationTimeout * 1000 <= now.getTime();
   }
 }
