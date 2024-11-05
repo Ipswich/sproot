@@ -150,6 +150,11 @@ class OutputList {
           this.#outputs[key]!.updateColor(output.color);
         }
 
+        if (this.#outputs[key]?.automationTimeout != output.automationTimeout){
+          outputListChanges = true;
+          this.#outputs[key]!.automationTimeout = output.automationTimeout;
+        }
+
         if (outputListChanges) {
           this.#logger.info(
             `Updating output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
