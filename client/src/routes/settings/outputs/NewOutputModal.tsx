@@ -46,10 +46,8 @@ export default function NewOutputModal({
       color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
-      pin: 0,
       isPwm: false,
       isInvertedPwm: false,
-      automationTimeout: 60,
     } as FormValues,
 
     validate: {
@@ -74,9 +72,9 @@ export default function NewOutputModal({
       isInvertedPwm: (value) =>
         value === true || value === false ? null : "Must be true or false",
       automationTimeout: (value) =>
-        value != null && value != undefined && value >= 0 && value <= 9999999999
+        value != null && value != undefined && value >= 0 && value <= 999999999
           ? null
-          : "Must be between 0 and 99999999",
+          : "Must be between 0 and 999999999",
     },
   });
 
@@ -136,6 +134,7 @@ export default function NewOutputModal({
             maxLength={64}
             label="Address"
             placeholder="0x40"
+            required
             {...newOutputForm.getInputProps("address")}
           />
           <NumberInput
@@ -144,7 +143,7 @@ export default function NewOutputModal({
             step={1}
             label="Automation Timeout"
             suffix=" seconds"
-            placeholder="60"
+            placeholder="60 seconds"
             stepHoldDelay={500}
             stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
             required

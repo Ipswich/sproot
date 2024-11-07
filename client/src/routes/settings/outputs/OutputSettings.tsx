@@ -6,7 +6,6 @@ import {
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/routes/settings/outputs/EditTable";
-import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/NewOutputModal";
 import { useQuery } from "@tanstack/react-query";
 
@@ -27,8 +26,6 @@ export default function OutputSettings() {
     newOutputModalOpened,
     { open: newOutputModalOpen, close: newOutputModalClose },
   ] = useDisclosure(false);
-  const [supportedModels, setSupportedModels] = useState([] as string[]);
-  const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [isStale, setIsStale] = useState(false);
 
   const getOutputsQuery = useQuery({
@@ -44,12 +41,10 @@ export default function OutputSettings() {
   });
 
   const updateData = async () => {
-    getOutputsQuery.refetch().then((response) => {
-      setOutputs(response.data!);
-    });
-    getSupportedModelsQuery.refetch().then((response) => {
-      setSupportedModels(response.data!);
-    });
+    await Promise.all([
+      getOutputsQuery.refetch(),
+      getSupportedModelsQuery.refetch(),
+    ]);
   };
 
   useEffect(() => {
@@ -62,14 +57,14 @@ export default function OutputSettings() {
     <Fragment>
       <Stack h="600" justify="center" align="center">
         <NewOutputModal
-          supportedModels={supportedModels}
+          supportedModels={getSupportedModelsQuery.data ?? []}
           modalOpened={newOutputModalOpened}
           closeModal={newOutputModalClose}
           setIsStale={setIsStale}
         />
         <EditTable
-          outputs={outputs}
-          supportedModels={supportedModels}
+          outputs={getOutputsQuery.data ?? {}}
+          supportedModels={getSupportedModelsQuery.data ?? []}
           setIsStale={setIsStale}
         />
         {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (

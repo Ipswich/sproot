@@ -100,7 +100,7 @@ export default function EditTable({
       isInvertedPwm: (value) =>
         value === true || value === false ? null : "Must be true or false",
       automationTimeout: (value) =>
-        value != null && value != undefined && value >= 0 && value <= 9999999999
+        value != null && value != undefined && value >= 0 && value <= 999999999
           ? null
           : "Must be between 0 and 99999999",
     },
@@ -187,6 +187,7 @@ export default function EditTable({
                 maxLength={64}
                 label="Address"
                 placeholder={selectedOutput.address ?? ""}
+                required
                 {...updateOutputForm.getInputProps("address")}
               />
               <NumberInput
