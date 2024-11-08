@@ -15,6 +15,7 @@ interface IOutputBase {
   isInvertedPwm: boolean;
   color: string;
   state: IOutputState;
+  automationTimeout: number;
 }
 
 type IOutputState = {

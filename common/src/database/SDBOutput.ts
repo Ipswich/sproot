@@ -9,6 +9,7 @@ type SDBOutput = RowDataPacket & {
   isPwm: boolean;
   isInvertedPwm: boolean;
   color: string;
+  automationTimeout: number;
 };
 
 export type { SDBOutput };

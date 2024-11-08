@@ -7,6 +7,7 @@ import {
   ColorInput,
   ScrollArea,
   ColorPicker,
+  NumberInput,
 } from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -45,7 +46,6 @@ export default function NewOutputModal({
       color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
-      pin: 0,
       isPwm: false,
       isInvertedPwm: false,
     } as FormValues,
@@ -67,6 +67,14 @@ export default function NewOutputModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
+      isPwm: (value) =>
+        value === true || value === false ? null : "Must be true or false",
+      isInvertedPwm: (value) =>
+        value === true || value === false ? null : "Must be true or false",
+      automationTimeout: (value) =>
+        value != null && value != undefined && value >= 0 && value <= 999999999
+          ? null
+          : "Must be between 0 and 999999999",
     },
   });
 
@@ -126,7 +134,20 @@ export default function NewOutputModal({
             maxLength={64}
             label="Address"
             placeholder="0x40"
+            required
             {...newOutputForm.getInputProps("address")}
+          />
+          <NumberInput
+            min={0}
+            max={999999999}
+            step={1}
+            label="Automation Timeout"
+            suffix=" seconds"
+            placeholder="60 seconds"
+            stepHoldDelay={500}
+            stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+            required
+            {...newOutputForm.getInputProps("automationTimeout")}
           />
           {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
             <PCA9685Form form={newOutputForm} />

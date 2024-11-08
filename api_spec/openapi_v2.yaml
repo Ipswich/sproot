@@ -3353,7 +3353,7 @@ components:
       description: >
         An output object that is stored in the database. Contains all the information needed to 
         create an output, including model, address, name, pin, if the output is a pwm, whether that
-        pwm value is should be inverted, and, color.
+        pwm value is should be inverted, color, and the automation timeout.
       type: object
       required:
         - "model"
@@ -3362,6 +3362,7 @@ components:
         - "isPwm"
         - "isInvertedPwm"
         - "color"
+        - "automationTimeout"
       properties:
         model:
           type: string
@@ -3384,6 +3385,9 @@ components:
         color:
           type: string
           example: "#ff0000"
+        automationTimeout:
+          type: number
+          example: 60
 
     OutputBase:
       description: >

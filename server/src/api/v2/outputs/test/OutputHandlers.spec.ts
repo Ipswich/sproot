@@ -145,6 +145,7 @@ describe("OutputHandlers.ts tests", () => {
         isPwm: true,
         isInvertedPwm: true,
         color: "#FF0000",
+        automationTimeout: 60,
       } as SDBOutput;
 
       const mockRequest = {
@@ -202,6 +203,7 @@ describe("OutputHandlers.ts tests", () => {
         "Missing required field: pin",
         "Missing required field: isPwm",
         "Missing required field: isInvertedPwm",
+        "Missing required field: automationTimeout",
       ]);
       assert.isTrue(sprootDB.addOutputAsync.notCalled);
       assert.isTrue(outputList.initializeOrRegenerateAsync.notCalled);
@@ -215,6 +217,7 @@ describe("OutputHandlers.ts tests", () => {
         pin: 0,
         isPwm: true,
         isInvertedPwm: true,
+        automationTimeout: 60,
         color: "#FF0000",
       } as SDBOutput;
 
@@ -282,6 +285,7 @@ describe("OutputHandlers.ts tests", () => {
           isPwm: true,
           isInvertedPwm: true,
           color: "#FF0000",
+          automationTimeout: 60,
         } as SDBOutput,
       };
       sinon.stub(outputList, "outputData").value(updatedOutput);
@@ -321,6 +325,7 @@ describe("OutputHandlers.ts tests", () => {
           isPwm: true,
           isInvertedPwm: true,
           color: "#FF0000",
+          automationTimeout: 60,
         } as SDBOutput,
       };
       sinon.stub(outputList, "outputData").value(updatedOutput);

@@ -140,9 +140,9 @@ export default function EditAutomationModal({
           readOnly ? (
             <Title order={4}>{targetAutomation?.name}</Title>
           ) : targetAutomation ? (
-            "Edit Automation"
+            "Edit"
           ) : (
-            "Add Automation"
+            "Add New"
           )
         }
       >

@@ -22,6 +22,7 @@ export abstract class OutputBase implements IOutputBase {
   isInvertedPwm: boolean;
   state: OutputState;
   color: string;
+  automationTimeout: number;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
   #cache: OutputCache;
@@ -29,7 +30,6 @@ export abstract class OutputBase implements IOutputBase {
   #chartData: OutputChartData;
   #chartDataPointInterval: number;
   #automationManager: OutputAutomationManager;
-
   #updateMissCount = 0;
 
   constructor(
@@ -50,6 +50,7 @@ export abstract class OutputBase implements IOutputBase {
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
     this.state = new OutputState(sprootDB);
     this.color = sdbOutput.color;
+    this.automationTimeout = sdbOutput.automationTimeout;
     this.sprootDB = sprootDB;
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
@@ -68,7 +69,8 @@ export abstract class OutputBase implements IOutputBase {
   }
 
   get outputData(): IOutputBase {
-    const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state } = this;
+    const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state, automationTimeout } =
+      this;
     return {
       id,
       model,
@@ -79,6 +81,7 @@ export abstract class OutputBase implements IOutputBase {
       isInvertedPwm,
       color,
       state,
+      automationTimeout,
     };
   }
 
@@ -164,7 +167,12 @@ export abstract class OutputBase implements IOutputBase {
   }
 
   runAutomations(sensorList: SensorList, outputList: OutputList, now: Date): void {
-    const result = this.#automationManager.evaluate(sensorList, outputList, now);
+    const result = this.#automationManager.evaluate(
+      sensorList,
+      outputList,
+      this.automationTimeout,
+      now,
+    );
     if (result.value != null) {
       this.state.setNewState(
         {

@@ -4,7 +4,6 @@ import { OutputAutomation } from "./OutputAutomation";
 import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
 
 export default class OutputAutomationManager {
-  #EXPIRATION_TIMER = 60000; // 1 minute
   #automations: Record<number, OutputAutomation>;
   #sprootDB: ISprootDB;
   #lastRunAt: number | null = null;
@@ -30,10 +29,11 @@ export default class OutputAutomationManager {
   evaluate(
     sensorList: SensorList,
     outputList: OutputList,
+    automationTimeout: number,
     now: Date = new Date(),
   ): { names: string[]; value: number | null } {
     //If not runnable, return the last result
-    if (!this.#isRunnable(now)) {
+    if (!this.#isRunnable(now, automationTimeout)) {
       return this.#lastEvaluation;
     } else {
       this.#lastRunAt = now.getTime();
@@ -109,7 +109,7 @@ export default class OutputAutomationManager {
     await Promise.all(loadPromises);
   }
 
-  #isRunnable(now: Date): boolean {
-    return this.#lastRunAt == null || this.#lastRunAt + this.#EXPIRATION_TIMER <= now.getTime();
+  #isRunnable(now: Date, automationTimeout: number): boolean {
+    return this.#lastRunAt == null || this.#lastRunAt + automationTimeout * 1000 <= now.getTime();
   }
 }
