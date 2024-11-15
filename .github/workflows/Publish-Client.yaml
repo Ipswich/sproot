@@ -1,4 +1,4 @@
-name: Publish Server to GHCR
+name: Publish Client to GHCR
 
 on:
   push:
@@ -6,10 +6,10 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-server
+  IMAGE_NAME: ${{ github.repository }}-client
 
 jobs:
-  build-and-push-server:
+  build-and-push-client:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,7 +42,7 @@ jobs:
         uses: docker/build-push-action@v6.9.0
         with:
           context: ./
-          file: ./server/Dockerfile
+          file: ./client/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
