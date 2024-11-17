@@ -23,11 +23,9 @@ COPY .. ./sproot
 WORKDIR /sproot
 RUN npm run install:common
 ENV NODE_OPTIONS="--max-old-space-size=8192"
-ARG VITE_CHART_DATA_POINT_INTERVAL
-ARG VITE_MAX_CHART_DATA_POINTS
 ARG VITE_API_SERVER_URL
-ARG VITE_CLIENT_VERSION
-RUN npm run install:client 
+ARG VITE_PRECONFIGURED
+RUN npm run install:client
 RUN npm run build:client
 
 FROM nginx:1.26.2-alpine-slim

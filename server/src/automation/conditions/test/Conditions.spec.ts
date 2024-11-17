@@ -2,7 +2,7 @@ import { SprootDB } from "../../../database/SprootDB";
 import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
 import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { OutputList } from "../../../outputs/list/OutputList";
 import { OutputBase } from "../../../outputs/base/OutputBase";
 import { SensorList } from "../../../sensors/list/SensorList";

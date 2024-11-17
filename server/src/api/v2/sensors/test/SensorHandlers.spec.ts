@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/SensorHandlers";
-import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";

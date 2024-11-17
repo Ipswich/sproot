@@ -1,7 +1,7 @@
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
 import { OutputAutomation } from "./OutputAutomation";
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 export default class OutputAutomationManager {
   #automations: Record<number, OutputAutomation>;

@@ -1,4 +1,4 @@
-import { Group, Code, ScrollArea } from "@mantine/core";
+import { Group, ScrollArea } from "@mantine/core";
 import { LinksGroup } from "./NavbarLinksGroup";
 // import { Logo } from './Logo';
 import classes from "./css/NavbarContents.module.css";
@@ -33,7 +33,7 @@ export default function NavbarContents({
         <Group justify="space-between">
           {/* <Logo style={{ width: rem(120) }} /> */}
           <h1>Sproot</h1>
-          <Code fw={700}>{import.meta.env["VITE_CLIENT_VERSION"]}</Code>
+          {/* <Code fw={700}>{import.meta.env["VITE_CLIENT_VERSION"]}</Code> */}
         </Group>
       </div>
 

@@ -1,4 +1,5 @@
-name: "Test"
+
+name: "Verify and Test"
 
 on:
   push:
@@ -20,7 +21,7 @@ jobs:
   # Depends on prettier finishing successfully
   test:
     needs: prettier
-    name: Unit tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
+    name: Run Unit Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: ${{ matrix.experimental }}

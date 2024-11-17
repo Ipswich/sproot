@@ -1,9 +1,9 @@
-// import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+// import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 // import winston from "winston";
 
 // import { assert } from "chai";
 // import * as sinon from "sinon";
-// import { ChartData } from "@sproot/sproot-common/src/utility/IChartable";
+// import { ChartData } from "@sproot/sproot-common/dist/utility/IChartable";
 // const sandbox = sinon.createSandbox();
 
 // describe("SensorBase.ts tests", function () {

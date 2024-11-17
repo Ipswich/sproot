@@ -6,7 +6,8 @@ import express from "express";
 import mysql2 from "mysql2/promise";
 import * as winston from "winston";
 
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
@@ -20,7 +21,7 @@ const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
   user: process.env["DATABASE_USER"]!,
   password: process.env["DATABASE_PASSWORD"]!,
-  database: process.env["DATABASE_NAME"]!,
+  database: Constants.DATABASE_NAME,
   port: parseInt(process.env["DATABASE_PORT"]!),
   dateStrings: true,
 };
@@ -40,19 +41,19 @@ const logger = setupLogger(app);
   logger.info("Creating sensor and output lists. . .");
   const sensorList = new SensorList(
     sprootDB,
-    Number(process.env["MAX_CACHE_SIZE"]),
-    Number(process.env["INITIAL_CACHE_LOOKBACK"]),
-    Number(process.env["MAX_CHART_DATA_POINTS"]),
-    Number(process.env["CHART_DATA_POINT_INTERVAL"]),
+    Constants.MAX_CACHE_SIZE,
+    Constants.INITIAL_CACHE_LOOKBACK,
+    Constants.MAX_CHART_DATA_POINTS,
+    Constants.CHART_DATA_POINT_INTERVAL,
     logger,
   );
   app.set("sensorList", sensorList);
   const outputList = new OutputList(
     sprootDB,
-    Number(process.env["MAX_CACHE_SIZE"]),
-    Number(process.env["INITIAL_CACHE_LOOKBACK"]),
-    Number(process.env["MAX_CHART_DATA_POINTS"]),
-    Number(process.env["CHART_DATA_POINT_INTERVAL"]),
+    Constants.MAX_CACHE_SIZE,
+    Constants.INITIAL_CACHE_LOOKBACK,
+    Constants.MAX_CHART_DATA_POINTS,
+    Constants.CHART_DATA_POINT_INTERVAL,
     logger,
   );
   app.set("outputList", outputList);
@@ -79,13 +80,13 @@ const logger = setupLogger(app);
 
     //Execute any changes made to state.
     outputList.executeOutputState();
-  }, parseInt(process.env["STATE_UPDATE_INTERVAL"]!));
+  }, Constants.STATE_UPDATE_INTERVAL);
 
   // Update loop - once a minute, that's the "frequency" of the system.
   const updateDatabaseLoop = setInterval(async () => {
     await sensorList.updateDataStoresAsync();
     await outputList.updateDataStoresAsync();
-  }, 60000);
+  }, Constants.DATABASE_UPDATE_INTERVAL);
 
   app.use(cors());
   app.use(cookieParser());
@@ -94,12 +95,12 @@ const logger = setupLogger(app);
   // API v2
   ApiRootV2(app);
 
-  const server = app.listen(process.env["APPLICATION_PORT"]!, () => {
+  const server = app.listen(3000, () => {
     profiler.done({
       message: "Sproot server initialization time",
       level: "debug",
     });
-    logger.info(`sproot is now listening on port ${process.env["APPLICATION_PORT"]}!`);
+    logger.info(`sproot is now listening on port 3000}!`);
   });
 
   // Graceful shutdown on signals

@@ -1,4 +1,4 @@
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SprootDB } from "../../../database/SprootDB";
 import OutputAutomationManager from "../OutputAutomationManager";
 
