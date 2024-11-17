@@ -2,29 +2,22 @@ services:
   server:
     depends_on:
       - db
-    build:
-      context: ./
-      dockerfile: ./server/Dockerfile.development
+     build:
+       context: ./
+       dockerfile: ./server/Dockerfile.development
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
       DEFAULT_USER: dev-test
       DEFAULT_USER_EMAIL: dev-test@example.com
       DEFAULT_USER_PASSWORD: password
-      APPLICATION_PORT: 3000
       AUTHENTICATION_ENABLED: false
       JWT_SECRET: CHANGE ME #Change this to something long and unique
       JWT_EXPIRATION: 259200000 #3 days in MS
       DATABASE_HOST: db
       DATABASE_PORT: 3306
       DATABASE_USER: root
-      DATABASE_PASSWORD: root #**MATCH ME**
-      DATABASE_NAME: sproot
-      STATE_UPDATE_INTERVAL: 1000
-      MAX_CACHE_SIZE: 10080 #7 days worth of minutes
-      INITIAL_CACHE_LOOKBACK: 10080 #7 days in minutes
-      CHART_DATA_POINT_INTERVAL: 5 #5 minutes (i.e. 5 minutes between each data point)
-      MAX_CHART_DATA_POINTS: 2016
+      DATABASE_PASSWORD: root
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
@@ -43,10 +36,7 @@ services:
       dockerfile: ./client/Dockerfile.development
       args:
         VITE_PRECONFIGURED: "false"
-        VITE_CHART_DATA_POINT_INTERVAL: 5
-        VITE_MAX_CHART_DATA_POINTS: 10080
         VITE_API_SERVER_URL: ""
-        VITE_CLIENT_VERSION: $npm_package_version
     environment:
       NODE_ENV: development
     volumes:
@@ -60,7 +50,7 @@ services:
     image: mariadb:11.5.2-noble
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: root #**MATCH ME**
+      MARIADB_ROOT_PASSWORD: root
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
       - ./sql/sproot-schema.preconfigured.sql:/docker-entrypoint-initdb.d/sproot-schema.preconfigured.sql
