@@ -6,6 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  DOCKER_BUILD_RECORD_UPLOAD: false
   SERVER_IMAGE_NAME: ${{ github.repository }}-server
   CLIENT_IMAGE_NAME: ${{ github.repository }}-client
 
@@ -89,9 +90,9 @@ jobs:
         with:
           context: ./
           file: ./client/Dockerfile
-          build-args: 
-            VITE_PRECONFIGURED=false
-            VITE_API_SERVER_URL=
+          build-args: |
+            "VITE_PRECONFIGURED=false"
+            "VITE_API_SERVER_URL="
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
