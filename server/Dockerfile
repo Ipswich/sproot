@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM debian:12.6-slim AS build
+FROM debian:12.6-slim AS build
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
     echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
