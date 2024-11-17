@@ -55,6 +55,9 @@ jobs:
         uses: docker/build-push-action@v6.9.0
         with:
           context: ./
+          build-args: |
+            VITE_API_SERVER_URL=""
+            VITE_PRECONFIGURED=false
           file: ./${{ env.SERVICE }}/Dockerfile
           platforms: linux/arm64,linux/amd64
           push: true
