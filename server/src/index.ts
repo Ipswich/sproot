@@ -100,7 +100,7 @@ const logger = setupLogger(app);
       message: "Sproot server initialization time",
       level: "debug",
     });
-    logger.info(`sproot is now listening on port 3000}!`);
+    logger.info("sproot is now listening on port 3000!");
   });
 
   // Graceful shutdown on signals
