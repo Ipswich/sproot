@@ -1,3 +1,4 @@
+import * as Constants from "@sproot/sproot-common/src/utility/Constants";
 import {
   ChartSeries,
   ChartData,
@@ -28,8 +29,8 @@ export default function ReadingsChartContainer({
   setChartRendering,
 }: ReadingsChartContainerProps) {
   const baseChartData = new ChartData(
-    import.meta.env["VITE_MAX_CHART_DATA_POINTS"],
-    import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"],
+    Constants.MAX_CHART_DATA_POINTS,
+    Constants.CHART_DATA_POINT_INTERVAL,
   );
   const [timeSpans, setTimeSpans] = useState(
     ChartData.generateTimeSpansFromDataSeries(
@@ -48,8 +49,8 @@ export default function ReadingsChartContainer({
   const updateAsync = async () => {
     const newData = (await chartDataQuery.refetch()).data!;
     const baseChartData = new ChartData(
-      import.meta.env["VITE_MAX_CHART_DATA_POINTS"],
-      import.meta.env["VITE_CHART_DATA_POINT_INTERVAL"],
+      Constants.MAX_CHART_DATA_POINTS,
+      Constants.CHART_DATA_POINT_INTERVAL,
       newData.data[readingType as ReadingType],
     );
     setTimeSpans(
