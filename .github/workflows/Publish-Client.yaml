@@ -4,7 +4,7 @@ on:
   push:
     branches: ['build-fiddlin']
     paths:
-      - 'client/**'
+      - 'client/src/**'
 
 env:
   REGISTRY: ghcr.io
