@@ -7,7 +7,6 @@ on:
       - 'common/src/**'
       - 'client/src/**'
 
-
 env:
   REGISTRY: ghcr.io
   DOCKER_BUILD_RECORD_UPLOAD: false
