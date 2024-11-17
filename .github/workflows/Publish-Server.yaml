@@ -4,6 +4,7 @@ on:
   push:
     branches: ['build-fiddlin']
     paths:
+      - 'common/src/**'
       - 'server/src/**'
 
 env:
