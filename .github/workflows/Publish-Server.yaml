@@ -2,10 +2,10 @@ name: Publish Server Image
 
 on:
   push:
-    branches: ['main']
-    paths:
-      - 'common/src/**'
-      - 'server/src/**'
+    branches: ['add-platforms']
+    # paths:
+    #   - 'common/src/**'
+    #   - 'server/src/**'
 
 env:
   REGISTRY: ghcr.io
@@ -50,6 +50,7 @@ jobs:
         with:
           context: ./
           file: ./${{ env.SERVICE }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
