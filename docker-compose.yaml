@@ -3,10 +3,10 @@ services:
     restart: unless-stopped
     depends_on:
       - db
-    image: ghcr.io/ipswich/sproot-server:latest
-    # build:
-    #   context: ./
-    #   dockerfile: ./server/Dockerfile
+    # image: ghcr.io/ipswich/sproot-server:latest
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile
     environment:
       - TZ=${TZ}
       - NODE_ENV=${NODE_ENV}
@@ -33,13 +33,13 @@ services:
     restart: unless-stopped
     depends_on:
       - server
-    image: ghcr.io/ipswich/sproot-client:latest
-    # build:
-    #   context: ./
-    #   dockerfile: ./client/Dockerfile
-    #   args:
-    #     - VITE_API_SERVER_URL=${API_SERVER_URL}
-    #     - VITE_PRECONFIGURED=${PRECONFIGURED}
+    # image: ghcr.io/ipswich/sproot-client:latest
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+      args:
+        - VITE_API_SERVER_URL=${API_SERVER_URL}
+        - VITE_PRECONFIGURED=${PRECONFIGURED}
     environment:
       - TZ=${TZ}
       - NODE_ENV=${NODE_ENV}

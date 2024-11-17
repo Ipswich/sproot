@@ -3,7 +3,7 @@ import mysql2, { ResultSetHeader } from "mysql2/promise";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";

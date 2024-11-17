@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { IOutputState, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 

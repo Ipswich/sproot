@@ -1,7 +1,7 @@
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { Request, Response } from "express";
 
 /**

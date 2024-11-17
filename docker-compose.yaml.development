@@ -2,7 +2,7 @@ services:
   server:
     depends_on:
       - db
-     build:
+    build:
        context: ./
        dockerfile: ./server/Dockerfile.development
     environment:
@@ -35,8 +35,8 @@ services:
       context: ./
       dockerfile: ./client/Dockerfile.development
       args:
-        VITE_PRECONFIGURED: "false"
         VITE_API_SERVER_URL: ""
+        VITE_PRECONFIGURED: "false"
     environment:
       NODE_ENV: development
     volumes:

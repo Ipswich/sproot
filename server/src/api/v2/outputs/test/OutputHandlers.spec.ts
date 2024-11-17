@@ -4,7 +4,7 @@ import { OutputList } from "../../../../outputs/list/OutputList";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/OutputHandlers";
 
-import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";

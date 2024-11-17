@@ -1,6 +1,6 @@
 import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
 import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
-import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SensorList } from "../SensorList";
 

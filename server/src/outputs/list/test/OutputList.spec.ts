@@ -1,6 +1,6 @@
 import { OutputList } from "../OutputList";
-import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
-import { MockSprootDB } from "@sproot/sproot-common/src/database/ISprootDB";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import Pca9685Driver from "pca9685";
 
 import { assert } from "chai";
