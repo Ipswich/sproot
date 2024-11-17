@@ -1,4 +1,5 @@
-name: "Test"
+
+name: "Verify Code Style and Run Tests"
 
 on:
   push:
