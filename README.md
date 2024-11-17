@@ -10,7 +10,7 @@ sproot is a Raspberry Pi-based greenhouse controller and monitoring system with 
 
 
 ## Running for Production 
-Grab the `docker-compose.yaml` file (or clone the repo), and run `sudo docker compose up -d`.
+Grab the `docker-compose.yaml` file (or clone the repo), and run `sudo docker compose up -d`. Images exist for `linux/amd64` and `linux/arm64`.
 
 ### Building locally
 If you'd rather build the project yourself, clone the repo and comment/uncomment the relevant lines in the `docker-compose.yaml` file.
