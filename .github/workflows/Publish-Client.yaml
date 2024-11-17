@@ -3,9 +3,9 @@ name: Publish Client Image
 on:
   push:
     branches: ['add-platforms']
-    paths:
-      - 'common/src/**'
-      - 'client/src/**'
+    # paths:
+    #   - 'common/src/**'
+    #   - 'client/src/**'
 
 env:
   REGISTRY: ghcr.io

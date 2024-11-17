@@ -3,9 +3,9 @@ name: Publish Server Image
 on:
   push:
     branches: ['add-platforms']
-    paths:
-      - 'common/src/**'
-      - 'server/src/**'
+    # paths:
+    #   - 'common/src/**'
+    #   - 'server/src/**'
 
 env:
   REGISTRY: ghcr.io
