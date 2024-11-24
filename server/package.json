@@ -1,6 +1,5 @@
 {
   "name": "@sproot/sproot-server",
-  "version": "0.1.0",
   "private": true,
   "description": "sproot-server, the backend for the sproot project",
   "main": "index.js",
