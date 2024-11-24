@@ -23,6 +23,7 @@ COPY .. ./sproot
 WORKDIR /sproot
 RUN npm run install:common
 ENV NODE_OPTIONS="--max-old-space-size=8192"
+ARG VITE_VERSION
 ARG VITE_API_SERVER_URL
 ARG VITE_PRECONFIGURED
 RUN npm run install:client

@@ -33,7 +33,7 @@ export default function NavbarContents({
         <Group justify="space-between">
           {/* <Logo style={{ width: rem(120) }} /> */}
           <h1>Sproot</h1>
-          {/* <Code fw={700}>{import.meta.env["VITE_CLIENT_VERSION"]}</Code> */}
+          <Code fw={700}>{import.meta.env["VITE_VERSION"]}</Code>
         </Group>
       </div>
 

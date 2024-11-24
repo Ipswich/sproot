@@ -38,6 +38,7 @@ services:
     #   context: ./
     #   dockerfile: ./client/Dockerfile
     #   args:
+    #     - VITE_VERSION=${VERSION}
     #     - VITE_API_SERVER_URL=${API_SERVER_URL}
     #     - VITE_PRECONFIGURED=${PRECONFIGURED}
     environment:
