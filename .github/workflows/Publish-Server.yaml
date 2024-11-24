@@ -3,9 +3,6 @@ name: Publish Server Image
 on:
   push:
     branches: ['workflow-revision']
-    # paths:
-    #   - 'common/src/**'
-    #   - 'server/src/**'
 
 env:
   REGISTRY: ghcr.io
@@ -18,10 +15,8 @@ jobs:
     name: Create Tag
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
+      contents: write
+  
 
     steps:
       - uses: actions/checkout@v4
@@ -33,9 +28,15 @@ jobs:
         id: version
         run: |
           echo "VERSION=v$(jq -r '.version' package.json)" >> $GITHUB_ENV
-      - name: echo out version
-        run: echo $VERSION
-
+      - name: Push Git Tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${{env.VERSION}}
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag ${{env.VERSION}}
+          git push origin ${{env.VERSION}}
       
   # build-and-push-image:
   #   name: Build and Push Server Image
