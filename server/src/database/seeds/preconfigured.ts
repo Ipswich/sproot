@@ -1,0 +1,17 @@
+import { SDBOutput } from "@sproot/database/SDBOutput";
+import { Knex } from "knex";
+
+export async function seed(knex: Knex): Promise<void> {
+
+    // Create output seed data
+    await knex("outputs").insert<SDBOutput>([
+        { id: 1, model: "pca9685", address: "0x40", name: "Relay #1", color: "#82c91e", pin: 0, isPwm: 0, isInvertedPwm: 0, automationTimeout: 1 },
+        { id: 2, model: "pca9685", address: "0x40", name: "Relay #2", color: "#40c057", pin: 1, isPwm: 0, isInvertedPwm: 0, automationTimeout: 1 },
+        { id: 3, model: "pca9685", address: "0x40", name: "Relay #3", color: "#12b886", pin: 2, isPwm: 0, isInvertedPwm: 0, automationTimeout: 1 },
+        { id: 4, model: "pca9685", address: "0x40", name: "Relay #4", color: "#15aabf", pin: 3, isPwm: 0, isInvertedPwm: 0, automationTimeout: 1 },
+        { id: 5, model: "pca9685", address: "0x40", name: "Pwm #1", color: "#228be6", pin: 4, isPwm: 1, isInvertedPwm: 0, automationTimeout: 1 },
+        { id: 6, model: "pca9685", address: "0x40", name: "Pwm #2", color: "#4c6ef5", pin: 5, isPwm: 1, isInvertedPwm: 0, automationTimeout: 1 },
+        { id: 7, model: "pca9685", address: "0x40", name: "Pwm #3", color: "#7950f2", pin: 6, isPwm: 1, isInvertedPwm: 0, automationTimeout: 1 },
+        { id: 8, model: "pca9685", address: "0x40", name: "Pwm #4", color: "#be4bdb", pin: 7, isPwm: 1, isInvertedPwm: 0, automationTimeout: 1 },
+    ]);
+};

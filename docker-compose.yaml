@@ -20,6 +20,7 @@ services:
       - DATABASE_PORT=${DATABASE_PORT}
       - DATABASE_USER=${DATABASE_USER}
       - DATABASE_PASSWORD=root
+      - PRECONFIGURED=${PRECONFIGURED}
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
@@ -40,7 +41,6 @@ services:
     #   args:
     #     - VITE_VERSION=${VERSION}
     #     - VITE_API_SERVER_URL=${API_SERVER_URL}
-    #     - VITE_PRECONFIGURED=${PRECONFIGURED}
     environment:
       - TZ=${TZ}
       - NODE_ENV=${NODE_ENV}
@@ -58,7 +58,6 @@ services:
       - MARIADB_ROOT_PASSWORD=${DATABASE_PASSWORD}
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-      - ${DATABASE_SCHEMA}:/docker-entrypoint-initdb.d/sproot-schema.sql
     networks:
       - sproot-network
     ports:
