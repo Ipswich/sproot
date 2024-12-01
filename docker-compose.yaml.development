@@ -37,6 +37,7 @@ services:
       dockerfile: ./client/Dockerfile.development
       args:
         VITE_VERSION: 0.0.0
+        VITE_PRECONFIGURED: false
         VITE_API_SERVER_URL: ""
     environment:
       NODE_ENV: development

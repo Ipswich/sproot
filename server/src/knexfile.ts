@@ -20,7 +20,7 @@ const config: { [key: string]: Knex.Config } = {
     seeds: {
       loadExtensions: [".js"],
       directory: `${__dirname}/database/seeds`,
-    }
+    },
   },
 
   test: {
@@ -41,7 +41,7 @@ const config: { [key: string]: Knex.Config } = {
     seeds: {
       loadExtensions: [".js"],
       directory: `${__dirname}/database/seeds`,
-    }
+    },
   },
 
   production: {
@@ -62,8 +62,8 @@ const config: { [key: string]: Knex.Config } = {
     seeds: {
       loadExtensions: [".js"],
       directory: `${__dirname}/database/seeds`,
-    }
-  }
+    },
+  },
 };
 
 export default config;

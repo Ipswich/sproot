@@ -1,10 +1,8 @@
 import "dotenv/config";
-import knexConfig from "./knexfile";
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import knex, { Knex } from "knex";
 import mysql2 from "mysql2/promise";
 import * as winston from "winston";
 
@@ -18,12 +16,13 @@ import { OutputList } from "./outputs/list/OutputList";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
+import { getKnexConnectionAsync } from "./database/KnexUtilities";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
   user: process.env["DATABASE_USER"]!,
   password: process.env["DATABASE_PASSWORD"]!,
-  database: Constants.DATABASE_NAME+ "-development",
+  database: Constants.DATABASE_NAME + "-development",
   port: parseInt(process.env["DATABASE_PORT"]!),
   dateStrings: true,
 };
@@ -155,46 +154,5 @@ async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
     const hash = await bcrypt.hash(defaultUser.hash, salt);
     defaultUser.hash = hash;
     await sprootDB.addUserAsync(defaultUser);
-  }
-}
-
-async function getKnexConnectionAsync() {
-  const config = knexConfig[process.env["NODE_ENV"]?.toLowerCase()!];
-  if (!config) {
-    throw new Error("Invalid NODE_ENV");
-  }
-  // Create table if it doesn't exist
-  var didCreateTable = await createDatabaseIfNotExistsAsync(config);
-  const connection = knex(config);
-
-  // Perform migrations (possibly create tables)
-  await connection.migrate.latest();
-
-  // If we created the database and we're in a preconfigured environment, seed it as well.
-  if (didCreateTable && process.env["PRECONFIGURED"] == "true") {
-    await connection.seed.run({specific: `preconfigured.js`});
-  }
-  
-  return connection;
-
-  async function createDatabaseIfNotExistsAsync(config: Knex.Config): Promise<boolean> {
-    // Remove database name from connection config
-    const databaseName = (config.connection as any).database;
-    delete (config.connection as any).database;
-
-    let knexConnection = knex(config);
-
-    // If the database doesn't exist, create it
-    const databaseExists = (await knexConnection.from("information_schema.SCHEMATA").where("SCHEMA_NAME", databaseName)).length !== 0;
-    var didCreateDatabase = false
-    if (!databaseExists) {
-      await knexConnection.raw(`CREATE DATABASE \`${databaseName}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`);
-      didCreateDatabase = true
-    }
-    // Destroy the connection
-    await knexConnection.destroy();
-    // Restore database name
-    (config.connection as any).database = databaseName;
-    return didCreateDatabase;
   }
 }
