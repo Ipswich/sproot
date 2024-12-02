@@ -16,12 +16,25 @@ import { OutputList } from "./outputs/list/OutputList";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
+import { getKnexConnectionAsync } from "./database/KnexUtilities";
+
+let databaseSuffix = "";
+switch (process.env["NODE_ENV"]) {
+  case "development":
+    databaseSuffix = "-development";
+    break;
+  case "test":
+    databaseSuffix = "-test";
+    break;
+  default:
+    databaseSuffix = "";
+}
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
   user: process.env["DATABASE_USER"]!,
   password: process.env["DATABASE_PASSWORD"]!,
-  database: Constants.DATABASE_NAME,
+  database: `${Constants.DATABASE_NAME}${databaseSuffix}`,
   port: parseInt(process.env["DATABASE_PORT"]!),
   dateStrings: true,
 };
@@ -32,10 +45,12 @@ const logger = setupLogger(app);
 (async () => {
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
+  const knexConnection = await getKnexConnectionAsync();
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
   app.set("logger", logger);
 
+  await knexConnection.migrate.latest();
   await defaultUserCheck(sprootDB, logger);
 
   logger.info("Creating sensor and output lists. . .");

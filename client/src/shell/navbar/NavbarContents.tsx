@@ -1,4 +1,4 @@
-import { Group, ScrollArea } from "@mantine/core";
+import { Code, Group, ScrollArea } from "@mantine/core";
 import { LinksGroup } from "./NavbarLinksGroup";
 // import { Logo } from './Logo';
 import classes from "./css/NavbarContents.module.css";

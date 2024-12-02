@@ -4,9 +4,9 @@ services:
     depends_on:
       - db
     image: ghcr.io/ipswich/sproot-server:latest
-    # build:
-    #   context: ./
-    #   dockerfile: ./server/Dockerfile
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile
     environment:
       - TZ=${TZ}
       - NODE_ENV=${NODE_ENV}
@@ -20,6 +20,7 @@ services:
       - DATABASE_PORT=${DATABASE_PORT}
       - DATABASE_USER=${DATABASE_USER}
       - DATABASE_PASSWORD=root
+      - PRECONFIGURED=${PRECONFIGURED}
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
@@ -34,13 +35,13 @@ services:
     depends_on:
       - server
     image: ghcr.io/ipswich/sproot-client:latest
-    # build:
-    #   context: ./
-    #   dockerfile: ./client/Dockerfile
-    #   args:
-    #     - VITE_VERSION=${VERSION}
-    #     - VITE_API_SERVER_URL=${API_SERVER_URL}
-    #     - VITE_PRECONFIGURED=${PRECONFIGURED}
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+      args:
+        - VITE_VERSION=${VERSION}
+        - VITE_PRECONFIGURED=${PRECONFIGURED}
+        - VITE_API_SERVER_URL=${API_SERVER_URL}
     environment:
       - TZ=${TZ}
       - NODE_ENV=${NODE_ENV}
@@ -58,7 +59,6 @@ services:
       - MARIADB_ROOT_PASSWORD=${DATABASE_PASSWORD}
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-      - ${DATABASE_SCHEMA}:/docker-entrypoint-initdb.d/sproot-schema.sql
     networks:
       - sproot-network
     ports:
