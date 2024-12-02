@@ -18,11 +18,23 @@ import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 
+let databaseSuffix = "";
+switch (process.env["NODE_ENV"]) {
+  case "development":
+    databaseSuffix = "-development";
+    break;
+  case "test":
+    databaseSuffix = "-test";
+    break;
+  default:
+    databaseSuffix = "";
+}
+
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
   user: process.env["DATABASE_USER"]!,
   password: process.env["DATABASE_PASSWORD"]!,
-  database: `${Constants.DATABASE_NAME}-${process.env["NODE_ENV"]}`,
+  database: `${Constants.DATABASE_NAME}${databaseSuffix}`,
   port: parseInt(process.env["DATABASE_PORT"]!),
   dateStrings: true,
 };
