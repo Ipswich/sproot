@@ -12,8 +12,9 @@
     "prettier:check": "npx --yes prettier . --check",
     "start": "npm run build && node ./dist/index.js",
     "start:dev": "npx nodemon --delay 3",
-    "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts",
-    "check": "npm run prettier:check && npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
+    "test": "mocha -r ts-node/register --colors --ignore './src/test/**/*.spec.ts' './src/**/*.spec.ts'",
+    "test:system": "mocha -r ts-node/register --file ./src/test/setup.ts --colors './src/test/**/*.spec.ts'",
+    "check": "npm run prettier:check && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
   },
   "author": "Ben Steele",
   "license": "ISC",

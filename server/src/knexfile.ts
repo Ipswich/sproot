@@ -14,19 +14,19 @@ const config: { [key: string]: Knex.Config } = {
     },
     migrations: {
       loadExtensions: [".js"],
-      directory: `${__dirname}/database/migrations`,
+      directory: "dist/database/migrations",
       tableName: "knex_migrations",
     },
     seeds: {
       loadExtensions: [".js"],
-      directory: `${__dirname}/database/seeds`,
+      directory: "dist/database/seeds",
     },
   },
 
   test: {
     client: "mysql2",
     connection: {
-      host: "127.0.0.1",
+      host: "db",
       user: "root",
       password: "root",
       database: `${Constants.DATABASE_NAME}-test`,
@@ -34,13 +34,13 @@ const config: { [key: string]: Knex.Config } = {
       dateStrings: true,
     },
     migrations: {
-      loadExtensions: [".js"],
-      directory: `${__dirname}/database/migrations`,
+      loadExtensions: [".ts"],
+      directory: "src/database/migrations",
       tableName: "knex_migrations",
     },
     seeds: {
-      loadExtensions: [".js"],
-      directory: `${__dirname}/database/seeds`,
+      loadExtensions: [".ts"],
+      directory: "src/database/seeds",
     },
   },
 
@@ -56,12 +56,12 @@ const config: { [key: string]: Knex.Config } = {
     },
     migrations: {
       loadExtensions: [".js"],
-      directory: `${__dirname}/database/migrations`,
+      directory: "dist/database/migrations",
       tableName: "knex_migrations",
     },
     seeds: {
       loadExtensions: [".js"],
-      directory: `${__dirname}/database/seeds`,
+      directory: "dist/database/seeds",
     },
   },
 };

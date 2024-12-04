@@ -7,6 +7,22 @@ on:
 
 env:
   NODE_VERSION: 22.5.1
+  
+  # Server configuration
+  TZ: America/Los_Angeles
+  NODE_ENV: test
+  DEFAULT_USER: dev-test
+  DEFAULT_USER_EMAIL: dev-test@example.com 
+  DEFAULT_USER_PASSWORD: password
+  APPLICATION_PORT: 3000
+  AUTHENTICATION_ENABLED: false
+  JWT_SECRET: Default
+  JWT_EXPIRATION: 259200000
+  DATABASE_HOST: db
+  DATABASE_PORT: 3306
+  DATABASE_USER: root
+  DATABASE_PASSWORD: root
+  PRECONFIGURED: false
 
 jobs:
   prettier:
@@ -36,6 +52,14 @@ jobs:
             experimental: false
           # - node-version: 22.x
           #   experimental: true
+
+    services: 
+      db:
+        image: mariadb:11.5.2-noble
+        env:
+          MARIADB_ROOT_PASSWORD: ${{ env.DATABASE_PASSWORD }}
+        ports:
+          - 3306:3306
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -44,5 +68,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: npm ci
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
+      - name: Run system tests
+        run: npm run test:system

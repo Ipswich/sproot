@@ -22,6 +22,7 @@
     "start:dev:server": "npm run start:dev --workspace=server",
     "start:dev:client": "npm run start:dev --workspace=client",
     "test": "npm run test --workspaces --if-present",
+    "test:system": "npm run test:system --workspace=server",
     "check": "npm run check --workspaces --if-present"
   },
   "author": "Ben Steele",
