@@ -16,7 +16,7 @@ import { OutputList } from "./outputs/list/OutputList";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
-// import { getKnexConnectionAsync } from "./database/KnexUtilities";
+import { getKnexConnectionAsync } from "./database/KnexUtilities";
 
 const mysqlConfig = {
   host: process.env["DATABASE_HOST"]!,
@@ -32,7 +32,9 @@ export default async function setupAsync(): Promise<Express> {
   const logger = setupLogger(app);
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
-  // const knexConnection = await getKnexConnectionAsync();
+  const knexConnection = await getKnexConnectionAsync();
+  console.log(knexConnection);
+
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);
   app.set("logger", logger);
@@ -116,6 +118,7 @@ function getDatabaseSuffix(): string {
       return "-development";
     case "test":
       return "-test";
+    case "production":
     default:
       return "";
   }

@@ -18,7 +18,7 @@ env:
   AUTHENTICATION_ENABLED: false
   JWT_SECRET: Default
   JWT_EXPIRATION: 259200000
-  DATABASE_HOST: db
+  DATABASE_HOST: 127.0.0.1
   DATABASE_PORT: 3306
   DATABASE_USER: root
   DATABASE_PASSWORD: root
@@ -40,7 +40,7 @@ jobs:
   # Depends on prettier finishing successfully
   test:
     needs: prettier
-    name: Run Unit Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
+    name: Run Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: ${{ matrix.experimental }}
@@ -53,7 +53,7 @@ jobs:
           # - node-version: 22.x
           #   experimental: true
 
-    services: 
+    services:
       db:
         image: mariadb:11.5.2-noble
         env:

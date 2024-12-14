@@ -5,11 +5,11 @@ const config: { [key: string]: Knex.Config } = {
   development: {
     client: "mysql2",
     connection: {
-      host: "db",
-      user: "root",
-      password: "root",
+      host: process.env["DATABASE_HOST"]!,
+      user: process.env["DATABASE_USER"]!,
+      password: process.env["DATABASE_PASSWORD"]!,
       database: `${Constants.DATABASE_NAME}-development`,
-      port: 3306,
+      port: parseInt(process.env["DATABASE_PORT"]!),
       dateStrings: true,
     },
     migrations: {
@@ -26,11 +26,11 @@ const config: { [key: string]: Knex.Config } = {
   test: {
     client: "mysql2",
     connection: {
-      host: "db",
-      user: "root",
-      password: "root",
+      host: process.env["DATABASE_HOST"]!,
+      user: process.env["DATABASE_USER"]!,
+      password: process.env["DATABASE_PASSWORD"]!,
       database: `${Constants.DATABASE_NAME}-test`,
-      port: 3306,
+      port: parseInt(process.env["DATABASE_PORT"]!),
       dateStrings: true,
     },
     migrations: {
