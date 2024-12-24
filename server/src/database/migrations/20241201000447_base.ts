@@ -1,7 +1,7 @@
 import { type Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
-  if (!await knex.schema.hasTable("automations")) {
+  if (!(await knex.schema.hasTable("automations"))) {
     await knex.schema.createTable("automations", (table) => {
       table.increments("id").notNullable();
       table.string("name", 32).notNullable();
@@ -11,7 +11,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("automation_tags")) {
+  if (!(await knex.schema.hasTable("automation_tags"))) {
     await knex.schema.createTable("automation_tags", (table) => {
       table.string("tag", 32).notNullable();
       table.primary(["tag"]);
@@ -19,7 +19,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("automation_tag_lookup")) {
+  if (!(await knex.schema.hasTable("automation_tag_lookup"))) {
     await knex.schema.createTable("automation_tag_lookup", (table) => {
       table
         .integer("automation_id", 10)
@@ -42,7 +42,7 @@ export async function up(knex: Knex): Promise<void> {
       setTableDefaults(table);
     });
   }
-  if (!await knex.schema.hasTable("outputs")) {
+  if (!(await knex.schema.hasTable("outputs"))) {
     await knex.schema.createTable("outputs", (table) => {
       table.increments("id").notNullable();
       table.string("model", 64).notNullable();
@@ -58,7 +58,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("output_actions")) {
+  if (!(await knex.schema.hasTable("output_actions"))) {
     await knex.schema.createTable("output_actions", (table) => {
       table.increments("id").notNullable();
       table
@@ -84,7 +84,7 @@ export async function up(knex: Knex): Promise<void> {
       setTableDefaults(table);
     });
   }
-  if (!await knex.schema.hasTable("output_conditions")) {
+  if (!(await knex.schema.hasTable("output_conditions"))) {
     await knex.schema.createTable("output_conditions", (table) => {
       table.increments("id").notNullable();
       table
@@ -113,7 +113,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("output_data")) {
+  if (!(await knex.schema.hasTable("output_data"))) {
     await knex.schema.createTable("output_data", (table) => {
       table.increments("id").notNullable();
       table
@@ -133,7 +133,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("sensors")) {
+  if (!(await knex.schema.hasTable("sensors"))) {
     await knex.schema.createTable("sensors", (table) => {
       table.increments("id").notNullable();
       table.string("name", 64).defaultTo(null);
@@ -145,7 +145,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("sensor_conditions")) {
+  if (!(await knex.schema.hasTable("sensor_conditions"))) {
     await knex.schema.createTable("sensor_conditions", (table) => {
       table.increments("id").notNullable();
       table
@@ -174,7 +174,7 @@ export async function up(knex: Knex): Promise<void> {
       setTableDefaults(table);
     });
   }
-  if (!await knex.schema.hasTable("sensor_data")) {
+  if (!(await knex.schema.hasTable("sensor_data"))) {
     await knex.schema.createTable("sensor_data", (table) => {
       table.increments("id").notNullable();
       table
@@ -195,7 +195,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("time_conditions")) {
+  if (!(await knex.schema.hasTable("time_conditions"))) {
     await knex.schema.createTable("time_conditions", (table) => {
       table.increments("id").notNullable();
       table
@@ -215,7 +215,7 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!await knex.schema.hasTable("users")) {
+  if (!(await knex.schema.hasTable("users"))) {
     await knex.schema.createTable("users", (table) => {
       table.string("username", 32).notNullable();
       table.string("hash", 60).notNullable();
@@ -231,7 +231,7 @@ export async function up(knex: Knex): Promise<void> {
        FROM information_schema.views
        WHERE table_name = ?
      ) AS view_exists;`,
-    ["output_actions_view"]
+    ["output_actions_view"],
   );
 
   if (!viewExists.rows[0].view_exists) {
@@ -252,7 +252,7 @@ export async function up(knex: Knex): Promise<void> {
   }
 }
 
-export async function down(_knex: Knex): Promise<void> { }
+export async function down(_knex: Knex): Promise<void> {}
 
 function setTableDefaults(table: Knex.CreateTableBuilder) {
   table.engine("InnoDB");
