@@ -1,5 +1,5 @@
+import { ISprootDB, MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { OutputState } from "../OutputState";
-import { SprootDB } from "../../../database/SprootDB";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 
@@ -8,7 +8,7 @@ import sinon from "sinon";
 
 describe("OutputState.ts tests", () => {
   describe("updateControlMode", () => {
-    let sprootDB = {} as SprootDB;
+    let sprootDB = {} as ISprootDB;
     let outputState = new OutputState(sprootDB);
     it("should update control mode", () => {
       outputState.updateControlMode(ControlMode.automatic);
@@ -19,7 +19,7 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("setNewState", () => {
-    let sprootDB = {} as SprootDB;
+    let sprootDB = {} as ISprootDB;
     let outputState = new OutputState(sprootDB);
     it("should set new states", () => {
       const automaticState = {
@@ -48,7 +48,7 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("get", () => {
-    let sprootDB = {} as SprootDB;
+    let sprootDB = {} as ISprootDB;
     let outputState = new OutputState(sprootDB);
     it("should return the correct states", () => {
       const automaticState = {
@@ -71,7 +71,7 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("value", () => {
-    let sprootDB = {} as SprootDB;
+    let sprootDB = {} as ISprootDB;
     let outputState = new OutputState(sprootDB);
     it("should return the correct values", () => {
       const automaticState = {
@@ -94,7 +94,7 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("logTime", () => {
-    let sprootDB = {} as SprootDB;
+    let sprootDB = {} as ISprootDB;
     let outputState = new OutputState(sprootDB);
     it("should return the correct logTimes", () => {
       const automaticState = {
@@ -117,7 +117,7 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("addCurrentStateToDatabaseAsync", () => {
-    const localSprootDB = sinon.createStubInstance(SprootDB);
+    const localSprootDB = sinon.createStubInstance(MockSprootDB);
     const localOutputState = new OutputState(localSprootDB);
     it("should call addOutputStateAsync with the correct parameters", async () => {
       const automaticState = {

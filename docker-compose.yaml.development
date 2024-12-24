@@ -18,6 +18,7 @@ services:
       DATABASE_PORT: 3306
       DATABASE_USER: root
       DATABASE_PASSWORD: root
+      PRECONFIGURED: true
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
@@ -35,8 +36,9 @@ services:
       context: ./
       dockerfile: ./client/Dockerfile.development
       args:
+        VITE_VERSION: 0.0.0
+        VITE_PRECONFIGURED: false
         VITE_API_SERVER_URL: ""
-        VITE_PRECONFIGURED: "false"
     environment:
       NODE_ENV: development
     volumes:
@@ -53,11 +55,10 @@ services:
       MARIADB_ROOT_PASSWORD: root
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-      - ./sql/sproot-schema.preconfigured.sql:/docker-entrypoint-initdb.d/sproot-schema.preconfigured.sql
     networks:
       - sproot-network
-    ports:
-      - 3306:3306
+    expose:
+      - "3306"
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache

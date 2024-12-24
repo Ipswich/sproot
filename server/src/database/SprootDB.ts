@@ -362,14 +362,12 @@ class SprootDB implements ISprootDB {
   ): Promise<SDBOutputState[]> {
     const [rows] = await this.#connection.execute<SDBOutputState[]>(
       `SELECT value, controlMode, logTime
-      FROM outputs o
-      JOIN (
-        SELECT *
-        FROM output_data
-        WHERE logTime > DATE_SUB(?, INTERVAL ? MINUTE)
-      ) AS d ON o.id=d.output_id
-      WHERE output_id = ?
-      ORDER BY logTime ASC`,
+FROM outputs o
+JOIN output_data d ON o.id = d.output_id
+WHERE d.logTime > DATE_SUB(?, INTERVAL ? MINUTE)
+  AND d.output_id = ?
+ORDER BY d.logTime ASC;
+`,
       [since.toISOString(), minutes, output.id],
     );
     if (toIsoString) {
@@ -400,14 +398,12 @@ class SprootDB implements ISprootDB {
   ): Promise<SDBReading[]> {
     const [rows] = await this.#connection.execute<SDBReading[]>(
       `SELECT metric, data, units, logTime
-      FROM sensors s
-      JOIN (
-        SELECT *
-        FROM sensor_data
-        WHERE logTime > DATE_SUB(?, INTERVAL ? MINUTE)
-      ) AS d ON s.id=d.sensor_id
-      WHERE sensor_id = ?
-      ORDER BY logTime ASC`,
+FROM sensors s
+JOIN sensor_data d ON s.id = d.sensor_id
+WHERE d.logTime > DATE_SUB(?, INTERVAL ? MINUTE)
+  AND d.sensor_id = ?
+ORDER BY d.logTime ASC;
+`,
       [since.toISOString(), minutes, sensor.id],
     );
     if (toIsoString) {
