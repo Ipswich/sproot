@@ -225,16 +225,14 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  const viewExists = await knex.raw(
-    `SELECT EXISTS (
-       SELECT 1
-       FROM information_schema.views
-       WHERE table_name = ?
-     ) AS view_exists;`,
-    ["output_actions_view"],
-  );
+  const viewExists = await knex("information_schema.VIEWS")
+    .where({
+      TABLE_SCHEMA: knex.client.config.connection.database,
+      TABLE_NAME: "output_actions_view",
+    })
+    .first();
 
-  if (!viewExists.rows[0].view_exists) {
+  if (!viewExists) {
     await knex.schema.createView("output_actions_view", (view) => {
       view.as(
         knex("automations")
