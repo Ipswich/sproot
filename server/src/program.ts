@@ -3,12 +3,11 @@ import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Express } from "express";
-import mysql2 from "mysql2/promise";
 import * as winston from "winston";
 
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SprootDB } from "./database/SprootDB";
+import { KnexDB } from "./database/KnexDB";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
 import { OutputList } from "./outputs/list/OutputList";
@@ -18,15 +17,6 @@ import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 
-const mysqlConfig = {
-  host: process.env["DATABASE_HOST"]!,
-  user: process.env["DATABASE_USER"]!,
-  password: process.env["DATABASE_PASSWORD"]!,
-  database: `${Constants.DATABASE_NAME}${getDatabaseSuffix()}`,
-  port: parseInt(process.env["DATABASE_PORT"]!),
-  dateStrings: true,
-};
-
 export default async function setupAsync(): Promise<Express> {
   const app = express();
   const logger = setupLogger(app);
@@ -35,7 +25,7 @@ export default async function setupAsync(): Promise<Express> {
   const knexConnection = await getKnexConnectionAsync();
   app.set("knexConnection", knexConnection);
 
-  const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
+  const sprootDB = new KnexDB(knexConnection);
   app.set("sprootDB", sprootDB);
   app.set("logger", logger);
 
@@ -110,18 +100,6 @@ export default async function setupAsync(): Promise<Express> {
   });
 
   return app;
-}
-
-function getDatabaseSuffix(): string {
-  switch (process.env["NODE_ENV"]) {
-    case "development":
-      return "-development";
-    case "test":
-      return "-test";
-    case "production":
-    default:
-      return "";
-  }
 }
 
 async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {

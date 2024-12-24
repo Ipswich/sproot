@@ -3,13 +3,13 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { SensorList } from "../../../sensors/list/SensorList";
 import { OutputList } from "../../../outputs/list/OutputList";
-import { SprootDB } from "../../../database/SprootDB";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 describe("Automation.ts tests", () => {
   describe("evaluate", () => {
     it("should return the automation's value (conditions met)", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const automation = new OutputAutomation(1, "test", 75, "or", sprootDB);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -34,7 +34,7 @@ describe("Automation.ts tests", () => {
     });
 
     it("should return null (conditions not met)", () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const automation = new OutputAutomation(1, "test", 75, "or", sprootDB);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);

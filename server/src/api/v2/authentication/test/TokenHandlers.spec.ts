@@ -4,14 +4,14 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
 
-import { SprootDB } from "../../../../database/SprootDB";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { getTokenAsync } from "../handlers/TokenHandlers";
 import { SDBUser } from "@sproot/database/SDBUser";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 describe("TokenHandlers.ts tests", () => {
   describe("getTokenAsync", async () => {
-    const sprootDB = sinon.createStubInstance(SprootDB);
+    const sprootDB = sinon.createStubInstance(MockSprootDB);
     sprootDB.getUserAsync.resolves([
       {
         username: "dev-test",

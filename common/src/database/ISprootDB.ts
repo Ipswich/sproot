@@ -99,6 +99,7 @@ interface ISprootDB {
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
+  disposeAsync(): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -308,6 +309,10 @@ class MockSprootDB implements ISprootDB {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addUserAsync(_user: SDBUser): Promise<void> {
+    return;
+  }
+
+  async disposeAsync(): Promise<void> {
     return;
   }
 }

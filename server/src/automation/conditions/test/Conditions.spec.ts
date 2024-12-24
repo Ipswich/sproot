@@ -1,4 +1,3 @@
-import { SprootDB } from "../../../database/SprootDB";
 import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
 import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
@@ -12,11 +11,12 @@ import { Conditions } from "../Conditions";
 
 import { assert } from "chai";
 import sinon from "sinon";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 describe("Conditions.ts tests", () => {
   describe("evaluate", () => {
     it("should return true or false, depending on the condition and comparator", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const conditions = new Conditions(1, sprootDB);
       // Sensor stubs
       const sensor = sinon.createStubInstance(SensorBase);
@@ -145,7 +145,7 @@ describe("Conditions.ts tests", () => {
 
   // describe("addSensorConditionAsync", () => {
   //   it("should add a sensor condition to the conditions list", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.addSensorConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -164,7 +164,7 @@ describe("Conditions.ts tests", () => {
 
   // describe("addOutputConditionAsync", () => {
   //   it("should add an output condition to the conditions list", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.addOutputConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -182,7 +182,7 @@ describe("Conditions.ts tests", () => {
 
   // describe("addTimeConditionAsync", () => {
   //   it("should add a time condition to the conditions list", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.addTimeConditionAsync.resolves(1);
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -199,7 +199,7 @@ describe("Conditions.ts tests", () => {
 
   // describe("updateConditionAsync", () => {
   //   it("should update a sensorCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.updateSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -220,7 +220,7 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should update an outputCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.updateOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -239,7 +239,7 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should update a timeCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.updateTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -258,7 +258,7 @@ describe("Conditions.ts tests", () => {
 
   // describe("deleteSensorConditionAsync", () => {
   //   it("should delete a sensorCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.addSensorConditionAsync.resolves(1);
   //     sprootDB.deleteSensorConditionAsync.resolves();
 
@@ -272,7 +272,7 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should not delete a sensorCondition that doesn't exist", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.deleteSensorConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -285,7 +285,7 @@ describe("Conditions.ts tests", () => {
 
   // describe("deleteOutputConditionAsync", () => {
   //   it("should delete an outputCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.addOutputConditionAsync.resolves(1);
   //     sprootDB.deleteOutputConditionAsync.resolves();
 
@@ -299,7 +299,7 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should not delete an outputCondition that doesn't exist", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.deleteOutputConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -312,7 +312,7 @@ describe("Conditions.ts tests", () => {
 
   // describe("deleteTimeConditionAsync", () => {
   //   it("should delete a timeCondition", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.addTimeConditionAsync.resolves(1);
   //     sprootDB.deleteTimeConditionAsync.resolves();
 
@@ -326,7 +326,7 @@ describe("Conditions.ts tests", () => {
   //   });
 
   //   it("should not delete a timeCondition that doesn't exist", async () => {
-  //     const sprootDB = sinon.createStubInstance(SprootDB);
+  //     const sprootDB = sinon.createStubInstance(MockSprootDB);
   //     sprootDB.deleteTimeConditionAsync.resolves();
 
   //     const conditions = new Conditions(1, sprootDB);
@@ -339,7 +339,7 @@ describe("Conditions.ts tests", () => {
 
   describe("loadAsync", () => {
     it("should load all conditions from the database", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getSensorConditionsAsync.resolves([
         {
           id: 1,

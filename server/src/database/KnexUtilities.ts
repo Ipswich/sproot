@@ -1,7 +1,7 @@
 import knexConfig from ".././knexfile";
 import knex, { Knex } from "knex";
 
-export async function getKnexConnectionAsync() {
+export async function getKnexConnectionAsync(): Promise<Knex<any, unknown>> {
   const config = knexConfig[process.env["NODE_ENV"]?.toLowerCase()!];
   if (!config) {
     throw new Error("Invalid NODE_ENV, could not find knex configuration.");
