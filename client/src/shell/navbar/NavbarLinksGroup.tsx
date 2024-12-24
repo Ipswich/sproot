@@ -8,7 +8,7 @@ interface LinksGroupProps {
   icon: (props: TablerIconsProps | undefined) => JSX.Element;
   navLinkText: string;
   page: Page;
-  setCurrentPage: (page: Page) => void;
+  closeNavbar: () => void;
   openedLinkGroups: string[];
   setOpenedLinkGroups: (linkGroups: string[]) => void;
 }
@@ -17,7 +17,7 @@ export function LinksGroup({
   icon: Icon,
   navLinkText,
   page,
-  setCurrentPage,
+  closeNavbar: closeNavbar,
   openedLinkGroups,
   setOpenedLinkGroups,
 }: LinksGroupProps) {
@@ -29,7 +29,7 @@ export function LinksGroup({
       key={link.navLinkText}
       onClick={() => {
         setOpenedLinkGroups([]);
-        setCurrentPage(link);
+        closeNavbar();
       }}
     >
       {link.navLinkText}
@@ -52,7 +52,7 @@ export function LinksGroup({
           }
           if (!hasLinks) {
             setOpenedLinkGroups([]);
-            setCurrentPage(page);
+            closeNavbar();
           }
         }}
       >
