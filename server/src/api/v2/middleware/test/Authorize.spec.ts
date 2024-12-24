@@ -70,7 +70,7 @@ describe("Authenticate.ts tests", () => {
     });
 
     it("should call next on successful coookie and CSRF authentication", () => {
-      const token = jwt.sign({ username: "dev-test", csrf: "csrf" }, jwtSecret, {
+      const token = jwt.sign({ username: "dev-test", "csrf-token": "csrf" }, jwtSecret, {
         expiresIn: 60000,
       });
 
@@ -132,7 +132,7 @@ describe("Authenticate.ts tests", () => {
     });
 
     it("should return a 401 and an error response for an invalid token", () => {
-      const token = jwt.sign({ username: "dev-test", csrf: "csrf" }, jwtSecret, {
+      const token = jwt.sign({ username: "dev-test", "csrf-token": "csrf" }, jwtSecret, {
         expiresIn: 60000,
       });
 
@@ -165,7 +165,7 @@ describe("Authenticate.ts tests", () => {
     });
 
     it("should return a 401 and an error response for a missing CSRF with cookie", () => {
-      const token = jwt.sign({ username: "dev-test", csrf: "csrf" }, jwtSecret, {
+      const token = jwt.sign({ username: "dev-test", "csrf-token": "csrf" }, jwtSecret, {
         expiresIn: 60000,
       });
 

@@ -33,7 +33,7 @@ export default async function setupAsync(): Promise<Express> {
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
   const knexConnection = await getKnexConnectionAsync();
-  console.log(knexConnection);
+  app.set("knexConnection", knexConnection);
 
   const sprootDB = new SprootDB(await mysql2.createConnection(mysqlConfig));
   app.set("sprootDB", sprootDB);

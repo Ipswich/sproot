@@ -17,3 +17,5 @@ after(() => {
     process.exit(0);
   });
 });
+
+export { app, server };

@@ -75,7 +75,7 @@ export async function getTokenAsync(
 
       data = {
         token,
-        csrf,
+        "csrf-token": csrf,
       };
     } else {
       token = jwt.sign({ username: request.body.username }, jwtSecret, {
