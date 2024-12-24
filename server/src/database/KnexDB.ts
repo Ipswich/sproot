@@ -75,7 +75,7 @@ export class KnexDB implements ISprootDB {
   ): Promise<SDBReading[]> {
     const readings = await this.#connection("sensors as s")
       .join("sensor_data as d", "s.id", "d.sensor_id")
-      .select("s.metric", "d.data", "s.units", "d.logTime")
+      .select("metric", "data", "units", "logTime")
       .where(
         "d.logTime",
         ">",
