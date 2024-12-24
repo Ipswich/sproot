@@ -1,25 +1,39 @@
 import { Burger, Container, Group, Title } from "@mantine/core";
 import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.module.css";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useLoaderData, useLocation } from "react-router-dom";
+import { getNavbarItems, Page } from "../Pages";
+import { ReadingType } from "@sproot/sensors/ReadingType";
 
 interface HeaderContentsProps {
-  headerText: string;
   navbarToggle: () => void;
   navbarOpened: boolean;
 }
 
 export default function HeaderContents({
-  headerText,
   navbarToggle,
   navbarOpened,
 }: HeaderContentsProps) {
+  const [headerText, setHeaderText] = useState("");
   const [, startTransition] = useTransition();
-
+  const location = useLocation();
   function toggleNavbar() {
     startTransition(() => {
       navbarToggle();
     });
   }
+
+  const readingTypes = Object.keys(
+    useLoaderData() as Partial<Record<ReadingType, string>>,
+  ) as ReadingType[];
+  const navbarItems = getNavbarItems(readingTypes);
+  useEffect(() => {
+    setHeaderText(
+      extractHeaderText(Object.values(navbarItems)).filter(
+        (page) => page.href === location.pathname,
+      )[0]?.headerText ?? "",
+    );
+  }, [location, navbarItems]);
 
   return (
     <header className={classes["header"]}>
@@ -49,4 +63,23 @@ export default function HeaderContents({
       </Container>
     </header>
   );
+}
+
+function extractHeaderText(
+  pages: Page[],
+): { href: string; headerText: string }[] {
+  const result = [];
+
+  for (const page of pages) {
+    if (page.href && page.headerText) {
+      result.push({ href: page.href, headerText: page.headerText });
+    }
+
+    // If the object has links, process them recursively
+    if (Array.isArray(page.links)) {
+      result.push(...extractHeaderText(page.links));
+    }
+  }
+
+  return result;
 }

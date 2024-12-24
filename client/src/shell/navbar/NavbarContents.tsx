@@ -6,12 +6,12 @@ import { Page } from "../Pages";
 import { useState } from "react";
 
 interface NavbarContentsProps {
-  setCurrentPage: (page: Page) => void;
+  closeNavbar: () => void;
   pages: Page[];
 }
 
 export default function NavbarContents({
-  setCurrentPage,
+  closeNavbar: closeNavbar,
   pages,
 }: NavbarContentsProps) {
   const [openedLinkGroups, setOpenedLinkGroups] = useState([] as string[]);
@@ -20,7 +20,7 @@ export default function NavbarContents({
       page={item}
       navLinkText={item.navLinkText}
       icon={item.icon}
-      setCurrentPage={setCurrentPage}
+      closeNavbar={closeNavbar}
       key={item.navLinkText}
       openedLinkGroups={openedLinkGroups}
       setOpenedLinkGroups={setOpenedLinkGroups}
