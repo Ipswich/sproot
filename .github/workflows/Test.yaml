@@ -69,5 +69,5 @@ jobs:
         run: npm ci
       - name: Run unit tests
         run: npm test
-      - name: Run system tests
-        run: npm run test:system
+      - name: Run API tests
+        run: npm run test:api
