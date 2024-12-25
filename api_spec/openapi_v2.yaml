@@ -1667,6 +1667,7 @@ paths:
               - "sensor"
               - "output"
               - "time"
+              - "weekday"
       responses:
         200:
           description: "Success"
@@ -1686,6 +1687,7 @@ paths:
                                 - $ref: "#/components/schemas/SensorCondition"
                                 - $ref: "#/components/schemas/OutputCondition"
                                 - $ref: "#/components/schemas/TimeCondition"
+                                - $ref: "#/components/schemas/WeekdayCondition"
         400:
           description: "Bad request"
           content:
@@ -1791,6 +1793,7 @@ paths:
               - "sensor"
               - "output"
               - "time"
+              - "weekday"
       requestBody:
         required: true
         content:
@@ -1800,6 +1803,7 @@ paths:
                 - $ref: "#/components/schemas/SensorCondition"
                 - $ref: "#/components/schemas/OutputCondition"
                 - $ref: "#/components/schemas/TimeCondition"
+                - $ref: "#/components/schemas/WeekdayCondition"
       responses:
         201:
           description: "Created"
@@ -1818,6 +1822,7 @@ paths:
                               - $ref: "#/components/schemas/SensorCondition"
                               - $ref: "#/components/schemas/OutputCondition"
                               - $ref: "#/components/schemas/TimeCondition"
+                              - $ref: "#/components/schemas/WeekdayCondition"
         400:
           description: "Bad request"
           content:
@@ -1856,6 +1861,25 @@ paths:
                             example: "/api/v2/automations/1/conditions/sensor"
                           details:
                             example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/automations/-1/conditions/sensor"
+                          details:
+                            items:
+                              example: "Automation with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -1905,6 +1929,7 @@ paths:
               - "sensor"
               - "output"
               - "time"
+              - "weekday"
         - in: path
           name: conditionId
           required: true
@@ -1930,6 +1955,8 @@ paths:
                               - $ref: "#/components/schemas/SensorCondition"
                               - $ref: "#/components/schemas/OutputCondition"
                               - $ref: "#/components/schemas/TimeCondition"
+                              - $ref: "#/components/schemas/WeekdayCondition"
+
         401:
           description: "Unauthorized"
           content:
@@ -2015,6 +2042,7 @@ paths:
               - "sensor"
               - "output"
               - "time"
+              - "weekday"
         - in: path
           name: conditionId
           required: true
@@ -2031,6 +2059,7 @@ paths:
                 - $ref: "#/components/schemas/SensorCondition"
                 - $ref: "#/components/schemas/OutputCondition"
                 - $ref: "#/components/schemas/TimeCondition"
+                - $ref: "#/components/schemas/WeekdayCondition"
       responses:
         200:
           description: "Success"
@@ -2049,6 +2078,7 @@ paths:
                               - $ref: "#/components/schemas/SensorCondition"
                               - $ref: "#/components/schemas/OutputCondition"
                               - $ref: "#/components/schemas/TimeCondition"
+                              - $ref: "#/components/schemas/WeekdayCondition"
         400:
           description: "Bad request"
           content:
@@ -2155,6 +2185,7 @@ paths:
               - "sensor"
               - "output"
               - "time"
+              - "weekday"
         - in: path
           name: conditionId
           required: true
@@ -3498,18 +3529,21 @@ components:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
             anyOf:
               items:
                 anyOf:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
             oneOf:
               items:
                 anyOf:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
         output:
           type: object
           properties:
@@ -3519,18 +3553,21 @@ components:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
             anyOf:
               items:
                 anyOf:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
             oneOf:
               items:
                 anyOf:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
         time:
           type: object
           properties:
@@ -3540,18 +3577,21 @@ components:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
             anyOf:
               items:
                 anyOf:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
             oneOf:
               items:
                 anyOf:
                   - $ref: "#/components/schemas/SensorCondition"
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
+                  - $ref: "#/components/schemas/WeekdayCondition"
       
     SensorCondition:
       description: >
@@ -3649,6 +3689,27 @@ components:
             nullable: true
             type: string
             example: "18:00"
+
+    WeekdayCondition:
+      description: >
+        Defines a condition based on the days of the week.
+      allOf:
+      - type: object
+      - properties:
+          id:
+            type: number
+            readOnly: true
+            example: 1
+          groupType: 
+            type: string
+            enum:
+              - allOf
+              - anyOf
+              - oneOf
+          weekdays:
+            description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
+            type: number
+            example: 127
 
     SDBSensor:
       description: >

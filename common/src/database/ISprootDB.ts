@@ -18,6 +18,8 @@ import { ITimeCondition } from "../automation/ITimeCondition";
 import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
+import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
+import { IWeekdayCondition } from "../automation/IWeekdayCondition";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -97,12 +99,40 @@ interface ISprootDB {
   updateTimeConditionAsync(automationId: number, condition: ITimeCondition): Promise<void>;
   deleteTimeConditionAsync(conditionId: number): Promise<void>;
 
+  getWeekdayConditionsAsync(automationId: number): Promise<SDBWeekdayCondition[]>;
+  addWeekdayConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    weekdays: number,
+  ): Promise<number>;
+  updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
+  deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
+
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
   disposeAsync(): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
+  async getWeekdayConditionsAsync(_automationId: number): Promise<SDBWeekdayCondition[]> {
+    return [];
+  }
+  async addWeekdayConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _weekdays: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateWeekdayConditionAsync(
+    _automationId: number,
+    _condition: IWeekdayCondition,
+  ): Promise<void> {
+    return;
+  }
+  async deleteWeekdayConditionAsync(_conditionId: number): Promise<void> {
+    return;
+  }
   async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
     return [];
   }

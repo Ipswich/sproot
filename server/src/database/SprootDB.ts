@@ -348,32 +348,41 @@ export class SprootDB implements ISprootDB {
   async deleteTimeConditionAsync(conditionId: number): Promise<void> {
     return this.#connection("time_conditions").where("id", conditionId).delete();
   }
-
   async getWeekdayConditionsAsync(automationId: number): Promise<SDBWeekdayCondition[]> {
     return this.#connection("weekday_conditions")
       .where("automation_id", automationId)
       .select(["id", "automation_id as automationId", "groupType", "weekdays"]);
   }
-  async addWeekdayConditionAsync(automationId: number, groupType: ConditionGroupType, weekday: number): Promise<number> {
-    return (await this.#connection("weekday_conditions").insert({
-      automation_id: automationId,
-      groupType,
-      weekday,
-    }))[0] ?? -1;
+  async addWeekdayConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    weekdays: number,
+  ): Promise<number> {
+    return (
+      (
+        await this.#connection("weekday_conditions").insert({
+          automation_id: automationId,
+          groupType,
+          weekdays,
+        })
+      )[0] ?? -1
+    );
   }
-  async updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void> {
+  async updateWeekdayConditionAsync(
+    automationId: number,
+    condition: IWeekdayCondition,
+  ): Promise<void> {
     return this.#connection("weekday_conditions")
       .where("automation_id", automationId)
       .and.where("id", condition.id)
       .update({
         groupType: condition.groupType,
-        weekday: condition.weekday,
+        weekdays: condition.weekdays,
       });
   }
   async deleteWeekdayConditionAsync(conditionId: number): Promise<void> {
     return this.#connection("weekday_conditions").where("id", conditionId).delete();
   }
-
   async getUserAsync(username: string): Promise<SDBUser[]> {
     return this.#connection("users").where("username", username).select("*");
   }

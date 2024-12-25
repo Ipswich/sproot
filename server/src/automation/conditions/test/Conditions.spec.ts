@@ -12,6 +12,7 @@ import { Conditions } from "../Conditions";
 import { assert } from "chai";
 import sinon from "sinon";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
 describe("Conditions.ts tests", () => {
   describe("evaluate", () => {
@@ -39,10 +40,12 @@ describe("Conditions.ts tests", () => {
       const sensorConditions = [] as SDBSensorCondition[];
       const outputConditions = [] as SDBOutputCondition[];
       const timeConditions = [] as SDBTimeCondition[];
+      const weekdayConditions = [] as SDBWeekdayCondition[];
 
       sprootDB.getSensorConditionsAsync.resolves(sensorConditions);
       sprootDB.getOutputConditionsAsync.resolves(outputConditions);
       sprootDB.getTimeConditionsAsync.resolves(timeConditions);
+      sprootDB.getWeekdayConditionsAsync.resolves(weekdayConditions);
 
       // Add some sensor Conditions
       sensorConditions.push({
@@ -363,6 +366,10 @@ describe("Conditions.ts tests", () => {
         { id: 1, groupType: "oneOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
         { id: 2, groupType: "anyOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 5 } as SDBWeekdayCondition,
+        { id: 2, groupType: "anyOf", weekdays: 2 } as SDBWeekdayCondition,
+      ]);
 
       const conditions = new Conditions(1, sprootDB);
       await conditions.loadAsync();
@@ -397,8 +404,13 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.time.anyOf[0]?.startTime, "00:00");
       assert.equal(conditions.groupedConditions.time.anyOf[0]?.endTime, "01:00");
 
-      assert.equal(conditions.allOf.length, 1);
-      assert.equal(conditions.anyOf.length, 2);
+      assert.equal(conditions.groupedConditions.weekday.allOf.length, 1);
+      assert.equal(conditions.groupedConditions.weekday.allOf[0]?.id, 1);
+      assert.equal(conditions.groupedConditions.weekday.allOf[0]?.groupType, "allOf");
+      assert.equal(conditions.groupedConditions.weekday.allOf[0]?.weekdays, 5);
+
+      assert.equal(conditions.allOf.length, 2);
+      assert.equal(conditions.anyOf.length, 3);
       assert.equal(conditions.oneOf.length, 1);
     });
   });

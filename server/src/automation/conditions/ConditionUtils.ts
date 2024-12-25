@@ -21,6 +21,15 @@ export function evaluateNumber(
   }
 }
 
+export function evaluateWeekday(now: Date, activeWeekdaysAsDecimal: number): boolean {
+  let binary = activeWeekdaysAsDecimal.toString(2).padStart(7, "0");
+  if (binary.length > 7) {
+    binary = binary.slice(-7);
+  }
+
+  return binary[6 - now.getDay()] == "1";
+}
+
 export function evaluateTime(
   now: Date,
   startTime?: string | null,
