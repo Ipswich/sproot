@@ -60,7 +60,7 @@ export class SprootDB implements ISprootDB {
     for (const readingType in sensor.lastReading) {
       promises.push(
         this.#connection("sensor_data").insert({
-          sensorId: sensor.id,
+          sensor_id: sensor.id,
           metric: readingType,
           data: sensor.lastReading[readingType as ReadingType],
           units: sensor.units[readingType as ReadingType],
