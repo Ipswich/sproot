@@ -1,5 +1,3 @@
-import mysql2, { ResultSetHeader } from "mysql2/promise";
-
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
@@ -7,432 +5,383 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { OutputBase } from "@sproot/sproot-server/src/outputs/base/OutputBase";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { ControlMode } from "@sproot/outputs/IOutputBase";
+import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
 import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
-import { TimeCondition } from "../automation/conditions/TimeCondition";
-import { OutputCondition } from "../automation/conditions/OutputCondition";
-import { SensorCondition } from "../automation/conditions/SensorCondition";
 import {
   SDBOutputAction,
   SDBOutputActionView,
 } from "@sproot/sproot-common/dist/database/SDBOutputAction";
-class SprootDB implements ISprootDB {
-  #connection: mysql2.Connection;
+import { Knex } from "knex";
+import { IOutputCondition } from "@sproot/automation/IOutputCondition";
+import { ISensorCondition } from "@sproot/automation/ISensorCondition";
+import { ITimeCondition } from "@sproot/automation/ITimeCondition";
+import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
-  constructor(connection: mysql2.Connection) {
+export class SprootDB implements ISprootDB {
+  #connection: Knex;
+
+  constructor(connection: Knex) {
     this.#connection = connection;
   }
-  async getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]> {
-    const [rows] = await this.#connection.execute<SDBSensorCondition[]>(
-      "SELECT sc.id, sc.automation_id AS automationId, sc.groupType, sc.operator, sc.comparisonValue, sc.sensor_id AS sensorId, sc.readingType, s.name as sensorName FROM sensor_conditions as sc INNER JOIN sensors as s ON sc.sensor_id = s.id WHERE automation_id = ?",
-      [automationId],
+
+  async getSensorsAsync(): Promise<SDBSensor[]> {
+    return this.#connection("sensors").select("*");
+  }
+  async getSensorAsync(id: number): Promise<SDBSensor[]> {
+    return this.#connection("sensors").where("id", id).select("*");
+  }
+  async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
+    return this.#connection("sensors").where("model", "DS18B20").select("address");
+  }
+  async addSensorAsync(sensor: SDBSensor): Promise<void> {
+    return this.#connection("sensors").insert(sensor);
+  }
+  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
+    return this.#connection("sensors").where("id", sensor.id).update({
+      name: sensor.name,
+      model: sensor.model,
+      address: sensor.address,
+      color: sensor.color,
+    });
+  }
+  async deleteSensorAsync(id: number): Promise<void> {
+    return this.#connection("sensors").where("id", id).delete();
+  }
+
+  async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {
+    const promises = [];
+    for (const readingType in sensor.lastReading) {
+      promises.push(
+        this.#connection("readings").insert({
+          sensorId: sensor.id,
+          readingType: readingType,
+          data: sensor.lastReading[readingType as ReadingType],
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        }),
+      );
+    }
+    await Promise.allSettled(promises);
+  }
+  async getSensorReadingsAsync(
+    sensor: ISensorBase | { id: number },
+    since: Date,
+    minutes: number,
+    toIsoString: boolean = false,
+  ): Promise<SDBReading[]> {
+    const readings = await this.#connection("sensors as s")
+      .join("sensor_data as d", "s.id", "d.sensor_id")
+      .select("metric", "data", "units", "logTime")
+      .where(
+        "d.logTime",
+        ">",
+        this.#connection.raw("DATE_SUB(?, INTERVAL ? MINUTE)", [since.toISOString(), minutes]),
+      )
+      .andWhere("d.sensor_id", sensor.id)
+      .orderBy("d.logTime", "asc");
+
+    if (toIsoString) {
+      for (const reading of readings) {
+        reading.logTime = reading.logTime.replace(" ", "T") + "Z";
+      }
+    }
+    return readings;
+  }
+  async getOutputsAsync(): Promise<SDBOutput[]> {
+    return this.#connection("outputs").select("*");
+  }
+  async getOutputAsync(id: number): Promise<SDBOutput[]> {
+    return this.#connection("outputs").where("id", id).select("*");
+  }
+  async addOutputAsync(output: SDBOutput): Promise<void> {
+    return this.#connection("outputs").insert(output);
+  }
+  async updateOutputAsync(output: SDBOutput): Promise<void> {
+    return this.#connection("outputs").where("id", output.id).update({
+      name: output.name,
+      model: output.model,
+      address: output.address,
+      color: output.color,
+      pin: output.pin,
+      isPwm: output.isPwm,
+      isInvertedPwm: output.isInvertedPwm,
+      automationTimeout: output.automationTimeout,
+    });
+  }
+  async deleteOutputAsync(id: number): Promise<void> {
+    return this.#connection("outputs").where("id", id).delete();
+  }
+  async addOutputStateAsync(output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void> {
+    return this.#connection("output_states").insert({
+      ...output,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    });
+  }
+  async getOutputStatesAsync(
+    output: IOutputBase | { id: number },
+    since: Date,
+    minutes: number,
+    toIsoString: boolean = false,
+  ): Promise<SDBOutputState[]> {
+    const states = await this.#connection("outputs as o")
+      .join("output_data as d", "o.id", "d.output_id")
+      .select("d.value", "d.controlMode", "d.logTime")
+      .where(
+        "d.logTime",
+        ">",
+        this.#connection.raw("DATE_SUB(?, INTERVAL ? MINUTE)", [since.toISOString(), minutes]),
+      )
+      .andWhere("d.output_id", output.id)
+      .orderBy("d.logTime", "asc");
+
+    if (toIsoString) {
+      for (const state of states) {
+        state.logTime = state.logTime.replace(" ", "T") + "Z";
+      }
+    }
+    return states;
+  }
+  async getAutomationsAsync(): Promise<SDBAutomation[]> {
+    return this.#connection("automations").select("*");
+  }
+  async getAutomationAsync(automationId: number): Promise<SDBAutomation[]> {
+    return this.#connection("automations").where("id", automationId).select("*");
+  }
+  async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
+    return (await this.#connection("automations").insert({ name: name, operator }))[0] ?? -1;
+  }
+  async updateAutomationAsync(
+    name: string,
+    operator: AutomationOperator,
+    id: number,
+  ): Promise<void> {
+    return this.#connection("automations").where("id", id).update({ name, operator });
+  }
+  async deleteAutomationAsync(automationId: number): Promise<void> {
+    return this.#connection("automations").where("id", automationId).delete();
+  }
+  async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
+    return this.#connection("output_actions").select([
+      "id",
+      "automation_id as automationId",
+      "output_id as outputId",
+      "value",
+    ]);
+  }
+  async getOutputActionsByAutomationIdAsync(automationId: number): Promise<SDBOutputAction[]> {
+    return this.#connection("output_actions")
+      .where("automation_id", automationId)
+      .select(["id", "automation_id as automationId", "output_id as outputId", "value"]);
+  }
+  async getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]> {
+    return this.#connection("output_actions")
+      .where("id", outputActionId)
+      .select(["id", "automation_id as automationId", "output_id as outputId", "value"]);
+  }
+  async addOutputActionAsync(
+    automationId: number,
+    outputId: number,
+    value: number,
+  ): Promise<number> {
+    return (
+      (
+        await this.#connection("output_actions").insert({
+          automation_id: automationId,
+          output_id: outputId,
+          value,
+        })
+      )[0] ?? -1
     );
-    return rows;
+  }
+  async deleteOutputActionAsync(outputActionId: number): Promise<void> {
+    return this.#connection("output_actions").where("id", outputActionId).delete();
+  }
+  async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]> {
+    return this.#connection("output_actions_view").where("outputId", outputId).select("*");
+  }
+  async getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]> {
+    return this.#connection("sensor_conditions as sc")
+      .select([
+        "sc.id",
+        "sc.automation_id as automationId",
+        "sc.groupType",
+        "sc.operator",
+        "sc.comparisonValue",
+        "sc.sensor_id as sensorId",
+        "sc.readingType",
+        "s.name as sensorName",
+      ])
+      .innerJoin("sensors as s", "sc.sensor_id", "s.id")
+      .where("automation_id", automationId);
   }
   async addSensorConditionAsync(
     automationId: number,
-    groupType: ConditionGroupType,
+    type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
     sensorId: number,
     readingType: string,
   ): Promise<number> {
     return (
-      await this.#connection.execute<ResultSetHeader>(
-        "INSERT INTO sensor_conditions (automation_id, groupType, operator, comparisonValue, sensor_id, readingType) VALUES (?, ?, ?, ?, ?, ?)",
-        [automationId, groupType, operator, comparisonValue, sensorId, readingType],
-      )
-    )[0].insertId;
+      (
+        await this.#connection("sensor_conditions").insert({
+          automation_id: automationId,
+          groupType: type,
+          operator,
+          comparisonValue,
+          sensor_id: sensorId,
+          readingType,
+        })
+      )[0] ?? -1
+    );
   }
   async updateSensorConditionAsync(
     automationId: number,
-    condition: SensorCondition,
+    condition: ISensorCondition,
   ): Promise<void> {
-    await this.#connection.execute(
-      "UPDATE sensor_conditions SET groupType = ?, operator = ?, comparisonValue = ?, sensor_id = ?, readingType = ? WHERE automation_id = ? AND id = ?",
-      [
-        condition.groupType,
-        condition.operator,
-        condition.comparisonValue,
-        condition.sensorId,
-        condition.readingType,
-        automationId,
-        condition.id,
-      ],
-    );
+    return this.#connection("sensor_conditions")
+      .where("automation_id", automationId)
+      .and.where("id", condition.id)
+      .update({
+        groupType: condition.groupType,
+        operator: condition.operator,
+        comparisonValue: condition.comparisonValue,
+        sensor_id: condition.sensorId,
+        readingType: condition.readingType,
+      });
   }
   async deleteSensorConditionAsync(conditionId: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM sensor_conditions WHERE id = ?", [conditionId]);
+    return this.#connection("sensor_conditions").where("id", conditionId).delete();
   }
-
   async getOutputConditionsAsync(automationId: number): Promise<SDBOutputCondition[]> {
-    const [rows] = await this.#connection.execute<SDBOutputCondition[]>(
-      "SELECT oc.id, oc.automation_id AS automationId, oc.groupType, oc.operator, oc.comparisonValue, oc.output_id AS outputId, o.name as outputName FROM output_conditions as oc INNER JOIN outputs as o ON oc.output_id = o.id WHERE automation_id = ?",
-      [automationId],
-    );
-    return rows;
+    return this.#connection("output_conditions as oc")
+      .select([
+        "oc.id",
+        "oc.automation_id as automationId",
+        "oc.groupType",
+        "oc.operator",
+        "oc.comparisonValue",
+        "oc.output_id as outputId",
+        "o.name as outputName",
+      ])
+      .innerJoin("outputs as o", "oc.output_id", "o.id")
+      .where("automation_id", automationId);
   }
   async addOutputConditionAsync(
     automationId: number,
-    groupType: ConditionGroupType,
+    type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
     outputId: number,
   ): Promise<number> {
     return (
-      await this.#connection.execute<ResultSetHeader>(
-        "INSERT INTO output_conditions (automation_id, groupType, operator, comparisonValue, output_id) VALUES (?, ?, ?, ?, ?)",
-        [automationId, groupType, operator, comparisonValue, outputId],
-      )
-    )[0].insertId;
+      (
+        await this.#connection("output_conditions").insert({
+          automation_id: automationId,
+          groupType: type,
+          operator,
+          comparisonValue,
+          output_id: outputId,
+        })
+      )[0] ?? -1
+    );
   }
   async updateOutputConditionAsync(
     automationId: number,
-    condition: OutputCondition,
+    condition: IOutputCondition,
   ): Promise<void> {
-    await this.#connection.execute(
-      "UPDATE output_conditions SET groupType = ?, operator = ?, comparisonValue = ?, output_id = ? WHERE automation_id = ? AND id = ?",
-      [
-        condition.groupType,
-        condition.operator,
-        condition.comparisonValue,
-        condition.outputId,
-        automationId,
-        condition.id,
-      ],
-    );
+    return this.#connection("output_conditions")
+      .where("automation_id", automationId)
+      .and.where("id", condition.id)
+      .update({
+        groupType: condition.groupType,
+        operator: condition.operator,
+        comparisonValue: condition.comparisonValue,
+        output_id: condition.outputId,
+      });
   }
   async deleteOutputConditionAsync(conditionId: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM output_conditions WHERE id = ?", [conditionId]);
+    return this.#connection("output_conditions").where("id", conditionId).delete();
   }
-
   async getTimeConditionsAsync(automationId: number): Promise<SDBTimeCondition[]> {
-    const [rows] = await this.#connection.execute<SDBTimeCondition[]>(
-      "SELECT id, automation_id as automationId, groupType, startTime, endTime FROM time_conditions WHERE automation_id = ?",
-      [automationId],
-    );
-    return rows;
+    return this.#connection("time_conditions")
+      .where("automation_id", automationId)
+      .select(["id", "automation_id as automationId", "groupType", "startTime", "endTime"]);
   }
   async addTimeConditionAsync(
     automationId: number,
-    groupType: ConditionGroupType,
-    startTime: string | null,
-    endTime: string | null,
+    type: ConditionGroupType,
+    startTime: string | undefined | null,
+    endTime: string | undefined | null,
   ): Promise<number> {
     return (
-      await this.#connection.execute<ResultSetHeader>(
-        "INSERT INTO time_conditions (automation_id, groupType, startTime, endTime) VALUES (?, ?, ?, ?)",
-        [automationId, groupType, startTime, endTime],
-      )
-    )[0].insertId;
-  }
-  async updateTimeConditionAsync(automationId: number, condition: TimeCondition): Promise<void> {
-    await this.#connection.execute(
-      "UPDATE time_conditions SET groupType = ?, startTime = ?, endTime = ? WHERE automation_id = ? AND id = ?",
-      [condition.groupType, condition.startTime, condition.endTime, automationId, condition.id],
+      (
+        await this.#connection("time_conditions").insert({
+          automation_id: automationId,
+          groupType: type,
+          startTime,
+          endTime,
+        })
+      )[0] ?? -1
     );
+  }
+  async updateTimeConditionAsync(automationId: number, condition: ITimeCondition): Promise<void> {
+    return this.#connection("time_conditions")
+      .where("automation_id", automationId)
+      .and.where("id", condition.id)
+      .update({
+        groupType: condition.groupType,
+        startTime: condition.startTime,
+        endTime: condition.endTime,
+      });
   }
   async deleteTimeConditionAsync(conditionId: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM time_conditions WHERE id = ?", [conditionId]);
+    return this.#connection("time_conditions").where("id", conditionId).delete();
   }
 
-  async getAutomationsAsync(): Promise<SDBAutomation[]> {
-    const [rows] = await this.#connection.execute<SDBAutomation[]>("SELECT * FROM automations");
-    return rows;
+  async getWeekdayConditionsAsync(automationId: number): Promise<SDBWeekdayCondition[]> {
+    return this.#connection("weekday_conditions")
+      .where("automation_id", automationId)
+      .select(["id", "automation_id as automationId", "groupType", "weekdays"]);
   }
-
-  async getAutomationAsync(automationId: number): Promise<SDBAutomation[]> {
-    const [rows] = await this.#connection.execute<SDBAutomation[]>(
-      "SELECT * FROM automations WHERE id = ?",
-      [automationId],
-    );
-    return rows;
+  async addWeekdayConditionAsync(automationId: number, groupType: ConditionGroupType, weekday: number): Promise<number> {
+    return (await this.#connection("weekday_conditions").insert({
+      automation_id: automationId,
+      groupType,
+      weekday,
+    }))[0] ?? -1;
   }
-
-  async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
-    const result = await this.#connection.execute<ResultSetHeader>(
-      "INSERT INTO automations (name, operator) VALUES (?, ?)",
-      [name, operator],
-    );
-    return result[0].insertId;
+  async updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void> {
+    return this.#connection("weekday_conditions")
+      .where("automation_id", automationId)
+      .and.where("id", condition.id)
+      .update({
+        groupType: condition.groupType,
+        weekday: condition.weekday,
+      });
   }
-
-  async updateAutomationAsync(name: string, operator: string, id: number): Promise<void> {
-    await this.#connection.execute("UPDATE automations SET name = ?, operator = ? WHERE id = ?", [
-      name,
-      operator,
-      id,
-    ]);
-  }
-
-  async deleteAutomationAsync(automationId: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM automations WHERE id = ?", [automationId]);
-  }
-
-  async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
-    const [rows] = await this.#connection.execute<SDBOutputAction[]>(
-      "SELECT id, automation_id as automationId, output_id as outputId, value FROM output_actions",
-    );
-    return rows;
-  }
-
-  async getOutputActionsByAutomationIdAsync(automationId: number): Promise<SDBOutputAction[]> {
-    const [rows] = await this.#connection.execute<SDBOutputAction[]>(
-      "SELECT id, automation_id as automationId, output_id as outputId, value FROM output_actions WHERE automation_id = ?",
-      [automationId],
-    );
-    return rows;
-  }
-
-  async getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]> {
-    const [rows] = await this.#connection.execute<SDBOutputAction[]>(
-      "SELECT id, automation_id as automationId, output_id as outputId, value FROM output_actions WHERE id = ?",
-      [outputActionId],
-    );
-    return rows;
-  }
-
-  async addOutputActionAsync(
-    automationId: number,
-    outputId: number,
-    value: number,
-  ): Promise<number> {
-    const result = await this.#connection.execute<ResultSetHeader>(
-      "INSERT INTO output_actions (automation_id, output_id, value) VALUES (?, ?, ?)",
-      [automationId, outputId, value],
-    );
-    return result[0].insertId;
-  }
-
-  async deleteOutputActionAsync(outputActionId: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM output_actions WHERE id = ?", [outputActionId]);
-  }
-
-  async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]> {
-    const [rows] = await this.#connection.execute<SDBOutputActionView[]>(
-      "SELECT * FROM output_actions_view WHERE outputId = ?",
-      [outputId],
-    );
-    return rows;
-  }
-
-  async getSensorsAsync(): Promise<SDBSensor[]> {
-    const [rows] = await this.#connection.execute<SDBSensor[]>("SELECT * FROM sensors");
-    return rows;
-  }
-
-  async getSensorAsync(id: number): Promise<SDBSensor[]> {
-    const [rows] = await this.#connection.execute<SDBSensor[]>(
-      "SELECT * FROM sensors WHERE id = ?",
-      [id],
-    );
-    return rows;
-  }
-
-  async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
-    const [rows] = await this.#connection.execute<SDBSensor[]>(
-      'SELECT address FROM sensors WHERE model = "DS18B20"',
-    );
-    return rows;
-  }
-
-  async addSensorAsync(sensor: SDBSensor): Promise<void> {
-    await this.#connection.execute(
-      "INSERT INTO sensors (name, model, address, color) VALUES (?, ?, ?, ?)",
-      [sensor.name, sensor.model, sensor.address, sensor.color],
-    );
-  }
-
-  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
-    await this.#connection.execute(
-      "UPDATE sensors SET name = ?, model = ?, address = ?, color = ? WHERE id = ?",
-      [sensor.name, sensor.model, sensor.address, sensor.color, sensor.id],
-    );
-  }
-
-  async deleteSensorAsync(id: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM sensors WHERE id = ?", [id]);
-  }
-
-  async getOutputsAsync(): Promise<SDBOutput[]> {
-    const [rows] = await this.#connection.execute<SDBOutput[]>("SELECT * FROM outputs");
-    return rows;
-  }
-
-  async getOutputAsync(id: number): Promise<SDBOutput[]> {
-    const [rows] = await this.#connection.execute<SDBOutput[]>(
-      "SELECT * FROM outputs WHERE id = ?",
-      [id],
-    );
-    return rows;
-  }
-
-  async addOutputAsync(output: SDBOutput): Promise<void> {
-    await this.#connection.execute(
-      "INSERT INTO outputs (name, model, address, color, pin, isPwm, isInvertedPwm, automationTimeout) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [
-        output.name,
-        output.model,
-        output.address,
-        output.color,
-        output.pin,
-        output.isPwm,
-        output.isInvertedPwm,
-        output.automationTimeout,
-      ],
-    );
-  }
-
-  async updateOutputAsync(output: SDBOutput): Promise<void> {
-    await this.#connection.execute(
-      "UPDATE outputs SET name = ?, model = ?, address = ?, color = ?, pin = ?, isPwm = ?, isInvertedPwm = ?, automationTimeout = ? WHERE id = ?",
-      [
-        output.name,
-        output.model,
-        output.address,
-        output.color,
-        output.pin,
-        output.isPwm,
-        output.isInvertedPwm,
-        output.automationTimeout,
-        output.id,
-      ],
-    );
-  }
-
-  async deleteOutputAsync(id: number): Promise<void> {
-    await this.#connection.execute("DELETE FROM outputs WHERE id = ?", [id]);
-  }
-
-  async addOutputStateAsync(output: {
-    id: number;
-    value: number;
-    controlMode: ControlMode;
-  }): Promise<void> {
-    await this.#connection.execute(
-      "INSERT INTO output_data (output_id, value, controlMode, logTime) VALUES (?, ?, ?, ?)",
-      [
-        output.id,
-        output.value,
-        output.controlMode,
-        new Date().toISOString().slice(0, 19).replace("T", " "),
-      ],
-    );
-  }
-
-  async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {
-    for (const readingType in sensor.lastReading) {
-      await this.#connection.execute(
-        "INSERT INTO sensor_data (sensor_id, metric, data, units, logTime) VALUES (?, ?, ?, ?, ?)",
-        [
-          sensor.id,
-          readingType,
-          sensor.lastReading[readingType as ReadingType],
-          sensor.units[readingType as ReadingType],
-          sensor.lastReadingTime?.toISOString().slice(0, 19).replace("T", " "),
-        ],
-      );
-    }
-  }
-
-  /**
-   * Important note on this one:
-   * The logTime is stored in the database in the format "YYYY-MM-DD HH:MM:SS". This is not a valid ISO string.
-   * This function will convert the logTime to an ISO string if toIsoString is true. Otherwise, you should probably
-   * this before you turn the returned date into a Date object as it'll be in a very different timezone and there'll
-   * be some... Irregularities.
-   * @param sensor sensor to fetch readings for.
-   * @param since time at the start of the lookback period.
-   * @param minutes minutes to lookback from since.
-   * @param toIsoString whether to convert the logTime to an ISO string.
-   * @returns An array of SDBOutputStates.
-   */
-  async getOutputStatesAsync(
-    output: OutputBase | { id: number },
-    since: Date,
-    minutes: number = 120,
-    toIsoString: boolean = false,
-  ): Promise<SDBOutputState[]> {
-    const [rows] = await this.#connection.execute<SDBOutputState[]>(
-      `SELECT value, controlMode, logTime
-FROM outputs o
-JOIN output_data d ON o.id = d.output_id
-WHERE d.logTime > DATE_SUB(?, INTERVAL ? MINUTE)
-  AND d.output_id = ?
-ORDER BY d.logTime ASC;
-`,
-      [since.toISOString(), minutes, output.id],
-    );
-    if (toIsoString) {
-      for (const row of rows) {
-        row.logTime = row.logTime.replace(" ", "T") + "Z";
-      }
-    }
-    return rows;
-  }
-
-  /**
-   * Important note on this one:
-   * The logTime is stored in the database in the format "YYYY-MM-DD HH:MM:SS". This is not a valid ISO string.
-   * This function will convert the logTime to an ISO string if toIsoString is true. Otherwise, you should probably
-   * this before you turn the returned date into a Date object as it'll be in a very different timezone and there'll
-   * be some... Irregularities.
-   * @param sensor sensor to fetch readings for.
-   * @param since time at the start of the lookback period.
-   * @param minutes minutes to lookback from since.
-   * @param toIsoString whether to convert the logTime to an ISO string.
-   * @returns An array of SDBReadings.
-   */
-  async getSensorReadingsAsync(
-    sensor: ISensorBase | { id: number },
-    since: Date,
-    minutes: number = 120,
-    toIsoString: boolean = false,
-  ): Promise<SDBReading[]> {
-    const [rows] = await this.#connection.execute<SDBReading[]>(
-      `SELECT metric, data, units, logTime
-FROM sensors s
-JOIN sensor_data d ON s.id = d.sensor_id
-WHERE d.logTime > DATE_SUB(?, INTERVAL ? MINUTE)
-  AND d.sensor_id = ?
-ORDER BY d.logTime ASC;
-`,
-      [since.toISOString(), minutes, sensor.id],
-    );
-    if (toIsoString) {
-      for (const row of rows) {
-        row.logTime = row.logTime.replace(" ", "T") + "Z";
-      }
-    }
-    return rows;
+  async deleteWeekdayConditionAsync(conditionId: number): Promise<void> {
+    return this.#connection("weekday_conditions").where("id", conditionId).delete();
   }
 
   async getUserAsync(username: string): Promise<SDBUser[]> {
-    const [rows] = await this.#connection.execute<SDBUser[]>(
-      "SELECT * FROM users WHERE username = ?",
-      [username],
-    );
-    return rows;
+    return this.#connection("users").where("username", username).select("*");
   }
-
-  async addUserAsync(credentials: SDBUser): Promise<void> {
-    await this.#connection.execute("INSERT INTO users (username, hash, email) VALUES (?, ?, ?)", [
-      credentials.username,
-      credentials.hash,
-      credentials.email,
-    ]);
+  async addUserAsync(user: SDBUser): Promise<void> {
+    return this.#connection("users").insert(user);
   }
 
   async disposeAsync(): Promise<void> {
-    await this.#connection.end();
+    return this.#connection.destroy();
   }
 }
-
-export { SprootDB };
