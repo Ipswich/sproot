@@ -1,4 +1,5 @@
 import { type Knex } from "knex";
+import { setTableDefaults } from "../KnexUtilities";
 
 export async function up(knex: Knex): Promise<void> {
   if (!(await knex.schema.hasTable("automations"))) {
@@ -251,9 +252,3 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(_knex: Knex): Promise<void> {}
-
-function setTableDefaults(table: Knex.CreateTableBuilder) {
-  table.engine("InnoDB");
-  table.charset("utf8mb4");
-  table.collate("utf8mb4_general_ci");
-}
