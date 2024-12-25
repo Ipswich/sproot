@@ -59,7 +59,7 @@ export class SprootDB implements ISprootDB {
     const promises = [];
     for (const readingType in sensor.lastReading) {
       promises.push(
-        this.#connection("readings").insert({
+        this.#connection("sensor_data").insert({
           sensorId: sensor.id,
           readingType: readingType,
           data: sensor.lastReading[readingType as ReadingType],
@@ -123,7 +123,9 @@ export class SprootDB implements ISprootDB {
     controlMode: ControlMode;
   }): Promise<void> {
     return this.#connection("output_data").insert({
-      ...output,
+      output_id: output.id,
+      value: output,
+      controlMode: output.controlMode,
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
     });
   }
