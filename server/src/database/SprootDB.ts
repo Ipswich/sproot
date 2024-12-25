@@ -124,7 +124,7 @@ export class SprootDB implements ISprootDB {
   }): Promise<void> {
     return this.#connection("output_data").insert({
       output_id: output.id,
-      value: output,
+      value: output.value,
       controlMode: output.controlMode,
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
     });
