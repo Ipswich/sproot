@@ -23,7 +23,7 @@ export default function TimeCondition({
 }: TimeConditionProps) {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
   const [timeConditionType, setTimeConditionType] = useState("Between");
-  const condtionsQuery = useQuery({
+  const conditionsQuery = useQuery({
     queryKey: ["conditions"],
     queryFn: () => getConditionsAsync(automationId),
   });
@@ -41,7 +41,7 @@ export default function TimeCondition({
       );
     },
     onSettled: () => {
-      condtionsQuery.refetch();
+      conditionsQuery.refetch();
     },
   });
 
