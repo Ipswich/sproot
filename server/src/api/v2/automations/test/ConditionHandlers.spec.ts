@@ -19,6 +19,7 @@ import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
 describe("ConditionHandlers.ts", () => {
   describe("getAllAsync", () => {
@@ -60,6 +61,9 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.getTimeConditionsAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
+      ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
 
       const mockRequest = {
@@ -104,6 +108,11 @@ describe("ConditionHandlers.ts", () => {
         },
         time: {
           allOf: [{ id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" }],
+          anyOf: [],
+          oneOf: [],
+        },
+        weekday: {
+          allOf: [{ id: 1, groupType: "allOf", weekdays: 127 }],
           anyOf: [],
           oneOf: [],
         },
@@ -248,6 +257,7 @@ describe("ConditionHandlers.ts", () => {
         } as SDBOutputCondition,
       ]);
       sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -309,6 +319,7 @@ describe("ConditionHandlers.ts", () => {
         } as SDBOutputCondition,
       ]);
       sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -355,6 +366,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.getTimeConditionsAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -377,6 +389,53 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.deepEqual(success.content?.data, {
         allOf: [{ id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" }],
+        anyOf: [],
+        oneOf: [],
+      });
+    });
+
+    it("should return a 200 and all of the conditions of a given type for a given automation (weekday)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "weekday",
+        },
+      } as unknown as Request;
+
+      const success = (await getByTypeAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        allOf: [{ id: 1, groupType: "allOf", weekdays: 127 }],
         anyOf: [],
         oneOf: [],
       });
@@ -665,6 +724,55 @@ describe("ConditionHandlers.ts", () => {
         groupType: "allOf",
         startTime: "12:00",
         endTime: "13:00",
+      });
+    });
+
+    it("should return a 200 and the condition of a given type and conditionId for a given automation (weekday)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+        { id: 2, groupType: "allOf", weekdays: 63 } as SDBWeekdayCondition,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "weekday",
+          conditionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await getOneOfByTypeAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "allOf",
+        weekdays: 127,
       });
     });
 
@@ -990,6 +1098,56 @@ describe("ConditionHandlers.ts", () => {
         groupType: "allOf",
         startTime: "12:00",
         endTime: "13:00",
+      });
+    });
+
+    it("should return a 201 and the weekday condition added to the automation", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.addWeekdayConditionAsync.resolves(1);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "weekday",
+        },
+        body: {
+          groupType: "allOf",
+          weekdays: 127,
+        },
+      } as unknown as Request;
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "allOf",
+        weekdays: 127,
       });
     });
 
@@ -1479,6 +1637,60 @@ describe("ConditionHandlers.ts", () => {
         groupType: "anyOf",
         startTime: "13:00",
         endTime: "14:00",
+      });
+    });
+
+    it("should return a 200 and the weekday condition updated for the automation", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.updateTimeConditionAsync.resolves();
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "weekday",
+          conditionId: "1",
+        },
+        body: {
+          groupType: "anyOf",
+          weekdays: 127,
+        },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "anyOf",
+        weekdays: 127,
       });
     });
 
@@ -1975,6 +2187,51 @@ describe("ConditionHandlers.ts", () => {
         params: {
           automationId: "1",
           type: "time",
+          conditionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, { message: "Condition deleted successfully." });
+    });
+
+    it("should return a 200 with a message (weekday)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.deleteWeekdayConditionAsync.resolves();
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "weekday",
           conditionId: "1",
         },
       } as unknown as Request;

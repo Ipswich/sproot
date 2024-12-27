@@ -51,3 +51,9 @@ async function seedDatabaseAsync(didCreateDatabase: Boolean, connection: Knex) {
     await connection.seed.run({ specific: `preconfigured.js` });
   }
 }
+
+export function setTableDefaults(table: Knex.CreateTableBuilder) {
+  table.engine("InnoDB");
+  table.charset("utf8mb4");
+  table.collate("utf8mb4_general_ci");
+}

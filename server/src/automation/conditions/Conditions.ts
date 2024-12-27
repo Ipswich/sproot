@@ -6,12 +6,16 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputCondition } from "./OutputCondition";
 import { SensorCondition } from "./SensorCondition";
 import { TimeCondition } from "./TimeCondition";
+import { WeekdayCondition } from "./WeekdayCondition";
+
+type EnabledConditionTypes = SensorCondition | OutputCondition | TimeCondition | WeekdayCondition;
 
 export class Conditions {
   #automationId: number;
   #sensorConditions: Record<string, SensorCondition>;
   #outputConditions: Record<string, OutputCondition>;
   #timeConditions: Record<string, TimeCondition>;
+  #weekdayConditions: Record<string, WeekdayCondition>;
   #sprootDB: ISprootDB;
 
   constructor(automationId: number, sprootDB: ISprootDB) {
@@ -19,6 +23,7 @@ export class Conditions {
     this.#sensorConditions = {};
     this.#outputConditions = {};
     this.#timeConditions = {};
+    this.#weekdayConditions = {};
     this.#sprootDB = sprootDB;
   }
 
@@ -26,6 +31,7 @@ export class Conditions {
     sensor: { allOf: SensorCondition[]; anyOf: SensorCondition[]; oneOf: SensorCondition[] };
     output: { allOf: OutputCondition[]; anyOf: OutputCondition[]; oneOf: OutputCondition[] };
     time: { allOf: TimeCondition[]; anyOf: TimeCondition[]; oneOf: TimeCondition[] };
+    weekday: { allOf: WeekdayCondition[]; anyOf: WeekdayCondition[]; oneOf: WeekdayCondition[] };
   } {
     return {
       sensor: {
@@ -43,30 +49,38 @@ export class Conditions {
         anyOf: [...Object.values(this.#timeConditions)].filter((c) => c.groupType == "anyOf"),
         oneOf: [...Object.values(this.#timeConditions)].filter((c) => c.groupType == "oneOf"),
       },
+      weekday: {
+        allOf: [...Object.values(this.#weekdayConditions)].filter((c) => c.groupType == "allOf"),
+        anyOf: [...Object.values(this.#weekdayConditions)].filter((c) => c.groupType == "anyOf"),
+        oneOf: [...Object.values(this.#weekdayConditions)].filter((c) => c.groupType == "oneOf"),
+      },
     };
   }
 
-  get allOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
+  get allOf(): EnabledConditionTypes[] {
     return [
       ...Object.values(this.#sensorConditions),
       ...Object.values(this.#outputConditions),
       ...Object.values(this.#timeConditions),
+      ...Object.values(this.#weekdayConditions),
     ].filter((c) => c.groupType == "allOf");
   }
 
-  get anyOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
+  get anyOf(): EnabledConditionTypes[] {
     return [
       ...Object.values(this.#sensorConditions),
       ...Object.values(this.#outputConditions),
       ...Object.values(this.#timeConditions),
+      ...Object.values(this.#weekdayConditions),
     ].filter((c) => c.groupType == "anyOf");
   }
 
-  get oneOf(): (SensorCondition | OutputCondition | TimeCondition)[] {
+  get oneOf(): EnabledConditionTypes[] {
     return [
       ...Object.values(this.#sensorConditions),
       ...Object.values(this.#outputConditions),
       ...Object.values(this.#timeConditions),
+      ...Object.values(this.#weekdayConditions),
     ].filter((c) => c.groupType == "oneOf");
   }
 
@@ -76,9 +90,7 @@ export class Conditions {
     outputList: OutputList,
     now: Date,
   ): boolean {
-    const evaluateByConditionFlavor = (
-      condition: SensorCondition | OutputCondition | TimeCondition,
-    ) => {
+    const evaluateByConditionFlavor = (condition: EnabledConditionTypes) => {
       if (condition instanceof SensorCondition) {
         return condition.evaluate(sensorList);
       }
@@ -86,6 +98,9 @@ export class Conditions {
         return condition.evaluate(outputList);
       }
       if (condition instanceof TimeCondition) {
+        return condition.evaluate(now);
+      }
+      if (condition instanceof WeekdayCondition) {
         return condition.evaluate(now);
       }
     };
@@ -137,6 +152,7 @@ export class Conditions {
     this.#sensorConditions = {};
     this.#outputConditions = {};
     this.#timeConditions = {};
+    this.#weekdayConditions = {};
 
     const promises = [];
     promises.push(
@@ -174,6 +190,17 @@ export class Conditions {
             timeCondition.groupType,
             timeCondition.startTime,
             timeCondition.endTime,
+          );
+        });
+      }),
+    );
+    promises.push(
+      this.#sprootDB.getWeekdayConditionsAsync(this.#automationId).then((weekdayConditions) => {
+        weekdayConditions.map((weekdayCondition) => {
+          this.#weekdayConditions[weekdayCondition.id] = new WeekdayCondition(
+            weekdayCondition.id,
+            weekdayCondition.groupType,
+            weekdayCondition.weekdays,
           );
         });
       }),

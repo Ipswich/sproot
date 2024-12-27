@@ -41,6 +41,7 @@ describe("OutputAutomationManager.ts tests", () => {
           endTime: null,
         } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
       const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
@@ -79,6 +80,7 @@ describe("OutputAutomationManager.ts tests", () => {
           endTime: null,
         } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
       let result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
@@ -156,6 +158,7 @@ describe("OutputAutomationManager.ts tests", () => {
           endTime: null,
         } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
       const result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
@@ -208,6 +211,7 @@ describe("OutputAutomationManager.ts tests", () => {
           endTime: null,
         } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
 
@@ -263,6 +267,7 @@ describe("OutputAutomationManager.ts tests", () => {
           endTime: null,
         } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
 
@@ -343,6 +348,8 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getTimeConditionsAsync.onSecondCall().resolves([]);
+
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
 

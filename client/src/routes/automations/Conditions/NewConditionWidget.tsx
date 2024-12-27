@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import TimeCondition from "./ConditionTypes/TimeCondition";
+import WeekdayCondition from "./ConditionTypes/WeekdayCondition";
 
 export interface NewConditionWidgetProps {
   automationId: number;
@@ -59,6 +60,7 @@ export default function NewConditionWidget({
           filter={optionsFilter}
           data={[
             { value: "Time", label: "Time", disabled: false },
+            { value: "Weekday", label: "Weekday", disabled: false },
             {
               value: "Sensor",
               label: "Sensor",
@@ -135,6 +137,14 @@ function updateDisplayedCondition(
     case "Time":
       return (
         <TimeCondition
+          toggleAddNewCondition={toggleAddNewCondition}
+          automationId={automationId}
+          groupType={groupType}
+        />
+      );
+    case "Weekday":
+      return (
+        <WeekdayCondition
           toggleAddNewCondition={toggleAddNewCondition}
           automationId={automationId}
           groupType={groupType}

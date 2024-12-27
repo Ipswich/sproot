@@ -29,6 +29,7 @@ describe("Automation.ts tests", () => {
           endTime: null,
         } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
       await automation.conditions.loadAsync();
       assert.equal(automation.evaluate(sensorListMock, outputListMock, new Date()), 75);
     });
@@ -61,6 +62,7 @@ describe("Automation.ts tests", () => {
           endTime: null,
         } as SDBTimeCondition,
       ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
       assert.isNull(automation.evaluate(sensorListMock, outputListMock, now));
     });
   });

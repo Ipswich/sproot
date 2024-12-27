@@ -1,4 +1,5 @@
 import { type Knex } from "knex";
+import { setTableDefaults } from "../KnexUtilities";
 
 export async function up(knex: Knex): Promise<void> {
   if (!(await knex.schema.hasTable("automations"))) {
@@ -42,6 +43,7 @@ export async function up(knex: Knex): Promise<void> {
       setTableDefaults(table);
     });
   }
+
   if (!(await knex.schema.hasTable("outputs"))) {
     await knex.schema.createTable("outputs", (table) => {
       table.increments("id").notNullable();
@@ -84,6 +86,7 @@ export async function up(knex: Knex): Promise<void> {
       setTableDefaults(table);
     });
   }
+
   if (!(await knex.schema.hasTable("output_conditions"))) {
     await knex.schema.createTable("output_conditions", (table) => {
       table.increments("id").notNullable();
@@ -174,6 +177,7 @@ export async function up(knex: Knex): Promise<void> {
       setTableDefaults(table);
     });
   }
+
   if (!(await knex.schema.hasTable("sensor_data"))) {
     await knex.schema.createTable("sensor_data", (table) => {
       table.increments("id").notNullable();
@@ -207,8 +211,8 @@ export async function up(knex: Knex): Promise<void> {
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table.string("groupType", 6).notNullable();
-      table.string("startTime", 8).notNullable();
-      table.string("endTime", 8).notNullable();
+      table.string("startTime", 8);
+      table.string("endTime", 8);
       table.primary(["id"]);
       table.index(["automation_id"]);
       setTableDefaults(table);
@@ -251,9 +255,3 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(_knex: Knex): Promise<void> {}
-
-function setTableDefaults(table: Knex.CreateTableBuilder) {
-  table.engine("InnoDB");
-  table.charset("utf8mb4");
-  table.collate("utf8mb4_general_ci");
-}

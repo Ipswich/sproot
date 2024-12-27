@@ -7,6 +7,7 @@ import {
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SuccessResponse } from "@sproot/sproot-common/src/api/v2/Responses";
@@ -260,6 +261,11 @@ export async function getConditionsAsync(automationId: number): Promise<{
     anyOf: SDBTimeCondition[];
     oneOf: SDBTimeCondition[];
   };
+  weekday: {
+    allOf: SDBWeekdayCondition[];
+    anyOf: SDBWeekdayCondition[];
+    oneOf: SDBWeekdayCondition[];
+  };
 }> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions`,
@@ -397,6 +403,43 @@ export async function deleteTimeConditionAsync(
   );
   if (!response.ok) {
     console.error(`Error deleting time condition: ${response}`);
+  }
+}
+
+export async function addWeekdayConditionAsync(
+  automationId: number,
+  groupType: ConditionGroupType,
+  weekdays: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/weekday`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ groupType, weekdays }),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function deleteWeekdayConditionAsync(
+  automationId: number,
+  id: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/weekday/${id}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error deleting weekday condition: ${response}`);
   }
 }
 

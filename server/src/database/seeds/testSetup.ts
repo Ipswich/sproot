@@ -109,6 +109,11 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 2, automation_id: 1, groupType: "oneOf", startTime: "12:00", endTime: "23:59" },
   ]);
 
+  await knex("weekday_conditions").insert([
+    { id: 1, automation_id: 1, groupType: "oneOf", weekdays: 5 },
+    { id: 2, automation_id: 1, groupType: "oneOf", weekdays: 122 },
+  ]);
+
   await knex("output_actions").insert([
     { id: 1, automation_id: 1, output_id: 1, value: 100 },
     { id: 2, automation_id: 1, output_id: 1, value: 0 },
