@@ -785,12 +785,12 @@ paths:
                                   $ref: "#/components/schemas/DataPoint"
                                 example:
                                   - name: "1/24 12:00 am"
-                                    output1: "0"
-                                    output2: "50"
+                                    output1: 0
+                                    output2: 50
                                     units: "%"
                                   - name: "1/24 12:05 am"
-                                    output1: "0"
-                                    output2: "50"
+                                    output1: 0
+                                    output2: 50
                                     units: "%"
                               series:
                                 type: array
@@ -3173,12 +3173,12 @@ paths:
                                   $ref: "#/components/schemas/DataPoint"
                                 example:
                                   - name: "1/24 12:00 am"
-                                    sensor1: "25.000"
-                                    sensor2: "25.000"
+                                    sensor1: 25.000
+                                    sensor2: 25.000
                                     units: "°C"
                                   - name: "1/24 12:05 am"
-                                    sensor1: "25.625"
-                                    sensor2: "25.625"
+                                    sensor1: 25.625
+                                    sensor2: 25.625
                                     units: "°C"
                               humidity:
                                 type: array
@@ -3186,12 +3186,12 @@ paths:
                                   $ref: "#/components/schemas/DataPoint"
                                 example:
                                   - name: "1/24 12:00 am"
-                                    sensor1: "50.000"
-                                    sensor2: "50.000"
+                                    sensor1: 50.000
+                                    sensor2: 50.000
                                     units: "%rH"
                                   - name: "1/24 12:05 am"
-                                    sensor1: "50.625"
-                                    sensor2: "50.625"
+                                    sensor1: 50.625
+                                    sensor2: 50.625
                                     units: "%rH"
                           series:
                             type: array

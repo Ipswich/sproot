@@ -32,7 +32,7 @@ export class OutputChartData implements IChartable {
       const value = this.get().data.findIndex((x) => x.name == formattedDate);
       if (value >= 0 && this.get().data[value]) {
         this.get().data[value]!.units = "%";
-        this.get().data[value]![outputName] = state.value.toString();
+        this.get().data[value]![outputName] = state.value;
       }
     }
   }
@@ -50,7 +50,7 @@ export class OutputChartData implements IChartable {
         this.chartData.addDataPoint({
           name,
           units: "%",
-          [outputName]: lastCacheData.value.toString(),
+          [outputName]: lastCacheData.value,
         });
       }
     }
