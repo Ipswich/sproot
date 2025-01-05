@@ -58,7 +58,7 @@ export default function StatesChart({
           withYAxis
           tickLine="xy"
           xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
-          yAxisProps={{ domain: [0, 100] }}
+          yAxisProps={{ type: "number", domain: [0, 100] }}
           // unit={unit}
           dataKey="outputName"
           series={chartSeries ?? []}

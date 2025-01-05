@@ -62,7 +62,7 @@ export default function ReadingsChart({
           withYAxis
           tickLine="xy"
           xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
-          yAxisProps={{ domain: ["auto", "auto"] }}
+          yAxisProps={{ type: "number", domain: ["auto", "auto"] }}
           referenceLines={[
             {
               y: stats.cumulativeAverage!,
