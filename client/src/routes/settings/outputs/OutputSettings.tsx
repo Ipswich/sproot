@@ -15,9 +15,9 @@ export interface FormValues {
   color: string;
   model: string;
   address: string;
-  pin?: number;
-  isPwm?: boolean;
-  isInvertedPwm?: boolean;
+  pin: number;
+  isPwm: boolean;
+  isInvertedPwm: boolean;
   automationTimeout?: number;
 }
 
