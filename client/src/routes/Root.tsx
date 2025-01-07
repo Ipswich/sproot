@@ -9,12 +9,20 @@ import HeaderContents from "../shell/header/HeaderContents";
 import NavbarContents from "../shell/navbar/NavbarContents";
 
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
 
 export default function Root() {
+  const loaderData = useLoaderData() as {
+    readingTypes: Partial<Record<ReadingType, string>>;
+    outputs: Record<string, IOutputBase>;
+  };
+
   const readingTypes = Object.keys(
-    useLoaderData() as Partial<Record<ReadingType, string>>,
+    loaderData["readingTypes"] as Partial<Record<ReadingType, string>>,
   ) as ReadingType[];
-  const pages = Object.values(getNavbarItems(readingTypes));
+  const outputs = Object.values(loaderData.outputs);
+
+  const pages = Object.values(getNavbarItems(readingTypes, outputs));
   const [isNavbarOpened, setIsNavbarOpened] = useDisclosure(false);
 
   function closeNavbar() {

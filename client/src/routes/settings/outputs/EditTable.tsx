@@ -22,6 +22,7 @@ import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms
 import { FormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation } from "@tanstack/react-query";
+import { useRevalidator } from "react-router-dom";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
@@ -34,6 +35,7 @@ export default function EditTable({
   supportedModels,
   setIsStale,
 }: EditTableProps) {
+  const revalidator = useRevalidator();
   const [selectedOutput, setSelectedOutput] = useState({} as IOutputBase);
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
@@ -44,6 +46,7 @@ export default function EditTable({
       await updateOutputAsync(newOutputValues);
     },
     onSettled: () => {
+      revalidator.revalidate();
       setIsStale(true);
     },
   });
@@ -53,6 +56,7 @@ export default function EditTable({
       await deleteOutputAsync(id);
     },
     onSettled: () => {
+      revalidator.revalidate();
       setIsStale(true);
     },
   });

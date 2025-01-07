@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useLoaderData, useLocation } from "react-router-dom";
 import { getNavbarItems, Page } from "../Pages";
 import { ReadingType } from "@sproot/sensors/ReadingType";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
 
 interface HeaderContentsProps {
   navbarToggle: () => void;
@@ -23,10 +24,14 @@ export default function HeaderContents({
     });
   }
 
-  const readingTypes = Object.keys(
-    useLoaderData() as Partial<Record<ReadingType, string>>,
-  ) as ReadingType[];
-  const navbarItems = getNavbarItems(readingTypes);
+  const loaderData = useLoaderData() as {
+    readingTypes: Partial<Record<ReadingType, string>>;
+    outputs: Record<string, IOutputBase>;
+  };
+  const readingTypes = Object.keys(loaderData.readingTypes) as ReadingType[];
+  const outputs = Object.values(loaderData.outputs);
+
+  const navbarItems = getNavbarItems(readingTypes, outputs);
   useEffect(() => {
     setHeaderText(
       extractHeaderText(Object.values(navbarItems)).filter(

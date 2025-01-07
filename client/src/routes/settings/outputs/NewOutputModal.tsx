@@ -18,6 +18,8 @@ import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
 
+import { useRevalidator } from "react-router-dom";
+
 interface NewOutputModalProps {
   supportedModels: string[];
   modalOpened: boolean;
@@ -31,12 +33,14 @@ export default function NewOutputModal({
   closeModal,
   setIsStale,
 }: NewOutputModalProps) {
+  const revalidator = useRevalidator();
   const addOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
       await addOutputAsync(newOutputValues);
     },
     onSettled: () => {
       setIsStale(true);
+      revalidator.revalidate();
     },
   });
 
