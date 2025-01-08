@@ -19,6 +19,7 @@ import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
 import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import { useRevalidator } from "react-router-dom";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
@@ -31,6 +32,7 @@ export default function EditTable({
   supportedModels,
   setIsStale,
 }: EditTableProps) {
+  const revalidator = useRevalidator();
   const [selectedSensor, setSelectedSensor] = useState({} as ISensorBase);
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
@@ -41,6 +43,7 @@ export default function EditTable({
       await updateSensorAsync(newSensorValues);
     },
     onSettled: () => {
+      revalidator.revalidate();
       setIsStale(true);
     },
   });
@@ -50,6 +53,7 @@ export default function EditTable({
       await deleteSensorAsync(id);
     },
     onSettled: () => {
+      revalidator.revalidate();
       setIsStale(true);
     },
   });
