@@ -1,19 +1,19 @@
 import { Burger, Container, Group, Title } from "@mantine/core";
 import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.module.css";
 import { useEffect, useState, useTransition } from "react";
-import { useLoaderData, useLocation } from "react-router-dom";
-import { getNavbarItems, Page } from "../Pages";
-import { ReadingType } from "@sproot/sensors/ReadingType";
-import { IOutputBase } from "@sproot/outputs/IOutputBase";
+import { useLocation } from "react-router-dom";
+import { Page } from "../Pages";
 
 interface HeaderContentsProps {
   navbarToggle: () => void;
   navbarOpened: boolean;
+  navbarItems: Record<string, Page>;
 }
 
 export default function HeaderContents({
   navbarToggle,
   navbarOpened,
+  navbarItems,
 }: HeaderContentsProps) {
   const [headerText, setHeaderText] = useState("");
   const [, startTransition] = useTransition();
@@ -23,15 +23,6 @@ export default function HeaderContents({
       navbarToggle();
     });
   }
-
-  const loaderData = useLoaderData() as {
-    readingTypes: Partial<Record<ReadingType, string>>;
-    outputs: Record<string, IOutputBase>;
-  };
-  const readingTypes = Object.keys(loaderData.readingTypes) as ReadingType[];
-  const outputs = Object.values(loaderData.outputs);
-
-  const navbarItems = getNavbarItems(readingTypes, outputs);
   useEffect(() => {
     setHeaderText(
       extractHeaderText(Object.values(navbarItems)).filter(

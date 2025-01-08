@@ -18,11 +18,11 @@ export default function Root() {
   };
 
   const readingTypes = Object.keys(
-    loaderData["readingTypes"] as Partial<Record<ReadingType, string>>,
+    loaderData.readingTypes as Partial<Record<ReadingType, string>>,
   ) as ReadingType[];
   const outputs = Object.values(loaderData.outputs);
-
-  const pages = Object.values(getNavbarItems(readingTypes, outputs));
+  const navbarItems = getNavbarItems(readingTypes, outputs);
+  const pages = Object.values(navbarItems);
   const [isNavbarOpened, setIsNavbarOpened] = useDisclosure(false);
 
   function closeNavbar() {
@@ -46,6 +46,7 @@ export default function Root() {
           <HeaderContents
             navbarToggle={setIsNavbarOpened.toggle}
             navbarOpened={isNavbarOpened}
+            navbarItems={navbarItems}
           />
         </AppShell.Header>
         <AppShell.Navbar style={{ width: "250px", opacity: "95%" }} p="md">

@@ -14,8 +14,12 @@ export async function rootLoader(): Promise<{
     readingTypes: Partial<Record<ReadingType, string>>;
     outputs: Record<string, IOutputBase>;
   };
-  data.readingTypes = await getReadingTypesAsync();
-  data.outputs = await getOutputsAsync();
+  await Promise.all([getReadingTypesAsync(), getOutputsAsync()]).then(
+    ([readingTypes, outputs]) => {
+      data.readingTypes = readingTypes;
+      data.outputs = outputs;
+    },
+  );
   return data;
 }
 
