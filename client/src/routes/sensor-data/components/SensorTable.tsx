@@ -5,17 +5,20 @@ import { Fragment, useEffect, useState, useTransition } from "react";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useQuery } from "@tanstack/react-query";
 import { getSensorsAsync } from "../../../requests/requests_v2";
+import { convertCelsiusToFahrenheit } from "@sproot/sproot-common/src/utility/DisplayFormats";
 
 interface SensorTableProps {
   readingType: ReadingType;
   toggleStates: string[];
   setToggleState: (sensorName: string[]) => void;
+  useAlternateUnits: boolean;
 }
 
 export default function SensorTable({
   readingType,
   toggleStates,
   setToggleState,
+  useAlternateUnits,
 }: SensorTableProps) {
   const [sensors, setSensors] = useState([] as ISensorBase[]);
   const getSensorsQuery = useQuery({
@@ -95,7 +98,11 @@ export default function SensorTable({
                   </Flex>
                 </Table.Td>
                 <Table.Td>{sensor.name}</Table.Td>
-                <Table.Td>{`${sensor.lastReading[readingType]} ${sensor.units[readingType]}`}</Table.Td>
+                <Table.Td>
+                  {useAlternateUnits && readingType == ReadingType.temperature
+                    ? `${convertCelsiusToFahrenheit(sensor.lastReading[readingType])} °F`
+                    : `${sensor.lastReading[readingType]} ${sensor.units[readingType]}`}
+                </Table.Td>
               </Table.Tr>
             ))}
         </Table.Tbody>

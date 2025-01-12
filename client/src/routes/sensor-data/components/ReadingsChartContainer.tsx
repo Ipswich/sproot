@@ -2,6 +2,7 @@ import * as Constants from "@sproot/sproot-common/src/utility/Constants";
 import {
   ChartSeries,
   ChartData,
+  DataSeries,
 } from "@sproot/sproot-common/src/utility/ChartData";
 import {
   ReadingType,
@@ -11,7 +12,10 @@ import { Fragment, useEffect, useState } from "react";
 import { getSensorChartDataAsync } from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import ReadingsChart from "./ReadingsChart";
-import { Flex } from "@mantine/core";
+import {
+  convertCelsiusToFahrenheit,
+  convertFahrenheitToCelsius,
+} from "@sproot/sproot-common/src/utility/DisplayFormats";
 
 export interface ReadingsChartContainerProps {
   readingType: string;
@@ -19,6 +23,7 @@ export interface ReadingsChartContainerProps {
   toggledSensors: string[];
   chartRendering: boolean;
   setChartRendering: (value: boolean) => void;
+  useAlternateUnits: boolean;
 }
 
 export default function ReadingsChartContainer({
@@ -27,6 +32,7 @@ export default function ReadingsChartContainer({
   toggledSensors,
   chartRendering,
   setChartRendering,
+  useAlternateUnits,
 }: ReadingsChartContainerProps) {
   const baseChartData = new ChartData(
     Constants.MAX_CHART_DATA_POINTS,
@@ -46,8 +52,11 @@ export default function ReadingsChartContainer({
     refetchInterval: 300000,
   });
 
-  const updateAsync = async () => {
+  const updateDataAsync = async () => {
     const newData = (await chartDataQuery.refetch()).data!;
+    if (readingType == ReadingType.temperature) {
+      updateUnits(newData["data"][readingType as ReadingType]);
+    }
     const baseChartData = new ChartData(
       Constants.MAX_CHART_DATA_POINTS,
       Constants.CHART_DATA_POINT_INTERVAL,
@@ -63,22 +72,57 @@ export default function ReadingsChartContainer({
     setChartRendering(false);
   };
 
+  const updateUnits = (dataSeries: DataSeries | undefined) => {
+    if (dataSeries === undefined) {
+      return;
+    }
+    if (readingType == ReadingType.temperature) {
+      if (useAlternateUnits) {
+        for (const dataPoint of dataSeries) {
+          if (dataPoint.units === "°F") {
+            continue;
+          }
+          dataPoint.units = "°F";
+          for (const key of Object.keys(dataPoint)) {
+            if (key === "units" || key === "name") {
+              continue;
+            }
+            dataPoint[key] = convertCelsiusToFahrenheit(dataPoint[key])!;
+          }
+        }
+      } else {
+        for (const dataPoint of dataSeries) {
+          if (dataPoint.units === Units.temperature) {
+            continue;
+          }
+          dataPoint.units = Units.temperature;
+          for (const key of Object.keys(dataPoint)) {
+            if (key === "units" || key === "name") {
+              continue;
+            }
+            dataPoint[key] = convertFahrenheitToCelsius(dataPoint[key])!;
+          }
+        }
+      }
+    }
+  };
+
   useEffect(() => {
-    updateAsync();
+    updateDataAsync();
 
     const interval = setInterval(() => {
-      updateAsync();
+      updateDataAsync();
     }, 60000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readingType]);
 
+  if (readingType == ReadingType.temperature) {
+    updateUnits(timeSpans[parseInt(chartInterval)]!);
+  }
+
   return (
     <Fragment>
-      <Flex my={-12}>
-        <h2>{readingType.charAt(0).toUpperCase() + readingType.slice(1)}</h2>
-        <h5>{Units[readingType as ReadingType]}</h5>
-      </Flex>
       <ReadingsChart
         dataSeries={ChartData.filterChartData(
           timeSpans[parseInt(chartInterval)]!,

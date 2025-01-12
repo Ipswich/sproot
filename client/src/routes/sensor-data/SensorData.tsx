@@ -5,8 +5,11 @@ import {
   useState,
   useTransition,
 } from "react";
-import { Card, SegmentedControl } from "@mantine/core";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { Card, Flex, Group, SegmentedControl, Switch } from "@mantine/core";
+import {
+  ReadingType,
+  Units,
+} from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useLoaderData } from "react-router-dom";
 import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import SensorTable from "./components/SensorTable";
@@ -19,6 +22,9 @@ export default function SensorData() {
   );
   const [segmentedControlValue, setSegmentedControlValue] =
     useState(chartInterval);
+  const [useAlternateUnits, setAlternateUnits] = useState(
+    localStorage.getItem(`${readingTypeString}-useAlternateUnits`) === "true",
+  );
   const [chartRendering, setChartRendering] = useState(true);
 
   const [sensorToggleStates, setSensorToggleStates] = useState([] as string[]);
@@ -33,12 +39,45 @@ export default function SensorData() {
   return (
     <Fragment>
       <Card shadow="sm" px="md" py="xs" radius="md" withBorder>
+        <Group justify="space-between">
+          <Flex my={-12}>
+            <h2>
+              {readingTypeString.charAt(0).toUpperCase() +
+                readingTypeString.slice(1)}
+            </h2>
+            <h5>
+              {useAlternateUnits && readingTypeString == "temperature"
+                ? "°F"
+                : Units[readingTypeString as ReadingType]}
+            </h5>
+          </Flex>
+
+          {readingTypeString == ReadingType.temperature ? (
+            <Flex justify="right">
+              <Switch
+                mr="32px"
+                size="md"
+                offLabel={Units[readingTypeString as ReadingType]}
+                onLabel="°F"
+                checked={useAlternateUnits}
+                onChange={(event) => {
+                  localStorage.setItem(
+                    `${readingTypeString}-useAlternateUnits`,
+                    event.currentTarget.checked.valueOf().toString(),
+                  );
+                  setAlternateUnits(!useAlternateUnits);
+                }}
+              />
+            </Flex>
+          ) : null}
+        </Group>
         <ReadingsChartContainer
           readingType={readingTypeString}
           chartInterval={chartInterval}
           toggledSensors={sensorToggleStates}
           chartRendering={chartRendering}
           setChartRendering={setChartRendering}
+          useAlternateUnits={useAlternateUnits}
         />
         <div style={{ height: "40px", marginTop: "8px" }}>
           <SegmentedControl
@@ -71,6 +110,7 @@ export default function SensorData() {
           setToggleState={(newToggleState: SetStateAction<string[]>) => {
             setSensorToggleStates(newToggleState);
           }}
+          useAlternateUnits={useAlternateUnits}
         />
       </Card>
     </Fragment>
