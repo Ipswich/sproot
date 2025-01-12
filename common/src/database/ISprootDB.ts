@@ -20,6 +20,7 @@ import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { IWeekdayCondition } from "../automation/IWeekdayCondition";
+import { SDBCamera } from "./SDBCamera";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -51,6 +52,12 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
+
+  getCameras(): Promise<SDBCamera[]>;
+  getCamera(id: number): Promise<SDBCamera[]>;
+  addCamera(camera: SDBCamera): Promise<number>;
+  updateCamera(camera: SDBCamera): Promise<void>;
+  deleteCamera(id: number): Promise<void>;
 
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
@@ -114,6 +121,22 @@ interface ISprootDB {
 }
 
 class MockSprootDB implements ISprootDB {
+  async getCameras(): Promise<SDBCamera[]> {
+    return [];
+  }
+  async getCamera(_id: number): Promise<SDBCamera[]> {
+    return [];
+  }
+  async addCamera(_camera: SDBCamera): Promise<number> {
+    return 0
+  }
+  async updateCamera(_camera: SDBCamera): Promise<void> {
+    return 
+  }
+  async deleteCamera(_id: number): Promise<void> {
+    return 
+  }
+
   async getWeekdayConditionsAsync(_automationId: number): Promise<SDBWeekdayCondition[]> {
     return [];
   }

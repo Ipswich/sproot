@@ -8,6 +8,11 @@ export async function up(knex: Knex): Promise<void> {
       table.string("deviceIdentifier", 255).notNullable();
       table.string("resolution", 64).notNullable();
       table.integer("quality", 11).notNullable();
+      table.tinyint("overlayTimestamp", 1).notNullable();
+      table.tinyint("overlayName", 1).notNullable();
+      table.string('overlayColor', 64).notNullable();
+      table.integer("retentionDays", 11).notNullable();
+      table.integer("frequencyMinutes", 11).notNullable();
     });
   }
 }

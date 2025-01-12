@@ -23,6 +23,7 @@ import { ISensorCondition } from "@sproot/automation/ISensorCondition";
 import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBCamera } from "@sproot/database/SDBCamera";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -31,6 +32,31 @@ export class SprootDB implements ISprootDB {
     this.#connection = connection;
   }
 
+  async getCameras(): Promise<SDBCamera[]> {
+    return this.#connection("cameras").select("*");
+  }
+  async getCamera(id: number): Promise<SDBCamera[]> {
+    return this.#connection("cameras").where("id", id).select("*");
+  }
+  async addCamera(camera: SDBCamera): Promise<number> {
+    return this.#connection("cameras").insert(camera);
+  }
+  async updateCamera(camera: SDBCamera): Promise<void> {
+    return this.#connection("cameras").where("id", camera.id).update({
+      name: camera.name,
+      deviceIdentifier: camera.deviceIdentifier,
+      resolution: camera.resolution,
+      quality: camera.quality,
+      overlayTimestamp: camera.overlayTimestamp,
+      overlayName: camera.overlayName,
+      overlayColor: camera.overlayColor,
+      retentionDays: camera.retentionDays,
+      frequencyMinutes: camera.frequencyMinutes,
+    });
+  }
+  async deleteCamera(id: number): Promise<void> {
+    return this.#connection("cameras").where("id", id).delete();
+  }
   async getSensorsAsync(): Promise<SDBSensor[]> {
     return this.#connection("sensors").select("*");
   }
