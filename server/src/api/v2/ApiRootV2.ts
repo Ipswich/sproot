@@ -68,6 +68,12 @@ function ApiRootV2(app: Express) {
     let errorResponse = {
       statusCode: err.status ?? 500,
       error: {
+        request: {
+          method: req.method,
+          url: req.originalUrl,
+          body: req.body,
+          query: req.query,
+        },
         name: err.name ?? "Internal Server Error",
         url: req.originalUrl,
         details: err.errors ?? [],

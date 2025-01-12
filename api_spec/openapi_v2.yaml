@@ -3374,7 +3374,20 @@ components:
             error:
               type: object
               properties:
+                request:
+                  type: object
+                  properties:
+                    method:
+                      type: string
+                    url:
+                      type: string
+                    body:
+                      type: object
+                    query:
+                      type: object
                 name:
+                  type: string
+                url:
                   type: string
                 details:
                   type: array
