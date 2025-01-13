@@ -3,7 +3,6 @@ type SDBCamera = {
   name: string;
   deviceIdentifier: string;
   resolution: string;
-  quality: number;
   overlayTimestamp: boolean;
   overlayName: boolean;
   overlayColor: string;

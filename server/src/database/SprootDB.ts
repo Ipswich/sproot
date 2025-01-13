@@ -46,7 +46,6 @@ export class SprootDB implements ISprootDB {
       name: camera.name,
       deviceIdentifier: camera.deviceIdentifier,
       resolution: camera.resolution,
-      quality: camera.quality,
       overlayTimestamp: camera.overlayTimestamp,
       overlayName: camera.overlayName,
       overlayColor: camera.overlayColor,
