@@ -597,13 +597,17 @@ export async function powerOffAsync(): Promise<void> {
 }
 
 export async function pingAsync(): Promise<boolean> {
-  const response = await fetch(`${SERVER_URL}/api/v2/ping`, {
-    method: "GET",
-    headers: {},
-    mode: "cors",
-    // credentials: "include",
-  });
-  return response.ok;
+  try {
+    const response = await fetch(`${SERVER_URL}/api/v2/ping`, {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    });
+    return response.ok ;
+  } catch {
+    return false;
+  }
 }
 
 function queryBuilder(

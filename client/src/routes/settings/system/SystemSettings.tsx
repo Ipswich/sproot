@@ -28,7 +28,7 @@ export default function SystemSettings() {
   useEffect(() => {
     const interval = setInterval(() => {
       updateServerStatusAsync();
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps

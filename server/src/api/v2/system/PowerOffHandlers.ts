@@ -15,10 +15,10 @@ export function powerOffHandler(
   };
 
   const logger = request.app.get("logger") as winston.Logger;
-  logger.info("Shutdown request received! System is powering off in 5 seconds.");
+  logger.info("Shutdown request received! System is powering off in 3 seconds.");
   setTimeout(async () => {
     await request.app.get("gracefulHaltAsync")();
-  }, 5000);
+  }, 3000);
 
   return powerOffResponse;
 }
