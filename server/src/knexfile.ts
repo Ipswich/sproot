@@ -1,5 +1,6 @@
 import type { Knex } from "knex";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import { TypeCastField } from "mysql2";
 
 const config: { [key: string]: Knex.Config } = {
   development: {
@@ -11,6 +12,7 @@ const config: { [key: string]: Knex.Config } = {
       database: `${Constants.DATABASE_NAME}-development`,
       port: parseInt(process.env["DATABASE_PORT"]!),
       dateStrings: true,
+      typeCast: castTinyIntsToBooleans,
     },
     migrations: {
       loadExtensions: [".js"],
@@ -32,6 +34,7 @@ const config: { [key: string]: Knex.Config } = {
       database: `${Constants.DATABASE_NAME}-test`,
       port: parseInt(process.env["DATABASE_PORT"]!),
       dateStrings: true,
+      typeCast: castTinyIntsToBooleans,
     },
     migrations: {
       loadExtensions: [".ts"],
@@ -53,6 +56,7 @@ const config: { [key: string]: Knex.Config } = {
       database: Constants.DATABASE_NAME,
       port: parseInt(process.env["DATABASE_PORT"]!),
       dateStrings: true,
+      typeCast: castTinyIntsToBooleans,
     },
     migrations: {
       loadExtensions: [".js"],
@@ -65,5 +69,13 @@ const config: { [key: string]: Knex.Config } = {
     },
   },
 };
+
+function castTinyIntsToBooleans(field: TypeCastField, next: () => any) {
+  if (field.type == "TINY" && field.length == 1) {
+    let value = field.string();
+    return value ? value == "1" : null;
+  }
+  return next();
+}
 
 export default config;
