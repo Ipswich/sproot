@@ -3,16 +3,17 @@ import mainAsync from "./program";
 
 mainAsync().then((app) => {
   const server = app.listen(3000, () => {
+    app.set("gracefulHaltAsync", gracefulHaltAsync);
     app.get("logger").info("Sproot server listening on port 3000!");
     // Graceful shutdown on signals
     process.on("SIGINT", async () => {
-      await gracefulHalt();
+      await gracefulHaltAsync();
     });
     process.on("SIGTERM", async () => {
-      await gracefulHalt();
+      await gracefulHaltAsync();
     });
 
-    async function gracefulHalt() {
+    async function gracefulHaltAsync() {
       const logger = app.get("logger");
       logger.info("Shutting down...");
       server.close(async () => {

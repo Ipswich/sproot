@@ -584,6 +584,32 @@ export async function setOutputManualStateAsync(
   }
 }
 
+export async function powerOffAsync(): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/power-off`, {
+    method: "POST",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error powering off: ${response}`);
+  }
+}
+
+export async function pingAsync(): Promise<boolean> {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/v2/ping`, {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 function queryBuilder(
   params: Record<string, string | boolean | undefined>,
 ): string {

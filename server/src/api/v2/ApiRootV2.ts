@@ -9,6 +9,7 @@ import addDefaultProperties, {
 import { authorize } from "./middleware/Authorize";
 import authenticationRouter from "./authentication/authenticationRouter";
 import pingRouter from "./ping/PingRouter";
+import systemRouter from "./system/SystemRouter";
 import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
 import automationsRouter from "./automations/AutomationsRouter";
@@ -26,7 +27,7 @@ const authenticateMiddleware = authorize(
 );
 
 function ApiRootV2(app: Express) {
-  let logger = app.get("logger");
+  const logger = app.get("logger");
 
   app.use(
     "/api/v2/docs",
@@ -46,6 +47,7 @@ function ApiRootV2(app: Express) {
 
   app.use("/api/v2/", addDefaultProperties);
   app.use("/api/v2/ping", pingRouter);
+  app.use("/api/v2/system", authenticateMiddleware, systemRouter);
 
   app.use(
     "/api/v2/authenticate",
@@ -65,7 +67,7 @@ function ApiRootV2(app: Express) {
   // Error handler - anything unexpected ends up here.
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     // format error
-    let errorResponse = {
+    const errorResponse = {
       statusCode: err.status ?? 500,
       error: {
         request: {

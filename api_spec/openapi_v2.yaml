@@ -262,6 +262,51 @@ paths:
                               example:
                                 - "Failed to get user from database."
                                 - "Database connection failed."
+  /api/v2/system/power-off:
+    post:
+      tags: 
+        - "System"
+      summary: "Power off the system."
+      description: >
+        Powers off the system. This operation is permanent and cannot be undone. Though, it 
+        should come back if you haven't changed any docker settings. It's intent is more of a
+        "restart" then a "power off".
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "System is powering off."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/power-off"
+                          details:
+                            items:
+                              example:
+                                - "Failed to power off system."
+                                - "System is not available."
   /api/v2/ping:
     get:
       tags:

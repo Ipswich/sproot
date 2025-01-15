@@ -85,11 +85,11 @@ export function getNavbarItems(
         headerText: "Output Settings",
         href: "/settings/outputs",
       } as Page,
-      // {
-      //   navLinkText: "System",
-      //   headerText: "System Settings",
-      //   href: "/settings/system"
-      // } as Page,
+      {
+        navLinkText: "System",
+        headerText: "System Settings",
+        href: "/settings/system",
+      } as Page,
     ],
   };
 
