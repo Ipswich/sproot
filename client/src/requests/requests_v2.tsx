@@ -585,7 +585,7 @@ export async function setOutputManualStateAsync(
 }
 
 export async function powerOffAsync(): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/power-off`, {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/power-off`, {
     method: "POST",
     headers: {},
     mode: "cors",
