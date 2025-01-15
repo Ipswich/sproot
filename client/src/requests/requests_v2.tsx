@@ -604,7 +604,7 @@ export async function pingAsync(): Promise<boolean> {
       mode: "cors",
       // credentials: "include",
     });
-    return response.ok ;
+    return response.ok;
   } catch {
     return false;
   }
