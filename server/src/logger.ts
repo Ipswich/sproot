@@ -1,9 +1,20 @@
 import { Express } from "express";
+import * as fs from "fs";
 import morgan from "morgan";
 import * as winston from "winston";
 import "winston-daily-rotate-file";
 
 export default function setupLogger(app: Express): winston.Logger {
+  if (process.env["NODE_ENV"]?.toLowerCase() === "test") {
+    return winston.createLogger({
+      transports: [
+        new winston.transports.Stream({
+          stream: fs.createWriteStream("/dev/null"), // Discard logs to /dev/null
+        }),
+      ],
+    });
+  }
+
   const logger = winston.createLogger({
     level: "info",
     format: winston.format.combine(

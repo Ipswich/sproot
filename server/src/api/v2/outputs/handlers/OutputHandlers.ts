@@ -76,19 +76,19 @@ export async function addAsync(
   if (newOutput.model == undefined || newOutput.model == null) {
     missingFields.push("Missing required field: model");
   }
-  if (newOutput.address == undefined || newOutput.model == null) {
+  if (newOutput.address == undefined || newOutput.address == null) {
     missingFields.push("Missing required field: address");
   }
-  if (newOutput.name == undefined || newOutput.model == null) {
+  if (newOutput.name == undefined || newOutput.name == null) {
     missingFields.push("Missing required field: name");
   }
-  if (newOutput.pin == undefined || newOutput.model == null) {
+  if (newOutput.pin == undefined || newOutput.pin == null) {
     missingFields.push("Missing required field: pin");
   }
-  if (newOutput.isPwm == undefined || newOutput.model == null) {
+  if (newOutput.isPwm == undefined || newOutput.isPwm == null) {
     missingFields.push("Missing required field: isPwm");
   }
-  if (newOutput.isInvertedPwm == undefined || newOutput.model == null) {
+  if (newOutput.isInvertedPwm == undefined || newOutput.isInvertedPwm == null) {
     missingFields.push("Missing required field: isInvertedPwm");
   }
   if (newOutput.automationTimeout == undefined || newOutput.automationTimeout == null) {

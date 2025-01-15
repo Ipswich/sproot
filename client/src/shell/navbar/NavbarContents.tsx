@@ -1,4 +1,4 @@
-import { Group, ScrollArea } from "@mantine/core";
+import { Code, Group, ScrollArea } from "@mantine/core";
 import { LinksGroup } from "./NavbarLinksGroup";
 // import { Logo } from './Logo';
 import classes from "./css/NavbarContents.module.css";
@@ -6,12 +6,12 @@ import { Page } from "../Pages";
 import { useState } from "react";
 
 interface NavbarContentsProps {
-  setCurrentPage: (page: Page) => void;
+  closeNavbar: () => void;
   pages: Page[];
 }
 
 export default function NavbarContents({
-  setCurrentPage,
+  closeNavbar: closeNavbar,
   pages,
 }: NavbarContentsProps) {
   const [openedLinkGroups, setOpenedLinkGroups] = useState([] as string[]);
@@ -20,7 +20,7 @@ export default function NavbarContents({
       page={item}
       navLinkText={item.navLinkText}
       icon={item.icon}
-      setCurrentPage={setCurrentPage}
+      closeNavbar={closeNavbar}
       key={item.navLinkText}
       openedLinkGroups={openedLinkGroups}
       setOpenedLinkGroups={setOpenedLinkGroups}
@@ -33,7 +33,7 @@ export default function NavbarContents({
         <Group justify="space-between">
           {/* <Logo style={{ width: rem(120) }} /> */}
           <h1>Sproot</h1>
-          {/* <Code fw={700}>{import.meta.env["VITE_CLIENT_VERSION"]}</Code> */}
+          <Code fw={700}>{import.meta.env["VITE_VERSION"]}</Code>
         </Group>
       </div>
 

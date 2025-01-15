@@ -4,6 +4,7 @@ import {
   deleteOutputConditionAsync,
   deleteSensorConditionAsync,
   deleteTimeConditionAsync,
+  deleteWeekdayConditionAsync,
   getConditionsAsync,
 } from "../../../requests/requests_v2";
 import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
@@ -17,6 +18,7 @@ import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
 import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -61,9 +63,22 @@ export default function ConditionsTable({
     },
   });
 
+  const deleteWeekdayConditionMutation = useMutation({
+    mutationFn: async (conditionId: number) => {
+      await deleteWeekdayConditionAsync(automationId, conditionId);
+    },
+    onSettled: () => {
+      conditionsQueryFn.refetch();
+    },
+  });
+
   //local helper function
   function mapToDeleteConditionMutationAsync(
-    condition: SDBSensorCondition | SDBOutputCondition | SDBTimeCondition,
+    condition:
+      | SDBSensorCondition
+      | SDBOutputCondition
+      | SDBTimeCondition
+      | SDBWeekdayCondition,
   ): (id: number) => Promise<void> {
     if ("sensorId" in condition && "readingType" in condition) {
       return async (conditionId: number) => {
@@ -76,6 +91,10 @@ export default function ConditionsTable({
     } else if ("startTime" in condition && "endTime" in condition) {
       return async (conditionId: number) => {
         await deleteTimeConditionMutation.mutateAsync(conditionId);
+      };
+    } else if ("weekdays" in condition) {
+      return async (conditionId: number) => {
+        await deleteWeekdayConditionMutation.mutateAsync(conditionId);
       };
     }
     return async () => {};
@@ -179,7 +198,11 @@ export default function ConditionsTable({
 }
 
 function mapToType(
-  condition: SDBSensorCondition | SDBOutputCondition | SDBTimeCondition,
+  condition:
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition,
 ): ReactNode {
   if ("sensorId" in condition && "readingType" in condition) {
     return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
@@ -187,6 +210,8 @@ function mapToType(
     return <OutputConditionRow {...(condition as SDBOutputCondition)} />;
   } else if ("startTime" in condition && "endTime" in condition) {
     return <TimeConditionRow {...(condition as SDBTimeCondition)} />;
+  } else if ("weekdays" in condition) {
+    return <WeekdayConditionRow {...(condition as SDBWeekdayCondition)} />;
   }
   return <></>;
 }
@@ -241,4 +266,29 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
         `Time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
     </Group>
   );
+}
+
+function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
+  const bits = weekdayCondition.weekdays.toString(2).padStart(7, "0");
+  const days = [];
+  for (let i = 0; i < bits.length; i++) {
+    if (bits[i] === "1") {
+      days.push(
+        [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ][i],
+      );
+    }
+  }
+  const response =
+    days.length > 1
+      ? days.slice(0, -1).join(", ") + ", or " + days.slice(-1)
+      : days[0];
+  return <Group>{`Day is ${response}`}</Group>;
 }

@@ -1,3 +1,4 @@
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import {
   IconAdjustments,
@@ -23,6 +24,7 @@ export interface Page {
 
 export function getNavbarItems(
   readingTypes: ReadingType[],
+  outputs: IOutputBase[],
 ): Record<string, Page> {
   const pages = {
     dashboard: {
@@ -48,12 +50,14 @@ export function getNavbarItems(
     };
   }
 
-  pages["outputStates"] = {
-    navLinkText: "Output States",
-    headerText: "Output States",
-    href: "/output-states",
-    icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
-  };
+  if (outputs.length > 0) {
+    pages["outputStates"] = {
+      navLinkText: "Output States",
+      headerText: "Output States",
+      href: "/output-states",
+      icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
+    };
+  }
 
   pages["automations"] = {
     navLinkText: "Automations",
@@ -81,11 +85,11 @@ export function getNavbarItems(
         headerText: "Output Settings",
         href: "/settings/outputs",
       } as Page,
-      // {
-      //   navLinkText: "System",
-      //   headerText: "System Settings",
-      //   href: "/settings/system"
-      // } as Page,
+      {
+        navLinkText: "System",
+        headerText: "System Settings",
+        href: "/settings/system",
+      } as Page,
     ],
   };
 

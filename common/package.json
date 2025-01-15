@@ -1,6 +1,5 @@
 {
   "name": "@sproot/sproot-common",
-  "version": "0.1.0",
   "private": true,
   "description": "Sproot common libraries",
   "main": "index.js",
@@ -11,8 +10,8 @@
     "coverage": "nyc npm run test",
     "prettier:write": "npx --yes prettier . --write",
     "prettier:check": "npx --yes prettier . --check",
-    "test": "npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts",
-    "check": "npm run prettier:check && npm run build && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
+    "test": "mocha -r ts-node/register --colors ./src/**/*.spec.ts",
+    "check": "npm run prettier:check && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
   },
   "author": "Ben Steele",
   "license": "ISC",

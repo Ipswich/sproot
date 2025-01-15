@@ -14,6 +14,7 @@ import { useForm } from "@mantine/form";
 import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
+import { useRevalidator } from "react-router-dom";
 
 interface NewSensorModalProps {
   supportedModels: string[];
@@ -28,11 +29,13 @@ export default function NewSensorModal({
   closeModal,
   setIsStale,
 }: NewSensorModalProps) {
+  const revalidator = useRevalidator();
   const addSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
       await addSensorAsync(newSensorValues);
     },
     onSettled: () => {
+      revalidator.revalidate();
       setIsStale(true);
     },
   });

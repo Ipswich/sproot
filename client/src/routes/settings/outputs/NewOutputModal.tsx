@@ -18,6 +18,8 @@ import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
 
+import { useRevalidator } from "react-router-dom";
+
 interface NewOutputModalProps {
   supportedModels: string[];
   modalOpened: boolean;
@@ -31,21 +33,30 @@ export default function NewOutputModal({
   closeModal,
   setIsStale,
 }: NewOutputModalProps) {
+  const revalidator = useRevalidator();
   const addOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
       await addOutputAsync(newOutputValues);
     },
     onSettled: () => {
       setIsStale(true);
+      revalidator.revalidate();
     },
   });
 
   const newOutputForm = useForm({
+    // Note - `mode: "uncontrolled"` prevents the form from rerendering every time a value in the form changes.
+    // If and when we get around to adding other output types (besides PCA9685), we'll probably want to set this
+    // and use some individual refs or states to keep track of things.
+    // https://mantine.dev/form/uncontrolled/
+
+    // mode: "uncontrolled",
     initialValues: {
       name: "",
       color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
+      pin: 0,
       isPwm: false,
       isInvertedPwm: false,
     } as FormValues,
@@ -67,6 +78,8 @@ export default function NewOutputModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
+      pin: (value) =>
+        value != null && value != undefined ? null : "Must have a value",
       isPwm: (value) =>
         value === true || value === false ? null : "Must be true or false",
       isInvertedPwm: (value) =>

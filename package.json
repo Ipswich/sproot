@@ -1,6 +1,6 @@
 {
   "name": "sproot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Garden Automation Managment",
   "main": "index.js",
@@ -22,6 +22,7 @@
     "start:dev:server": "npm run start:dev --workspace=server",
     "start:dev:client": "npm run start:dev --workspace=client",
     "test": "npm run test --workspaces --if-present",
+    "test:api": "npm run test:api --workspace=server",
     "check": "npm run check --workspaces --if-present"
   },
   "author": "Ben Steele",

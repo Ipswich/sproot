@@ -25,7 +25,7 @@ class PCA9685 {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    frequency: number = 50,
+    frequency: number = 800,
     logger: winston.Logger,
   ) {
     this.#sprootDB = sprootDB;

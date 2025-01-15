@@ -35,9 +35,9 @@ export function authorize(isAuthEnabled: string, jwtSecret: string) {
       }
       const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
-      if (decoded["csrf"]) {
+      if (decoded["csrf-token"]) {
         const csrf = request.headers["x-csrf-token"];
-        if (csrf !== decoded["csrf"]) {
+        if (csrf !== decoded["csrf-token"]) {
           details.push("Invalid CSRF token.");
           response.status(401).json(errorResponse);
           return;

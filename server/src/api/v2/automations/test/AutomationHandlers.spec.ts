@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
-import { SprootDB } from "../../../../database/SprootDB";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import {
   getAsync,
@@ -14,6 +13,7 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
 import { OutputList } from "../../../../outputs/list/OutputList";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 describe("AutomationHandlers", () => {
   describe("getAsync ", () => {
@@ -29,7 +29,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
         { automationId: 2, name: "automation2", operator: "and" } as SDBAutomation,
@@ -64,7 +64,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.rejects(new Error("Failed to get automations from database."));
 
       const mockRequest = {
@@ -102,7 +102,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
@@ -131,7 +131,7 @@ describe("AutomationHandlers", () => {
     });
 
     it("should return a 400 and an error message", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([]);
       const mockResponse = {
         locals: {
@@ -166,7 +166,7 @@ describe("AutomationHandlers", () => {
     });
 
     it("should return a 404 and an error message", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([]);
       const mockResponse = {
         locals: {
@@ -201,7 +201,7 @@ describe("AutomationHandlers", () => {
     });
 
     it("should return a 503 and an error message", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.rejects(new Error("Failed to get automation from database."));
       const mockResponse = {
         locals: {
@@ -246,7 +246,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const outputList = sinon.createStubInstance(OutputList);
       const automationDataManager = new AutomationDataManager(sprootDB, outputList);
       sprootDB.addAutomationAsync.resolves(1);
@@ -332,7 +332,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const outputList = sinon.createStubInstance(OutputList);
       const automationDataManager = new AutomationDataManager(sprootDB, outputList);
       sprootDB.addAutomationAsync.rejects(new Error("Failed to add automation to database."));
@@ -374,7 +374,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const outputList = sinon.createStubInstance(OutputList);
       const automationDataManager = new AutomationDataManager(sprootDB, outputList);
       sprootDB.getAutomationAsync.resolves([
@@ -413,7 +413,7 @@ describe("AutomationHandlers", () => {
     });
 
     it("should return a 400 and an error message", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -447,7 +447,7 @@ describe("AutomationHandlers", () => {
     });
 
     it("should return a 404 and an error message", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([]);
       const mockResponse = {
         locals: {
@@ -490,7 +490,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.rejects(new Error("Failed to update automation in database."));
 
       const mockRequest = {
@@ -527,7 +527,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const outputList = sinon.createStubInstance(OutputList);
       const automationDataManager = new AutomationDataManager(sprootDB, outputList);
       sprootDB.getAutomationAsync.resolves([
@@ -560,7 +560,7 @@ describe("AutomationHandlers", () => {
     });
 
     it("should return a 400 and an error message", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -594,7 +594,7 @@ describe("AutomationHandlers", () => {
     });
 
     it("should return a 404 and an error message", async () => {
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([]);
       const mockResponse = {
         locals: {
@@ -637,7 +637,7 @@ describe("AutomationHandlers", () => {
           },
         },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(SprootDB);
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.rejects(new Error("Failed to delete automation from database."));
 
       const mockRequest = {

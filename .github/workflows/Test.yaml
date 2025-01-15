@@ -5,6 +5,24 @@ on:
   push:
     branches: ["**"]
 
+env:
+  NODE_VERSION: 22.5.1
+  
+  # Server configuration
+  TZ: America/Los_Angeles
+  NODE_ENV: test
+  DEFAULT_USER: dev-test
+  DEFAULT_USER_EMAIL: dev-test@example.com 
+  DEFAULT_USER_PASSWORD: password
+  AUTHENTICATION_ENABLED: false
+  JWT_SECRET: Default
+  JWT_EXPIRATION: 259200000
+  DATABASE_HOST: 127.0.0.1
+  DATABASE_PORT: 3306
+  DATABASE_USER: root
+  DATABASE_PASSWORD: root
+  PRECONFIGURED: false
+
 jobs:
   prettier:
     name: Style Check
@@ -14,14 +32,14 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: ${{ env.NODE_VERSION }}
       - name: Check code style
         run: npm run prettier:check
 
   # Depends on prettier finishing successfully
   test:
     needs: prettier
-    name: Run Unit Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
+    name: Run Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: ${{ matrix.experimental }}
@@ -33,6 +51,14 @@ jobs:
             experimental: false
           # - node-version: 22.x
           #   experimental: true
+
+    services:
+      db:
+        image: mariadb:11.5.2-noble
+        env:
+          MARIADB_ROOT_PASSWORD: ${{ env.DATABASE_PASSWORD }}
+        ports:
+          - 3306:3306
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -41,5 +67,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: npm ci
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
+      - name: Run API tests
+        run: npm run test:api
