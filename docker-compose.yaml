@@ -73,6 +73,7 @@ services:
       - 3001:80
     environment:
       - PMA_HOST=db
+      - UPLOAD_LIMIT=500M
 
 networks:
   sproot-network:
