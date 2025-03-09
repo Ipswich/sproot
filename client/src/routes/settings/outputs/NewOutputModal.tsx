@@ -36,7 +36,7 @@ export default function NewOutputModal({
   const revalidator = useRevalidator();
   const addOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
-      newOutputValues.pin = String(newOutputValues.pin)
+      newOutputValues.pin = String(newOutputValues.pin);
       await addOutputAsync(newOutputValues);
     },
     onSettled: () => {

@@ -43,7 +43,7 @@ export default function EditTable({
 
   const updateOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
-      newOutputValues.pin = String(newOutputValues.pin)
+      newOutputValues.pin = String(newOutputValues.pin);
       await updateOutputAsync(newOutputValues);
     },
     onSettled: () => {
@@ -97,9 +97,7 @@ export default function EditTable({
           ? null
           : "Address must be between 1 and 64 characters",
       pin: (value) =>
-        value != null && value != undefined
-          ? null
-          : "Pin must be defined",
+        value != null && value != undefined ? null : "Pin must be defined",
       isPwm: (value) =>
         value === true || value === false ? null : "Must be true or false",
       isInvertedPwm: (value) =>
