@@ -34,7 +34,7 @@ describe("PCA9685.ts tests", function () {
       model: "pca9685",
       address: "0x40",
       name: "test output 1",
-      pin: 0,
+      pin: "0",
       isPwm: true,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -43,7 +43,7 @@ describe("PCA9685.ts tests", function () {
       model: "pca9685",
       address: "0x40",
       name: "test output 2",
-      pin: 1,
+      pin: "1",
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -52,7 +52,7 @@ describe("PCA9685.ts tests", function () {
       model: "pca9685",
       address: "0x40",
       name: "test output 3",
-      pin: 2,
+      pin: "2",
       isPwm: true,
       isInvertedPwm: true,
     } as SDBOutput);
@@ -61,7 +61,7 @@ describe("PCA9685.ts tests", function () {
       model: "pca9685",
       address: "0x40",
       name: "test output 4",
-      pin: 3,
+      pin: "3",
       isPwm: false,
       isInvertedPwm: true,
     } as SDBOutput);
@@ -77,7 +77,7 @@ describe("PCA9685.ts tests", function () {
     assert.isUndefined(pca9685.outputs["4"]);
 
     // disposing with a non existent pin should also not cause issues
-    pca9685.disposeOutput({ pin: 3, address: "0x40" } as OutputBase);
+    pca9685.disposeOutput({ pin: "3", address: "0x40" } as OutputBase);
 
     // Dispose the rest
     pca9685.disposeOutput(output1!);
@@ -100,14 +100,14 @@ describe("PCA9685.ts tests", function () {
       id: 1,
       model: "pca9685",
       name: "test output 1",
-      pin: 0,
+      pin: "0",
       isPwm: true,
       isInvertedPwm: false,
     } as SDBOutput);
     const outputData = pca9685.outputData;
 
     assert.equal(outputData["1"]!["name"], "test output 1");
-    assert.equal(outputData["1"]!["pin"], 0);
+    assert.equal(outputData["1"]!["pin"], "0");
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.exists(pca9685.outputs["1"]!["pca9685"]);
@@ -128,7 +128,7 @@ describe("PCA9685.ts tests", function () {
       id: 1,
       model: "pca9685",
       name: "test output 1",
-      pin: 0,
+      pin: "0",
       isPwm: true,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -198,7 +198,7 @@ describe("PCA9685.ts tests", function () {
       id: 1,
       model: "pca9685",
       name: "test output 1",
-      pin: 0,
+      pin: "0",
       isPwm: true,
       isInvertedPwm: true,
     } as SDBOutput);
@@ -226,7 +226,7 @@ describe("PCA9685.ts tests", function () {
       id: 2,
       model: "pca9685",
       name: "test output 1",
-      pin: 0,
+      pin: "0",
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);

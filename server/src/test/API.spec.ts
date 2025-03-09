@@ -105,7 +105,7 @@ describe("API Tests", async () => {
                 model: "PCA9685",
                 address: "0x40",
                 name: "Test Output",
-                pin: 0,
+                pin: "0",
                 isPwm: true,
                 isInvertedPwm: false,
                 color: "#82c91e",

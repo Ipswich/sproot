@@ -578,8 +578,8 @@ paths:
                   type: string
                   example: "0x40"
                 pin:
-                  type: number
-                  example: 0
+                  type: string
+                  example: "0"
                 isPwm:
                   type: boolean
                   example: true
@@ -3463,8 +3463,8 @@ components:
           type: string
           example: "PCA9685"
         pin:
-          type: number
-          example: 0
+          type: string
+          example: "0"
         isPwm:
           type: boolean
           example: true

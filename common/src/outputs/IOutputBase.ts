@@ -10,7 +10,7 @@ interface IOutputBase {
   model: string;
   address: string;
   name: string | null;
-  pin: number;
+  pin: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
   color: string;

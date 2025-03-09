@@ -16,7 +16,7 @@ export abstract class OutputBase implements IOutputBase {
   readonly id: number;
   readonly model: string;
   readonly address: string;
-  readonly pin: number;
+  readonly pin: string;
   name: string;
   isPwm: boolean;
   isInvertedPwm: boolean;

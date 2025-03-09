@@ -22,7 +22,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "test output 1",
-          pin: 0,
+          pin: "0",
           isPwm: true,
           isInvertedPwm: false,
           color: "blue",
@@ -33,7 +33,7 @@ describe("OutputList.ts tests", function () {
           address: "0x40",
           name: "test output 2",
           color: "lime",
-          pin: 1,
+          pin: "1",
           isPwm: false,
           isInvertedPwm: false,
         } as SDBOutput,
@@ -43,7 +43,7 @@ describe("OutputList.ts tests", function () {
           address: "0x40",
           name: "test output 3",
           color: "green",
-          pin: 2,
+          pin: "2",
           isPwm: true,
           isInvertedPwm: true,
         } as SDBOutput,
@@ -52,7 +52,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "test output 4",
-          pin: 3,
+          pin: "3",
           isPwm: false,
           isInvertedPwm: true,
         } as SDBOutput,
@@ -81,7 +81,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "1 tuptuo tset",
-          pin: 0,
+          pin: "0",
           isPwm: false,
           isInvertedPwm: true,
           color: "pink",
@@ -107,7 +107,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "test output 1",
-          pin: 0,
+          pin: "0",
           isPwm: true,
           isInvertedPwm: false,
         } as SDBOutput,
@@ -127,7 +127,7 @@ describe("OutputList.ts tests", function () {
       const outputData = outputList.outputData;
 
       assert.equal(outputData["1"]!["name"], "test output 1");
-      assert.equal(outputData["1"]!["pin"], 0);
+      assert.equal(outputData["1"]!["pin"], "0");
       assert.equal(outputData["1"]!["isPwm"], true);
       assert.equal(outputData["1"]!["isInvertedPwm"], false);
       assert.exists(outputList.outputs["1"]!["sprootDB"]);
@@ -145,7 +145,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "test output 1",
-          pin: 0,
+          pin: "0",
           isPwm: true,
           isInvertedPwm: false,
           color: "pink",
@@ -155,7 +155,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "test output 2",
-          pin: 1,
+          pin: "1",
           isPwm: false,
           isInvertedPwm: false,
         } as SDBOutput,
@@ -164,7 +164,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "test output 3",
-          pin: 2,
+          pin: "2",
           isPwm: true,
           isInvertedPwm: true,
           color: "red",
@@ -174,7 +174,7 @@ describe("OutputList.ts tests", function () {
           model: "pca9685",
           address: "0x40",
           name: "test output 4",
-          pin: 3,
+          pin: "3",
           isPwm: false,
           isInvertedPwm: true,
         } as SDBOutput,

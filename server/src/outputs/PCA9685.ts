@@ -12,7 +12,7 @@ class PCA9685 {
   #outputs: Record<string, PCA9685Output>;
   #sprootDB: ISprootDB;
   #frequency: number;
-  #usedPins: Record<string, number[]> = {};
+  #usedPins: Record<string, string[]> = {};
   #maxCacheSize: number;
   #initialCacheLookback: number;
   #maxChartDataSize: number;
@@ -75,7 +75,7 @@ class PCA9685 {
   get outputs(): Record<string, PCA9685Output> {
     return this.#outputs;
   }
-  get usedPins(): Record<string, number[]> {
+  get usedPins(): Record<string, string[]> {
     return this.#usedPins;
   }
 
@@ -146,13 +146,13 @@ class PCA9685Output extends OutputBase {
 
   executeState(): void {
     this.executeStateHelper((value) => {
-      this.pca9685.setDutyCycle(this.pin, value);
+      this.pca9685.setDutyCycle(parseInt(this.pin), value);
     });
   }
 
   // Power down pin
   dispose = () => {
-    this.pca9685.setDutyCycle(this.pin, 0);
+    this.pca9685.setDutyCycle(parseInt(this.pin), 0);
   };
 }
 
