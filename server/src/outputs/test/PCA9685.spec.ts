@@ -1,6 +1,6 @@
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { PCA9685 } from "@sproot/sproot-server/src/outputs/PCA9685";
+import { PCA9685, PCA9685Output } from "@sproot/sproot-server/src/outputs/PCA9685";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { Pca9685Driver } from "pca9685";
@@ -29,7 +29,7 @@ describe("PCA9685.ts tests", function () {
     // disposing with nothing shouldn't cause issues
     pca9685.disposeOutput({} as OutputBase);
 
-    const output1 = await pca9685.createOutput({
+    const output1 = await pca9685.createOutputAsync({
       id: 1,
       model: "pca9685",
       address: "0x40",
@@ -38,7 +38,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: true,
       isInvertedPwm: false,
     } as SDBOutput);
-    const output2 = await pca9685.createOutput({
+    const output2 = await pca9685.createOutputAsync({
       id: 2,
       model: "pca9685",
       address: "0x40",
@@ -47,7 +47,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
-    const output3 = await pca9685.createOutput({
+    const output3 = await pca9685.createOutputAsync({
       id: 3,
       model: "pca9685",
       address: "0x40",
@@ -56,7 +56,7 @@ describe("PCA9685.ts tests", function () {
       isPwm: true,
       isInvertedPwm: true,
     } as SDBOutput);
-    const output4 = await pca9685.createOutput({
+    const output4 = await pca9685.createOutputAsync({
       id: 4,
       model: "pca9685",
       address: "0x40",
@@ -88,7 +88,7 @@ describe("PCA9685.ts tests", function () {
     assert.isUndefined(pca9685.boardRecord["0x40"]);
   });
 
-  it("should return output data (no functions)", function () {
+  it("should return output data (no functions)", async function () {
     sinon.createStubInstance(Pca9685Driver);
     sinon
       .stub(winston, "createLogger")
@@ -96,9 +96,10 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
-    pca9685.createOutput({
+    await pca9685.createOutputAsync({
       id: 1,
       model: "pca9685",
+      address: "0x40",
       name: "test output 1",
       pin: "0",
       isPwm: true,
@@ -110,11 +111,11 @@ describe("PCA9685.ts tests", function () {
     assert.equal(outputData["1"]!["pin"], "0");
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
-    assert.exists(pca9685.outputs["1"]!["pca9685"]);
+    assert.exists((pca9685.outputs["1"]! as PCA9685Output)["pca9685"]);
     assert.exists(pca9685.outputs["1"]!["sprootDB"]);
   });
 
-  it("should update and apply states with respect to control mode", function () {
+  it("should update and apply states with respect to control mode", async function () {
     sinon
       .stub(winston, "createLogger")
       .callsFake(
@@ -124,9 +125,10 @@ describe("PCA9685.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
-    pca9685.createOutput({
+    await pca9685.createOutputAsync({
       id: 1,
       model: "pca9685",
+      address: "0x40",
       name: "test output 1",
       pin: "0",
       isPwm: true,
@@ -194,9 +196,10 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(4).args[1], 0);
 
     //Inverted PWM Execution
-    pca9685.createOutput({
+    await pca9685.createOutputAsync({
       id: 1,
       model: "pca9685",
+      address: "0x40",
       name: "test output 1",
       pin: "0",
       isPwm: true,
@@ -222,9 +225,10 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.callCount, 8);
 
     //Non-PWM error handling
-    pca9685.createOutput({
+    await pca9685.createOutputAsync({
       id: 2,
       model: "pca9685",
+      address: "0x40",
       name: "test output 1",
       pin: "0",
       isPwm: false,

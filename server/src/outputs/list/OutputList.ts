@@ -9,10 +9,13 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import { HS300 } from "../HS300";
+import ModelList from "../ModelList";
 
 class OutputList {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
+  #HS300: HS300;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
   #chartData: OutputListChartData;
@@ -40,6 +43,14 @@ class OutputList {
       undefined,
       this.#logger,
     );
+    this.#HS300 = new HS300(
+      this.#sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      this.#logger
+    )
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
@@ -101,6 +112,17 @@ class OutputList {
     }
 
     return allAutomations;
+  }
+
+  async getAvailablePins(model: string, address: string): Promise<string[]> {
+    switch (model){
+      case (ModelList.PCA9685.toLowerCase()):
+        return []
+      case (ModelList.HS300.toLowerCase()):
+        return await this.#HS300.getAvailableChildIdsAsync(address);
+      default:
+        return []
+    }
   }
 
   dispose(): void {
@@ -240,10 +262,13 @@ class OutputList {
   }
 
   async #createOutputAsync(output: SDBOutput): Promise<void> {
-    let newOutput: OutputBase | null = null;
+    let newOutput: OutputBase | undefined;
     switch (output.model.toLowerCase()) {
       case "pca9685": {
-        newOutput = await this.#PCA9685.createOutput(output);
+        newOutput = await this.#PCA9685.createOutputAsync(output);
+        break;
+      } case "hs300" : {
+        newOutput = await this.#HS300.createOutputAsync(output);
         break;
       }
       default:

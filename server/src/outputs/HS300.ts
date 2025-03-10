@@ -1,42 +1,35 @@
-import { Pca9685Driver } from "pca9685";
-import { openSync } from "i2c-bus";
+import { Client, Plug } from "tplink-smarthome-api"
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 
-class PCA9685 extends MultiOutputBase {
+class HS300 extends MultiOutputBase{
+  #client: Client;
+
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    frequency: number = 800,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
-    super(sprootDB, maxCacheSize, initialCacheLookback, maxChartDataSize, chartDataPointInterval, frequency, logger)
+    super(sprootDB, maxCacheSize, initialCacheLookback, maxChartDataSize, chartDataPointInterval, undefined, logger)
+    this.#client = new Client({ defaultSendOptions: { timeout: 20000, transport: 'tcp' } })
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
-    //Create new PCA9685 if one doesn't exist for this address.
+    //Create new HS300 if one doesn't exist for this address.
     if (!this.boardRecord[output.address]) {
-      this.boardRecord[output.address] = new Pca9685Driver(
-        {
-          i2c: openSync(1),
-          address: parseInt(output.address),
-          frequency: this.frequency,
-          debug: false,
-        },
-        () => { },
-      );
+      this.boardRecord[output.address] = await this.#client.getDevice({ host: output.address }) as Plug
       this.usedPins[output.address] = [];
     }
 
-    const pca9685Driver = this.boardRecord[output.address];
-    this.outputs[output.id] = new PCA9685Output(
-      pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
+    const hs300 = await this.#client.getDevice({ host: output.address, childId: output.pin })
+    this.outputs[output.id] = new HS300Output(
+      hs300 as Plug,
       output,
       this.sprootDB,
       this.maxCacheSize,
@@ -50,23 +43,22 @@ class PCA9685 extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  override getAvailableChildIdsAsync(address: string): Promise<string[]> {
-    const childIds = this.usedPins[address] ?? [];
-    return Promise.resolve(childIds.filter(childId => !this.usedPins[address]?.includes(childId)));
+  async getAvailableChildIdsAsync(host: string): Promise<string[]> {
+    const device = await this.#client.getDevice({host}) as Plug
+    const childIds = device.children ? [...device.children.keys()] : []
+    return childIds.filter(childId => !this.usedPins[host]?.includes(childId));
   }
 
   disposeOutput(output: OutputBase): void {
-    if (this.outputs[output.id] !== undefined){
-      this.disposeOutputHelper(output, this.outputs[output.id]!.dispose)
-    }
+    this.disposeOutputHelper(output, () => {})
   }
 }
 
-class PCA9685Output extends OutputBase {
-  pca9685: Pca9685Driver;
+class HS300Output extends OutputBase {
+  hs300: Plug;
 
   constructor(
-    pca9685: Pca9685Driver,
+    hs300: Plug,
     output: SDBOutput,
     sprootDB: ISprootDB,
     maxCacheSize: number,
@@ -84,18 +76,18 @@ class PCA9685Output extends OutputBase {
       chartDataPointInterval,
       logger,
     );
-    this.pca9685 = pca9685;
+    this.hs300 = hs300;
   }
 
   executeState(): void {
     this.executeStateHelper((value) => {
-      this.pca9685.setDutyCycle(parseInt(this.pin), value);
+      this.hs300.setPowerState(!!value);
     });
   }
 
   dispose = () => {
-    this.pca9685.setDutyCycle(parseInt(this.pin), 0);
+    this.hs300.setPowerState(false);
   };
 }
 
-export { PCA9685, PCA9685Output };
+export { HS300, HS300Output };

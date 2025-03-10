@@ -3,6 +3,7 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { Request, Response } from "express";
+import ModelList from "../../../../outputs/ModelList";
 
 /**
  * Possible statusCodes: 200, 404
@@ -274,4 +275,67 @@ export async function deleteAsync(
     };
   }
   return deleteOutputResponse;
+}
+
+
+
+export async function getAvailablePinsAsync(request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> {
+  const outputList = request.app.get("outputList") as OutputList;
+  let getAvailablePinsResponse: SuccessResponse | ErrorResponse;
+
+  const errorDetails: string[] = [];
+  if (request.params["model"] === undefined) {
+    errorDetails.push("Model cannot be undefined.")
+  }
+  if (request.params["address"] === undefined) {
+    errorDetails.push("Address cannot be undefined.")
+  }
+  if (errorDetails.length > 0) {
+    getAvailablePinsResponse = {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: errorDetails
+      },
+      ...response.locals["defaultProperties"],
+    }
+    return getAvailablePinsResponse;
+  }
+
+  switch (request.params["model"]?.toLowerCase()) {
+    case (ModelList.PCA9685.toLowerCase()): {
+      getAvailablePinsResponse = {
+        statusCode: 200,
+        content: {
+          data: []
+        },
+        ...response.locals["defaultProperties"]
+      }
+      break;
+    }
+    case (ModelList.HS300.toLowerCase()): {
+      getAvailablePinsResponse = {
+        statusCode: 200,
+        content: {
+          data: outputList.getAvailablePins(request.params["model"], request.params["address"]!)
+        },
+        ...response.locals["defaultProperties"]
+      }
+      break;
+    }
+    default: {
+      getAvailablePinsResponse = {
+        statusCode: 400,
+        error: {
+          name: "Bad Request",
+          url: request.originalUrl,
+          details: [`Model '${request.params["model"]}' not recognized`]
+        },
+        ...response.locals["defaultProperties"],
+      }
+    }
+  }
+
+  return getAvailablePinsResponse;
 }
