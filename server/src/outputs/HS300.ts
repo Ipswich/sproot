@@ -17,7 +17,7 @@ class HS300 extends MultiOutputBase{
     logger: winston.Logger
   ) {
     super(sprootDB, maxCacheSize, initialCacheLookback, maxChartDataSize, chartDataPointInterval, undefined, logger)
-    this.#client = new Client({ defaultSendOptions: { timeout: 20000, transport: 'tcp' } })
+    this.#client = new Client({ defaultSendOptions: { timeout: 1000, transport: 'tcp' } })
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {

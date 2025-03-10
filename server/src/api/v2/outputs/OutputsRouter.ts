@@ -3,6 +3,7 @@ import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
+import { getAvailablePinsAsync } from "./handlers/AvailablePinsHandlers";
 
 const router = express.Router();
 
@@ -64,6 +65,13 @@ router.put("/:outputId/control-mode", (req: Request, res: Response) => {
 
 router.put("/:outputId/manual-state", (req: Request, res: Response) => {
   const response = setManualState(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.get("/available-pins/:model/:address", async (req: Request, res: Response) => {
+  const response = await getAvailablePinsAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

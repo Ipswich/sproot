@@ -911,7 +911,90 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-
+  /api/v2/outputs/available-pins/{model}/{address}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Available Pins"
+      summary: Gets available pins for a given model and address.
+      description: >
+        Gets available pins for a given model and address. Useful for getting pins you could create an output with.
+        Please note that this does not mean that there's an output created with the given address. Also doesn't
+        necessarily guarantee that the address is valid.
+      parameters:
+        - in: path
+          name: model
+          required: true
+          description: "Output model"
+          schema:
+            type: string
+          example: "hs300"
+        - in: path
+          name: address
+          required: true
+          description: "Address to search for available pins on"
+          schema:
+            type: string
+          example: "192.168.1.1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - $ref: "#/components/schemas/AvailablePins"
+                            example:
+                              - "1"
+                              - "2"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/available-pins"
+                          details:
+                            example:
+                              - Model s300 not recognized.
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/outputs/available-pins"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
   /api/v2/outputs/{outputId}/control-mode:
     put:
       security:
@@ -3834,6 +3917,13 @@ components:
     SupportedModels:
       description: >
         A list of supported device models.
+      type: array
+      items:
+        type: string
+
+    AvailablePins:
+      description: >
+        A list of available pins for a given device
       type: array
       items:
         type: string

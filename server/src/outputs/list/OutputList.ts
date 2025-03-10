@@ -117,7 +117,7 @@ class OutputList {
   async getAvailablePins(model: string, address: string): Promise<string[]> {
     switch (model){
       case (ModelList.PCA9685.toLowerCase()):
-        return []
+        return await this.#PCA9685.getAvailableChildIdsAsync(address);
       case (ModelList.HS300.toLowerCase()):
         return await this.#HS300.getAvailableChildIdsAsync(address);
       default:

@@ -51,7 +51,7 @@ class PCA9685 extends MultiOutputBase {
   }
 
   override getAvailableChildIdsAsync(address: string): Promise<string[]> {
-    const childIds = this.usedPins[address] ?? [];
+    const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
     return Promise.resolve(childIds.filter(childId => !this.usedPins[address]?.includes(childId)));
   }
 
