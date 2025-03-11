@@ -31,9 +31,9 @@ export async function getAvailablePinsAsync(
   }
 
   try {
-    const models = Object.keys(ModelList).map(model => model.toLowerCase())
+    const models = Object.values(ModelList).map(model => model.toLowerCase())
     if (models.includes(request.params["model"]!.toLowerCase())) {
-      const pins = await outputList.getAvailablePins(request.params["model"]!, request.params["address"]!)
+      const pins = outputList.getAvailablePins(request.params["model"]!.toLowerCase(), request.params["address"]!)
       getAvailablePinsResponse = {
         statusCode: 200,
         content: {

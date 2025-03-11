@@ -7,9 +7,9 @@ import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 
 export abstract class MultiOutputBase {
-  boardRecord: Record<string, unknown> = {};
-  outputs: Record<string, OutputBase>;
-  usedPins: Record<string, string[]> = {};
+  readonly boardRecord: Record<string, unknown> = {};
+  readonly outputs: Record<string, OutputBase>;
+  readonly usedPins: Record<string, string[]> = {};
   protected sprootDB: ISprootDB;
   protected frequency: number;
   protected maxCacheSize: number;
@@ -38,8 +38,7 @@ export abstract class MultiOutputBase {
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>
-  abstract getAvailableChildIdsAsync(host: string): Promise<string[]> 
-  abstract disposeOutput(output: OutputBase): void
+  abstract getAvailableChildIds(host: string): string[]
 
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
@@ -65,13 +64,13 @@ export abstract class MultiOutputBase {
   ? this.outputs[outputId]?.executeState()
   : Object.keys(this.outputs).forEach((key) => this.outputs[key]?.executeState());
   
-  protected disposeOutputHelper(output: OutputBase, disposeFunction: Function): void {
+  disposeOutput(output: OutputBase): void {
     const usedPins = this.usedPins[output.address];
     if (usedPins) {
       const index = usedPins.indexOf(output.pin);
       if (index !== -1) {
         usedPins.splice(index, 1);
-        disposeFunction();
+        output.dispose();
         delete this.outputs[output.id];
         if (usedPins.length === 0) {
           delete this.boardRecord[output.address];

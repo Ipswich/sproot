@@ -1,4 +1,5 @@
 import { PCA9685 } from "../PCA9685";
+import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs"
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { OutputBase } from "../base/OutputBase";
@@ -9,13 +10,12 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
-import { HS300 } from "../HS300";
 import ModelList from "../ModelList";
 
 class OutputList {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
-  #HS300: HS300;
+  #TPLinkSmartPlugs: TPLinkSmartPlugs;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
   #chartData: OutputListChartData;
@@ -43,7 +43,7 @@ class OutputList {
       undefined,
       this.#logger,
     );
-    this.#HS300 = new HS300(
+    this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -98,8 +98,8 @@ class OutputList {
     outputId
       ? this.#outputs[outputId]?.runAutomations(sensorList, this, now)
       : Object.values(this.#outputs).forEach((output) =>
-          output.runAutomations(sensorList, this, now),
-        );
+        output.runAutomations(sensorList, this, now),
+      );
   }
 
   getAutomations() {
@@ -114,12 +114,12 @@ class OutputList {
     return allAutomations;
   }
 
-  async getAvailablePins(model: string, address: string): Promise<string[]> {
-    switch (model){
+  getAvailablePins(model: string, address: string): string[] {
+    switch (model) {
       case (ModelList.PCA9685.toLowerCase()):
-        return await this.#PCA9685.getAvailableChildIdsAsync(address);
-      case (ModelList.HS300.toLowerCase()):
-        return await this.#HS300.getAvailableChildIdsAsync(address);
+        return this.#PCA9685.getAvailableChildIds(address);
+      case (ModelList.TPLinkSmartPlug.toLowerCase()):
+        return this.#TPLinkSmartPlugs.getAvailableChildIds(address);
       default:
         return []
     }
@@ -136,6 +136,7 @@ class OutputList {
       }
     }
     this.#outputs = {};
+    this.#TPLinkSmartPlugs.dispose();
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
@@ -264,11 +265,11 @@ class OutputList {
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | undefined;
     switch (output.model.toLowerCase()) {
-      case "pca9685": {
+      case (ModelList.PCA9685.toLowerCase()): {
         newOutput = await this.#PCA9685.createOutputAsync(output);
         break;
-      } case "hs300" : {
-        newOutput = await this.#HS300.createOutputAsync(output);
+      } case (ModelList.TPLinkSmartPlug.toLowerCase()): {
+        newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
       default:
@@ -281,8 +282,12 @@ class OutputList {
 
   #deleteOutput(output: OutputBase): void {
     switch (output.model.toLowerCase()) {
-      case "pca9685": {
+      case (ModelList.PCA9685.toLowerCase()): {
         this.#PCA9685.disposeOutput(output);
+        break;
+      }
+      case (ModelList.TPLinkSmartPlug.toLowerCase()): {
+        this.#TPLinkSmartPlugs.disposeOutput(output)
         break;
       }
       default: {

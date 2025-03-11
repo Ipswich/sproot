@@ -50,15 +50,9 @@ class PCA9685 extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  override getAvailableChildIdsAsync(address: string): Promise<string[]> {
+  override getAvailableChildIds(address: string): string[] {
     const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
-    return Promise.resolve(childIds.filter(childId => !this.usedPins[address]?.includes(childId)));
-  }
-
-  disposeOutput(output: OutputBase): void {
-    if (this.outputs[output.id] !== undefined){
-      this.disposeOutputHelper(output, this.outputs[output.id]!.dispose)
-    }
+    return childIds.filter(childId => !this.usedPins[address]?.includes(childId));
   }
 }
 
