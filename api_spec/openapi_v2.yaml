@@ -936,7 +936,7 @@ paths:
           description: Output address
           schema:
             type: string
-          example: "192.168.1.138"
+          example: "192.168.2.138"
       responses:
         200:
           description: "Success"
