@@ -1,5 +1,5 @@
 import { PCA9685 } from "../PCA9685";
-import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs"
+import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { OutputBase } from "../base/OutputBase";
@@ -49,8 +49,8 @@ class OutputList {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      this.#logger
-    )
+      this.#logger,
+    );
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
@@ -98,8 +98,8 @@ class OutputList {
     outputId
       ? this.#outputs[outputId]?.runAutomations(sensorList, this, now)
       : Object.values(this.#outputs).forEach((output) =>
-        output.runAutomations(sensorList, this, now),
-      );
+          output.runAutomations(sensorList, this, now),
+        );
   }
 
   getAutomations() {
@@ -116,12 +116,12 @@ class OutputList {
 
   getAvailablePins(model: string, address: string): string[] {
     switch (model) {
-      case (ModelList.PCA9685.toLowerCase()):
+      case ModelList.PCA9685.toLowerCase():
         return this.#PCA9685.getAvailableChildIds(address);
-      case (ModelList.TPLinkSmartPlug.toLowerCase()):
+      case ModelList.TPLinkSmartPlug.toLowerCase():
         return this.#TPLinkSmartPlugs.getAvailableChildIds(address);
       default:
-        return []
+        return [];
     }
   }
 
@@ -265,10 +265,11 @@ class OutputList {
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | undefined;
     switch (output.model.toLowerCase()) {
-      case (ModelList.PCA9685.toLowerCase()): {
+      case ModelList.PCA9685.toLowerCase(): {
         newOutput = await this.#PCA9685.createOutputAsync(output);
         break;
-      } case (ModelList.TPLinkSmartPlug.toLowerCase()): {
+      }
+      case ModelList.TPLinkSmartPlug.toLowerCase(): {
         newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
@@ -282,12 +283,12 @@ class OutputList {
 
   #deleteOutput(output: OutputBase): void {
     switch (output.model.toLowerCase()) {
-      case (ModelList.PCA9685.toLowerCase()): {
+      case ModelList.PCA9685.toLowerCase(): {
         this.#PCA9685.disposeOutput(output);
         break;
       }
-      case (ModelList.TPLinkSmartPlug.toLowerCase()): {
-        this.#TPLinkSmartPlugs.disposeOutput(output)
+      case ModelList.TPLinkSmartPlug.toLowerCase(): {
+        this.#TPLinkSmartPlugs.disposeOutput(output);
         break;
       }
       default: {

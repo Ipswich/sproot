@@ -16,7 +16,15 @@ class PCA9685 extends MultiOutputBase {
     frequency: number = 800,
     logger: winston.Logger,
   ) {
-    super(sprootDB, maxCacheSize, initialCacheLookback, maxChartDataSize, chartDataPointInterval, frequency, logger)
+    super(
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      frequency,
+      logger,
+    );
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
@@ -29,7 +37,7 @@ class PCA9685 extends MultiOutputBase {
           frequency: this.frequency,
           debug: false,
         },
-        () => { },
+        () => {},
       );
       this.usedPins[output.address] = [];
     }
@@ -52,7 +60,7 @@ class PCA9685 extends MultiOutputBase {
 
   override getAvailableChildIds(address: string): string[] {
     const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
-    return childIds.filter(childId => !this.usedPins[address]?.includes(childId));
+    return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
   }
 }
 

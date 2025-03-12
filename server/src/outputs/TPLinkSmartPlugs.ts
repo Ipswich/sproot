@@ -1,4 +1,4 @@
-import { Client, Plug } from "tplink-smarthome-api"
+import { Client, Plug } from "tplink-smarthome-api";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -6,7 +6,7 @@ import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
-  readonly availablePlugs: Record<string, Plug> = {}
+  readonly availablePlugs: Record<string, Plug> = {};
   #client: Client;
 
   constructor(
@@ -15,39 +15,54 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
-    super(sprootDB, maxCacheSize, initialCacheLookback, maxChartDataSize, chartDataPointInterval, undefined, logger)
-    this.#client = new Client({ defaultSendOptions: { timeout: 500, transport: 'tcp' } })
+    super(
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      undefined,
+      logger,
+    );
+    this.#client = new Client({ defaultSendOptions: { timeout: 500, transport: "tcp" } });
 
+    this.#client.on("plug-new", (plug) => {
+      if (plug.childId != undefined) {
+        this.availablePlugs[plug.childId] = plug;
+      }
+    });
     this.#client.on("plug-online", (plug) => {
       if (plug.childId != undefined) {
         this.availablePlugs[plug.childId] = plug;
       }
-    })
-    this.#client.on("plug-offline", (plug => {
+    });
+    this.#client.on("plug-offline", (plug) => {
       if (plug.childId != undefined) {
-        delete this.availablePlugs[plug.childId]
+        delete this.availablePlugs[plug.childId];
       }
-    }))
-    setInterval(() => {
-      console.log(this.availablePlugs)
-    }, 3000);
+    });
+    this.#client.startDiscovery();
   }
 
   getHosts(): string[] {
-    return [... new Set(Object.values(this.availablePlugs).map(plug => plug.host))]
+    return [...new Set(Object.values(this.availablePlugs).map((plug) => plug.host))];
   }
 
   getAvailableChildIds(host: string): string[] {
-    const usedIds = Object.values(this.outputs).map(plug => (plug as TPLinkPlug).tplinkPlug.childId);
+    const usedIds = Object.values(this.outputs).map(
+      (plug) => (plug as TPLinkPlug).tplinkPlug.childId,
+    );
     return Object.values(this.availablePlugs)
-      .filter(plug => plug.host == host && plug.childId != undefined && !usedIds.includes(plug.childId))
-      .map(plug => plug.childId!)
+      .filter(
+        (plug) => plug.host == host && plug.childId != undefined && !usedIds.includes(plug.childId),
+      )
+      .map((plug) => plug.childId!);
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
-    const plug = await this.#client.getDevice({ host: output.address, childId: output.pin })
+    const plug = await this.#client.getDevice({ host: output.address, childId: output.pin });
     this.outputs[output.id] = new TPLinkPlug(
       plug as Plug,
       output,
@@ -102,4 +117,4 @@ class TPLinkPlug extends OutputBase {
     this.tplinkPlug.setPowerState(false);
   };
 }
-export {TPLinkSmartPlugs, TPLinkPlug}
+export { TPLinkSmartPlugs, TPLinkPlug };

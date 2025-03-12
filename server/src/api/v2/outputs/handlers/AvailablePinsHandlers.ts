@@ -5,17 +5,17 @@ import ModelList from "../../../../outputs/ModelList";
 
 export async function getAvailablePinsAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get("outputList") as OutputList;
   let getAvailablePinsResponse: SuccessResponse | ErrorResponse;
 
   const errorDetails: string[] = [];
   if (request.params["model"] === undefined) {
-    errorDetails.push("Model cannot be undefined.")
+    errorDetails.push("Model cannot be undefined.");
   }
   if (request.params["address"] === undefined) {
-    errorDetails.push("Address cannot be undefined.")
+    errorDetails.push("Address cannot be undefined.");
   }
   if (errorDetails.length > 0) {
     getAvailablePinsResponse = {
@@ -23,34 +23,37 @@ export async function getAvailablePinsAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: errorDetails
+        details: errorDetails,
       },
       ...response.locals["defaultProperties"],
-    }
+    };
     return getAvailablePinsResponse;
   }
 
   try {
-    const models = Object.values(ModelList).map(model => model.toLowerCase())
+    const models = Object.values(ModelList).map((model) => model.toLowerCase());
     if (models.includes(request.params["model"]!.toLowerCase())) {
-      const pins = outputList.getAvailablePins(request.params["model"]!.toLowerCase(), request.params["address"]!)
+      const pins = outputList.getAvailablePins(
+        request.params["model"]!.toLowerCase(),
+        request.params["address"]!,
+      );
       getAvailablePinsResponse = {
         statusCode: 200,
         content: {
-          data: pins
+          data: pins,
         },
-        ...response.locals["defaultProperties"]
-      }
+        ...response.locals["defaultProperties"],
+      };
     } else {
       getAvailablePinsResponse = {
         statusCode: 400,
         error: {
           name: "Bad Request",
           url: request.originalUrl,
-          details: [`Model '${request.params["model"]}' not recognized`]
+          details: [`Model '${request.params["model"]}' not recognized`],
         },
         ...response.locals["defaultProperties"],
-      }
+      };
     }
   } catch (e) {
     getAvailablePinsResponse = {
@@ -58,10 +61,10 @@ export async function getAvailablePinsAsync(
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: [`${e}`]
+        details: [`${e}`],
       },
-      ...response.locals["defaultProperties"]
-    }
+      ...response.locals["defaultProperties"],
+    };
   }
-  return getAvailablePinsResponse
+  return getAvailablePinsResponse;
 }

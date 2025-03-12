@@ -37,8 +37,8 @@ export abstract class MultiOutputBase {
     this.outputs = {};
   }
 
-  abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>
-  abstract getAvailableChildIds(host: string): string[]
+  abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
+  abstract getAvailableChildIds(host: string): string[];
 
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
@@ -49,7 +49,7 @@ export abstract class MultiOutputBase {
     }
     return cleanObject;
   }
-  
+
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
     this.outputs[outputId]?.state.updateControlMode(controlMode);
 
@@ -61,9 +61,9 @@ export abstract class MultiOutputBase {
 
   executeOutputState = (outputId?: string) =>
     outputId
-  ? this.outputs[outputId]?.executeState()
-  : Object.keys(this.outputs).forEach((key) => this.outputs[key]?.executeState());
-  
+      ? this.outputs[outputId]?.executeState()
+      : Object.keys(this.outputs).forEach((key) => this.outputs[key]?.executeState());
+
   disposeOutput(output: OutputBase): void {
     const usedPins = this.usedPins[output.address];
     if (usedPins) {

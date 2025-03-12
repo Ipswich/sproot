@@ -14,7 +14,7 @@ services:
       AUTHENTICATION_ENABLED: false
       JWT_SECRET: CHANGE ME #Change this to something long and unique
       JWT_EXPIRATION: 259200000 #3 days in MS
-      DATABASE_HOST: db
+      DATABASE_HOST: localhost
       DATABASE_PORT: 3306
       DATABASE_USER: root
       DATABASE_PASSWORD: root
@@ -22,11 +22,10 @@ services:
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
-    networks:
-      - sproot-network
+    network_mode: "host"
+    privileged: true
     expose:
       - "3000"
-    privileged: true
     command: ["sleep", "infinity"]
   
   client:
@@ -43,10 +42,9 @@ services:
       NODE_ENV: development
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
-    networks:
-      - sproot-network
-    ports:
-      - 80:80
+    network_mode: "host"
+    expose:
+      - "80"
 
   db:
     image: mariadb:11.5.2-noble
@@ -55,22 +53,17 @@ services:
       MARIADB_ROOT_PASSWORD: root
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-    networks:
-      - sproot-network
+    network_mode: "host"
     expose:
       - "3306"
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache
     restart: unless-stopped
-    networks:
-      - sproot-network
-    ports:
-      - 3001:80
+    network_mode: "host"
+    expose:
+      - "3001"
     environment:
-      - PMA_HOST=db
+      - APACHE_PORT=3001
+      - PMA_HOST=localhost
       - UPLOAD_LIMIT=500M
-
-networks:
-  sproot-network:
-    driver: bridge

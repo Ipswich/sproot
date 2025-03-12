@@ -82,7 +82,7 @@
 //     assert.equal(hs300.usedPins["127.0.0.1"]!.length, 4);
 //     assert.exists(hs300.boardRecord["127.0.0.1"]);
 //     console.log(await hs300.getAvailableChildIds("127.0.0.1"))
-    
+
 //     // Dispose 1 output
 //     hs300.disposeOutput(output4!);
 //     assert.equal(Object.keys(hs300.outputs).length, 3);
