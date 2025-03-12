@@ -43,7 +43,7 @@ describe("tplinkPlug.ts tests", function () {
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableChildIds("127.0.0.1");
+    const childIds = tplinkSmartPlugs.getAvailableIdentifiers("127.0.0.1");
     // disposing with nothing shouldn't cause issues
     tplinkSmartPlugs.disposeOutput({} as OutputBase);
     const output1 = await tplinkSmartPlugs.createOutputAsync({
@@ -114,7 +114,7 @@ describe("tplinkPlug.ts tests", function () {
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableChildIds("127.0.0.1");
+    const childIds = tplinkSmartPlugs.getAvailableIdentifiers("127.0.0.1");
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
@@ -146,7 +146,7 @@ describe("tplinkPlug.ts tests", function () {
     const setStateStub = sinon.stub(Plug.prototype, "setPowerState").resolves();
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableChildIds("127.0.0.1");
+    const childIds = tplinkSmartPlugs.getAvailableIdentifiers("127.0.0.1");
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "tplinkPlug",

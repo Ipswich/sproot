@@ -50,7 +50,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return [...new Set(Object.values(this.availablePlugs).map((plug) => plug.host))];
   }
 
-  getAvailableChildIds(host?: string): Record<string, string>[] {
+  getAvailableIdentifiers(host?: string): Record<string, string>[] {
     if (host != undefined) {
       return Object.values(this.availablePlugs)
         .filter(

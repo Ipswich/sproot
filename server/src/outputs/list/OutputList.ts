@@ -114,12 +114,12 @@ class OutputList implements Disposable {
     return allAutomations;
   }
 
-  getAvailablePins(model: string, address?: string): Record<string, string>[] {
+  getAvailableIdentifiers(model: string, address?: string): Record<string, string>[] {
     switch (model) {
       case ModelList.PCA9685.toLowerCase():
         return []; //this.#PCA9685.getAvailableChildIds(address);
       case ModelList.TPLinkSmartPlug.toLowerCase():
-        return this.#TPLinkSmartPlugs.getAvailableChildIds(address);
+        return this.#TPLinkSmartPlugs.getAvailableIdentifiers(address);
       default:
         return [];
     }

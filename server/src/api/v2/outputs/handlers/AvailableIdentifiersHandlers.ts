@@ -3,19 +3,19 @@ import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import ModelList from "../../../../outputs/ModelList";
 
-export async function getAvailablePinsAsync(
+export async function getAvailableIdentifiersAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get("outputList") as OutputList;
-  let getAvailablePinsResponse: SuccessResponse | ErrorResponse;
+  let getAvailableIdentifiersResponse: SuccessResponse | ErrorResponse;
 
   const errorDetails: string[] = [];
   if (request.params["model"] === undefined) {
     errorDetails.push("Model cannot be undefined.");
   }
   if (errorDetails.length > 0) {
-    getAvailablePinsResponse = {
+    getAvailableIdentifiersResponse = {
       statusCode: 400,
       error: {
         name: "Bad Request",
@@ -24,17 +24,17 @@ export async function getAvailablePinsAsync(
       },
       ...response.locals["defaultProperties"],
     };
-    return getAvailablePinsResponse;
+    return getAvailableIdentifiersResponse;
   }
 
   try {
     const models = Object.values(ModelList).map((model) => model.toLowerCase());
     if (models.includes(request.params["model"]!.toLowerCase())) {
-      const pins = outputList.getAvailablePins(
+      const pins = outputList.getAvailableIdentifiers(
         request.params["model"]!.toLowerCase(),
         request.query["address"] as string,
       );
-      getAvailablePinsResponse = {
+      getAvailableIdentifiersResponse = {
         statusCode: 200,
         content: {
           data: pins,
@@ -42,7 +42,7 @@ export async function getAvailablePinsAsync(
         ...response.locals["defaultProperties"],
       };
     } else {
-      getAvailablePinsResponse = {
+      getAvailableIdentifiersResponse = {
         statusCode: 400,
         error: {
           name: "Bad Request",
@@ -53,7 +53,7 @@ export async function getAvailablePinsAsync(
       };
     }
   } catch (e) {
-    getAvailablePinsResponse = {
+    getAvailableIdentifiersResponse = {
       statusCode: 400,
       error: {
         name: "Bad Request",
@@ -63,5 +63,5 @@ export async function getAvailablePinsAsync(
       ...response.locals["defaultProperties"],
     };
   }
-  return getAvailablePinsResponse;
+  return getAvailableIdentifiersResponse;
 }

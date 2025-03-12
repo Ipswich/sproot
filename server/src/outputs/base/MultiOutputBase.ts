@@ -38,7 +38,7 @@ export abstract class MultiOutputBase {
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
-  abstract getAvailableChildIds(host?: string): Record<string, string>[];
+  abstract getAvailableIdentifiers(host?: string): Record<string, string>[];
 
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};

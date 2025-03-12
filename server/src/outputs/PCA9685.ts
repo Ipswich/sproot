@@ -58,7 +58,7 @@ class PCA9685 extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  override getAvailableChildIds(_address: string): Record<string, string>[] {
+  override getAvailableIdentifiers(_address: string): Record<string, string>[] {
     return [];
     // const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
     // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
