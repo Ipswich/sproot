@@ -7,7 +7,7 @@ import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 
 export abstract class MultiOutputBase {
-  readonly boardRecord: Record<string, unknown> = {};
+  readonly boardRecord: Record<string, any> = {};
   readonly outputs: Record<string, OutputBase>;
   readonly usedPins: Record<string, string[]> = {};
   protected sprootDB: ISprootDB;
@@ -38,7 +38,7 @@ export abstract class MultiOutputBase {
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
-  abstract getAvailableChildIds(host: string): string[];
+  abstract getAvailableChildIds(host?: string): Record<string, string>[];
 
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
@@ -70,7 +70,7 @@ export abstract class MultiOutputBase {
       const index = usedPins.indexOf(output.pin);
       if (index !== -1) {
         usedPins.splice(index, 1);
-        output.dispose();
+        output[Symbol.dispose];
         delete this.outputs[output.id];
         if (usedPins.length === 0) {
           delete this.boardRecord[output.address];

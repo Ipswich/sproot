@@ -70,7 +70,7 @@ router.put("/:outputId/manual-state", (req: Request, res: Response) => {
   return;
 });
 
-router.get("/available-pins/:model/:address", async (req: Request, res: Response) => {
+router.get("/available-pins/:model", async (req: Request, res: Response) => {
   const response = await getAvailablePinsAsync(req, res);
 
   res.status(response.statusCode).json(response);

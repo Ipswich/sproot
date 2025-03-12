@@ -50,18 +50,33 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return [...new Set(Object.values(this.availablePlugs).map((plug) => plug.host))];
   }
 
-  getAvailableChildIds(host: string): string[] {
-    const usedIds = Object.values(this.outputs).map(
-      (plug) => (plug as TPLinkPlug).tplinkPlug.childId,
-    );
+  getAvailableChildIds(host?: string): Record<string, string>[] {
+    if (host != undefined) {
+      return Object.values(this.availablePlugs)
+        .filter(
+          (plug) =>
+            plug.host == host &&
+            plug.childId != undefined &&
+            !(this.usedPins[plug.host] ?? []).includes(plug.childId),
+        )
+        .map((plug) => ({ alias: plug.alias, childId: plug.childId! }));
+    }
+
     return Object.values(this.availablePlugs)
       .filter(
-        (plug) => plug.host == host && plug.childId != undefined && !usedIds.includes(plug.childId),
+        (plug) =>
+          plug.childId != undefined && !(this.usedPins[plug.host] ?? []).includes(plug.childId),
       )
-      .map((plug) => plug.childId!);
+      .map((plug) => ({ alias: plug.alias, childId: plug.childId! }));
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
+    if (!this.boardRecord[output.address]) {
+      this.boardRecord[output.address] = [];
+      this.boardRecord[output.address].push(output.pin);
+      this.usedPins[output.address] = [];
+    }
+
     const plug = await this.#client.getDevice({ host: output.address, childId: output.pin });
     this.outputs[output.id] = new TPLinkPlug(
       plug as Plug,
@@ -74,10 +89,11 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       this.logger,
     );
     await this.outputs[output.id]?.initializeAsync();
+    this.usedPins[output.address]?.push(output.pin);
     return this.outputs[output.id];
   }
 
-  dispose(): void {
+  [Symbol.dispose](): void {
     this.#client.stopDiscovery();
   }
 }
@@ -113,8 +129,8 @@ class TPLinkPlug extends OutputBase {
     });
   }
 
-  dispose = () => {
+  override [Symbol.dispose](): void {
     this.tplinkPlug.setPowerState(false);
-  };
+  }
 }
 export { TPLinkSmartPlugs, TPLinkPlug };

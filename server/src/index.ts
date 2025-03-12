@@ -23,9 +23,9 @@ mainAsync().then((app) => {
         try {
           // Cleanup sensors and turn off outputs
           await app.get("sensorList").disposeAsync();
-          await app.get("outputList").dispose();
+          app.get("outputList")[Symbol.dispose]();
           // Close database connection
-          await app.get("sprootDB").disposeAsync();
+          await app.get("sprootDB")[Symbol.asyncDispose]();
         } catch (err) {
           //Dgaf, swallow anything, we're shutting down anyway.
           logger.error(err);

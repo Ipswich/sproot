@@ -14,9 +14,6 @@ export async function getAvailablePinsAsync(
   if (request.params["model"] === undefined) {
     errorDetails.push("Model cannot be undefined.");
   }
-  if (request.params["address"] === undefined) {
-    errorDetails.push("Address cannot be undefined.");
-  }
   if (errorDetails.length > 0) {
     getAvailablePinsResponse = {
       statusCode: 400,
@@ -35,7 +32,7 @@ export async function getAvailablePinsAsync(
     if (models.includes(request.params["model"]!.toLowerCase())) {
       const pins = outputList.getAvailablePins(
         request.params["model"]!.toLowerCase(),
-        request.params["address"]!,
+        request.query["address"] as string,
       );
       getAvailablePinsResponse = {
         statusCode: 200,

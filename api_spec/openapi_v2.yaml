@@ -911,7 +911,7 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-  /api/v2/outputs/available-pins/{model}/{address}:
+  /api/v2/outputs/available-pins/{model}:
     get:
       security:
         - bearerAuth: []
@@ -930,14 +930,7 @@ paths:
           description: "Output model"
           schema:
             type: string
-          example: "hs300"
-        - in: path
-          name: address
-          required: true
-          description: "Address to search for available pins on"
-          schema:
-            type: string
-          example: "192.168.1.1"
+          example: "tplink-smart-plug"
       responses:
         200:
           description: "Success"
@@ -953,10 +946,9 @@ paths:
                         properties:
                           data:
                             allOf:
-                              - $ref: "#/components/schemas/AvailablePins"
-                            example:
-                              - "1"
-                              - "2"
+                              - $ref: "#/components/schemas/AvailableOutputs"
+
+                                
         400:
           description: "Bad request"
           content:
@@ -3921,12 +3913,20 @@ components:
       items:
         type: string
 
-    AvailablePins:
+    AvailableOutputs:
       description: >
         A list of available pins for a given device
       type: array
       items:
-        type: string
+        type: object
+        properties:
+          alias:
+            type: string
+            example: Plug 1
+          childId:
+            type: string
+            example: 8006C5CA540AABD8165111F62C70CFD3236B0B3703
+          
 
     ReadingTypes:
       description: >

@@ -12,7 +12,7 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 import ModelList from "../ModelList";
 
-class OutputList {
+class OutputList implements Disposable {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #TPLinkSmartPlugs: TPLinkSmartPlugs;
@@ -114,10 +114,10 @@ class OutputList {
     return allAutomations;
   }
 
-  getAvailablePins(model: string, address: string): string[] {
+  getAvailablePins(model: string, address?: string): Record<string, string>[] {
     switch (model) {
       case ModelList.PCA9685.toLowerCase():
-        return this.#PCA9685.getAvailableChildIds(address);
+        return []; //this.#PCA9685.getAvailableChildIds(address);
       case ModelList.TPLinkSmartPlug.toLowerCase():
         return this.#TPLinkSmartPlugs.getAvailableChildIds(address);
       default:
@@ -125,7 +125,7 @@ class OutputList {
     }
   }
 
-  dispose(): void {
+  [Symbol.dispose](): void {
     for (const key in this.#outputs) {
       try {
         this.#deleteOutput(this.#outputs[key]!);
@@ -136,7 +136,7 @@ class OutputList {
       }
     }
     this.#outputs = {};
-    this.#TPLinkSmartPlugs.dispose();
+    this.#TPLinkSmartPlugs[Symbol.dispose]();
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
@@ -292,7 +292,9 @@ class OutputList {
         break;
       }
       default: {
-        this.#outputs[output.id]?.dispose();
+        if (this.#outputs[output.id] !== undefined) {
+          this.#outputs[output.id]![Symbol.dispose]();
+        }
       }
     }
     delete this.#outputs[output.id];
