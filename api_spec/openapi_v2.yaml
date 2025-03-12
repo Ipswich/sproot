@@ -911,18 +911,17 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-  /api/v2/outputs/available-pins/{model}:
+  /api/v2/outputs/available-identifiers/{model}:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
         - "Available Pins"
-      summary: Gets available pins for a given model and address.
+      summary: Gets gets available identifiers for a given model.
       description: >
-        Gets available pins for a given model and address. Useful for getting pins you could create an output with.
-        Please note that this does not mean that there's an output created with the given address. Also doesn't
-        necessarily guarantee that the address is valid.
+        Gets available identifiers for a given model. Optionally, filter by address. Useful for getting
+        identifiers you could create an output with.
       parameters:
         - in: path
           name: model
@@ -931,6 +930,13 @@ paths:
           schema:
             type: string
           example: "tplink-smart-plug"
+        - in: query
+          name: address
+          required: false
+          description: Output address
+          schema:
+            type: string
+          example: "192.168.1.138"
       responses:
         200:
           description: "Success"
@@ -946,9 +952,7 @@ paths:
                         properties:
                           data:
                             allOf:
-                              - $ref: "#/components/schemas/AvailableOutputs"
-
-                                
+                              - $ref: "#/components/schemas/AvailableIdentifiers"
         400:
           description: "Bad request"
           content:
@@ -3913,7 +3917,7 @@ components:
       items:
         type: string
 
-    AvailableOutputs:
+    AvailableIdentifiers:
       description: >
         A list of available pins for a given device
       type: array
@@ -3926,7 +3930,6 @@ components:
           childId:
             type: string
             example: 8006C5CA540AABD8165111F62C70CFD3236B0B3703
-          
 
     ReadingTypes:
       description: >
