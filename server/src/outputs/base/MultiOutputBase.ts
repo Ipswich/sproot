@@ -3,6 +3,7 @@ import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
 
 import winston from "winston";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
+import { AvailableDevice } from "@sproot/outputs/AvailableDevices";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 
@@ -79,10 +80,4 @@ export abstract class MultiOutputBase {
       }
     }
   }
-}
-
-export type AvailableDevice ={
-  alias: string
-  address: string
-  externalId: string
 }

@@ -3,8 +3,9 @@ import { openSync } from "i2c-bus";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { AvailableDevice } from "@sproot/outputs/AvailableDevices";
 import winston from "winston";
-import { AvailableDevice, MultiOutputBase } from "./base/MultiOutputBase";
+import { MultiOutputBase } from "./base/MultiOutputBase";
 
 class PCA9685 extends MultiOutputBase {
   constructor(
