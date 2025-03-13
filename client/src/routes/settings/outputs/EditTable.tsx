@@ -23,6 +23,7 @@ import { FormValues } from "@sproot/sproot-client/src/routes/settings/outputs/Ou
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
+import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
@@ -185,13 +186,7 @@ export default function EditTable({
                 data={supportedModels}
                 required
                 {...updateOutputForm.getInputProps("model")}
-              />
-              <TextInput
-                maxLength={64}
-                label="Address"
-                placeholder={selectedOutput.address ?? ""}
-                required
-                {...updateOutputForm.getInputProps("address")}
+                disabled
               />
               <NumberInput
                 min={0}
@@ -205,12 +200,10 @@ export default function EditTable({
                 {...updateOutputForm.getInputProps("automationTimeout")}
               />
               {selectedOutput.model?.toLowerCase() === "pca9685" ? (
-                <PCA9685Form
-                  selectedOutput={selectedOutput}
-                  form={updateOutputForm}
-                />
+                <PCA9685Form selectedOutput={selectedOutput} form={updateOutputForm} />
+              ) : selectedOutput.model?.toLowerCase() === "tplink-smart-plug" ? (
+                <TPLinkSmartPlugForm selectedOutput={selectedOutput} form={updateOutputForm} />
               ) : null}
-
               <Group justify="space-between" mt="md">
                 <Button
                   disabled={isUpdating}
@@ -233,11 +226,10 @@ export default function EditTable({
             </Fragment>
           ) : (
             <Fragment>
-              {selectedOutput.model?.toLowerCase() === "pca9685" ? (
-                <PCA9685Form
-                  selectedOutput={selectedOutput}
-                  form={updateOutputForm}
-                />
+              {updateOutputForm.values.model.toLowerCase() === "pca9685" ? (
+                <PCA9685Form selectedOutput={selectedOutput} form={updateOutputForm} />
+              ) : updateOutputForm.values.model.toLowerCase() === "tplink-smart-plug" ? (
+                <TPLinkSmartPlugForm selectedOutput={selectedOutput} form={updateOutputForm} />
               ) : null}
               <Group justify="flex-end" mt="md">
                 <Button type="submit" disabled={isUpdating}>
