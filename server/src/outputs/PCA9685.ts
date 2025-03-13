@@ -4,7 +4,7 @@ import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
-import { MultiOutputBase } from "./base/MultiOutputBase";
+import { AvailableDevice, MultiOutputBase } from "./base/MultiOutputBase";
 
 class PCA9685 extends MultiOutputBase {
   constructor(
@@ -58,7 +58,7 @@ class PCA9685 extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  override getIdentifiers(_address: string): Record<string, string>[] {
+  override getAvailableDevices(_address: string): AvailableDevice[] {
     return [];
     // const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
     // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));

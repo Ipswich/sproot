@@ -38,7 +38,7 @@ export abstract class MultiOutputBase {
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
-  abstract getIdentifiers(host?: string): Record<string, string>[];
+  abstract getAvailableDevices(host?: string): AvailableDevice[];
 
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
@@ -79,4 +79,10 @@ export abstract class MultiOutputBase {
       }
     }
   }
+}
+
+export type AvailableDevice ={
+  alias: string
+  address: string
+  externalId: string
 }

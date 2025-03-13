@@ -3,7 +3,7 @@ import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
-import { getIdentifiersAsync } from "./handlers/AvailableIdentifiersHandlers";
+import { getAvailableDevices } from "./handlers/AvailableIdentifiersHandlers";
 
 const router = express.Router();
 
@@ -70,8 +70,8 @@ router.put("/:outputId/manual-state", (req: Request, res: Response) => {
   return;
 });
 
-router.get("/identifiers/:model", async (req: Request, res: Response) => {
-  const response = await getIdentifiersAsync(req, res);
+router.get("/available-devices/:model", async (req: Request, res: Response) => {
+  const response = await getAvailableDevices(req, res);
 
   res.status(response.statusCode).json(response);
   return;

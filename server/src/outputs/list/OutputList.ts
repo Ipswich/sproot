@@ -114,7 +114,7 @@ class OutputList implements Disposable {
     return allAutomations;
   }
 
-  getAvailableIdentifiers(
+  getAvailableDevices(
     model: string,
     address?: string,
     filterUsed?: boolean,
@@ -123,7 +123,7 @@ class OutputList implements Disposable {
       case ModelList.PCA9685.toLowerCase():
         return []; //this.#PCA9685.getAvailableChildIds(address);
       case ModelList.TPLinkSmartPlug.toLowerCase():
-        return this.#TPLinkSmartPlugs.getIdentifiers(address, filterUsed);
+        return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:
         return [];
     }

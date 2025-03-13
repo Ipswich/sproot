@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import ModelList from "../../../../outputs/ModelList";
 
-export async function getIdentifiersAsync(
+export async function getAvailableDevices(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -30,7 +30,7 @@ export async function getIdentifiersAsync(
   try {
     const models = Object.values(ModelList).map((model) => model.toLowerCase());
     if (models.includes(request.params["model"]!.toLowerCase())) {
-      const pins = outputList.getAvailableIdentifiers(
+      const pins = outputList.getAvailableDevices(
         request.params["model"]!.toLowerCase(),
         request.query["address"] as string,
       );

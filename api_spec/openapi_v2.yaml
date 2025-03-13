@@ -911,17 +911,17 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-  /api/v2/outputs/identifiers/{model}:
+  /api/v2/outputs/available-devices/{model}:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Output Identifiers"
-      summary: Gets gets available identifiers for a given output model.
+        - "Outputs"
+      summary: Gets gets available devices for a given output model.
       description: >
-        Gets available identifiers for a given model. Optionally, filter by address. Useful for getting
-        identifiers you could create an output with.
+        Gets available devices for a given model. Optionally, filter by address. Useful for getting
+        devices you could create an output with.
       parameters:
         - in: path
           name: model
@@ -959,7 +959,7 @@ paths:
                         properties:
                           data:
                             allOf:
-                              - $ref: "#/components/schemas/AvailableIdentifiers"
+                              - $ref: "#/components/schemas/AvailableDevices"
         400:
           description: "Bad request"
           content:
@@ -975,7 +975,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/outputs/available-pins"
+                            example: "/api/v2/outputs/available-devices"
                           details:
                             example:
                               - Model s300 not recognized.
@@ -994,7 +994,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/outputs/available-pins"
+                            example: "/api/v2/outputs/available-devices"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -3924,9 +3924,9 @@ components:
       items:
         type: string
 
-    AvailableIdentifiers:
+    AvailableDevices:
       description: >
-        A list of available pins for a given device
+        A list of available devices
       type: array
       items:
         type: object
@@ -3934,9 +3934,12 @@ components:
           alias:
             type: string
             example: Plug 1
-          childId:
+          externalId:
             type: string
             example: 8006C5CA540AABD8165111F62C70CFD3236B0B3703
+          address:
+            type: string
+            example: 192.168.2.138
 
     ReadingTypes:
       description: >

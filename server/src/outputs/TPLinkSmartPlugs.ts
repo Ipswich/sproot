@@ -3,7 +3,7 @@ import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
-import { MultiOutputBase } from "./base/MultiOutputBase";
+import { AvailableDevice, MultiOutputBase } from "./base/MultiOutputBase";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
   readonly availablePlugs: Record<string, Plug> = {};
@@ -50,7 +50,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return [...new Set(Object.values(this.availablePlugs).map((plug) => plug.host))];
   }
 
-  getIdentifiers(host?: string, filterUsed: boolean = true): Record<string, string>[] {
+  getAvailableDevices(host?: string, filterUsed: boolean = true): AvailableDevice[] {
     let plugs = Object.values(this.availablePlugs);
 
     if (host != undefined) {
@@ -63,7 +63,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       plugs = plugs.filter((plug) => !(this.usedPins[plug.host] ?? []).includes(plug.childId!));
     }
 
-    return plugs.map((plug) => ({ alias: plug.alias, childId: plug.childId! }));
+    return plugs.map((plug) => ({ alias: plug.alias, address: plug.host, externalId: plug.childId! }));
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
@@ -125,7 +125,7 @@ class TPLinkPlug extends OutputBase {
     });
   }
 
-  override [Symbol.dispose](): void {
+  override[Symbol.dispose](): void {
     this.tplinkPlug.setPowerState(false);
   }
 }

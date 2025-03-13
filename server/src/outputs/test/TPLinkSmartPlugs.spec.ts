@@ -43,7 +43,7 @@ describe("tplinkPlug.ts tests", function () {
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
-    const childIds = tplinkSmartPlugs.getIdentifiers("127.0.0.1");
+    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
     // disposing with nothing shouldn't cause issues
     tplinkSmartPlugs.disposeOutput({} as OutputBase);
     const output1 = await tplinkSmartPlugs.createOutputAsync({
@@ -51,7 +51,7 @@ describe("tplinkPlug.ts tests", function () {
       model: "tplinkPlug",
       address: "127.0.0.1",
       name: "test output 1",
-      pin: childIds[0]!["childId"],
+      pin: childIds[0]?.externalId,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -60,7 +60,7 @@ describe("tplinkPlug.ts tests", function () {
       model: "tplinkPlug",
       address: "127.0.0.1",
       name: "test output 2",
-      pin: childIds[1]!["childId"],
+      pin: childIds[1]?.externalId,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -69,7 +69,7 @@ describe("tplinkPlug.ts tests", function () {
       model: "tplinkPlug",
       address: "127.0.0.1",
       name: "test output 3",
-      pin: childIds[2]!["childId"],
+      pin: childIds[2]?.externalId,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -78,7 +78,7 @@ describe("tplinkPlug.ts tests", function () {
       model: "tplinkPlug",
       address: "127.0.0.1",
       name: "test output 4",
-      pin: childIds[3]!["childId"],
+      pin: childIds[3]?.externalId,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -114,21 +114,21 @@ describe("tplinkPlug.ts tests", function () {
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
-    const childIds = tplinkSmartPlugs.getIdentifiers("127.0.0.1");
+    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "tplinkPlug",
       address: "127.0.0.1",
       name: "test output 1",
-      pin: childIds[0]!["childId"],
+      pin: childIds[0]?.externalId,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
     const outputData = tplinkSmartPlugs.outputData;
 
     assert.equal(outputData["1"]!["name"], "test output 1");
-    assert.equal(outputData["1"]!["pin"], childIds[0]!["childId"]);
+    assert.equal(outputData["1"]!["pin"], childIds[0]?.externalId);
     assert.equal(outputData["1"]!["isPwm"], false);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.exists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
@@ -146,12 +146,12 @@ describe("tplinkPlug.ts tests", function () {
     const setStateStub = sinon.stub(Plug.prototype, "setPowerState").resolves();
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
-    const childIds = tplinkSmartPlugs.getIdentifiers("127.0.0.1");
+    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "tplinkPlug",
       name: "test output 1",
-      pin: childIds[0]!["childId"],
+      pin: childIds[0]?.externalId,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -216,7 +216,7 @@ describe("tplinkPlug.ts tests", function () {
       id: 1,
       model: "tplinkPlug",
       name: "test output 1",
-      pin: childIds[0]!["childId"],
+      pin: childIds[0]?.externalId,
       isPwm: true,
       isInvertedPwm: true,
     } as SDBOutput);
@@ -243,7 +243,7 @@ describe("tplinkPlug.ts tests", function () {
       id: 2,
       model: "tplinkPlug",
       name: "test output 1",
-      pin: childIds[0]!["childId"],
+      pin: childIds[0]?.externalId,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
