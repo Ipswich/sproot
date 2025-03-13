@@ -610,6 +610,17 @@ export async function pingAsync(): Promise<boolean> {
   }
 }
 
+export async function getAvailableOutputPinsAsync(model:string, address: string): Promise<string[]>{
+  try {
+    const response = await fetch(`${SERVER_URL}/api/v2/outputs/available-pins/${model}/${address}`)
+    const deserializedResponse = (await response.json()) as SuccessResponse;
+    return deserializedResponse.content?.data;
+  } catch(e) {
+    console.error(`Error fetching children for ${model} and ${address}: ${e}`)
+    return [];
+  }
+}
+
 function queryBuilder(
   params: Record<string, string | boolean | undefined>,
 ): string {

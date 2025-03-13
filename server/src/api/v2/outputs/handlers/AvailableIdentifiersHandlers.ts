@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import ModelList from "../../../../outputs/ModelList";
 
-export async function getAvailableIdentifiersAsync(
+export async function getIdentifiersAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {

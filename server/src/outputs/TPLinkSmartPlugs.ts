@@ -50,24 +50,20 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return [...new Set(Object.values(this.availablePlugs).map((plug) => plug.host))];
   }
 
-  getAvailableIdentifiers(host?: string): Record<string, string>[] {
+  getIdentifiers(host?: string, filterUsed: boolean = true): Record<string, string>[] {
+    let plugs = Object.values(this.availablePlugs);
+
     if (host != undefined) {
-      return Object.values(this.availablePlugs)
-        .filter(
-          (plug) =>
-            plug.host == host &&
-            plug.childId != undefined &&
-            !(this.usedPins[plug.host] ?? []).includes(plug.childId),
-        )
-        .map((plug) => ({ alias: plug.alias, childId: plug.childId! }));
+      plugs = plugs.filter((plug) => plug.host == host && plug.childId !== undefined);
+    } else {
+      plugs = plugs.filter((plug) => plug.childId !== undefined);
     }
 
-    return Object.values(this.availablePlugs)
-      .filter(
-        (plug) =>
-          plug.childId != undefined && !(this.usedPins[plug.host] ?? []).includes(plug.childId),
-      )
-      .map((plug) => ({ alias: plug.alias, childId: plug.childId! }));
+    if (filterUsed) {
+      plugs = plugs.filter((plug) => !(this.usedPins[plug.host] ?? []).includes(plug.childId!));
+    }
+
+    return plugs.map((plug) => ({ alias: plug.alias, childId: plug.childId! }));
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {

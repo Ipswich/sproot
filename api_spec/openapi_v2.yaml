@@ -911,14 +911,14 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-  /api/v2/outputs/available-identifiers/{model}:
+  /api/v2/outputs/identifiers/{model}:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Available Pins"
-      summary: Gets gets available identifiers for a given model.
+        - "Output Identifiers"
+      summary: Gets gets available identifiers for a given output model.
       description: >
         Gets available identifiers for a given model. Optionally, filter by address. Useful for getting
         identifiers you could create an output with.
@@ -937,6 +937,13 @@ paths:
           schema:
             type: string
           example: "192.168.2.138"
+        - in: query
+          name: filterUsed
+          required: false
+          description: Output address
+          schema:
+            type: boolean
+          example: false
       responses:
         200:
           description: "Success"
