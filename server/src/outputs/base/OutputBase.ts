@@ -239,13 +239,17 @@ export abstract class OutputBase implements IOutputBase, Disposable {
     };
 
     let validatedValue = undefined;
-    switch (this.controlMode) {
-      case ControlMode.manual:
-        validatedValue = validateAndFixValue(this.state.manual.value);
-        return validatedValue != undefined ? executionFn(validatedValue) : undefined;
-      case ControlMode.automatic:
-        validatedValue = validateAndFixValue(this.state.automatic.value);
-        return validatedValue != undefined ? executionFn(validatedValue) : undefined;
+    try {
+      switch (this.controlMode) {
+        case ControlMode.manual:
+          validatedValue = validateAndFixValue(this.state.manual.value);
+          return validatedValue != undefined ? executionFn(validatedValue) : undefined;
+        case ControlMode.automatic:
+          validatedValue = validateAndFixValue(this.state.automatic.value);
+          return validatedValue != undefined ? executionFn(validatedValue) : undefined;
+      }
+    } catch (error) {
+      this.logger.error(`Error executing state for output ${this.id} - ${error}`)
     }
   }
 

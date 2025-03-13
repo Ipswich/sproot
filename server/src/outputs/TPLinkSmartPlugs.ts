@@ -27,7 +27,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       undefined,
       logger,
     );
-    this.#client = new Client({ defaultSendOptions: { timeout: 500, transport: "tcp" } });
+    this.#client = new Client({ defaultSendOptions: { timeout: 1000, transport: "tcp" } });
 
     this.#client.on("plug-new", (plug) => {
       if (plug.childId != undefined) {
@@ -43,6 +43,13 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       if (plug.childId != undefined) {
         delete this.availablePlugs[plug.childId];
       }
+    });
+
+    this.#client.on("error", (error) => {
+      this.logger.error(`TPLink Smart Plug client error: ${error}`)
+    });
+    this.#client.on("discovery-invalid", (error) => {
+      this.logger.error(`TPLink Smart Plug client error: ${error}`)
     });
     this.#client.startDiscovery();
   }
