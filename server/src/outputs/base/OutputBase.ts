@@ -249,7 +249,7 @@ export abstract class OutputBase implements IOutputBase, Disposable {
           return validatedValue != undefined ? executionFn(validatedValue) : undefined;
       }
     } catch (error) {
-      this.logger.error(`Error executing state for output ${this.id} - ${error}`)
+      this.logger.error(`Error executing state for output ${this.id} - ${error}`);
     }
   }
 

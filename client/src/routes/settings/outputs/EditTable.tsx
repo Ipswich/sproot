@@ -200,9 +200,16 @@ export default function EditTable({
                 {...updateOutputForm.getInputProps("automationTimeout")}
               />
               {selectedOutput.model?.toLowerCase() === "pca9685" ? (
-                <PCA9685Form selectedOutput={selectedOutput} form={updateOutputForm} />
-              ) : selectedOutput.model?.toLowerCase() === "tplink-smart-plug" ? (
-                <TPLinkSmartPlugForm selectedOutput={selectedOutput} form={updateOutputForm} />
+                <PCA9685Form
+                  selectedOutput={selectedOutput}
+                  form={updateOutputForm}
+                />
+              ) : selectedOutput.model?.toLowerCase() ===
+                "tplink-smart-plug" ? (
+                <TPLinkSmartPlugForm
+                  selectedOutput={selectedOutput}
+                  form={updateOutputForm}
+                />
               ) : null}
               <Group justify="space-between" mt="md">
                 <Button
@@ -227,9 +234,16 @@ export default function EditTable({
           ) : (
             <Fragment>
               {updateOutputForm.values.model.toLowerCase() === "pca9685" ? (
-                <PCA9685Form selectedOutput={selectedOutput} form={updateOutputForm} />
-              ) : updateOutputForm.values.model.toLowerCase() === "tplink-smart-plug" ? (
-                <TPLinkSmartPlugForm selectedOutput={selectedOutput} form={updateOutputForm} />
+                <PCA9685Form
+                  selectedOutput={selectedOutput}
+                  form={updateOutputForm}
+                />
+              ) : updateOutputForm.values.model.toLowerCase() ===
+                "tplink-smart-plug" ? (
+                <TPLinkSmartPlugForm
+                  selectedOutput={selectedOutput}
+                  form={updateOutputForm}
+                />
               ) : null}
               <Group justify="flex-end" mt="md">
                 <Button type="submit" disabled={isUpdating}>

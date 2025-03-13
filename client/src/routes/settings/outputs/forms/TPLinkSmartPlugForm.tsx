@@ -14,12 +14,13 @@ interface TPLinkSmartPlugProps {
 
 export default function TPLinkSmartPlugForm({
   selectedOutput,
-  form
+  form,
 }: TPLinkSmartPlugProps) {
-  const filterUsed = selectedOutput === undefined ? true: false
+  const filterUsed = selectedOutput === undefined ? true : false;
   const getDevices = useQuery({
     queryKey: ["tplinksmartplug-output-pins", selectedOutput?.model],
-    queryFn: () => GetAvailableDevicesAsync("tplink-smart-plug", undefined, filterUsed),
+    queryFn: () =>
+      GetAvailableDevicesAsync("tplink-smart-plug", undefined, filterUsed),
   });
 
   return (
@@ -27,15 +28,21 @@ export default function TPLinkSmartPlugForm({
       <Select
         required
         searchable
-        defaultValue={(getDevices?.data ?? []).filter(device => device.externalId == selectedOutput?.pin)[0]?.alias ?? ""}
-        label="Plug ID"
-        data={
-          (getDevices.data ?? [])
-            .map((data) => ({ label: data.alias, value: data.externalId }))
+        defaultValue={
+          (getDevices?.data ?? []).filter(
+            (device) => device.externalId == selectedOutput?.pin,
+          )[0]?.alias ?? ""
         }
+        label="Plug ID"
+        data={(getDevices.data ?? []).map((data) => ({
+          label: data.alias,
+          value: data.externalId,
+        }))}
         {...form.getInputProps("pin")}
         onChange={(event) => {
-          const details = getDevices.data?.filter(d => d.externalId === event)[0];
+          const details = getDevices.data?.filter(
+            (d) => d.externalId === event,
+          )[0];
           form.setFieldValue("pin", details!.externalId);
           form.setFieldValue("address", details!.address);
         }}

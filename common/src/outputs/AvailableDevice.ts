@@ -1,5 +1,5 @@
-export type AvailableDevice ={
-  alias: string
-  address: string
-  externalId: string
-}
+export type AvailableDevice = {
+  alias: string;
+  address: string;
+  externalId: string;
+};

@@ -33,7 +33,7 @@ export async function getAvailableDevices(
       const pins = outputList.getAvailableDevices(
         request.params["model"]!.toLowerCase(),
         request.query["address"] as string,
-        request.query["filterUsed"] as boolean | undefined
+        request.query["filterUsed"] as boolean | undefined,
       );
       getAvailableIdentifiersResponse = {
         statusCode: 200,

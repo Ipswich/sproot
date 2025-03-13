@@ -3,7 +3,7 @@ import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
 
 import winston from "winston";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { AvailableDevice } from "@sproot/outputs/AvailableDevices";
+import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 
