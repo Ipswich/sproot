@@ -71,7 +71,7 @@ export abstract class SensorBase implements ISensorBase {
     this.#chartData.chartSeries.name = name;
     this.#loadChartData();
   }
-  
+
   updateColor(color: string): void {
     this.color = color;
     this.#chartData.chartSeries.color = color;
