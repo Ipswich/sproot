@@ -5,7 +5,7 @@ type SDBOutput = RowDataPacket & {
   model: string;
   address: string;
   name: string;
-  pin: number;
+  pin: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
   color: string;

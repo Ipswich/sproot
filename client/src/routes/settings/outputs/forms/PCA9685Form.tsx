@@ -21,7 +21,7 @@ export default function PCA9685Form({
         <Fragment>
           <NumberInput
             required
-            defaultValue={selectedOutput?.pin ?? 0}
+            defaultValue={parseInt(selectedOutput?.pin ?? 0)}
             label="Pin"
             clampBehavior="strict"
             allowDecimal={false}

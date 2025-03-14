@@ -36,6 +36,7 @@ export default function NewOutputModal({
   const revalidator = useRevalidator();
   const addOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
+      newOutputValues.pin = String(newOutputValues.pin);
       await addOutputAsync(newOutputValues);
     },
     onSettled: () => {
@@ -56,7 +57,7 @@ export default function NewOutputModal({
       color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
-      pin: 0,
+      pin: "0",
       isPwm: false,
       isInvertedPwm: false,
     } as FormValues,
