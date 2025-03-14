@@ -3,7 +3,7 @@ import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
-import { getAvailableDevices } from "./handlers/AvailableIdentifiersHandlers";
+import { getAvailableDevices } from "./handlers/AvailableDevicesHandlers";
 
 const router = express.Router();
 
