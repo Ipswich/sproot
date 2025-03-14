@@ -84,19 +84,18 @@ class SensorList {
       if (key) {
         //Update if it exists
         if (this.#sensors[key]?.name != sensor.name) {
-          //Also updates chartSeries data
+          //Also updates chartSeries data (and chart data)
           this.#sensors[key]?.updateName(sensor.name);
           sensorChanges = true;
         }
 
         if (this.#sensors[key]?.color != sensor.color) {
-          //Also updates chartSeries data
+          //Also updates chartSeries data (and chart data)
           this.#sensors[key]?.updateColor(sensor.color);
           sensorChanges = true;
         }
 
         if (sensorChanges) {
-          //TODO:Reload chart data.
           this.#logger.info(
             `Updating sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
           );

@@ -69,11 +69,13 @@ export abstract class SensorBase implements ISensorBase {
   updateName(name: string): void {
     this.name = name;
     this.#chartData.chartSeries.name = name;
+    this.#loadChartData();
   }
 
   updateColor(color: string): void {
     this.color = color;
     this.#chartData.chartSeries.color = color;
+    this.#loadChartData();
   }
 
   getCachedReadings(offset?: number, limit?: number): Partial<Record<string, SDBReading[]>> {
