@@ -69,6 +69,6 @@ services:
       - "3001"
     environment:
       - APACHE_PORT=3001
-      - PMA_HOST=db
+      - PMA_HOST=localhost
       - UPLOAD_LIMIT=500M
       
