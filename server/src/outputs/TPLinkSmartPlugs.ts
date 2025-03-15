@@ -5,7 +5,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
-import { ControlMode } from "@sproot/outputs/IOutputBase";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
