@@ -6,7 +6,7 @@ import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { ControlMode } from "@sproot/outputs/IOutputBase";
-import { SDBOutputState } from "@sproot/database/SDBOutputState";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
   readonly availablePlugs: Record<string, Plug> = {};
