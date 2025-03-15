@@ -5,6 +5,8 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
+import { ControlMode } from "@sproot/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/database/SDBOutputState";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
   readonly availablePlugs: Record<string, Plug> = {};
@@ -96,6 +98,15 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       this.chartDataPointInterval,
       this.logger,
     );
+    // Set state from switch
+    this.outputs[output.id]?.setNewState(
+      {
+        controlMode: ControlMode.manual,
+        value: (await plug.getPowerState()) ? 100 : 0,
+        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      } as SDBOutputState,
+      ControlMode.manual,
+    );
     await this.outputs[output.id]?.initializeAsync();
     this.usedPins[output.address]?.push(output.pin);
     return this.outputs[output.id];
@@ -128,6 +139,27 @@ class TPLinkPlug extends OutputBase {
       chartDataPointInterval,
       logger,
     );
+    tplinkPlug.on("power-on", () => {
+      this.setNewState(
+        {
+          controlMode: ControlMode.manual,
+          value: 100,
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        } as SDBOutputState,
+        ControlMode.manual,
+      );
+    });
+    tplinkPlug.on("power-off", () => {
+      this.setNewState(
+        {
+          controlMode: ControlMode.manual,
+          value: 0,
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        } as SDBOutputState,
+        ControlMode.manual,
+      );
+    });
+
     this.tplinkPlug = tplinkPlug;
   }
 
@@ -138,6 +170,8 @@ class TPLinkPlug extends OutputBase {
   }
 
   override [Symbol.dispose](): void {
+    this.tplinkPlug.removeAllListeners("power-on");
+    this.tplinkPlug.removeAllListeners("power-off");
     this.tplinkPlug.setPowerState(false);
   }
 }
