@@ -41,7 +41,7 @@ export default async function setupAsync(): Promise<Express> {
     logger,
   );
   app.set("sensorList", sensorList);
-  using outputList = new OutputList(
+  const outputList = new OutputList(
     sprootDB,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
