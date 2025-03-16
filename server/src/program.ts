@@ -77,7 +77,7 @@ export default async function setupAsync(): Promise<Express> {
         //Execute any changes made to state.
         outputList.executeOutputState();
       } catch (e) {
-        logger.error(`Exception in stateup date loop: ${e}`);
+        logger.error(`Exception in state update loop: ${e}`);
       }
     }, Constants.STATE_UPDATE_INTERVAL),
   );

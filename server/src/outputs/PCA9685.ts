@@ -97,7 +97,7 @@ class PCA9685Output extends OutputBase {
     });
   }
 
-  override [Symbol.dispose](): void {
+  override dispose(): void {
     this.pca9685.setDutyCycle(parseInt(this.pin), 0);
   }
 }

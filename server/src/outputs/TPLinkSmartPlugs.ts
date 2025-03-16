@@ -8,7 +8,7 @@ import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDev
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 
-class TPLinkSmartPlugs extends MultiOutputBase {
+class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
   readonly availablePlugs: Record<string, Plug> = {};
   #client: Client;
 
@@ -29,7 +29,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       undefined,
       logger,
     );
-    this.#client = new Client({ defaultSendOptions: { timeout: 1000, transport: "tcp" } });
+    this.#client = new Client();
 
     this.#client.on("plug-new", (plug) => {
       if (plug.childId != undefined) {
@@ -113,6 +113,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   }
 
   [Symbol.dispose](): void {
+    this.#client.removeAllListeners();
     this.#client.stopDiscovery();
   }
 }
@@ -139,40 +140,46 @@ class TPLinkPlug extends OutputBase {
       chartDataPointInterval,
       logger,
     );
-    tplinkPlug.on("power-on", () => {
-      this.setNewState(
-        {
-          controlMode: ControlMode.manual,
-          value: 100,
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        } as SDBOutputState,
-        ControlMode.manual,
-      );
-    });
-    tplinkPlug.on("power-off", () => {
-      this.setNewState(
-        {
-          controlMode: ControlMode.manual,
-          value: 0,
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        } as SDBOutputState,
-        ControlMode.manual,
-      );
-    });
-
     this.tplinkPlug = tplinkPlug;
+
+    this.tplinkPlug
+      .on("power-on", () => {
+        if (this.controlMode == ControlMode.manual) {
+          this.setNewState(
+            {
+              controlMode: ControlMode.manual,
+              value: 100,
+              logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+            } as SDBOutputState,
+            ControlMode.manual,
+          );
+        }
+      })
+      .on("power-off", () => {
+        if (this.controlMode == ControlMode.manual) {
+          this.setNewState(
+            {
+              controlMode: ControlMode.manual,
+              value: 0,
+              logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+            } as SDBOutputState,
+            ControlMode.manual,
+          );
+        }
+      });
   }
 
   executeState(): void {
-    this.executeStateHelper((value) => {
-      this.tplinkPlug.setPowerState(!!value);
+    this.executeStateHelper(async (value) => {
+      await this.tplinkPlug.setPowerState(!!value);
     });
   }
 
-  override [Symbol.dispose](): void {
-    this.tplinkPlug.removeAllListeners("power-on");
-    this.tplinkPlug.removeAllListeners("power-off");
-    this.tplinkPlug.setPowerState(false);
+  dispose(): void {
+    if (this.controlMode == ControlMode.automatic) {
+      this.tplinkPlug.setPowerState(false);
+    }
+    this.tplinkPlug.removeAllListeners();
   }
 }
 export { TPLinkSmartPlugs, TPLinkPlug };

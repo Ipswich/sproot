@@ -12,7 +12,7 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 
-export abstract class OutputBase implements IOutputBase, Disposable {
+export abstract class OutputBase implements IOutputBase {
   readonly id: number;
   readonly model: string;
   readonly address: string;
@@ -93,7 +93,7 @@ export abstract class OutputBase implements IOutputBase, Disposable {
    * See setNewState
    */
   abstract executeState(): void;
-  abstract [Symbol.dispose](): void;
+  abstract dispose(): void;
 
   /** Initializes all of the data for this output */
   async initializeAsync() {

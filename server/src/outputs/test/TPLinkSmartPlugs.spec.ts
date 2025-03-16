@@ -12,6 +12,7 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
+import { Client } from "tplink-smarthome-api";
 const mockSprootDB = new MockSprootDB();
 
 describe("tplinkPlug.ts tests", function () {
@@ -38,12 +39,20 @@ describe("tplinkPlug.ts tests", function () {
   it("should create and delete TPLink Smart Plugs outputs", async function () {
     sinon
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(() => ({ info: () => { }, error: () => { } }) as unknown as winston.Logger);
     const logger = winston.createLogger();
+    const client = new Client();
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
+    const plug1 = await client.getDevice({ host: "127.0.0.1", childId: childIds[0]?.externalId });
+    const plug2 = await client.getDevice({ host: "127.0.0.1", childId: childIds[1]?.externalId });
+    const plug3 = await client.getDevice({ host: "127.0.0.1", childId: childIds[1]?.externalId });
+    await plug1.setPowerState(true);
+    await plug2.setPowerState(true);
+    await plug3.setPowerState(true);
+
     // disposing with nothing shouldn't cause issues
     tplinkSmartPlugs.disposeOutput({} as OutputBase);
     const output1 = await tplinkSmartPlugs.createOutputAsync({
@@ -87,6 +96,20 @@ describe("tplinkPlug.ts tests", function () {
     assert.exists(tplinkSmartPlugs.outputs["4"]);
     assert.equal(tplinkSmartPlugs.usedPins["127.0.0.1"]!.length, 4);
     assert.exists(tplinkSmartPlugs.boardRecord["127.0.0.1"]);
+    // Should inherit from the existing state of the tplink device
+    assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 100);
+    assert.equal(tplinkSmartPlugs.outputs["2"]?.state.manual.value, 100);
+    assert.equal(tplinkSmartPlugs.outputs["3"]?.state.manual.value, 0);
+    assert.equal(tplinkSmartPlugs.outputs["4"]?.state.manual.value, 0);
+
+    tplinkSmartPlugs.outputs["1"]?.state.updateControlMode(ControlMode.manual);
+    tplinkSmartPlugs.outputs["2"]?.state.updateControlMode(ControlMode.manual);
+    tplinkSmartPlugs.outputs["2"]?.setNewState({
+      value: 0,
+      controlMode: ControlMode.manual,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " ")
+    } as SDBOutputState,
+      ControlMode.manual)
 
     // Dispose 1 output
     tplinkSmartPlugs.disposeOutput(output4!);
@@ -94,13 +117,19 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(tplinkSmartPlugs.usedPins["127.0.0.1"]!.length, 3);
     assert.isUndefined(tplinkSmartPlugs.outputs["4"]);
 
-    // disposing with a non existent pin should also not cause issues
+    // Disposing with a non existent pin should also not cause issues
     tplinkSmartPlugs.disposeOutput({ pin: "3", address: "127.0.0.1" } as OutputBase);
 
     // Dispose the rest
+    // Plug 1 (manual): inherited on, disposed as on -> on
     tplinkSmartPlugs.disposeOutput(output1!);
+    assert.isTrue(await plug1.getPowerState());
+    // Plug 2 (manual): inherited on, disposed as off -> off
     tplinkSmartPlugs.disposeOutput(output2!);
+    // assert.isFalse(await plug2.getPowerState());
+    // Plug 3 (automatic): inherited on, disposed as on -> off
     tplinkSmartPlugs.disposeOutput(output3!);
+    // assert.isFalse(await plug2.getPowerState());
     assert.equal(Object.keys(tplinkSmartPlugs.outputs).length, 0);
     assert.isUndefined(tplinkSmartPlugs.usedPins["127.0.0.1"]);
     assert.isUndefined(tplinkSmartPlugs.boardRecord["127.0.0.1"]);
@@ -109,7 +138,7 @@ describe("tplinkPlug.ts tests", function () {
   it("should return output data (no functions)", async function () {
     sinon
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(() => ({ info: () => { }, error: () => { } }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
@@ -133,14 +162,13 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.exists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
     assert.exists(tplinkSmartPlugs.outputs["1"]!["sprootDB"]);
-    // console.log(tplinkSmartPlugs.outputs["1"]?.state.manual.value)
   });
 
   it("should update and apply states with respect to control mode", async function () {
     sinon
       .stub(winston, "createLogger")
       .callsFake(
-        () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
+        () => ({ info: () => { }, error: () => { }, verbose: () => { } }) as unknown as winston.Logger,
       );
     const logger = winston.createLogger();
 
