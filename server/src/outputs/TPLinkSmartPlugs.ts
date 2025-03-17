@@ -141,32 +141,6 @@ class TPLinkPlug extends OutputBase {
       logger,
     );
     this.tplinkPlug = tplinkPlug;
-
-    this.tplinkPlug
-      .on("power-on", () => {
-        if (this.controlMode == ControlMode.manual) {
-          this.setNewState(
-            {
-              controlMode: ControlMode.manual,
-              value: 100,
-              logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-            } as SDBOutputState,
-            ControlMode.manual,
-          );
-        }
-      })
-      .on("power-off", () => {
-        if (this.controlMode == ControlMode.manual) {
-          this.setNewState(
-            {
-              controlMode: ControlMode.manual,
-              value: 0,
-              logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-            } as SDBOutputState,
-            ControlMode.manual,
-          );
-        }
-      });
   }
 
   executeState(): void {
@@ -179,7 +153,6 @@ class TPLinkPlug extends OutputBase {
     if (this.controlMode == ControlMode.automatic) {
       this.tplinkPlug.setPowerState(false);
     }
-    this.tplinkPlug.removeAllListeners();
   }
 }
 export { TPLinkSmartPlugs, TPLinkPlug };
