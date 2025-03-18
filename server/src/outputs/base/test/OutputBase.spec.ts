@@ -14,7 +14,7 @@ describe("OutputBase.ts tests", function () {
 
   describe("constructor", function () {
     it("should create a new OutputState object with default values", function () {
-      const outputState = new OutputState(mockSprootDB);
+      const outputState = new OutputState(1, mockSprootDB);
 
       assert.equal(outputState.value, 0);
       assert.equal(outputState.controlMode, ControlMode.automatic);
@@ -23,7 +23,7 @@ describe("OutputBase.ts tests", function () {
 
   describe("updateControlMode", function () {
     it("should update the control mode of the output state", function () {
-      const outputState = new OutputState(mockSprootDB);
+      const outputState = new OutputState(1, mockSprootDB);
 
       outputState.updateControlMode(ControlMode.manual);
       assert.equal(outputState.controlMode, ControlMode.manual);
@@ -34,49 +34,54 @@ describe("OutputBase.ts tests", function () {
   });
 
   describe("setNewState", function () {
-    it("should update the value of the output state", function () {
-      const outputState = new OutputState(mockSprootDB);
+    it("should update the value of the output state", async function () {
+      const outputState = new OutputState(1, mockSprootDB);
+      const dbStub = sinon.stub(mockSprootDB, "updateLastOutputStateAsync");
 
       const newState = { value: 100 } as SDBOutputState;
       //We're not in manual, should have no effect
-      outputState.setNewState(newState, ControlMode.manual);
+      await outputState.setNewStateAsync(newState, ControlMode.manual);
       assert.equal(outputState.value, 0);
+      dbStub.calledOnceWith({ id: 1, value: 0, controlMode: ControlMode.manual });
+      dbStub.resetHistory();
 
       //But we are in automatic, so ... effect.
-      outputState.setNewState(newState, ControlMode.automatic);
+      await outputState.setNewStateAsync(newState, ControlMode.automatic);
       assert.equal(outputState.value, 100);
+      dbStub.calledOnceWith({ id: 1, value: 100, controlMode: ControlMode.automatic });
+      dbStub.resetHistory();
     });
   });
 
   describe("addCurrentStateToDatabaseAsync()", function () {
     it("should add the current state to the database", async function () {
       const dbStub = sinon.stub(mockSprootDB, "addOutputStateAsync");
-      const outputState = new OutputState(mockSprootDB);
+      const outputState = new OutputState(1, mockSprootDB);
 
       //Start in automatic, set automatic value to 100
       let newState = { value: 100 } as SDBOutputState;
-      outputState.setNewState({ value: 100 } as SDBOutputState, ControlMode.automatic);
-      await outputState.addCurrentStateToDatabaseAsync(1);
+      await outputState.setNewStateAsync({ value: 100 } as SDBOutputState, ControlMode.automatic);
+      await outputState.addCurrentStateToDatabaseAsync();
       dbStub.calledOnceWith({ id: 1, value: 100, controlMode: ControlMode.automatic });
       dbStub.resetHistory();
 
       //Stay in automatic, set automatic value to 0
       newState = { value: 0 } as SDBOutputState;
-      outputState.setNewState(newState, ControlMode.automatic);
-      await outputState.addCurrentStateToDatabaseAsync(1);
+      await outputState.setNewStateAsync(newState, ControlMode.automatic);
+      await outputState.addCurrentStateToDatabaseAsync();
       dbStub.calledOnceWith({ id: 1, value: 0, controlMode: ControlMode.automatic });
       dbStub.resetHistory();
 
       //Stay in automatic, set manual value to 100
       newState = { value: 100 } as SDBOutputState;
-      outputState.setNewState(newState, ControlMode.manual);
-      await outputState.addCurrentStateToDatabaseAsync(1);
+      await outputState.setNewStateAsync(newState, ControlMode.manual);
+      await outputState.addCurrentStateToDatabaseAsync();
       dbStub.calledOnceWith({ id: 1, value: 0, controlMode: ControlMode.automatic });
       dbStub.resetHistory();
 
       //Swap to manual, value be 100 now
       outputState.updateControlMode(ControlMode.manual);
-      await outputState.addCurrentStateToDatabaseAsync(1);
+      await outputState.addCurrentStateToDatabaseAsync();
       dbStub.calledOnceWith({ id: 1, value: 100, controlMode: ControlMode.manual });
       dbStub.resetHistory();
     });

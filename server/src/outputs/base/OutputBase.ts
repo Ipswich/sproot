@@ -48,7 +48,7 @@ export abstract class OutputBase implements IOutputBase {
     this.name = sdbOutput.name;
     this.isPwm = sdbOutput.isPwm ? true : false;
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
-    this.state = new OutputState(sprootDB);
+    this.state = new OutputState(sdbOutput.id, sprootDB);
     this.color = sdbOutput.color;
     this.automationTimeout = sdbOutput.automationTimeout;
     this.sprootDB = sprootDB;
@@ -97,6 +97,7 @@ export abstract class OutputBase implements IOutputBase {
 
   /** Initializes all of the data for this output */
   async initializeAsync() {
+    await this.state.initializeAsync();
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
     await this.loadAutomationsAsync();
@@ -118,8 +119,8 @@ export abstract class OutputBase implements IOutputBase {
    * @param newState The new state
    * @param targetControlMode The control mode to apply it to
    */
-  setNewState(newState: SDBOutputState, targetControlMode: ControlMode): void {
-    this.state.setNewState(newState, targetControlMode);
+  async setNewStateAsync(newState: SDBOutputState, targetControlMode: ControlMode): Promise<void> {
+    await this.state.setNewStateAsync(newState, targetControlMode);
     this.executeState();
   }
 
@@ -160,13 +161,13 @@ export abstract class OutputBase implements IOutputBase {
     }
 
     try {
-      await this.state.addCurrentStateToDatabaseAsync(this.id);
+      await this.state.addCurrentStateToDatabaseAsync();
     } catch (error) {
       this.logger.error(`Error adding state to database for output ${this.id}: ${error}`);
     }
   }
 
-  runAutomations(sensorList: SensorList, outputList: OutputList, now: Date): void {
+  async runAutomationsAsync(sensorList: SensorList, outputList: OutputList, now: Date): Promise<void> {
     const result = this.#automationManager.evaluate(
       sensorList,
       outputList,
@@ -174,7 +175,7 @@ export abstract class OutputBase implements IOutputBase {
       now,
     );
     if (result.value != null) {
-      this.state.setNewState(
+      await this.state.setNewStateAsync(
         {
           value: result.value,
           controlMode: ControlMode.automatic,
@@ -183,7 +184,7 @@ export abstract class OutputBase implements IOutputBase {
         ControlMode.automatic,
       );
     } else {
-      this.state.setNewState(
+      await this.state.setNewStateAsync(
         {
           value: 0,
           controlMode: ControlMode.automatic,

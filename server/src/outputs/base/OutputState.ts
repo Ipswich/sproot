@@ -6,9 +6,10 @@ export class OutputState implements IOutputState {
   manual: SDBOutputState;
   automatic: SDBOutputState;
   controlMode: ControlMode;
+  #outputId: number;
   #sprootDB: ISprootDB;
 
-  constructor(sprootDB: ISprootDB) {
+  constructor(outputId: number, sprootDB: ISprootDB) {
     this.manual = {
       controlMode: ControlMode.manual,
       value: 0,
@@ -21,6 +22,15 @@ export class OutputState implements IOutputState {
     } as SDBOutputState;
     this.controlMode = ControlMode.automatic;
     this.#sprootDB = sprootDB;
+    this.#outputId = outputId;
+  }
+
+  async initializeAsync() {
+    const lastState = await this.#sprootDB.getLastOutputStateAsync(this.#outputId);
+    if (lastState[0]?.controlMode == ControlMode.manual) {
+      this.controlMode = ControlMode.manual;
+      await this.setNewStateAsync(lastState[0], ControlMode.manual);
+    }
   }
 
   get(): SDBOutputState {
@@ -67,25 +77,37 @@ export class OutputState implements IOutputState {
    * @param newState New state to set
    * @param targetControlMode Determines which state will be overwritten
    */
-  setNewState(newState: SDBOutputState, targetControlMode: ControlMode) {
+  async setNewStateAsync(newState: SDBOutputState, targetControlMode: ControlMode) {
     newState.value = Math.min(100, Math.max(0, newState.value));
     switch (targetControlMode) {
       case ControlMode.manual:
         this.manual = { ...newState, controlMode: ControlMode.manual };
         break;
-
       case ControlMode.automatic:
         this.automatic = { ...newState, controlMode: ControlMode.automatic };
         break;
     }
+    await this.updateLastOutputStateAsync();
+  }
+
+  /**
+   * Updates the last recorded state in the database.
+   * This is used for second granularity, as opposed to minute granularity.
+   */
+  async updateLastOutputStateAsync(): Promise<void>{
+    await this.#sprootDB.updateLastOutputStateAsync({
+      id: this.#outputId,
+      value: this.value,
+      controlMode: this.controlMode,
+    });
   }
 
   /**
    * Adds the current state of the output to the database.
    */
-  async addCurrentStateToDatabaseAsync(outputId: number): Promise<void> {
+  async addCurrentStateToDatabaseAsync(): Promise<void> {
     await this.#sprootDB.addOutputStateAsync({
-      id: outputId,
+      id: this.#outputId,
       value: this.value,
       controlMode: this.controlMode,
     });

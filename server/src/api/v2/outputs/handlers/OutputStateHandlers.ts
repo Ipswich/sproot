@@ -69,7 +69,7 @@ export function setControlMode(
  * @param response
  * @returns
  */
-export function setManualState(request: Request, response: Response) {
+export async function setManualStateAsync(request: Request, response: Response) {
   const outputList = request.app.get("outputList") as OutputList;
   const outputId = String(request.params["outputId"]);
   const value = parseInt(request.body["value"]);
@@ -122,7 +122,7 @@ export function setManualState(request: Request, response: Response) {
     logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
   } as SDBOutputState;
 
-  outputList.setNewOutputState(outputId, state, ControlMode.manual);
+  await outputList.setNewOutputStateAsync(outputId, state, ControlMode.manual);
   outputList.executeOutputState(outputId);
   manualStateResponse = {
     statusCode: 200,

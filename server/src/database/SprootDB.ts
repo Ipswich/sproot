@@ -130,6 +130,24 @@ export class SprootDB implements ISprootDB {
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
     });
   }
+  async updateLastOutputStateAsync(output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void> {
+    return this.#connection("outputs")
+      .where("id", output.id)
+      .update({
+        lastValue: output.value,
+        lastControlMode: output.controlMode,
+        lastStateUpdate: new Date().toISOString().slice(0, 19).replace("T", " "),
+      });
+  }
+  async getLastOutputStateAsync(outputId: number): Promise<SDBOutputState[]> {
+    return this.#connection("outputs")
+      .where("id", outputId)
+      .select("lastControlMode as controlMode", "lastValue as value", "lastStateUpdate as logTime");
+  }
   async getOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
