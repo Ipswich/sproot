@@ -27,7 +27,7 @@
     "postcss-simple-vars": "^7.0.1",
     "rimraf": "^5.0.1",
     "typescript": "^5.5.3",
-    "vite": "^4.4.5"
+    "vite": "^6.2.2"
   },
   "dependencies": {
     "@mantine/charts": "^7.11.2",
