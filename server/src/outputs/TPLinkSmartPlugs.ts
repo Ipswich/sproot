@@ -31,26 +31,26 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
     );
     this.#client = new Client();
 
-    this.#client.on("plug-new", (plug) => {
+    this.#client.on("plug-new", (plug: Plug) => {
       if (plug.childId != undefined) {
         this.availablePlugs[plug.childId] = plug;
       }
     });
-    this.#client.on("plug-online", (plug) => {
+    this.#client.on("plug-online", (plug: Plug) => {
       if (plug.childId != undefined) {
         this.availablePlugs[plug.childId] = plug;
       }
     });
-    this.#client.on("plug-offline", (plug) => {
+    this.#client.on("plug-offline", (plug: Plug) => {
       if (plug.childId != undefined) {
         delete this.availablePlugs[plug.childId];
       }
     });
 
-    this.#client.on("error", (error) => {
+    this.#client.on("error", (error: unknown) => {
       this.logger.error(`TPLink Smart Plug client error: ${error}`);
     });
-    this.#client.on("discovery-invalid", (error) => {
+    this.#client.on("discovery-invalid", (error: unknown) => {
       this.logger.error(`TPLink Smart Plug client error: ${error}`);
     });
     this.#client.startDiscovery();

@@ -24,7 +24,7 @@ import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
-export class SprootDB implements ISprootDB, AsyncDisposable {
+export class SprootDB implements ISprootDB {
   #connection: Knex;
 
   constructor(connection: Knex) {
@@ -393,7 +393,7 @@ export class SprootDB implements ISprootDB, AsyncDisposable {
     return this.#connection("users").insert(user);
   }
 
-  [Symbol.asyncDispose](): PromiseLike<void> {
+  disposeAsync(): Promise<void> {
     return this.#connection.destroy();
   }
 }
