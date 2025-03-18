@@ -151,7 +151,10 @@ class TPLinkPlug extends OutputBase {
 
   dispose(): void {
     if (this.controlMode == ControlMode.automatic) {
-      this.tplinkPlug.setPowerState(false);
+      // Catch this so it doesn't blow up
+      this.tplinkPlug.setPowerState(false).catch(() => {
+        this.logger.error(`Disposal error turning off TPLink Smart Plug ${this.id}`);
+      });
     }
   }
 }
