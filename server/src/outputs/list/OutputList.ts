@@ -86,8 +86,8 @@ class OutputList {
   async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
     outputId
       ? await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now)
-      : Object.values(this.#outputs).forEach(async (output) =>
-          await output.runAutomationsAsync(sensorList, this, now),
+      : Object.values(this.#outputs).forEach(
+          async (output) => await output.runAutomationsAsync(sensorList, this, now),
         );
   }
 

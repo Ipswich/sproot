@@ -185,7 +185,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      let success = await setManualStateAsync(mockRequest, mockResponse) as SuccessResponse;
+      let success = (await setManualStateAsync(mockRequest, mockResponse)) as SuccessResponse;
 
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -227,7 +227,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      let error = await setManualStateAsync(mockRequest, mockResponse) as ErrorResponse;
+      let error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -240,7 +240,7 @@ describe("OutputStateHandlers.ts tests", () => {
       ]);
 
       mockRequest.body["value"] = -1;
-      error = await setManualStateAsync(mockRequest, mockResponse) as ErrorResponse;
+      error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -255,7 +255,7 @@ describe("OutputStateHandlers.ts tests", () => {
       mockRequest.params["outputId"] = "2";
       mockRequest.originalUrl = "/outputs/2/manual-state";
       mockRequest.body["value"] = 50;
-      error = await setManualStateAsync(mockRequest, mockResponse) as ErrorResponse;
+      error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -294,7 +294,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Response;
 
-      let error = await setManualStateAsync(mockRequest, mockResponse) as ErrorResponse;
+      let error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 404);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);

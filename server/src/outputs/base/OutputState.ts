@@ -94,7 +94,7 @@ export class OutputState implements IOutputState {
    * Updates the last recorded state in the database.
    * This is used for second granularity, as opposed to minute granularity.
    */
-  async updateLastOutputStateAsync(): Promise<void>{
+  async updateLastOutputStateAsync(): Promise<void> {
     await this.#sprootDB.updateLastOutputStateAsync({
       id: this.#outputId,
       value: this.value,

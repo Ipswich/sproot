@@ -18,6 +18,29 @@ describe("OutputState.ts tests", () => {
     });
   });
 
+  describe("initializeAsync", function () {
+    it("should set current state based on the last output state in the database", async () => {
+      const sprootDB = sinon.createStubInstance(SprootDB);
+      sprootDB.getLastOutputStateAsync = sinon
+        .stub<[number], Promise<SDBOutputState[]>>()
+        .resolves([{ controlMode: ControlMode.manual, value: 100 } as SDBOutputState]);
+      let outputState = new OutputState(1, sprootDB);
+
+      assert.equal(outputState.controlMode, ControlMode.automatic);
+      assert.equal(outputState.value, 0);
+      await outputState.initializeAsync();
+      assert.equal(outputState.controlMode, ControlMode.manual);
+
+      outputState = new OutputState(1, sprootDB);
+      sprootDB.getLastOutputStateAsync = sinon
+        .stub<[number], Promise<SDBOutputState[]>>()
+        .resolves([{ controlMode: ControlMode.automatic, value: 0 } as SDBOutputState]);
+      await outputState.initializeAsync();
+      assert.equal(outputState.controlMode, ControlMode.automatic);
+      assert.equal(outputState.value, 0);
+    });
+  });
+
   describe("setNewState", () => {
     const sprootDB = sinon.createStubInstance(SprootDB);
     const outputState = new OutputState(1, sprootDB);

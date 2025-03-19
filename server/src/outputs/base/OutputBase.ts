@@ -167,7 +167,11 @@ export abstract class OutputBase implements IOutputBase {
     }
   }
 
-  async runAutomationsAsync(sensorList: SensorList, outputList: OutputList, now: Date): Promise<void> {
+  async runAutomationsAsync(
+    sensorList: SensorList,
+    outputList: OutputList,
+    now: Date,
+  ): Promise<void> {
     const result = this.#automationManager.evaluate(
       sensorList,
       outputList,

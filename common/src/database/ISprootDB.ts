@@ -271,7 +271,7 @@ class MockSprootDB implements ISprootDB {
   }): Promise<void> {
     return;
   }
-  
+
   async updateLastOutputStateAsync(_output: {
     id: number;
     value: number;
@@ -282,7 +282,7 @@ class MockSprootDB implements ISprootDB {
 
   async getLastOutputStateAsync(_outputId: number): Promise<SDBOutputState[]> {
     return [];
-  };
+  }
 
   async getOutputsAsync(): Promise<SDBOutput[]> {
     return [];
