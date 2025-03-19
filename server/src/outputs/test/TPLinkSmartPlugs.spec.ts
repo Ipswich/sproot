@@ -12,7 +12,6 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
-import { Client } from "tplink-smarthome-api";
 const mockSprootDB = new MockSprootDB();
 
 describe("tplinkPlug.ts tests", function () {
@@ -41,13 +40,10 @@ describe("tplinkPlug.ts tests", function () {
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
-    const client = new Client();
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
-    const plug1 = await client.getDevice({ host: "127.0.0.1", childId: childIds[0]?.externalId });
-    await plug1.setPowerState(true);
 
     // disposing with nothing shouldn't cause issues
     tplinkSmartPlugs.disposeOutput({} as OutputBase);
@@ -92,13 +88,10 @@ describe("tplinkPlug.ts tests", function () {
     assert.exists(tplinkSmartPlugs.outputs["4"]);
     assert.equal(tplinkSmartPlugs.usedPins["127.0.0.1"]!.length, 4);
     assert.exists(tplinkSmartPlugs.boardRecord["127.0.0.1"]);
-    // Should inherit from the existing state of the tplink device
-    assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 100);
-    assert.equal(tplinkSmartPlugs.outputs["2"]?.state.manual.value, 0);
 
     tplinkSmartPlugs.outputs["1"]?.state.updateControlMode(ControlMode.manual);
     tplinkSmartPlugs.outputs["2"]?.state.updateControlMode(ControlMode.manual);
-    tplinkSmartPlugs.outputs["2"]?.setNewStateAsync(
+    await tplinkSmartPlugs.outputs["2"]?.setNewStateAsync(
       {
         value: 0,
         controlMode: ControlMode.manual,
@@ -182,54 +175,54 @@ describe("tplinkPlug.ts tests", function () {
       ControlMode.automatic,
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 100);
-    tplinkSmartPlugs.executeOutputState();
+    await tplinkSmartPlugs.executeOutputStateAsync();
     //Creation calls once.
-    assert.equal(setStateStub.callCount, 2);
-    assert.equal(setStateStub.getCall(1).args[0], true);
+    assert.equal(setStateStub.callCount, 1);
+    assert.equal(setStateStub.getCall(0).args[0], true);
 
     //Automatic Low
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.automatic,
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 0);
-    tplinkSmartPlugs.executeOutputState();
-    assert.equal(setStateStub.callCount, 3);
-    assert.equal(setStateStub.getCall(2).args[0], false);
+    await tplinkSmartPlugs.executeOutputStateAsync();
+    assert.equal(setStateStub.callCount, 2);
+    assert.equal(setStateStub.getCall(1).args[0], false);
 
     //Swap to Manual
     tplinkSmartPlugs.updateControlMode("1", ControlMode.manual);
 
     //Manual Low
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.manual,
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 0);
-    tplinkSmartPlugs.executeOutputState();
-    assert.equal(setStateStub.callCount, 4);
-    assert.equal(setStateStub.getCall(3).args[0], false);
+    await tplinkSmartPlugs.executeOutputStateAsync();
+    assert.equal(setStateStub.callCount, 3);
+    assert.equal(setStateStub.getCall(2).args[0], false);
 
     //Manual High
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.manual,
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 100);
-    tplinkSmartPlugs.executeOutputState();
-    assert.equal(setStateStub.callCount, 5);
-    assert.equal(setStateStub.getCall(4).args[0], true);
+    await tplinkSmartPlugs.executeOutputStateAsync();
+    assert.equal(setStateStub.callCount, 4);
+    assert.equal(setStateStub.getCall(3).args[0], true);
 
     //Swap to Automatic
     tplinkSmartPlugs.updateControlMode("1", ControlMode.automatic);
 
     //Execute Automatic Low
-    tplinkSmartPlugs.executeOutputState();
-    assert.equal(setStateStub.callCount, 6);
-    assert.equal(setStateStub.getCall(5).args[0], false);
+    await tplinkSmartPlugs.executeOutputStateAsync();
+    assert.equal(setStateStub.callCount, 5);
+    assert.equal(setStateStub.getCall(4).args[0], false);
 
     //Inverted PWM Execution
     await tplinkSmartPlugs.createOutputAsync({
@@ -241,34 +234,34 @@ describe("tplinkPlug.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 100 },
       ControlMode.automatic,
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 100);
-    tplinkSmartPlugs.executeOutputState("1"); //Receives individual output id as well.
-    assert.equal(setStateStub.callCount, 8);
-    assert.equal(setStateStub.getCall(7).args[0], false);
+    await tplinkSmartPlugs.executeOutputStateAsync("1"); //Receives individual output id as well.
+    assert.equal(setStateStub.callCount, 6);
+    assert.equal(setStateStub.getCall(5).args[0], false);
 
     //PWM error handling
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: -1 },
       ControlMode.automatic,
     );
-    tplinkSmartPlugs.executeOutputState("1"); //Receives individual output id as well.
+    await tplinkSmartPlugs.executeOutputStateAsync("1"); //Receives individual output id as well.
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 0);
-    assert.equal(setStateStub.callCount, 9);
+    assert.equal(setStateStub.callCount, 7);
 
     tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 101 },
       ControlMode.automatic,
     );
-    tplinkSmartPlugs.executeOutputState("1"); //Receives individual output id as well.
+    await tplinkSmartPlugs.executeOutputStateAsync("1"); //Receives individual output id as well.
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 100);
-    assert.equal(setStateStub.callCount, 10);
+    assert.equal(setStateStub.callCount, 8);
 
     //Non-PWM error handling
     await tplinkSmartPlugs.createOutputAsync({
@@ -281,12 +274,12 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
 
     //Execute non-pwm output (not 0 or 100)
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "2",
       <SDBOutputState>{ value: 75 },
       ControlMode.automatic,
     );
-    tplinkSmartPlugs.executeOutputState("2");
-    assert.equal(setStateStub.callCount, 11);
+    await tplinkSmartPlugs.executeOutputStateAsync("2");
+    assert.equal(setStateStub.callCount, 8);
   });
 });

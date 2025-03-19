@@ -60,7 +60,7 @@ export abstract class MultiOutputBase {
     targetControlMode: ControlMode,
   ) => this.outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
 
-  async executeOutputState(outputId?: string) {
+  async executeOutputStateAsync(outputId?: string) {
     if (outputId) {
       return await this.outputs[outputId]?.executeStateAsync();
     }

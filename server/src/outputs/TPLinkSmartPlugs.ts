@@ -6,7 +6,6 @@ import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 
 class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
   readonly availablePlugs: Record<string, Plug> = {};
@@ -97,15 +96,6 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
       this.maxChartDataSize,
       this.chartDataPointInterval,
       this.logger,
-    );
-    // Set state from switch
-    this.outputs[output.id]?.setNewStateAsync(
-      {
-        controlMode: ControlMode.manual,
-        value: (await plug.getPowerState()) ? 100 : 0,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      } as SDBOutputState,
-      ControlMode.manual,
     );
     await this.outputs[output.id]?.initializeAsync();
     this.usedPins[output.address]?.push(output.pin);
