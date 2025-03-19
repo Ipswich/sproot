@@ -91,9 +91,9 @@ class PCA9685Output extends OutputBase {
     this.pca9685 = pca9685;
   }
 
-  executeState(): void {
-    this.executeStateHelper((value) => {
-      this.pca9685.setDutyCycle(parseInt(this.pin), value);
+  async executeStateAsync(): Promise<void> {
+    await this.executeStateHelperAsync(async (value) => {
+      Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value));
     });
   }
 

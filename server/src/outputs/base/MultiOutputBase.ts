@@ -60,10 +60,15 @@ export abstract class MultiOutputBase {
     targetControlMode: ControlMode,
   ) => this.outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
 
-  executeOutputState = (outputId?: string) =>
-    outputId
-      ? this.outputs[outputId]?.executeState()
-      : Object.keys(this.outputs).forEach((key) => this.outputs[key]?.executeState());
+  async executeOutputState(outputId?: string) {
+    if (outputId) {
+      return await this.outputs[outputId]?.executeStateAsync();
+    }
+    const promises = Object.keys(this.outputs).map(
+      async (key) => await this.outputs[key]?.executeStateAsync(),
+    );
+    await Promise.allSettled(promises);
+  }
 
   disposeOutput(output: OutputBase): void {
     const usedPins = this.usedPins[output.address];

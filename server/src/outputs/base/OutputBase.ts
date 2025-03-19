@@ -92,7 +92,7 @@ export abstract class OutputBase implements IOutputBase {
    *
    * See setNewState
    */
-  abstract executeState(): void;
+  abstract executeStateAsync(): Promise<void>;
   abstract dispose(): void;
 
   /** Initializes all of the data for this output */
@@ -121,7 +121,7 @@ export abstract class OutputBase implements IOutputBase {
    */
   async setNewStateAsync(newState: SDBOutputState, targetControlMode: ControlMode): Promise<void> {
     await this.state.setNewStateAsync(newState, targetControlMode);
-    this.executeState();
+    await this.executeStateAsync();
   }
 
   getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
@@ -229,7 +229,9 @@ export abstract class OutputBase implements IOutputBase {
     await this.#automationManager.loadAsync(this.id);
   }
 
-  protected executeStateHelper(executionFn: (value: number) => void): void {
+  protected async executeStateHelperAsync(
+    executionFnAsync: (value: number) => Promise<void>,
+  ): Promise<void> {
     //Local helper function
     const validateAndFixValue = (value: number) => {
       if (!this.isPwm && value != 0 && value != 100) {
@@ -248,10 +250,10 @@ export abstract class OutputBase implements IOutputBase {
       switch (this.controlMode) {
         case ControlMode.manual:
           validatedValue = validateAndFixValue(this.state.manual.value);
-          return validatedValue != undefined ? executionFn(validatedValue) : undefined;
+          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
         case ControlMode.automatic:
           validatedValue = validateAndFixValue(this.state.automatic.value);
-          return validatedValue != undefined ? executionFn(validatedValue) : undefined;
+          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
       }
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);

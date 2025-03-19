@@ -74,7 +74,7 @@ export default async function setupAsync(): Promise<Express> {
 
         await outputList.runAutomationsAsync(sensorList, new Date());
         //Execute any changes made to state.
-        outputList.executeOutputState();
+        await outputList.executeOutputStateAsync();
       } catch (e) {
         logger.error(`Exception in state update loop: ${e}`);
       }

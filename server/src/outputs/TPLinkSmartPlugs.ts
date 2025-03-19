@@ -143,8 +143,8 @@ class TPLinkPlug extends OutputBase {
     this.tplinkPlug = tplinkPlug;
   }
 
-  executeState(): void {
-    this.executeStateHelper(async (value) => {
+  async executeStateAsync(): Promise<void> {
+    await this.executeStateHelperAsync(async (value) => {
       await this.tplinkPlug.setPowerState(!!value);
     });
   }

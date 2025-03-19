@@ -88,10 +88,14 @@ class OutputList implements Disposable {
     await this.#outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
   }
 
-  executeOutputState(outputId?: string): void {
-    outputId
-      ? this.#outputs[outputId]?.executeState()
-      : Object.values(this.#outputs).forEach((output) => output?.executeState());
+  async executeOutputStateAsync(outputId?: string) {
+    if (outputId) {
+      return await this.outputs[outputId]?.executeStateAsync();
+    }
+    const promises = Object.keys(this.outputs).map(
+      async (key) => await this.outputs[key]?.executeStateAsync(),
+    );
+    await Promise.allSettled(promises);
   }
 
   async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {

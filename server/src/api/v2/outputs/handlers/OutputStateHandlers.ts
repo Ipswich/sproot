@@ -10,10 +10,10 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
  * @param response
  * @returns
  */
-export function setControlMode(
+export async function setControlModeAsync(
   request: Request,
   response: Response,
-): SuccessResponse | ErrorResponse {
+): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get("outputList") as OutputList;
   const outputId = String(request.params["outputId"]);
   const output = outputList.outputData[outputId];
@@ -52,7 +52,7 @@ export function setControlMode(
       return controlModeResponse;
   }
 
-  outputList.executeOutputState(String(request.params["outputId"]));
+  await outputList.executeOutputStateAsync(String(request.params["outputId"]));
   controlModeResponse = {
     statusCode: 200,
     content: {
@@ -123,7 +123,7 @@ export async function setManualStateAsync(request: Request, response: Response) 
   } as SDBOutputState;
 
   await outputList.setNewOutputStateAsync(outputId, state, ControlMode.manual);
-  outputList.executeOutputState(outputId);
+  await outputList.executeOutputStateAsync(outputId);
   manualStateResponse = {
     statusCode: 200,
     content: {
