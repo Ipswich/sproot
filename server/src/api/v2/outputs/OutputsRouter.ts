@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
-import { setControlMode, setManualState } from "./handlers/OutputStateHandlers";
+import { setControlMode, setManualStateAsync } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
 import { getAvailableDevices } from "./handlers/AvailableDevicesHandlers";
 
@@ -63,8 +63,8 @@ router.put("/:outputId/control-mode", (req: Request, res: Response) => {
   return;
 });
 
-router.put("/:outputId/manual-state", (req: Request, res: Response) => {
-  const response = setManualState(req, res);
+router.put("/:outputId/manual-state", async (req: Request, res: Response) => {
+  const response = await setManualStateAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

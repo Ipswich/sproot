@@ -136,7 +136,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Automatic High
-    pca9685.setNewOutputState(
+    pca9685.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.automatic,
@@ -148,7 +148,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(0).args[1], 1);
 
     //Automatic Low
-    pca9685.setNewOutputState(
+    pca9685.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.automatic,
@@ -163,7 +163,7 @@ describe("PCA9685.ts tests", function () {
     pca9685.updateControlMode("1", ControlMode.manual);
 
     //Manual Low
-    pca9685.setNewOutputState(
+    pca9685.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
       ControlMode.manual,
@@ -175,7 +175,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(2).args[1], 0);
 
     //Manual High
-    pca9685.setNewOutputState(
+    pca9685.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.manual,
@@ -206,7 +206,7 @@ describe("PCA9685.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 100 }, ControlMode.automatic);
+    pca9685.setNewOutputStateAsync("1", <SDBOutputState>{ value: 100 }, ControlMode.automatic);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     pca9685.executeOutputState("1"); //Receives individual output id as well.
     assert.equal(setDutyCycleStub.callCount, 6);
@@ -214,12 +214,12 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(5).args[1], 0);
 
     //PWM error handling
-    pca9685.setNewOutputState("1", <SDBOutputState>{ value: -1 }, ControlMode.automatic);
+    pca9685.setNewOutputStateAsync("1", <SDBOutputState>{ value: -1 }, ControlMode.automatic);
     pca9685.executeOutputState("1"); //Receives individual output id as well.
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 0);
     assert.equal(setDutyCycleStub.callCount, 7);
 
-    pca9685.setNewOutputState("1", <SDBOutputState>{ value: 101 }, ControlMode.automatic);
+    pca9685.setNewOutputStateAsync("1", <SDBOutputState>{ value: 101 }, ControlMode.automatic);
     pca9685.executeOutputState("1"); //Receives individual output id as well.
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     assert.equal(setDutyCycleStub.callCount, 8);
@@ -236,7 +236,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Execute non-pwm output (not 0 or 100)
-    pca9685.setNewOutputState("2", <SDBOutputState>{ value: 75 }, ControlMode.automatic);
+    pca9685.setNewOutputStateAsync("2", <SDBOutputState>{ value: 75 }, ControlMode.automatic);
     pca9685.executeOutputState("2");
     assert.equal(setDutyCycleStub.callCount, 8);
   });

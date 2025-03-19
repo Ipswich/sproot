@@ -99,7 +99,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
       this.logger,
     );
     // Set state from switch
-    this.outputs[output.id]?.setNewState(
+    this.outputs[output.id]?.setNewStateAsync(
       {
         controlMode: ControlMode.manual,
         value: (await plug.getPowerState()) ? 100 : 0,

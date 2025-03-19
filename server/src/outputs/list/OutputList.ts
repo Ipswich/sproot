@@ -80,12 +80,12 @@ class OutputList implements Disposable {
     this.#outputs[outputId]?.state.updateControlMode(controlMode);
   }
 
-  setNewOutputState(
+  async setNewOutputStateAsync(
     outputId: string,
     newState: SDBOutputState,
     targetControlMode: ControlMode,
-  ): void {
-    this.#outputs[outputId]?.state.setNewState(newState, targetControlMode);
+  ): Promise<void> {
+    await this.#outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
   }
 
   executeOutputState(outputId?: string): void {
@@ -94,11 +94,11 @@ class OutputList implements Disposable {
       : Object.values(this.#outputs).forEach((output) => output?.executeState());
   }
 
-  runAutomations(sensorList: SensorList, now: Date, outputId?: number): void {
+  async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
     outputId
-      ? this.#outputs[outputId]?.runAutomations(sensorList, this, now)
-      : Object.values(this.#outputs).forEach((output) =>
-          output.runAutomations(sensorList, this, now),
+      ? await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now)
+      : Object.values(this.#outputs).forEach(
+          async (output) => await output.runAutomationsAsync(sensorList, this, now),
         );
   }
 

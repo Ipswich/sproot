@@ -72,8 +72,7 @@ export default async function setupAsync(): Promise<Express> {
         logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
         //Add triggers and whatnot here.
 
-        outputList.runAutomations(sensorList, new Date());
-
+        await outputList.runAutomationsAsync(sensorList, new Date());
         //Execute any changes made to state.
         outputList.executeOutputState();
       } catch (e) {

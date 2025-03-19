@@ -54,11 +54,11 @@ export abstract class MultiOutputBase {
   updateControlMode = (outputId: string, controlMode: ControlMode) =>
     this.outputs[outputId]?.state.updateControlMode(controlMode);
 
-  setNewOutputState = (
+  setNewOutputStateAsync = async (
     outputId: string,
     newState: SDBOutputState,
     targetControlMode: ControlMode,
-  ) => this.outputs[outputId]?.state.setNewState(newState, targetControlMode);
+  ) => this.outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
 
   executeOutputState = (outputId?: string) =>
     outputId
