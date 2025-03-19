@@ -169,7 +169,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
 
     //Automatic High
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
       ControlMode.automatic,
@@ -254,7 +254,7 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 0);
     assert.equal(setStateStub.callCount, 7);
 
-    tplinkSmartPlugs.setNewOutputStateAsync(
+    await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
       <SDBOutputState>{ value: 101 },
       ControlMode.automatic,
