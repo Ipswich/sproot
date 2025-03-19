@@ -112,7 +112,7 @@ class PCA9685 {
     outputId: string,
     newState: SDBOutputState,
     targetControlMode: ControlMode,
-  ) => this.#outputs[outputId]?.state.setNewState(newState, targetControlMode);
+  ) => this.#outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
   executeOutputState = (outputId?: string) =>
     outputId
       ? this.#outputs[outputId]?.executeState()
