@@ -86,7 +86,10 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
       this.usedPins[output.address] = [];
     }
 
-    const plug = await this.#client.getDevice({ host: output.address, childId: output.pin });
+    const plug = this.#client.devices.get(output.pin);
+    if (plug == undefined) {
+      throw new Error("TPLink Smart Plug device could not be found creation failed");
+    }
     this.outputs[output.id] = new TPLinkPlug(
       plug as Plug,
       output,
