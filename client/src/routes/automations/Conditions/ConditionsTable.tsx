@@ -287,24 +287,28 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
 function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
   const bits = weekdayCondition.weekdays.toString(2).padStart(7, "0");
   const days = [];
-  for (let i = 0; i < bits.length; i++) {
+  for (let i = bits.length - 1; i >= 0; i--) {
     if (bits[i] === "1") {
       days.push(
         [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
           "Saturday",
+          "Friday",
+          "Thursday",
+          "Wednesday",
+          "Tuesday",
+          "Monday",
+          "Sunday",
         ][i],
       );
     }
   }
-  const response =
-    days.length > 1
-      ? days.slice(0, -1).join(", ") + ", or " + days.slice(-1)
-      : days[0];
+  let response: string | undefined = "";
+  if (days.length == 1) {
+    response = days[0];
+  } else if (days.length == 2) {
+    response = `${days[0]} or ${days[1]}`;
+  } else {
+    response = days.slice(0, -1).join(", ") + ", or " + days.slice(-1);
+  }
   return <Group>{`Day is ${response}`}</Group>;
 }
