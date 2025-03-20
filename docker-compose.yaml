@@ -19,13 +19,12 @@ services:
       - DATABASE_HOST=${DATABASE_HOST}
       - DATABASE_PORT=${DATABASE_PORT}
       - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=root
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - PRECONFIGURED=${PRECONFIGURED}
     volumes:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
-    networks:
-      - sproot-network
+    network_mode: "host"
     expose:
       - "3000"
     privileged: true
@@ -47,10 +46,9 @@ services:
       - NODE_ENV=${NODE_ENV}
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
-    networks:
-      - sproot-network
-    ports:
-      - 80:80
+    network_mode: "host"
+    expose:
+      - "80"
 
   db:
     image: mariadb:11.5.2-noble
@@ -59,22 +57,18 @@ services:
       - MARIADB_ROOT_PASSWORD=${DATABASE_PASSWORD}
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
-    networks:
-      - sproot-network
+    network_mode: "host"
     expose:
       - "3306"
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache
     restart: unless-stopped
-    networks:
-      - sproot-network
-    ports:
-      - 3001:80
+    network_mode: "host"
+    expose:
+      - "3001"
     environment:
-      - PMA_HOST=db
+      - APACHE_PORT=3001
+      - PMA_HOST=127.0.0.1
       - UPLOAD_LIMIT=500M
-
-networks:
-  sproot-network:
-    driver: bridge
+      

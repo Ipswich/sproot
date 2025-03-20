@@ -64,17 +64,20 @@ export default async function setupAsync(): Promise<Express> {
   app.set(
     "updateStateLoop",
     setInterval(async () => {
-      await Promise.all([
-        sensorList.initializeOrRegenerateAsync(),
-        outputList.initializeOrRegenerateAsync(),
-      ]);
-      logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
-      //Add triggers and whatnot here.
+      try {
+        await Promise.all([
+          sensorList.initializeOrRegenerateAsync(),
+          outputList.initializeOrRegenerateAsync(),
+        ]);
+        logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
+        //Add triggers and whatnot here.
 
-      await outputList.runAutomationsAsync(sensorList, new Date());
-
-      //Execute any changes made to state.
-      outputList.executeOutputState();
+        await outputList.runAutomationsAsync(sensorList, new Date());
+        //Execute any changes made to state.
+        await outputList.executeOutputStateAsync();
+      } catch (e) {
+        logger.error(`Exception in state update loop: ${e}`);
+      }
     }, Constants.STATE_UPDATE_INTERVAL),
   );
 
@@ -82,8 +85,12 @@ export default async function setupAsync(): Promise<Express> {
   app.set(
     "updateDatabaseLoop",
     setInterval(async () => {
-      await sensorList.updateDataStoresAsync();
-      await outputList.updateDataStoresAsync();
+      try {
+        await sensorList.updateDataStoresAsync();
+        await outputList.updateDataStoresAsync();
+      } catch (e) {
+        logger.error(`Exception in database update loop: ${e}`);
+      }
     }, Constants.DATABASE_UPDATE_INTERVAL),
   );
 

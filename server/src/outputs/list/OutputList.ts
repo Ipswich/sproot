@@ -1,4 +1,5 @@
 import { PCA9685 } from "../PCA9685";
+import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { OutputBase } from "../base/OutputBase";
@@ -9,10 +10,12 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import ModelList from "../ModelList";
 
-class OutputList {
+class OutputList implements Disposable {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
+  #TPLinkSmartPlugs: TPLinkSmartPlugs;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
   #chartData: OutputListChartData;
@@ -38,6 +41,14 @@ class OutputList {
       maxChartDataSize,
       chartDataPointInterval,
       undefined,
+      this.#logger,
+    );
+    this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
+      this.#sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
       this.#logger,
     );
     this.maxCacheSize = maxCacheSize;
@@ -77,10 +88,14 @@ class OutputList {
     await this.#outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
   }
 
-  executeOutputState(outputId?: string): void {
-    outputId
-      ? this.#outputs[outputId]?.executeState()
-      : Object.values(this.#outputs).forEach((output) => output?.executeState());
+  async executeOutputStateAsync(outputId?: string) {
+    if (outputId) {
+      return await this.outputs[outputId]?.executeStateAsync();
+    }
+    const promises = Object.keys(this.outputs).map(
+      async (key) => await this.outputs[key]?.executeStateAsync(),
+    );
+    await Promise.allSettled(promises);
   }
 
   async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
@@ -103,7 +118,22 @@ class OutputList {
     return allAutomations;
   }
 
-  dispose(): void {
+  getAvailableDevices(
+    model: string,
+    address?: string,
+    filterUsed?: boolean,
+  ): Record<string, string>[] {
+    switch (model) {
+      case ModelList.PCA9685.toLowerCase():
+        return []; //this.#PCA9685.getAvailableChildIds(address);
+      case ModelList.TPLinkSmartPlug.toLowerCase():
+        return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
+      default:
+        return [];
+    }
+  }
+
+  [Symbol.dispose](): void {
     for (const key in this.#outputs) {
       try {
         this.#deleteOutput(this.#outputs[key]!);
@@ -114,6 +144,7 @@ class OutputList {
       }
     }
     this.#outputs = {};
+    this.#TPLinkSmartPlugs[Symbol.dispose]();
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
@@ -240,10 +271,14 @@ class OutputList {
   }
 
   async #createOutputAsync(output: SDBOutput): Promise<void> {
-    let newOutput: OutputBase | null = null;
+    let newOutput: OutputBase | undefined;
     switch (output.model.toLowerCase()) {
-      case "pca9685": {
-        newOutput = await this.#PCA9685.createOutput(output);
+      case ModelList.PCA9685.toLowerCase(): {
+        newOutput = await this.#PCA9685.createOutputAsync(output);
+        break;
+      }
+      case ModelList.TPLinkSmartPlug.toLowerCase(): {
+        newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
       default:
@@ -256,12 +291,18 @@ class OutputList {
 
   #deleteOutput(output: OutputBase): void {
     switch (output.model.toLowerCase()) {
-      case "pca9685": {
+      case ModelList.PCA9685.toLowerCase(): {
         this.#PCA9685.disposeOutput(output);
         break;
       }
+      case ModelList.TPLinkSmartPlug.toLowerCase(): {
+        this.#TPLinkSmartPlugs.disposeOutput(output);
+        break;
+      }
       default: {
-        this.#outputs[output.id]?.dispose();
+        if (this.#outputs[output.id] !== undefined) {
+          this.#outputs[output.id]!.dispose();
+        }
       }
     }
     delete this.#outputs[output.id];

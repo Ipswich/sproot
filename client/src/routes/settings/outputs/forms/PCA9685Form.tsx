@@ -1,4 +1,4 @@
-import { NumberInput, Stack, Switch } from "@mantine/core";
+import { NumberInput, Stack, Switch, TextInput } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { Fragment, useState } from "react";
@@ -16,12 +16,19 @@ export default function PCA9685Form({
   const [isPwm, setIsPwm] = useState(selectedOutput?.isPwm ?? false);
 
   return (
-    <Stack py="md">
+    <Fragment>
+      <TextInput
+        maxLength={64}
+        label="Address"
+        placeholder="0x40"
+        required
+        {...form.getInputProps("address")}
+      />
       {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
         <Fragment>
           <NumberInput
             required
-            defaultValue={parseInt(selectedOutput?.pin ?? 0)}
+            defaultValue={parseInt(selectedOutput?.pin ?? "0")}
             label="Pin"
             clampBehavior="strict"
             allowDecimal={false}
@@ -29,21 +36,23 @@ export default function PCA9685Form({
             max={15}
             {...form.getInputProps("pin")}
           />
-          <Switch
-            label="Pwm-able"
-            defaultChecked={selectedOutput?.isPwm ?? false}
-            {...form.getInputProps("isPwm")}
-            onChange={() => {
-              setIsPwm(!isPwm);
-              form.setFieldValue("isPwm", !isPwm);
-            }}
-          />
-          <Switch
-            label="Invert PWM"
-            defaultChecked={selectedOutput?.isInvertedPwm ?? false}
-            {...form.getInputProps("isInvertedPwm")}
-            disabled={!isPwm}
-          />
+          <Stack pt="xs">
+            <Switch
+              label="Pwm-able"
+              defaultChecked={selectedOutput?.isPwm ?? false}
+              {...form.getInputProps("isPwm")}
+              onChange={() => {
+                setIsPwm(!isPwm);
+                form.setFieldValue("isPwm", !isPwm);
+              }}
+            />
+            <Switch
+              label="Invert PWM"
+              defaultChecked={selectedOutput?.isInvertedPwm ?? false}
+              {...form.getInputProps("isInvertedPwm")}
+              disabled={!isPwm}
+            />
+          </Stack>
         </Fragment>
       ) : (selectedOutput?.isPwm ?? false) ? (
         <Switch
@@ -53,6 +62,6 @@ export default function PCA9685Form({
           disabled={!isPwm}
         />
       ) : null}
-    </Stack>
+    </Fragment>
   );
 }
