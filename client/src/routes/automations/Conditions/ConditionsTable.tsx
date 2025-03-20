@@ -12,12 +12,18 @@ import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { ConditionOperator } from "@sproot/automation/ConditionTypes";
-import { Units } from "@sproot/sproot-common/src/sensors/ReadingType";
+import {
+  ReadingType,
+  Units,
+} from "@sproot/sproot-common/src/sensors/ReadingType";
 import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
-import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import {
+  convertCelsiusToFahrenheit,
+  formatDecimalReadingForDisplay,
+} from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
 export interface ConditionsTableProps {
@@ -234,12 +240,22 @@ function mapOperatorToText(operator: ConditionOperator) {
 }
 
 function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
+  let comparisonValue = sensorCondition.comparisonValue;
+  let readingType = String(Units[sensorCondition.readingType]);
+  if (
+    sensorCondition.readingType == ReadingType.temperature &&
+    localStorage.getItem("temperature-useAlternateUnits") == "true"
+  ) {
+    comparisonValue = convertCelsiusToFahrenheit(comparisonValue) ?? 0;
+    readingType = "°F";
+  }
+
   return (
     <Group>
       {sensorCondition.sensorName} is{" "}
       {mapOperatorToText(sensorCondition.operator)}{" "}
-      {formatDecimalReadingForDisplay(String(sensorCondition.comparisonValue))}
-      {Units[sensorCondition.readingType]}
+      {formatDecimalReadingForDisplay(String(comparisonValue))}
+      {readingType}
     </Group>
   );
 }
