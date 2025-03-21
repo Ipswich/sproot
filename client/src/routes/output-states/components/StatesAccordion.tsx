@@ -70,8 +70,7 @@ export default function OutputAccordion() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const items = Object.values(outputs);
-  const sortableItems = items.map((output) => (
+  const sortableItems = outputs.map((output) => (
     <SortableAccordionItem
       output={output}
       updateOutputsAsync={updateOutputsAsync}
@@ -86,7 +85,7 @@ export default function OutputAccordion() {
       onDragEnd={handleDragEnd}
     >
       <Accordion>
-        <SortableContext items={items} strategy={verticalListSortingStrategy}>
+        <SortableContext items={outputs} strategy={verticalListSortingStrategy}>
           {sortableItems}
         </SortableContext>
       </Accordion>
