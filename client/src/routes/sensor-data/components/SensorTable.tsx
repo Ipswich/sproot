@@ -1,11 +1,26 @@
-import { Center, Flex, Switch, Table } from "@mantine/core";
+import {
+  DndContext,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor,
+  closestCenter,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Center, Table } from "@mantine/core";
 import { IconEyeOff } from "@tabler/icons-react";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { Fragment, useEffect, useState, useTransition } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useQuery } from "@tanstack/react-query";
 import { getSensorsAsync } from "../../../requests/requests_v2";
-import { convertCelsiusToFahrenheit } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import SortableTableRow from "./SortableTableRow";
 
 interface SensorTableProps {
   readingType: ReadingType;
@@ -20,6 +35,12 @@ export default function SensorTable({
   setToggleState,
   useAlternateUnits,
 }: SensorTableProps) {
+  const dragSensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
   const [sensors, setSensors] = useState([] as ISensorBase[]);
   const getSensorsQuery = useQuery({
     queryKey: ["sensor-data-sensors"],
@@ -27,7 +48,30 @@ export default function SensorTable({
     refetchInterval: 60000,
   });
   const updateSensorsAsync = async () => {
-    setSensors(Object.values((await getSensorsQuery.refetch()).data!));
+    const lastSensorDataOrder =
+      localStorage.getItem(`${readingType}-sensorDataOrder`)?.split(",") ??
+      ([] as string[]);
+    const retrievedSensors = Object.values(
+      (await getSensorsQuery.refetch()).data!,
+    ).filter((sensor) => Object.keys(sensor.lastReading).includes(readingType));
+    const orderedSensors: ISensorBase[] = [];
+
+    //Get sensors that don't exist in the last list
+    const newSensors = retrievedSensors.filter(
+      (sensor) => !lastSensorDataOrder.includes(String(sensor.id)),
+    );
+
+    //Add the outputs that do exist in the last list
+    lastSensorDataOrder.forEach((sensorId) => {
+      const sensorIndex = retrievedSensors.findIndex(
+        (o) => o.id == Number(sensorId),
+      );
+      if (sensorIndex != -1) {
+        orderedSensors.push(retrievedSensors[sensorIndex]!);
+      }
+    });
+
+    setSensors(orderedSensors.concat(newSensors));
   };
 
   useEffect(() => {
@@ -40,8 +84,15 @@ export default function SensorTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readingType, JSON.stringify(toggleStates)]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, startTransition] = useTransition();
+  const sortableItems = sensors.map((sensor) => (
+    <SortableTableRow
+      sensor={sensor}
+      readingType={readingType}
+      useAlternateUnits={useAlternateUnits}
+      toggleStates={toggleStates}
+      setToggleState={setToggleState}
+    />
+  ));
 
   return (
     <Fragment>
@@ -60,6 +111,7 @@ export default function SensorTable({
       >
         <Table.Thead>
           <Table.Tr>
+            <Table.Th />
             <Table.Th style={{ display: "flex", paddingLeft: 10 }}>
               <IconEyeOff />
             </Table.Th>
@@ -69,44 +121,42 @@ export default function SensorTable({
             </Table.Th>
           </Table.Tr>
         </Table.Thead>
-        <Table.Tbody>
-          {sensors
-            .filter((sensor) =>
-              Object.keys(sensor.lastReading).includes(readingType),
-            )
-            .map((sensor) => (
-              <Table.Tr key={sensor.id}>
-                <Table.Td style={{ verticalAlign: "middle" }}>
-                  <Flex style={{ alignContent: "center" }}>
-                    <Switch
-                      defaultChecked
-                      color={sensor.color}
-                      onChange={() => {
-                        startTransition(() => {
-                          if (toggleStates.includes(sensor.name)) {
-                            toggleStates.splice(
-                              toggleStates.indexOf(sensor.name),
-                              1,
-                            );
-                          } else {
-                            toggleStates.push(sensor.name);
-                          }
-                          setToggleState([...toggleStates]);
-                        });
-                      }}
-                    />
-                  </Flex>
-                </Table.Td>
-                <Table.Td>{sensor.name}</Table.Td>
-                <Table.Td>
-                  {useAlternateUnits && readingType == ReadingType.temperature
-                    ? `${convertCelsiusToFahrenheit(sensor.lastReading[readingType])} °F`
-                    : `${sensor.lastReading[readingType]} ${sensor.units[readingType]}`}
-                </Table.Td>
-              </Table.Tr>
-            ))}
-        </Table.Tbody>
+        <DndContext
+          sensors={dragSensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <Table.Tbody>
+            <SortableContext
+              items={sensors}
+              strategy={verticalListSortingStrategy}
+            >
+              {sortableItems}
+            </SortableContext>
+          </Table.Tbody>
+        </DndContext>
       </Table>
     </Fragment>
   );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over == null) {
+      return;
+    }
+
+    if (active.id !== over?.id) {
+      setSensors((items: ISensorBase[]) => {
+        const oldIndex = items.findIndex((sensor) => sensor.id == active.id);
+        const newIndex = items.findIndex((sensor) => sensor.id == over!.id);
+
+        const updatedArray = arrayMove(items, oldIndex, newIndex);
+        localStorage.setItem(
+          `${readingType}-sensorDataOrder`,
+          updatedArray.map((sensor) => sensor.id).toString(),
+        );
+        return updatedArray;
+      });
+    }
+  }
 }
