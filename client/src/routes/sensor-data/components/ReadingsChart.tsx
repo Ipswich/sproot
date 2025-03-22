@@ -74,20 +74,21 @@ export default function ReadingsChart({
               label: `Average: ${formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
               color: "red",
               ifOverflow: "extendDomain",
+              labelPosition: "insideTopLeft",
             },
             {
               y: stats.cumulativeMin!,
               label: `Min: ${formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
               color: "blue",
               ifOverflow: "extendDomain",
-              // labelPosition: "insideBottomLeft"
+              labelPosition: "insideBottomLeft",
             },
             {
               y: stats.cumulativeMax!,
               label: `Max: ${formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
               color: "green",
               ifOverflow: "extendDomain",
-              // labelPosition:"insideTopLeft"
+              labelPosition: "insideTopLeft",
             },
           ]}
           dataKey="sensorName"
