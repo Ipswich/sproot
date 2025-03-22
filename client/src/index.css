@@ -1,6 +1,10 @@
 :root {
   /* MY SHIT STARTS HERE */
 
+  .recharts-wrapper .recharts-cartesian-grid-horizontal line:last-child {
+    stroke-opacity: 0 !important;
+  }
+
   --platinum: #e6e8e6ff;
   --timberwolf: #ced0ceff;
   --ash-gray: #9fb8adff;
