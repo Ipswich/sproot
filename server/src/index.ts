@@ -18,8 +18,8 @@ mainAsync().then((app) => {
       logger.info("Shutting down...");
       server.close(async () => {
         // Stop updating database and sensors
-        clearInterval(app.get("updateDatabaseLoop"));
-        clearInterval(app.get("updateStateLoop"));
+        app.get("updateDatabaseCronJob").stop();
+        app.get("updateStateCronJob").stop();
         try {
           // Cleanup sensors and turn off outputs
           await app.get("sensorList").disposeAsync();

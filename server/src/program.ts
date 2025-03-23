@@ -1,5 +1,6 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
+import { CronJob } from "cron";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Express } from "express";
@@ -62,36 +63,49 @@ export default async function setupAsync(): Promise<Express> {
 
   //State update loop
   app.set(
-    "updateStateLoop",
-    setInterval(async () => {
-      try {
-        await Promise.all([
-          sensorList.initializeOrRegenerateAsync(),
-          outputList.initializeOrRegenerateAsync(),
-        ]);
-        logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
-        //Add triggers and whatnot here.
+    "updateStateCronJob",
+    new CronJob(
+      Constants.CRON.EVERY_SECOND,
+      async () => {
+        try {
+          await Promise.all([
+            sensorList.initializeOrRegenerateAsync(),
+            outputList.initializeOrRegenerateAsync(),
+          ]);
+          logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
+          //Add triggers and whatnot here.
 
-        await outputList.runAutomationsAsync(sensorList, new Date());
-        //Execute any changes made to state.
-        await outputList.executeOutputStateAsync();
-      } catch (e) {
-        logger.error(`Exception in state update loop: ${e}`);
-      }
-    }, Constants.STATE_UPDATE_INTERVAL),
+          await outputList.runAutomationsAsync(sensorList, new Date());
+          //Execute any changes made to state.
+          await outputList.executeOutputStateAsync();
+
+          //Execute any changes made to state.
+          await outputList.executeOutputStateAsync();
+        } catch (e) {
+          logger.error(`Exception in state update loop: ${e}`);
+        }
+      },
+      null,
+      true,
+    ),
   );
 
   // Update loop - once a minute, that's the "frequency" of the system.
   app.set(
-    "updateDatabaseLoop",
-    setInterval(async () => {
-      try {
-        await sensorList.updateDataStoresAsync();
-        await outputList.updateDataStoresAsync();
-      } catch (e) {
-        logger.error(`Exception in database update loop: ${e}`);
-      }
-    }, Constants.DATABASE_UPDATE_INTERVAL),
+    "updateDatabaseCronJob",
+    new CronJob(
+      Constants.CRON.EVERY_MINUTE,
+      async () => {
+        try {
+          await sensorList.updateDataStoresAsync();
+          await outputList.updateDataStoresAsync();
+        } catch (e) {
+          logger.error(`Exception in database update loop: ${e}`);
+        }
+      },
+      null,
+      true,
+    ),
   );
 
   app.use(cors());
