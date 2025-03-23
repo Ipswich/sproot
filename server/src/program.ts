@@ -1,5 +1,6 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
+import { CronJob } from "cron";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Express } from "express";
@@ -62,29 +63,39 @@ export default async function setupAsync(): Promise<Express> {
 
   //State update loop
   app.set(
-    "updateStateLoop",
-    setInterval(async () => {
-      await Promise.all([
-        sensorList.initializeOrRegenerateAsync(),
-        outputList.initializeOrRegenerateAsync(),
-      ]);
-      logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
-      //Add triggers and whatnot here.
+    "updateStateCronJob",
+    new CronJob(
+      Constants.CRON.EVERY_SECOND,
+      async () => {
+        await Promise.all([
+          sensorList.initializeOrRegenerateAsync(),
+          outputList.initializeOrRegenerateAsync(),
+        ]);
+        logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
+        //Add triggers and whatnot here.
 
-      await outputList.runAutomationsAsync(sensorList, new Date());
+        await outputList.runAutomationsAsync(sensorList, new Date());
 
-      //Execute any changes made to state.
-      outputList.executeOutputState();
-    }, Constants.STATE_UPDATE_INTERVAL),
+        //Execute any changes made to state.
+        outputList.executeOutputState();
+      },
+      null,
+      true,
+    ),
   );
 
   // Update loop - once a minute, that's the "frequency" of the system.
   app.set(
-    "updateDatabaseLoop",
-    setInterval(async () => {
-      await sensorList.updateDataStoresAsync();
-      await outputList.updateDataStoresAsync();
-    }, Constants.DATABASE_UPDATE_INTERVAL),
+    "updateDatabaseCronJob",
+    new CronJob(
+      Constants.CRON.EVERY_MINUTE,
+      async () => {
+        await sensorList.updateDataStoresAsync();
+        await outputList.updateDataStoresAsync();
+      },
+      null,
+      true,
+    ),
   );
 
   app.use(cors());

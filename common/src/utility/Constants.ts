@@ -1,8 +1,10 @@
 export const DATABASE_NAME = "sproot";
 
-// Event Intervals
-export const STATE_UPDATE_INTERVAL = 1000;
-export const DATABASE_UPDATE_INTERVAL = 60000;
+// Cron Job Schedules
+export const CRON = {
+  EVERY_SECOND: "* * * * * *",
+  EVERY_MINUTE: "0 * * * * *",
+};
 
 // Cache Constants
 export const INITIAL_CACHE_LOOKBACK = 10080;
