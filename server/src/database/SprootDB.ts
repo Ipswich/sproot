@@ -411,7 +411,7 @@ export class SprootDB implements ISprootDB {
     return this.#connection("users").insert(user);
   }
 
-  async disposeAsync(): Promise<void> {
+  disposeAsync(): Promise<void> {
     return this.#connection.destroy();
   }
 }

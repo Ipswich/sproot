@@ -18,6 +18,6 @@ describe("SupportedModelsHandler.ts tests", () => {
     const supportedModelsResponse = supportedModelsHandler(mockResponse);
 
     assert.deepEqual(supportedModelsResponse.content?.data, Object.values(ModelList));
-    assert.equal((supportedModelsResponse.content?.data as Array<string>).length, 1);
+    assert.equal((supportedModelsResponse.content?.data as Array<string>).length, 2);
   });
 });
