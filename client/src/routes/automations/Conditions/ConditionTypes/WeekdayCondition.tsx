@@ -62,9 +62,12 @@ export default function WeekdayCondition({
           if (values.thursday) weekdays += 16;
           if (values.friday) weekdays += 32;
           if (values.saturday) weekdays += 64;
-          await addWeekdayMutation.mutateAsync({ weekdays });
+          if (weekdays != 0) {
+            await addWeekdayMutation.mutateAsync({ weekdays });
+            weekdayConditionForm.reset();
+          }
 
-          weekdayConditionForm.reset();
+          console.log(weekdayConditionForm.values);
           toggleAddNewCondition();
         })}
       >
@@ -73,48 +76,32 @@ export default function WeekdayCondition({
             <Chip
               size="xs"
               px="0px"
-              onChange={() => {
-                weekdayConditionForm.setFieldValue(
-                  "sunday",
-                  !weekdayConditionForm.getValues()["sunday"],
-                );
-              }}
+              checked={weekdayConditionForm.values["sunday"]}
+              {...weekdayConditionForm.getInputProps("sunday")}
             >
               Sun
             </Chip>
             <Chip
               size="xs"
               px="0px"
-              onChange={() => {
-                weekdayConditionForm.setFieldValue(
-                  "monday",
-                  !weekdayConditionForm.getValues()["monday"],
-                );
-              }}
+              checked={weekdayConditionForm.values["monday"]}
+              {...weekdayConditionForm.getInputProps("monday")}
             >
               Mon
             </Chip>
             <Chip
               size="xs"
               px="0px"
-              onChange={() => {
-                weekdayConditionForm.setFieldValue(
-                  "tuesday",
-                  !weekdayConditionForm.getValues()["tuesday"],
-                );
-              }}
+              checked={weekdayConditionForm.values["tuesday"]}
+              {...weekdayConditionForm.getInputProps("tuesday")}
             >
               Tue
             </Chip>
             <Chip
               size="xs"
               px="0px"
-              onChange={() => {
-                weekdayConditionForm.setFieldValue(
-                  "wednesday",
-                  !weekdayConditionForm.getValues()["wednesday"],
-                );
-              }}
+              checked={weekdayConditionForm.values["wednesday"]}
+              {...weekdayConditionForm.getInputProps("wednesday")}
             >
               Wed
             </Chip>
@@ -123,42 +110,37 @@ export default function WeekdayCondition({
             <Chip
               size="xs"
               px="0px"
-              onChange={() => {
-                weekdayConditionForm.setFieldValue(
-                  "thursday",
-                  !weekdayConditionForm.getValues()["thursday"],
-                );
-              }}
+              checked={weekdayConditionForm.values["thursday"]}
+              {...weekdayConditionForm.getInputProps("thursday")}
             >
               Thu
             </Chip>
             <Chip
               size="xs"
               px="0px"
-              onChange={() => {
-                weekdayConditionForm.setFieldValue(
-                  "friday",
-                  !weekdayConditionForm.getValues()["friday"],
-                );
-              }}
+              checked={weekdayConditionForm.values["friday"]}
+              {...weekdayConditionForm.getInputProps("friday")}
             >
               Fri
             </Chip>
             <Chip
               size="xs"
               px="0px"
-              onChange={() => {
-                weekdayConditionForm.setFieldValue(
-                  "saturday",
-                  !weekdayConditionForm.getValues()["saturday"],
-                );
-              }}
+              checked={weekdayConditionForm.values["saturday"]}
+              {...weekdayConditionForm.getInputProps("saturday")}
             >
               Sat
             </Chip>
           </Group>
           <Group pt="xs" justify="center">
-            <Button type="submit">Save</Button>
+            <Button
+              type="submit"
+              disabled={Object.values(weekdayConditionForm.values).every(
+                (day) => day == false,
+              )}
+            >
+              Save
+            </Button>
           </Group>
         </Stack>
         <Space h={"12px"} />

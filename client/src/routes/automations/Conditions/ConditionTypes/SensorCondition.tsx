@@ -16,8 +16,12 @@ import {
 import {
   ConditionGroupType,
   ConditionOperator,
-} from "@sproot/automation/ConditionTypes";
-import { ReadingType } from "@sproot/sensors/ReadingType";
+} from "@sproot/sproot-common/src/automation/ConditionTypes";
+import {
+  ReadingType,
+  Units,
+} from "@sproot/sproot-common/src/sensors/ReadingType";
+import { convertFahrenheitToCelsius } from "@sproot/sproot-common/src/utility/DisplayFormats";
 
 export interface SensorConditionProps {
   toggleAddNewCondition: () => void;
@@ -47,6 +51,14 @@ export default function SensorCondition({
       sensorId: string;
       readingType: ReadingType;
     }) => {
+      if (
+        sensorCondition.readingType == ReadingType.temperature &&
+        localStorage.getItem("temperature-useAlternateUnits") == "true"
+      ) {
+        sensorCondition.comparisonValue =
+          convertFahrenheitToCelsius(sensorCondition.comparisonValue) ?? 0;
+      }
+
       await addSensorConditionAsync(
         automationId,
         groupType,
@@ -95,6 +107,20 @@ export default function SensorCondition({
           : "Comparison value must be provided",
     },
   });
+
+  function getSuffix() {
+    let suffix = sensors.filter(
+      (sensor) => sensor.id == Number(sensorConditionForm.values.sensorId),
+    )[0]!.units[sensorConditionForm.values.readingType as ReadingType]!;
+
+    if (
+      suffix == Units.temperature &&
+      localStorage.getItem("temperature-useAlternateUnits") == "true"
+    ) {
+      suffix = "°F";
+    }
+    return suffix;
+  }
 
   return (
     <Fragment>
@@ -194,14 +220,7 @@ export default function SensorCondition({
               decimalScale={3}
               stepHoldDelay={500}
               stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-              suffix={
-                sensors.filter(
-                  (sensor) =>
-                    sensor.id == Number(sensorConditionForm.values.sensorId),
-                )[0]!.units[
-                  sensorConditionForm.values.readingType as ReadingType
-                ]!
-              }
+              suffix={getSuffix()}
               {...sensorConditionForm.getInputProps("comparisonValue")}
             />
           </Group>

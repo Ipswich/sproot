@@ -12,12 +12,18 @@ import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { ConditionOperator } from "@sproot/automation/ConditionTypes";
-import { Units } from "@sproot/sproot-common/src/sensors/ReadingType";
+import {
+  ReadingType,
+  Units,
+} from "@sproot/sproot-common/src/sensors/ReadingType";
 import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
-import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import {
+  convertCelsiusToFahrenheit,
+  formatDecimalReadingForDisplay,
+} from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
 export interface ConditionsTableProps {
@@ -234,12 +240,22 @@ function mapOperatorToText(operator: ConditionOperator) {
 }
 
 function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
+  let comparisonValue = sensorCondition.comparisonValue;
+  let readingType = String(Units[sensorCondition.readingType]);
+  if (
+    sensorCondition.readingType == ReadingType.temperature &&
+    localStorage.getItem("temperature-useAlternateUnits") == "true"
+  ) {
+    comparisonValue = convertCelsiusToFahrenheit(comparisonValue) ?? 0;
+    readingType = "°F";
+  }
+
   return (
     <Group>
       {sensorCondition.sensorName} is{" "}
       {mapOperatorToText(sensorCondition.operator)}{" "}
-      {formatDecimalReadingForDisplay(String(sensorCondition.comparisonValue))}
-      {Units[sensorCondition.readingType]}
+      {formatDecimalReadingForDisplay(String(comparisonValue))}
+      {readingType}
     </Group>
   );
 }
@@ -271,24 +287,28 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
 function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
   const bits = weekdayCondition.weekdays.toString(2).padStart(7, "0");
   const days = [];
-  for (let i = 0; i < bits.length; i++) {
+  for (let i = bits.length - 1; i >= 0; i--) {
     if (bits[i] === "1") {
       days.push(
         [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
           "Saturday",
+          "Friday",
+          "Thursday",
+          "Wednesday",
+          "Tuesday",
+          "Monday",
+          "Sunday",
         ][i],
       );
     }
   }
-  const response =
-    days.length > 1
-      ? days.slice(0, -1).join(", ") + ", or " + days.slice(-1)
-      : days[0];
+  let response: string | undefined = "";
+  if (days.length == 1) {
+    response = days[0];
+  } else if (days.length == 2) {
+    response = `${days[0]} or ${days[1]}`;
+  } else {
+    response = days.slice(0, -1).join(", ") + ", or " + days.slice(-1);
+  }
   return <Group>{`Day is ${response}`}</Group>;
 }
