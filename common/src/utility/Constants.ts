@@ -3,8 +3,8 @@ export const DATABASE_NAME = "sproot";
 // Cron Job Schedules
 export const CRON = {
   EVERY_SECOND: "* * * * * *",
-  EVERY_MINUTE: "0 * * * * *"
-}
+  EVERY_MINUTE: "0 * * * * *",
+};
 
 // Cache Constants
 export const INITIAL_CACHE_LOOKBACK = 10080;
