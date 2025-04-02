@@ -23,6 +23,7 @@ import { ISensorCondition } from "@sproot/automation/ISensorCondition";
 import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -404,6 +405,44 @@ export class SprootDB implements ISprootDB {
   async deleteWeekdayConditionAsync(conditionId: number): Promise<void> {
     return this.#connection("weekday_conditions").where("id", conditionId).delete();
   }
+
+  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
+    return this.#connection("camera_settings").select("*");
+  }
+
+  async addCameraAsync(
+    xVideoResolution: number,
+    yVideoResolution: number,
+    xImageResolution: number,
+    yImageResolution: number,
+  ): Promise<number> {
+    return this.#connection("camera_settings").insert({
+      xVideoResolution,
+      yVideoResolution,
+      xImageResolution,
+      yImageResolution,
+    });
+  }
+
+  async updateCameraAsync(
+    cameraId: number,
+    xVideoResolution: number,
+    yVideoResolution: number,
+    xImageResolution: number,
+    yImageResolution: number,
+  ): Promise<void> {
+    return this.#connection("camera_settings").where("id", cameraId).update({
+      xVideoResolution,
+      yVideoResolution,
+      xImageResolution,
+      yImageResolution,
+    });
+  }
+
+  async deleteCameraAsync(cameraId: number): Promise<void> {
+    return this.#connection("camera_settings").where("id", cameraId).delete();
+  }
+
   async getUserAsync(username: string): Promise<SDBUser[]> {
     return this.#connection("users").where("username", username).select("*");
   }

@@ -31,12 +31,20 @@ RUN rm -rf /sproot/node_modules
 RUN npm run install:server:production
 
 FROM node:22.5.1-bookworm-slim
-# Copy production dependencies and common/server
+
+# Copy node production dependencies
 COPY --from=build /sproot/node_modules /sproot/node_modules
+# Copy over common/server
 COPY --from=build /sproot/common/dist /sproot/common/dist
 COPY --from=build /sproot/server/dist /sproot/server/dist
-# Need this one too for serving the API spec  
+COPY --from=build /sproot/server/python /sproot/server/python
 COPY --from=build /sproot/api_spec /sproot/api_spec
+
+# Install camera dependencies
+RUN echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
+  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
+RUN apt-get update && apt-get -y upgrade
+RUN apt-get install -y python3-picamera2 python3-opencv
 
 # Set this as the project root - api_spec lives a layer below and the server expects to be run from here.
 WORKDIR /sproot/server

@@ -20,6 +20,7 @@ import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { IWeekdayCondition } from "../automation/IWeekdayCondition";
+import { SDBCameraSettings } from "./SDBCameraSettings";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -113,6 +114,22 @@ interface ISprootDB {
   ): Promise<number>;
   updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
   deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
+
+  getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
+  addCameraAsync(
+    xVideoResolution: number,
+    yVideoResolution: number,
+    xImageResolution: number,
+    yImageResolution: number,
+  ): Promise<number>;
+  updateCameraAsync(
+    cameraId: number,
+    xVideoResolution: number,
+    yVideoResolution: number,
+    xImageResolution: number,
+    yImageResolution: number,
+  ): Promise<void>;
+  deleteCameraAsync(cameraId: number): Promise<void>;
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
@@ -346,6 +363,36 @@ class MockSprootDB implements ISprootDB {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
+    return;
+  }
+
+  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
+    return [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async addCameraAsync(
+    _xVideoResolution: number,
+    _yVideoResolution: number,
+    _xImageResolution: number,
+    _yImageResolution: number,
+  ): Promise<number> {
+    return 0;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updateCameraAsync(
+    _cameraId: number,
+    _xVideoResolution: number,
+    _yVideoResolution: number,
+    _xImageResolution: number,
+    _yImageResolution: number,
+  ): Promise<void> {
+    return;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deleteCameraAsync(_cameraId: number): Promise<void> {
     return;
   }
 
