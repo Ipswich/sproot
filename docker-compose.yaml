@@ -22,6 +22,7 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - PRECONFIGURED=${PRECONFIGURED}
     volumes:
+      - /run/udev:/run/udev:ro
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
     network_mode: "host"
