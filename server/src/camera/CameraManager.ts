@@ -15,7 +15,7 @@ class CameraManager {
   async initializeOrRegenerateAsync(): Promise<void> {
     const settings = await this.#sprootDB.getCameraSettingsAsync();
 
-    if (settings.length != 0) {
+    if (settings.length != 0 && this.#livestreamProcess == null) {
       // const cameraSettings = settings[0];
       this.#livestreamProcess = spawn("python3", [
         "python/livestream_server.py",
@@ -42,15 +42,24 @@ class CameraManager {
       this.#livestreamProcess.stderr.on("data", (data) => {
         this.#logger.error(`Error in livestream server: ${data}`);
       });
+    } else {
+      this.cleanupLivestream();
     }
   }
 
   async disposeAsync(): Promise<void> {
+    this.cleanupLivestream();
+  }
+
+  private cleanupLivestream() {
     if (this.#livestreamProcess !== null) {
       this.#livestreamProcess.removeAllListeners();
       this.#livestreamProcess.stderr.removeAllListeners();
       this.#livestreamProcess.stdout.removeAllListeners();
-      this.#livestreamProcess.kill();
+      const result = this.#livestreamProcess.kill();
+      if (result == true) {
+        this.#livestreamProcess = null;
+      }
     }
   }
 }
