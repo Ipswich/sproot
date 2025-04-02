@@ -41,6 +41,7 @@ COPY --from=build /sproot/server/python /sproot/server/python
 COPY --from=build /sproot/api_spec /sproot/api_spec
 
 # Install camera dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg
 RUN echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
   && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
 RUN apt-get update && apt-get -y upgrade

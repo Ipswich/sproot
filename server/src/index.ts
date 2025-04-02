@@ -21,7 +21,6 @@ mainAsync().then((app) => {
         app.get("updateDatabaseCronJob").stop();
         app.get("updateStateCronJob").stop();
         try {
-
           // Cleanup Cameras
           await app.get("cameraManager").disposeAsync();
 
