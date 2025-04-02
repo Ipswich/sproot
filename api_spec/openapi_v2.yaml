@@ -911,7 +911,93 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-
+  /api/v2/outputs/available-devices/{model}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Outputs"
+      summary: Gets gets available devices for a given output model.
+      description: >
+        Gets available devices for a given model. Optionally, filter by address. Useful for getting
+        devices you could create an output with.
+      parameters:
+        - in: path
+          name: model
+          required: true
+          description: "Output model"
+          schema:
+            type: string
+          example: "tplink-smart-plug"
+        - in: query
+          name: address
+          required: false
+          description: Output address
+          schema:
+            type: string
+          example: "192.168.2.138"
+        - in: query
+          name: filterUsed
+          required: false
+          description: Output address
+          schema:
+            type: boolean
+          example: false
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - $ref: "#/components/schemas/AvailableDevices"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/outputs/available-devices"
+                          details:
+                            example:
+                              - Model s300 not recognized.
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/outputs/available-devices"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
   /api/v2/outputs/{outputId}/control-mode:
     put:
       security:
@@ -3837,6 +3923,23 @@ components:
       type: array
       items:
         type: string
+
+    AvailableDevices:
+      description: >
+        A list of available devices
+      type: array
+      items:
+        type: object
+        properties:
+          alias:
+            type: string
+            example: Plug 1
+          externalId:
+            type: string
+            example: 8006C5CA540AABD8165111F62C70CFD3236B0B3703
+          address:
+            type: string
+            example: 192.168.2.138
 
     ReadingTypes:
       description: >

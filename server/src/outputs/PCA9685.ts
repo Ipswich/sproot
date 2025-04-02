@@ -1,24 +1,13 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
-import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import winston from "winston";
+import { MultiOutputBase } from "./base/MultiOutputBase";
 
-class PCA9685 {
-  #boardRecord: Record<string, Pca9685Driver> = {};
-  #outputs: Record<string, PCA9685Output>;
-  #sprootDB: ISprootDB;
-  #frequency: number;
-  #usedPins: Record<string, string[]> = {};
-  #maxCacheSize: number;
-  #initialCacheLookback: number;
-  #maxChartDataSize: number;
-  #chartDataPointInterval: number;
-  #logger: winston.Logger;
-
+class PCA9685 extends MultiOutputBase {
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
@@ -28,95 +17,53 @@ class PCA9685 {
     frequency: number = 800,
     logger: winston.Logger,
   ) {
-    this.#sprootDB = sprootDB;
-    this.#maxCacheSize = maxCacheSize;
-    this.#initialCacheLookback = initialCacheLookback;
-    this.#maxChartDataSize = maxChartDataSize;
-    this.#chartDataPointInterval = chartDataPointInterval;
-    this.#frequency = frequency;
-    this.#logger = logger;
-    this.#outputs = {};
+    super(
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      frequency,
+      logger,
+    );
   }
 
-  async createOutput(output: SDBOutput): Promise<PCA9685Output | null> {
+  async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
     //Create new PCA9685 if one doesn't exist for this address.
-    if (!this.#boardRecord[output.address]) {
-      this.#boardRecord[output.address] = new Pca9685Driver(
+    if (!this.boardRecord[output.address]) {
+      this.boardRecord[output.address] = new Pca9685Driver(
         {
           i2c: openSync(1),
           address: parseInt(output.address),
-          frequency: this.#frequency,
+          frequency: this.frequency,
           debug: false,
         },
         () => {},
       );
-      this.#usedPins[output.address] = [];
+      this.usedPins[output.address] = [];
     }
 
-    const pca9685Driver = this.#boardRecord[output.address];
-    this.#outputs[output.id] = new PCA9685Output(
+    const pca9685Driver = this.boardRecord[output.address];
+    this.outputs[output.id] = new PCA9685Output(
       pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
       output,
-      this.#sprootDB,
-      this.#maxCacheSize,
-      this.#initialCacheLookback,
-      this.#maxChartDataSize,
-      this.#chartDataPointInterval,
-      this.#logger,
+      this.sprootDB,
+      this.maxCacheSize,
+      this.initialCacheLookback,
+      this.maxChartDataSize,
+      this.chartDataPointInterval,
+      this.logger,
     );
-    await this.#outputs[output.id]?.initializeAsync();
-    this.#usedPins[output.address]?.push(output.pin);
-    return this.#outputs[output.id]!;
+    await this.outputs[output.id]?.initializeAsync();
+    this.usedPins[output.address]?.push(output.pin);
+    return this.outputs[output.id];
   }
 
-  get boardRecord(): Record<string, Pca9685Driver> {
-    return this.#boardRecord;
+  override getAvailableDevices(_address: string): AvailableDevice[] {
+    return [];
+    // const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
+    // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
   }
-  get outputs(): Record<string, PCA9685Output> {
-    return this.#outputs;
-  }
-  get usedPins(): Record<string, string[]> {
-    return this.#usedPins;
-  }
-
-  get outputData(): Record<string, IOutputBase> {
-    const cleanObject: Record<string, IOutputBase> = {};
-    for (const key in this.#outputs) {
-      if (this.#outputs[key]) {
-        cleanObject[key] = this.#outputs[key]?.outputData;
-      }
-    }
-    return cleanObject;
-  }
-
-  disposeOutput(output: OutputBase) {
-    const usedPins = this.#usedPins[output.address];
-    if (usedPins) {
-      const index = usedPins.indexOf(output.pin);
-      if (index !== -1) {
-        usedPins.splice(index, 1);
-        this.#outputs[output.id]!.dispose();
-        delete this.#outputs[output.id];
-        if (usedPins.length === 0) {
-          this.#boardRecord[output.address]?.dispose();
-          delete this.#boardRecord[output.address];
-          delete this.#usedPins[output.address];
-        }
-      }
-    }
-  }
-
-  updateControlMode = (outputId: string, controlMode: ControlMode) =>
-    this.#outputs[outputId]?.state.updateControlMode(controlMode);
-  setNewOutputState = (
-    outputId: string,
-    newState: SDBOutputState,
-    targetControlMode: ControlMode,
-  ) => this.#outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
-  executeOutputState = (outputId?: string) =>
-    outputId
-      ? this.#outputs[outputId]?.executeState()
-      : Object.keys(this.#outputs).forEach((key) => this.#outputs[key]?.executeState());
 }
 
 class PCA9685Output extends OutputBase {
@@ -144,16 +91,15 @@ class PCA9685Output extends OutputBase {
     this.pca9685 = pca9685;
   }
 
-  executeState(): void {
-    this.executeStateHelper((value) => {
-      this.pca9685.setDutyCycle(parseInt(this.pin), value);
+  async executeStateAsync(): Promise<void> {
+    await this.executeStateHelperAsync(async (value) => {
+      Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value));
     });
   }
 
-  // Power down pin
-  dispose = () => {
+  override dispose(): void {
     this.pca9685.setDutyCycle(parseInt(this.pin), 0);
-  };
+  }
 }
 
 export { PCA9685, PCA9685Output };

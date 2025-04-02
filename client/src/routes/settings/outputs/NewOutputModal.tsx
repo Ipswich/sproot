@@ -19,6 +19,7 @@ import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
 
 import { useRevalidator } from "react-router-dom";
+import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 
 interface NewOutputModalProps {
   supportedModels: string[];
@@ -144,13 +145,6 @@ export default function NewOutputModal({
             required
             {...newOutputForm.getInputProps("model")}
           />
-          <TextInput
-            maxLength={64}
-            label="Address"
-            placeholder="0x40"
-            required
-            {...newOutputForm.getInputProps("address")}
-          />
           <NumberInput
             min={0}
             max={999999999}
@@ -165,6 +159,9 @@ export default function NewOutputModal({
           />
           {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
             <PCA9685Form form={newOutputForm} />
+          ) : newOutputForm.values.model.toLowerCase() ===
+            "tplink-smart-plug" ? (
+            <TPLinkSmartPlugForm form={newOutputForm} />
           ) : null}
           <Group justify="flex-end" mt="md">
             <Button type="submit">Add Output</Button>

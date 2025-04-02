@@ -9,6 +9,7 @@ import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
+import { AvailableDevice } from "@sproot/outputs/AvailableDevice";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SuccessResponse } from "@sproot/sproot-common/src/api/v2/Responses";
 import {
@@ -607,6 +608,24 @@ export async function pingAsync(): Promise<boolean> {
     return response.ok;
   } catch {
     return false;
+  }
+}
+
+export async function GetAvailableDevicesAsync(
+  model: string,
+  address?: string,
+  filterUsed = true,
+): Promise<AvailableDevice[]> {
+  const queryString = queryBuilder({ address, filterUsed });
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/v2/outputs/available-devices/${model}/?${queryString}`,
+    );
+    const deserializedResponse = (await response.json()) as SuccessResponse;
+    return deserializedResponse.content?.data;
+  } catch (e) {
+    console.error(`Error fetching children for ${model}: ${e}`);
+    return [];
   }
 }
 
