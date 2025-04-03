@@ -77,33 +77,33 @@ export default function EditTable({
     } as FormValues,
 
     validate: {
-      id: (value) =>
+      id: (value: number | undefined) =>
         value || value != selectedOutput.id
           ? null
           : "ID must match selected output",
-      name: (value) =>
+      name: (value: string) =>
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Name must be between 1 and 64 characters",
-      color: (value) =>
+      color: (value: string) =>
         !value || (value.length > 0 && value.length <= 7)
           ? null
           : "Color must be a valid hex color",
-      model: (value) =>
+      model: (value: string) =>
         value.length > 0 && value.length <= 64
           ? null
           : "Model must be between 1 and 64 characters",
-      address: (value) =>
+      address: (value: string) =>
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
-      pin: (value) =>
+      pin: (value: string) =>
         value != null && value != undefined ? null : "Pin must be defined",
-      isPwm: (value) =>
+      isPwm: (value: boolean) =>
         value === true || value === false ? null : "Must be true or false",
-      isInvertedPwm: (value) =>
+      isInvertedPwm: (value: boolean) =>
         value === true || value === false ? null : "Must be true or false",
-      automationTimeout: (value) =>
+      automationTimeout: (value: number | undefined) =>
         value != null && value != undefined && value >= 0 && value <= 999999999
           ? null
           : "Must be between 0 and 99999999",

@@ -82,15 +82,15 @@ export default function SensorCondition({
     },
 
     validate: {
-      sensorId: (value) =>
+      sensorId: (value: string) =>
         value != null && value != undefined
           ? null
           : "Sensor Id must be provided",
-      readingType: (value) =>
+      readingType: (value: string | undefined) =>
         value != null && value != undefined
           ? null
           : "Reading type must be provided",
-      operator: (value) =>
+      operator: (value: string) =>
         [
           "less",
           "lessOrEqual",
@@ -101,7 +101,7 @@ export default function SensorCondition({
         ].includes(value)
           ? null
           : "Invalid operator",
-      comparisonValue: (value) =>
+      comparisonValue: (value: number) =>
         value != null && value != undefined
           ? null
           : "Comparison value must be provided",
