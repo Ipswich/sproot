@@ -50,11 +50,11 @@ export default function EditAutomationModal({
       operator: targetAutomation?.operator ?? "or",
     },
     validate: {
-      name: (value) =>
+      name: (value: string) =>
         value.length > 0 && value.length <= 64
           ? null
           : "Name must be between 1 and 64 characters",
-      operator: (value) =>
+      operator: (value: string) =>
         value === "or" || value === "and"
           ? null
           : "Operator must be either 'or' or 'and'",

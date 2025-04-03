@@ -55,11 +55,11 @@ export default function OutputCondition({
     },
 
     validate: {
-      outputId: (value) =>
+      outputId: (value: string) =>
         value != null && value != undefined
           ? null
           : "Output Id must be provided",
-      operator: (value) =>
+      operator: (value: string) =>
         [
           "less",
           "lessOrEqual",
@@ -70,7 +70,7 @@ export default function OutputCondition({
         ].includes(value)
           ? null
           : "Invalid operator",
-      comparisonValue: (value) =>
+      comparisonValue: (value: number) =>
         value != null && value != undefined && value <= 100 && value >= 0
           ? null
           : "Comparison value must be provided",

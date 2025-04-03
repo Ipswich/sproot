@@ -51,11 +51,11 @@ export default function TimeCondition({
       endTime: "",
     },
     validate: {
-      startTime: (value) =>
+      startTime: (value: string) =>
         value === "" || regex.test(value)
           ? null
           : "Start time must be null or proper time format",
-      endTime: (value) =>
+      endTime: (value: string) =>
         value === "" || regex.test(value)
           ? null
           : "End time must be null or proper time format",
