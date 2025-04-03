@@ -44,8 +44,12 @@ class CameraManager {
           this.#livestreamProcess = null;
         });
 
-        this.#livestreamProcess.stderr.on("data", (data) => {
-          this.#logger.error(`Error in livestream server: ${data}`);
+        this.#livestreamProcess.stdout.on("data", (data) => {
+          this.#logger.info(`STDOUT: ${data}`);
+        });
+
+        this.#livestreamProcess.stderr.on("error", (error) => {
+          this.#logger.error(`Error in livestream server: ${error}`);
           this.cleanupLivestream();
           this.#livestreamProcess = null;
         });

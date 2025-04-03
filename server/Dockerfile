@@ -1,8 +1,8 @@
 FROM debian:12.6-slim AS build
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
-    echo "Acquire::BrokenProxy    true;" >> /etc/apt/apt.conf.d/99custom
+  echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
+  echo "Acquire::BrokenProxy    true;" >> /etc/apt/apt.conf.d/99custom
 
 RUN apt-get update -y && apt-get upgrade -y
 
@@ -45,7 +45,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends gnupg
 RUN echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
   && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
 RUN apt-get update && apt-get -y upgrade
-RUN apt-get install -y python3-picamera2 python3-opencv
+RUN apt-get install -y python3-picamera2 python3-opencv \
+  && apt-get clean \
+  && apt-get autoremove \
+  && rm -rf /var/cache/apt/archives/* \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set this as the project root - api_spec lives a layer below and the server expects to be run from here.
 WORKDIR /sproot/server
