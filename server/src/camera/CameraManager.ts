@@ -49,7 +49,6 @@ class CameraManager {
           this.cleanupLivestream();
           this.#livestreamProcess = null;
         });
-
       }
     } else {
       this.cleanupLivestream();
