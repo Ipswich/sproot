@@ -42,11 +42,11 @@ export default function NewOutputActionWidget({
     },
 
     validate: {
-      outputId: (value) =>
+      outputId: (value: string) =>
         value != null && value != undefined
           ? null
           : "Output Id must be provided",
-      value: (value) =>
+      value: (value: number) =>
         value != null && value != undefined ? null : "Value must be provided",
     },
   });
