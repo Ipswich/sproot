@@ -42,6 +42,10 @@ class CameraManager {
           this.#livestreamProcess = null;
         });
 
+        this.#livestreamProcess.stderr.on("data", (data) => {
+          this.#logger.error(`MAYBE AN ERROR: ${data}`);
+        });
+
         this.#livestreamProcess.on("close", (code, signal) => {
           this.#logger.info(
             `Livestream server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
