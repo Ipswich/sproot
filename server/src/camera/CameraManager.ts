@@ -28,11 +28,18 @@ class CameraManager {
       if (this.#livestreamProcess == null) {
         this.#livestreamProcess = spawn("python3", [
           "python/livestream_server.py",
-          `--resolution ${cameraSettings!.xVideoResolution}x${cameraSettings!.yVideoResolution}`,
+          "--resolution",
+          `${cameraSettings!.xVideoResolution}x${cameraSettings!.yVideoResolution}`,
         ]);
 
         this.#livestreamProcess.on("spawn", () => {
           this.#logger.info(`Livestream server started`);
+        });
+
+        this.#livestreamProcess.on("error", (error: Error) => {
+          this.#logger.error(`Error on spawning livestream server: ${error}`);
+          this.cleanupLivestream();
+          this.#livestreamProcess = null;
         });
 
         this.#livestreamProcess.on("close", (code, signal) => {
@@ -43,21 +50,6 @@ class CameraManager {
           this.#livestreamProcess = null;
         });
 
-        this.#livestreamProcess.on("error", (error: Error) => {
-          this.#logger.error(`Error on spawning livestream server: ${error}`);
-          this.cleanupLivestream();
-          this.#livestreamProcess = null;
-        });
-
-        this.#livestreamProcess.stdout.on("data", (data) => {
-          this.#logger.info(`STDOUT: ${data}`);
-        });
-
-        this.#livestreamProcess.stderr.on("data", (data) => {
-          this.#logger.error(`Error in livestream server: ${data}`);
-          this.cleanupLivestream();
-          this.#livestreamProcess = null;
-        });
       }
     } else {
       this.cleanupLivestream();

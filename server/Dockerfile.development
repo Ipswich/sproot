@@ -2,7 +2,18 @@ FROM debian:12.6-slim
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
-  echo "Acquire::BrokenProxy    true;" >> /etc/apt/apt.conf.d/99custom
+  echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
+
+# Install camera dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg
+RUN echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
+  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
+RUN apt-get update && apt-get -y upgrade
+RUN apt-get install -y --no-install-recommends python3-pip python3-picamera2 \
+  && apt-get clean \
+  && apt-get autoremove \
+  && rm -rf /var/cache/apt/archives/* \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update -y && apt-get upgrade -y
 
@@ -24,23 +35,13 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | g
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null;
 RUN apt-get update && apt-get install -y gh;
 
-# Install camera dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg
-RUN echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
-  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
-RUN apt-get update && apt-get -y upgrade
-RUN apt-get install -y python3-picamera2 python3-opencv \
-  && apt-get clean \
-  && apt-get autoremove \
-  && rm -rf /var/cache/apt/archives/* \
-  && rm -rf /var/lib/apt/lists/*
-
 # Copy project
 COPY .. /sproot
 WORKDIR /sproot
 RUN npm run install:common
 RUN npm run install:server 
 RUN npm run build:server
+RUN pip install --break-system-packages --no-cache-dir -r /sproot/server/python/requirements.txt
 
 # Expose app ports
 EXPOSE 3000
