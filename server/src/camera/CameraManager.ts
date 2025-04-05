@@ -23,6 +23,7 @@ class CameraManager {
       if (!this.areSameSettings(cameraSettings)) {
         this.cleanupLivestream();
       }
+      this.#currentSettings = cameraSettings!;
 
       // If there is no live stream process, create one.
       if (this.#livestreamProcess == null) {
