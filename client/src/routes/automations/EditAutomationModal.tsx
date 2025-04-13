@@ -156,6 +156,7 @@ export default function EditAutomationModal({
             <Fragment>
               <Title order={4}>Name</Title>
               <TextInput
+                onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                 rightSection={
                   targetAutomation == null ? null : (
                     <ActionIcon
