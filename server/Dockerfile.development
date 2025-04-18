@@ -41,7 +41,6 @@ WORKDIR /sproot
 RUN npm run install:common
 RUN npm run install:server 
 RUN npm run build:server
-RUN pip install --break-system-packages --no-cache-dir -r /sproot/server/python/requirements.txt
 
 # Expose app ports
 EXPOSE 3000

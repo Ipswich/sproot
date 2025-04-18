@@ -21,6 +21,7 @@ services:
       - DATABASE_USER=${DATABASE_USER}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - PRECONFIGURED=${PRECONFIGURED}
+      - INTERSERVICE_AUTHENTICATION_KEY=${INTERSERVICE_AUTHENTICATION_KEY}
     volumes:
       - /run/udev:/run/udev:ro
       - /sys:/sys

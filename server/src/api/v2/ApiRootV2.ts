@@ -14,6 +14,7 @@ import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
 import automationsRouter from "./automations/AutomationsRouter";
 import outputActionsRouter from "./automations/OutputActionRouter";
+import cameraRouter from "./camera/CameraRouter";
 
 const spec_path = "../api_spec/openapi_v2.yaml";
 
@@ -39,8 +40,8 @@ function ApiRootV2(app: Express) {
   app.use(
     OpenApiValidator.middleware({
       apiSpec: spec_path,
-      validateRequests: true,
-      validateResponses: true,
+      // validateRequests: true,
+      // validateResponses: true,
       validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
     }),
   );
@@ -63,6 +64,7 @@ function ApiRootV2(app: Express) {
   app.use("/api/v2/outputs", authenticateMiddleware, outputsRouter);
   app.use("/api/v2/automations", authenticateMiddleware, automationsRouter);
   app.use("/api/v2/output-actions", authenticateMiddleware, outputActionsRouter);
+  app.use("/api/v2/camera", authenticateMiddleware, cameraRouter);
 
   // Error handler - anything unexpected ends up here.
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {

@@ -1,16 +1,26 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import { generateInterserviceAuthenticationToken } from "@sproot/utility/InterserviceAuthentication";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { createWriteStream } from "fs";
+import { pipeline, Readable } from "stream";
+import { promisify } from "util";
+
 import winston from "winston";
+
+const streamPipeline = promisify(pipeline);
 
 class CameraManager {
   #sprootDB: ISprootDB;
+  #interserviceAuthenticationKey: string;
   #logger: winston.Logger;
-  #livestreamProcess: ChildProcessWithoutNullStreams | null = null;
+  #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
   #currentSettings: SDBCameraSettings | null = null;
+  readonly #baseUrl: string = "http://localhost:3002";
 
-  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(sprootDB: ISprootDB, interserviceAuthenticationKey: string, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
+    this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
   }
 
@@ -26,38 +36,65 @@ class CameraManager {
       this.#currentSettings = cameraSettings!;
 
       // If there is no live stream process, create one.
-      if (this.#livestreamProcess == null) {
-        this.#livestreamProcess = spawn("python3", [
-          "python/livestream_server.py",
+      if (this.#picameraServerProcess == null) {
+        this.#picameraServerProcess = spawn("python3", [
+          "python/pi_camera_server.py",
           "--resolution",
           `${cameraSettings!.xVideoResolution}x${cameraSettings!.yVideoResolution}`,
         ]);
 
-        this.#livestreamProcess.on("spawn", () => {
+        this.#picameraServerProcess.on("spawn", () => {
           this.#logger.info(`Livestream server started`);
         });
 
-        this.#livestreamProcess.on("error", (error: Error) => {
+        this.#picameraServerProcess.on("error", (error: Error) => {
           this.#logger.error(`Error on spawning livestream server: ${error}`);
           this.cleanupLivestream();
-          this.#livestreamProcess = null;
+          this.#picameraServerProcess = null;
         });
 
-        this.#livestreamProcess.stderr.on("data", (data) => {
-          this.#logger.error(`MAYBE AN ERROR: ${data}`);
-        });
+        // this.#livestreamProcess.stderr.on("data", (data) => {
+        //   this.#logger.error(`MAYBE AN ERROR: ${data}`);
+        // });
 
-        this.#livestreamProcess.on("close", (code, signal) => {
+        this.#picameraServerProcess.on("close", (code, signal) => {
           this.#logger.info(
             `Livestream server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
           );
           this.cleanupLivestream();
-          this.#livestreamProcess = null;
+          this.#picameraServerProcess = null;
         });
       }
     } else {
       this.cleanupLivestream();
     }
+  }
+
+  async captureImage(fileName: string) {
+    const response = await fetch(`${this.#baseUrl}/capture`, {
+      method: "GET",
+      headers: this.generateRequestHeaders(),
+    });
+    if (!response.ok || !response.body) {
+      this.#logger.error(`Image capture was unsuccessful. Filename: ${fileName}`);
+      return;
+    }
+
+    await streamPipeline(response.body, createWriteStream(fileName));
+  }
+
+  async forwardLivestream(writeableStream: NodeJS.WritableStream) {
+    const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
+      method: "GET",
+      headers: this.generateRequestHeaders(),
+    });
+
+    if (!upstream.ok || !upstream.body) {
+      this.#logger.error("Failed to connect to camera stream");
+      throw new Error("Failed to connect to camera stream");
+    }
+
+    Readable.fromWeb(upstream.body).pipe(writeableStream);
   }
 
   async disposeAsync(): Promise<void> {
@@ -69,13 +106,13 @@ class CameraManager {
    * setting the livestreamProcess to null if successful.
    */
   private cleanupLivestream() {
-    if (this.#livestreamProcess !== null) {
-      this.#livestreamProcess.removeAllListeners();
-      this.#livestreamProcess.stderr.removeAllListeners();
-      this.#livestreamProcess.stdout.removeAllListeners();
-      const result = this.#livestreamProcess.kill();
+    if (this.#picameraServerProcess !== null) {
+      this.#picameraServerProcess.removeAllListeners();
+      this.#picameraServerProcess.stderr.removeAllListeners();
+      this.#picameraServerProcess.stdout.removeAllListeners();
+      const result = this.#picameraServerProcess.kill();
       if (result == true) {
-        this.#livestreamProcess = null;
+        this.#picameraServerProcess = null;
       }
     }
   }
@@ -92,6 +129,14 @@ class CameraManager {
       this.#currentSettings.xImageResolution === newSettings.xImageResolution &&
       this.#currentSettings.yImageResolution === newSettings.yImageResolution
     );
+  }
+
+  private generateRequestHeaders() {
+    return {
+      "X-Interservice-Authentication-Token": generateInterserviceAuthenticationToken(
+        this.#interserviceAuthenticationKey,
+      ),
+    };
   }
 }
 

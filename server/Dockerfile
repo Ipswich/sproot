@@ -56,8 +56,6 @@ RUN apt-get update && apt-get -y upgrade \
   && rm -rf /var/cache/apt/archives/* \
   && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --break-system-packages --no-cache-dir -r /sproot/server/python/requirements.txt
-
 # Set this as the project root - api_spec lives a layer below and the server expects to be run from here.
 WORKDIR /sproot/server
 

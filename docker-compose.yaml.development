@@ -19,6 +19,7 @@ services:
       DATABASE_USER: root
       DATABASE_PASSWORD: root
       PRECONFIGURED: true
+      INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
     volumes:
       - /run/udev:/run/udev:ro
       - /sys:/sys

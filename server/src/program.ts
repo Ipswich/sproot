@@ -34,7 +34,11 @@ export default async function setupAsync(): Promise<Express> {
   await defaultUserCheck(sprootDB, logger);
 
   logger.info("Creating camera manager. . .");
-  const cameraManager = new CameraManager(sprootDB, logger);
+  const cameraManager = new CameraManager(
+    sprootDB,
+    process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
+    logger,
+  );
   app.set("cameraManager", cameraManager);
 
   logger.info("Creating sensor and output lists. . .");
