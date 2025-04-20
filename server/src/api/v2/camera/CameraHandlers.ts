@@ -4,7 +4,11 @@ import { CameraManager } from "../../../camera/CameraManager";
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
   const cameraManger = request.app.get("cameraManager") as CameraManager;
   try {
-    await cameraManger.forwardLivestreamAsync(response);
+    const controller = new AbortController();
+    request.on("close", () => {
+      controller.abort();
+    });
+    await cameraManger.forwardLivestreamAsync(response, controller);
     response.setHeader("Age", 0);
     response.setHeader("Cache-Control", "no-cache, private");
     response.setHeader("Pragma", "no-cache");

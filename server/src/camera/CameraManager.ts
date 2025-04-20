@@ -83,8 +83,12 @@ class CameraManager {
     await streamPipeline(response.body, createWriteStream(fileName));
   }
 
-  async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream) {
+  async forwardLivestreamAsync(
+    writeableStream: NodeJS.WritableStream,
+    abortController?: AbortController,
+  ) {
     const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
+      signal: abortController?.signal ?? null,
       method: "GET",
       headers: this.generateRequestHeaders(),
     });
