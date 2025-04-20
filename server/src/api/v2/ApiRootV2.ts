@@ -42,7 +42,7 @@ function ApiRootV2(app: Express) {
       apiSpec: spec_path,
       validateRequests: true,
       validateResponses: true,
-      // validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
+      validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
     }),
   );
 
