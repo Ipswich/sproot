@@ -3453,6 +3453,42 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
+  /api/v2/camera/stream:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Get a live MJPEG camera stream.
+      description: Returns a live MJPEG stream from the camera.
+      responses:
+        200:
+          description: "Success"
+          content:
+            multipart/x-mixed-replace:
+              schema:
+                type: string
+                format: binary
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 502
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Gateway"
+                          url:
+                            example: "/api/v2/camera/stream"
+                          details:
+                            items:
+                              example: "Failed to connect to camera stream"
 
 components:
   schemas:

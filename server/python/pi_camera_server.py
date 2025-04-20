@@ -119,7 +119,7 @@ class InterserviceAuthentication:
         )
         h = hmac.new(
             key.encode("ascii"),
-            (rounded_time_stamp + key).encode("ascii"),
+            (rounded_time_stamp).encode("ascii"),
             hashlib.sha256,
         )
         return h.hexdigest() == token

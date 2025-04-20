@@ -44,22 +44,22 @@ class CameraManager {
         ]);
 
         this.#picameraServerProcess.on("spawn", () => {
-          this.#logger.info(`Livestream server started`);
+          this.#logger.info(`Picamera server started`);
         });
 
         this.#picameraServerProcess.on("error", (error: Error) => {
-          this.#logger.error(`Error on spawning livestream server: ${error}`);
+          this.#logger.error(`Error on spawning Picamera Server: ${error}`);
           this.cleanupLivestream();
           this.#picameraServerProcess = null;
         });
 
         this.#picameraServerProcess.stderr.on("data", (data: string) => {
-          this.#logger.error(`MAYBE AN ERROR: ${data}`);
+          this.#logger.error(`Message from Picamera Server: ${data}`);
         });
 
         this.#picameraServerProcess.on("close", (code, signal) => {
           this.#logger.info(
-            `Livestream server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
+            `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
           );
           this.cleanupLivestream();
           this.#picameraServerProcess = null;
@@ -70,7 +70,7 @@ class CameraManager {
     }
   }
 
-  async captureImage(fileName: string) {
+  async captureImageAsync(fileName: string) {
     const response = await fetch(`${this.#baseUrl}/capture`, {
       method: "GET",
       headers: this.generateRequestHeaders(),
@@ -83,7 +83,7 @@ class CameraManager {
     await streamPipeline(response.body, createWriteStream(fileName));
   }
 
-  async forwardLivestream(writeableStream: NodeJS.WritableStream) {
+  async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream) {
     const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
       method: "GET",
       headers: this.generateRequestHeaders(),
