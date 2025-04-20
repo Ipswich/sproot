@@ -4,6 +4,11 @@ RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
 
+RUN apt-get update -y && apt-get upgrade -y
+
+# Install curl, nano, python, make, g++, git
+RUN apt-get install curl nano python3 make g++ git -y
+
 # Install camera dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends gnupg
 RUN echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
@@ -14,11 +19,6 @@ RUN apt-get install -y --no-install-recommends python3-pip python3-picamera2 \
   && apt-get autoremove \
   && rm -rf /var/cache/apt/archives/* \
   && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update -y && apt-get upgrade -y
-
-# Install curl, nano, python, make, g++, git
-RUN apt-get install curl nano python3 make g++ git -y
 
 # Install NVM (and Node, npm)
 ENV NODE_VERSION=22.5.1

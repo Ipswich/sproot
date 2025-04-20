@@ -1,5 +1,5 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { generateInterserviceAuthenticationToken } from "@sproot/utility/InterserviceAuthentication";
+import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/dist/utility/InterserviceAuthentication";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { createWriteStream } from "fs";
@@ -53,9 +53,9 @@ class CameraManager {
           this.#picameraServerProcess = null;
         });
 
-        // this.#livestreamProcess.stderr.on("data", (data) => {
-        //   this.#logger.error(`MAYBE AN ERROR: ${data}`);
-        // });
+        this.#picameraServerProcess.stderr.on("data", (data: string) => {
+          this.#logger.error(`MAYBE AN ERROR: ${data}`);
+        });
 
         this.#picameraServerProcess.on("close", (code, signal) => {
           this.#logger.info(

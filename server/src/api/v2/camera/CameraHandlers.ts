@@ -1,11 +1,7 @@
 import { Request, Response } from "express";
 import { CameraManager } from "../../../camera/CameraManager";
-import { ErrorResponse } from "@sproot/api/v2/Responses";
 
-export async function streamHandlerAsync(
-  request: Request,
-  response: Response,
-): Promise<Response | ErrorResponse> {
+export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
   const cameraManger = request.app.get("cameraManager") as CameraManager;
   try {
     cameraManger.forwardLivestream(response);
@@ -13,10 +9,9 @@ export async function streamHandlerAsync(
     response.setHeader("Cache-Control", "no-cache, private");
     response.setHeader("Pragma", "no-cache");
     response.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=FRAME");
-    response.status(200);
-    return response;
+    response.status(200).send();
   } catch {
-    return {
+    response.status(502).json({
       statusCode: 502,
       error: {
         name: "Bad Gateway",
@@ -24,6 +19,6 @@ export async function streamHandlerAsync(
         details: [`Could not connect to camera server`],
       },
       ...response.locals["defaultProperties"],
-    };
+    });
   }
 }

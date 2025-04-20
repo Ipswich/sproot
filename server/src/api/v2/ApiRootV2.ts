@@ -1,5 +1,5 @@
 import { Express, Request, Response, NextFunction } from "express";
-import * as OpenApiValidator from "express-openapi-validator";
+// import * as OpenApiValidator from "express-openapi-validator";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 
@@ -37,14 +37,14 @@ function ApiRootV2(app: Express) {
   );
 
   // OpenAPI Validator
-  app.use(
-    OpenApiValidator.middleware({
-      apiSpec: spec_path,
-      // validateRequests: true,
-      // validateResponses: true,
-      validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
-    }),
-  );
+  // app.use(
+  //   OpenApiValidator.middleware({
+  //     apiSpec: spec_path,
+  //     validateRequests: true,
+  //     validateResponses: true,
+  //     validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
+  //   }),
+  // );
 
   app.use("/api/v2/", addDefaultProperties);
   app.use("/api/v2/ping", pingRouter);
