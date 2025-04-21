@@ -1,5 +1,6 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/dist/utility/InterserviceAuthentication";
+import { IMAGE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { createWriteStream } from "fs";
@@ -80,7 +81,7 @@ class CameraManager {
       return;
     }
 
-    await streamPipeline(response.body, createWriteStream(fileName));
+    await streamPipeline(response.body, createWriteStream(`${IMAGE_DIRECTORY}/fileName`));
   }
 
   async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream) {
@@ -88,6 +89,8 @@ class CameraManager {
       method: "GET",
       headers: this.generateRequestHeaders(),
     });
+
+    await this.captureImageAsync("test.jpg");
 
     if (!upstream.ok || !upstream.body) {
       this.#logger.error("Failed to connect to camera stream");
