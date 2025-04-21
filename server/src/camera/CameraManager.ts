@@ -106,6 +106,43 @@ class CameraManager {
     Readable.fromWeb(upstream.body).pipe(writeableStream);
   }
 
+  async getLatestImageAsync(): Promise<Buffer | null> {
+    try {
+      // Ensure the directory exists
+      if (!fs.existsSync(IMAGE_DIRECTORY)) {
+        this.#logger.warn(`Image directory ${IMAGE_DIRECTORY} does not exist`);
+        return null;
+      }
+
+      // Get all files in the directory
+      const files = await fs.promises.readdir(IMAGE_DIRECTORY);
+
+      if (files.length === 0) {
+        this.#logger.warn(`No images found in ${IMAGE_DIRECTORY}`);
+        return null;
+      }
+
+      // Sort files by timestamp, newest first.
+      const fileStats = await Promise.all(
+        files.map(async (file) => {
+          const filePath = path.join(IMAGE_DIRECTORY, file);
+          const stats = await fs.promises.stat(filePath);
+          return { file, stats };
+        }),
+      );
+      fileStats.sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime());
+
+      // Load latest image
+      const latestFilePath = path.join(IMAGE_DIRECTORY, fileStats[0]!.file);
+      const imageBuffer = await fs.promises.readFile(latestFilePath);
+
+      return imageBuffer;
+    } catch (error) {
+      this.#logger.error(`Error retrieving latest image: ${error}`);
+      return null;
+    }
+  }
+
   dispose(): void {
     this.cleanupLivestream();
   }

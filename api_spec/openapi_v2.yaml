@@ -3489,6 +3489,42 @@ paths:
                           details:
                             items:
                               example: "Failed to connect to camera stream"
+  /api/v2/camera/latest-image:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Get the latest image.
+      description: Returns the most recently taken image.
+      responses:
+        200:
+          description: "Success"
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        404:
+          description: "Image not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/camera/latest-image"
+                          details:
+                            items:
+                              example: "No latest image"
 
 components:
   schemas:

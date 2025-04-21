@@ -1,11 +1,9 @@
 import { Request, Response } from "express";
 import { CameraManager } from "../../../camera/CameraManager";
-// import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
   const cameraManger = request.app.get("cameraManager") as CameraManager;
   try {
-    await cameraManger.captureImageAsync("test.jpg");
     await cameraManger.forwardLivestreamAsync(response);
     response.setHeader("Age", 0);
     response.setHeader("Cache-Control", "no-cache, private");
@@ -25,7 +23,22 @@ export async function streamHandlerAsync(request: Request, response: Response): 
   }
 }
 
-// export async function getLatestImageAsync(
-//   reqeust: Request,
-//   response: Response,
-// ): Promise<SuccessResponse | ErrorResponse> {}
+export async function getLatestImageAsync(request: Request, response: Response): Promise<void> {
+  const cameraManger = request.app.get("cameraManager") as CameraManager;
+  const imageBuffer = await cameraManger.getLatestImageAsync();
+  if (imageBuffer === null) {
+    response.status(404).json({
+      statusCode: 404,
+      error: {
+        name: "Not Found",
+        url: request.originalUrl,
+        details: [`No latest image`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+    return;
+  }
+
+  response.setHeader("Content-Type", "image/jpeg");
+  response.status(200).send(imageBuffer);
+}
