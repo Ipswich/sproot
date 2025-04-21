@@ -66,15 +66,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "image/jpeg")
             self.end_headers()
+            buffer = io.BytesIO()
             picam2.switch_mode_and_capture_file(
-                still_configuration, file_output="output.jpg"
+                still_configuration,
+                buffer,
+                format="jpeg"
             )
-            with open("output.jpg", "rb") as file:
-                while True:
-                    chunk = file.read(1024)
-                    if not chunk:
-                        break
-                    self.wfile.write(chunk)
+            buffer.seek(0)
+            self.wfile.write(buffer.read())
         elif self.path == "/stream.mjpg":
             self.send_response(200)
             self.send_header("Age", 0)

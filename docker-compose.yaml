@@ -26,6 +26,7 @@ services:
       - /run/udev:/run/udev:ro
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
+      - ./docker_volumes/sproot/server/images:/sproot/server/images
     network_mode: "host"
     expose:
       - "3000"

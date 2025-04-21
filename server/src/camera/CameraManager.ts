@@ -3,11 +3,12 @@ import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/d
 import { IMAGE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { createWriteStream } from "fs";
+import fs, { createWriteStream } from "fs";
 import { pipeline, Readable } from "stream";
 import { promisify } from "util";
 
 import winston from "winston";
+import path from "path";
 
 const streamPipeline = promisify(pipeline);
 
@@ -82,9 +83,13 @@ class CameraManager {
       );
       return;
     }
+    // Ensure the directory exists
+    await fs.promises.mkdir(IMAGE_DIRECTORY, { recursive: true });
+
+    const outputPath = path.join(IMAGE_DIRECTORY, fileName);
+    await streamPipeline(Readable.fromWeb(response.body), createWriteStream(outputPath));
 
     this.#logger.info(`Image captured. Filename: ${IMAGE_DIRECTORY}/${fileName}`);
-    await streamPipeline(response.body, createWriteStream(`${IMAGE_DIRECTORY}/fileName`));
   }
 
   async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream) {
