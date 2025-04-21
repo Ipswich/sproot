@@ -6,7 +6,7 @@ router.get("/stream", async (req: Request, res: Response) => {
   await streamHandlerAsync(req, res);
 });
 
-router.get("latest-image", async (req: Request, res: Response) => {
+router.get("/latest-image", async (req: Request, res: Response) => {
   await getLatestImageAsync(req, res);
 });
 
