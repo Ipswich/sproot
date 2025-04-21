@@ -77,10 +77,13 @@ class CameraManager {
       headers: this.generateRequestHeaders(),
     });
     if (!response.ok || !response.body) {
-      this.#logger.error(`Image capture was unsuccessful. Filename: ${fileName}`);
+      this.#logger.error(
+        `Image capture was unsuccessful. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
+      );
       return;
     }
 
+    this.#logger.info(`Image captured. Filename: ${IMAGE_DIRECTORY}/${fileName}`);
     await streamPipeline(response.body, createWriteStream(`${IMAGE_DIRECTORY}/fileName`));
   }
 
@@ -89,8 +92,6 @@ class CameraManager {
       method: "GET",
       headers: this.generateRequestHeaders(),
     });
-
-    await this.captureImageAsync("test.jpg");
 
     if (!upstream.ok || !upstream.body) {
       this.#logger.error("Failed to connect to camera stream");
