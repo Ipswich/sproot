@@ -87,8 +87,6 @@ export default async function setupAsync(): Promise<Express> {
           //Add triggers and whatnot here.
 
           await outputList.runAutomationsAsync(sensorList, new Date());
-          //Execute any changes made to state.
-          await outputList.executeOutputStateAsync();
 
           //Execute any changes made to state.
           await outputList.executeOutputStateAsync();

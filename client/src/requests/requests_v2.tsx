@@ -11,7 +11,10 @@ import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
 import { AvailableDevice } from "@sproot/outputs/AvailableDevice";
 import { ReadingType } from "@sproot/sensors/ReadingType";
-import { SuccessResponse } from "@sproot/sproot-common/src/api/v2/Responses";
+import {
+  SuccessResponse,
+  ErrorResponse,
+} from "@sproot/sproot-common/src/api/v2/Responses";
 import {
   ChartSeries,
   DataSeries,
@@ -611,7 +614,7 @@ export async function pingAsync(): Promise<boolean> {
   }
 }
 
-export async function GetAvailableDevicesAsync(
+export async function getAvailableDevicesAsync(
   model: string,
   address?: string,
   filterUsed = true,
@@ -627,6 +630,24 @@ export async function GetAvailableDevicesAsync(
     console.error(`Error fetching children for ${model}: ${e}`);
     return [];
   }
+}
+
+export async function getLatestImageAsync() {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/v2/camera/latest-image`);
+    if (response.ok) {
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    }
+    return (await response.json()) as ErrorResponse;
+  } catch (e) {
+    console.error(`Error fetching latest image: ${e}`);
+    return;
+  }
+}
+
+export async function getLivestreamAsync() {
+  return `${SERVER_URL}/api/v2/camera/stream`;
 }
 
 function queryBuilder(

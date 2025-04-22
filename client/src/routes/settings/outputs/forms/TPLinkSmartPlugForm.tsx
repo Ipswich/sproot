@@ -4,7 +4,7 @@ import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { Fragment } from "react";
 import { FormValues } from "../OutputSettings";
 import { useQuery } from "@tanstack/react-query";
-import { GetAvailableDevicesAsync } from "../../../../requests/requests_v2";
+import { getAvailableDevicesAsync } from "../../../../requests/requests_v2";
 
 interface TPLinkSmartPlugProps {
   selectedOutput?: IOutputBase;
@@ -20,7 +20,7 @@ export default function TPLinkSmartPlugForm({
   const getDevices = useQuery({
     queryKey: ["tplinksmartplug-output-pins", selectedOutput?.model],
     queryFn: () =>
-      GetAvailableDevicesAsync("tplink-smart-plug", undefined, filterUsed),
+      getAvailableDevicesAsync("tplink-smart-plug", undefined, filterUsed),
   });
 
   return (

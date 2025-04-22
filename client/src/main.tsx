@@ -11,6 +11,7 @@ import ErrorPage from "./error_pages/ErrorPage";
 
 import { rootLoader, sensorChartDataLoader } from "./routes/utility/Loaders";
 
+import Dashboard from "./routes/Dashboard";
 import SensorData from "./routes/sensor-data/SensorData";
 import OutputStates from "./routes/output-states/OutputStates";
 import Automations from "./routes/automations/Automations";
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     loader: rootLoader,
     children: [
+      {
+        path: "/",
+        element: <Dashboard />,
+      },
       {
         path: "/sensor-data/:readingType",
         element: <SensorData />,

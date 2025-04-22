@@ -1,11 +1,12 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/dist/utility/InterserviceAuthentication";
-import { IMAGE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import { CRON, IMAGE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import fs, { createWriteStream } from "fs";
 import { pipeline, Readable } from "stream";
 import { promisify } from "util";
+import { CronJob } from "cron";
 
 import winston from "winston";
 import path from "path";
@@ -17,6 +18,7 @@ class CameraManager {
   #interserviceAuthenticationKey: string;
   #logger: winston.Logger;
   #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
+  #captureImageCronJob: CronJob;
   #currentSettings: SDBCameraSettings | null = null;
   readonly #baseUrl: string = "http://localhost:3002";
 
@@ -24,6 +26,19 @@ class CameraManager {
     this.#sprootDB = sprootDB;
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
+    this.#captureImageCronJob = new CronJob(
+      CRON.EVERY_MINUTE,
+      async () => await this.captureImageAsync("latest.jpg"),
+      undefined, // onComplete
+      false, // start
+      undefined, // timezone
+      null, // context
+      false, // runOnInit
+      undefined, // unrefTimeout
+      undefined, // startDate
+      undefined, // endDate
+      (err) => this.#logger.error(`Image capture cron error: ${err}`)
+    );
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
@@ -44,6 +59,7 @@ class CameraManager {
           "--resolution",
           `${cameraSettings!.xVideoResolution}x${cameraSettings!.yVideoResolution}`,
         ]);
+        this.#captureImageCronJob?.start();
 
         this.#picameraServerProcess.on("spawn", () => {
           this.#logger.info(`Picamera server started`);
@@ -92,18 +108,34 @@ class CameraManager {
     this.#logger.info(`Image captured. Filename: ${IMAGE_DIRECTORY}/${fileName}`);
   }
 
-  async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream) {
+  async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream): Promise<AbortController> {
+    const abortController = new AbortController();
+    writeableStream.on('close', () => {
+      abortController.abort();
+    }).on('error', () => {
+      abortController.abort();
+    });
+
     const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
       method: "GET",
       headers: this.generateRequestHeaders(),
+      signal: abortController.signal
     });
 
     if (!upstream.ok || !upstream.body) {
       this.#logger.error("Failed to connect to camera stream");
       throw new Error("Failed to connect to camera stream");
     }
+    const readableStream = Readable.fromWeb(upstream.body);
 
-    Readable.fromWeb(upstream.body).pipe(writeableStream);
+    readableStream.on('error', (err) => {
+      if(!err.message.includes("abort")){
+        this.#logger.error(`Upstream stream error: ${err.message}`);
+      }
+    });
+    readableStream.pipe(writeableStream);
+
+    return abortController;
   }
 
   async getLatestImageAsync(): Promise<Buffer | null> {
@@ -158,6 +190,7 @@ class CameraManager {
       this.#picameraServerProcess.stdout.removeAllListeners();
       const result = this.#picameraServerProcess.kill();
       if (result == true) {
+        this.#captureImageCronJob.stop()
         this.#picameraServerProcess = null;
       }
     }
