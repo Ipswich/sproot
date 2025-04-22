@@ -15,6 +15,9 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     });
 
     abortController = await cameraManger.forwardLivestreamAsync(response);
+    abortController.signal.addEventListener("abort", () => {
+      response.end();
+    });
     response.status(200);
   } catch (e) {
     if (!response.headersSent) {

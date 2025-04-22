@@ -21,6 +21,7 @@ class CameraManager {
   #captureImageCronJob: CronJob;
   #currentSettings: SDBCameraSettings | null = null;
   #activeStreams: Set<AbortController> = new Set();
+  #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
 
   constructor(sprootDB: ISprootDB, interserviceAuthenticationKey: string, logger: winston.Logger) {
@@ -29,7 +30,11 @@ class CameraManager {
     this.#logger = logger;
     this.#captureImageCronJob = new CronJob(
       CRON.EVERY_MINUTE,
-      async () => await this.captureImageAsync("latest.jpg"),
+      async () => {
+        if (this.#picameraServerProcess !== null) {
+          await this.captureImageAsync("latest.jpg");
+        }
+      },
       undefined, // onComplete
       false, // start
       undefined, // timezone
@@ -43,6 +48,9 @@ class CameraManager {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
+    if (this.#disposed) {
+      return;
+    }
     const settings = await this.#sprootDB.getCameraSettingsAsync();
 
     if (settings.length != 0) {
@@ -73,14 +81,24 @@ class CameraManager {
         });
 
         this.#picameraServerProcess.stderr.on("data", (data: string) => {
-          this.#logger.error(`Message from Picamera Server: ${data}`);
+          this.#logger.info(`Message from Picamera Server: ${data}`);
+          // Check for bad address error
+          if (data.includes("Bad address") || data.includes("OSError")) {
+            this.#logger.error("Camera encoder error detected, attempting recovery");
+            this.cleanupLivestream();
+          }
         });
 
         this.#picameraServerProcess.on("close", (code, signal) => {
           this.#logger.info(
             `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
           );
+          if (signal === "SIGINT") {
+            this.dispose();
+            return;
+          }
           this.cleanupLivestream();
+          this.#captureImageCronJob.stop();
           this.#picameraServerProcess = null;
         });
       }
@@ -185,6 +203,7 @@ class CameraManager {
   }
 
   dispose(): void {
+    this.#disposed = true;
     this.cleanupLivestream();
   }
 
@@ -197,12 +216,13 @@ class CameraManager {
       this.#picameraServerProcess.removeAllListeners();
       this.#picameraServerProcess.stderr.removeAllListeners();
       this.#picameraServerProcess.stdout.removeAllListeners();
+      // Cleanup active streams - calling abort should also delete them from
+      // the active stream set
+      for (const controller of this.#activeStreams) {
+        controller.abort();
+      }
       const result = this.#picameraServerProcess.kill();
       if (result == true) {
-        // Cleanup active streams - calling abort should also delete them from the active stream set
-        for (const controller of this.#activeStreams) {
-          controller.abort();
-        }
         this.#captureImageCronJob.stop();
         this.#picameraServerProcess = null;
       }
