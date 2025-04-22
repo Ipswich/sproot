@@ -12,7 +12,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 
     request.on("close", () => {
       abortController?.abort();
-    })
+    });
 
     abortController = await cameraManger.forwardLivestreamAsync(response);
     response.status(200);

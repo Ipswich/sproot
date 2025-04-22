@@ -20,6 +20,7 @@ class CameraManager {
   #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
   #captureImageCronJob: CronJob;
   #currentSettings: SDBCameraSettings | null = null;
+  #activeStreams: Set<AbortController> = new Set();
   readonly #baseUrl: string = "http://localhost:3002";
 
   constructor(sprootDB: ISprootDB, interserviceAuthenticationKey: string, logger: winston.Logger) {
@@ -37,7 +38,7 @@ class CameraManager {
       undefined, // unrefTimeout
       undefined, // startDate
       undefined, // endDate
-      (err) => this.#logger.error(`Image capture cron error: ${err}`)
+      (err) => this.#logger.error(`Image capture cron error: ${err}`),
     );
   }
 
@@ -110,16 +111,24 @@ class CameraManager {
 
   async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream): Promise<AbortController> {
     const abortController = new AbortController();
-    writeableStream.on('close', () => {
-      abortController.abort();
-    }).on('error', () => {
-      abortController.abort();
-    });
+
+    this.#activeStreams.add(abortController);
+    abortController.signal.addEventListener("abort", () =>
+      this.#activeStreams.delete(abortController),
+    );
+
+    writeableStream
+      .on("close", () => {
+        abortController.abort();
+      })
+      .on("error", () => {
+        abortController.abort();
+      });
 
     const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
       method: "GET",
       headers: this.generateRequestHeaders(),
-      signal: abortController.signal
+      signal: abortController.signal,
     });
 
     if (!upstream.ok || !upstream.body) {
@@ -128,8 +137,8 @@ class CameraManager {
     }
     const readableStream = Readable.fromWeb(upstream.body);
 
-    readableStream.on('error', (err) => {
-      if(!err.message.includes("abort")){
+    readableStream.on("error", (err) => {
+      if (!err.message.includes("abort")) {
         this.#logger.error(`Upstream stream error: ${err.message}`);
       }
     });
@@ -190,7 +199,11 @@ class CameraManager {
       this.#picameraServerProcess.stdout.removeAllListeners();
       const result = this.#picameraServerProcess.kill();
       if (result == true) {
-        this.#captureImageCronJob.stop()
+        // Cleanup active streams - calling abort should also delete them from the active stream set
+        for (const controller of this.#activeStreams) {
+          controller.abort();
+        }
+        this.#captureImageCronJob.stop();
         this.#picameraServerProcess = null;
       }
     }

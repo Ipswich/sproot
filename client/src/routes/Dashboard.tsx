@@ -34,7 +34,12 @@ export default function Dashboard() {
             height: "100%",
             cursor: "pointer",
           }}
-          onClick={() => setShowStream(!showStream)}
+          onClick={async () => {
+            if (showStream) {
+              await imageQuery.refetch();
+            }
+            setShowStream(!showStream);
+          }}
         >
           {showStream ? (
             <IconPlayerPause
