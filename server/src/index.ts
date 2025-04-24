@@ -16,6 +16,7 @@ mainAsync().then((app) => {
     async function gracefulHaltAsync() {
       const logger = app.get("logger");
       logger.info("Shutting down...");
+      server.closeAllConnections();
       server.close(async () => {
         // Stop updating database and sensors
         app.get("updateDatabaseCronJob").stop();
@@ -36,6 +37,7 @@ mainAsync().then((app) => {
           // Give everything a hot sec to finish whatever it's up to - call backs really mess with just calling process.exit.
           setTimeout(() => {
             logger.info("Done! See you next time!");
+            server.close();
             process.exit(0);
           }, 250);
         }

@@ -141,13 +141,6 @@ class CameraManager {
     );
 
     // Setup signal handlers for graceful termination
-    process
-      .once("SIGTERM", () => {
-        abortController.abort();
-      })
-      .once("SIGINT", () => {
-        abortController.abort();
-      });
     writeableStream
       .on("close", () => {
         abortController.abort();
