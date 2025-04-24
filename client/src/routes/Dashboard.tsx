@@ -24,7 +24,10 @@ export default function Dashboard() {
   return (
     <Fragment>
       <div style={{ position: "relative" }}>
-        <Image src={showStream ? streamQuery.data : imageQuery.data} />
+        <Image
+          radius="sm"
+          src={showStream ? streamQuery.data : imageQuery.data}
+        />
         <div
           style={{
             position: "absolute",
@@ -48,8 +51,9 @@ export default function Dashboard() {
                 bottom: 10,
                 left: 10,
                 filter: "drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.7))",
+                color: "blue",
               }}
-              color="white"
+              color="var(--mantine-color-blue-filled)"
             />
           ) : (
             <IconPlayerPlay
@@ -59,7 +63,7 @@ export default function Dashboard() {
                 left: 10,
                 filter: "drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.7))",
               }}
-              color="white"
+              color="var(--mantine-color-blue-filled)"
             />
           )}
         </div>
