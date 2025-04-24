@@ -18,7 +18,6 @@ class CameraManager {
   #interserviceAuthenticationKey: string;
   #logger: winston.Logger;
   #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
-  #captureImageCronJob: CronJob;
   #currentSettings: SDBCameraSettings | null = null;
   #activeStreams: Set<AbortController> = new Set();
   #disposed: boolean = false;
@@ -28,18 +27,22 @@ class CameraManager {
     this.#sprootDB = sprootDB;
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
-    this.#captureImageCronJob = new CronJob(
+    new CronJob(
       CRON.EVERY_MINUTE,
       async () => {
         if (this.#picameraServerProcess !== null) {
-          await this.captureImageAsync("latest.jpg");
+          try {
+            await this.captureImageAsync("latest.jpg");
+          } catch (e) {
+            this.#logger.error(`Cron error while capturing image: ${e}`);
+          }
         }
       },
       undefined, // onComplete
-      false, // start
+      true, // start
       undefined, // timezone
       null, // context
-      false, // runOnInit
+      true, // runOnInit
       undefined, // unrefTimeout
       undefined, // startDate
       undefined, // endDate
@@ -68,7 +71,6 @@ class CameraManager {
           "--resolution",
           `${cameraSettings!.xVideoResolution}x${cameraSettings!.yVideoResolution}`,
         ]);
-        this.#captureImageCronJob?.start();
 
         this.#picameraServerProcess.on("spawn", () => {
           this.#logger.info(`Picamera server started`);
@@ -98,7 +100,6 @@ class CameraManager {
             return;
           }
           this.cleanupLivestream();
-          this.#captureImageCronJob.stop();
           this.#picameraServerProcess = null;
         });
       }
@@ -135,6 +136,14 @@ class CameraManager {
       this.#activeStreams.delete(abortController),
     );
 
+    // Setup signal handlers for graceful termination
+    process
+      .once("SIGTERM", () => {
+        abortController.abort();
+      })
+      .once("SIGINT", () => {
+        abortController.abort();
+      });
     writeableStream
       .on("close", () => {
         abortController.abort();
@@ -212,18 +221,18 @@ class CameraManager {
    * setting the livestreamProcess to null if successful.
    */
   private cleanupLivestream() {
+    // Cleanup active streams - calling abort should also delete them from
+    // the active stream set
+    for (const controller of this.#activeStreams) {
+      controller.abort();
+    }
+
     if (this.#picameraServerProcess !== null) {
       this.#picameraServerProcess.removeAllListeners();
       this.#picameraServerProcess.stderr.removeAllListeners();
       this.#picameraServerProcess.stdout.removeAllListeners();
-      // Cleanup active streams - calling abort should also delete them from
-      // the active stream set
-      for (const controller of this.#activeStreams) {
-        controller.abort();
-      }
       const result = this.#picameraServerProcess.kill();
       if (result == true) {
-        this.#captureImageCronJob.stop();
         this.#picameraServerProcess = null;
       }
     }

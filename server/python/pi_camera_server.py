@@ -1,24 +1,28 @@
 #!/usr/bin/python3
 
 import argparse
+import asyncio
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
 import os
-from http import server
 import io
 import logging
-import socketserver
 from threading import Condition
+from typing import Optional
+
+import uvicorn
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Header, HTTPException, Response, Depends
+from fastapi.responses import StreamingResponse
 
 from picamera2 import Picamera2
 from picamera2.encoders import MJPEGEncoder
 from picamera2.outputs import FileOutput
 
 # Parse command line arguments
-parser = argparse.ArgumentParser(
-    description="Picamera2 MJPEG streaming demo with options"
-)
+parser = argparse.ArgumentParser(description="Picamera2 MJPEG streaming with FastAPI")
 parser.add_argument(
     "--resolution",
     type=str,
@@ -32,11 +36,19 @@ args = parser.parse_args()
 
 # Parse resolution
 resolution = tuple(map(int, args.resolution.split("x")))
-fps = args.fps
-if fps > 60:
-    fps = 60
-if fps < 1:
-    fps = 1
+fps = min(max(args.fps, 1), 60)  # Ensure fps is between 1 and 60
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    picam2.start_recording(MJPEGEncoder(), FileOutput(output))
+    yield
+    # Shutdown code
+    picam2.stop_recording()
+
+
+app = FastAPI(title="Pi Camera Server", lifespan=lifespan)
 
 
 class StreamingOutput(io.BufferedIOBase):
@@ -50,66 +62,11 @@ class StreamingOutput(io.BufferedIOBase):
             self.condition.notify_all()
 
 
-class StreamingHandler(server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        if (
-            interservice_authentication.verify(
-                self.headers.get("X-Interservice-Authentication-Token")
-            )
-            is False
-        ):
-            self.send_response(401)
-            self.end_headers()
-            return
-
-        if self.path == "/capture":
-            self.send_response(200)
-            self.send_header("Content-Type", "image/jpeg")
-            self.end_headers()
-            buffer = io.BytesIO()
-            picam2.switch_mode_and_capture_file(
-                still_configuration,
-                buffer,
-                format="jpeg"
-            )
-            buffer.seek(0)
-            self.wfile.write(buffer.read())
-        elif self.path == "/stream.mjpg":
-            self.send_response(200)
-            self.send_header("Age", 0)
-            self.send_header("Cache-Control", "no-cache, private")
-            self.send_header("Pragma", "no-cache")
-            self.send_header(
-                "Content-Type", "multipart/x-mixed-replace; boundary=FRAME"
-            )
-            self.end_headers()
-            try:
-                while True:
-                    with output.condition:
-                        output.condition.wait()
-                        frame = output.frame
-                    self.wfile.write(b"--FRAME\r\n")
-                    self.send_header("Content-Type", "image/jpeg")
-                    self.send_header("Content-Length", len(frame))
-                    self.end_headers()
-                    self.wfile.write(frame)
-                    self.wfile.write(b"\r\n")
-            except Exception as e:
-                logging.warning(
-                    "Removed streaming client %s: %s", self.client_address, str(e)
-                )
-        else:
-            self.send_error(404)
-            self.end_headers()
-
-
-class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
-    allow_reuse_address = True
-    daemon_threads = True
-
-
 class InterserviceAuthentication:
-    def verify(self, token):
+    def verify(self, token: Optional[str] = None) -> bool:
+        if token is None:
+            return False
+
         key = os.environ.get("INTERSERVICE_AUTHENTICATION_KEY", "")
         rounded_time_stamp = (
             (datetime.now(timezone.utc) + timedelta(minutes=30))
@@ -124,25 +81,64 @@ class InterserviceAuthentication:
         return h.hexdigest() == token
 
 
-if __name__ == "__main__":
-    frame_duration = int(1_000_000 / fps)
+# Initialize camera and output
+frame_duration = int(1_000_000 / fps)
+picam2 = Picamera2()
+interservice_auth = InterserviceAuthentication()
 
-    picam2 = Picamera2()
-    interservice_authentication = InterserviceAuthentication()
-    still_configuration = picam2.create_still_configuration(
-        main={"size": picam2.sensor_resolution, "format": "RGB888"}
-    )
-    video_configuration = picam2.create_video_configuration(
-        main={"size": resolution, "format": "RGB888"},
-        controls={"FrameDurationLimits": (frame_duration, frame_duration)},
-    )
+still_configuration = picam2.create_still_configuration(
+    main={"size": picam2.sensor_resolution, "format": "RGB888"}
+)
+video_configuration = picam2.create_video_configuration(
+    main={"size": resolution, "format": "RGB888"},
+    controls={"FrameDurationLimits": (frame_duration, frame_duration)},
+)
 
-    picam2.configure(video_configuration)
-    output = StreamingOutput()
-    picam2.start_recording(MJPEGEncoder(), FileOutput(output))
+picam2.configure(video_configuration)
+output = StreamingOutput()
+
+
+async def verify_auth(
+    x_interservice_authentication_token: Optional[str] = Header(None),
+) -> bool:
+    if not interservice_auth.verify(x_interservice_authentication_token):
+        raise HTTPException(
+            status_code=401, detail="Invalid Interservice Authentication Token"
+        )
+    return True
+
+
+@app.get("/capture")
+async def capture(authenticated: bool = Depends(verify_auth)):
+    buffer = io.BytesIO()
+    picam2.switch_mode_and_capture_file(still_configuration, buffer, format="jpeg")
+    buffer.seek(0)
+    return Response(content=buffer.read(), media_type="image/jpeg")
+
+
+async def generate_mjpeg_stream():
     try:
-        address = ("", 3002)
-        server = StreamingServer(address, StreamingHandler)
-        server.serve_forever()
-    finally:
-        picam2.stop_recording()
+        while True:
+            with output.condition:
+                output.condition.wait()
+                frame = output.frame
+            yield b"--FRAME\r\n"
+            yield b"Content-Type: image/jpeg\r\n"
+            yield f"Content-Length: {len(frame)}\r\n\r\n".encode()
+            yield frame
+            yield b"\r\n"
+            await asyncio.sleep(0)
+    except Exception as e:
+        logging.warning(f"Streaming client disconnected: {str(e)}")
+
+
+@app.get("/stream.mjpg")
+async def stream(authenticated: bool = Depends(verify_auth)):
+    return StreamingResponse(
+        generate_mjpeg_stream(), media_type="multipart/x-mixed-replace; boundary=FRAME"
+    )
+
+
+if __name__ == "__main__":
+    config = uvicorn.Config(app, host="0.0.0.0", port=3002, timeout_graceful_shutdown=1)
+    uvicorn.Server(config).run()
