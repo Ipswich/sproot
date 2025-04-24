@@ -55,7 +55,7 @@ RUN apt-get update && apt-get -y upgrade \
   && apt-get autoremove \
   && rm -rf /var/cache/apt/archives/* \
   && rm -rf /var/lib/apt/lists/*
-RUN pip3 install fastapi uvicon picamera2 --break-system-packages
+RUN pip3 install fastapi uvicorn picamera2 --break-system-packages
 
 # Set this as the project root - api_spec lives a layer below and the server expects to be run from here.
 WORKDIR /sproot/server
