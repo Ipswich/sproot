@@ -31,11 +31,7 @@ class CameraManager {
       CRON.EVERY_MINUTE,
       async () => {
         if (this.#picameraServerProcess !== null) {
-          try {
-            await this.captureImageAsync("latest.jpg");
-          } catch (e) {
-            this.#logger.error(`Cron error while capturing image: ${e}`);
-          }
+          await this.captureImageAsync("latest.jpg");
         }
       },
       undefined, // onComplete
@@ -95,12 +91,12 @@ class CameraManager {
           this.#logger.info(
             `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
           );
+          //SIGINT should basically only come from a ctrl-c, everything is dying at this point
           if (signal === "SIGINT") {
             this.dispose();
             return;
           }
           this.cleanupLivestream();
-          this.#picameraServerProcess = null;
         });
       }
     } else {
@@ -109,23 +105,31 @@ class CameraManager {
   }
 
   async captureImageAsync(fileName: string) {
-    const response = await fetch(`${this.#baseUrl}/capture`, {
-      method: "GET",
-      headers: this.generateRequestHeaders(),
-    });
-    if (!response.ok || !response.body) {
+    let response: Response;
+    try {
+      response = await fetch(`${this.#baseUrl}/capture`, {
+        method: "GET",
+        headers: this.generateRequestHeaders(),
+      });
+      if (!response?.ok || !response.body) {
+        this.#logger.error(
+          `Image capture was unsuccessful. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
+        );
+        return;
+      }
+      // Ensure the directory exists
+      await fs.promises.mkdir(IMAGE_DIRECTORY, { recursive: true });
+
+      const outputPath = path.join(IMAGE_DIRECTORY, fileName);
+      await streamPipeline(Readable.fromWeb(response.body), createWriteStream(outputPath));
+
+      this.#logger.info(`Image captured. Filename: ${IMAGE_DIRECTORY}/${fileName}`);
+    } catch (e) {
       this.#logger.error(
         `Image capture was unsuccessful. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
       );
       return;
     }
-    // Ensure the directory exists
-    await fs.promises.mkdir(IMAGE_DIRECTORY, { recursive: true });
-
-    const outputPath = path.join(IMAGE_DIRECTORY, fileName);
-    await streamPipeline(Readable.fromWeb(response.body), createWriteStream(outputPath));
-
-    this.#logger.info(`Image captured. Filename: ${IMAGE_DIRECTORY}/${fileName}`);
   }
 
   async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream): Promise<AbortController> {
