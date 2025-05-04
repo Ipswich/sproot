@@ -4,7 +4,7 @@ import winston from "winston";
 
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
   const cameraManger = request.app.get("cameraManager") as CameraManager;
-  const logger = request.app.get("logger") as winston.Logger
+  const logger = request.app.get("logger") as winston.Logger;
   try {
     response.setHeader("Age", 0);
     response.setHeader("Cache-Control", "no-cache, private");
@@ -28,7 +28,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
       livestream.unpipe(response);
       livestream.removeListener("error", onStreamError);
     });
-    
+
     livestream.pipe(response);
     response.status(200);
   } catch (e) {

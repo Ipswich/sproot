@@ -47,7 +47,7 @@ class CameraManager {
     );
   }
 
-  get livestream(){
+  get livestream() {
     return this.#livestreamStream;
   }
 
@@ -105,8 +105,8 @@ class CameraManager {
         });
       }
 
-      if(this.#livestreamStream === null) {
-        await this.connectToLivestreamAsync()
+      if (this.#livestreamStream === null) {
+        await this.connectToLivestreamAsync();
       }
     } else {
       this.cleanupLivestream();
@@ -185,25 +185,29 @@ class CameraManager {
 
   private async connectToLivestreamAsync() {
     this.#livestreamAbortController = new AbortController();
-    const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
-      method: "GET",
-      headers: this.generateRequestHeaders(),
-      signal: this.#livestreamAbortController.signal,
-    });
+    try {
+      const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
+        method: "GET",
+        headers: this.generateRequestHeaders(),
+        signal: this.#livestreamAbortController.signal,
+      });
 
-    // Return if not a successful result
-    if (!upstream.ok || !upstream.body) {
-      return;
-    }
+      // Return if not a successful result
+      if (!upstream.ok || !upstream.body) {
+        return;
+      }
 
-    this.#livestreamStream = Readable.fromWeb(upstream.body);
+      this.#livestreamStream = Readable.fromWeb(upstream.body);
 
-    this.#livestreamStream.on("error", (err) => {
+      this.#livestreamStream.on("error", (err) => {
         this.#logger.error(`Upstream stream error: ${err.message}`);
-        this.#livestreamStream?.emit("end")
-        this.#livestreamAbortController?.abort()
+        this.#livestreamStream?.emit("end");
+        this.#livestreamAbortController?.abort();
         this.#livestreamStream = null;
-    });
+      });
+    } catch (e) {
+      this.#logger.error(`Error connecting camera to upstream: ${e}`);
+    }
   }
 
   /**
@@ -212,7 +216,6 @@ class CameraManager {
    */
   private cleanupLivestream() {
     if (this.#picameraServerProcess !== null) {
-      this.#livestreamAbortController?.abort();
       this.#picameraServerProcess.removeAllListeners();
       this.#picameraServerProcess.stderr.removeAllListeners();
       this.#picameraServerProcess.stdout.removeAllListeners();
