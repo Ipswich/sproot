@@ -19,7 +19,8 @@ class CameraManager {
   #logger: winston.Logger;
   #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
   #currentSettings: SDBCameraSettings | null = null;
-  #activeStreams: Set<AbortController> = new Set();
+  #livestreamStream: NodeJS.ReadableStream | null = null;
+  #livestreamAbortController: AbortController | null = null;
   #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
 
@@ -44,6 +45,10 @@ class CameraManager {
       undefined, // endDate
       (err) => this.#logger.error(`Image capture cron error: ${err}`),
     );
+  }
+
+  get livestream(){
+    return this.#livestreamStream;
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
@@ -99,6 +104,10 @@ class CameraManager {
           this.cleanupLivestream();
         });
       }
+
+      if(this.#livestreamStream === null) {
+        await this.connectToLivestreamAsync()
+      }
     } else {
       this.cleanupLivestream();
     }
@@ -130,45 +139,6 @@ class CameraManager {
       );
       return;
     }
-  }
-
-  async forwardLivestreamAsync(writeableStream: NodeJS.WritableStream): Promise<AbortController> {
-    const abortController = new AbortController();
-
-    this.#activeStreams.add(abortController);
-    abortController.signal.addEventListener("abort", () =>
-      this.#activeStreams.delete(abortController),
-    );
-
-    // Setup signal handlers for graceful termination
-    writeableStream
-      .on("close", () => {
-        abortController.abort();
-      })
-      .on("error", () => {
-        abortController.abort();
-      });
-
-    const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
-      method: "GET",
-      headers: this.generateRequestHeaders(),
-      signal: abortController.signal,
-    });
-
-    if (!upstream.ok || !upstream.body) {
-      this.#logger.error("Failed to connect to camera stream");
-      throw new Error("Failed to connect to camera stream");
-    }
-    const readableStream = Readable.fromWeb(upstream.body);
-
-    readableStream.on("error", (err) => {
-      if (!err.message.includes("abort")) {
-        this.#logger.error(`Upstream stream error: ${err.message}`);
-      }
-    });
-    readableStream.pipe(writeableStream);
-
-    return abortController;
   }
 
   async getLatestImageAsync(): Promise<Buffer | null> {
@@ -213,24 +183,44 @@ class CameraManager {
     this.cleanupLivestream();
   }
 
+  private async connectToLivestreamAsync() {
+    this.#livestreamAbortController = new AbortController();
+    const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
+      method: "GET",
+      headers: this.generateRequestHeaders(),
+      signal: this.#livestreamAbortController.signal,
+    });
+
+    // Return if not a successful result
+    if (!upstream.ok || !upstream.body) {
+      return;
+    }
+
+    this.#livestreamStream = Readable.fromWeb(upstream.body);
+
+    this.#livestreamStream.on("error", (err) => {
+        this.#logger.error(`Upstream stream error: ${err.message}`);
+        this.#livestreamStream?.emit("end")
+        this.#livestreamAbortController?.abort()
+        this.#livestreamStream = null;
+    });
+  }
+
   /**
    * Cleans up the live stream. Removes listeners and kills the process,
    * setting the livestreamProcess to null if successful.
    */
   private cleanupLivestream() {
-    // Cleanup active streams - calling abort should also delete them from
-    // the active stream set
-    for (const controller of this.#activeStreams) {
-      controller.abort();
-    }
-
     if (this.#picameraServerProcess !== null) {
+      this.#livestreamAbortController?.abort();
       this.#picameraServerProcess.removeAllListeners();
       this.#picameraServerProcess.stderr.removeAllListeners();
       this.#picameraServerProcess.stdout.removeAllListeners();
       const result = this.#picameraServerProcess.kill();
       if (result == true) {
         this.#picameraServerProcess = null;
+        this.#livestreamStream?.removeAllListeners();
+        this.#livestreamStream = null;
       }
     }
   }

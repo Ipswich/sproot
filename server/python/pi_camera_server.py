@@ -27,7 +27,7 @@ parser.add_argument(
     "--resolution",
     type=str,
     help="Video resolution in WIDTHxHEIGHT format (default: 640x480)",
-    default="640x480",
+    default="1280x960",
 )
 parser.add_argument(
     "--fps", type=int, help="Frame rate to record at. (default: 30)", default=30
@@ -86,15 +86,21 @@ frame_duration = int(1_000_000 / fps)
 picam2 = Picamera2()
 interservice_auth = InterserviceAuthentication()
 
-still_configuration = picam2.create_still_configuration(
-    main={"size": picam2.sensor_resolution, "format": "RGB888"}
-)
-video_configuration = picam2.create_video_configuration(
-    main={"size": resolution, "format": "RGB888"},
-    controls={"FrameDurationLimits": (frame_duration, frame_duration)},
-)
+# still_configuration = picam2.create_still_configuration(
+#     main={"size": picam2.sensor_resolution, "format": "RGB888"}
+# )
+# video_configuration = picam2.create_video_configuration(
+#     main={"size": picam2.sensor_resolution, "format": "RGB888"},
+#     lores={"size": resolution, "format": "YUV420"},
+#     controls={"FrameDurationLimits": (frame_duration, frame_duration)},
+# )
+# picam2.configure(video_configuration)
 
-picam2.configure(video_configuration)
+main_stream = {"size": picam2.sensor_resolution, "format": "RGB888"}
+lores_stream = {"size": resolution}
+video_config = picam2.create_video_configuration(main_stream, lores_stream, encode="lores", buffer_count=2)
+picam2.configure(video_config)
+
 output = StreamingOutput()
 
 
@@ -111,7 +117,10 @@ async def verify_auth(
 @app.get("/capture")
 async def capture(authenticated: bool = Depends(verify_auth)):
     buffer = io.BytesIO()
-    picam2.switch_mode_and_capture_file(still_configuration, buffer, format="jpeg")
+    # picam2.switch_mode_and_capture_file(still_configuration, buffer, format="jpeg")
+    request = picam2.capture_request()
+    request.save("main", buffer, format="jpeg")
+    request.release()
     buffer.seek(0)
     return Response(content=buffer.read(), media_type="image/jpeg")
 
