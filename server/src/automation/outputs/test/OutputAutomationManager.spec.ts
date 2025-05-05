@@ -44,7 +44,7 @@ describe("OutputAutomationManager.ts tests", () => {
       sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
-      const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
+      const result = automationManager.evaluateAsync(sensorListMock, outputListMock, 60);
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
@@ -83,7 +83,7 @@ describe("OutputAutomationManager.ts tests", () => {
       sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
-      let result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
+      let result = automationManager.evaluateAsync(sensorListMock, outputListMock, 60, now);
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
@@ -100,13 +100,13 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBOutputActionView,
       ]);
       await automationManager.loadAsync(1);
-      result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
+      result = automationManager.evaluateAsync(sensorListMock, outputListMock, 60, now);
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
 
       //Add some time (longer automationInterval), not runnable
-      result = automationManager.evaluate(
+      result = automationManager.evaluateAsync(
         sensorListMock,
         outputListMock,
         61,
@@ -117,7 +117,7 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.value, 75);
 
       //Add same time, this should make the automation runnable again
-      result = automationManager.evaluate(
+      result = automationManager.evaluateAsync(
         sensorListMock,
         outputListMock,
         60,
@@ -161,7 +161,7 @@ describe("OutputAutomationManager.ts tests", () => {
       sprootDB.getWeekdayConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
-      const result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
+      const result = automationManager.evaluateAsync(sensorListMock, outputListMock, 60, now);
       assert.equal(result?.names.length, 0);
       assert.isNull(result.value);
     });
@@ -215,7 +215,7 @@ describe("OutputAutomationManager.ts tests", () => {
 
       await automationManager.loadAsync(1);
 
-      const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
+      const result = automationManager.evaluateAsync(sensorListMock, outputListMock, 60);
       assert.equal(result?.names.length, 2);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.names[1], "test2");
@@ -271,7 +271,7 @@ describe("OutputAutomationManager.ts tests", () => {
 
       await automationManager.loadAsync(1);
 
-      const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
+      const result = automationManager.evaluateAsync(sensorListMock, outputListMock, 60);
       assert.equal(result?.names.length, 2);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.names[1], "test2");

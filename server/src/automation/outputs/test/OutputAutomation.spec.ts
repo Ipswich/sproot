@@ -10,12 +10,12 @@ describe("Automation.ts tests", () => {
   describe("evaluate", () => {
     it("should return the automation's value (conditions met)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automation = new OutputAutomation(1, "test", 75, "or", sprootDB);
+      const automation = new OutputAutomation(1, "test", 75, "or", null, sprootDB);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
       //No conditions, should be null
-      assert.isNull(automation.evaluate(sensorListMock, outputListMock, new Date()));
+      assert.isNull(automation.evaluateAsync(sensorListMock, outputListMock, new Date()));
 
       //Add a condition
       sprootDB.getSensorConditionsAsync.resolves([]);
@@ -31,12 +31,12 @@ describe("Automation.ts tests", () => {
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
       await automation.conditions.loadAsync();
-      assert.equal(automation.evaluate(sensorListMock, outputListMock, new Date()), 75);
+      assert.equal(automation.evaluateAsync(sensorListMock, outputListMock, new Date()), 75);
     });
 
     it("should return null (conditions not met)", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automation = new OutputAutomation(1, "test", 75, "or", sprootDB);
+      const automation = new OutputAutomation(1, "test", 75, "or", null, sprootDB);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
       const now = new Date();
@@ -63,7 +63,7 @@ describe("Automation.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
-      assert.isNull(automation.evaluate(sensorListMock, outputListMock, now));
+      assert.isNull(automation.evaluateAsync(sensorListMock, outputListMock, now));
     });
   });
 });

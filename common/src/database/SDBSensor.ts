@@ -1,6 +1,4 @@
-import { RowDataPacket } from "mysql2";
-
-type SDBSensor = RowDataPacket & {
+type SDBSensor = {
   id: number;
   name: string;
   model: string;

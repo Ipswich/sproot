@@ -1,6 +1,4 @@
-import { RowDataPacket } from "mysql2/promise";
-
-type SDBUser = RowDataPacket & {
+type SDBUser = {
   username: string;
   hash: string;
   email: string;

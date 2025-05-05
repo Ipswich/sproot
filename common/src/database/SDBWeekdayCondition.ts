@@ -1,7 +1,6 @@
-import { RowDataPacket } from "mysql2";
 import { ConditionGroupType } from "@sproot/sproot-common/src/automation/ConditionTypes";
 
-type SDBWeekdayCondition = RowDataPacket & {
+type SDBWeekdayCondition = {
   id: number;
   automationId: number;
   groupType: ConditionGroupType;

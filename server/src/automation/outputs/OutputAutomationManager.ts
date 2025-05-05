@@ -26,27 +26,32 @@ export default class OutputAutomationManager {
    * @param now
    * @returns
    */
-  evaluate(
+  async evaluateAsync(
     sensorList: SensorList,
     outputList: OutputList,
     automationTimeout: number,
     now: Date = new Date(),
-  ): { names: string[]; value: number | null } {
+  ): Promise<{ names: string[]; value: number | null }> {
     //If not runnable, return the last result
     if (!this.#isRunnable(now, automationTimeout)) {
       return this.#lastEvaluation;
     } else {
       this.#lastRunAt = now.getTime();
     }
-    const evaluatedAutomations = Object.values(this.#automations)
-      .map((automation) => {
-        return {
-          id: automation.id,
-          name: automation.name,
-          value: automation.evaluate(sensorList, outputList, now),
-        };
-      })
-      .filter((r) => r.value != null) as { id: number; name: string; value: number }[];
+    const automationPromises = Object.values(this.#automations).map(async (automation) => {
+      return {
+        id: automation.id,
+        name: automation.name,
+        value: await automation.evaluateAsync(sensorList, outputList, now),
+      };
+    });
+
+    const evaluationResults = await Promise.all(automationPromises);
+    const evaluatedAutomations = evaluationResults.filter((r) => r.value != null) as {
+      id: number;
+      name: string;
+      value: number;
+    }[];
 
     if (evaluatedAutomations.length > 1) {
       //More than one automation evaluated to true
@@ -99,6 +104,7 @@ export default class OutputAutomationManager {
         automation.name,
         automation.value,
         automation.operator,
+        new Date(automation.lastRunTime),
         this.#sprootDB,
       );
 

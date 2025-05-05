@@ -172,7 +172,7 @@ export abstract class OutputBase implements IOutputBase {
     outputList: OutputList,
     now: Date,
   ): Promise<void> {
-    const result = this.#automationManager.evaluate(
+    const result = await this.#automationManager.evaluateAsync(
       sensorList,
       outputList,
       this.automationTimeout,

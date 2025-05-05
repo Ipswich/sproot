@@ -19,7 +19,7 @@ export class TimeCondition implements ITimeCondition {
     this.endTime = endTime ?? null;
   }
 
-  evaluate(now: Date): boolean {
-    return evaluateTime(now, this.startTime, this.endTime);
+  evaluate(now: Date, lastRunTime: Date | null): boolean {
+    return evaluateTime(now, this.startTime, this.endTime, lastRunTime);
   }
 }

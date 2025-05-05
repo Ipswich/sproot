@@ -89,20 +89,23 @@ export class Conditions {
     sensorList: SensorList,
     outputList: OutputList,
     now: Date,
+    lastRunTime: Date | null,
   ): boolean {
     const evaluateByConditionFlavor = (condition: EnabledConditionTypes) => {
+      let returnValue = false;
       if (condition instanceof SensorCondition) {
-        return condition.evaluate(sensorList);
+        returnValue = condition.evaluate(sensorList);
       }
       if (condition instanceof OutputCondition) {
-        return condition.evaluate(outputList);
+        returnValue = condition.evaluate(outputList);
       }
       if (condition instanceof TimeCondition) {
-        return condition.evaluate(now);
+        returnValue = condition.evaluate(now, lastRunTime);
       }
       if (condition instanceof WeekdayCondition) {
-        return condition.evaluate(now);
+        returnValue = condition.evaluate(now);
       }
+      return returnValue;
     };
 
     // If no conditions, false.

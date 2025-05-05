@@ -173,10 +173,18 @@ export class SprootDB implements ISprootDB {
     return states;
   }
   async getAutomationsAsync(): Promise<SDBAutomation[]> {
-    return this.#connection("automations").select("*");
+    const automations = await this.#connection("automations").select("*");
+    for (const automation of automations) {
+      automation.lastRunTime = automation.lastRunTime.replace(" ", "T") + "Z";
+    }
+    return automations;
   }
   async getAutomationAsync(automationId: number): Promise<SDBAutomation[]> {
-    return this.#connection("automations").where("id", automationId).select("*");
+    const automations = await this.#connection("automations").where("id", automationId).select("*");
+    for (const automation of automations) {
+      automation.lastRunTime = automation.lastRunTime.replace(" ", "T") + "Z";
+    }
+    return automations;
   }
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
     return (await this.#connection("automations").insert({ name: name, operator }))[0] ?? -1;
@@ -185,8 +193,15 @@ export class SprootDB implements ISprootDB {
     name: string,
     operator: AutomationOperator,
     id: number,
+    lastRunTime: Date | null,
   ): Promise<void> {
-    return this.#connection("automations").where("id", id).update({ name, operator });
+    return this.#connection("automations")
+      .where("id", id)
+      .update({
+        name,
+        operator,
+        lastRunTime: lastRunTime?.toISOString().slice(0, 19).replace("T", " "),
+      });
   }
   async deleteAutomationAsync(automationId: number): Promise<void> {
     return this.#connection("automations").where("id", automationId).delete();

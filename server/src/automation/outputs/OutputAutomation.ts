@@ -9,23 +9,44 @@ export class OutputAutomation implements IAutomation {
   name: string;
   value: number;
   operator: AutomationOperator;
+  lastRunTime: Date | null;
   conditions: Conditions;
+  sprootDB: ISprootDB;
 
   constructor(
     id: number,
     name: string,
     value: number,
     operator: AutomationOperator,
+    lastRunTime: Date | null,
     sprootDB: ISprootDB,
   ) {
     this.id = id;
     this.name = name;
     this.value = value;
     this.operator = operator;
+    this.lastRunTime = lastRunTime ?? null;
     this.conditions = new Conditions(this.id, sprootDB);
+    this.sprootDB = sprootDB;
   }
 
-  evaluate(sensorList: SensorList, outputList: OutputList, now: Date): number | null {
-    return this.conditions.evaluate(this.operator, sensorList, outputList, now) ? this.value : null;
+  async evaluateAsync(
+    sensorList: SensorList,
+    outputList: OutputList,
+    now: Date,
+  ): Promise<number | null> {
+    const returnValue = this.conditions.evaluate(
+      this.operator,
+      sensorList,
+      outputList,
+      now,
+      this.lastRunTime,
+    )
+      ? this.value
+      : null;
+    if (returnValue != null) {
+      await this.sprootDB.updateAutomationAsync(this.name, this.operator, this.id, now);
+    }
+    return returnValue;
   }
 }
