@@ -103,7 +103,7 @@ export default function ConditionsTable({
         await deleteWeekdayConditionMutation.mutateAsync(conditionId);
       };
     }
-    return async () => {};
+    return async () => { };
   }
 
   useEffect(() => {
@@ -280,6 +280,7 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
       {timeCondition.startTime &&
         timeCondition.endTime &&
         `Time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
+      {!timeCondition.startTime && timeCondition.endTime && `Every ${timeCondition.endTime} ${Number(timeCondition.endTime) > 1 ? "minutes" : "minute"}`}
     </Group>
   );
 }

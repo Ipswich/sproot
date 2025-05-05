@@ -1,4 +1,4 @@
-import { Button, Group, Stack, Space, SegmentedControl } from "@mantine/core";
+import { Button, Group, Stack, Space, SegmentedControl, NumberInput } from "@mantine/core";
 import { TimeInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -55,10 +55,10 @@ export default function TimeCondition({
         value === "" || regex.test(value)
           ? null
           : "Start time must be null or proper time format",
-      endTime: (value: string) =>
-        value === "" || regex.test(value)
+      endTime: (value: string, {startTime}) => {
+        return value === "" || (startTime === "" || regex.test(value))
           ? null
-          : "End time must be null or proper time format",
+          : "End time must be null or proper time format"}
     },
   });
 
@@ -73,6 +73,9 @@ export default function TimeCondition({
             timeConditionForm.setFieldValue("startTime", "");
             timeConditionForm.setFieldValue("endTime", "");
           }
+          if (timeConditionType === "Every") {
+            timeConditionForm.setFieldValue("startTime", "");
+          }
           addTimeMutation.mutate(values);
           timeConditionForm.reset();
           toggleAddNewCondition();
@@ -83,7 +86,7 @@ export default function TimeCondition({
             flex={1}
             value={timeConditionType}
             onChange={setTimeConditionType}
-            data={["Once", "Between", "Always"]}
+            data={["Once", "Between", "Always", "Every"]}
             color="blue"
           />
           <Group justify="space-around">
@@ -128,6 +131,26 @@ export default function TimeCondition({
               </Fragment>
             )}
             {timeConditionType === "Always" && <Fragment />}
+            {timeConditionType === "Every" && (
+              <Fragment>
+                <NumberInput
+                  required
+                  w={"50%"}
+                  step={1}
+                  stepHoldDelay={500}
+                  stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+                  max={1440}
+                  min={1}
+                  onChange={(value) => {
+                    timeConditionForm.setFieldValue(
+                      "endTime",
+                      value.toString()
+                    )}
+                  }
+                  suffix={timeConditionForm.values.endTime !== "1" ? " Minutes" : " Minute"}
+                />
+              </Fragment>
+            )}
           </Group>
           <Group justify="center" mt="md">
             <Button type="submit">Save</Button>
