@@ -175,14 +175,18 @@ export class SprootDB implements ISprootDB {
   async getAutomationsAsync(): Promise<SDBAutomation[]> {
     const automations = await this.#connection("automations").select("*");
     for (const automation of automations) {
-      automation.lastRunTime = automation.lastRunTime.replace(" ", "T") + "Z";
+      if (automation.lastRunTime != null) {
+        automation.lastRunTime = automation.lastRunTime.replace(" ", "T") + "Z";
+      }
     }
     return automations;
   }
   async getAutomationAsync(automationId: number): Promise<SDBAutomation[]> {
     const automations = await this.#connection("automations").where("id", automationId).select("*");
     for (const automation of automations) {
-      automation.lastRunTime = automation.lastRunTime.replace(" ", "T") + "Z";
+      if (automation.lastRunTime != null) {
+        automation.lastRunTime = automation.lastRunTime.replace(" ", "T") + "Z";
+      }
     }
     return automations;
   }
@@ -195,13 +199,14 @@ export class SprootDB implements ISprootDB {
     id: number,
     lastRunTime: Date | null,
   ): Promise<void> {
-    return this.#connection("automations")
-      .where("id", id)
-      .update({
-        name,
-        operator,
-        lastRunTime: lastRunTime?.toISOString().slice(0, 19).replace("T", " "),
+    // Only update if given a non null value.
+    let data = { name, operator };
+    if (lastRunTime != null) {
+      data = Object.assign(data, {
+        lastRunTime: lastRunTime.toISOString().slice(0, 19).replace("T", " "),
       });
+    }
+    return this.#connection("automations").where("id", id).update(data);
   }
   async deleteAutomationAsync(automationId: number): Promise<void> {
     return this.#connection("automations").where("id", automationId).delete();
@@ -243,7 +248,15 @@ export class SprootDB implements ISprootDB {
     return this.#connection("output_actions").where("id", outputActionId).delete();
   }
   async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]> {
-    return this.#connection("output_actions_view").where("outputId", outputId).select("*");
+    const automations = await this.#connection("output_actions_view")
+      .where("outputId", outputId)
+      .select("*");
+    for (const automation of automations) {
+      if (automation.lastRunTime != null) {
+        automation.lastRunTime = automation.lastRunTime.replace(" ", "T") + "Z";
+      }
+    }
+    return automations;
   }
   async getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]> {
     return this.#connection("sensor_conditions as sc")

@@ -104,7 +104,7 @@ export default class OutputAutomationManager {
         automation.name,
         automation.value,
         automation.operator,
-        new Date(automation.lastRunTime),
+        automation.lastRunTime ? new Date(automation.lastRunTime) : null,
         this.#sprootDB,
       );
 

@@ -37,7 +37,6 @@ export function evaluateTime(
   lastRunTime?: Date | null,
 ): boolean {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
-
   // ALWAYS
   if (startTime == null && endTime == null) {
     // if neither startTime nor endTime, return true
@@ -63,7 +62,7 @@ export function evaluateTime(
     if (isNaN(endTimeAsMinutes)) {
       return false;
     }
-    return now.getTime() - (lastRunTime?.getTime() ?? 0) >= endTimeAsMinutes / 60000;
+    return now.getTime() - (lastRunTime?.getTime() ?? 0) >= endTimeAsMinutes * 60000;
   }
   // anything else, return false.
   return false;

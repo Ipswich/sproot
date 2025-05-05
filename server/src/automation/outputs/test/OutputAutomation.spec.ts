@@ -31,7 +31,7 @@ describe("Automation.ts tests", () => {
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
       await automation.conditions.loadAsync();
-      assert.equal(automation.evaluateAsync(sensorListMock, outputListMock, new Date()), 75);
+      assert.equal(await automation.evaluateAsync(sensorListMock, outputListMock, new Date()), 75);
     });
 
     it("should return null (conditions not met)", () => {

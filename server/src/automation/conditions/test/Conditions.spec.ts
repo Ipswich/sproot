@@ -34,8 +34,8 @@ describe("Conditions.ts tests", () => {
       now.setHours(12, 0);
 
       // No conditions should return false
-      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
-      assert.isFalse(conditions.evaluate("or", sensorList, outputList, now));
+      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now, null));
+      assert.isFalse(conditions.evaluate("or", sensorList, outputList, now, null));
 
       const sensorConditions = [] as SDBSensorCondition[];
       const outputConditions = [] as SDBOutputCondition[];
@@ -58,7 +58,7 @@ describe("Conditions.ts tests", () => {
         readingType: ReadingType.temperature,
       } as SDBSensorCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now, null));
       sensorConditions.push({
         automationId: 1,
         id: 2,
@@ -69,7 +69,7 @@ describe("Conditions.ts tests", () => {
         readingType: ReadingType.pressure,
       } as SDBSensorCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now, null));
       //This one is false, but the previous one is true
       sensorConditions.push({
         automationId: 1,
@@ -81,7 +81,7 @@ describe("Conditions.ts tests", () => {
         readingType: ReadingType.humidity,
       } as SDBSensorCondition);
       await conditions.loadAsync();
-      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now, null));
 
       // Clean up that last one
       sensorConditions.pop();
@@ -97,7 +97,7 @@ describe("Conditions.ts tests", () => {
         outputId: 1,
       } as SDBOutputCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now, null));
       //This one is false, but the previous one is true
       outputConditions.push({
         automationId: 1,
@@ -108,7 +108,7 @@ describe("Conditions.ts tests", () => {
         outputId: 1,
       } as SDBOutputCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now, null));
 
       // Add some time Conditions
       timeConditions.push({
@@ -119,7 +119,7 @@ describe("Conditions.ts tests", () => {
         endTime: null,
       } as SDBTimeCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now, null));
       //This one is false, but the previous one is true
       timeConditions.push({
         automationId: 1,
@@ -129,7 +129,7 @@ describe("Conditions.ts tests", () => {
         endTime: "14:00",
       } as SDBTimeCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now, null));
       //This one is also true (and should make this all return false)
       timeConditions.push({
         automationId: 1,
@@ -139,10 +139,10 @@ describe("Conditions.ts tests", () => {
         endTime: "13:00",
       } as SDBTimeCondition);
       await conditions.loadAsync();
-      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now, null));
 
       //But evaluating as "or" should return true
-      assert.isTrue(conditions.evaluate("or", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("or", sensorList, outputList, now, null));
     });
   });
 

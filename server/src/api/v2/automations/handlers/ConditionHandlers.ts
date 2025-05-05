@@ -13,6 +13,8 @@ import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SensorList } from "../../../../sensors/list/SensorList";
 
+const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
  * @param request
@@ -451,11 +453,13 @@ export async function addAsync(
         );
         break;
       case "time":
-        const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
         if (request.body.startTime != null && !regex.test(request.body.startTime)) {
           invalidFields.push("Invalid or missing start time.");
         }
-        if (request.body.endTime != null && !regex.test(request.body.endTime)) {
+        if (
+          request.body.endTime != null &&
+          !(request.body.startTime == null || regex.test(request.body.endTime))
+        ) {
           invalidFields.push("Invalid or missing end time.");
         }
         if (invalidFields.length > 0) {
@@ -648,10 +652,10 @@ export async function updateAsync(
         condition = new SensorCondition(
           sdbcondition.id,
           sdbcondition.groupType,
-          request.body.sensorId ?? sdbcondition.sensorId,
-          request.body.readingType ?? sdbcondition.readingType,
-          request.body.operator ?? sdbcondition.operator,
-          request.body.comparisonValue ?? sdbcondition.comparisonValue,
+          request.body.sensorId ?? (sdbcondition as SDBSensorCondition).sensorId,
+          request.body.readingType ?? (sdbcondition as SDBSensorCondition).readingType,
+          request.body.operator ?? (sdbcondition as SDBSensorCondition).operator,
+          request.body.comparisonValue ?? (sdbcondition as SDBSensorCondition).comparisonValue,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -683,9 +687,9 @@ export async function updateAsync(
         condition = new OutputCondition(
           sdbcondition.id,
           sdbcondition.groupType,
-          request.body.outputId ?? sdbcondition.outputId,
-          request.body.operator ?? sdbcondition.operator,
-          request.body.comparisonValue ?? sdbcondition.comparisonValue,
+          request.body.outputId ?? (sdbcondition as SDBOutputCondition).outputId,
+          request.body.operator ?? (sdbcondition as SDBOutputCondition).operator,
+          request.body.comparisonValue ?? (sdbcondition as SDBOutputCondition).comparisonValue,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -713,8 +717,8 @@ export async function updateAsync(
         condition = new TimeCondition(
           sdbcondition.id,
           sdbcondition.groupType,
-          sdbcondition.startTime,
-          sdbcondition.endTime,
+          (sdbcondition as SDBTimeCondition).startTime,
+          (sdbcondition as SDBTimeCondition).endTime,
         );
         if (request.body.startTime !== undefined) {
           condition.startTime = request.body.startTime;
@@ -722,7 +726,6 @@ export async function updateAsync(
         if (request.body.endTime !== undefined) {
           condition.endTime = request.body.endTime;
         }
-        const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
         if (condition.startTime != null && !regex.test(condition.startTime)) {
           invalidDetails.push("Invalid start time.");
         }
@@ -739,7 +742,7 @@ export async function updateAsync(
         condition = new WeekdayCondition(
           sdbcondition.id,
           sdbcondition.groupType,
-          request.body.weekdays ?? sdbcondition.weekdays,
+          request.body.weekdays ?? (sdbcondition as SDBWeekdayCondition).weekdays,
         );
         if (
           request.body.weekdays === null ||
