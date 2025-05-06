@@ -4,15 +4,6 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.alterTable("automations", (table) => {
     table.dateTime("lastRunTime").nullable().defaultTo(null);
   });
-  await knex.schema.alterView("output_actions_view", (view) => {
-    view.as(
-      knex
-        .select("*")
-        .from("automations")
-        .leftJoin("output_actions", "automations.id", "output_actions.automationId")
-        .select("automations.lastRunTime"),
-    );
-  });
   await knex.schema.createViewOrReplace("output_actions_view", (view) => {
     view.as(
       knex("automations")
