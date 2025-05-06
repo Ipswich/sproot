@@ -3,7 +3,7 @@ import { CameraManager } from "../../../camera/CameraManager";
 import winston from "winston";
 
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
-  const cameraManger = request.app.get("cameraManager") as CameraManager;
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
   const logger = request.app.get("logger") as winston.Logger;
   try {
     response.setHeader("Age", 0);
@@ -11,7 +11,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     response.setHeader("Pragma", "no-cache");
     response.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=FRAME");
 
-    const livestream = cameraManger.livestream;
+    const livestream = cameraManager.livestream;
     if (!livestream) {
       throw new Error("Livestream not available");
     }
@@ -47,8 +47,8 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 }
 
 export async function getLatestImageAsync(request: Request, response: Response): Promise<void> {
-  const cameraManger = request.app.get("cameraManager") as CameraManager;
-  const imageBuffer = await cameraManger.getLatestImageAsync();
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const imageBuffer = await cameraManager.getLatestImageAsync();
   if (imageBuffer === null) {
     response.status(404).json({
       statusCode: 404,

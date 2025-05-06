@@ -130,6 +130,9 @@ class CameraManager {
   }
 
   async captureImageAsync(fileName: string) {
+    if (this.#disposed) {
+      return;
+    }
     let response: Response;
     try {
       response = await fetch(`${this.#baseUrl}/capture`, {
@@ -138,7 +141,7 @@ class CameraManager {
       });
       if (!response?.ok || !response.body) {
         this.#logger.error(
-          `Image capture was unsuccessful. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
+          `Image capture was unsuccessful(status: ${response?.status}).. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
         );
         return;
       }
@@ -151,7 +154,7 @@ class CameraManager {
       this.#logger.info(`Image captured. Filename: ${IMAGE_DIRECTORY}/${fileName}`);
     } catch (e) {
       this.#logger.error(
-        `Image capture was unsuccessful. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
+        `Image capture failed for ${IMAGE_DIRECTORY}/${fileName}: ${e instanceof Error ? e.message : String(e)}`,
       );
       return;
     }
@@ -197,16 +200,16 @@ class CameraManager {
     const retentionPeriodInMS =
       (this.#currentSettings?.imageRetentionDays || 0) * 24 * 60 * 60 * 1000;
     const cutoffTime = now.getTime() - retentionPeriodInMS;
+    let directorySizeMB = (await this.getDirectorySizeAsync(directory)) / (1024 * 1024);
 
     // Process files until we're within limits
     let oldestFilePath = await this.getOldestImagePathAsync();
 
     while (oldestFilePath) {
-      const directorySizeMB = (await this.getDirectorySizeAsync(directory)) / (1024 * 1024);
-
       // Get stats for the oldest file
       const stats = await fs.promises.stat(oldestFilePath);
       const oldestFileTime = stats.mtime.getTime();
+      const fileSizeMB = stats.size / (1024 * 1024);
 
       // Check if we need to delete this file
       const oversizedStorage = directorySizeMB > maxRetentionSizeMB;
@@ -219,6 +222,8 @@ class CameraManager {
       // Delete the file
       await fs.promises.rm(oldestFilePath);
       this.#logger.debug(`Removed old image: ${oldestFilePath}`);
+
+      directorySizeMB -= fileSizeMB;
 
       // Update for next iteration
       oldestFilePath = await this.getOldestImagePathAsync();
@@ -253,6 +258,11 @@ class CameraManager {
   }
 
   private async connectToLivestreamAsync() {
+    if (this.#livestreamStream) {
+      this.#livestreamStream.removeAllListeners();
+      this.#livestreamStream = null;
+    }
+
     this.#livestreamAbortController = new AbortController();
     try {
       const upstream = await fetch(`${this.#baseUrl}/stream.mjpg`, {
@@ -267,15 +277,27 @@ class CameraManager {
       }
 
       this.#livestreamStream = Readable.fromWeb(upstream.body);
+      this.#logger.info(`Successfully connected to upstream livestream`);
 
-      this.#livestreamStream.on("error", (err) => {
-        this.#logger.error(`Upstream stream error: ${err.message}`);
-        this.#livestreamStream?.emit("end");
+      this.#livestreamStream.on("error", (e) => {
+        this.#logger.error(`Upstream stream error: ${e instanceof Error ? e.message : String(e)}`);
+        // Safely clean up without triggering additional errors
+        try {
+          this.#livestreamStream?.emit("end");
+        } catch (e) {
+          this.#logger.debug(
+            `Error during stream cleanup: ${e instanceof Error ? e.message : String(e)}`,
+          );
+        }
         this.#livestreamAbortController?.abort();
         this.#livestreamStream = null;
       });
     } catch (e) {
-      this.#logger.error(`Error connecting camera to upstream: ${e}`);
+      this.#logger.error(
+        `Error connecting camera to upstream livestream: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      this.#livestreamStream = null;
+      this.#livestreamAbortController = null;
     }
   }
 
@@ -284,15 +306,26 @@ class CameraManager {
    * setting the livestreamProcess to null if successful.
    */
   private cleanupLivestream() {
+    // Abort any ongoing fetch first
+    if (this.#livestreamAbortController) {
+      this.#livestreamAbortController.abort();
+      this.#livestreamAbortController = null;
+    }
+
+    // Clean up stream
+    if (this.#livestreamStream) {
+      this.#livestreamStream.removeAllListeners();
+      this.#livestreamStream = null;
+    }
+
+    // Clean up process
     if (this.#picameraServerProcess !== null) {
       this.#picameraServerProcess.removeAllListeners();
       this.#picameraServerProcess.stderr.removeAllListeners();
       this.#picameraServerProcess.stdout.removeAllListeners();
       const result = this.#picameraServerProcess.kill();
-      if (result == true) {
+      if (result === true) {
         this.#picameraServerProcess = null;
-        this.#livestreamStream?.removeAllListeners();
-        this.#livestreamStream = null;
       }
     }
   }
