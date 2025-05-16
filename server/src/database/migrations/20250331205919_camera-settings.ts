@@ -12,6 +12,8 @@ export async function up(knex: Knex): Promise<void> {
       table.integer("yImageResolution").nullable();
       table.integer("imageRetentionDays").notNullable();
       table.integer("imageRetentionSize").notNullable();
+      table.tinyint("timelapseEnabled").notNullable().defaultTo(0);
+      table.integer("timelapseInterval").nullable();
     });
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
@@ -116,20 +117,32 @@ interface ISprootDB {
   deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
 
   getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
-  addCameraAsync(
-    xVideoResolution: number,
-    yVideoResolution: number,
-    xImageResolution: number,
-    yImageResolution: number,
+  addCameraSettingsAsync(
+    name: string,
+    xVideoResolution: number | null,
+    yVideoResolution: number | null,
+    videoFps: number,
+    xImageResolution: number | null,
+    yImageResolution: number | null,
+    imageRetentionDays: number,
+    imageRetentionSize: number,
+    timelapseEnabled: boolean,
+    timelapseInterval: number | null,
   ): Promise<number>;
-  updateCameraAsync(
+  updateCameraSettingsAsync(
     cameraId: number,
-    xVideoResolution: number,
-    yVideoResolution: number,
-    xImageResolution: number,
-    yImageResolution: number,
+    name: string,
+    xVideoResolution: number | null,
+    yVideoResolution: number | null,
+    videoFps: number,
+    xImageResolution: number | null,
+    yImageResolution: number | null,
+    imageRetentionDays: number,
+    imageRetentionSize: number,
+    timelapseEnabled: boolean,
+    timelapseInterval: number | null,
   ): Promise<void>;
-  deleteCameraAsync(cameraId: number): Promise<void>;
+  deleteCameraSettingsAsync(cameraId: number): Promise<void>;
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
@@ -312,22 +325,18 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getSensorAsync(_id: number): Promise<SDBSensor[]> {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteSensorAsync(_id: number): Promise<void> {
     return;
   }
@@ -336,22 +345,18 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addOutputAsync(_output: SDBOutput): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateOutputAsync(_output: SDBOutput): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteOutputAsync(_id: number): Promise<void> {
     return;
   }
 
-  /* eslint-disable */
   async getSensorReadingsAsync(
     _sensor: ISensorBase,
     _since: Date,
@@ -359,9 +364,7 @@ class MockSprootDB implements ISprootDB {
   ): Promise<SDBReading[]> {
     return [];
   }
-  /* eslint-enable */
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
     return;
   }
@@ -370,38 +373,44 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async addCameraAsync(
-    _xVideoResolution: number,
-    _yVideoResolution: number,
-    _xImageResolution: number,
-    _yImageResolution: number,
+  async addCameraSettingsAsync(
+    _name: string,
+    _xVideoResolution: number | null,
+    _yVideoResolution: number | null,
+    _videoFps: number,
+    _xImageResolution: number | null,
+    _yImageResolution: number | null,
+    _imageRetentionDays: number,
+    _imageRetentionSize: number,
+    _timelapseEnabled: boolean,
+    _timelapseInterval: number | null,
   ): Promise<number> {
     return 0;
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async updateCameraAsync(
+  async updateCameraSettingsAsync(
     _cameraId: number,
-    _xVideoResolution: number,
-    _yVideoResolution: number,
-    _xImageResolution: number,
-    _yImageResolution: number,
+    _name: string,
+    _xVideoResolution: number | null,
+    _yVideoResolution: number | null,
+    _videoFps: number,
+    _xImageResolution: number | null,
+    _yImageResolution: number | null,
+    _imageRetentionDays: number,
+    _imageRetentionSize: number,
+    _timelapseEnabled: boolean,
+    _timelapseInterval: number | null,
   ): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async deleteCameraAsync(_cameraId: number): Promise<void> {
+  async deleteCameraSettingsAsync(_cameraId: number): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getUserAsync(_username: string): Promise<SDBUser[]> {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addUserAsync(_user: SDBUser): Promise<void> {
     return;
   }

@@ -119,27 +119,52 @@ async def verify_auth(
 
 @app.get("/capture")
 async def capture(authenticated: bool = Depends(verify_auth)):
-    buffer = io.BytesIO()
-    # picam2.switch_mode_and_capture_file(still_configuration, buffer, format="jpeg")
-    request = picam2.capture_request()
-    request.save("main", buffer, format="jpeg")
-    request.release()
-    buffer.seek(0)
-    return Response(content=buffer.read(), media_type="image/jpeg")
+    try:
+        buffer = io.BytesIO()
+        request = picam2.capture_request()
+        try:
+            request.save("main", buffer, format="jpeg")
+        finally:
+            # Always release the request
+            request.release()
+        
+        buffer.seek(0)
+        content = buffer.read()
+        # Explicitly close and dereference the buffer
+        buffer.close()
+        buffer = None
+        
+        return Response(content=content, media_type="image/jpeg")
+    except Exception as e:
+        logging.error(f"Error in capture endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Capture failed: {str(e)}")
 
 
 async def generate_mjpeg_stream():
     try:
         while True:
-            with output.condition:
-                output.condition.wait()
-                frame = output.frame
-            yield b"--FRAME\r\n"
-            yield b"Content-Type: image/jpeg\r\n"
-            yield f"Content-Length: {len(frame)}\r\n\r\n".encode()
-            yield frame
-            yield b"\r\n"
-            await asyncio.sleep(0)
+            try:
+                with output.condition:
+                    # Add timeout to prevent deadlocks
+                    if not output.condition.wait(timeout=5):
+                        # If timeout occurs, send an empty frame or continue
+                        continue
+                    
+                    if output.frame is None:
+                        continue
+                    
+                    frame = output.frame
+                
+                yield b"--FRAME\r\n"
+                yield b"Content-Type: image/jpeg\r\n"
+                yield f"Content-Length: {len(frame)}\r\n\r\n".encode()
+                yield frame
+                yield b"\r\n"
+                await asyncio.sleep(0)
+            except Exception as e:
+                logging.error(f"Error in stream generation: {str(e)}")
+                # Add small delay to avoid CPU spinning on errors
+                await asyncio.sleep(0.1)
     except Exception as e:
         logging.warning(f"Streaming client disconnected: {str(e)}")
 

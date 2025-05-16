@@ -8,6 +8,8 @@ type SDBCameraSettings = {
   yImageResolution: number | null;
   imageRetentionDays: number;
   imageRetentionSize: number;
+  timelapseEnabled: boolean;
+  timelapseInterval: number | null;
 };
 
 export type { SDBCameraSettings };

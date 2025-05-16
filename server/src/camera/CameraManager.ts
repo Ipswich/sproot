@@ -23,6 +23,7 @@ class CameraManager {
   #livestreamAbortController: AbortController | null = null;
   #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
+  #reconnectTimeoutRef: NodeJS.Timeout | null = null;
 
   constructor(sprootDB: ISprootDB, interserviceAuthenticationKey: string, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
@@ -258,10 +259,7 @@ class CameraManager {
   }
 
   private async connectToLivestreamAsync() {
-    if (this.#livestreamStream) {
-      this.#livestreamStream.removeAllListeners();
-      this.#livestreamStream = null;
-    }
+    this.disconnectFromLivestream();
 
     this.#livestreamAbortController = new AbortController();
     try {
@@ -277,6 +275,13 @@ class CameraManager {
       }
 
       this.#livestreamStream = Readable.fromWeb(upstream.body);
+      // reconnect every 6 hours - long lived http connections can be unreliable
+      this.#reconnectTimeoutRef = setTimeout(
+        async () => {
+          await this.reconnectLivestreamAsync();
+        },
+        60 * 1000 * 60 * 6,
+      );
       this.#logger.info(`Successfully connected to upstream livestream`);
 
       this.#livestreamStream.on("error", (e) => {
@@ -289,15 +294,51 @@ class CameraManager {
             `Error during stream cleanup: ${e instanceof Error ? e.message : String(e)}`,
           );
         }
-        this.#livestreamAbortController?.abort();
-        this.#livestreamStream = null;
+        this.disconnectFromLivestream();
       });
     } catch (e) {
       this.#logger.error(
         `Error connecting camera to upstream livestream: ${e instanceof Error ? e.message : String(e)}`,
       );
-      this.#livestreamStream = null;
+      this.disconnectFromLivestream();
+    }
+  }
+
+  /**
+   * Reconnects the livestream.
+   * @returns {Promise<boolean>} True if reconnected successfully, false otherwise
+   */
+  private async reconnectLivestreamAsync(): Promise<boolean> {
+    if (this.#disposed) {
+      return false;
+    }
+
+    this.#logger.info("Reconnecting livestream...");
+    this.disconnectFromLivestream();
+
+    try {
+      await this.connectToLivestreamAsync();
+      return this.#livestreamStream !== null;
+    } catch (e) {
+      this.#logger.error(
+        `Failed to reconnect livestream: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      return false;
+    }
+  }
+
+  private disconnectFromLivestream() {
+    if (this.#livestreamAbortController) {
+      this.#livestreamAbortController.abort();
       this.#livestreamAbortController = null;
+    }
+    if (this.#livestreamStream) {
+      this.#livestreamStream.removeAllListeners();
+      this.#livestreamStream = null;
+    }
+    if (this.#reconnectTimeoutRef) {
+      clearTimeout(this.#reconnectTimeoutRef);
+      this.#reconnectTimeoutRef = null;
     }
   }
 
@@ -306,17 +347,13 @@ class CameraManager {
    * setting the livestreamProcess to null if successful.
    */
   private cleanupLivestream() {
-    // Abort any ongoing fetch first
-    if (this.#livestreamAbortController) {
-      this.#livestreamAbortController.abort();
-      this.#livestreamAbortController = null;
+    // Clean up timelapse
+    if (this.#timelapse) {
+      this.#timelapse.dispose();
+      this.#timelapse = null;
     }
 
-    // Clean up stream
-    if (this.#livestreamStream) {
-      this.#livestreamStream.removeAllListeners();
-      this.#livestreamStream = null;
-    }
+    this.disconnectFromLivestream();
 
     // Clean up process
     if (this.#picameraServerProcess !== null) {

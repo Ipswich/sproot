@@ -410,36 +410,64 @@ export class SprootDB implements ISprootDB {
     return this.#connection("camera_settings").select("*");
   }
 
-  async addCameraAsync(
-    xVideoResolution: number,
-    yVideoResolution: number,
-    xImageResolution: number,
-    yImageResolution: number,
+  async addCameraSettingsAsync(
+    name: string,
+    xVideoResolution: number | null,
+    yVideoResolution: number | null,
+    videoFps: number,
+    xImageResolution: number | null,
+    yImageResolution: number | null,
+    imageRetentionDays: number,
+    imageRetentionSize: number,
+    timelapseEnabled: boolean,
+    timelapseInterval: number | null,
   ): Promise<number> {
-    return this.#connection("camera_settings").insert({
-      xVideoResolution,
-      yVideoResolution,
-      xImageResolution,
-      yImageResolution,
-    });
+    return (
+      (
+        await this.#connection("camera_settings").insert({
+          name,
+          xVideoResolution,
+          yVideoResolution,
+          videoFps,
+          xImageResolution,
+          yImageResolution,
+          imageRetentionDays,
+          imageRetentionSize,
+          timelapseEnabled,
+          timelapseInterval,
+        })
+      )[0] ?? -1
+    );
   }
 
-  async updateCameraAsync(
-    cameraId: number,
-    xVideoResolution: number,
-    yVideoResolution: number,
-    xImageResolution: number,
-    yImageResolution: number,
+  async updateCameraSettingsAsync(
+    id: number,
+    name: string,
+    xVideoResolution: number | null,
+    yVideoResolution: number | null,
+    videoFps: number,
+    xImageResolution: number | null,
+    yImageResolution: number | null,
+    imageRetentionDays: number,
+    imageRetentionSize: number,
+    timelapseEnabled: boolean,
+    timelapseInterval: number | null,
   ): Promise<void> {
-    return this.#connection("camera_settings").where("id", cameraId).update({
+    return this.#connection("camera_settings").where("id", id).update({
+      name,
       xVideoResolution,
       yVideoResolution,
+      videoFps,
       xImageResolution,
       yImageResolution,
+      imageRetentionDays,
+      imageRetentionSize,
+      timelapseEnabled,
+      timelapseInterval,
     });
   }
 
-  async deleteCameraAsync(cameraId: number): Promise<void> {
+  async deleteCameraSettingsAsync(cameraId: number): Promise<void> {
     return this.#connection("camera_settings").where("id", cameraId).delete();
   }
 
