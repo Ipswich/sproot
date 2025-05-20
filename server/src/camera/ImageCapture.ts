@@ -1,4 +1,9 @@
 import { IMAGE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import {
+  getDirectorySizeAsync,
+  getOldestFilePathAsync,
+  getSortedFileAsync,
+} from "@sproot/sproot-common/dist/utility/Files";
 import fs, { createWriteStream } from "fs";
 import path from "path";
 import { Readable } from "stream";
@@ -41,7 +46,8 @@ class ImageCapture {
   }
 
   async getLatestImageAsync(): Promise<Buffer | null> {
-    const imagePath = await this.getSortedImageAsync(
+    const imagePath = await getSortedFileAsync(
+      IMAGE_DIRECTORY,
       (a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime(),
     );
     if (imagePath) {
@@ -55,7 +61,7 @@ class ImageCapture {
    * when either space limit or time retention period is exceeded
    */
   async runImageRetentionAsync(
-    retentionSize: number = Infinity,
+    retentionSize: number = 0,
     retentionDays: number = 0,
     now = new Date(),
     directory = IMAGE_DIRECTORY,
@@ -70,10 +76,10 @@ class ImageCapture {
     const maxRetentionSizeMB = retentionSize ?? Infinity;
     const retentionPeriodInMS = (retentionDays || 0) * 24 * 60 * 60 * 1000;
     const cutoffTime = now.getTime() - retentionPeriodInMS;
-    let directorySizeMB = (await this.getDirectorySizeAsync(directory)) / (1024 * 1024);
+    let directorySizeMB = (await getDirectorySizeAsync(directory)) / (1024 * 1024);
 
     // Process files until we're within limits
-    let oldestFilePath = await this.getOldestImagePathAsync();
+    let oldestFilePath = await getOldestFilePathAsync(IMAGE_DIRECTORY);
 
     while (oldestFilePath) {
       // Get stats for the oldest file
@@ -96,88 +102,8 @@ class ImageCapture {
       directorySizeMB -= fileSizeMB;
 
       // Update for next iteration
-      oldestFilePath = await this.getOldestImagePathAsync();
+      oldestFilePath = await getOldestFilePathAsync(IMAGE_DIRECTORY);
     }
-  }
-
-  /**
-   * Gets the total size of a directory's contents in bytes
-   */
-  private async getDirectorySizeAsync(directoryPath: string): Promise<number> {
-    // Ensure the directory exists
-    if (!fs.existsSync(directoryPath)) {
-      return 0;
-    }
-
-    let totalSize = 0;
-    const items = await fs.promises.readdir(directoryPath);
-
-    // Process each item (file or subdirectory)
-    for (const item of items) {
-      const itemPath = path.join(directoryPath, item);
-      const stats = await fs.promises.stat(itemPath);
-
-      if (stats.isFile()) {
-        totalSize += stats.size;
-      } else if (stats.isDirectory()) {
-        totalSize += await this.getDirectorySizeAsync(itemPath);
-      }
-    }
-
-    return totalSize;
-  }
-
-  private async getSortedImageAsync(
-    sort: (
-      a: {
-        file: string;
-        stats: fs.Stats;
-      },
-      b: {
-        file: string;
-        stats: fs.Stats;
-      },
-    ) => number,
-  ) {
-    try {
-      // Ensure the directory exists
-      if (!fs.existsSync(IMAGE_DIRECTORY)) {
-        this.#logger.warn(`Image directory ${IMAGE_DIRECTORY} does not exist`);
-        return null;
-      }
-
-      // Get all files in the directory
-      const files = await fs.promises.readdir(IMAGE_DIRECTORY);
-
-      if (files.length === 0) {
-        this.#logger.warn(`No images found in ${IMAGE_DIRECTORY}`);
-        return null;
-      }
-
-      // Sort files
-      const fileStats = await Promise.all(
-        files.map(async (file) => {
-          const filePath = path.join(IMAGE_DIRECTORY, file);
-          const stats = await fs.promises.stat(filePath);
-          return { file, stats };
-        }),
-      );
-      fileStats.sort(sort);
-
-      // Load image
-      const imagePath = path.join(IMAGE_DIRECTORY, fileStats[0]!.file);
-
-      return imagePath;
-    } catch (error) {
-      this.#logger.error(`Error retrieving image: ${error}`);
-      return null;
-    }
-  }
-
-  private async getOldestImagePathAsync(): Promise<string | null> {
-    return await this.getSortedImageAsync(
-      (a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime(),
-    );
   }
 }
 

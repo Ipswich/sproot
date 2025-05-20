@@ -27,7 +27,6 @@ describe("InterserviceAuthentication.ts tests", function () {
       const token1 = generateInterserviceAuthenticationToken(key, now1);
       const token2 = generateInterserviceAuthenticationToken(key, now2);
 
-      console.log(generateInterserviceAuthenticationToken(""));
       assert.notStrictEqual(token1, token2, "Tokens should differ for different times");
     });
 
