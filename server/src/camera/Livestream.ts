@@ -2,7 +2,7 @@ import { Readable } from "stream";
 import winston from "winston";
 
 class Livestream {
-  #readableStream: NodeJS.ReadableStream | null = null;
+  #readableStream: Readable | null = null;
   #livestreamAbortController: AbortController | null = null;
   #logger: winston.Logger;
   #reconnectTimeoutRef: NodeJS.Timeout | null = null;
@@ -36,8 +36,7 @@ class Livestream {
       });
       // reconnect every 6 hours - long lived http connections can be unreliable
       this.#livestreamAbortController.signal.addEventListener("abort", () => {
-        this.#logger.info(`Livestream aborted`);
-        this.#readableStream?.removeAllListeners();
+        this.#readableStream?.destroy();
       });
       this.#reconnectTimeoutRef = setTimeout(
         async () => {
@@ -91,15 +90,30 @@ class Livestream {
       clearTimeout(this.#reconnectTimeoutRef);
       this.#reconnectTimeoutRef = null;
     }
-    if (this.#livestreamAbortController) {
-      if (!this.#livestreamAbortController.signal.aborted) {
-        this.#livestreamAbortController.abort();
-      }
-      this.#livestreamAbortController = null;
-    }
+
     if (this.#readableStream) {
+      try {
+        this.#readableStream.destroy();
+      } catch (e) {
+        this.#logger.debug(
+          `Error destroying stream: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
       this.#readableStream.removeAllListeners();
       this.#readableStream = null;
+    }
+
+    if (this.#livestreamAbortController) {
+      try {
+        if (!this.#livestreamAbortController.signal.aborted) {
+          this.#livestreamAbortController.abort();
+        }
+      } catch (e) {
+        this.#logger.debug(
+          `Error aborting controller: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+      this.#livestreamAbortController = null;
     }
   }
 }

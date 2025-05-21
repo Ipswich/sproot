@@ -65,3 +65,30 @@ export async function getLatestImageAsync(request: Request, response: Response):
   response.setHeader("Content-Type", "image/jpeg");
   response.status(200).send(imageBuffer);
 }
+
+export async function reconnectLivestreamAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const logger = request.app.get("logger") as winston.Logger;
+  try {
+    await cameraManager.reconnectLivestreamAsync();
+    response.status(200).json({
+      statusCode: 200,
+      message: "Livestream reconnected",
+      ...response.locals["defaultProperties"],
+    });
+  } catch (e) {
+    logger.error(`Error reconnecting livestream: ${e}`);
+    response.status(502).json({
+      statusCode: 502,
+      error: {
+        name: "Bad Gateway",
+        url: request.originalUrl,
+        details: [`Could not connect to camera server`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+  }
+}

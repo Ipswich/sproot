@@ -63,6 +63,10 @@ class CameraManager {
     return this.#imageCapture.getLatestImageAsync();
   }
 
+  reconnectLivestreamAsync() {
+    return this.#livestream.reconnectLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
+  }
+
   async initializeOrRegenerateAsync(): Promise<void> {
     if (this.#disposed) {
       return;
