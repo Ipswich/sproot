@@ -76,13 +76,7 @@ class CameraManager {
     if (settings[0] != undefined) {
       this.createCameraProcess(settings[0]);
       this.#currentSettings = settings[0];
-
-      if (this.#livestream.readableStream === null) {
-        await this.#livestream.connectToLivestreamAsync(
-          this.#baseUrl,
-          this.generateRequestHeaders(),
-        );
-      }
+      await this.#livestream.connectToLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
 
       // if (this.#timelapse === null) {
       //   this.#timelapse = new Timelapse(async (filename: string, directory: string) => {
