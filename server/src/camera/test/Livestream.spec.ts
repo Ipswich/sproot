@@ -31,7 +31,7 @@ describe("Livestream.ts tests", () => {
   });
 
   describe("connectToLivestreamAsync", () => {
-    it('should connect to livestream and return true', async () => {
+    it("should connect to livestream and return true", async () => {
       const mockBody = {
         cancel: sinon.stub().resolves(),
         getReader: sinon.stub(),
