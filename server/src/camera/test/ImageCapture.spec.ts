@@ -7,7 +7,7 @@ import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 import winston from "winston";
 import os from "os";
 
-describe("ImageCapture", () => {
+describe("ImageCapture.ts tests", () => {
   let imageCapture: ImageCapture;
   let tempDir: string;
   let originalImageDir: string;

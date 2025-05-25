@@ -21,7 +21,11 @@ class Livestream {
     return this.#isConnected() ? this.#passthrough : null;
   }
 
-  async connectToLivestreamAsync(url: string, headers: Record<string, string>, fetchTimeout: number = FETCH_TIMEOUT): Promise<boolean> {
+  async connectToLivestreamAsync(
+    url: string,
+    headers: Record<string, string>,
+    fetchTimeout: number = FETCH_TIMEOUT,
+  ): Promise<boolean> {
     if (this.#isConnected()) {
       return true;
     }
