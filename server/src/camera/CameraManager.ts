@@ -10,7 +10,6 @@ import winston from "winston";
 // import path from "path";
 import ImageCapture from "./ImageCapture";
 import Livestream from "./Livestream";
-// import { Timelapse } from "./Timelapse";
 
 class CameraManager {
   #sprootDB: ISprootDB;
@@ -21,7 +20,6 @@ class CameraManager {
   #livestream: Livestream;
   #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
   #currentSettings: SDBCameraSettings | null = null;
-  // #timelapse: Timelapse | null = null;
   #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
 
@@ -31,7 +29,6 @@ class CameraManager {
     this.#logger = logger;
     this.#imageCapture = new ImageCapture(logger);
     this.#livestream = new Livestream(logger);
-    // this.#timelapse = null;
     new CronJob(
       CRON.EVERY_MINUTE,
       async () => {
@@ -59,10 +56,19 @@ class CameraManager {
     return this.#livestream.readableStream;
   }
 
+  /**
+   * Gets a buffer containing the latest image.
+   * @returns A promise that resolves to the latest image captured by the camera.
+   */
   getLatestImageAsync() {
     return this.#imageCapture.getLatestImageAsync();
   }
 
+  /**
+   * Forces a reconnect to the livestream. Cleans up resources and reinitializes
+   * the livestream connection.
+   * @returns A promise that resolves with the result of the reconnection attempt.
+   */
   reconnectLivestreamAsync() {
     return this.#livestream.reconnectLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
   }
@@ -78,20 +84,11 @@ class CameraManager {
       this.#currentSettings = settings[0];
       await this.#livestream.connectToLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
 
-      // if (this.#timelapse === null) {
-      //   this.#timelapse = new Timelapse(async (filename: string, directory: string) => {
-      //     const latestImage = await this.#imageCapture.getLatestImageAsync();
-      //     if (latestImage) {
-      //       await fs.promises.writeFile(path.join(directory, filename), latestImage);
-      //     }
-      //   }, this.#logger);
-      // }
-
-      // this.#timelapse.updateSettings(
-      //   this.#currentSettings.name!,
-      //   this.#currentSettings.timelapseEnabled!,
-      //   this.#currentSettings.timelapseInterval!,
-      // );
+      this.#imageCapture.updateTimelapseSettings(
+        this.#currentSettings.name,
+        this.#currentSettings.timelapseEnabled,
+        this.#currentSettings.timelapseInterval!,
+      );
 
       await this.#imageCapture.runImageRetentionAsync(
         this.#currentSettings.imageRetentionSize,

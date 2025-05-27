@@ -9,12 +9,28 @@ import path from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import winston from "winston";
+import Timelapse from "./Timelapse";
 
 class ImageCapture {
+  #timelapse: Timelapse;
   #logger: winston.Logger;
 
   constructor(logger: winston.Logger) {
+    this.#timelapse = new Timelapse(async (filename: string, directory: string) => {
+      const latestImage = await this.getLatestImageAsync();
+      if (latestImage) {
+        await fs.promises.writeFile(path.join(directory, filename), latestImage);
+      }
+    }, logger);
     this.#logger = logger;
+  }
+
+  updateTimelapseSettings(
+    cameraName: string,
+    enabled: boolean,
+    intervalMinutes: number | null,
+  ): void {
+    this.#timelapse.updateSettings(cameraName, enabled, intervalMinutes);
   }
 
   async captureImageAsync(fileName: string, url: string, headers: Record<string, string>) {
