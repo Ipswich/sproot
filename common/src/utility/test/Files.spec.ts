@@ -78,6 +78,37 @@ describe("Files Utility", () => {
       assert.strictEqual(result, null);
     });
 
+    it("should only consider files, not directories when sorting", async () => {
+      // Create a subdirectory and files
+      const subdir = path.join(testDir, "subdir");
+      await fs.promises.mkdir(subdir);
+      
+      const file1 = path.join(testDir, "file1.txt");
+      const file2 = path.join(testDir, "file2.txt");
+      
+      await fs.promises.writeFile(file1, "content1");
+      await fs.promises.writeFile(file2, "content2");
+      
+      const now = new Date();
+      const twoDaysAgo = new Date(now.getTime() - 172800000); // 2 days ago
+      
+      await fs.promises.utimes(file1, now, now);
+      await fs.promises.utimes(file2, now, now);
+      await fs.promises.utimes(subdir, twoDaysAgo, twoDaysAgo);
+      
+      // Sort by modification time (oldest first)
+      const sortFunction = (a: { stats: fs.Stats }, b: { stats: fs.Stats }) =>
+      a.stats.mtime.getTime() - b.stats.mtime.getTime();
+      
+      const result = await getSortedFileAsync(testDir, sortFunction);
+      
+      assert.notStrictEqual(result, subdir);
+      assert(result === file1 || result === file2);
+
+      const stats = await fs.promises.stat(result!);
+      assert.strictEqual(stats.isFile(), true);
+    });
+
     it("should sort files using the provided sort function", async () => {
       // Create files with different sizes
       const file1 = path.join(testDir, "file1.txt");

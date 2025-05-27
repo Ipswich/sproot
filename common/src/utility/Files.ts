@@ -55,14 +55,14 @@ export async function getSortedFileAsync(
     }
 
     // Sort files
-    const fileStats = await Promise.all(
+    let fileStats = await Promise.all(
       files.map(async (file) => {
         const filePath = path.join(directoryPath, file);
         const stats = await fs.promises.stat(filePath);
         return { file, stats };
       }),
     );
-    fileStats.sort(sort);
+    fileStats = fileStats.filter((file => file.stats.isFile())).sort(sort);
 
     // Load file
     const imagePath = path.join(directoryPath, fileStats[0]!.file);
