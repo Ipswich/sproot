@@ -146,6 +146,35 @@ describe("Timelapse.ts tests", function () {
     timelapse.dispose();
   });
 
+  it("should not capture images when intervalMinutes is null", async function () {
+    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+
+    timelapse.updateSettings("testCamera", true, null);
+
+    // Advance 10 minutes
+    clock.tick(10 * 60 * 1000);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(countFilesInDir(), 0);
+
+    // Update to a valid interval
+    timelapse.updateSettings("testCamera", true, 2);
+
+    // Advance 2 minutes - should capture now
+    clock.tick(2 * 60 * 1000);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(countFilesInDir(), 1);
+
+    timelapse.updateSettings("testCamera", true, null);
+
+    // Advance 10 more minutes - no new captures
+    clock.tick(10 * 60 * 1000);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(countFilesInDir(), 1);
+
+    timelapse.dispose();
+  });
+
   it("should use updated camera name for new captures", async function () {
     const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
@@ -194,24 +223,24 @@ describe("Timelapse.ts tests", function () {
     assert.equal(countFilesInDir(), 1);
   });
 
-  it("should handle errors from capture function gracefully", async function () {
-    // Create a capture function that throws an error
-    const erroringCaptureFunction = async (): Promise<void> => {
-      throw new Error("Capture failed");
+  it("should handle errors from add function gracefully", async function () {
+    // Create a add function that throws an error
+    const erroringAddFunctionAsync = async (): Promise<void> => {
+      throw new Error("Add failed");
     };
 
-    const timelapse = new Timelapse(erroringCaptureFunction, logger);
+    const timelapse = new Timelapse(erroringAddFunctionAsync, logger);
     timelapse.updateSettings("testCamera", true, 1);
 
-    // This should not throw even though the capture function throws
+    // This should not throw even though the add function throws
     clock.tick(1 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // It should continue scheduling captures
+    // It should continue scheduling adds even if one fails
     clock.tick(1 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // No files should be created since the capture function errors
+    // No files should be created since the add function errors
     assert.equal(countFilesInDir(), 0);
 
     timelapse.dispose();

@@ -25,8 +25,8 @@ class Timelapse {
       if (this.#timer) {
         clearTimeout(this.#timer);
         this.#timer = null;
-        this.scheduleNextExecution();
       }
+      this.scheduleNextExecution();
     }
 
     if (this.#enabled && !enabled) {
@@ -63,7 +63,6 @@ class Timelapse {
     }
     const intervalMs = this.#intervalMinutes * 60 * 1000;
 
-    // Schedule the next capture
     this.#timer = setTimeout(async () => {
       await this.addImage();
 
