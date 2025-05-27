@@ -45,7 +45,7 @@ class Timelapse {
     this.scheduleNextExecution();
 
     this.#logger.info(
-      `Timelapse started, capturing every ${this.#intervalMinutes} ${this.#intervalMinutes > 1 ? "minutes" : "minute"}`,
+      `Timelapse started, adding image every ${this.#intervalMinutes} ${this.#intervalMinutes > 1 ? "minutes" : "minute"}`,
     );
   }
 
@@ -85,10 +85,12 @@ class Timelapse {
       await fs.promises.mkdir(TIMELAPSE_DIRECTORY, { recursive: true });
 
       await this.addImageToTimelapseFunction(fileName, TIMELAPSE_DIRECTORY);
+      this.#logger.info(`Added timelapse image ${fileName} to ${TIMELAPSE_DIRECTORY}`);
     } catch (error) {
       this.#logger.error(
         `Failed to add timelapse image: ${error instanceof Error ? error.message : String(error)}`,
       );
+      throw error;
     }
   }
 

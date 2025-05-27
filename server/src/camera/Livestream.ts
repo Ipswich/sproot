@@ -30,7 +30,6 @@ class Livestream {
       return true;
     }
 
-    // Prevent multiple simultaneous connection attempts
     if (this.#connecting) {
       this.#logger.debug("Connection attempt already in progress");
       return false;
