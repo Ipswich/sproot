@@ -62,7 +62,7 @@ export async function getSortedFileAsync(
         return { file, stats };
       }),
     );
-    fileStats = fileStats.filter((file => file.stats.isFile())).sort(sort);
+    fileStats = fileStats.filter((file) => file.stats.isFile()).sort(sort);
 
     // Load file
     const imagePath = path.join(directoryPath, fileStats[0]!.file);
