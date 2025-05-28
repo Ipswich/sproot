@@ -10,6 +10,7 @@ import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import winston from "winston";
 import Timelapse from "./Timelapse";
+import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
 
 class ImageCapture {
   #timelapse: Timelapse;
@@ -25,12 +26,8 @@ class ImageCapture {
     this.#logger = logger;
   }
 
-  updateTimelapseSettings(
-    cameraName: string,
-    enabled: boolean,
-    intervalMinutes: number | null,
-  ): void {
-    this.#timelapse.updateSettings(cameraName, enabled, intervalMinutes);
+  updateTimelapseSettings(settings: SDBCameraSettings): void {
+    this.#timelapse.updateSettings(settings);
   }
 
   async captureImageAsync(fileName: string, url: string, headers: Record<string, string>) {

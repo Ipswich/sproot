@@ -67,7 +67,6 @@ export default function WeekdayCondition({
             weekdayConditionForm.reset();
           }
 
-          console.log(weekdayConditionForm.values);
           toggleAddNewCondition();
         })}
       >

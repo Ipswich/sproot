@@ -1,6 +1,8 @@
 import fs from "fs";
 import winston from "winston";
 import { TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
+import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
 
@@ -11,17 +13,21 @@ class Timelapse {
   addImageToTimelapseFunction: AddImageToTimelapseFunction;
   #cameraName: string | null = null;
   #enabled: boolean = false;
+  #startTime: string | null = null;
+  #endTime: string | null = null;
 
   constructor(addImageToTimelapseFunction: AddImageToTimelapseFunction, logger: winston.Logger) {
     this.addImageToTimelapseFunction = addImageToTimelapseFunction;
     this.#logger = logger;
   }
 
-  updateSettings(cameraName: string, enabled: boolean, intervalMinutes: number | null): void {
-    this.#cameraName = cameraName;
+  updateSettings(settings: SDBCameraSettings): void {
+    this.#cameraName = settings.name;
+    this.#startTime = settings.timelapseStartTime;
+    this.#endTime = settings.timelapseEndTime;
 
-    if (this.#intervalMinutes !== intervalMinutes) {
-      this.#intervalMinutes = intervalMinutes;
+    if (this.#intervalMinutes !== settings.timelapseInterval) {
+      this.#intervalMinutes = settings.timelapseInterval;
       if (this.#timer) {
         clearTimeout(this.#timer);
         this.#timer = null;
@@ -29,10 +35,10 @@ class Timelapse {
       this.scheduleNextExecution();
     }
 
-    if (this.#enabled && !enabled) {
+    if (this.#enabled && !settings.timelapseEnabled) {
       this.#enabled = false;
       this.stop();
-    } else if (!this.#enabled && enabled) {
+    } else if (!this.#enabled && settings.timelapseEnabled) {
       this.#enabled = true;
       this.start();
     }
@@ -64,7 +70,12 @@ class Timelapse {
     const intervalMs = this.#intervalMinutes * 60 * 1000;
 
     this.#timer = setTimeout(async () => {
-      await this.addImage();
+      if (
+        (this.#startTime === null && this.#endTime === null) ||
+        isBetweenTimeStamp(this.#startTime, this.#endTime, new Date())
+      ) {
+        await this.addImage();
+      }
 
       this.scheduleNextExecution();
     }, intervalMs);

@@ -3,11 +3,9 @@ import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/d
 import { CRON } from "@sproot/sproot-common/dist/utility/Constants";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-// import fs from "fs";
 import { CronJob } from "cron";
 
 import winston from "winston";
-// import path from "path";
 import ImageCapture from "./ImageCapture";
 import Livestream from "./Livestream";
 
@@ -52,6 +50,10 @@ class CameraManager {
     );
   }
 
+  get cameraSettings() {
+    return this.#currentSettings;
+  }
+
   get livestream() {
     return this.#livestream.readableStream;
   }
@@ -78,25 +80,25 @@ class CameraManager {
       return;
     }
     const settings = await this.#sprootDB.getCameraSettingsAsync();
-
     if (settings[0] != undefined) {
-      this.createCameraProcess(settings[0]);
       this.#currentSettings = settings[0];
+    } else {
+      return;
+    }
+    if (this.#currentSettings.enabled) {
+      this.createCameraProcess(this.#currentSettings);
       await this.#livestream.connectToLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
 
-      this.#imageCapture.updateTimelapseSettings(
-        this.#currentSettings.name,
-        this.#currentSettings.timelapseEnabled,
-        this.#currentSettings.timelapseInterval!,
-      );
+      this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
 
       await this.#imageCapture.runImageRetentionAsync(
         this.#currentSettings.imageRetentionSize,
         this.#currentSettings.imageRetentionDays,
       );
-    } else {
-      this.#livestream.disconnectFromLivestream();
+      return;
     }
+
+    this.#livestream.disconnectFromLivestream();
   }
 
   dispose(): void {
@@ -143,7 +145,7 @@ class CameraManager {
       });
 
       this.#picameraServerProcess.stdout.on("data", (data: string) => {
-        console.log(`Message from Picamera Server: ${data}`);
+        this.#logger.info(`Message from Picamera Server: ${data}`);
       });
 
       this.#picameraServerProcess.stderr.on("data", (data: string) => {

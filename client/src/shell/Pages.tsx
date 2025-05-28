@@ -86,6 +86,11 @@ export function getNavbarItems(
         href: "/settings/outputs",
       } as Page,
       {
+        navLinkText: "Camera",
+        headerText: "Camera Settings",
+        href: "/settings/camera",
+      } as Page,
+      {
         navLinkText: "System",
         headerText: "System Settings",
         href: "/settings/system",

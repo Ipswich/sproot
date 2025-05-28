@@ -410,66 +410,58 @@ export class SprootDB implements ISprootDB {
     return this.#connection("camera_settings").select("*");
   }
 
-  async addCameraSettingsAsync(
-    name: string,
-    xVideoResolution: number | null,
-    yVideoResolution: number | null,
-    videoFps: number,
-    xImageResolution: number | null,
-    yImageResolution: number | null,
-    imageRetentionDays: number,
-    imageRetentionSize: number,
-    timelapseEnabled: boolean,
-    timelapseInterval: number | null,
-  ): Promise<number> {
-    return (
-      (
-        await this.#connection("camera_settings").insert({
-          name,
-          xVideoResolution,
-          yVideoResolution,
-          videoFps,
-          xImageResolution,
-          yImageResolution,
-          imageRetentionDays,
-          imageRetentionSize,
-          timelapseEnabled,
-          timelapseInterval,
-        })
-      )[0] ?? -1
-    );
-  }
+  // async addCameraSettingsAsync(
+  //   name: string,
+  //   xVideoResolution: number | null,
+  //   yVideoResolution: number | null,
+  //   videoFps: number,
+  //   xImageResolution: number | null,
+  //   yImageResolution: number | null,
+  //   imageRetentionDays: number,
+  //   imageRetentionSize: number,
+  //   timelapseEnabled: boolean,
+  //   timelapseInterval: number | null,
+  // ): Promise<number> {
+  //   return (
+  //     (
+  //       await this.#connection("camera_settings").insert({
+  //         name,
+  //         xVideoResolution,
+  //         yVideoResolution,
+  //         videoFps,
+  //         xImageResolution,
+  //         yImageResolution,
+  //         imageRetentionDays,
+  //         imageRetentionSize,
+  //         timelapseEnabled,
+  //         timelapseInterval,
+  //       })
+  //     )[0] ?? -1
+  //   );
+  // }
 
-  async updateCameraSettingsAsync(
-    id: number,
-    name: string,
-    xVideoResolution: number | null,
-    yVideoResolution: number | null,
-    videoFps: number,
-    xImageResolution: number | null,
-    yImageResolution: number | null,
-    imageRetentionDays: number,
-    imageRetentionSize: number,
-    timelapseEnabled: boolean,
-    timelapseInterval: number | null,
-  ): Promise<void> {
-    return this.#connection("camera_settings").where("id", id).update({
-      name,
-      xVideoResolution,
-      yVideoResolution,
-      videoFps,
-      xImageResolution,
-      yImageResolution,
-      imageRetentionDays,
-      imageRetentionSize,
-      timelapseEnabled,
-      timelapseInterval,
+  async updateCameraSettingsAsync(cameraSettings: SDBCameraSettings): Promise<void> {
+    return this.#connection("camera_settings").where("id", cameraSettings.id).update({
+      id: cameraSettings.id,
+      enabled: cameraSettings.enabled,
+      name: cameraSettings.name,
+      xVideoResolution: cameraSettings.xVideoResolution,
+      yVideoResolution: cameraSettings.yVideoResolution,
+      videoFps: cameraSettings.videoFps,
+      xImageResolution: cameraSettings.xImageResolution,
+      yImageResolution: cameraSettings.yImageResolution,
+      timelapseEnabled: cameraSettings.timelapseEnabled,
+      imageRetentionDays: cameraSettings.imageRetentionDays,
+      imageRetentionSize: cameraSettings.imageRetentionSize,
+      timelapseInterval: cameraSettings.timelapseInterval,
+      timelapseStartTime: cameraSettings.timelapseStartTime,
+      timelapseEndTime: cameraSettings.timelapseEndTime,
     });
   }
 
-  async deleteCameraSettingsAsync(cameraId: number): Promise<void> {
-    return this.#connection("camera_settings").where("id", cameraId).delete();
-  }
+  // async deleteCameraSettingsAsync(cameraId: number): Promise<void> {
+  //   return this.#connection("camera_settings").where("id", cameraId).delete();
+  // }
 
   async getUserAsync(username: string): Promise<SDBUser[]> {
     return this.#connection("users").where("username", username).select("*");

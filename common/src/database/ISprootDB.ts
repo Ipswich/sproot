@@ -117,32 +117,9 @@ interface ISprootDB {
   deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
 
   getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
-  addCameraSettingsAsync(
-    name: string,
-    xVideoResolution: number | null,
-    yVideoResolution: number | null,
-    videoFps: number,
-    xImageResolution: number | null,
-    yImageResolution: number | null,
-    imageRetentionDays: number,
-    imageRetentionSize: number,
-    timelapseEnabled: boolean,
-    timelapseInterval: number | null,
-  ): Promise<number>;
-  updateCameraSettingsAsync(
-    cameraId: number,
-    name: string,
-    xVideoResolution: number | null,
-    yVideoResolution: number | null,
-    videoFps: number,
-    xImageResolution: number | null,
-    yImageResolution: number | null,
-    imageRetentionDays: number,
-    imageRetentionSize: number,
-    timelapseEnabled: boolean,
-    timelapseInterval: number | null,
-  ): Promise<void>;
-  deleteCameraSettingsAsync(cameraId: number): Promise<void>;
+  // addCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<number>;
+  updateCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<void>;
+  // deleteCameraSettingsAsync(cameraId: number): Promise<void>;
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
@@ -373,33 +350,22 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async addCameraSettingsAsync(
-    _name: string,
-    _xVideoResolution: number | null,
-    _yVideoResolution: number | null,
-    _videoFps: number,
-    _xImageResolution: number | null,
-    _yImageResolution: number | null,
-    _imageRetentionDays: number,
-    _imageRetentionSize: number,
-    _timelapseEnabled: boolean,
-    _timelapseInterval: number | null,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateCameraSettingsAsync(
-    _cameraId: number,
-    _name: string,
-    _xVideoResolution: number | null,
-    _yVideoResolution: number | null,
-    _videoFps: number,
-    _xImageResolution: number | null,
-    _yImageResolution: number | null,
-    _imageRetentionDays: number,
-    _imageRetentionSize: number,
-    _timelapseEnabled: boolean,
-    _timelapseInterval: number | null,
-  ): Promise<void> {
+  // async addCameraSettingsAsync(
+  //   _name: string,
+  //   _xVideoResolution: number | null,
+  //   _yVideoResolution: number | null,
+  //   _videoFps: number,
+  //   _xImageResolution: number | null,
+  //   _yImageResolution: number | null,
+  //   _imageRetentionDays: number,
+  //   _imageRetentionSize: number,
+  //   _timelapseEnabled: boolean,
+  //   _timelapseInterval: number | null,
+  // ): Promise<number> {
+  //   return 0;
+  // }
+
+  async updateCameraSettingsAsync(_cameraSettings: SDBCameraSettings): Promise<void> {
     return;
   }
 

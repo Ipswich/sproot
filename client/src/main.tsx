@@ -18,6 +18,7 @@ import Automations from "./routes/automations/Automations";
 import OutputSettings from "./routes/settings/outputs/OutputSettings";
 import SensorSettings from "./routes/settings/sensors/SensorSettings";
 import SystemSettings from "./routes/settings/system/SystemSettings";
+import CameraSettings from "./routes/settings/camera/CameraSettings";
 
 const router = createBrowserRouter([
   {
@@ -51,6 +52,7 @@ const router = createBrowserRouter([
         path: "/settings/sensors",
         element: <SensorSettings />,
       },
+      { path: "/settings/camera", element: <CameraSettings /> },
       {
         path: "/settings/system",
         element: <SystemSettings />,

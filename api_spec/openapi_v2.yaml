@@ -3453,6 +3453,139 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
+  /api/v2/camera/settings:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Get camera settings.
+      description: Returns the current camera settings.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/CameraSettings"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/camera/settings"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Update camera settings.
+      description: >
+        Updates the camera settings. This operation changes only the fields provided.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CameraSettings"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/CameraSettings"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/camera/settings"
+                          details:
+                            items:
+                              example: 
+                                - "Missing timelapse enabled"
+                                - "Missing timelapse image retention days"
+                                - "Missing timelapse image retention size"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/camera/settings"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/camera/settings"
+                          details:
+                            items:
+                              example: "Failed to update camera settings: database connection failed."
   /api/v2/camera/stream:
     get:
       security:
@@ -3489,6 +3622,51 @@ paths:
                           details:
                             items:
                               example: "Failed to connect to camera stream"
+  /api/v2/camera/reconnect:
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Reconnect to the camera.
+      description: >
+        Attempts to reconnect to the camera. This is useful if the camera has lost connection or 
+        is not responding.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Camera successfully reconnected."
+        502:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 502
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/camera/reconnect"
+                          details:
+                            items:
+                              example: "Could not connect to camera server"
   /api/v2/camera/latest-image:
     get:
       security:
@@ -4042,6 +4220,76 @@ components:
           type: string
         color:
           type: string
+
+    CameraSettings:
+      description: >
+        An object containing the current camera settings.
+      type: object
+      required:
+        - "enabled"
+        - "name"
+        - "xVideoResolution"
+        - "yVideoResolution"
+        - "videoFps"
+        - "xImageResolution"
+        - "yImageResolution"
+        - "timelapseEnabled"
+        - "imageRetentionDays"
+        - "imageRetentionSize"
+        - "timelapseInterval"
+        - "timelapseStartTime"
+        - "timelapseEndTime"
+      properties:
+        id:
+          type: number
+          example: 1
+        enabled:
+          type: boolean
+          example: true
+        name:
+          type: string
+          example: "Camera 1"
+        xVideoResolution:
+          nullable: true
+          type: number
+          example: 1920
+        yVideoResolution:
+          nullable: true
+          type: number
+          example: 1080
+        videoFps:
+          nullable: true
+          type: number
+          example: 30
+        xImageResolution:
+          nullable: true
+          type: number
+          example: 1920
+        yImageResolution:
+          nullable: true
+          type: number
+          example: 1080
+        timelapseEnabled:
+          type: boolean
+          example: true
+        imageRetentionDays:
+          type: number
+          example: 30
+        imageRetentionSize:
+          type: number
+          example: 1000
+        timelapseInterval:
+          nullable: true
+          type: number
+          example: 60
+        timelapseStartTime:
+          nullable: true
+          type: string
+          example: "00:00"
+        timelapseEndTime:
+          nullable: true
+          type: string
+          example: "23:59"
 
   securitySchemes:
     bearerAuth:

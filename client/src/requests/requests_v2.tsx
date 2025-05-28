@@ -9,6 +9,7 @@ import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { AvailableDevice } from "@sproot/outputs/AvailableDevice";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import {
@@ -648,6 +649,41 @@ export async function getLatestImageAsync() {
 
 export async function getLivestreamAsync() {
   return `${SERVER_URL}/api/v2/camera/stream`;
+}
+
+export async function getCameraSettingsAsync(): Promise<SDBCameraSettings> {
+  const response = await fetch(`${SERVER_URL}/api/v2/camera/settings`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching camera settings: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function updateCameraSettingsAsync(
+  settings: SDBCameraSettings,
+): Promise<void> {
+  settings.videoFps = null;
+  settings.xImageResolution = null;
+  settings.yImageResolution = null;
+  settings.xVideoResolution = null;
+  settings.yVideoResolution = null;
+
+  const response = await fetch(`${SERVER_URL}/api/v2/camera/settings`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error updating camera settings: ${response}`);
+  }
 }
 
 function queryBuilder(

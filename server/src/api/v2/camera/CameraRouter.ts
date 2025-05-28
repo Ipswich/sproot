@@ -1,11 +1,23 @@
 import express, { Request, Response } from "express";
 import {
+  getCameraSettings,
+  updateCameraSettingsAsync,
   getLatestImageAsync,
   reconnectLivestreamAsync,
   streamHandlerAsync,
-} from "./CameraHandlers";
+} from "./handlers/CameraHandlers";
 
 const router = express.Router();
+router.get("/settings", (req: Request, res: Response) => {
+  const response = getCameraSettings(req, res);
+  res.status(response.statusCode).json(response);
+});
+
+router.patch("/settings", async (req: Request, res: Response) => {
+  const response = await updateCameraSettingsAsync(req, res);
+  res.status(response.statusCode).json(response);
+});
+
 router.get("/stream", async (req: Request, res: Response) => {
   await streamHandlerAsync(req, res);
 });
