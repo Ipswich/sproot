@@ -1,3 +1,4 @@
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import {
@@ -6,11 +7,12 @@ import {
   IconChartBubble,
   IconChartLine,
   IconDroplet,
-  IconLayoutDashboard,
+  // IconLayoutDashboard,
   // IconPlant2,
   // IconSeeding,
   IconSettingsAutomation,
   IconTemperature,
+  IconVideo,
   TablerIconsProps,
 } from "@tabler/icons-react";
 
@@ -25,17 +27,18 @@ export interface Page {
 export function getNavbarItems(
   readingTypes: ReadingType[],
   outputs: IOutputBase[],
+  cameraSettings: SDBCameraSettings,
 ): Record<string, Page> {
-  const pages = {
-    dashboard: {
-      navLinkText: "Dashboard",
-      headerText: "Dashboard",
-      href: "/",
-      icon: (props: TablerIconsProps | undefined) => (
-        <IconLayoutDashboard {...props} />
-      ),
-    },
-  } as Record<string, Page>;
+  const pages = {} as Record<string, Page>;
+
+  if (cameraSettings.enabled) {
+    pages["live-view"] = {
+      navLinkText: "Live View",
+      headerText: "Live View",
+      href: "/live-view",
+      icon: (props: TablerIconsProps | undefined) => <IconVideo {...props} />,
+    };
+  }
 
   if (readingTypes.length > 0) {
     pages["sensorData"] = {

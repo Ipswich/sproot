@@ -10,18 +10,21 @@ import NavbarContents from "../shell/navbar/NavbarContents";
 
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
 export default function Root() {
   const loaderData = useLoaderData() as {
     readingTypes: Partial<Record<ReadingType, string>>;
     outputs: Record<string, IOutputBase>;
+    cameraSettings: SDBCameraSettings;
   };
 
   const readingTypes = Object.keys(
     loaderData.readingTypes as Partial<Record<ReadingType, string>>,
   ) as ReadingType[];
   const outputs = Object.values(loaderData.outputs);
-  const navbarItems = getNavbarItems(readingTypes, outputs);
+  const cameraSettings = loaderData.cameraSettings;
+  const navbarItems = getNavbarItems(readingTypes, outputs, cameraSettings);
   const pages = Object.values(navbarItems);
   const [isNavbarOpened, setIsNavbarOpened] = useDisclosure(false);
 
