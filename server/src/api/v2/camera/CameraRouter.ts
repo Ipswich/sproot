@@ -1,11 +1,14 @@
 import express, { Request, Response } from "express";
 import {
-  getCameraSettings,
-  updateCameraSettingsAsync,
   getLatestImageAsync,
   reconnectLivestreamAsync,
   streamHandlerAsync,
 } from "./handlers/CameraHandlers";
+
+import {
+  getCameraSettings,
+  updateCameraSettingsAsync,
+} from "./handlers/CameraSettingsHandlers";
 
 const router = express.Router();
 router.get("/settings", (req: Request, res: Response) => {

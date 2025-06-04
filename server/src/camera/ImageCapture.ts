@@ -1,4 +1,4 @@
-import { IMAGE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import { IMAGE_DIRECTORY, TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
 import {
   getDirectorySizeAsync,
   getOldestFilePathAsync,
@@ -39,7 +39,7 @@ class ImageCapture {
       });
       if (!response?.ok || !response.body) {
         this.#logger.error(
-          `Image capture was unsuccessful(status: ${response?.status}).. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
+          `Image capture was unsuccessful (status: ${response?.status}).. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
         );
         return;
       }
@@ -77,7 +77,7 @@ class ImageCapture {
     retentionSize: number = 0,
     retentionDays: number = 0,
     now = new Date(),
-    directory = IMAGE_DIRECTORY,
+    directory = TIMELAPSE_DIRECTORY,
   ): Promise<void> {
     // Ensure the directory exists
     if (!fs.existsSync(directory)) {
@@ -92,7 +92,7 @@ class ImageCapture {
     let directorySizeMB = (await getDirectorySizeAsync(directory)) / (1024 * 1024);
 
     // Process files until we're within limits
-    let oldestFilePath = await getOldestFilePathAsync(IMAGE_DIRECTORY);
+    let oldestFilePath = await getOldestFilePathAsync(directory);
 
     while (oldestFilePath) {
       // Get stats for the oldest file
@@ -115,7 +115,7 @@ class ImageCapture {
       directorySizeMB -= fileSizeMB;
 
       // Update for next iteration
-      oldestFilePath = await getOldestFilePathAsync(IMAGE_DIRECTORY);
+      oldestFilePath = await getOldestFilePathAsync(directory);
     }
   }
 }

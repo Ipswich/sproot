@@ -146,7 +146,7 @@ describe("ImageCapture.ts tests", () => {
       await fs.promises.utimes(oldFile, oldDate, oldDate);
       await fs.promises.utimes(recentFile, recentDate, recentDate);
 
-      await imageCapture.runImageRetentionAsync(10, 5, now); // 10MB, 5-day retention
+      await imageCapture.runImageRetentionAsync(10, 5, now, tempDir); // 10MB, 5-day retention
 
       assert.strictEqual(fs.existsSync(oldFile), false);
       assert.strictEqual(fs.existsSync(recentFile), true);
@@ -164,7 +164,7 @@ describe("ImageCapture.ts tests", () => {
         await fs.promises.utimes(filePath, fileDate, fileDate);
       }
 
-      await imageCapture.runImageRetentionAsync(maxSize, 30); // 1.5MB, 30-day retention
+      await imageCapture.runImageRetentionAsync(maxSize, 30, new Date(), tempDir); // 1.5MB, 30-day retention
 
       assert.strictEqual(fs.existsSync(path.join(tempDir, "file0.jpg")), false);
       assert.strictEqual(fs.existsSync(path.join(tempDir, "file1.jpg")), false);
@@ -195,7 +195,7 @@ describe("ImageCapture.ts tests", () => {
       await fs.promises.writeFile(file1, "content 1");
       await fs.promises.writeFile(file2, "content 2");
 
-      await imageCapture.runImageRetentionAsync(100, 100); // 100MB, 100-day retention
+      await imageCapture.runImageRetentionAsync(100, 100, new Date(), tempDir); // 100MB, 100-day retention
 
       assert.strictEqual(fs.existsSync(file1), true);
       assert.strictEqual(fs.existsSync(file2), true);

@@ -82,6 +82,11 @@ class CameraManager {
     const settings = await this.#sprootDB.getCameraSettingsAsync();
     if (settings[0] != undefined) {
       this.#currentSettings = settings[0];
+      
+      await this.#imageCapture.runImageRetentionAsync(
+        this.#currentSettings.imageRetentionSize,
+        this.#currentSettings.imageRetentionDays,
+      );
     } else {
       return;
     }
@@ -91,10 +96,6 @@ class CameraManager {
 
       this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
 
-      await this.#imageCapture.runImageRetentionAsync(
-        this.#currentSettings.imageRetentionSize,
-        this.#currentSettings.imageRetentionDays,
-      );
       return;
     }
 

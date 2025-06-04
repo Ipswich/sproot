@@ -1,5 +1,9 @@
 import fs from "fs";
 import winston from "winston";
+import path from "path";
+import os from "os";
+import { exec } from "child_process";
+import { promisify } from "util";
 import { TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
 import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
 import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
@@ -43,6 +47,66 @@ class Timelapse {
       this.start();
     }
   }
+
+  /**
+   * Creates and returns a gzipped archive of timelapse images between two dates
+   * @param startDate The start date to filter images
+   * @param endDate The end date to filter images
+   * @returns Buffer containing the gzipped archive
+   */
+  async getTimelapseArchive(startDate: Date, endDate: Date): Promise<Buffer> {
+  try {
+    const tempDir = path.join(os.tmpdir(), `timelapse-${Date.now()}`);
+    const archivePath = path.join(tempDir, 'timelapse.tar'); 
+    await fs.promises.mkdir(tempDir, { recursive: true });
+    const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
+    
+    const matchingFiles = files.filter(file => {
+      const match = file.match(/_(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})\.jpg$/);
+      if (!match) return false;
+      
+      const [_, year, month, day, hours, minutes] = match;
+      
+      const fileDate = new Date(
+        parseInt(year!),
+        parseInt(month!) - 1, // JS months are 0-indexed
+        parseInt(day!),
+        parseInt(hours!),
+        parseInt(minutes!)
+      );
+      
+      return fileDate >= startDate && fileDate <= endDate;
+    });
+    
+    if (matchingFiles.length === 0) {
+      throw new Error('No timelapse images found in the specified date range');
+    }
+
+    // Create a file list for tar to use
+    const fileListPath = path.join(tempDir, 'filelist.txt');
+    const filePaths = matchingFiles.map(file => path.join(TIMELAPSE_DIRECTORY, file));
+    await fs.promises.writeFile(fileListPath, filePaths.join('\n'));
+    
+    // Create tar archive directly from source files using -T option
+    const execAsync = promisify(exec);
+    await execAsync(`tar -cf "${archivePath}" --transform='s|.*/||' -T "${fileListPath}"`);
+    
+    // Read the resulting archive
+    const archiveBuffer = await fs.promises.readFile(archivePath);
+    
+    // Clean up
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+    
+    this.#logger.info(`Created timelapse archive with ${matchingFiles.length} images`);
+    
+    return archiveBuffer;
+  } catch (error) {
+    this.#logger.error(
+      `Failed to create timelapse archive: ${error instanceof Error ? error.message : String(error)}`
+    );
+    throw error;
+  }
+}
 
   private start(): void {
     if (this.#intervalMinutes == null) {
