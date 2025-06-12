@@ -162,7 +162,7 @@ class Timelapse {
       const archiveFile = path.join(ARCHIVE_DIRECTORY, "timelapse.tar");
 
       this.#logger.info(`Creating timelapse archive: ${archiveFile}`);
-
+      const profiler = this.#logger.startTimer();
       this.#archiveProgressPercentage = 0;
 
       const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
@@ -175,7 +175,7 @@ class Timelapse {
         this.#logger.info("No timelapse images found to archive");
         return;
       }
-
+      profiler.logger.debug(`Found ${imageFiles.length} images to archive`);
       let processedFiles = 0;
       const totalFiles = imageFiles.length;
 
@@ -198,6 +198,10 @@ class Timelapse {
         imageFiles,
       );
 
+      profiler.done({
+        message: `Timelapse archive created in ${archiveFile}`,
+        level: "debug",
+      });
       this.#logger.info(`Successfully created timelapse archive with ${imageFiles.length} images`);
     } catch (error) {
       this.#logger.error(
