@@ -15,6 +15,7 @@ import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCamera
 class ImageCapture {
   #timelapse: Timelapse;
   #logger: winston.Logger;
+  #isRunningImageRetention: boolean = false;
 
   constructor(logger: winston.Logger) {
     this.#timelapse = new Timelapse(async (filename: string, directory: string) => {
@@ -69,6 +70,24 @@ class ImageCapture {
     return null;
   }
 
+  async getTimelapseArchiveAsync(): Promise<Buffer | null> {
+    return this.#timelapse.getTimelapseArchiveAsync();
+  }
+
+  async regenerateTimelapseArchiveAsync(): Promise<void> {
+    return this.#timelapse.generateTimelapseArchiveAsync();
+  }
+
+  getTimelapseGenerationStatus(): {
+    isGenerating: boolean;
+    archiveProgress: number;
+  } {
+    return {
+      isGenerating: this.#timelapse.isGeneratingTimelapseArchive,
+      archiveProgress: this.#timelapse.archiveProgress,
+    };
+  }
+
   /**
    * Manages images based on retention settings by removing old images
    * when either space limit or time retention period is exceeded
@@ -79,12 +98,17 @@ class ImageCapture {
     now = new Date(),
     directory = TIMELAPSE_DIRECTORY,
   ): Promise<void> {
+    if (this.#isRunningImageRetention) {
+      this.#logger.warn("Image retention is already running, skipping");
+      return;
+    }
     // Ensure the directory exists
     if (!fs.existsSync(directory)) {
       this.#logger.warn(`Image directory ${directory} does not exist`);
       return;
     }
 
+    this.#isRunningImageRetention = true;
     // Get retention settings from current camera settings
     const maxRetentionSizeMB = retentionSize ?? Infinity;
     const retentionPeriodInMS = (retentionDays || 0) * 24 * 60 * 60 * 1000;
@@ -117,6 +141,8 @@ class ImageCapture {
       // Update for next iteration
       oldestFilePath = await getOldestFilePathAsync(directory);
     }
+
+    this.#isRunningImageRetention = false;
   }
 }
 

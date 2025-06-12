@@ -4,7 +4,6 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
-
 export function getCameraSettings(request: Request, response: Response): SuccessResponse {
   const cameraManager = request.app.get("cameraManager") as CameraManager;
   const settings = cameraManager.cameraSettings;
@@ -86,20 +85,27 @@ export async function updateCameraSettingsAsync(
   ) {
     missingOrInvalidFields.push("timelapseInterval must be a number between 1 and 1440");
   }
-  if (newSettings.timelapseStartTime !== null &&
-    (typeof newSettings.timelapseStartTime !== "string" || !newSettings.timelapseStartTime.match(/^\d{2}:\d{2}$/))
+  if (
+    newSettings.timelapseStartTime !== null &&
+    (typeof newSettings.timelapseStartTime !== "string" ||
+      !newSettings.timelapseStartTime.match(/^\d{2}:\d{2}$/))
   ) {
     missingOrInvalidFields.push("timelapseStartTime must be a string in HH:MM format, or null");
   }
   if (
     newSettings.timelapseEndTime !== null &&
-    (typeof newSettings.timelapseEndTime !== "string" || !newSettings.timelapseEndTime.match(/^\d{2}:\d{2}$/))
+    (typeof newSettings.timelapseEndTime !== "string" ||
+      !newSettings.timelapseEndTime.match(/^\d{2}:\d{2}$/))
   ) {
     missingOrInvalidFields.push("timelapseEndTime must be a string in HH:MM format, or null");
   }
-  if ((newSettings.timelapseStartTime === null && newSettings.timelapseEndTime !== null) ||
-    (newSettings.timelapseStartTime !== null && newSettings.timelapseEndTime === null)) {
-    missingOrInvalidFields.push("Both timelapseStartTime and timelapseEndTime must be provided or both must be null");
+  if (
+    (newSettings.timelapseStartTime === null && newSettings.timelapseEndTime !== null) ||
+    (newSettings.timelapseStartTime !== null && newSettings.timelapseEndTime === null)
+  ) {
+    missingOrInvalidFields.push(
+      "Both timelapseStartTime and timelapseEndTime must be provided or both must be null",
+    );
   }
   if (missingOrInvalidFields.length > 0) {
     return {

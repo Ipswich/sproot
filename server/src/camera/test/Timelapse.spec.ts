@@ -435,4 +435,396 @@ describe("Timelapse.ts tests", function () {
 
     timelapse.dispose();
   });
+
+  describe("shouldGenerateTimelapseArchive tests", function () {
+    it("should return false when timelapse is not enabled", function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: false,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      assert.isFalse(timelapse.shouldGenerateTimelapseArchive());
+    });
+
+    it("should return true at midnight when no time range is specified", function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      // Set time to midnight
+      clock.restore();
+      clock = sinon.useFakeTimers({
+        now: new Date(2025, 4, 26, 0, 0), // May 26, 2025, 00:00
+        shouldAdvanceTime: true,
+      });
+
+      assert.isTrue(timelapse.shouldGenerateTimelapseArchive());
+
+      // Set time to not midnight
+      clock.restore();
+      clock = sinon.useFakeTimers({
+        now: new Date(2025, 4, 26, 12, 30), // May 26, 2025, 12:30
+        shouldAdvanceTime: true,
+      });
+
+      assert.isFalse(timelapse.shouldGenerateTimelapseArchive());
+    });
+
+    it("should return true when current time matches end time", function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: "08:00",
+        timelapseEndTime: "17:30",
+      } as SDBCameraSettings);
+
+      // Set time to match end time
+      clock.restore();
+      clock = sinon.useFakeTimers({
+        now: new Date(2025, 4, 26, 17, 30), // May 26, 2025, 17:30
+        shouldAdvanceTime: true,
+      });
+
+      assert.isTrue(timelapse.shouldGenerateTimelapseArchive());
+
+      // Set time to not match end time
+      clock.restore();
+      clock = sinon.useFakeTimers({
+        now: new Date(2025, 4, 26, 17, 31), // May 26, 2025, 17:31
+        shouldAdvanceTime: true,
+      });
+      ``;
+
+      assert.isFalse(timelapse.shouldGenerateTimelapseArchive());
+    });
+
+    it("should return false when only one of startTime or endTime is set", function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+
+      // Only startTime set
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: "08:00",
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      assert.isFalse(timelapse.shouldGenerateTimelapseArchive());
+
+      // Only endTime set
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: "17:30",
+      } as SDBCameraSettings);
+
+      assert.isFalse(timelapse.shouldGenerateTimelapseArchive());
+    });
+
+    it("should return false when time formats are invalid", function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: "8:00", // Invalid format (should be 08:00)
+        timelapseEndTime: "17:30",
+      } as SDBCameraSettings);
+
+      assert.isFalse(timelapse.shouldGenerateTimelapseArchive());
+    });
+  });
+
+  describe("generateTimelapseArchivesAsync tests", function () {
+    let originalArchiveDir: string;
+    let archiveDir: string;
+
+    beforeEach(function () {
+      archiveDir = fs.mkdtempSync(path.join(os.tmpdir(), "archive-test-"));
+      originalArchiveDir = Constants.ARCHIVE_DIRECTORY;
+      Object.defineProperty(Constants, "ARCHIVE_DIRECTORY", {
+        value: archiveDir,
+        configurable: true,
+      });
+    });
+
+    afterEach(function () {
+      Object.defineProperty(Constants, "ARCHIVE_DIRECTORY", {
+        value: originalArchiveDir,
+        configurable: true,
+      });
+
+      // Clean up archive directory
+      if (fs.existsSync(archiveDir)) {
+        fs.readdirSync(archiveDir).forEach((file) => {
+          fs.unlinkSync(path.join(archiveDir, file));
+        });
+        fs.rmdirSync(archiveDir);
+      }
+    });
+
+    it("should not create an archive when shouldGenerateTimelapseArchive returns false", async function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: false, // Disabled, so shouldGenerateTimelapseArchive will return false
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await timelapse.generateTimelapseArchiveAsync();
+      assert.equal(fs.readdirSync(archiveDir).length, 0);
+    });
+
+    it("should bypass shouldGenerateTimelapseArchive check when validateShouldRun is false", async function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: false, // Disabled, so shouldGenerateTimelapseArchive will return false
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, "testCamera_sample.jpg"), "test image");
+
+      await timelapse.generateTimelapseArchiveAsync(false); // Force archive generation
+
+      const archiveFiles = fs.readdirSync(archiveDir);
+      assert.equal(archiveFiles.length, 1);
+    });
+
+    it("should create an archive with captured images", async function () {
+      // Create test image files
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      await fs.promises.writeFile(
+        path.join(tempDir, "testCamera_2025-05-26-12-00.jpg"),
+        "test image 1",
+      );
+      await fs.promises.writeFile(
+        path.join(tempDir, "testCamera_2025-05-26-12-05.jpg"),
+        "test image 2",
+      );
+
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await timelapse.generateTimelapseArchiveAsync(false);
+
+      const archiveFiles = fs.readdirSync(archiveDir);
+      assert.equal(archiveFiles.length, 1);
+      assert.match(archiveFiles[0]!, /^timelapse.tar$/);
+    });
+
+    it("should overwrite existing archive file", async function () {
+      // Create test image files
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      await fs.promises.writeFile(
+        path.join(tempDir, "testCamera_2025-05-26-12-00.jpg"),
+        "test image 1",
+      );
+      await fs.promises.writeFile(
+        path.join(tempDir, "testCamera_2025-05-26-12-05.jpg"),
+        "test image 2",
+      );
+
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await timelapse.generateTimelapseArchiveAsync(false);
+      await timelapse.generateTimelapseArchiveAsync(false);
+
+      const archiveFiles = fs.readdirSync(archiveDir);
+      assert.equal(archiveFiles.length, 1);
+      assert.match(archiveFiles[0]!, /^timelapse.tar$/);
+    });
+
+    it("should skip archive generation when already in progress", async function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, "testCamera_sample.jpg"), "test image");
+
+      const readdirSpy = sinon.spy(fs.promises, "readdir");
+
+      const promise1 = timelapse.generateTimelapseArchiveAsync(false);
+      const promise2 = timelapse.generateTimelapseArchiveAsync(false);
+
+      await Promise.all([promise1, promise2]);
+
+      // Verify that although the method was called twice, it should have returned early for one of them
+      assert.equal(readdirSpy.callCount, 1);
+
+      readdirSpy.restore();
+    });
+
+    it("should not create an archive when no images exist", async function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await timelapse.generateTimelapseArchiveAsync(false);
+
+      const archiveFiles = fs.readdirSync(archiveDir);
+      assert.equal(archiveFiles.length, 0);
+    });
+
+    it("should handle errors during archive creation", async function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, "testCamera_sample.jpg"), "test image");
+
+      const fsStub = sinon.stub(fs.promises, "readdir").throws(new Error("Simulated write error"));
+
+      await timelapse.generateTimelapseArchiveAsync(false);
+
+      // Should set progress to -1 on error
+      assert.equal(timelapse.archiveProgress, -1);
+
+      fsStub.restore();
+    });
+
+    it("should track progress during archive creation", async function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      for (let i = 0; i < 5; i++) {
+        await fs.promises.writeFile(
+          path.join(tempDir, `testCamera_img${i}.jpg`),
+          `test image ${i}`,
+        );
+      }
+      await timelapse.generateTimelapseArchiveAsync(false);
+
+      assert.equal(timelapse.archiveProgress, 100);
+    });
+  });
+
+  describe("getLatestTimelapseArchiveAsync", function () {
+    let originalArchiveDir: string;
+    let archiveDir: string;
+    let timelapse: Timelapse;
+
+    beforeEach(function () {
+      archiveDir = fs.mkdtempSync(path.join(os.tmpdir(), "archive-test-"));
+      originalArchiveDir = Constants.ARCHIVE_DIRECTORY;
+      Object.defineProperty(Constants, "ARCHIVE_DIRECTORY", {
+        value: archiveDir,
+        configurable: true,
+      });
+
+      timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
+    });
+
+    afterEach(function () {
+      Object.defineProperty(Constants, "ARCHIVE_DIRECTORY", {
+        value: originalArchiveDir,
+        configurable: true,
+      });
+
+      // Clean up archive directory
+      if (fs.existsSync(archiveDir)) {
+        fs.readdirSync(archiveDir).forEach((file) => {
+          fs.unlinkSync(path.join(archiveDir, file));
+        });
+        fs.rmdirSync(archiveDir);
+      }
+    });
+
+    it("should return null when archive directory does not exist", async function () {
+      fs.rmdirSync(archiveDir);
+      const result = await timelapse.getTimelapseArchiveAsync();
+      assert.isNull(result);
+    });
+
+    it("should return null when archive directory is empty", async function () {
+      const result = await timelapse.getTimelapseArchiveAsync();
+      assert.isNull(result);
+    });
+
+    it("should handle errors gracefully", async function () {
+      await fs.promises.writeFile(path.join(archiveDir, "timelapse.tar"), "archive data");
+
+      const readFileStub = sinon.stub(fs.promises, "readFile").throws(new Error("Read error"));
+      const result = await timelapse.getTimelapseArchiveAsync();
+
+      assert.isNull(result);
+      readFileStub.restore();
+    });
+
+    it("should return null when camera name is null", async function () {
+      timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      // Don't set camera name
+
+      await fs.promises.writeFile(path.join(archiveDir, "archvive.tar"), "archive data");
+      const result = await timelapse.getTimelapseArchiveAsync();
+      assert.isNull(result);
+    });
+  });
 });

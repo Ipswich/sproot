@@ -4,11 +4,12 @@ import {
   reconnectLivestreamAsync,
   streamHandlerAsync,
 } from "./handlers/CameraHandlers";
-
+import { getCameraSettings, updateCameraSettingsAsync } from "./handlers/CameraSettingsHandlers";
 import {
-  getCameraSettings,
-  updateCameraSettingsAsync,
-} from "./handlers/CameraSettingsHandlers";
+  getTimelapseArchiveAsync,
+  getTimelapseGenerationStatus,
+  postRegenerateTimelapseArchive,
+} from "./handlers/TimelapseHandlers";
 
 const router = express.Router();
 router.get("/settings", (req: Request, res: Response) => {
@@ -27,6 +28,18 @@ router.get("/stream", async (req: Request, res: Response) => {
 
 router.get("/latest-image", async (req: Request, res: Response) => {
   await getLatestImageAsync(req, res);
+});
+
+router.get("/timelapse/archive", async (req: Request, res: Response) => {
+  await getTimelapseArchiveAsync(req, res);
+});
+
+router.post("/timelapse/archive/regenerate", (req: Request, res: Response) => {
+  postRegenerateTimelapseArchive(req, res);
+});
+
+router.get("/timelapse/archive/regenerate/status", (req: Request, res: Response) => {
+  getTimelapseGenerationStatus(req, res);
 });
 
 router.post("/reconnect", async (req: Request, res: Response) => {

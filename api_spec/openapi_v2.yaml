@@ -3703,6 +3703,100 @@ paths:
                           details:
                             items:
                               example: "No latest image"
+  /api/v2/camera/timelapse/archive:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Get the timelapse archive.
+      description: Returns a zip file containing all timelapse images.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/x-tar:
+              schema:
+                type: string
+                format: binary
+        404:
+          description: "Archive not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/camera/timelapse/archive"
+                          details:
+                            items:
+                              example: "No timelapse archive available."
+
+  /api/v2/camera/timelapse/archive/regenerate:
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Regenerate the timelapse archive.
+      description: >
+        Regenerates the timelapse archive. Useful if you want to regenerate it to now, instead of waiting for the usual interval.
+      responses:
+        204:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 204
+                      content:
+                        properties:
+                          data:
+                            example: "Timelapse archive regeneration queued."        
+  /api/v2/camera/timelapse/archive/status:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Get the status of the timelapse archive regeneration.
+      description: >
+        Returns the status of the timelapse archive regeneration. This is useful to check if the regeneration is still in progress.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            properties:
+                              isGenerating:
+                                type: boolean
+                                example: "true"
+                              archiveProgress:
+                                type: number
+                                example: 75        
 
 components:
   schemas:

@@ -16,3 +16,4 @@ export const MAX_CHART_DATA_POINTS = 2016; // 7 days of 5 minute intervals (24 *
 
 export const IMAGE_DIRECTORY = "./images";
 export const TIMELAPSE_DIRECTORY = `${IMAGE_DIRECTORY}/timelapse`;
+export const ARCHIVE_DIRECTORY = `${IMAGE_DIRECTORY}/archive`;

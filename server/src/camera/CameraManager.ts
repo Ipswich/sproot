@@ -67,6 +67,30 @@ class CameraManager {
   }
 
   /**
+   * Gets the progress of the timelapse archive generation.
+   * @returns A promise that resolves to an object containing the status of the timelapse generation.
+   */
+  getTimelapseArchiveProgressAsync() {
+    return this.#imageCapture.getTimelapseGenerationStatus();
+  }
+
+  /**
+   * Gets a buffer containing the timelapse archive.
+   * @returns A promise that resolves to the timelapse archive.
+   */
+  getTimelapseArchiveAsync() {
+    return this.#imageCapture.getTimelapseArchiveAsync();
+  }
+
+  /**
+   * Regenerates the timelapse archive.
+   * @returns A promise that resolves when the timelapse archive has been regenerated.
+   */
+  regenerateTimelapseArchiveAsync() {
+    return this.#imageCapture.regenerateTimelapseArchiveAsync();
+  }
+
+  /**
    * Forces a reconnect to the livestream. Cleans up resources and reinitializes
    * the livestream connection.
    * @returns A promise that resolves with the result of the reconnection attempt.
@@ -80,10 +104,12 @@ class CameraManager {
       return;
     }
     const settings = await this.#sprootDB.getCameraSettingsAsync();
+
     if (settings[0] != undefined) {
       this.#currentSettings = settings[0];
-      
-      await this.#imageCapture.runImageRetentionAsync(
+
+      // Don't await this here - internally, it keeps track if it's running and so this should prevent it from blocking until its done.
+      this.#imageCapture.runImageRetentionAsync(
         this.#currentSettings.imageRetentionSize,
         this.#currentSettings.imageRetentionDays,
       );

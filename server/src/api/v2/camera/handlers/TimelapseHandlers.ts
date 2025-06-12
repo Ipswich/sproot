@@ -1,0 +1,64 @@
+import { Request, Response } from "express";
+import { CameraManager } from "../../../../camera/CameraManager";
+
+/**
+ * Possible statusCodes: 200, 404
+ * @param request
+ * @param response
+ * @returns
+ */
+export async function getTimelapseArchiveAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const timelapseArchive = await cameraManager.getTimelapseArchiveAsync();
+  if (timelapseArchive === null) {
+    response.status(404).json({
+      statusCode: 404,
+      error: {
+        name: "Not Found",
+        url: request.originalUrl,
+        details: [`No timelapse archive available`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+    return;
+  }
+
+  response.setHeader("Content-Type", "application/x-tar");
+  response.status(200).send(timelapseArchive);
+}
+
+/**
+ * Possible statusCodes: 204
+ * @param request
+ * @param response
+ * @returns
+ */
+export function postRegenerateTimelapseArchive(request: Request, response: Response): void {
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
+
+  cameraManager.regenerateTimelapseArchiveAsync();
+  response.status(204).json({
+    statusCode: 204,
+    message: "Timelapse archive regeneration queued.",
+    ...response.locals["defaultProperties"],
+  });
+}
+
+/**
+ * Possible statusCodes: 200
+ * @param request
+ * @param response
+ * @returns
+ */
+export function getTimelapseGenerationStatus(request: Request, response: Response): void {
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const status = cameraManager.getTimelapseArchiveProgressAsync();
+  response.status(200).json({
+    statusCode: 200,
+    data: status,
+    ...response.locals["defaultProperties"],
+  });
+}
