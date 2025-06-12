@@ -38,7 +38,7 @@ router.post("/timelapse/archive/regenerate", (req: Request, res: Response) => {
   postRegenerateTimelapseArchive(req, res);
 });
 
-router.get("/timelapse/archive/regenerate/status", (req: Request, res: Response) => {
+router.get("/timelapse/archive/status", (req: Request, res: Response) => {
   getTimelapseGenerationStatus(req, res);
 });
 

@@ -187,6 +187,11 @@ class Timelapse {
           filter: (_path, _stat) => {
             processedFiles++;
             this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
+            if (processedFiles % 100 === 0) {
+              this.#logger.info(
+                `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
+              );
+            }
             return true;
           },
         },

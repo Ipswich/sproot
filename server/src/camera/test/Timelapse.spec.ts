@@ -737,7 +737,12 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should track progress during archive creation", async function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      const testLogger = winston.createLogger({
+        transports: [new winston.transports.Console({ silent: true })],
+      });
+      const logSpy = sinon.spy(testLogger, "info");
+
+      const timelapse = new Timelapse(testAddImageFunctionAsync, testLogger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: true,
@@ -747,15 +752,28 @@ describe("Timelapse.ts tests", function () {
       } as SDBCameraSettings);
 
       await fs.promises.mkdir(tempDir, { recursive: true });
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 200; i++) {
         await fs.promises.writeFile(
           path.join(tempDir, `testCamera_img${i}.jpg`),
           `test image ${i}`,
         );
       }
+
       await timelapse.generateTimelapseArchiveAsync(false);
 
-      assert.equal(timelapse.archiveProgress, 100);
+      // Verify that progress was logged during the process
+      const progressLogs = logSpy.args
+        .map((args) => args[0])
+        .filter((arg) => (arg as unknown as string).includes("Processed")) as unknown as string[];
+
+      assert.isTrue(progressLogs.length == 4);
+      assert.isTrue(progressLogs[0]!.includes("25%"));
+      assert.isTrue(progressLogs[1]!.includes("50%"));
+      assert.isTrue(progressLogs[2]!.includes("75%"));
+      assert.isTrue(progressLogs[3]!.includes("100%"));
+
+      // Restore the spy
+      logSpy.restore();
     });
   });
 
