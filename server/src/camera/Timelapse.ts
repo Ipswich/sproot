@@ -146,7 +146,7 @@ class Timelapse {
     }
   }
 
-  public async generateTimelapseArchiveAsync(validateShouldRun: boolean = true): Promise<void> {
+  public async generateTimelapseArchiveAsync(validateShouldRun: boolean): Promise<void> {
     if (validateShouldRun && !this.shouldGenerateTimelapseArchive()) {
       return;
     }

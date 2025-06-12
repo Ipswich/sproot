@@ -87,7 +87,8 @@ class CameraManager {
    * @returns A promise that resolves when the timelapse archive has been regenerated.
    */
   regenerateTimelapseArchiveAsync() {
-    return this.#imageCapture.regenerateTimelapseArchiveAsync();
+    // Force regeneration - this ignores the time checks
+    return this.#imageCapture.regenerateTimelapseArchiveAsync(false);
   }
 
   /**
@@ -108,11 +109,16 @@ class CameraManager {
     if (settings[0] != undefined) {
       this.#currentSettings = settings[0];
 
-      // Don't await this here - internally, it keeps track if it's running and so this should prevent it from blocking until its done.
-      this.#imageCapture.runImageRetentionAsync(
-        this.#currentSettings.imageRetentionSize,
-        this.#currentSettings.imageRetentionDays,
-      );
+      // Don't await these here - internally, they keeps track if they're's running
+      // so this should prevent it from blocking until its done.
+      this.#imageCapture
+        .runImageRetentionAsync(
+          this.#currentSettings.imageRetentionSize,
+          this.#currentSettings.imageRetentionDays,
+        )
+        .then(() => {
+          this.#imageCapture.regenerateTimelapseArchiveAsync(true);
+        });
     } else {
       return;
     }

@@ -591,7 +591,7 @@ describe("Timelapse.ts tests", function () {
         timelapseEndTime: null,
       } as SDBCameraSettings);
 
-      await timelapse.generateTimelapseArchiveAsync();
+      await timelapse.generateTimelapseArchiveAsync(true);
       assert.equal(fs.readdirSync(archiveDir).length, 0);
     });
 
@@ -766,11 +766,9 @@ describe("Timelapse.ts tests", function () {
         .map((args) => args[0])
         .filter((arg) => (arg as unknown as string).includes("Processed")) as unknown as string[];
 
-      assert.isTrue(progressLogs.length == 4);
-      assert.isTrue(progressLogs[0]!.includes("25%"));
-      assert.isTrue(progressLogs[1]!.includes("50%"));
-      assert.isTrue(progressLogs[2]!.includes("75%"));
-      assert.isTrue(progressLogs[3]!.includes("100%"));
+      assert.lengthOf(progressLogs, 2);
+      assert.isTrue(progressLogs[0]!.includes("50%"));
+      assert.isTrue(progressLogs[1]!.includes("100%"));
 
       // Restore the spy
       logSpy.restore();

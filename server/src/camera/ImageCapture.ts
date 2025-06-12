@@ -74,8 +74,8 @@ class ImageCapture {
     return this.#timelapse.getTimelapseArchiveAsync();
   }
 
-  async regenerateTimelapseArchiveAsync(): Promise<void> {
-    return this.#timelapse.generateTimelapseArchiveAsync();
+  async regenerateTimelapseArchiveAsync(validateShouldRun: boolean = true): Promise<void> {
+    return this.#timelapse.generateTimelapseArchiveAsync(validateShouldRun);
   }
 
   getTimelapseGenerationStatus(): {
