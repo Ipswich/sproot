@@ -1,5 +1,5 @@
 import fs from "fs";
-import * as tar from "tar";
+// import * as tar from "tar";
 import winston from "winston";
 import {
   ARCHIVE_DIRECTORY,
@@ -8,6 +8,9 @@ import {
 import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
 import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
 import path from "path";
+import { promisify } from "util";
+
+const execFile = promisify(require("node:child_process").execFile);
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
 
@@ -175,62 +178,28 @@ class Timelapse {
         return;
       }
       profiler.logger.debug(`Found ${imageFiles.length} images to archive`);
+      await execFile("tar", ["-cf", archiveFile, ...imageFiles], { cwd: TIMELAPSE_DIRECTORY });
+      // let processedFiles = 0;
+      // const totalFiles = imageFiles.length;
 
-      // Process files in batches
-      const batchSize = 50;
-      const batches = [];
-
-      for (let i = 0; i < imageFiles.length; i += batchSize) {
-        batches.push(imageFiles.slice(i, i + batchSize));
-      }
-
-      let processedFiles = 0;
-      const totalFiles = imageFiles.length;
-
-      // Create the tar file with the first batch
-      await tar.create(
-        {
-          gzip: false,
-          file: archiveFile,
-          cwd: TIMELAPSE_DIRECTORY,
-          onWriteEntry: (_entry) => {
-            processedFiles++;
-            this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
-            if (processedFiles % 100 === 0) {
-              this.#logger.info(
-                `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
-              );
-            }
-            return true;
-          },
-        },
-        batches[0] || [],
-      );
-
-      // Then append additional batches with small delays between them
-      for (let i = 1; i < batches.length; i++) {
-        // Allow event loop to process other tasks between batches
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        await tar.update(
-          {
-            gzip: false,
-            file: archiveFile,
-            cwd: TIMELAPSE_DIRECTORY,
-            onWriteEntry: (_entry) => {
-              processedFiles++;
-              this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
-              if (processedFiles % 100 === 0) {
-                this.#logger.info(
-                  `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
-                );
-              }
-              return true;
-            },
-          },
-          batches[i] || [],
-        );
-      }
+      // await tar.create(
+      //   {
+      //     gzip: false,
+      //     file: archiveFile,
+      //     cwd: TIMELAPSE_DIRECTORY,
+      //     onWriteEntry: (_entry) => {
+      //       processedFiles++;
+      //       this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
+      //       if (processedFiles % 100 === 0) {
+      //         this.#logger.info(
+      //           `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
+      //         );
+      //       }
+      //       return true;
+      //     },
+      //   },
+      //   imageFiles,
+      // );
 
       profiler.done({
         message: `Timelapse archive created in ${archiveFile}`,
