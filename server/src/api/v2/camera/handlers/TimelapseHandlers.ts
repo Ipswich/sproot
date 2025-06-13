@@ -58,7 +58,9 @@ export function getTimelapseGenerationStatus(request: Request, response: Respons
   const status = cameraManager.getTimelapseArchiveProgressAsync();
   response.status(200).json({
     statusCode: 200,
-    data: status,
+    content: {
+      data: status
+    },
     ...response.locals["defaultProperties"],
   });
 }

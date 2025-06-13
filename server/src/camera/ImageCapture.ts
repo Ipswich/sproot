@@ -99,7 +99,6 @@ class ImageCapture {
     directory = TIMELAPSE_DIRECTORY,
   ): Promise<void> {
     if (this.#isRunningImageRetention) {
-      this.#logger.warn("Image retention is already running, skipping");
       return;
     }
     // Ensure the directory exists

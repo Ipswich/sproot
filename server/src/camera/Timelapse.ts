@@ -90,7 +90,6 @@ class Timelapse {
       return;
     }
     if (this.#isGeneratingTimelapseArchive) {
-      this.#logger.warn("Timelapse archive generation already in progress, skipping this run.");
       return;
     }
     this.#isGeneratingTimelapseArchive = true;
