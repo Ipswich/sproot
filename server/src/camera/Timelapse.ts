@@ -184,7 +184,7 @@ class Timelapse {
           gzip: false,
           file: archiveFile,
           cwd: TIMELAPSE_DIRECTORY,
-          filter: (_path, _stat) => {
+          onWriteEntry: (_entry) => {
             processedFiles++;
             this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
             if (processedFiles % 100 === 0) {
