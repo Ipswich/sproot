@@ -59,7 +59,7 @@ export function getTimelapseGenerationStatus(request: Request, response: Respons
   response.status(200).json({
     statusCode: 200,
     content: {
-      data: status
+      data: status,
     },
     ...response.locals["defaultProperties"],
   });
