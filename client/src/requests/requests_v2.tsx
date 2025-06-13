@@ -647,6 +647,58 @@ export async function getLatestImageAsync() {
   }
 }
 
+export async function getTimelapseArchiveAsync() {
+  try {
+    const response = await fetch(
+      `${SERVER_URL}/api/v2/camera/timelapse/archive`,
+    );
+    if (response.ok) {
+      return await response.blob();
+    }
+    return (await response.json()) as ErrorResponse;
+  } catch (e) {
+    console.error(`Error fetching timelapse archive: ${e}`);
+    return;
+  }
+}
+
+export async function getTimelapseArchiveStatusAsync(): Promise<{
+  isGenerating: boolean;
+  archiveProgress: number;
+}> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/timelapse/archive/status`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching timelapse archive status: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function regenerateTimelapseArchiveAsync(): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/timelapse/archive/regenerate`,
+    {
+      method: "POST",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error regenerating timelapse archive: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
 export async function getLivestreamAsync() {
   return `${SERVER_URL}/api/v2/camera/stream`;
 }

@@ -56,7 +56,6 @@ const sensorDataPageLoader = async ({ params }: LoaderFunctionArgs) => {
 
 const outputStatesLoader = async () => {
   const { outputs } = await rootLoader();
-  console.log(outputs);
   if (Object.keys(outputs || {}).length === 0) {
     // No outputs available, redirect to settings
     return redirect("/settings/sensors");

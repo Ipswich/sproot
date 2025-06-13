@@ -10,8 +10,6 @@ import {
   rem,
   Fieldset,
   Switch,
-  Loader,
-  Center,
   LoadingOverlay,
 } from "@mantine/core";
 import {
