@@ -3711,7 +3711,7 @@ paths:
       tags:
         - "Camera"
       summary: Get the timelapse archive.
-      description: Returns a zip file containing all timelapse images.
+      description: Returns a tar file containing all timelapse images.
       responses:
         200:
           description: "Success"

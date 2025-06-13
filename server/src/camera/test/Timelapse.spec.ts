@@ -736,43 +736,43 @@ describe("Timelapse.ts tests", function () {
       fsStub.restore();
     });
 
-    // it("should track progress during archive creation", async function () {
-    //   const testLogger = winston.createLogger({
-    //     transports: [new winston.transports.Console({ silent: true })],
-    //   });
-    //   const logSpy = sinon.spy(testLogger, "info");
+    it("should track progress during archive creation", async function () {
+      const testLogger = winston.createLogger({
+        transports: [new winston.transports.Console({ silent: true })],
+      });
+      const logSpy = sinon.spy(testLogger, "info");
 
-    //   const timelapse = new Timelapse(testAddImageFunctionAsync, testLogger);
-    //   timelapse.updateSettings({
-    //     name: "testCamera",
-    //     timelapseEnabled: true,
-    //     timelapseInterval: 5,
-    //     timelapseStartTime: null,
-    //     timelapseEndTime: null,
-    //   } as SDBCameraSettings);
+      const timelapse = new Timelapse(testAddImageFunctionAsync, testLogger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
 
-    //   await fs.promises.mkdir(tempDir, { recursive: true });
-    //   for (let i = 0; i < 200; i++) {
-    //     await fs.promises.writeFile(
-    //       path.join(tempDir, `testCamera_img${i}.jpg`),
-    //       `test image ${i}`,
-    //     );
-    //   }
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      for (let i = 0; i < 200; i++) {
+        await fs.promises.writeFile(
+          path.join(tempDir, `testCamera_img${i}.jpg`),
+          `test image ${i}`,
+        );
+      }
 
-    //   await timelapse.generateTimelapseArchiveAsync(false);
+      await timelapse.generateTimelapseArchiveAsync(false);
 
-    //   // Verify that progress was logged during the process
-    //   const progressLogs = logSpy.args
-    //     .map((args) => args[0])
-    //     .filter((arg) => (arg as unknown as string).includes("Processed")) as unknown as string[];
+      // Verify that progress was logged during the process
+      const progressLogs = logSpy.args
+        .map((args) => args[0])
+        .filter((arg) => (arg as unknown as string).includes("Processed")) as unknown as string[];
 
-    //   assert.lengthOf(progressLogs, 2);
-    //   assert.isTrue(progressLogs[0]!.includes("50%"));
-    //   assert.isTrue(progressLogs[1]!.includes("100%"));
+      assert.lengthOf(progressLogs, 2);
+      assert.isTrue(progressLogs[0]!.includes("50%"));
+      assert.isTrue(progressLogs[1]!.includes("100%"));
 
-    //   // Restore the spy
-    //   logSpy.restore();
-    // });
+      // Restore the spy
+      logSpy.restore();
+    });
   });
 
   describe("getLatestTimelapseArchiveAsync", function () {

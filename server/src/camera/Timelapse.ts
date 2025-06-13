@@ -1,5 +1,5 @@
 import fs from "fs";
-// import * as tar from "tar";
+import * as tar from "tar";
 import winston from "winston";
 import {
   ARCHIVE_DIRECTORY,
@@ -8,9 +8,6 @@ import {
 import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
 import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
 import path from "path";
-import { promisify } from "util";
-
-const execFile = promisify(require("node:child_process").execFile);
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
 
@@ -88,6 +85,107 @@ class Timelapse {
     }
   }
 
+  async generateTimelapseArchiveAsync(validateShouldRun: boolean): Promise<void> {
+    if (validateShouldRun && !this.shouldGenerateTimelapseArchive()) {
+      return;
+    }
+    if (this.#isGeneratingTimelapseArchive) {
+      this.#logger.warn("Timelapse archive generation already in progress, skipping this run.");
+      return;
+    }
+    this.#isGeneratingTimelapseArchive = true;
+
+    const profiler = this.#logger.startTimer();
+    try {
+      await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
+      const archiveFile = path.join(ARCHIVE_DIRECTORY, "timelapse.tar");
+
+      this.#logger.info(`Creating timelapse archive: ${archiveFile}`);
+      this.#archiveProgressPercentage = 0;
+
+      const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
+      const fileStatsPromises = files
+        .filter((file) => file.endsWith(".jpg"))
+        .map(async (file) => {
+          const filePath = path.join(TIMELAPSE_DIRECTORY, file);
+          try {
+            const stats = await fs.promises.stat(filePath);
+            return { file, isFile: stats.isFile() };
+          } catch (err) {
+            return { file, isFile: false };
+          }
+        });
+
+      const fileStats = await Promise.all(fileStatsPromises);
+      const imageFiles = fileStats.filter((item) => item.isFile).map((item) => item.file);
+
+      if (imageFiles.length === 0) {
+        this.#logger.info("No timelapse images found to archive");
+        return;
+      }
+      let processedFiles = 0;
+      const totalFiles = imageFiles.length;
+
+      await tar.create(
+        {
+          gzip: false,
+          file: archiveFile,
+          cwd: TIMELAPSE_DIRECTORY,
+          onWriteEntry: (_entry) => {
+            processedFiles++;
+            this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
+            if (processedFiles % 100 === 0) {
+              this.#logger.info(
+                `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
+              );
+            }
+          },
+        },
+        imageFiles,
+      );
+
+      this.#logger.info(`Successfully created timelapse archive with ${imageFiles.length} images`);
+    } catch (error) {
+      this.#logger.error(
+        `Failed to create timelapse archive: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.#archiveProgressPercentage = -1;
+    } finally {
+      // The setTimeout should force cleanup of resources before actually calling things "done."
+      setTimeout(() => {
+        profiler.done({
+          message: `Timelapse archive process completed`,
+          level: "debug",
+        });
+        this.#isGeneratingTimelapseArchive = false;
+      }, 0);
+    }
+  }
+
+  shouldGenerateTimelapseArchive(): boolean {
+    // Obviously, only generate timelapse archives if enabled
+    if (!this.#enabled) {
+      return false;
+    }
+    const now = new Date();
+    const nowHours = now.getHours();
+    const nowMinutes = now.getMinutes();
+
+    // If start and end times are set and valid, run if current time is equal to end time
+    if (this.#startTime?.match(/^\d{2}:\d{2}$/) && this.#endTime?.match(/^\d{2}:\d{2}$/)) {
+      const [endHours, endMinutes] = this.#endTime.split(":").map(Number);
+      if (nowHours === endHours && nowMinutes === endMinutes) {
+        return true;
+      }
+    }
+    // If no start or end times, run if current time is midnight (00:00)
+    if (this.#startTime === null && this.#endTime === null && nowHours === 0 && nowMinutes === 0) {
+      return true;
+    }
+
+    return false;
+  }
+
   private start(): void {
     if (this.#intervalMinutes == null) {
       return;
@@ -147,97 +245,6 @@ class Timelapse {
       );
       throw error;
     }
-  }
-
-  public async generateTimelapseArchiveAsync(validateShouldRun: boolean): Promise<void> {
-    if (this.#isGeneratingTimelapseArchive) {
-      this.#logger.warn("Timelapse archive generation already in progress, skipping this run.");
-      return;
-    }
-    if (validateShouldRun && !this.shouldGenerateTimelapseArchive()) {
-      return;
-    }
-    this.#isGeneratingTimelapseArchive = true;
-
-    try {
-      await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
-      const archiveFile = path.join(ARCHIVE_DIRECTORY, "timelapse.tar");
-
-      this.#logger.info(`Creating timelapse archive: ${archiveFile}`);
-      const profiler = this.#logger.startTimer();
-      this.#archiveProgressPercentage = 0;
-
-      const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
-      const imageFiles = files.filter(
-        (file) =>
-          file.endsWith(".jpg") && fs.statSync(path.join(TIMELAPSE_DIRECTORY, file)).isFile(),
-      );
-
-      if (imageFiles.length === 0) {
-        this.#logger.info("No timelapse images found to archive");
-        return;
-      }
-      profiler.logger.debug(`Found ${imageFiles.length} images to archive`);
-      await execFile("tar", ["-cf", archiveFile, ...imageFiles], { cwd: TIMELAPSE_DIRECTORY });
-      // let processedFiles = 0;
-      // const totalFiles = imageFiles.length;
-
-      // await tar.create(
-      //   {
-      //     gzip: false,
-      //     file: archiveFile,
-      //     cwd: TIMELAPSE_DIRECTORY,
-      //     onWriteEntry: (_entry) => {
-      //       processedFiles++;
-      //       this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
-      //       if (processedFiles % 100 === 0) {
-      //         this.#logger.info(
-      //           `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
-      //         );
-      //       }
-      //       return true;
-      //     },
-      //   },
-      //   imageFiles,
-      // );
-
-      profiler.done({
-        message: `Timelapse archive created in ${archiveFile}`,
-        level: "debug",
-      });
-      this.#logger.info(`Successfully created timelapse archive with ${imageFiles.length} images`);
-    } catch (error) {
-      this.#logger.error(
-        `Failed to create timelapse archive: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      this.#archiveProgressPercentage = -1;
-    } finally {
-      this.#isGeneratingTimelapseArchive = false;
-    }
-  }
-
-  public shouldGenerateTimelapseArchive(): boolean {
-    // Obviously, only generate timelapse archives if enabled
-    if (!this.#enabled) {
-      return false;
-    }
-    const now = new Date();
-    const nowHours = now.getHours();
-    const nowMinutes = now.getMinutes();
-
-    // If start and end times are set and valid, run if current time is equal to end time
-    if (this.#startTime?.match(/^\d{2}:\d{2}$/) && this.#endTime?.match(/^\d{2}:\d{2}$/)) {
-      const [endHours, endMinutes] = this.#endTime.split(":").map(Number);
-      if (nowHours === endHours && nowMinutes === endMinutes) {
-        return true;
-      }
-    }
-    // If no start or end times, run if current time is midnight (00:00)
-    if (this.#startTime === null && this.#endTime === null && nowHours === 0 && nowMinutes === 0) {
-      return true;
-    }
-
-    return false;
   }
 
   dispose(): void {
