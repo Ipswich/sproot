@@ -1,5 +1,5 @@
 import fs from "fs";
-import { create } from "tar";
+import * as tar from "tar";
 import winston from "winston";
 import {
   ARCHIVE_DIRECTORY,
@@ -147,18 +147,17 @@ class Timelapse {
   }
 
   public async generateTimelapseArchiveAsync(validateShouldRun: boolean): Promise<void> {
-    if (validateShouldRun && !this.shouldGenerateTimelapseArchive()) {
-      return;
-    }
     if (this.#isGeneratingTimelapseArchive) {
       this.#logger.warn("Timelapse archive generation already in progress, skipping this run.");
+      return;
+    }
+    if (validateShouldRun && !this.shouldGenerateTimelapseArchive()) {
       return;
     }
     this.#isGeneratingTimelapseArchive = true;
 
     try {
       await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
-
       const archiveFile = path.join(ARCHIVE_DIRECTORY, "timelapse.tar");
 
       this.#logger.info(`Creating timelapse archive: ${archiveFile}`);
@@ -176,10 +175,20 @@ class Timelapse {
         return;
       }
       profiler.logger.debug(`Found ${imageFiles.length} images to archive`);
+
+      // Process files in batches
+      const batchSize = 50;
+      const batches = [];
+
+      for (let i = 0; i < imageFiles.length; i += batchSize) {
+        batches.push(imageFiles.slice(i, i + batchSize));
+      }
+
       let processedFiles = 0;
       const totalFiles = imageFiles.length;
 
-      await create(
+      // Create the tar file with the first batch
+      await tar.create(
         {
           gzip: false,
           file: archiveFile,
@@ -195,8 +204,33 @@ class Timelapse {
             return true;
           },
         },
-        imageFiles,
+        batches[0] || [],
       );
+
+      // Then append additional batches with small delays between them
+      for (let i = 1; i < batches.length; i++) {
+        // Allow event loop to process other tasks between batches
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        await tar.update(
+          {
+            gzip: false,
+            file: archiveFile,
+            cwd: TIMELAPSE_DIRECTORY,
+            onWriteEntry: (_entry) => {
+              processedFiles++;
+              this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
+              if (processedFiles % 100 === 0) {
+                this.#logger.info(
+                  `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
+                );
+              }
+              return true;
+            },
+          },
+          batches[i] || [],
+        );
+      }
 
       profiler.done({
         message: `Timelapse archive created in ${archiveFile}`,
