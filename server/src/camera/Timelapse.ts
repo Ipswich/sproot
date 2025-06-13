@@ -1,6 +1,6 @@
 import fs from "fs";
+import { create } from "tar";
 import winston from "winston";
-import { Worker } from "worker_threads";
 import {
   ARCHIVE_DIRECTORY,
   TIMELAPSE_DIRECTORY,
@@ -155,73 +155,62 @@ class Timelapse {
       return;
     }
     this.#isGeneratingTimelapseArchive = true;
-    this.#archiveProgressPercentage = 0;
 
-    return new Promise<void>((resolve) => {
-      // Create a worker thread
-      const workerPath = path.resolve(__dirname, "timelapseArchiveWorker.mjs");
-      const worker = new Worker(workerPath, {
-        workerData: {
-          timelapseDirectory: TIMELAPSE_DIRECTORY,
-          archiveDirectory: ARCHIVE_DIRECTORY,
-        },
-      });
+    try {
+      await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
 
-      // Handle messages from the worker
-      worker.on("message", (message) => {
-        // Remove console.log to avoid interfering with tests
-        switch (message.type) {
-          case "log":
-            // Handle logging messages
-            switch (message.level) {
-              case "info":
-                this.#logger.info(message.message);
-                break;
-              case "warn":
-                this.#logger.warn(message.message);
-                break;
-              case "error":
-                this.#logger.error(message.message);
-                break;
-              case "debug":
-                this.#logger.debug(message.message);
-                break;
+      const archiveFile = path.join(ARCHIVE_DIRECTORY, "timelapse.tar");
+
+      this.#logger.info(`Creating timelapse archive: ${archiveFile}`);
+      const profiler = this.#logger.startTimer();
+      this.#archiveProgressPercentage = 0;
+
+      const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
+      const imageFiles = files.filter(
+        (file) =>
+          file.endsWith(".jpg") && fs.statSync(path.join(TIMELAPSE_DIRECTORY, file)).isFile(),
+      );
+
+      if (imageFiles.length === 0) {
+        this.#logger.info("No timelapse images found to archive");
+        return;
+      }
+      profiler.logger.debug(`Found ${imageFiles.length} images to archive`);
+      let processedFiles = 0;
+      const totalFiles = imageFiles.length;
+
+      await create(
+        {
+          gzip: false,
+          file: archiveFile,
+          cwd: TIMELAPSE_DIRECTORY,
+          filter: (_path, _stat) => {
+            processedFiles++;
+            this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
+            if (processedFiles % 100 === 0) {
+              this.#logger.info(
+                `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
+              );
             }
-            break;
+            return true;
+          },
+        },
+        imageFiles,
+      );
 
-          case "progress":
-            // Update progress percentage
-            this.#archiveProgressPercentage = message.value;
-            break;
-
-          case "complete":
-            // Worker has completed its task
-            this.#isGeneratingTimelapseArchive = false;
-            worker.terminate();
-            resolve();
-            break;
-        }
+      profiler.done({
+        message: `Timelapse archive created in ${archiveFile}`,
+        level: "debug",
       });
-
-      // Handle worker errors
-      worker.on("error", (err) => {
-        this.#logger.error(`Worker error in timelapse archive generation: ${err.message}`);
-        this.#archiveProgressPercentage = -1;
-        this.#isGeneratingTimelapseArchive = false;
-        worker.terminate();
-        resolve();
-      });
-
-      // Handle worker exit
-      worker.on("exit", (code) => {
-        if (code !== 0) {
-          this.#logger.error(`Timelapse archive worker stopped with exit code ${code}`);
-          this.#archiveProgressPercentage = -1;
-          this.#isGeneratingTimelapseArchive = false;
-        }
-        resolve();
-      });
-    });
+      this.#logger.info(`Successfully created timelapse archive with ${imageFiles.length} images`);
+    } catch (error) {
+      this.#logger.error(
+        `Failed to create timelapse archive: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      this.#archiveProgressPercentage = -1;
+    } finally {
+      this.#isGeneratingTimelapseArchive = false;
+    }
   }
 
   public shouldGenerateTimelapseArchive(): boolean {

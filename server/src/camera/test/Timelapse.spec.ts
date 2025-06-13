@@ -672,7 +672,6 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should skip archive generation when already in progress", async function () {
-      const loggerSpy = sinon.spy(logger, "warn");
       const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
@@ -685,14 +684,17 @@ describe("Timelapse.ts tests", function () {
       await fs.promises.mkdir(tempDir, { recursive: true });
       await fs.promises.writeFile(path.join(tempDir, "testCamera_sample.jpg"), "test image");
 
-      await Promise.all([
-        timelapse.generateTimelapseArchiveAsync(false),
-        timelapse.generateTimelapseArchiveAsync(false),
-      ]);
+      const readdirSpy = sinon.spy(fs.promises, "readdir");
 
-      assert(loggerSpy.calledOnce);
+      const promise1 = timelapse.generateTimelapseArchiveAsync(false);
+      const promise2 = timelapse.generateTimelapseArchiveAsync(false);
 
-      loggerSpy.restore();
+      await Promise.all([promise1, promise2]);
+
+      // Verify that although the method was called twice, it should have returned early for one of them
+      assert.equal(readdirSpy.callCount, 1);
+
+      readdirSpy.restore();
     });
 
     it("should not create an archive when no images exist", async function () {
@@ -711,26 +713,28 @@ describe("Timelapse.ts tests", function () {
       assert.equal(archiveFiles.length, 0);
     });
 
-    // it("should handle errors during archive creation", async function () {
-    //   const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
-    //   timelapse.updateSettings({
-    //     name: "testCamera",
-    //     timelapseEnabled: true,
-    //     timelapseInterval: 5,
-    //     timelapseStartTime: null,
-    //     timelapseEndTime: null,
-    //   } as SDBCameraSettings);
+    it("should handle errors during archive creation", async function () {
+      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      timelapse.updateSettings({
+        name: "testCamera",
+        timelapseEnabled: true,
+        timelapseInterval: 5,
+        timelapseStartTime: null,
+        timelapseEndTime: null,
+      } as SDBCameraSettings);
 
-    //   await fs.promises.mkdir(tempDir, { recursive: true });
-    //   await fs.promises.writeFile(path.join(tempDir, "testCamera_sample.jpg"), "test image");
+      await fs.promises.mkdir(tempDir, { recursive: true });
+      await fs.promises.writeFile(path.join(tempDir, "testCamera_sample.jpg"), "test image");
 
-    //   // Simulate an error by throwing in the worker thread
+      const fsStub = sinon.stub(fs.promises, "readdir").throws(new Error("Simulated write error"));
 
-    //   await timelapse.generateTimelapseArchiveAsync(false);
+      await timelapse.generateTimelapseArchiveAsync(false);
 
-    //   // Should set progress to -1 on error
-    //   assert.equal(timelapse.archiveProgress, -1);
-    // });
+      // Should set progress to -1 on error
+      assert.equal(timelapse.archiveProgress, -1);
+
+      fsStub.restore();
+    });
 
     it("should track progress during archive creation", async function () {
       const testLogger = winston.createLogger({
