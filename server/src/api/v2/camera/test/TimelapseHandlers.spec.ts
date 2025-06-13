@@ -77,14 +77,14 @@ describe("TimelapseHandlers", () => {
   });
 
   describe("postRegenerateTimelapseArchive", () => {
-    it("should queue timelapse regeneration and return 204 status", () => {
+    it("should queue timelapse regeneration and return 202 status", () => {
       postRegenerateTimelapseArchive(req as Request, res as Response);
 
       assert.isTrue((cameraManager.regenerateTimelapseArchiveAsync as sinon.SinonStub).calledOnce);
-      assert.isTrue(statusStub.calledOnceWith(204));
+      assert.isTrue(statusStub.calledOnceWith(202));
       assert.isTrue(jsonSpy.calledOnce);
       const jsonResponse = jsonSpy.firstCall.args[0];
-      assert.equal(jsonResponse.statusCode, 204);
+      assert.equal(jsonResponse.statusCode, 202);
       assert.equal(jsonResponse.message, "Timelapse archive regeneration queued.");
       assert.deepEqual(jsonResponse.requestId, "test-id");
     });
@@ -102,7 +102,7 @@ describe("TimelapseHandlers", () => {
       assert.isTrue(jsonSpy.calledOnce);
       const jsonResponse = jsonSpy.firstCall.args[0];
       assert.equal(jsonResponse.statusCode, 200);
-      assert.deepEqual(jsonResponse.data, mockStatus);
+      assert.deepEqual(jsonResponse.content?.data, mockStatus);
       assert.deepEqual(jsonResponse.requestId, "test-id");
     });
   });

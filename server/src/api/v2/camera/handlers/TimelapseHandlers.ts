@@ -31,7 +31,7 @@ export async function getTimelapseArchiveAsync(
 }
 
 /**
- * Possible statusCodes: 204
+ * Possible statusCodes: 202
  * @param request
  * @param response
  * @returns
@@ -40,8 +40,8 @@ export function postRegenerateTimelapseArchive(request: Request, response: Respo
   const cameraManager = request.app.get("cameraManager") as CameraManager;
 
   cameraManager.regenerateTimelapseArchiveAsync();
-  response.status(204).json({
-    statusCode: 204,
+  response.status(202).json({
+    statusCode: 202,
     message: "Timelapse archive regeneration queued.",
     ...response.locals["defaultProperties"],
   });

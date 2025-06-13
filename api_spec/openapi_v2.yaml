@@ -3751,7 +3751,7 @@ paths:
       description: >
         Regenerates the timelapse archive. Useful if you want to regenerate it to now, instead of waiting for the usual interval.
       responses:
-        204:
+        202:
           description: "Success"
           content:
             application/json:
@@ -3760,7 +3760,7 @@ paths:
                   - $ref: "#/components/schemas/SuccessResponse"
                   - properties:
                       statusCode:
-                        example: 204
+                        example: 202
                       content:
                         properties:
                           data:
