@@ -35,6 +35,7 @@ describe("CameraSettingsHandlers", () => {
         timelapseStartTime: "08:00",
         timelapseEndTime: "20:00",
       } as SDBCameraSettings,
+      initializeOrRegenerateAsync: sandbox.stub().resolves(),
     };
 
     mockSprootDB = {
@@ -251,13 +252,13 @@ describe("CameraSettingsHandlers", () => {
       assert.include(result.error.details, "imageRetentionDays must be a non-negative number");
     });
 
-    it("should return 500 when database update fails", async () => {
+    it("should return 503 when database update fails", async () => {
       mockRequest.body = validSettings;
       (mockSprootDB.updateCameraSettingsAsync as any).rejects(new Error("Database error"));
 
       const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 
-      assert.equal(result.statusCode, 500);
+      assert.equal(result.statusCode, 503);
       assert.equal(result.error.name, "Internal Server Error");
       assert.include(result.error.details, "Failed to update camera settings: Database error");
     });

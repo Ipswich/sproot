@@ -3567,8 +3567,8 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-        500:
-          description: "Internal server error"
+        503:
+          description: "Service unavailable"
           content:
             application/json:
               schema:
@@ -3576,11 +3576,11 @@ paths:
                   - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
-                        example: 500
+                        example: 503
                       error:
                         properties:
                           name:
-                            example: "Internal Server Error"
+                            example: "Service unavailable"
                           url:
                             example: "/api/v2/camera/settings"
                           details:

@@ -85,7 +85,7 @@ describe("TimelapseHandlers", () => {
       assert.isTrue(jsonSpy.calledOnce);
       const jsonResponse = jsonSpy.firstCall.args[0];
       assert.equal(jsonResponse.statusCode, 202);
-      assert.equal(jsonResponse.message, "Timelapse archive regeneration queued.");
+      assert.equal(jsonResponse.content.data, "Timelapse archive regeneration queued.");
       assert.deepEqual(jsonResponse.requestId, "test-id");
     });
   });
