@@ -176,7 +176,7 @@ describe("API Tests", async () => {
             .expect(200);
           const content = response.body["content"];
           validateMiddlewareValues(response);
-          assert.deepEqual(content.data, ["PCA9685"]);
+          assert.deepEqual(content.data, ["PCA9685", "TPLink-Smart-Plug"]);
         });
       });
     });
@@ -797,6 +797,174 @@ describe("API Tests", async () => {
           const content = response.body["content"];
           validateMiddlewareValues(response);
           assert.deepEqual(content.data, ["BME280", "DS18B20"]);
+        });
+      });
+    });
+  });
+
+  describe("Camera Routes", async () => {
+    const cameraSettingsKeys = [
+      "id",
+      "enabled",
+      "name",
+      "xVideoResolution",
+      "yVideoResolution",
+      "videoFps",
+      "xImageResolution",
+      "yImageResolution",
+      "timelapseEnabled",
+      "imageRetentionDays",
+      "imageRetentionSize",
+      "timelapseInterval",
+      "timelapseStartTime",
+      "timelapseEndTime",
+    ];
+    describe("Settings", () => {
+      describe("GET", () => {
+        it("should return 200 and camera settings data", async () => {
+          const response = await request(server).get("/api/v2/camera/settings").expect(200);
+          const content = response.body["content"];
+          validateMiddlewareValues(response);
+          assert.deepEqual(content.data, {
+            id: 1,
+            enabled: false,
+            name: "Pi Camera",
+            xVideoResolution: null,
+            yVideoResolution: null,
+            videoFps: null,
+            xImageResolution: null,
+            yImageResolution: null,
+            imageRetentionDays: 90,
+            imageRetentionSize: 5000,
+            timelapseEnabled: false,
+            timelapseInterval: 5,
+            timelapseStartTime: null,
+            timelapseEndTime: null,
+          });
+        });
+      });
+
+      describe("PATCH", () => {
+        it("should return 200 and the updated settings", async () => {
+          assert.equal(app.get("cameraManager").cameraSettings.name, "Pi Camera");
+
+          const updatedSettings = {
+            enabled: true,
+            name: "Updated Camera Name",
+            xVideoResolution: 1280,
+            yVideoResolution: 720,
+            videoFps: 30,
+            xImageResolution: 1920,
+            yImageResolution: 1080,
+            timelapseEnabled: true,
+            imageRetentionDays: 7,
+            imageRetentionSize: 1024,
+            timelapseInterval: 60,
+            timelapseStartTime: "08:00",
+            timelapseEndTime: "20:00",
+          };
+
+          const response = await request(server)
+            .patch("/api/v2/camera/settings")
+            .send(updatedSettings)
+            .expect(200);
+
+          const content = response.body["content"];
+          validateMiddlewareValues(response);
+
+          assert.containsAllKeys(content.data, cameraSettingsKeys);
+          assert.equal(app.get("cameraManager").cameraSettings.name, "Updated Camera Name");
+        });
+      });
+    });
+
+    describe("Stream", () => {
+      describe("GET", () => {
+        it("should return 200 and a stream", async () => {
+          const req = request(server)
+            .get("/api/v2/camera/stream")
+            .buffer(false)
+            .expect(200)
+            .end((err, res) => {
+              if (err) {
+                assert.fail("Stream request failed: " + err.message);
+              }
+              validateMiddlewareValues(res);
+
+              // Verify headers
+              assert.equal(
+                res.headers["content-type"],
+                "multipart/x-mixed-replace; boundary=FRAME",
+              );
+              // Listen for first data chunk to confirm streaming works
+              res.on("data", (_chunk) => {
+                req.abort();
+              });
+
+              setTimeout(() => {
+                req.abort();
+                assert.fail("Stream did not send data within timeout period");
+              }, 300);
+            });
+        });
+
+        it("should return a 200 after reconnecting to the livestream server", async () => {
+          // First make the reconnect request
+          const response = await request(server).post("/api/v2/camera/reconnect").expect(200);
+
+          validateMiddlewareValues(response);
+          assert.equal(response.body.content.data, "Livestream successfully reconnected");
+        });
+      });
+    });
+  });
+
+  describe("Latest Image", () => {
+    describe("GET", () => {
+      it("should return 200 and the latest image", async () => {
+        const response = await request(server).get("/api/v2/camera/latest-image").expect(200);
+        validateMiddlewareValues(response);
+        assert.equal(response.headers["content-type"], "image/jpeg");
+        assert.isNotNull(response.body);
+      });
+    });
+  });
+
+  describe("Timelapse", () => {
+    describe("Archive", () => {
+      describe("GET", () => {
+        it("should return 200 and the archive file", async () => {
+          const response = await request(server)
+            .get("/api/v2/camera/timelapse/archive")
+            .expect(200);
+          validateMiddlewareValues(response);
+          assert.equal(response.headers["content-type"], "application/x-tar");
+          assert.isNotNull(response.body);
+        });
+      });
+    });
+
+    describe("Regenerate", () => {
+      describe("POST", () => {
+        it("should return 202 and queue archive regeneration", async () => {
+          const response = await request(server)
+            .post("/api/v2/camera/timelapse/archive/regenerate")
+            .expect(202);
+          validateMiddlewareValues(response);
+          assert.equal(response.body["content"].data, "Timelapse archive regeneration queued.");
+        });
+      });
+    });
+
+    describe("Status", async () => {
+      describe("GET", async () => {
+        it("should return 200 and the timelapse generation status", async () => {
+          const response = await request(server)
+            .get("/api/v2/camera/timelapse/archive/status")
+            .expect(200);
+          validateMiddlewareValues(response);
+          assert.isBoolean(response.body["content"].data.isGenerating);
+          assert.isNumber(response.body["content"].data.archiveProgress);
         });
       });
     });

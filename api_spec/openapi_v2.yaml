@@ -3647,7 +3647,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: "Camera successfully reconnected."
+                            example: "Livestream successfully reconnected"
         502:
           description: "Internal server error"
           content:

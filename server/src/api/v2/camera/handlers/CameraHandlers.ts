@@ -2,6 +2,11 @@ import { Request, Response } from "express";
 import { CameraManager } from "../../../../camera/CameraManager";
 import winston from "winston";
 
+/**
+ * Possible statusCodes: 200, 502
+ * @param request
+ * @param response
+ */
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
   const cameraManager = request.app.get("cameraManager") as CameraManager;
   const logger = request.app.get("logger") as winston.Logger;
@@ -46,6 +51,11 @@ export async function streamHandlerAsync(request: Request, response: Response): 
   }
 }
 
+/**
+ * Possible statusCodes: 200, 404
+ * @param request
+ * @param response
+ */
 export async function getLatestImageAsync(request: Request, response: Response): Promise<void> {
   const cameraManager = request.app.get("cameraManager") as CameraManager;
   const imageBuffer = await cameraManager.getLatestImageAsync();
@@ -66,6 +76,11 @@ export async function getLatestImageAsync(request: Request, response: Response):
   response.status(200).send(imageBuffer);
 }
 
+/**
+ * Possible statusCodes: 200, 502
+ * @param request
+ * @param response
+ */
 export async function reconnectLivestreamAsync(
   request: Request,
   response: Response,
@@ -76,7 +91,9 @@ export async function reconnectLivestreamAsync(
     await cameraManager.reconnectLivestreamAsync();
     response.status(200).json({
       statusCode: 200,
-      message: "Livestream reconnected",
+      content: {
+        data: "Livestream successfully reconnected",
+      },
       ...response.locals["defaultProperties"],
     });
   } catch (e) {

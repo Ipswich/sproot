@@ -121,4 +121,20 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 4, automation_id: 2, output_id: 5, value: 50 },
     { id: 5, automation_id: 2, output_id: 5, value: 75 },
   ]);
+
+  await knex("camera_settings").insert({
+    enabled: false,
+    name: "Pi Camera",
+    xVideoResolution: null,
+    yVideoResolution: null,
+    videoFps: null,
+    xImageResolution: null,
+    yImageResolution: null,
+    imageRetentionDays: 90,
+    imageRetentionSize: 5000,
+    timelapseEnabled: false,
+    timelapseInterval: 5,
+    timelapseStartTime: null,
+    timelapseEndTime: null,
+  });
 }

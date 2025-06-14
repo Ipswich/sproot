@@ -4,6 +4,12 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
+/**
+ * Possible return codes: 200
+ * @param request
+ * @param response
+ * @returns
+ */
 export function getCameraSettings(request: Request, response: Response): SuccessResponse {
   const cameraManager = request.app.get("cameraManager") as CameraManager;
   const settings = cameraManager.cameraSettings;
@@ -15,7 +21,12 @@ export function getCameraSettings(request: Request, response: Response): Success
     ...response.locals["defaultProperties"],
   };
 }
-
+/**
+ * Possible return codes: 200, 400, 503
+ * @param request
+ * @param response
+ * @returns
+ */
 export async function updateCameraSettingsAsync(
   request: Request,
   response: Response,
@@ -121,6 +132,8 @@ export async function updateCameraSettingsAsync(
 
   try {
     await sprootDB.updateCameraSettingsAsync(newSettings);
+    const cameraManager = request.app.get("cameraManager") as CameraManager;
+    await cameraManager.initializeOrRegenerateAsync();
     return {
       statusCode: 200,
       content: {
@@ -130,7 +143,7 @@ export async function updateCameraSettingsAsync(
     };
   } catch (error: any) {
     return {
-      statusCode: 500,
+      statusCode: 503,
       error: {
         name: "Internal Server Error",
         url: request.originalUrl,

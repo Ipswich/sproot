@@ -42,7 +42,9 @@ export function postRegenerateTimelapseArchive(request: Request, response: Respo
   cameraManager.regenerateTimelapseArchiveAsync();
   response.status(202).json({
     statusCode: 202,
-    message: "Timelapse archive regeneration queued.",
+    content: {
+      data: "Timelapse archive regeneration queued.",
+    },
     ...response.locals["defaultProperties"],
   });
 }
