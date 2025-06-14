@@ -137,21 +137,20 @@ export default function TimelapseDetails() {
                     return 100;
                   })()}
                   color={(function () {
-                    if (
-                      timelapseArchiveStatusQuery.data.archiveProgress === -1
-                    ) {
-                      return "red";
+                    switch (timelapseArchiveStatusQuery.data.archiveProgress) {
+                      case -1:
+                        return "red";
+                      case 0:
+                        return "blue";
+                      case 100:
+                        return "blue";
+                      default:
+                        return "green";
                     }
-                    if (
-                      timelapseArchiveStatusQuery.data.archiveProgress === 100
-                    ) {
-                      return "blue";
-                    }
-                    return "green";
                   })()}
                   animated={
-                    timelapseArchiveStatusQuery.data?.archiveProgress < 100 ||
-                    false
+                    timelapseArchiveStatusQuery.data.archiveProgress < 100 &&
+                    timelapseArchiveStatusQuery.data.archiveProgress > 0
                   }
                 />
               )}
