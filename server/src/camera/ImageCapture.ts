@@ -70,7 +70,7 @@ class ImageCapture {
     return null;
   }
 
-  async getTimelapseArchiveAsync(): Promise<Buffer | null> {
+  async getTimelapseArchiveAsync(): Promise<fs.ReadStream | null> {
     return this.#timelapse.getTimelapseArchiveAsync();
   }
 

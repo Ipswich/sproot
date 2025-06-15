@@ -76,7 +76,7 @@ class CameraManager {
 
   /**
    * Gets a buffer containing the timelapse archive.
-   * @returns A promise that resolves to the timelapse archive.
+   * @returns A promise that resolves with read stream to the timelapse archive.
    */
   getTimelapseArchiveAsync() {
     return this.#imageCapture.getTimelapseArchiveAsync();
@@ -186,6 +186,10 @@ class CameraManager {
         // Check for bad address error
         if (data.includes("Bad address") || data.includes("OSError")) {
           this.#logger.error("Camera encoder error detected, attempting recovery");
+          this.cleanupCameraProcess();
+        }
+        if (data.includes("timed out")) {
+          this.#logger.error("Camera encoder timed out, attempting recovery");
           this.cleanupCameraProcess();
         }
       });

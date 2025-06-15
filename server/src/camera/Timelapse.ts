@@ -1,5 +1,4 @@
 import fs from "fs";
-import * as tar from "tar";
 import winston from "winston";
 import {
   ARCHIVE_DIRECTORY,
@@ -8,6 +7,8 @@ import {
 import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
 import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
 import path from "path";
+import { PassThrough } from "stream";
+import { spawn } from "child_process";
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
 
@@ -59,7 +60,7 @@ class Timelapse {
     return this.#archiveProgressPercentage;
   }
 
-  async getTimelapseArchiveAsync(): Promise<Buffer | null> {
+  async getTimelapseArchiveAsync(): Promise<fs.ReadStream | null> {
     try {
       if (!fs.existsSync(ARCHIVE_DIRECTORY)) {
         return null;
@@ -76,7 +77,7 @@ class Timelapse {
 
       const latestFile = path.join(ARCHIVE_DIRECTORY, matchingFiles[0]!);
 
-      return await fs.promises.readFile(latestFile);
+      return fs.createReadStream(latestFile);
     } catch (error) {
       this.#logger.error(
         `Failed to get latest timelapse archive: ${error instanceof Error ? error.message : String(error)}`,
@@ -102,48 +103,14 @@ class Timelapse {
       this.#logger.info(`Creating timelapse archive: ${archiveFile}`);
       this.#archiveProgressPercentage = 0;
 
-      const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
-      const fileStatsPromises = files
-        .filter((file) => file.endsWith(".jpg"))
-        .map(async (file) => {
-          const filePath = path.join(TIMELAPSE_DIRECTORY, file);
-          try {
-            const stats = await fs.promises.stat(filePath);
-            return { file, isFile: stats.isFile() };
-          } catch (err) {
-            return { file, isFile: false };
-          }
-        });
-
-      const fileStats = await Promise.all(fileStatsPromises);
-      const imageFiles = fileStats.filter((item) => item.isFile).map((item) => item.file);
-
-      if (imageFiles.length === 0) {
+      const imageData = await this.getTimelapseFileDataAsync();
+      if (imageData.length === 0) {
         this.#logger.info("No timelapse images found to archive");
         return;
       }
-      let processedFiles = 0;
-      const totalFiles = imageFiles.length;
 
-      await tar.create(
-        {
-          gzip: false,
-          file: archiveFile,
-          cwd: TIMELAPSE_DIRECTORY,
-          onWriteEntry: (_entry) => {
-            processedFiles++;
-            this.#archiveProgressPercentage = Math.round((processedFiles / totalFiles) * 100);
-            if (processedFiles % 100 === 0) {
-              this.#logger.info(
-                `Processed ${processedFiles} of ${totalFiles} files (${this.#archiveProgressPercentage}%)`,
-              );
-            }
-          },
-        },
-        imageFiles,
-      );
-
-      this.#logger.info(`Successfully created timelapse archive with ${imageFiles.length} images`);
+      await this.createArchiveAsync(imageData, archiveFile);
+      this.#logger.info(`Successfully created timelapse archive with ${imageData.length} images`);
     } catch (error) {
       this.#logger.error(
         `Failed to create timelapse archive: ${error instanceof Error ? error.message : String(error)}`,
@@ -183,6 +150,101 @@ class Timelapse {
     }
 
     return false;
+  }
+
+  private async createArchiveAsync(
+    imageData: { name: string; size: number }[],
+    archiveFile: string,
+  ): Promise<void> {
+    const imageFiles = imageData.map((file) => file.name);
+    const unarchivedBytes = imageData.reduce((total, file) => total + file.size, 0);
+
+    return new Promise((resolve, reject) => {
+      let archivedBytes = 0;
+      const output = fs.createWriteStream(archiveFile);
+
+      const niceArgs = ["-n", "19"];
+      const ioniceArgs = ["-c", "3"];
+      const tarArgs = [
+        "-c", // create
+        "-f",
+        "-", // output to stdout
+        "-C",
+        TIMELAPSE_DIRECTORY, // set directory
+        ...imageFiles, // include all files
+      ];
+
+      // Use nice and ionice to give the tar process lower priority - fast causes problems for low end devices
+      const tarProcess = spawn("nice", [...niceArgs, "ionice", ...ioniceArgs, "tar", ...tarArgs]);
+      const passThrough = new PassThrough();
+
+      passThrough.on("data", (_chunk: Buffer) => {
+        const chunkSize = _chunk.byteLength;
+        archivedBytes += chunkSize;
+        this.#archiveProgressPercentage = Math.min(
+          Math.round((archivedBytes / unarchivedBytes) * 100),
+          100,
+        );
+
+        const MB = 1024 * 1024;
+        const logInterval = 100 * MB;
+        const lastLoggedMB = Math.floor(archivedBytes / logInterval);
+        const currentMB = Math.floor((archivedBytes + chunkSize) / logInterval);
+        if (currentMB > lastLoggedMB || unarchivedBytes <= archivedBytes) {
+          this.#logger.info(
+            `Processed ${archivedBytes} of ${unarchivedBytes} bytes (${this.#archiveProgressPercentage}%)`,
+          );
+        }
+      });
+
+      // Pipe tar to pass through for logging, and then ultimately to the output stream
+      tarProcess.stdout.pipe(passThrough).pipe(output);
+
+      tarProcess.stderr.on("data", (data: { toString: () => string }) => {
+        this.#logger.error(`tar stderr: ${data.toString().trim()}`);
+      });
+
+      tarProcess.on("error", (err: any) => {
+        output.end();
+        reject(err);
+      });
+
+      // Resolve or reject based on exit code
+      tarProcess.on("close", (code: number) => {
+        if (code === 0) {
+          this.#archiveProgressPercentage = 100;
+          passThrough.end();
+          output.end();
+          resolve();
+        } else {
+          passThrough.end();
+          output.end();
+          reject(new Error(`tar process exited with code ${code}`));
+        }
+      });
+    });
+  }
+
+  private async getTimelapseFileDataAsync(): Promise<{ name: string; size: number }[]> {
+    const files = await fs.promises.readdir(TIMELAPSE_DIRECTORY);
+    const fileStatsPromises = files
+      .filter((file) => file.endsWith(".jpg"))
+      .map(async (file) => {
+        const filePath = path.join(TIMELAPSE_DIRECTORY, file);
+        try {
+          const stats = await fs.promises.stat(filePath);
+          return { file, size: stats.size, isFile: stats.isFile() };
+        } catch (err) {
+          return { file, isFile: false };
+        }
+      });
+
+    const fileStats = await Promise.all(fileStatsPromises);
+    return fileStats
+      .filter((item) => item.isFile)
+      .map((item) => {
+        return { name: item.file, size: item.size! };
+      });
   }
 
   private start(): void {

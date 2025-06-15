@@ -68,7 +68,6 @@
     "pca9685": "^5.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
-    "tar": "^7.4.3",
     "tplink-smarthome-api": "^5.0.0",
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^4.7.1",
