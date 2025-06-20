@@ -169,8 +169,14 @@ class Timelapse {
         "-c", // create
         "-f",
         "-", // output to stdout
-        TIMELAPSE_DIRECTORY,
-        TIMELAPSE_RESOURCES,
+        "-C",
+        TIMELAPSE_RESOURCES, // change to resources directory
+        ".",
+        "-C",
+        "../../", // Return to the root directory
+        "-C",
+        TIMELAPSE_DIRECTORY, // set directory
+        ".",
       ];
 
       // Use nice and ionice to give the tar process lower priority - fast causes problems for low end devices
