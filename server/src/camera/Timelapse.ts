@@ -3,6 +3,7 @@ import winston from "winston";
 import {
   ARCHIVE_DIRECTORY,
   TIMELAPSE_DIRECTORY,
+  TIMELAPSE_RESOURCES,
 } from "@sproot/sproot-common/dist/utility/Constants";
 import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
 import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
@@ -156,11 +157,6 @@ class Timelapse {
     imageData: { name: string; size: number }[],
     archiveFile: string,
   ): Promise<void> {
-    const imageFiles = imageData.map((file) => file.name);
-    const readmePath = path.join("./timelapse_resources", "README.md");
-    const ffmpegScriptPath = path.join("./timelapse_resources", "generate-timelapse.sh");
-
-    imageFiles.push(readmePath, ffmpegScriptPath);
     const unarchivedBytes = imageData.reduce((total, file) => total + file.size, 0);
 
     return new Promise((resolve, reject) => {
@@ -173,9 +169,8 @@ class Timelapse {
         "-c", // create
         "-f",
         "-", // output to stdout
-        "-C",
-        TIMELAPSE_DIRECTORY, // set directory
-        ...imageFiles, // include all files
+        TIMELAPSE_DIRECTORY,
+        TIMELAPSE_RESOURCES,
       ];
 
       // Use nice and ionice to give the tar process lower priority - fast causes problems for low end devices
