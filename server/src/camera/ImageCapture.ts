@@ -133,7 +133,18 @@ class ImageCapture {
 
       // Delete the file
       await fs.promises.rm(oldestFilePath);
-      this.#logger.debug(`Removed old image: ${oldestFilePath}`);
+      const reasons = [];
+      if (oversizedStorage) {
+        reasons.push(
+          `Size limit exceeded (${directorySizeMB.toFixed(2)} MB > ${maxRetentionSizeMB} MB)`,
+        );
+      }
+      if (exceededRetentionPeriod) {
+        reasons.push(
+          `Retention period exceeded (${new Date(oldestFileTime).toISOString()} < ${new Date(cutoffTime).toISOString()})`,
+        );
+      }
+      this.#logger.debug(`Removed old image: ${oldestFilePath}, ${reasons.join(", ")}`);
 
       directorySizeMB -= fileSizeMB;
 
