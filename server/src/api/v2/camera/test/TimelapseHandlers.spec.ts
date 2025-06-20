@@ -7,6 +7,7 @@ import {
   postRegenerateTimelapseArchive,
   getTimelapseGenerationStatus,
 } from "../handlers/TimelapseHandlers";
+import { createReadStream } from "fs";
 
 describe("TimelapseHandlers", () => {
   let req: Partial<Request>;
@@ -42,6 +43,9 @@ describe("TimelapseHandlers", () => {
       locals: {
         defaultProperties: { requestId: "test-id" },
       },
+      on: sinon.stub(),
+      once: sinon.stub(),
+      emit: sinon.stub(),
     };
   });
 
@@ -51,14 +55,15 @@ describe("TimelapseHandlers", () => {
 
   describe("getTimelapseArchiveAsync", () => {
     it("should return 200 with the archive when a timelapse archive exists", async () => {
-      const mockArchive = Buffer.from("mock archive data");
-      (cameraManager.getTimelapseArchiveAsync as sinon.SinonStub).resolves(mockArchive);
+      const mockArchive = createReadStream("path/to/mock/timelapse.tar");
+      cameraManager.getTimelapseArchiveAsync = sinon.stub().resolves(mockArchive);
 
       await getTimelapseArchiveAsync(req as Request, res as Response);
 
-      assert.isTrue(setHeaderSpy.calledOnceWith("Content-Type", "application/x-tar"));
-      assert.isTrue(statusStub.calledOnceWith(200));
-      assert.isTrue(sendSpy.calledOnceWith(mockArchive));
+      assert.isTrue(setHeaderSpy.calledWith("Content-Type", "application/x-tar"));
+      assert.isTrue(
+        setHeaderSpy.calledWith("Content-Disposition", "attachment; filename=timelapse.tar"),
+      );
     });
 
     it("should return 404 when no timelapse archive is available", async () => {

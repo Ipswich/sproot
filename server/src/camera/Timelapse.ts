@@ -157,6 +157,10 @@ class Timelapse {
     archiveFile: string,
   ): Promise<void> {
     const imageFiles = imageData.map((file) => file.name);
+    const readmePath = path.join("./timelapse_resources", "README.md");
+    const ffmpegScriptPath = path.join("./timelapse_resources", "generate-timelapse.sh");
+
+    imageFiles.push(readmePath, ffmpegScriptPath);
     const unarchivedBytes = imageData.reduce((total, file) => total + file.size, 0);
 
     return new Promise((resolve, reject) => {
@@ -202,6 +206,9 @@ class Timelapse {
 
       tarProcess.stderr.on("data", (data: { toString: () => string }) => {
         this.#logger.error(`tar stderr: ${data.toString().trim()}`);
+      });
+      tarProcess.stdout.on("error", (err: any) => {
+        this.#logger.error(`tar stdout error: ${err.message}`);
       });
 
       tarProcess.on("error", (err: any) => {

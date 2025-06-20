@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { CameraManager } from "../../../../camera/CameraManager";
 
 /**
- * Possible statusCodes: 200, 404
+ * Possible statusCodes: 200, 404, 500
  * @param request
  * @param response
  * @returns
@@ -13,6 +13,7 @@ export async function getTimelapseArchiveAsync(
 ): Promise<void> {
   const cameraManager = request.app.get("cameraManager") as CameraManager;
   const timelapseArchive = await cameraManager.getTimelapseArchiveAsync();
+
   if (timelapseArchive === null) {
     response.status(404).json({
       statusCode: 404,
@@ -26,8 +27,20 @@ export async function getTimelapseArchiveAsync(
     return;
   }
 
+  // Set appropriate headers
   response.setHeader("Content-Type", "application/x-tar");
-  response.status(200).send(timelapseArchive);
+  response.setHeader("Content-Disposition", "attachment; filename=timelapse.tar");
+
+  // Handle potential errors
+  timelapseArchive.on("error", () => {
+    if (!response.headersSent) {
+      response.status(500).send("Error streaming timelapse archive.");
+    } else {
+      response.end();
+    }
+  });
+
+  timelapseArchive.pipe(response);
 }
 
 /**

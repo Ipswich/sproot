@@ -98,7 +98,7 @@ class ImageCapture {
     now = new Date(),
     directory = TIMELAPSE_DIRECTORY,
   ): Promise<void> {
-    if (this.#isRunningImageRetention) {
+    if (this.#isRunningImageRetention || this.#timelapse.isGeneratingTimelapseArchive) {
       return;
     }
     // Ensure the directory exists

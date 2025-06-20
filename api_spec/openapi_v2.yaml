@@ -3715,6 +3715,12 @@ paths:
       responses:
         200:
           description: "Success"
+          headers:
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"timelapse.tar\""
           content:
             application/x-tar:
               schema:
@@ -3739,6 +3745,25 @@ paths:
                           details:
                             items:
                               example: "No timelapse archive available."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/camera/timelapse/archive"
+                          details:
+                            items:
+                              example: "Error streaming timelapse archive."
 
   /api/v2/camera/timelapse/archive/regenerate:
     post:
