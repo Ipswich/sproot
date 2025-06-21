@@ -21,6 +21,7 @@ describe("TimelapseHandlers", () => {
   beforeEach(() => {
     cameraManager = {
       getTimelapseArchiveAsync: sinon.stub(),
+      getTimelapseArchiveSizeAsync: sinon.stub().resolves(1024),
       regenerateTimelapseArchiveAsync: sinon.stub(),
       getTimelapseArchiveProgressAsync: sinon.stub(),
     };
