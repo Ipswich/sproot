@@ -624,6 +624,12 @@ export async function getAvailableDevicesAsync(
   try {
     const response = await fetch(
       `${SERVER_URL}/api/v2/outputs/available-devices/${model}/?${queryString}`,
+      {
+        method: "GET",
+        headers: {},
+        mode: "cors",
+        // credentials: "include",
+      },
     );
     const deserializedResponse = (await response.json()) as SuccessResponse;
     return deserializedResponse.content?.data;
@@ -635,7 +641,12 @@ export async function getAvailableDevicesAsync(
 
 export async function getLatestImageAsync() {
   try {
-    const response = await fetch(`${SERVER_URL}/api/v2/camera/latest-image`);
+    const response = await fetch(`${SERVER_URL}/api/v2/camera/latest-image`, {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    });
     if (response.ok) {
       const blob = await response.blob();
       return URL.createObjectURL(blob);
@@ -649,16 +660,27 @@ export async function getLatestImageAsync() {
 
 export async function getTimelapseArchiveAsync() {
   try {
-    const response = await fetch(
-      `${SERVER_URL}/api/v2/camera/timelapse/archive`,
-    );
-    if (response.ok) {
-      return await response.blob();
-    }
-    return (await response.json()) as ErrorResponse;
+    // Create a new window/tab for the download
+    // This will use the browser's native download handling
+    const downloadUrl = `${SERVER_URL}/api/v2/camera/timelapse/archive`;
+
+    // Open in a hidden iframe to prevent opening a new tab
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    // Set the source to the download URL
+    iframe.src = downloadUrl;
+
+    // Clean up after a short delay to ensure download starts
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 5000);
+
+    return { success: true };
   } catch (e) {
-    console.error(`Error fetching timelapse archive: ${e}`);
-    return;
+    console.error(`Error downloading timelapse archive:`, e);
+    throw e;
   }
 }
 
