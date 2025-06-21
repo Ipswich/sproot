@@ -3716,6 +3716,11 @@ paths:
         200:
           description: "Success"
           headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
             Content-Disposition:
               description: "Indicates that the content is a file attachment."
               schema:

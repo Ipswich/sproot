@@ -82,6 +82,10 @@ class CameraManager {
     return this.#imageCapture.getTimelapseArchiveAsync();
   }
 
+  getTimelapseArchiveSizeAsync() {
+    return this.#imageCapture.getTimelapseArchiveSizeAsync();
+  }
+
   /**
    * Regenerates the timelapse archive.
    * @returns A promise that resolves when the timelapse archive has been regenerated.

@@ -8,7 +8,7 @@ import {
 import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
 import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
 import path from "path";
-import { PassThrough } from "stream";
+import { PassThrough, pipeline } from "stream";
 import { spawn } from "child_process";
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
@@ -84,6 +84,22 @@ class Timelapse {
         `Failed to get latest timelapse archive: ${error instanceof Error ? error.message : String(error)}`,
       );
       return null;
+    }
+  }
+
+  async getTimelapseArchiveSizeAsync(): Promise<number> {
+    try {
+      await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
+      const files = await fs.promises.readdir(ARCHIVE_DIRECTORY);
+      const archiveFile = files.filter((file) => file.match("timelapse.tar"))[0];
+      if (archiveFile === undefined) {
+        return 0;
+      }
+      const timelapseFile = path.join(ARCHIVE_DIRECTORY, archiveFile);
+      const stats = await fs.promises.stat(timelapseFile);
+      return stats.size;
+    } catch (error) {
+      return 0;
     }
   }
 
@@ -203,31 +219,13 @@ class Timelapse {
       });
 
       // Pipe tar to pass through for logging, and then ultimately to the output stream
-      tarProcess.stdout.pipe(passThrough).pipe(output);
-
-      tarProcess.stderr.on("data", (data: { toString: () => string }) => {
-        this.#logger.error(`tar stderr: ${data.toString().trim()}`);
-      });
-      tarProcess.stdout.on("error", (err: any) => {
-        this.#logger.error(`tar stdout error: ${err.message}`);
-      });
-
-      tarProcess.on("error", (err: any) => {
-        output.end();
-        reject(err);
-      });
-
-      // Resolve or reject based on exit code
-      tarProcess.on("close", (code: number) => {
-        if (code === 0) {
-          this.#archiveProgressPercentage = 100;
-          passThrough.end();
-          output.end();
-          resolve();
+      pipeline(tarProcess.stdout, passThrough, output, (err) => {
+        if (err) {
+          this.#logger.error(`Pipeline error: ${err.message}`);
+          reject(err);
         } else {
-          passThrough.end();
-          output.end();
-          reject(new Error(`tar process exited with code ${code}`));
+          this.#logger.info("Timelapse archive created successfully");
+          resolve();
         }
       });
     });

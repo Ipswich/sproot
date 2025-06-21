@@ -27,8 +27,10 @@ export async function getTimelapseArchiveAsync(
     return;
   }
 
-  // Set appropriate headers
+  const timelapseArchiveSize = await cameraManager.getTimelapseArchiveSizeAsync();
+
   response.setHeader("Content-Type", "application/x-tar");
+  response.setHeader("Content-Length", timelapseArchiveSize.toString());
   response.setHeader("Content-Disposition", "attachment; filename=timelapse.tar");
 
   // Handle potential errors
