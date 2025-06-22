@@ -113,7 +113,7 @@ class CameraManager {
     if (settings[0] != undefined) {
       this.#currentSettings = settings[0];
 
-      // Don't await these here - internally, they keeps track if they're's running
+      // Don't await these here - internally, they keeps track if they're running
       // so this should prevent it from blocking until its done.
       this.#imageCapture
         .runImageRetentionAsync(

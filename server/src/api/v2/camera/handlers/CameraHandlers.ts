@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { CameraManager } from "../../../../camera/CameraManager";
 import winston from "winston";
+import { pipeline } from "stream";
 
 /**
  * Possible statusCodes: 200, 502
@@ -34,7 +35,13 @@ export async function streamHandlerAsync(request: Request, response: Response): 
       livestream.removeListener("error", onStreamError);
     });
 
-    livestream.pipe(response);
+    pipeline(livestream, response, (err) => {
+      if (err) {
+        logger.error(`Pipeline error: ${err}`);
+        response.end();
+      }
+    });
+    // livestream.pipe(response);
     response.status(200);
   } catch (e) {
     if (!response.headersSent) {
