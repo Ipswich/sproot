@@ -138,7 +138,7 @@ async def capture(authenticated: bool = Depends(verify_auth)):
         return Response(content=content, media_type="image/jpeg")
     except Exception as e:
         logging.error(f"Error in capture endpoint: {str(e)}")
-        raise HTTPException(status_code=, detail=f"Capture failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Capture failed: {str(e)}")
 
 
 async def generate_mjpeg_stream():
