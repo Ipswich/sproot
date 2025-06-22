@@ -1,12 +1,4 @@
-import {
-  Button,
-  Card,
-  Group,
-  Modal,
-  Progress,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Button, Card, Group, Progress, Stack, Text } from "@mantine/core";
 import {
   getCameraSettingsAsync,
   getTimelapseArchiveAsync,
@@ -19,7 +11,6 @@ import { Fragment } from "react/jsx-runtime";
 
 export default function TimelapseDetails() {
   const [statusRefetchInterval, setStatusRefetchInterval] = useState(60000);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
   const cameraSettingsQuery = useQuery({
     queryKey: ["camera-settings"],
@@ -50,69 +41,25 @@ export default function TimelapseDetails() {
         <Card withBorder shadow="sm" radius="md">
           <Card.Section inheritPadding py="sm">
             <Group justify="center">
-              <Text fw={500}>Timelapse</Text>
+              <Text fw={500}>Timelapse Archive</Text>
             </Group>
           </Card.Section>
           <Card.Section mx="xs" mb="xs">
             <Stack>
-              <Button onClick={() => setConfirmModalOpen(true)}>
+              <Button
+                onClick={async () => {
+                  try {
+                    await getTimelapseArchiveAsync();
+                  } catch (error) {
+                    console.error(
+                      "Failed to download timelapse archive:",
+                      error,
+                    );
+                  }
+                }}
+              >
                 Download
               </Button>
-
-              <Modal
-                opened={confirmModalOpen}
-                onClose={() => setConfirmModalOpen(false)}
-                withCloseButton={false}
-                centered
-              >
-                <Stack>
-                  <Group justify="center" mt="sm">
-                    <Text>Download Archive?</Text>
-                  </Group>
-                  <Group justify="space-between" mt="sm">
-                    <Button
-                      color={"red"}
-                      onClick={() => setConfirmModalOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        setConfirmModalOpen(false);
-                        try {
-                          const response = await getTimelapseArchiveAsync();
-                          if (!(response instanceof Blob)) {
-                            console.error(
-                              "No response received from the server",
-                            );
-                            return;
-                          }
-                          const url = window.URL.createObjectURL(
-                            new Blob([response]),
-                          );
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.setAttribute(
-                            "download",
-                            "timelapse-archive.tar",
-                          );
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          window.URL.revokeObjectURL(url);
-                        } catch (error) {
-                          console.error(
-                            "Failed to download timelapse archive:",
-                            error,
-                          );
-                        }
-                      }}
-                    >
-                      Confirm
-                    </Button>
-                  </Group>
-                </Stack>
-              </Modal>
               <Button
                 onClick={async () => {
                   try {

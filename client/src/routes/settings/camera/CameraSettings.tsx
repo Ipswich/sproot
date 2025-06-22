@@ -29,11 +29,12 @@ export interface FormValues {
   imageRetentionSize: number;
   timelapseEnabled: boolean;
   timelapseInterval: number | null;
-  timelapseStartTime: string;
-  timelapseEndTime: string;
+  timelapseStartTime: string | null;
+  timelapseEndTime: string | null;
 }
 
 export default function OutputSettings() {
+  const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
   const getCameraSettingsQuery = useQuery({
     queryKey: ["cameraSettings"],
     queryFn: () => getCameraSettingsAsync(),
@@ -42,7 +43,16 @@ export default function OutputSettings() {
 
   const updateCameraSettingsMutation = useMutation({
     mutationFn: async (newCameraSettings: FormValues) => {
-      await updateCameraSettingsAsync(newCameraSettings as SDBCameraSettings);
+      const updatedSettings = { ...newCameraSettings };
+
+      if (updatedSettings.timelapseStartTime === "") {
+        updatedSettings.timelapseStartTime = null;
+      }
+      if (updatedSettings.timelapseEndTime === "") {
+        updatedSettings.timelapseEndTime = null;
+      }
+
+      await updateCameraSettingsAsync(updatedSettings as SDBCameraSettings);
     },
     onSettled: () => {
       getCameraSettingsQuery.refetch();
@@ -80,6 +90,14 @@ export default function OutputSettings() {
         value === null || (value > 0 && value <= 86400)
           ? null
           : "Timelapse Interval must be a positive number up to 86400 seconds (24 hours)",
+      timelapseStartTime: (value: string | null) =>
+        value === "" || value === null || (value && regex.test(value))
+          ? null
+          : "Timelapse Start Time must be null or proper time format (HH:MM)",
+      timelapseEndTime: (value: string | null) =>
+        value === "" || value === null || (value && regex.test(value))
+          ? null
+          : "Timelapse End Time must be null or proper time format (HH:MM)",
     },
   });
 
@@ -104,6 +122,7 @@ export default function OutputSettings() {
 
   // Handle form submission
   const handleSubmit = (values: FormValues) => {
+    console.log(values);
     updateCameraSettingsMutation.mutate(values);
   };
 
@@ -119,7 +138,7 @@ export default function OutputSettings() {
           loaderProps={{ color: "teal", type: "bars", size: "lg" }}
         />
         <form onSubmit={newCameraForm.onSubmit(handleSubmit)}>
-          <Stack>
+          <Stack justify="space-around" w={rem(350)}>
             <Switch
               label="Enable Camera"
               type="checkbox"
@@ -156,18 +175,19 @@ export default function OutputSettings() {
               />
             </div>
             <Fragment>
-              <Group>
+              <Group justify="space-around">
                 <TimeInput
                   disabled={
                     !newCameraForm.values.enabled ||
                     !newCameraForm.values.timelapseEnabled
                   }
                   label="Start time"
-                  value={newCameraForm.values.timelapseStartTime}
+                  value={newCameraForm.values.timelapseStartTime ?? ""}
                   onChange={(value) => {
+                    console.log(value.currentTarget.value);
                     newCameraForm.setFieldValue(
-                      "timelapseStartTime", // Fixed typo here
-                      value.currentTarget.value,
+                      "timelapseStartTime",
+                      value.currentTarget.value ?? "",
                     );
                   }}
                 />
@@ -177,7 +197,7 @@ export default function OutputSettings() {
                     !newCameraForm.values.timelapseEnabled
                   }
                   label="End time"
-                  value={newCameraForm.values.timelapseEndTime}
+                  value={newCameraForm.values.timelapseEndTime ?? ""}
                   onChange={(value) =>
                     newCameraForm.setFieldValue(
                       "timelapseEndTime",
