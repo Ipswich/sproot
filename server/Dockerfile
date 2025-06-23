@@ -1,4 +1,4 @@
-FROM debian:12.6-slim AS build
+FROM debian:12.11-slim AS build
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
@@ -38,6 +38,7 @@ COPY --from=build /sproot/node_modules /sproot/node_modules
 COPY --from=build /sproot/common/dist /sproot/common/dist
 COPY --from=build /sproot/server/dist /sproot/server/dist
 COPY --from=build /sproot/server/python /sproot/server/python
+COPY --from=build /sproot/server/static /sproot/server/static
 COPY --from=build /sproot/api_spec /sproot/api_spec
 
 # Install camera dependencies
