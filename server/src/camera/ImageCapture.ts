@@ -21,6 +21,8 @@ class ImageCapture {
     this.#timelapse = new Timelapse(async (filename: string, directory: string) => {
       const latestImage = await this.getLatestImageAsync();
       if (latestImage) {
+        // Ensure the directory exists
+        await fs.promises.mkdir(directory, { recursive: true });
         await fs.promises.writeFile(path.join(directory, filename), latestImage);
       }
     }, logger);
@@ -105,9 +107,8 @@ class ImageCapture {
     if (this.#isRunningImageRetention || this.#timelapse.isGeneratingTimelapseArchive) {
       return;
     }
-    // Ensure the directory exists
+    // If directory doesn't exist, nothing to do
     if (!fs.existsSync(directory)) {
-      this.#logger.warn(`Image directory ${directory} does not exist`);
       return;
     }
 

@@ -38,7 +38,6 @@ describe("ImageCapture.ts tests", () => {
     (mockLogger.info as sinon.SinonSpy).resetHistory();
     (mockLogger.error as sinon.SinonSpy).resetHistory();
     (mockLogger.debug as sinon.SinonSpy).resetHistory();
-    (mockLogger.warn as sinon.SinonSpy).resetHistory();
     fetchStub.reset();
 
     // Ensure directory exists and is empty
@@ -177,15 +176,6 @@ describe("ImageCapture.ts tests", () => {
         return acc + stats.size;
       }, 0);
       assert.strictEqual(totalSize / (1024 * 1024) <= maxSize, true);
-    });
-
-    it("should handle non-existent directories gracefully", async () => {
-      const nonExistentDir = path.join(tempDir, "non-existent");
-
-      await imageCapture.runImageRetentionAsync(0, 0, new Date(), nonExistentDir);
-
-      assert.strictEqual((mockLogger.warn as sinon.SinonSpy).calledOnce, true);
-      assert.ok((mockLogger.warn as sinon.SinonSpy).firstCall.args[0].includes("does not exist"));
     });
 
     it("should not delete files when within limits", async () => {

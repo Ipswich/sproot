@@ -95,6 +95,7 @@ class InterserviceAuthentication:
 
 # Initialize camera and output
 frame_duration = int(1_000_000 / fps)
+exposure_time = 8333 # in microseconds (8333us for 120 fps; 1s/120)
 interservice_auth = InterserviceAuthentication()
 main_stream = {"size": image_resolution, "format": "RGB888"}
 lores_stream = {"size": video_resolution}
@@ -102,7 +103,7 @@ video_config = picam2.create_video_configuration(
     main_stream,
     lores_stream,
     encode="lores",
-    controls={"FrameDurationLimits": (frame_duration, frame_duration)})
+    controls={"FrameDurationLimits": (frame_duration, frame_duration), "ExposureTime": exposure_time})
 picam2.configure(video_config)
 output = StreamingOutput()
 
