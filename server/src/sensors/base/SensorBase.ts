@@ -16,6 +16,9 @@ export abstract class SensorBase implements ISensorBase {
   lastReading: Record<ReadingType, string>;
   lastReadingTime: Date | null;
   color: string;
+  pin: string | null = null;
+  lowCalibrationPoint: number | null = null;
+  highCalibrationPoint: number | null = null;
   readonly units: Record<ReadingType, string>;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
@@ -119,7 +122,6 @@ export abstract class SensorBase implements ISensorBase {
   }
 
   protected async createSensorAsync(
-    sensorModel: string,
     maxSensorReadTime: number,
   ): Promise<this | null> {
     const profiler = this.logger.startTimer();
@@ -129,11 +131,11 @@ export abstract class SensorBase implements ISensorBase {
         await this.takeReadingAsync();
       }, maxSensorReadTime);
     } catch (err) {
-      this.logger.error(`Failed to create ${sensorModel} sensor ${this.id}. ${err}`);
+      this.logger.error(`Failed to create ${this.model} sensor ${this.id}. ${err}`);
       return null;
     } finally {
       profiler.done({
-        message: `Initialization time for sensor {${sensorModel}, id: ${this.id}, address: ${this.address}`,
+        message: `Initialization time for sensor {${this.model}, id: ${this.id}, address: ${this.address}`,
         level: "debug",
       });
     }

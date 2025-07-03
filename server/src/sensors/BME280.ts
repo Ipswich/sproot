@@ -29,7 +29,7 @@ class BME280 extends SensorBase {
   }
 
   override async initAsync(): Promise<BME280 | null> {
-    return this.createSensorAsync("BME280", this.MAX_SENSOR_READ_TIME);
+    return this.createSensorAsync(this.MAX_SENSOR_READ_TIME);
   }
 
   override async takeReadingAsync(): Promise<void> {

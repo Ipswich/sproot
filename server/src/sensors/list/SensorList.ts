@@ -1,5 +1,7 @@
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
+import { ADS115 } from "../ADS1115";
+import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -47,7 +49,7 @@ class SensorList {
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, name, model, address, color, lastReading, lastReadingTime, units } = this
+      const { id, name, model, address, color, lastReading, lastReadingTime, units, pin, lowCalibrationPoint, highCalibrationPoint } = this
         .#sensors[key] as ISensorBase;
       for (const readingType in lastReading) {
         const reading = lastReading[readingType as ReadingType];
@@ -64,6 +66,9 @@ class SensorList {
         lastReading,
         lastReadingTime,
         units,
+        pin,
+        lowCalibrationPoint,
+        highCalibrationPoint
       };
     }
     return cleanObject;
@@ -262,6 +267,45 @@ class SensorList {
           this.#logger,
         ).initAsync();
         break;
+
+      case "ads1115":
+        if (!sensor.address) {
+          throw new SensorListError("ADS1115 sensor address cannot be null");
+        }
+        if (!sensor.pin) {
+          throw new SensorListError("ADS1115 sensor pin cannot be null");
+        }
+        newSensor = await new ADS115(
+          sensor,
+          ReadingType.voltage,
+          "1",
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
+
+      case "capacitive_moisture_sensor":
+        if (!sensor.address) {
+          throw new SensorListError("Capacitive Moisture Sensor address cannot be null");
+        }
+        if (!sensor.pin) {
+          throw new SensorListError("Capacitive Moisture Sensor pin cannot be null");
+        }
+        newSensor = await new CapacitiveMoistureSensor(
+          sensor,
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
+        
       default:
         throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);
     }

@@ -31,7 +31,7 @@ class DS18B20 extends SensorBase {
   }
 
   override async initAsync(): Promise<DS18B20 | null> {
-    return this.createSensorAsync("DS18B20", this.MAX_SENSOR_READ_TIME);
+    return this.createSensorAsync(this.MAX_SENSOR_READ_TIME);
   }
 
   override async takeReadingAsync(): Promise<void> {
