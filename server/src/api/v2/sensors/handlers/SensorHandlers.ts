@@ -3,6 +3,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
+import ModelList from "../../../../sensors/ModelList";
 
 /**
  * Possible statusCodes: 200, 404
@@ -73,10 +74,19 @@ export async function addAsync(
   if (newSensor.name == undefined || newSensor.name == null) {
     missingFields.push("Missing required field: name");
   }
-  if (newSensor.model == undefined || newSensor.name == null) {
+  if (newSensor.model == undefined || newSensor.model == null) {
     missingFields.push("Missing required field: model");
   }
-  if (newSensor.address == undefined || newSensor.name == null) {
+  if (
+    newSensor.model == ModelList.ADS1115 ||
+    newSensor.model == ModelList.CAPACITATIVE_MOISTURE_SENSOR
+  ) {
+    if (newSensor.pin == undefined || newSensor.pin == null) {
+      missingFields.push("Missing required field: pin");
+    }
+  }
+
+  if (newSensor.address == undefined || newSensor.address == null) {
     missingFields.push("Missing required field: address");
   }
 
@@ -166,6 +176,10 @@ export async function updateAsync(
   sensorData.model = request.body["model"] ?? sensorData.model;
   sensorData.address = request.body["address"] ?? sensorData.address;
   sensorData.color = request.body["color"] ?? sensorData.color;
+  sensorData.lowCalibrationPoint =
+    request.body["lowCalibrationPoint"] ?? sensorData.lowCalibrationPoint;
+  sensorData.highCalibrationPoint =
+    request.body["highCalibrationPoint"] ?? sensorData.highCalibrationPoint;
 
   try {
     await sprootDB.updateSensorAsync(sensorData);

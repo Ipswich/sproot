@@ -173,7 +173,7 @@ describe("SensorHandlers.ts tests", () => {
         body: newSensor,
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      let error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -182,6 +182,35 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
         "Missing required field: model",
+        "Missing required field: address",
+      ]);
+      assert.isTrue(sprootDB.addSensorAsync.notCalled);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+
+      newSensor.model = "BME280";
+      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/sensors");
+      assert.deepEqual(error.error["details"], [
+        "Missing required field: name",
+        "Missing required field: address",
+      ]);
+      assert.isTrue(sprootDB.addSensorAsync.notCalled);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+
+      newSensor.model = "ADS1115";
+      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/sensors");
+      assert.deepEqual(error.error["details"], [
+        "Missing required field: name",
+        "Missing required field: pin",
         "Missing required field: address",
       ]);
       assert.isTrue(sprootDB.addSensorAsync.notCalled);

@@ -3878,6 +3878,9 @@ components:
         color:
           type: string
           example: "#ff0000"
+        pin:
+          type: string
+          example: "0"
 
     SensorBase:
       description: >
