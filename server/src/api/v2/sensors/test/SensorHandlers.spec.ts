@@ -7,6 +7,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
+import ModelList from "@sproot/sproot-common/dist/sensors/ModelList";
 
 describe("SensorHandlers.ts tests", () => {
   describe("get", () => {
@@ -187,7 +188,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
 
-      newSensor.model = "BME280";
+      newSensor.model = ModelList.BME280;
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -201,7 +202,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
 
-      newSensor.model = "ADS1115";
+      newSensor.model = ModelList.ADS1115;
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);

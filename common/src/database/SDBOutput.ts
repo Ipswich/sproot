@@ -1,8 +1,8 @@
-import { RowDataPacket } from "mysql2";
+import ModelList from "../outputs/ModelList";
 
-type SDBOutput = RowDataPacket & {
+type SDBOutput = {
   id: number;
-  model: string;
+  model: ModelList;
   address: string;
   name: string;
   pin: string;

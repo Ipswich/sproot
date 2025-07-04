@@ -10,7 +10,7 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
-import ModelList from "../ModelList";
+import ModelList from "@sproot/sproot-common/src/outputs/ModelList";
 
 class OutputList implements Disposable {
   #sprootDB: ISprootDB;

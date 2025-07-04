@@ -3,7 +3,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import ModelList from "../../../../sensors/ModelList";
+import ModelList from "@sproot/sproot-common/src/sensors/ModelList";
 
 /**
  * Possible statusCodes: 200, 404
@@ -79,7 +79,7 @@ export async function addAsync(
   }
   if (
     newSensor.model == ModelList.ADS1115 ||
-    newSensor.model == ModelList.CAPACITATIVE_MOISTURE_SENSOR
+    newSensor.model == ModelList.CAPACITIVE_MOISTURE_SENSOR
   ) {
     if (newSensor.pin == undefined || newSensor.pin == null) {
       missingFields.push("Missing required field: pin");

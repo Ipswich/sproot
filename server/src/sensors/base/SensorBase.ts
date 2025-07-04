@@ -7,10 +7,11 @@ import winston from "winston";
 import { SensorChartData } from "./SensorChartData";
 import { SensorCache } from "./SensorCache";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
+import ModelList from "@sproot/sproot-common/dist/sensors/ModelList";
 
 export abstract class SensorBase implements ISensorBase {
   readonly id: number;
-  readonly model: string;
+  readonly model: ModelList;
   readonly address: string | null;
   name: string;
   lastReading: Record<ReadingType, string>;

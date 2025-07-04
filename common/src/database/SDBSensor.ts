@@ -1,7 +1,9 @@
+import ModelList from "../sensors/ModelList";
+
 type SDBSensor = {
   id: number;
   name: string;
-  model: string;
+  model: ModelList;
   address: string | null;
   color: string;
   pin: string | null;

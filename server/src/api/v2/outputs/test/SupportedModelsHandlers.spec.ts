@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { supportedModelsHandler } from "../handlers/SupportedModelsHandlers";
-import ModelList from "../../../../outputs/ModelList";
+import ModelList from "@sproot/sproot-common/src/outputs/ModelList";
 
 import { assert } from "chai";
 

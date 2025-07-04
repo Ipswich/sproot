@@ -1,9 +1,10 @@
+import ModelList from "./ModelList";
 import { ReadingType } from "./ReadingType";
 
 interface ISensorBase {
   id: number;
   name: string;
-  model: string;
+  model: ModelList;
   address: string | null;
   color: string;
   pin: string | null;

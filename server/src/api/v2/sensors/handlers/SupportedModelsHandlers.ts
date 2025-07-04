@@ -1,5 +1,5 @@
 import { SuccessResponse } from "@sproot/api/v2/Responses";
-import ModelList from "../../../../sensors/ModelList";
+import ModelList from "@sproot/sproot-common/src/sensors/ModelList";
 import { Response } from "express";
 
 export function supportedModelsHandler(response: Response): SuccessResponse {
