@@ -21,38 +21,104 @@ describe("SensorCondition.ts tests", () => {
       const sensorMock = sinon.createStubInstance(SensorBase);
       sinon.stub(sensorListMock, "sensors").value({ 1: sensorMock });
 
-      sensorMock.lastReading = { temperature: "51", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "51",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isFalse(sensorCondition.evaluate(sensorListMock));
-      sensorMock.lastReading = { temperature: "50", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "50",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
 
       sensorCondition.operator = "notEqual";
       assert.isFalse(sensorCondition.evaluate(sensorListMock));
-      sensorMock.lastReading = { temperature: "51", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "51",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
 
       sensorCondition.operator = "greaterOrEqual";
-      sensorMock.lastReading = { temperature: "50", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "50",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
-      sensorMock.lastReading = { temperature: "51", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "51",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
 
       sensorCondition.operator = "greater";
-      sensorMock.lastReading = { temperature: "50", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "50",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isFalse(sensorCondition.evaluate(sensorListMock));
-      sensorMock.lastReading = { temperature: "51", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "51",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
 
       sensorCondition.operator = "lessOrEqual";
-      sensorMock.lastReading = { temperature: "50", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "50",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
-      sensorMock.lastReading = { temperature: "49", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "49",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
 
       sensorCondition.operator = "less";
-      sensorMock.lastReading = { temperature: "50", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "50",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isFalse(sensorCondition.evaluate(sensorListMock));
-      sensorMock.lastReading = { temperature: "49", humidity: "49", pressure: "51" };
+      sensorMock.lastReading = {
+        temperature: "49",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
     });
   });
