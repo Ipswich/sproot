@@ -27,7 +27,7 @@ import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
-  supportedModels: string[];
+  supportedModels: Record<string, string>;
   setIsStale: (isStale: boolean) => void;
 }
 
@@ -183,7 +183,9 @@ export default function EditTable({
             <Fragment>
               <NativeSelect
                 label="Model"
-                data={supportedModels}
+                data={Object.keys(supportedModels).map((key) => {
+                  return { value: key, label: supportedModels[key]! };
+                })}
                 required
                 {...updateOutputForm.getInputProps("model")}
                 disabled
@@ -205,7 +207,7 @@ export default function EditTable({
                   form={updateOutputForm}
                 />
               ) : selectedOutput.model?.toLowerCase() ===
-                "tplink-smart-plug" ? (
+                "tplink_smart_plug" ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
@@ -239,7 +241,7 @@ export default function EditTable({
                   form={updateOutputForm}
                 />
               ) : updateOutputForm.values.model.toLowerCase() ===
-                "tplink-smart-plug" ? (
+                "tplink_smart_plug" ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}

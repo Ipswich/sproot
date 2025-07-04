@@ -4,7 +4,7 @@ import { ReadingType } from "./ReadingType";
 interface ISensorBase {
   id: number;
   name: string;
-  model: ModelList;
+  model: keyof typeof ModelList;
   address: string | null;
   color: string;
   pin: string | null;

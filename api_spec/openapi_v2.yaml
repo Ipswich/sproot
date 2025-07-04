@@ -891,7 +891,9 @@ paths:
                             allOf:
                               - $ref: "#/components/schemas/SupportedModels"
                             example:
-                              - "PCA9685"
+                              object:
+                                PCA9685: "PCA9685"
+                                TPLinkSmartPlug: "TPLink Smart Plug"
         401:
           description: "Unauthorized"
           content:
@@ -929,7 +931,7 @@ paths:
           description: "Output model"
           schema:
             type: string
-          example: "tplink-smart-plug"
+          example: "TPLINK_SMART_PLUG"
         - in: query
           name: address
           required: false
@@ -3379,8 +3381,11 @@ paths:
                             allOf:
                               - $ref: "#/components/schemas/SupportedModels"
                             example:
-                              - "DS18B20"
-                              - "BME280"
+                              object:
+                                DS18B20: "DS18B20"
+                                BME280: "BME280"
+                                ADS1115: "ADS1115"
+                                CAPACITIVE_MOISTURE_SENSOR: "Capacitive Moisture Sensor"
         401:
           description: "Unauthorized"
           content:
@@ -4253,8 +4258,17 @@ components:
           type: string
           example: "#ff0000"
         pin:
+          nullable: true
           type: string
           example: "0"
+        lowCalibrationPoint:
+          nullable: true
+          type: number
+          example: 0
+        highCalibrationPoint:
+          nullable: true
+          type: number
+          example: 100
 
     SensorBase:
       description: >
@@ -4296,10 +4310,11 @@ components:
 
     SupportedModels:
       description: >
-        A list of supported device models.
-      type: array
-      items:
-        type: string
+        A Record of supported device models, mapped to a presentable label.
+      type: object
+      properties:
+        type:
+          type: string
 
     AvailableDevices:
       description: >

@@ -11,7 +11,7 @@ import ModelList from "@sproot/sproot-common/dist/sensors/ModelList";
 
 export abstract class SensorBase implements ISensorBase {
   readonly id: number;
-  readonly model: ModelList;
+  readonly model: keyof typeof ModelList;
   readonly address: string | null;
   name: string;
   lastReading: Record<ReadingType, string>;
@@ -46,6 +46,7 @@ export abstract class SensorBase implements ISensorBase {
     this.model = sdbSensor.model;
     this.address = sdbSensor.address;
     this.color = sdbSensor.color;
+    this.pin = sdbSensor.pin;
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.sprootDB = sprootDB;

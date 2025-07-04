@@ -15,7 +15,7 @@ import ModelList from "@sproot/sproot-common/dist/outputs/ModelList";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
-  readonly model: ModelList;
+  readonly model: keyof typeof ModelList;
   readonly address: string;
   readonly pin: string;
   name: string;

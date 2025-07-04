@@ -42,7 +42,6 @@ export class SprootDB implements ISprootDB {
     return this.#connection("sensors").where("model", "DS18B20").select("address");
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
-    console.log("Adding sensor:", sensor);
     return this.#connection("sensors").insert(sensor);
   }
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {

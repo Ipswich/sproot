@@ -176,7 +176,10 @@ describe("API Tests", async () => {
             .expect(200);
           const content = response.body["content"];
           validateMiddlewareValues(response);
-          assert.deepEqual(content.data, ["PCA9685", "TPLink-Smart-Plug"]);
+          assert.deepEqual(content.data, {
+            PCA9685: "PCA9685",
+            TPLINK_SMART_PLUG: "TPLink Smart Plug",
+          });
         });
       });
     });
@@ -796,7 +799,12 @@ describe("API Tests", async () => {
             .expect(200);
           const content = response.body["content"];
           validateMiddlewareValues(response);
-          assert.deepEqual(content.data, ["BME280", "DS18B20"]);
+          assert.deepEqual(content.data, {
+            BME280: "BME280",
+            DS18B20: "DS18B20",
+            ADS1115: "ADS1115",
+            CAPACITIVE_MOISTURE_SENSOR: "Capacitive Moisture Sensor",
+          });
         });
       });
     });

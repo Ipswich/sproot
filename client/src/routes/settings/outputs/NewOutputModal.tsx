@@ -20,9 +20,10 @@ import { Fragment } from "react";
 
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
+import ModelList from "@sproot/outputs/ModelList";
 
 interface NewOutputModalProps {
-  supportedModels: string[];
+  supportedModels: Record<string, string>;
   modalOpened: boolean;
   closeModal: () => void;
   setIsStale: (isStale: boolean) => void;
@@ -139,7 +140,9 @@ export default function NewOutputModal({
           />
           <Select
             label="Model"
-            data={supportedModels}
+            data={Object.keys(supportedModels).map((key) => {
+              return { value: key, label: supportedModels[key]! };
+            })}
             allowDeselect={false}
             placeholder="Model Name"
             required
@@ -160,7 +163,7 @@ export default function NewOutputModal({
           {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
             <PCA9685Form form={newOutputForm} />
           ) : newOutputForm.values.model.toLowerCase() ===
-            "tplink-smart-plug" ? (
+            ModelList.TPLINK_SMART_PLUG.toLowerCase() ? (
             <TPLinkSmartPlugForm form={newOutputForm} />
           ) : null}
           <Group justify="flex-end" mt="md">

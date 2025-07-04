@@ -15,7 +15,9 @@ export default function SensorSettings() {
     newSensorModalOpened,
     { open: newSensorModalOpen, close: newSensorModalClose },
   ] = useDisclosure(false);
-  const [supportedModels, setSupportedModels] = useState([] as string[]);
+  const [supportedModels, setSupportedModels] = useState(
+    {} as Record<string, string>,
+  );
   const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
   const [isStale, setIsStale] = useState(false);
 

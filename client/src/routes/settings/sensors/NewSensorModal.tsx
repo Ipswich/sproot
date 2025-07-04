@@ -17,7 +17,7 @@ import { Fragment } from "react";
 import { useRevalidator } from "react-router-dom";
 
 interface NewSensorModalProps {
-  supportedModels: string[];
+  supportedModels: Record<string, string>;
   modalOpened: boolean;
   closeModal: () => void;
   setIsStale: (isStale: boolean) => void;
@@ -114,7 +114,9 @@ export default function NewSensorModal({
           />
           <Select
             label="Model"
-            data={supportedModels}
+            data={Object.keys(supportedModels).map((key) => {
+              return { value: key, label: supportedModels[key]! };
+            })}
             allowDeselect={false}
             placeholder="Model Name"
             required

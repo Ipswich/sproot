@@ -23,7 +23,7 @@ import { useRevalidator } from "react-router-dom";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
-  supportedModels: string[];
+  supportedModels: Record<string, string>;
   setIsStale: (isStale: boolean) => void;
 }
 
@@ -154,7 +154,9 @@ export default function EditTable({
           />
           <NativeSelect
             label="Model"
-            data={supportedModels}
+            data={Object.keys(supportedModels).map((key) => {
+              return { value: key, label: supportedModels[key]! };
+            })}
             required
             {...updateSensorForm.getInputProps("model")}
           />

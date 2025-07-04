@@ -1,7 +1,7 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
-import ModelList from "@sproot/sproot-common/src/outputs/ModelList";
+import ModelList from "@sproot/sproot-common/dist/outputs/ModelList";
 
 export async function getAvailableDevices(
   request: Request,

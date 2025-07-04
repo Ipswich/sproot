@@ -3,7 +3,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import ModelList from "@sproot/sproot-common/src/sensors/ModelList";
+import ModelList from "@sproot/sproot-common/dist/sensors/ModelList";
 
 /**
  * Possible statusCodes: 200, 404
@@ -69,6 +69,9 @@ export async function addAsync(
     address: request.body["address"],
     color: request.body["color"],
   } as SDBSensor;
+  if (request.body["pin"] !== undefined) {
+    newSensor.pin = request.body["pin"];
+  }
 
   const missingFields: Array<string> = [];
   if (newSensor.name == undefined || newSensor.name == null) {
@@ -76,11 +79,16 @@ export async function addAsync(
   }
   if (newSensor.model == undefined || newSensor.model == null) {
     missingFields.push("Missing required field: model");
-  }
-  if (
-    newSensor.model == ModelList.ADS1115 ||
-    newSensor.model == ModelList.CAPACITIVE_MOISTURE_SENSOR
+  } else if (
+    !Object.keys(ModelList)
+      .map((key) => key.toLowerCase())
+      .includes(newSensor.model.toLowerCase())
   ) {
+    missingFields.push(
+      `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(ModelList).join(", ")}`,
+    );
+  }
+  if (newSensor.model == "ADS1115" || newSensor.model == "CAPACITIVE_MOISTURE_SENSOR") {
     if (newSensor.pin == undefined || newSensor.pin == null) {
       missingFields.push("Missing required field: pin");
     }

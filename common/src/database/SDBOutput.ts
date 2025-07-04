@@ -2,7 +2,7 @@ import ModelList from "../outputs/ModelList";
 
 type SDBOutput = {
   id: number;
-  model: ModelList;
+  model: keyof typeof ModelList;
   address: string;
   name: string;
   pin: string;

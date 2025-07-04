@@ -3,7 +3,7 @@ import ModelList from "../sensors/ModelList";
 type SDBSensor = {
   id: number;
   name: string;
-  model: ModelList;
+  model: keyof typeof ModelList;
   address: string | null;
   color: string;
   pin: string | null;

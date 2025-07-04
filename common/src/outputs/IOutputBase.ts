@@ -8,7 +8,7 @@ enum ControlMode {
 
 interface IOutputBase {
   id: number;
-  model: ModelList;
+  model: keyof typeof ModelList;
   address: string;
   name: string | null;
   pin: string;
