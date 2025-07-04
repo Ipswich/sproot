@@ -6,6 +6,5 @@ ffmpeg -y -loglevel warning \
   -exec sh -c 'for f; do printf "file %q\n" "$PWD/$f"; done' _ {} + \
   | sort -V \
   | sed 's/$/\nduration 1.0/' \
-  | tee list.txt
-) \
+  | tee list.txt) \
   -vf fps=30 -codec:v libx265 -tag:v hvc1 timelapse.mp4

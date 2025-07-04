@@ -37,7 +37,6 @@ mainAsync().then((app) => {
           // Give everything a hot sec to finish whatever it's up to - call backs really mess with just calling process.exit.
           setTimeout(() => {
             logger.info("Done! See you next time!");
-            server.close();
             process.exit(0);
           }, 250);
         }

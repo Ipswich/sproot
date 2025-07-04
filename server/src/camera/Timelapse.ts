@@ -70,7 +70,7 @@ class Timelapse {
       const files = await fs.promises.readdir(ARCHIVE_DIRECTORY);
       if (!files.length) return null;
 
-      const matchingFiles = files.filter((file) => file.match("timelapse.tar"));
+      const matchingFiles = files.filter((file) => file.match(/^timelapse\.tar$/));
 
       if (!matchingFiles.length) {
         return null;

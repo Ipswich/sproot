@@ -1,5 +1,4 @@
 import { Fragment, useEffect } from "react";
-import {} from "@sproot/sproot-client/src/requests/requests_v2";
 import {
   Text,
   Button,
@@ -87,9 +86,9 @@ export default function OutputSettings() {
           ? null
           : "Timelapse Enabled must be true or false",
       timelapseInterval: (value: number | null) =>
-        value === null || (value > 0 && value <= 86400)
+        value === null || (value > 0 && value <= 1440)
           ? null
-          : "Timelapse Interval must be a positive number up to 86400 seconds (24 hours)",
+          : "Timelapse Interval must be a positive number up to 1440 minutes (24 hours)",
       timelapseStartTime: (value: string | null) =>
         value === "" || value === null || (value && regex.test(value))
           ? null
@@ -122,7 +121,6 @@ export default function OutputSettings() {
 
   // Handle form submission
   const handleSubmit = (values: FormValues) => {
-    console.log(values);
     updateCameraSettingsMutation.mutate(values);
   };
 
@@ -184,7 +182,6 @@ export default function OutputSettings() {
                   label="Start time"
                   value={newCameraForm.values.timelapseStartTime ?? ""}
                   onChange={(value) => {
-                    console.log(value.currentTarget.value);
                     newCameraForm.setFieldValue(
                       "timelapseStartTime",
                       value.currentTarget.value ?? "",
