@@ -17,6 +17,7 @@ import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
+import { CameraManager } from "./camera/CameraManager";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -31,6 +32,14 @@ export default async function setupAsync(): Promise<Express> {
   app.set("logger", logger);
 
   await defaultUserCheck(sprootDB, logger);
+
+  logger.info("Creating camera manager. . .");
+  const cameraManager = new CameraManager(
+    sprootDB,
+    process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
+    logger,
+  );
+  app.set("cameraManager", cameraManager);
 
   logger.info("Creating sensor and output lists. . .");
   const sensorList = new SensorList(
@@ -52,8 +61,9 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set("outputList", outputList);
 
-  logger.info("Initializing sensor and output lists. . .");
+  logger.info("Initializing camera manager, and sensor and output lists. . .");
   await Promise.all([
+    cameraManager.initializeOrRegenerateAsync(),
     sensorList.initializeOrRegenerateAsync(),
     outputList.initializeOrRegenerateAsync(),
   ]);
@@ -69,6 +79,7 @@ export default async function setupAsync(): Promise<Express> {
       async () => {
         try {
           await Promise.all([
+            cameraManager.initializeOrRegenerateAsync(),
             sensorList.initializeOrRegenerateAsync(),
             outputList.initializeOrRegenerateAsync(),
           ]);
@@ -76,8 +87,6 @@ export default async function setupAsync(): Promise<Express> {
           //Add triggers and whatnot here.
 
           await outputList.runAutomationsAsync(sensorList, new Date());
-          //Execute any changes made to state.
-          await outputList.executeOutputStateAsync();
 
           //Execute any changes made to state.
           await outputList.executeOutputStateAsync();

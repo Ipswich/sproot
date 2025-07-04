@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
@@ -20,6 +21,7 @@ import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { IWeekdayCondition } from "../automation/IWeekdayCondition";
+import { SDBCameraSettings } from "./SDBCameraSettings";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -113,6 +115,11 @@ interface ISprootDB {
   ): Promise<number>;
   updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
   deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
+
+  getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
+  // addCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<number>;
+  updateCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<void>;
+  // deleteCameraSettingsAsync(cameraId: number): Promise<void>;
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
@@ -295,22 +302,18 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getSensorAsync(_id: number): Promise<SDBSensor[]> {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteSensorAsync(_id: number): Promise<void> {
     return;
   }
@@ -319,22 +322,18 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addOutputAsync(_output: SDBOutput): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateOutputAsync(_output: SDBOutput): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteOutputAsync(_id: number): Promise<void> {
     return;
   }
 
-  /* eslint-disable */
   async getSensorReadingsAsync(
     _sensor: ISensorBase,
     _since: Date,
@@ -342,19 +341,42 @@ class MockSprootDB implements ISprootDB {
   ): Promise<SDBReading[]> {
     return [];
   }
-  /* eslint-enable */
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
+    return [];
+  }
+
+  // async addCameraSettingsAsync(
+  //   _name: string,
+  //   _xVideoResolution: number | null,
+  //   _yVideoResolution: number | null,
+  //   _videoFps: number,
+  //   _xImageResolution: number | null,
+  //   _yImageResolution: number | null,
+  //   _imageRetentionDays: number,
+  //   _imageRetentionSize: number,
+  //   _timelapseEnabled: boolean,
+  //   _timelapseInterval: number | null,
+  // ): Promise<number> {
+  //   return 0;
+  // }
+
+  async updateCameraSettingsAsync(_cameraSettings: SDBCameraSettings): Promise<void> {
+    return;
+  }
+
+  async deleteCameraSettingsAsync(_cameraId: number): Promise<void> {
+    return;
+  }
+
   async getUserAsync(_username: string): Promise<SDBUser[]> {
     return [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addUserAsync(_user: SDBUser): Promise<void> {
     return;
   }

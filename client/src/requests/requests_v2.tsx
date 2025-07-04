@@ -9,9 +9,13 @@ import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { AvailableDevice } from "@sproot/outputs/AvailableDevice";
 import { ReadingType } from "@sproot/sensors/ReadingType";
-import { SuccessResponse } from "@sproot/sproot-common/src/api/v2/Responses";
+import {
+  SuccessResponse,
+  ErrorResponse,
+} from "@sproot/sproot-common/src/api/v2/Responses";
 import {
   ChartSeries,
   DataSeries,
@@ -611,7 +615,7 @@ export async function pingAsync(): Promise<boolean> {
   }
 }
 
-export async function GetAvailableDevicesAsync(
+export async function getAvailableDevicesAsync(
   model: string,
   address?: string,
   filterUsed = true,
@@ -620,12 +624,139 @@ export async function GetAvailableDevicesAsync(
   try {
     const response = await fetch(
       `${SERVER_URL}/api/v2/outputs/available-devices/${model}/?${queryString}`,
+      {
+        method: "GET",
+        headers: {},
+        mode: "cors",
+        // credentials: "include",
+      },
     );
     const deserializedResponse = (await response.json()) as SuccessResponse;
     return deserializedResponse.content?.data;
   } catch (e) {
     console.error(`Error fetching children for ${model}: ${e}`);
     return [];
+  }
+}
+
+export async function getLatestImageAsync() {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/v2/camera/latest-image`, {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    });
+    if (response.ok) {
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    }
+    return (await response.json()) as ErrorResponse;
+  } catch (e) {
+    console.error(`Error fetching latest image: ${e}`);
+    return;
+  }
+}
+
+export async function getTimelapseArchiveAsync() {
+  try {
+    // Create a new window/tab for the download
+    // This will use the browser's native download handling
+    const downloadUrl = `${SERVER_URL}/api/v2/camera/timelapse/archive`;
+
+    // Open in a hidden iframe to prevent opening a new tab
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    // Set the source to the download URL
+    iframe.src = downloadUrl;
+
+    // Clean up after a short delay to ensure download starts
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 5000);
+
+    return { success: true };
+  } catch (e) {
+    console.error(`Error downloading timelapse archive:`, e);
+    throw e;
+  }
+}
+
+export async function getTimelapseArchiveStatusAsync(): Promise<{
+  isGenerating: boolean;
+  archiveProgress: number;
+}> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/timelapse/archive/status`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching timelapse archive status: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function regenerateTimelapseArchiveAsync(): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/camera/timelapse/archive/regenerate`,
+    {
+      method: "POST",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error regenerating timelapse archive: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function getLivestreamAsync() {
+  return `${SERVER_URL}/api/v2/camera/stream`;
+}
+
+export async function getCameraSettingsAsync(): Promise<SDBCameraSettings> {
+  const response = await fetch(`${SERVER_URL}/api/v2/camera/settings`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching camera settings: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function updateCameraSettingsAsync(
+  settings: SDBCameraSettings,
+): Promise<void> {
+  settings.videoFps = null;
+  settings.xImageResolution = null;
+  settings.yImageResolution = null;
+  settings.xVideoResolution = null;
+  settings.yVideoResolution = null;
+
+  const response = await fetch(`${SERVER_URL}/api/v2/camera/settings`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error updating camera settings: ${response}`);
   }
 }
 

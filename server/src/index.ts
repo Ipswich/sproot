@@ -16,11 +16,15 @@ mainAsync().then((app) => {
     async function gracefulHaltAsync() {
       const logger = app.get("logger");
       logger.info("Shutting down...");
+      server.closeAllConnections();
       server.close(async () => {
         // Stop updating database and sensors
         app.get("updateDatabaseCronJob").stop();
         app.get("updateStateCronJob").stop();
         try {
+          // Cleanup Cameras
+          app.get("cameraManager").dispose();
+
           // Cleanup sensors and turn off outputs
           await app.get("sensorList").disposeAsync();
           app.get("outputList")[Symbol.dispose]();
