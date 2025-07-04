@@ -11,8 +11,8 @@ export class CapacitiveMoistureSensor extends ADS115 {
   // wetter, higher readings are drier.
   static readonly MAX_SENSOR_READING = 27000;
   static readonly MIN_SENSOR_READING = 11000;
-  static readonly DEFAULT_LOW_CALIBRATION_VOLTAGE = 15000;
-  static readonly DEFAULT_HIGH_CALIBRATION_VOLTAGE = 22000;
+  static readonly DEFAULT_LOW_CALIBRATION_VOLTAGE = 14000;
+  static readonly DEFAULT_HIGH_CALIBRATION_VOLTAGE = 21000;
 
   #lowCalibrationPoint: number | null;
   #highCalibrationPoint: number | null;
@@ -63,12 +63,13 @@ export class CapacitiveMoistureSensor extends ADS115 {
   protected async recalibrateAsync(rawReading: number) {
     // Set defaults if calibration points are not set.
     // This should give us a big ol range as a starting point, as opposed to a small one that needs to be built
+    var shouldUpdateCalibration = false;
     if (this.#lowCalibrationPoint === null) {
-      await this.sprootDB.updateLowCalibrationPointAsync(CapacitiveMoistureSensor.DEFAULT_LOW_CALIBRATION_VOLTAGE)
+      shouldUpdateCalibration = true;
       this.#lowCalibrationPoint = CapacitiveMoistureSensor.DEFAULT_LOW_CALIBRATION_VOLTAGE;
     }
     if (this.#highCalibrationPoint === null) {
-      await this.sprootDB.updateHighCalibrationPointAsync(CapacitiveMoistureSensor.DEFAULT_HIGH_CALIBRATION_VOLTAGE)
+      shouldUpdateCalibration = true;
       this.#highCalibrationPoint = CapacitiveMoistureSensor.DEFAULT_HIGH_CALIBRATION_VOLTAGE;
     }
 
@@ -79,15 +80,26 @@ export class CapacitiveMoistureSensor extends ADS115 {
 
     // Update calibration points if the reading is outside the current range
     if (rawReading < this.#lowCalibrationPoint) {
+      shouldUpdateCalibration = true;
       this.#lowCalibrationPoint = rawReading
-      await this.sprootDB.updateLowCalibrationPointAsync(rawReading);
     }
     else if (rawReading > this.#highCalibrationPoint) {
+      shouldUpdateCalibration = true;
       this.#highCalibrationPoint = rawReading
-      await this.sprootDB.updateHighCalibrationPointAsync(rawReading);
+    }
+
+    if (shouldUpdateCalibration) {
+      this.logger.info(`Moisture sensor ${this.id} recalibrated. New low: ${this.#lowCalibrationPoint}, new high: ${this.#highCalibrationPoint}`);
+      await this.sprootDB.updateSensorCalibrationAsync(this.id, this.#lowCalibrationPoint, this.#highCalibrationPoint);
     }
   }
 
+  // Two points - a low and a high - meaning this is linear. That's not strictly accurate,
+  // as I'm lead to believe that the curve of moisture content for these sensors is more of
+  // a power curve, but in order to map that accurately you'd need to manually calibrate each
+  // sensor before placement, which seems like a lot of work. Ultimately, the intent of
+  // sensors like these is to basically be like "SHOULD WATER OR NAH?", rather than have a
+  // strictly scientifically accurate reading.
   protected getPercentMoisture(rawReading: number): number {
     if (this.#lowCalibrationPoint === null || this.#highCalibrationPoint === null) {
       throw new Error(`Calibration points not set for moisture sensor ${this.id}. Please calibrate the sensor first.`);
