@@ -23,6 +23,7 @@ import { ISensorCondition } from "@sproot/automation/ISensorCondition";
 import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -416,6 +417,64 @@ export class SprootDB implements ISprootDB {
   async deleteWeekdayConditionAsync(conditionId: number): Promise<void> {
     return this.#connection("weekday_conditions").where("id", conditionId).delete();
   }
+
+  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
+    return this.#connection("camera_settings").select("*");
+  }
+
+  // async addCameraSettingsAsync(
+  //   name: string,
+  //   xVideoResolution: number | null,
+  //   yVideoResolution: number | null,
+  //   videoFps: number,
+  //   xImageResolution: number | null,
+  //   yImageResolution: number | null,
+  //   imageRetentionDays: number,
+  //   imageRetentionSize: number,
+  //   timelapseEnabled: boolean,
+  //   timelapseInterval: number | null,
+  // ): Promise<number> {
+  //   return (
+  //     (
+  //       await this.#connection("camera_settings").insert({
+  //         name,
+  //         xVideoResolution,
+  //         yVideoResolution,
+  //         videoFps,
+  //         xImageResolution,
+  //         yImageResolution,
+  //         imageRetentionDays,
+  //         imageRetentionSize,
+  //         timelapseEnabled,
+  //         timelapseInterval,
+  //       })
+  //     )[0] ?? -1
+  //   );
+  // }
+
+  async updateCameraSettingsAsync(cameraSettings: SDBCameraSettings): Promise<void> {
+    return this.#connection("camera_settings").where("id", cameraSettings.id).update({
+      id: cameraSettings.id,
+      enabled: cameraSettings.enabled,
+      name: cameraSettings.name,
+      xVideoResolution: cameraSettings.xVideoResolution,
+      yVideoResolution: cameraSettings.yVideoResolution,
+      videoFps: cameraSettings.videoFps,
+      xImageResolution: cameraSettings.xImageResolution,
+      yImageResolution: cameraSettings.yImageResolution,
+      timelapseEnabled: cameraSettings.timelapseEnabled,
+      imageRetentionDays: cameraSettings.imageRetentionDays,
+      imageRetentionSize: cameraSettings.imageRetentionSize,
+      timelapseInterval: cameraSettings.timelapseInterval,
+      timelapseStartTime: cameraSettings.timelapseStartTime,
+      timelapseEndTime: cameraSettings.timelapseEndTime,
+    });
+  }
+
+  // async deleteCameraSettingsAsync(cameraId: number): Promise<void> {
+  //   return this.#connection("camera_settings").where("id", cameraId).delete();
+  // }
+
   async getUserAsync(username: string): Promise<SDBUser[]> {
     return this.#connection("users").where("username", username).select("*");
   }

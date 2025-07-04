@@ -21,9 +21,12 @@ services:
       - DATABASE_USER=${DATABASE_USER}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - PRECONFIGURED=${PRECONFIGURED}
+      - INTERSERVICE_AUTHENTICATION_KEY=${INTERSERVICE_AUTHENTICATION_KEY}
     volumes:
+      - /run/udev:/run/udev:ro
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
+      - ./docker_volumes/sproot/server/images:/sproot/server/images
     network_mode: "host"
     expose:
       - "3000"

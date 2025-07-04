@@ -134,3 +134,4 @@ dist
 docker_volumes/
 
 *.local
+client/.env.development
