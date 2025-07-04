@@ -121,9 +121,7 @@ export abstract class SensorBase implements ISensorBase {
     await this.#addLastReadingToDatabaseAsync();
   }
 
-  protected async createSensorAsync(
-    maxSensorReadTime: number,
-  ): Promise<this | null> {
+  protected async createSensorAsync(maxSensorReadTime: number): Promise<this | null> {
     const profiler = this.logger.startTimer();
     try {
       await this.intitializeCacheAndChartDataAsync();

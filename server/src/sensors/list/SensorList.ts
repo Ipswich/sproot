@@ -49,8 +49,19 @@ class SensorList {
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, name, model, address, color, lastReading, lastReadingTime, units, pin, lowCalibrationPoint, highCalibrationPoint } = this
-        .#sensors[key] as ISensorBase;
+      const {
+        id,
+        name,
+        model,
+        address,
+        color,
+        lastReading,
+        lastReadingTime,
+        units,
+        pin,
+        lowCalibrationPoint,
+        highCalibrationPoint,
+      } = this.#sensors[key] as ISensorBase;
       for (const readingType in lastReading) {
         const reading = lastReading[readingType as ReadingType];
         if (reading !== undefined) {
@@ -68,7 +79,7 @@ class SensorList {
         units,
         pin,
         lowCalibrationPoint,
-        highCalibrationPoint
+        highCalibrationPoint,
       };
     }
     return cleanObject;
@@ -305,7 +316,7 @@ class SensorList {
           this.#logger,
         ).initAsync();
         break;
-        
+
       default:
         throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);
     }
