@@ -68,10 +68,8 @@ export async function addAsync(
     model: request.body["model"],
     address: request.body["address"],
     color: request.body["color"],
+    pin: request.body["pin"],
   } as SDBSensor;
-  if (request.body["pin"] !== undefined) {
-    newSensor.pin = request.body["pin"];
-  }
 
   const missingFields: Array<string> = [];
   if (newSensor.name == undefined || newSensor.name == null) {
@@ -184,6 +182,7 @@ export async function updateAsync(
   sensorData.model = request.body["model"] ?? sensorData.model;
   sensorData.address = request.body["address"] ?? sensorData.address;
   sensorData.color = request.body["color"] ?? sensorData.color;
+  sensorData.pin = request.body["pin"] ?? sensorData.pin;
   sensorData.lowCalibrationPoint =
     request.body["lowCalibrationPoint"] ?? sensorData.lowCalibrationPoint;
   sensorData.highCalibrationPoint =

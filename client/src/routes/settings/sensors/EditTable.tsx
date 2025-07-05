@@ -7,6 +7,7 @@ import {
   ColorInput,
   ScrollArea,
   ColorPicker,
+  NumberInput,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
@@ -40,6 +41,9 @@ export default function EditTable({
 
   const updateSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
+      if (newSensorValues.pin != null) {
+        newSensorValues.pin = String(newSensorValues.pin);
+      }
       await updateSensorAsync(newSensorValues);
     },
     onSettled: () => {
@@ -65,6 +69,7 @@ export default function EditTable({
       color: selectedSensor.color,
       model: selectedSensor.model,
       address: selectedSensor.address,
+      pin: selectedSensor.pin ?? null,
     },
     validate: {
       id: (value: number) =>
@@ -87,6 +92,8 @@ export default function EditTable({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
+      pin: (value: string | null) =>
+        !value || (value.length > 0 && value.length <= 64) ? null : null,
     },
   });
 
@@ -97,6 +104,7 @@ export default function EditTable({
     updateSensorForm.setFieldValue("model", sensor.model);
     updateSensorForm.setFieldValue("address", sensor.address ?? "");
     updateSensorForm.setFieldValue("id", sensor.id);
+    updateSensorForm.setFieldValue("pin", sensor.pin ?? null);
     openModal();
   };
 
@@ -166,6 +174,18 @@ export default function EditTable({
             placeholder={selectedSensor.address ?? ""}
             {...updateSensorForm.getInputProps("address")}
           />
+          {(updateSensorForm.values.model === "ADS1115" ||
+            updateSensorForm.values.model === "CAPACITIVE_MOISTURE_SENSOR") && (
+            <NumberInput
+              defaultValue={0}
+              label="Pin"
+              clampBehavior="strict"
+              allowDecimal={false}
+              min={0}
+              max={3}
+              {...updateSensorForm.getInputProps("pin")}
+            />
+          )}
           <Group justify="space-between" mt="md">
             <Button
               disabled={isUpdating}

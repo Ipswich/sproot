@@ -48,7 +48,9 @@ export async function getAvailableDevices(
         error: {
           name: "Bad Request",
           url: request.originalUrl,
-          details: [`Model '${request.params["model"]}' not recognized, supported models are: ${Object.keys(models).join(", ")}`],
+          details: [
+            `Model '${request.params["model"]}' not recognized, supported models are: ${Object.keys(models).join(", ")}`,
+          ],
         },
         ...response.locals["defaultProperties"],
       };
