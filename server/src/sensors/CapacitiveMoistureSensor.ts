@@ -46,6 +46,8 @@ export class CapacitiveMoistureSensor extends ADS115 {
     const sensor = await this.createSensorAsync(ADS115.MAX_SENSOR_READ_TIME);
     const rawReading = await this.getReadingFromDeviceAsync();
     await this.recalibrateAsync(rawReading);
+    this.lastReading[ReadingType.moisture] = String(this.getPercentMoisture(rawReading));
+    this.lastReadingTime = new Date();
     return sensor;
   }
 

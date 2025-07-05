@@ -10,7 +10,6 @@ import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import ModelList from "@sproot/sproot-common/dist/sensors/ModelList";
 
 class SensorList {
   #sprootDB: ISprootDB;
@@ -250,7 +249,7 @@ class SensorList {
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
     switch (sensor.model.toLowerCase()) {
-      case ModelList.BME280.toLowerCase():
+      case "bme280":
         if (!sensor.address) {
           throw new SensorListError("BME280 sensor address cannot be null");
         }
@@ -265,7 +264,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case ModelList.DS18B20.toLowerCase():
+      case "ds18b20":
         if (!sensor.address) {
           throw new SensorListError("DS18B20 sensor address cannot be null");
         }
@@ -280,7 +279,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case ModelList.ADS1115.toLowerCase():
+      case "ads1115":
         if (!sensor.address) {
           throw new SensorListError("ADS1115 sensor address cannot be null");
         }
@@ -300,7 +299,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case ModelList.CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
+      case "capacitive_moisture_sensor":
         if (!sensor.address) {
           throw new SensorListError("Capacitive Moisture Sensor address cannot be null");
         }

@@ -3,7 +3,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
-import { ReadingType } from "@sproot/sensors/ReadingType";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
 export class ADS115 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;
@@ -42,7 +42,9 @@ export class ADS115 extends SensorBase {
 
   override async takeReadingAsync(): Promise<void> {
     try {
-      this.getReadingFromDeviceAsync();
+      const reading = await this.getReadingFromDeviceAsync();
+      this.lastReading[ReadingType.voltage] = (reading / 10000).toString();
+      this.lastReadingTime = new Date();
     } catch (error) {
       this.logger.error(`Failed to read ADS1115 sensor ${this.id}. ${error}`);
       return;
@@ -54,7 +56,7 @@ export class ADS115 extends SensorBase {
       throw new Error(`Invalid pin: ${this.pin}. Must be one of '0', '1', '2', or '3'.`);
     }
 
-    const mux = `${this.pin}+'GND'` as
+    const mux = `${this.pin}+GND` as
       | "0+1"
       | "0+3"
       | "1+3"
@@ -105,7 +107,7 @@ class Ads1115Device {
     return openPromisified(busNum).then((bus: PromisifiedBus) => new Ads1115Device(bus, addr));
   }
 
-  #gain: number = Ads1115Device.gains["2/3"];
+  #gain: number = Ads1115Device.gains["1"];
   #bus: PromisifiedBus;
   #addr: number;
   #delay: number;
@@ -127,14 +129,12 @@ class Ads1115Device {
 
   writeReg16Async(register: number, value: number) {
     const buff = Buffer.from([register & 3, value >> 8, value & 0xff]);
-    // debug('write to 0x%h [%h]', addr, buff)
     return this.#bus.i2cWrite(this.#addr, 3, buff);
   }
 
   async readReg16Async(register: number) {
     await this.#bus.i2cWrite(this.#addr, 1, Buffer.alloc(1, register));
     const buff = (await this.#bus.i2cRead(this.#addr, 2, Buffer.allocUnsafe(2))).buffer;
-    // debug('read from register 0x%h [%h]', register, buff)
     if (buff.length !== 2) {
       throw new Error(
         `Invalid read length from register 0x${register.toString(16)}: ${buff.length}`,
@@ -148,7 +148,6 @@ class Ads1115Device {
   }
 
   writeConfigAsync(value: number) {
-    // debug('writeConfig 0b%b', value)
     return this.writeReg16Async(0b01, value);
   }
 
