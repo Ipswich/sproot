@@ -28,7 +28,7 @@ export async function getAvailableDevices(
   }
 
   try {
-    const models = Object.values(ModelList).map((model) => model.toLowerCase());
+    const models = Object.keys(ModelList).map((model) => model.toLowerCase());
     if (models.includes(request.params["model"]!.toLowerCase())) {
       const pins = outputList.getAvailableDevices(
         request.params["model"]!.toLowerCase(),
@@ -48,7 +48,7 @@ export async function getAvailableDevices(
         error: {
           name: "Bad Request",
           url: request.originalUrl,
-          details: [`Model '${request.params["model"]}' not recognized`],
+          details: [`Model '${request.params["model"]}' not recognized, supported models are: ${Object.keys(models).join(", ")}`],
         },
         ...response.locals["defaultProperties"],
       };

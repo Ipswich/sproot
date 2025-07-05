@@ -20,7 +20,6 @@ import { Fragment } from "react";
 
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
-import ModelList from "@sproot/outputs/ModelList";
 
 interface NewOutputModalProps {
   supportedModels: Record<string, string>;
@@ -163,7 +162,7 @@ export default function NewOutputModal({
           {newOutputForm.values.model.toLowerCase() === "pca9685" ? (
             <PCA9685Form form={newOutputForm} />
           ) : newOutputForm.values.model.toLowerCase() ===
-            ModelList.TPLINK_SMART_PLUG.toLowerCase() ? (
+            "tplink_smart_plug" ? (
             <TPLinkSmartPlugForm form={newOutputForm} />
           ) : null}
           <Group justify="flex-end" mt="md">

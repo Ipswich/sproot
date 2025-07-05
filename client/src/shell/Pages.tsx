@@ -7,6 +7,8 @@ import {
   IconChartBubble,
   IconChartLine,
   IconDroplet,
+  IconBucketDroplet,
+  IconCircuitVoltmeter,
   // IconLayoutDashboard,
   // IconPlant2,
   // IconSeeding,
@@ -125,6 +127,22 @@ const sensorDataLinks: Record<ReadingType, Page> = {
     href: "/sensor-data/pressure",
     icon: (props: TablerIconsProps | undefined) => (
       <IconChartBubble {...props} />
+    ),
+  },
+  moisture: {
+    navLinkText: "Soil Moisture",
+    headerText: "Sensor Data",
+    href: "/sensor-data/moisture",
+    icon: (props: TablerIconsProps | undefined) => (
+      <IconBucketDroplet {...props} />
+    ),
+  },
+  voltage: {
+    navLinkText: "Voltage",
+    headerText: "Sensor Data",
+    href: "/sensor-data/voltage",
+    icon: (props: TablerIconsProps | undefined) => (
+      <IconCircuitVoltmeter {...props} />
     ),
   },
 };

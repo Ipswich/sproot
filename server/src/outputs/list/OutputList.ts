@@ -125,7 +125,7 @@ class OutputList implements Disposable {
     switch (model) {
       case "pca9685":
         return []; //this.#PCA9685.getAvailableChildIds(address);
-      case "tplink-smart-plug":
+      case "tplink_smart_plug":
         return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:
         return [];
