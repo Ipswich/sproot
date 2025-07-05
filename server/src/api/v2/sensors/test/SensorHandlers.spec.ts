@@ -149,7 +149,7 @@ describe("SensorHandlers.ts tests", () => {
       let success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
 
       assert.equal(success.statusCode, 201);
-      assert.deepEqual(success.content?.data, {...newSensor, pin: undefined});
+      assert.deepEqual(success.content?.data, { ...newSensor, pin: undefined });
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.addSensorAsync.calledOnce);
