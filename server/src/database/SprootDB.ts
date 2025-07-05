@@ -50,6 +50,9 @@ export class SprootDB implements ISprootDB {
       model: sensor.model,
       address: sensor.address,
       color: sensor.color,
+      pin: sensor.pin,
+      lowCalibrationPoint: sensor.lowCalibrationPoint,
+      highCalibrationPoint: sensor.highCalibrationPoint,
     });
   }
 

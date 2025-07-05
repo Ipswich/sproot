@@ -97,23 +97,28 @@ class SensorList {
     for (const sensor of sensorsFromDatabase) {
       let sensorChanges = false;
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
-      if (key) {
+      if (key && this.#sensors[key]) {
         //Update if it exists
-        if (this.#sensors[key]?.name != sensor.name) {
+        if (this.#sensors[key].name != sensor.name) {
           //Also updates chartSeries data (and chart data)
-          this.#sensors[key]?.updateName(sensor.name);
+          this.#sensors[key].updateName(sensor.name);
           sensorChanges = true;
         }
 
-        if (this.#sensors[key]?.color != sensor.color) {
+        if (this.#sensors[key].color != sensor.color) {
           //Also updates chartSeries data (and chart data)
-          this.#sensors[key]?.updateColor(sensor.color);
+          this.#sensors[key].updateColor(sensor.color);
+          sensorChanges = true;
+        }
+
+        if (this.#sensors[key].pin != sensor.pin) {
+          this.#sensors[key].pin = sensor.pin;
           sensorChanges = true;
         }
 
         if (sensorChanges) {
           this.#logger.info(
-            `Updating sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
+            `Updating sensor {model: ${this.#sensors[key].model}, id: ${this.#sensors[key].id}}`,
           );
           sensorListChanges = true;
         }
