@@ -1,10 +1,10 @@
-import ModelList from "./ModelList";
+import {Models} from "./Models";
 import { ReadingType } from "./ReadingType";
 
 interface ISensorBase {
   id: number;
   name: string;
-  model: keyof typeof ModelList;
+  model: keyof typeof Models;
   address: string | null;
   color: string;
   pin: string | null;

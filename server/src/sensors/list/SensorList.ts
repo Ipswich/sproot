@@ -10,6 +10,7 @@ import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 class SensorList {
   #sprootDB: ISprootDB;
@@ -253,8 +254,8 @@ class SensorList {
 
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
-    switch (sensor.model.toLowerCase()) {
-      case "bme280":
+    switch (sensor.model) {
+      case Models.BME280:
         if (!sensor.address) {
           throw new SensorListError("BME280 sensor address cannot be null");
         }
@@ -269,7 +270,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case "ds18b20":
+      case Models.DS18B20:
         if (!sensor.address) {
           throw new SensorListError("DS18B20 sensor address cannot be null");
         }
@@ -284,7 +285,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case "ads1115":
+      case Models.ADS1115:
         if (!sensor.address) {
           throw new SensorListError("ADS1115 sensor address cannot be null");
         }
@@ -304,7 +305,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case "capacitive_moisture_sensor":
+      case Models.CAPACITIVE_MOISTURE_SENSOR:
         if (!sensor.address) {
           throw new SensorListError("Capacitive Moisture Sensor address cannot be null");
         }
@@ -343,7 +344,7 @@ class SensorList {
         promises.push(
           this.#sprootDB.addSensorAsync({
             name: `New DS18B20 ..${address.slice(-4)}`,
-            model: "DS18B20",
+            model: Models.DS18B20,
             address: address,
             color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
           } as SDBSensor),

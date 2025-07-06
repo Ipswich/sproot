@@ -1,7 +1,7 @@
 import { Response } from "express";
 
 import { supportedModelsHandler } from "../handlers/SupportedModelsHandlers";
-import ModelList from "@sproot/sproot-common/src/sensors/ModelList";
+import { ModelList } from "@sproot/sproot-common/src/sensors/Models";
 
 import { assert } from "chai";
 

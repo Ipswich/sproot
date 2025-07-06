@@ -1,9 +1,9 @@
-import ModelList from "../sensors/ModelList";
+import {Models} from "@sproot/sproot-common/src/sensors/Models";
 
 type SDBSensor = {
   id: number;
   name: string;
-  model: keyof typeof ModelList;
+  model: keyof typeof Models;
   address: string | null;
   color: string;
   pin: string | null;

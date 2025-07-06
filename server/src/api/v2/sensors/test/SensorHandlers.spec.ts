@@ -7,7 +7,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
-import ModelList from "@sproot/sproot-common/dist/sensors/ModelList";
+import {Models} from "@sproot/sproot-common/dist/sensors/Models";
 
 describe("SensorHandlers.ts tests", () => {
   describe("get", () => {
@@ -127,7 +127,7 @@ describe("SensorHandlers.ts tests", () => {
     it("should return a 201 and add a new sensor", async () => {
       const newSensor = {
         name: "test sensor 4",
-        model: ModelList.DS18B20,
+        model: Models.DS18B20,
         address: "28-00002",
         color: "#000000",
       } as SDBSensor;
@@ -198,7 +198,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
 
-      newSensor.model = ModelList.BME280;
+      newSensor.model = Models.BME280;
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -212,7 +212,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
 
-      newSensor.model = ModelList.ADS1115;
+      newSensor.model = Models.ADS1115;
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -227,7 +227,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
 
-      newSensor.model = "Not A Valid Model" as keyof typeof ModelList;
+      newSensor.model = "Not A Valid Model" as keyof typeof Models;
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -236,7 +236,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
-        `Invalid model: Not A Valid Model. Supported models are: ${Object.keys(ModelList).join(", ")}`,
+        `Invalid model: Not A Valid Model. Supported models are: ${Object.keys(Models).join(", ")}`,
         "Missing required field: address",
       ]);
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
