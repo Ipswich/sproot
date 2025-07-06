@@ -132,7 +132,7 @@ const sensorDataLinks: Record<ReadingType, Page> = {
   moisture: {
     navLinkText: "Soil Moisture",
     headerText: "Sensor Data",
-    href: "/sensor-data/soil-moisture",
+    href: "/sensor-data/moisture",
     icon: (props: TablerIconsProps | undefined) => (
       <IconBucketDroplet {...props} />
     ),

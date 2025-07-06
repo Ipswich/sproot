@@ -100,7 +100,6 @@ export default function EditTable({
 
   const editTableOnClick = function (sensor: ISensorBase) {
     setSelectedSensor(sensor);
-    console.log(sensor);
     updateSensorForm.setFieldValue("name", sensor.name);
     updateSensorForm.setFieldValue("color", sensor.color);
     updateSensorForm.setFieldValue("model", sensor.model);

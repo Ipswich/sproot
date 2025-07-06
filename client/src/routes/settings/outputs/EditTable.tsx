@@ -24,7 +24,7 @@ import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
-import { Models } from "@sproot/outputs/Models";
+import { Models } from "@sproot/sproot-common/src/outputs/Models";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
