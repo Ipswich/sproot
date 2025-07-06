@@ -162,8 +162,7 @@ export default function NewOutputModal({
           />
           {newOutputForm.values.model === Models.PCA9685 ? (
             <PCA9685Form form={newOutputForm} />
-          ) : newOutputForm.values.model ===
-            Models.TPLINK_SMART_PLUG ? (
+          ) : newOutputForm.values.model === Models.TPLINK_SMART_PLUG ? (
             <TPLinkSmartPlugForm form={newOutputForm} />
           ) : null}
           <Group justify="flex-end" mt="md">

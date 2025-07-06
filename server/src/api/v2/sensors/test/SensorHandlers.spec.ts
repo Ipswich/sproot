@@ -7,7 +7,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
-import {Models} from "@sproot/sproot-common/dist/sensors/Models";
+import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 describe("SensorHandlers.ts tests", () => {
   describe("get", () => {

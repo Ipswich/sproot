@@ -61,9 +61,9 @@ describe("OutputList.ts tests", function () {
       sinon.stub(winston, "createLogger").callsFake(
         () =>
           ({
-            info: () => { },
-            error: () => { },
-            startTimer: () => ({ done: () => { } }) as winston.Profiler,
+            info: () => {},
+            error: () => {},
+            startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
@@ -118,9 +118,9 @@ describe("OutputList.ts tests", function () {
       sinon.stub(winston, "createLogger").callsFake(
         () =>
           ({
-            info: () => { },
-            error: () => { },
-            startTimer: () => ({ done: () => { } }) as winston.Profiler,
+            info: () => {},
+            error: () => {},
+            startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
@@ -141,7 +141,7 @@ describe("OutputList.ts tests", function () {
     it("should dispose of all outputs", async function () {
       sinon.createStubInstance(Pca9685Driver);
 
-      sinon.stub(Pca9685Driver.prototype, "dispose").callsFake(() => { });
+      sinon.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
       sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
         {
           id: 1,
@@ -185,9 +185,9 @@ describe("OutputList.ts tests", function () {
       sinon.stub(winston, "createLogger").callsFake(
         () =>
           ({
-            info: () => { },
-            error: () => { },
-            startTimer: () => ({ done: () => { } }) as winston.Profiler,
+            info: () => {},
+            error: () => {},
+            startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();

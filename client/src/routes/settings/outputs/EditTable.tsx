@@ -207,8 +207,7 @@ export default function EditTable({
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
-              ) : selectedOutput.model ===
-                Models.TPLINK_SMART_PLUG ? (
+              ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
@@ -241,8 +240,7 @@ export default function EditTable({
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
-              ) : updateOutputForm.values.model ===
-                Models.TPLINK_SMART_PLUG ? (
+              ) : updateOutputForm.values.model === Models.TPLINK_SMART_PLUG ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}

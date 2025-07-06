@@ -16,6 +16,7 @@ import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
 import { useRevalidator } from "react-router-dom";
+import { Models } from "@sproot/sproot-common/src/sensors/Models";
 
 interface NewSensorModalProps {
   supportedModels: Record<string, string>;
@@ -135,8 +136,9 @@ export default function NewSensorModal({
             placeholder="0x76"
             {...newSensorForm.getInputProps("address")}
           />
-          {(newSensorForm.values.model === "ADS1115" ||
-            newSensorForm.values.model === "CAPACITIVE_MOISTURE_SENSOR") && (
+          {(newSensorForm.values.model === Models.ADS1115 ||
+            newSensorForm.values.model ===
+              Models.CAPACITIVE_MOISTURE_SENSOR) && (
             <NumberInput
               defaultValue={0}
               label="Pin"

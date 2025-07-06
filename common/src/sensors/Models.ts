@@ -3,7 +3,7 @@ export const Models = {
   CAPACITIVE_MOISTURE_SENSOR: "CAPACITIVE_MOISTURE_SENSOR",
   DS18B20: "DS18B20",
   ADS1115: "ADS1115",
-} as const
+} as const;
 
 export const ModelList: Record<keyof typeof Models, string> = {
   BME280: "BME280",
@@ -11,4 +11,3 @@ export const ModelList: Record<keyof typeof Models, string> = {
   DS18B20: "DS18B20",
   ADS1115: "ADS1115",
 } as const;
-

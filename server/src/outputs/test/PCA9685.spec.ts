@@ -11,7 +11,7 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
-import {Models} from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {

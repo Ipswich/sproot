@@ -1,4 +1,4 @@
-import {Models} from "./Models";
+import { Models } from "./Models";
 import { ReadingType } from "./ReadingType";
 
 interface ISensorBase {

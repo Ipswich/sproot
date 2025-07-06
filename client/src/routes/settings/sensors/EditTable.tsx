@@ -21,6 +21,7 @@ import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTab
 import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useRevalidator } from "react-router-dom";
+import { Models } from "@sproot/sproot-common/src/sensors/Models";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
@@ -175,8 +176,9 @@ export default function EditTable({
             placeholder={selectedSensor.address ?? ""}
             {...updateSensorForm.getInputProps("address")}
           />
-          {(updateSensorForm.values.model === "ADS1115" ||
-            updateSensorForm.values.model === "CAPACITIVE_MOISTURE_SENSOR") && (
+          {(updateSensorForm.values.model === Models.ADS1115 ||
+            updateSensorForm.values.model ===
+              Models.CAPACITIVE_MOISTURE_SENSOR) && (
             <NumberInput
               label="Pin"
               clampBehavior="strict"

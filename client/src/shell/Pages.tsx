@@ -119,8 +119,7 @@ const sensorDataLinks: Record<ReadingType, Page> = {
     navLinkText: "Humidity",
     headerText: "Sensor Data",
     href: "/sensor-data/humidity",
-    icon: (props: TablerIconsProps | undefined) =>
-      <IconDroplet {...props} />,
+    icon: (props: TablerIconsProps | undefined) => <IconDroplet {...props} />,
   },
   pressure: {
     navLinkText: "Pressure",
