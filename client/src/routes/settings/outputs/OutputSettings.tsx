@@ -9,13 +9,13 @@ import EditTable from "@sproot/sproot-client/src/routes/settings/outputs/EditTab
 import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/NewOutputModal";
 import { useQuery } from "@tanstack/react-query";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
-import ModelList from "@sproot/outputs/ModelList";
+import { Models } from "@sproot/outputs/Models";
 
 export interface FormValues {
   id?: number;
   name: string;
   color: string;
-  model: keyof typeof ModelList;
+  model: keyof typeof Models;
   address: string;
   pin: string;
   isPwm: boolean;

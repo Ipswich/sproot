@@ -1,8 +1,8 @@
-import ModelList from "../outputs/ModelList";
+import { Models } from "@sproot/sproot-common/src/outputs/Models";
 
 type SDBOutput = {
   id: number;
-  model: keyof typeof ModelList;
+  model: keyof typeof Models;
   address: string;
   name: string;
   pin: string;

@@ -10,6 +10,7 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 class OutputList implements Disposable {
   #sprootDB: ISprootDB;
@@ -123,9 +124,9 @@ class OutputList implements Disposable {
     filterUsed?: boolean,
   ): Record<string, string>[] {
     switch (model) {
-      case "pca9685":
+      case Models.PCA9685:
         return []; //this.#PCA9685.getAvailableChildIds(address);
-      case "tplink_smart_plug":
+      case Models.TPLINK_SMART_PLUG:
         return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:
         return [];
@@ -271,12 +272,12 @@ class OutputList implements Disposable {
 
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | undefined;
-    switch (output.model.toLowerCase()) {
-      case "pca9685": {
+    switch (output.model) {
+      case Models.PCA9685: {
         newOutput = await this.#PCA9685.createOutputAsync(output);
         break;
       }
-      case "tplink_smart_plug": {
+      case Models.TPLINK_SMART_PLUG: {
         newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
@@ -289,12 +290,12 @@ class OutputList implements Disposable {
   }
 
   #deleteOutput(output: OutputBase): void {
-    switch (output.model.toLowerCase()) {
-      case "pca9685": {
+    switch (output.model) {
+      case Models.PCA9685: {
         this.#PCA9685.disposeOutput(output);
         break;
       }
-      case "tplink_smart_plug": {
+      case Models.TPLINK_SMART_PLUG: {
         this.#TPLinkSmartPlugs.disposeOutput(output);
         break;
       }

@@ -1,3 +1,4 @@
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { Knex } from "knex";
 
 export async function seed(knex: Knex): Promise<void> {
@@ -32,7 +33,7 @@ export async function seed(knex: Knex): Promise<void> {
   await knex("outputs").insert([
     {
       id: "1",
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Relay #1",
       color: "#82c91e",
@@ -43,7 +44,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: "5",
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #1",
       color: "#228be6",

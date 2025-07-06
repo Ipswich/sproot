@@ -24,6 +24,7 @@ import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
+import { Models } from "@sproot/outputs/Models";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
@@ -201,13 +202,13 @@ export default function EditTable({
                 required
                 {...updateOutputForm.getInputProps("automationTimeout")}
               />
-              {selectedOutput.model?.toLowerCase() === "pca9685" ? (
+              {selectedOutput.model === Models.PCA9685 ? (
                 <PCA9685Form
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
-              ) : selectedOutput.model?.toLowerCase() ===
-                "tplink_smart_plug" ? (
+              ) : selectedOutput.model ===
+                Models.TPLINK_SMART_PLUG ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
@@ -235,13 +236,13 @@ export default function EditTable({
             </Fragment>
           ) : (
             <Fragment>
-              {updateOutputForm.values.model.toLowerCase() === "pca9685" ? (
+              {updateOutputForm.values.model === Models.PCA9685 ? (
                 <PCA9685Form
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
-              ) : updateOutputForm.values.model.toLowerCase() ===
-                "tplink_smart_plug" ? (
+              ) : updateOutputForm.values.model ===
+                Models.TPLINK_SMART_PLUG ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}

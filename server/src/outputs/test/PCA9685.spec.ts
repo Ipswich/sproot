@@ -11,7 +11,7 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
-import ModelList from "@sproot/sproot-common/dist/outputs/ModelList";
+import {Models} from "@sproot/sproot-common/dist/outputs/Models";
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {
@@ -32,7 +32,7 @@ describe("PCA9685.ts tests", function () {
 
     const output1 = await pca9685.createOutputAsync({
       id: 1,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -41,7 +41,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
     const output2 = await pca9685.createOutputAsync({
       id: 2,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 2",
       pin: "1",
@@ -50,7 +50,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
     const output3 = await pca9685.createOutputAsync({
       id: 3,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 3",
       pin: "2",
@@ -59,7 +59,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
     const output4 = await pca9685.createOutputAsync({
       id: 4,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 4",
       pin: "3",
@@ -99,7 +99,7 @@ describe("PCA9685.ts tests", function () {
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -128,7 +128,7 @@ describe("PCA9685.ts tests", function () {
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -199,7 +199,7 @@ describe("PCA9685.ts tests", function () {
     //Inverted PWM Execution
     await pca9685.createOutputAsync({
       id: 1,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -236,7 +236,7 @@ describe("PCA9685.ts tests", function () {
     //Non-PWM error handling
     await pca9685.createOutputAsync({
       id: 2,
-      model: ModelList.PCA9685,
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",

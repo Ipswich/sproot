@@ -11,11 +11,11 @@ import OutputAutomationManager from "../../automation/outputs/OutputAutomationMa
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
-import ModelList from "@sproot/sproot-common/dist/outputs/ModelList";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
-  readonly model: keyof typeof ModelList;
+  readonly model: keyof typeof Models;
   readonly address: string;
   readonly pin: string;
   name: string;
