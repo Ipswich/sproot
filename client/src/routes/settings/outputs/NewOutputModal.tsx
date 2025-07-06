@@ -20,7 +20,7 @@ import { Fragment } from "react";
 
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
-import { Models } from "@sproot/outputs/Models";
+import { Models } from "@sproot/sproot-common/src/outputs/Models";
 
 interface NewOutputModalProps {
   supportedModels: Record<string, string>;
