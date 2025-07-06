@@ -873,7 +873,9 @@ paths:
       tags:
         - "Outputs"
       summary: Get supported models.
-      description: Returns a list of supported output models.
+      description: >
+        Returns a list of supported output models, with the key as the actual model type and the value as the display type.
+        Pass the key to the server where appropriate.
       responses:
         200:
           description: "Success"
@@ -3363,7 +3365,9 @@ paths:
       tags:
         - "Sensors"
       summary: Get supported models.
-      description: Returns a list of supported sensor models.
+      description: >
+        Returns a list of supported sensor models, with the key as the actual model type and the value as the display type.
+        Pass the key to the server where appropriate.
       responses:
         200:
           description: "Success"
