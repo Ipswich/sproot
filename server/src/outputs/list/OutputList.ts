@@ -272,12 +272,12 @@ class OutputList implements Disposable {
 
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | undefined;
-    switch (output.model) {
-      case Models.PCA9685: {
+    switch (output.model.toLowerCase()) {
+      case Models.PCA9685.toLowerCase(): {
         newOutput = await this.#PCA9685.createOutputAsync(output);
         break;
       }
-      case Models.TPLINK_SMART_PLUG: {
+      case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
@@ -290,12 +290,12 @@ class OutputList implements Disposable {
   }
 
   #deleteOutput(output: OutputBase): void {
-    switch (output.model) {
-      case Models.PCA9685: {
+    switch (output.model.toLowerCase()) {
+      case Models.PCA9685.toLowerCase(): {
         this.#PCA9685.disposeOutput(output);
         break;
       }
-      case Models.TPLINK_SMART_PLUG: {
+      case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         this.#TPLinkSmartPlugs.disposeOutput(output);
         break;
       }

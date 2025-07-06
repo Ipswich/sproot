@@ -254,8 +254,8 @@ class SensorList {
 
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
-    switch (sensor.model) {
-      case Models.BME280:
+    switch (sensor.model.toLowerCase()) {
+      case Models.BME280.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("BME280 sensor address cannot be null");
         }
@@ -270,7 +270,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case Models.DS18B20:
+      case Models.DS18B20.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("DS18B20 sensor address cannot be null");
         }
@@ -285,7 +285,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case Models.ADS1115:
+      case Models.ADS1115.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("ADS1115 sensor address cannot be null");
         }
@@ -305,7 +305,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case Models.CAPACITIVE_MOISTURE_SENSOR:
+      case Models.CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("Capacitive Moisture Sensor address cannot be null");
         }
