@@ -1,6 +1,6 @@
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
-import { ADS115 } from "../ADS1115";
+import { ADS1115 } from "../ADS1115";
 import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
@@ -292,7 +292,7 @@ class SensorList {
         if (!sensor.pin) {
           throw new SensorListError("ADS1115 sensor pin cannot be null");
         }
-        newSensor = await new ADS115(
+        newSensor = await new ADS1115(
           sensor,
           ReadingType.voltage,
           "1",

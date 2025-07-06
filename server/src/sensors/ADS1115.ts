@@ -5,7 +5,7 @@ import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 
-export class ADS115 extends SensorBase {
+export class ADS1115 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;
   readonly gain: "2/3" | "1" | "2" | "4" | "8" | "16";
   constructor(
@@ -32,8 +32,8 @@ export class ADS115 extends SensorBase {
     this.gain = gain;
   }
 
-  override async initAsync(): Promise<ADS115 | null> {
-    return await this.createSensorAsync(ADS115.MAX_SENSOR_READ_TIME);
+  override async initAsync(): Promise<ADS1115 | null> {
+    return await this.createSensorAsync(ADS1115.MAX_SENSOR_READ_TIME);
   }
 
   override async disposeAsync(): Promise<void> {
@@ -47,7 +47,6 @@ export class ADS115 extends SensorBase {
       this.lastReadingTime = new Date();
     } catch (error) {
       this.logger.error(`Failed to read ADS1115 sensor ${this.id}. ${error}`);
-      return;
     }
   }
 
@@ -76,7 +75,7 @@ export class ADS115 extends SensorBase {
 /**
  * The smart bits - this handles all of the communication with the ADS1115 chip.
  */
-class Ads1115Device {
+export class Ads1115Device {
   public static sleep = (t: number) => new Promise((resolve) => setTimeout(resolve, t));
 
   public static START_CONVERSION: number = 0b1000000000000000;
