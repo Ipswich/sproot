@@ -73,7 +73,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       rawReading > CapacitiveMoistureSensor.MAX_SENSOR_READING
     ) {
       throw new Error(
-        `Invalid reading for moisture sensor ${this.id}: ${rawReading}. Must be between ${CapacitiveMoistureSensor.MIN_SENSOR_READING} and ${CapacitiveMoistureSensor.MAX_SENSOR_READING}.`,
+        `Invalid reading for capacitive moisture sensor {id: ${this.id}}: ${rawReading}. Must be between ${CapacitiveMoistureSensor.MIN_SENSOR_READING} and ${CapacitiveMoistureSensor.MAX_SENSOR_READING}.`,
       );
     }
 

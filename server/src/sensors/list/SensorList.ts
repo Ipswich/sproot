@@ -78,9 +78,9 @@ class SensorList {
         lastReading,
         lastReadingTime,
         units,
-        pin,
-        lowCalibrationPoint,
-        highCalibrationPoint,
+        pin: pin ?? null,
+        lowCalibrationPoint: lowCalibrationPoint ?? null,
+        highCalibrationPoint: highCalibrationPoint ?? null,
       };
     }
     return cleanObject;
