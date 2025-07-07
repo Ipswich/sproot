@@ -643,13 +643,17 @@ describe("API Tests", async () => {
         "lastReading",
         "lastReadingTime",
         "units",
+        "pin",
+        "lowCalibrationPoint",
+        "highCalibrationPoint",
       ];
       describe("GET", async () => {
-        it("should return 200 and all sesnors", async () => {
+        it("should return 200 and all sensors", async () => {
           const response = await request(server).get("/api/v2/sensors").expect(200);
           const content = response.body["content"];
           validateMiddlewareValues(response);
-          assert.lengthOf(content.data, 2);
+          assert.lengthOf(content.data, 4);
+          assert.lengthOf(Object.keys(content.data[0]), sensorKeys.length);
           assert.containsAllKeys(content.data[0], sensorKeys);
           assert.containsAllKeys(content.data[1], sensorKeys);
           assert.containsAllKeys(content.data[0].units, ["humidity", "pressure", "temperature"]);
@@ -669,7 +673,7 @@ describe("API Tests", async () => {
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
           it("should return 201", async () => {
-            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 2);
+            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 4);
             const response = await request(server)
               .post("/api/v2/sensors")
               .send({
@@ -681,16 +685,16 @@ describe("API Tests", async () => {
               .expect(201);
             const content = response.body["content"];
             validateMiddlewareValues(response);
-            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 3);
+            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 5);
             assert.containsAllKeys(content.data, ["name", "model", "address", "color"]);
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
-            assert.equal(app.get("sensorList").sensors["3"].name, "Test Sensor");
+            assert.equal(app.get("sensorList").sensors["5"].name, "Test Sensor");
             const response = await request(server)
-              .patch("/api/v2/sensors/3")
+              .patch("/api/v2/sensors/5")
               .send({
                 name: "Test1 Sensor",
                 model: "BME280",
@@ -700,17 +704,17 @@ describe("API Tests", async () => {
               .expect(200);
             const content = response.body["content"];
             validateMiddlewareValues(response);
-            assert.equal(app.get("sensorList").sensors["3"].name, "Test1 Sensor");
+            assert.equal(app.get("sensorList").sensors["5"].name, "Test1 Sensor");
             assert.containsAllKeys(content.data, ["name", "model", "address", "color"]);
           });
         });
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 3);
-            const response = await request(server).delete("/api/v2/sensors/3").expect(200);
+            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 5);
+            const response = await request(server).delete("/api/v2/sensors/5").expect(200);
             validateMiddlewareValues(response);
-            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 2);
+            assert.lengthOf(Object.keys(app.get("sensorList").sensors), 4);
           });
         });
       });
@@ -785,6 +789,8 @@ describe("API Tests", async () => {
               humidity: "%rH",
               pressure: "hPa",
               temperature: "°C",
+              moisture: "%",
+              voltage: "V",
             },
           });
         });
