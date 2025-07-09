@@ -76,6 +76,7 @@ export class ADS1115 extends SensorBase {
  * The smart bits - this handles all of the communication with the ADS1115 chip.
  */
 export class Ads1115Device {
+  public static MEASUREMENT_SAMPLE_COUNT = 5;
   public static sleep = (t: number) => new Promise((resolve) => setTimeout(resolve, t));
 
   public static START_CONVERSION: number = 0b1000000000000000;
@@ -164,11 +165,19 @@ export class Ads1115Device {
     }
 
     const config = 0x0183; // No comparator | 1600 samples per second | single-shot mode
-    await this.writeConfigAsync(
-      config | calculatedGain | muxValue | Ads1115Device.START_CONVERSION,
-    );
-    await Ads1115Device.sleep(this.#delay);
 
-    return this.readResultsAsync();
+    // Do some math based on several readings to get a more accurate result
+    const readings = [];
+    for (let i = 0; i < Ads1115Device.MEASUREMENT_SAMPLE_COUNT; i++) {
+      await this.writeConfigAsync(
+        config | calculatedGain | muxValue | Ads1115Device.START_CONVERSION,
+      );
+      await Ads1115Device.sleep(this.#delay);
+      readings.push(await this.readResultsAsync());
+    }
+
+    const sum = readings.reduce((acc, val) => acc + val, 0);
+
+    return Math.round(sum / Ads1115Device.MEASUREMENT_SAMPLE_COUNT);
   }
 }

@@ -193,7 +193,7 @@ export abstract class SensorBase implements ISensorBase {
       }
     }
     this.logger.info(
-      `Updated cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
+      `Updated cached readings for {${this.model}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
     );
   }
 
