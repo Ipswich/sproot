@@ -32,6 +32,7 @@ export abstract class OutputBase implements IOutputBase {
   #chartDataPointInterval: number;
   #automationManager: OutputAutomationManager;
   #updateMissCount = 0;
+  #isInitializing = false;
 
   constructor(
     sdbOutput: SDBOutput,
@@ -98,10 +99,18 @@ export abstract class OutputBase implements IOutputBase {
 
   /** Initializes all of the data for this output */
   async initializeAsync() {
-    await this.state.initializeAsync();
-    await this.loadCacheFromDatabaseAsync();
-    this.loadChartData();
-    await this.loadAutomationsAsync();
+    if (this.#isInitializing) {
+      return;
+    }
+    try {
+      this.#isInitializing = true;
+      await this.state.initializeAsync();
+      await this.loadCacheFromDatabaseAsync();
+      this.loadChartData();
+      await this.loadAutomationsAsync();
+    } finally {
+      this.#isInitializing = false;
+    }
   }
 
   updateName(name: string): void {
