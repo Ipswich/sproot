@@ -141,6 +141,9 @@ class TPLinkPlug extends OutputBase {
     // Add some ddos protection for things - turns out sending too many commands too quickly
     // can cause some issues for the some devices.
     if (this.#isUpdating) {
+      this.logger.warn(
+        `TPLink Smart Plug ${this.id} is already updating. Skipping execution of state change.`,
+      );
       return;
     }
     try {
