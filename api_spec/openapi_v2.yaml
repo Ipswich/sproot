@@ -4267,11 +4267,11 @@ components:
           example: "0"
         lowCalibrationPoint:
           nullable: true
-          type: string
+          type: number
           example: 0
         highCalibrationPoint:
           nullable: true
-          type: string
+          type: number
           example: 100
 
     SensorBase:
