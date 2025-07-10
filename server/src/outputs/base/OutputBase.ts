@@ -11,10 +11,11 @@ import OutputAutomationManager from "../../automation/outputs/OutputAutomationMa
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
-  readonly model: string;
+  readonly model: keyof typeof Models;
   readonly address: string;
   readonly pin: string;
   name: string;
@@ -31,6 +32,7 @@ export abstract class OutputBase implements IOutputBase {
   #chartDataPointInterval: number;
   #automationManager: OutputAutomationManager;
   #updateMissCount = 0;
+  #isInitializing = false;
 
   constructor(
     sdbOutput: SDBOutput,
@@ -97,10 +99,18 @@ export abstract class OutputBase implements IOutputBase {
 
   /** Initializes all of the data for this output */
   async initializeAsync() {
-    await this.state.initializeAsync();
-    await this.loadCacheFromDatabaseAsync();
-    this.loadChartData();
-    await this.loadAutomationsAsync();
+    if (this.#isInitializing) {
+      return;
+    }
+    try {
+      this.#isInitializing = true;
+      await this.state.initializeAsync();
+      await this.loadCacheFromDatabaseAsync();
+      this.loadChartData();
+      await this.loadAutomationsAsync();
+    } finally {
+      this.#isInitializing = false;
+    }
   }
 
   updateName(name: string): void {

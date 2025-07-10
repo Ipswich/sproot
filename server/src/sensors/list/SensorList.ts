@@ -1,5 +1,7 @@
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
+import { ADS1115 } from "../ADS1115";
+import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -8,6 +10,7 @@ import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { SensorListChartData } from "./SensorListChartData";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 class SensorList {
   #sprootDB: ISprootDB;
@@ -47,8 +50,19 @@ class SensorList {
   get sensorData(): Record<string, ISensorBase> {
     const cleanObject: Record<string, ISensorBase> = {};
     for (const key in this.#sensors) {
-      const { id, name, model, address, color, lastReading, lastReadingTime, units } = this
-        .#sensors[key] as ISensorBase;
+      const {
+        id,
+        name,
+        model,
+        address,
+        color,
+        lastReading,
+        lastReadingTime,
+        units,
+        pin,
+        lowCalibrationPoint,
+        highCalibrationPoint,
+      } = this.#sensors[key] as ISensorBase;
       for (const readingType in lastReading) {
         const reading = lastReading[readingType as ReadingType];
         if (reading !== undefined) {
@@ -64,6 +78,9 @@ class SensorList {
         lastReading,
         lastReadingTime,
         units,
+        pin: pin ?? null,
+        lowCalibrationPoint: lowCalibrationPoint ?? null,
+        highCalibrationPoint: highCalibrationPoint ?? null,
       };
     }
     return cleanObject;
@@ -81,23 +98,28 @@ class SensorList {
     for (const sensor of sensorsFromDatabase) {
       let sensorChanges = false;
       const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
-      if (key) {
+      if (key && this.#sensors[key]) {
         //Update if it exists
-        if (this.#sensors[key]?.name != sensor.name) {
+        if (this.#sensors[key].name != sensor.name) {
           //Also updates chartSeries data (and chart data)
-          this.#sensors[key]?.updateName(sensor.name);
+          this.#sensors[key].updateName(sensor.name);
           sensorChanges = true;
         }
 
-        if (this.#sensors[key]?.color != sensor.color) {
+        if (this.#sensors[key].color != sensor.color) {
           //Also updates chartSeries data (and chart data)
-          this.#sensors[key]?.updateColor(sensor.color);
+          this.#sensors[key].updateColor(sensor.color);
+          sensorChanges = true;
+        }
+
+        if (this.#sensors[key].pin != sensor.pin) {
+          this.#sensors[key].pin = sensor.pin;
           sensorChanges = true;
         }
 
         if (sensorChanges) {
           this.#logger.info(
-            `Updating sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
+            `Updating sensor {model: ${this.#sensors[key].model}, id: ${this.#sensors[key].id}}`,
           );
           sensorListChanges = true;
         }
@@ -233,7 +255,7 @@ class SensorList {
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
     switch (sensor.model.toLowerCase()) {
-      case "bme280":
+      case Models.BME280.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("BME280 sensor address cannot be null");
         }
@@ -248,7 +270,7 @@ class SensorList {
         ).initAsync();
         break;
 
-      case "ds18b20":
+      case Models.DS18B20.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("DS18B20 sensor address cannot be null");
         }
@@ -262,6 +284,45 @@ class SensorList {
           this.#logger,
         ).initAsync();
         break;
+
+      case Models.ADS1115.toLowerCase():
+        if (!sensor.address) {
+          throw new SensorListError("ADS1115 sensor address cannot be null");
+        }
+        if (!sensor.pin) {
+          throw new SensorListError("ADS1115 sensor pin cannot be null");
+        }
+        newSensor = await new ADS1115(
+          sensor,
+          ReadingType.voltage,
+          "1",
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
+
+      case Models.CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
+        if (!sensor.address) {
+          throw new SensorListError("Capacitive Moisture Sensor address cannot be null");
+        }
+        if (!sensor.pin) {
+          throw new SensorListError("Capacitive Moisture Sensor pin cannot be null");
+        }
+        newSensor = await new CapacitiveMoistureSensor(
+          sensor,
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
+
       default:
         throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);
     }
@@ -283,7 +344,7 @@ class SensorList {
         promises.push(
           this.#sprootDB.addSensorAsync({
             name: `New DS18B20 ..${address.slice(-4)}`,
-            model: "DS18B20",
+            model: Models.DS18B20,
             address: address,
             color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
           } as SDBSensor),

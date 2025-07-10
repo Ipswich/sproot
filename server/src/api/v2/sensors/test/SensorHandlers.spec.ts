@@ -7,6 +7,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
+import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 describe("SensorHandlers.ts tests", () => {
   describe("get", () => {
@@ -126,7 +127,7 @@ describe("SensorHandlers.ts tests", () => {
     it("should return a 201 and add a new sensor", async () => {
       const newSensor = {
         name: "test sensor 4",
-        model: "DS18B20",
+        model: Models.DS18B20,
         address: "28-00002",
         color: "#000000",
       } as SDBSensor;
@@ -145,14 +146,24 @@ describe("SensorHandlers.ts tests", () => {
         body: newSensor,
       } as unknown as Request;
 
-      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      let success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
 
       assert.equal(success.statusCode, 201);
-      assert.deepEqual(success.content?.data, newSensor);
+      assert.deepEqual(success.content?.data, { ...newSensor, pin: undefined });
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.addSensorAsync.calledOnce);
       assert.isTrue(sensorList.initializeOrRegenerateAsync.calledOnce);
+
+      newSensor.model = "CAPACITIVE_MOISTURE_SENSOR";
+      newSensor.pin = "4";
+      success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, newSensor);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.isTrue(sprootDB.addSensorAsync.calledTwice);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.calledTwice);
     });
 
     it("should return a 400 and details for each missing required field", async () => {
@@ -173,7 +184,7 @@ describe("SensorHandlers.ts tests", () => {
         body: newSensor,
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      let error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -182,6 +193,50 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(error.error["details"], [
         "Missing required field: name",
         "Missing required field: model",
+        "Missing required field: address",
+      ]);
+      assert.isTrue(sprootDB.addSensorAsync.notCalled);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+
+      newSensor.model = Models.BME280;
+      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/sensors");
+      assert.deepEqual(error.error["details"], [
+        "Missing required field: name",
+        "Missing required field: address",
+      ]);
+      assert.isTrue(sprootDB.addSensorAsync.notCalled);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+
+      newSensor.model = Models.ADS1115;
+      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/sensors");
+      assert.deepEqual(error.error["details"], [
+        "Missing required field: name",
+        "Missing required field: pin",
+        "Missing required field: address",
+      ]);
+      assert.isTrue(sprootDB.addSensorAsync.notCalled);
+      assert.isTrue(sensorList.initializeOrRegenerateAsync.notCalled);
+
+      newSensor.model = "Not A Valid Model" as keyof typeof Models;
+      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.equal(error.error.url, "/api/v2/sensors");
+      assert.deepEqual(error.error["details"], [
+        "Missing required field: name",
+        `Invalid model: Not A Valid Model. Supported models are: ${Object.keys(Models).join(", ")}`,
         "Missing required field: address",
       ]);
       assert.isTrue(sprootDB.addSensorAsync.notCalled);

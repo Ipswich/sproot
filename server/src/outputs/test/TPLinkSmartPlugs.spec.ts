@@ -49,7 +49,7 @@ describe("tplinkPlug.ts tests", function () {
     tplinkSmartPlugs.disposeOutput({} as OutputBase);
     const output1 = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 1",
       pin: childIds[0]?.externalId,
@@ -58,7 +58,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
     const output2 = await tplinkSmartPlugs.createOutputAsync({
       id: 2,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 2",
       pin: childIds[1]?.externalId,
@@ -67,7 +67,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
     const output3 = await tplinkSmartPlugs.createOutputAsync({
       id: 3,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 3",
       pin: childIds[2]?.externalId,
@@ -76,7 +76,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
     const output4 = await tplinkSmartPlugs.createOutputAsync({
       id: 4,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 4",
       pin: childIds[3]?.externalId,
@@ -130,7 +130,7 @@ describe("tplinkPlug.ts tests", function () {
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 1",
       pin: childIds[0]?.externalId,
@@ -161,7 +161,7 @@ describe("tplinkPlug.ts tests", function () {
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       name: "test output 1",
       pin: childIds[0]?.externalId,
       isPwm: false,
@@ -227,7 +227,7 @@ describe("tplinkPlug.ts tests", function () {
     //Inverted PWM Execution
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       name: "test output 1",
       pin: childIds[0]?.externalId,
       isPwm: true,
@@ -266,7 +266,7 @@ describe("tplinkPlug.ts tests", function () {
     //Non-PWM error handling
     await tplinkSmartPlugs.createOutputAsync({
       id: 2,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       name: "test output 1",
       pin: childIds[0]?.externalId,
       isPwm: false,
