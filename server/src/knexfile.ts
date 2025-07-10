@@ -7,7 +7,7 @@ function getConnectionConfiguration(databaseSuffix: string) {
     host: process.env["DATABASE_HOST"]!,
     user: process.env["DATABASE_USER"]!,
     password: process.env["DATABASE_PASSWORD"]!,
-    database: `${Constants.DATABASE_NAME}-${databaseSuffix}`,
+    database: `${Constants.DATABASE_NAME}${databaseSuffix}`,
     port: parseInt(process.env["DATABASE_PORT"]!),
     dateStrings: true,
     typeCast: castTinyIntsToBooleans,
@@ -18,7 +18,7 @@ function getConnectionConfiguration(databaseSuffix: string) {
 const config: { [key: string]: Knex.Config } = {
   development: {
     client: "mysql2",
-    connection: getConnectionConfiguration("development"),
+    connection: getConnectionConfiguration("-development"),
     migrations: {
       loadExtensions: [".js"],
       directory: "dist/database/migrations",
@@ -32,7 +32,7 @@ const config: { [key: string]: Knex.Config } = {
 
   test: {
     client: "mysql2",
-    connection: getConnectionConfiguration("test"),
+    connection: getConnectionConfiguration("-test"),
     migrations: {
       loadExtensions: [".ts"],
       directory: "src/database/migrations",
