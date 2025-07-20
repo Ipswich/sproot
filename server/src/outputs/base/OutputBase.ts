@@ -242,32 +242,35 @@ export abstract class OutputBase implements IOutputBase {
   protected async executeStateHelperAsync(
     executionFnAsync: (value: number) => Promise<void>,
   ): Promise<void> {
-    //Local helper function
-    const validateAndFixValue = (value: number) => {
-      if (!this.isPwm && value != 0 && value != 100) {
-        this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
-        return;
-      }
-      const validatedValue = (this.isInvertedPwm ? 100 - value : value) / 100;
-      this.logger.verbose(
-        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue * 100}`,
-      );
-      return validatedValue;
-    };
-
     let validatedValue = undefined;
     try {
       switch (this.controlMode) {
         case ControlMode.manual:
-          validatedValue = validateAndFixValue(this.state.manual.value);
-          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
+          validatedValue = this.#validateAndFixValue(this.state.manual.value);
+          break;
         case ControlMode.automatic:
-          validatedValue = validateAndFixValue(this.state.automatic.value);
-          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
+          validatedValue = this.#validateAndFixValue(this.state.automatic.value);
+          break;
       }
+      if (validatedValue === undefined) {
+        return undefined;
+      }
+      this.logger.verbose(
+        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
+      );
+      await executionFnAsync(validatedValue);
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
     }
+  }
+
+  #validateAndFixValue(value: number): number | undefined {
+    if (!this.isPwm && value != 0 && value != 100) {
+      this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
+      return;
+    }
+    const validatedValue = this.isInvertedPwm ? 100 - value : value;
+    return validatedValue;
   }
 
   #updateChartData(): void {

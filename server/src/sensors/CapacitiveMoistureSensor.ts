@@ -72,9 +72,10 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       rawReading < CapacitiveMoistureSensor.MIN_SENSOR_READING ||
       rawReading > CapacitiveMoistureSensor.MAX_SENSOR_READING
     ) {
-      throw new Error(
-        `Invalid reading for capacitive moisture sensor {id: ${this.id}}: ${rawReading}. Must be between ${CapacitiveMoistureSensor.MIN_SENSOR_READING} and ${CapacitiveMoistureSensor.MAX_SENSOR_READING}.`,
+      this.logger.warn(
+        `Moisture sensor ${this.id} reading out of bounds: ${rawReading}. Expected range: ${CapacitiveMoistureSensor.MIN_SENSOR_READING} - ${CapacitiveMoistureSensor.MAX_SENSOR_READING}`,
       );
+      return;
     }
 
     // Update calibration points if the reading is outside the current range
