@@ -124,22 +124,23 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
 
     // GetReading with cached values should average the readings
     const mockedReadings = [];
-    let i = 1;
-    for (i; i < 5; i++) {
-      mockedReadings.push({
-        data: `${i}`,
-        metric: ReadingType.moisture,
-        units: "%",
-        logTime: new Date().toISOString(),
-      } as SDBReading);
-    }
-    // These are old and should not count
+    const now = new Date().getTime() - 900000; // 15 minutes ago
+    let i = 0;
+    // 10 of these get loaded in, and of those, 5 are old and should not count
     for (i; i < 10; i++) {
       mockedReadings.push({
         data: `${i}`,
         metric: ReadingType.moisture,
         units: "%",
-        logTime: new Date(new Date().getTime() - 601000).toISOString(),
+        logTime: new Date(now).toISOString(),
+      } as SDBReading);
+    }
+    for (i; i < 15; i++) {
+      mockedReadings.push({
+        data: `${i}`,
+        metric: ReadingType.moisture,
+        units: "%",
+        logTime: new Date(now + i * 60000).toISOString(),
       } as SDBReading);
     }
 
@@ -157,7 +158,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     assert.isTrue(openStub.calledOnce);
     assert.equal(
       capacitiveMoistureSensor!.lastReading[ReadingType.moisture],
-      String(19.142857142857146), // calibrated value
+      String(24.28571428571429), // calibrated value
     );
 
     openStub.resetHistory();

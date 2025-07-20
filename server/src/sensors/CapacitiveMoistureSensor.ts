@@ -62,7 +62,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
     const MAX_HISTORICAL_READING_AGE = 600000; // 10 minutes in milliseconds
 
     const rawAsPercentMoisture = this.#getPercentMoisture(rawReading);
-    const historicalReadings = this.getCachedReadings(undefined, -MAX_READINGS_COUNT);
+    const historicalReadings = this.getCachedReadings(-MAX_READINGS_COUNT);
 
     // Remove any stale readings (don't want to have ancient values on startup)
     const now = new Date();
