@@ -83,10 +83,10 @@ export abstract class SensorBase implements ISensorBase {
     this.#loadChartData();
   }
 
-  getCachedReadings(offset?: number, limit?: number): Partial<Record<string, SDBReading[]>> {
-    const result: Record<string, SDBReading[]> = {};
+  getCachedReadings(offset?: number, limit?: number): Partial<Record<ReadingType, SDBReading[]>> {
+    const result: Partial<Record<ReadingType, SDBReading[]>> = {};
     for (const key in this.units) {
-      result[key] = this.#cache.get(key as ReadingType, offset, limit);
+      result[key as ReadingType] = this.#cache.get(key as ReadingType, offset, limit);
     }
     return result;
   }

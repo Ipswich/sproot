@@ -9,8 +9,8 @@ export class CapacitiveMoistureSensor extends ADS1115 {
   // These values are based on 0 to 32767 - signed 16 bit range
   // Also worth calling out that these values are "inverted" for moisture - lower readings are
   // wetter, higher readings are drier.
-  static readonly MAX_SENSOR_READING = 27000;
-  static readonly MIN_SENSOR_READING = 11000;
+  static readonly MAX_SENSOR_READING = 29000;
+  static readonly MIN_SENSOR_READING = 10000;
   static readonly DEFAULT_LOW_CALIBRATION_VOLTAGE = 14000;
   static readonly DEFAULT_HIGH_CALIBRATION_VOLTAGE = 21000;
 
@@ -46,15 +46,41 @@ export class CapacitiveMoistureSensor extends ADS1115 {
   override async takeReadingAsync(): Promise<void> {
     try {
       const rawReading = await this.getReadingFromDeviceAsync();
-      await this.recalibrateAsync(rawReading);
-      this.lastReading[ReadingType.moisture] = String(this.getPercentMoisture(rawReading));
+      await this.#recalibrateAsync(rawReading);
+
+      const normalizedReading = this.#normalizeRawReading(rawReading);
+
+      this.lastReading[ReadingType.moisture] = String(normalizedReading);
       this.lastReadingTime = new Date();
     } catch (error) {
       this.logger.error(`Failed to read Capacitive Moisture Sensor ${this.id}. ${error}`);
     }
   }
 
-  protected async recalibrateAsync(rawReading: number) {
+  #normalizeRawReading(rawReading: number) {
+    const MAX_READINGS_COUNT = 10; // Maximum number of readings to consider for averaging
+    const MAX_HISTORICAL_READING_AGE = 600000; // 10 minutes in milliseconds
+
+    const rawAsPercentMoisture = this.#getPercentMoisture(rawReading);
+    const historicalReadings = this.getCachedReadings(undefined, -MAX_READINGS_COUNT);
+
+    // Remove any stale readings (don't want to have ancient values on startup)
+    const now = new Date();
+    const relevantReadings =
+      (historicalReadings.moisture ?? [])
+        .filter((reading) => {
+          const readingTime = new Date(reading.logTime);
+          return now.getTime() - readingTime.getTime() <= MAX_HISTORICAL_READING_AGE;
+        })
+        .map((reading) => parseFloat(reading.data)) ?? [];
+
+    // Take an average
+    const filteredSum = relevantReadings.reduce((acc, reading) => acc + reading, 0) ?? 0;
+    const averageReading = (filteredSum + rawAsPercentMoisture) / (relevantReadings.length + 1);
+    return averageReading;
+  }
+
+  async #recalibrateAsync(rawReading: number) {
     // Set defaults if calibration points are not set.
     // This should give us a big ol range as a starting point, as opposed to a small one that needs to be built
     var shouldUpdateCalibration = false;
@@ -105,7 +131,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
   // sensor before placement, which seems like a lot of work. Ultimately, the intent of
   // sensors like these is to basically be like "SHOULD WATER OR NAH?", rather than have a
   // strictly scientifically accurate reading.
-  protected getPercentMoisture(rawReading: number): number {
+  #getPercentMoisture(rawReading: number): number {
     if (this.lowCalibrationPoint == null || this.highCalibrationPoint == null) {
       throw new Error(
         `Calibration points not set for moisture sensor ${this.id}. Please calibrate the sensor first.`,

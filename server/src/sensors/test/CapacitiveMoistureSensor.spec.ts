@@ -77,6 +77,10 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
   });
 
   it("should take a reading from a CapacitiveMoistureSensor", async () => {
+    const stubbedMockDB = sinon.createStubInstance(MockSprootDB);
+    const mockReading = 15000;
+    stubbedMockDB.getSensorReadingsAsync.resolves([]);
+
     const mockADS1115Data = {
       id: 1,
       name: "test sensor 1",
@@ -84,7 +88,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       address: "0x48",
       pin: "0",
     } as SDBSensor;
-    const mockReading = 15000;
     const loggerSpy = sinon.spy();
     sinon.stub(winston, "createLogger").callsFake(
       () =>
@@ -101,7 +104,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     } as Ads1115Device);
     let capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
-      mockSprootDB,
+      stubbedMockDB,
       5,
       5,
       3,
@@ -114,15 +117,56 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     assert.isTrue(openStub.calledOnce);
     assert.equal(
       capacitiveMoistureSensor!.lastReading[ReadingType.moisture],
-      "85.71428571428572", // calibrated value
+      String(85.71428571428572), // calibrated value
+    );
+    openStub.resetHistory();
+    await capacitiveMoistureSensor?.disposeAsync();
+
+    // GetReading with cached values should average the readings
+    const mockedReadings = [];
+    let i = 1;
+    for (i; i < 5; i++) {
+      mockedReadings.push({
+        data: `${i}`,
+        metric: ReadingType.moisture,
+        units: "%",
+        logTime: new Date().toISOString(),
+      } as SDBReading);
+    }
+    // These are old and should not count
+    for (i; i < 10; i++) {
+      mockedReadings.push({
+        data: `${i}`,
+        metric: ReadingType.moisture,
+        units: "%",
+        logTime: new Date(new Date().getTime() - 601000).toISOString(),
+      } as SDBReading);
+    }
+
+    stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
+    capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
+      mockADS1115Data,
+      stubbedMockDB,
+      500,
+      500,
+      3,
+      5,
+      logger,
+    ).initAsync();
+    await capacitiveMoistureSensor!.takeReadingAsync();
+    assert.isTrue(openStub.calledOnce);
+    assert.equal(
+      capacitiveMoistureSensor!.lastReading[ReadingType.moisture],
+      String(19.142857142857146), // calibrated value
     );
 
+    openStub.resetHistory();
     await capacitiveMoistureSensor?.disposeAsync();
 
     // GetReading throws an errror
     capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
-      mockSprootDB,
+      stubbedMockDB,
       5,
       5,
       3,
