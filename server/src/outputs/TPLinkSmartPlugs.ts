@@ -28,7 +28,12 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
       undefined,
       logger,
     );
-    this.#client = new Client();
+    this.#client = new Client({
+      defaultSendOptions: {
+        transport: "udp",
+        useSharedSocket: true,
+      },
+    });
 
     this.#client.on("plug-new", (plug: Plug) => {
       if (plug.childId != undefined) {
@@ -113,7 +118,6 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
 
 class TPLinkPlug extends OutputBase {
   tplinkPlug: Plug;
-  #isUpdating: boolean = false;
 
   constructor(
     tplinkPlug: Plug,
@@ -139,22 +143,9 @@ class TPLinkPlug extends OutputBase {
   }
 
   async executeStateAsync(): Promise<void> {
-    // Add some ddos protection for things - turns out sending too many commands too quickly
-    // can cause some issues for the some devices.
-    if (this.#isUpdating) {
-      this.logger.warn(
-        `TPLink Smart Plug ${this.id} is already updating. Skipping execution of state change.`,
-      );
-      return;
-    }
-    try {
-      this.#isUpdating = true;
-      await this.executeStateHelperAsync(async (value) => {
-        await this.tplinkPlug.setPowerState(!!value);
-      });
-    } finally {
-      this.#isUpdating = false;
-    }
+    await this.executeStateHelperAsync(async (value) => {
+      await this.tplinkPlug.setPowerState(!!value);
+    });
   }
 
   dispose(): void {
