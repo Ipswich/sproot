@@ -28,7 +28,7 @@ class QueueCache<T> {
   }
 
   public get(offset?: number, limit?: number): T[] {
-    if (offset == null || !limit) {
+    if (offset == undefined || limit == undefined) {
       if (limit) {
         return this.cache.slice(undefined, limit);
       }

@@ -36,8 +36,8 @@ export default class OutputAutomationManager {
     if (!this.#isRunnable(now, automationTimeout)) {
       return this.#lastEvaluation;
     } else {
-      // Round down to the nearest tenth of a second
-      this.#lastRunAt = Math.floor(now.getTime() / 100) * 100;
+      // Round down to the nearest tenth of a second, give an extra 100ms of slop because eventloop
+      this.#lastRunAt = Math.floor(now.getTime() / 100) * 100 - 100;
     }
     const evaluatedAutomations = Object.values(this.#automations)
       .map((automation) => {

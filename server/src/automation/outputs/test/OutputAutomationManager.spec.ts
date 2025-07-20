@@ -57,7 +57,7 @@ describe("OutputAutomationManager.ts tests", () => {
       const outputListMock = sinon.createStubInstance(OutputList);
 
       // A timestamp rounded to a solid second.
-      const now = new Date(Math.ceil(new Date().getTime() / 1000) * 1000);
+      const now = new Date(Math.ceil(new Date().getTime() / 1000) * 1000 - 500);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
         {
@@ -106,23 +106,23 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
 
-      //Beyond 100ms of 61s, not runnable (tenth of a second granularity)
+      //Beyond 200ms of 61s, not runnable (tenth of a second granularity)
       result = automationManager.evaluate(
         sensorListMock,
         outputListMock,
         61,
-        new Date(now.getTime() + 60900),
+        new Date(now.getTime() + 60800),
       );
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
 
-      //Within 100ms of 61s, runnable (tenth of a second granularity)
+      //Within 200ms of 61s, runnable (tenth of a second granularity)
       result = automationManager.evaluate(
         sensorListMock,
         outputListMock,
         61,
-        new Date(now.getTime() + 60901),
+        new Date(now.getTime() + 60801),
       );
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
