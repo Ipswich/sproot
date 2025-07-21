@@ -49,6 +49,12 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       await this.#recalibrateAsync(rawReading);
 
       const normalizedReading = this.#normalizeRawReading(rawReading);
+      if (isNaN(normalizedReading)) {
+        this.logger.error(
+          `Capacitive Moisture Sensor ${this.id} returned an invalid reading: { raw: ${rawReading}, normalized: ${normalizedReading} }`,
+        );
+        return;
+      }
 
       this.lastReading[ReadingType.moisture] = String(normalizedReading);
       this.lastReadingTime = new Date();
