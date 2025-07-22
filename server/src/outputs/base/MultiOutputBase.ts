@@ -9,7 +9,7 @@ import { SDBOutput } from "@sproot/database/SDBOutput";
 
 export abstract class MultiOutputBase {
   readonly boardRecord: Record<string, any> = {};
-  readonly outputs: Record<string, OutputBase>;
+  readonly outputs: Record<string, OutputBase> = {};
   readonly usedPins: Record<string, string[]> = {};
   protected sprootDB: ISprootDB;
   protected frequency: number;
@@ -35,7 +35,6 @@ export abstract class MultiOutputBase {
     this.chartDataPointInterval = chartDataPointInterval;
     this.frequency = frequency;
     this.logger = logger;
-    this.outputs = {};
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;

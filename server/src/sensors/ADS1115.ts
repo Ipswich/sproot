@@ -102,6 +102,7 @@ export class Ads1115Device {
     "8": 0b0000100000000000, // +/- 0.512V
     "16": 0b0000101000000000, // +/- 0.256V
   };
+  private static addressLocks: Map<number, Promise<any>> = new Map();
 
   public static async openAsync(busNum: number, addr = 0x48) {
     return openPromisified(busNum).then((bus: PromisifiedBus) => new Ads1115Device(bus, addr));
@@ -155,29 +156,54 @@ export class Ads1115Device {
     mux: "0+1" | "0+3" | "1+3" | "2+3" | "0+GND" | "1+GND" | "2+GND" | "3+GND",
     gain: "2/3" | "1" | "2" | "4" | "8" | "16" = "2/3",
   ) {
-    const muxValue = Ads1115Device.MUX[mux];
-    if (typeof mux === "undefined") {
-      throw new Error("ADS1115 measureAsync - Invalid mux");
+    return Ads1115Device.runExclusive(this.#addr, async () => {
+      const muxValue = Ads1115Device.MUX[mux];
+      if (typeof mux === "undefined") {
+        throw new Error("ADS1115 measureAsync - Invalid mux");
+      }
+      const calculatedGain = Ads1115Device.gains[gain] ?? this.#gain;
+      if (typeof calculatedGain === "undefined") {
+        throw new Error("ADS1115 measureAsync - Invalid gain");
+      }
+
+      const config = 0x0183; // No comparator | 1600 samples per second | single-shot mode
+
+      // Do some math based on several readings to get a more accurate result
+      const readings = [];
+      for (let i = 0; i < Ads1115Device.MEASUREMENT_SAMPLE_COUNT; i++) {
+        await this.writeConfigAsync(
+          config | calculatedGain | muxValue | Ads1115Device.START_CONVERSION,
+        );
+        await Ads1115Device.sleep(this.#delay);
+        readings.push(await this.readResultsAsync());
+      }
+
+      const sum = readings.reduce((acc, val) => acc + val, 0);
+
+      return Math.round(sum / Ads1115Device.MEASUREMENT_SAMPLE_COUNT);
+    });
+  }
+
+  // Helper to run a function in series per address
+  private static async runExclusive<T>(addr: number, fn: () => Promise<T>): Promise<T> {
+    const prev = Ads1115Device.addressLocks.get(addr) ?? Promise.resolve();
+    let resolve: (value: T | PromiseLike<T>) => void;
+    let reject: (reason?: any) => void;
+    const next = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    Ads1115Device.addressLocks.set(
+      addr,
+      prev.then(() => next).catch(() => next),
+    );
+    try {
+      const result = await fn();
+      resolve!(result);
+      return result;
+    } catch (err) {
+      reject!(err);
+      throw err;
     }
-    const calculatedGain = Ads1115Device.gains[gain] ?? this.#gain;
-    if (typeof calculatedGain === "undefined") {
-      throw new Error("ADS1115 measureAsync - Invalid gain");
-    }
-
-    const config = 0x0183; // No comparator | 1600 samples per second | single-shot mode
-
-    // Do some math based on several readings to get a more accurate result
-    const readings = [];
-    for (let i = 0; i < Ads1115Device.MEASUREMENT_SAMPLE_COUNT; i++) {
-      await this.writeConfigAsync(
-        config | calculatedGain | muxValue | Ads1115Device.START_CONVERSION,
-      );
-      await Ads1115Device.sleep(this.#delay);
-      readings.push(await this.readResultsAsync());
-    }
-
-    const sum = readings.reduce((acc, val) => acc + val, 0);
-
-    return Math.round(sum / Ads1115Device.MEASUREMENT_SAMPLE_COUNT);
   }
 }
