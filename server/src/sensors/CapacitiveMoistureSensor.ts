@@ -121,7 +121,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
 
     if (shouldUpdateCalibration) {
       this.logger.info(
-        `Moisture sensor ${this.id} recalibrated. New low: ${this.lowCalibrationPoint}, new high: ${this.highCalibrationPoint}`,
+        `${this.model} { id: ${this.id} } recalibrated. New low: ${this.lowCalibrationPoint}, new high: ${this.highCalibrationPoint}`,
       );
       await this.sprootDB.updateSensorCalibrationAsync(
         this.id,
