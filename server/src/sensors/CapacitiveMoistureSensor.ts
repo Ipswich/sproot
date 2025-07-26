@@ -51,7 +51,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       const normalizedReading = this.#normalizeRawReading(rawReading);
       if (isNaN(normalizedReading)) {
         this.logger.error(
-          `Capacitive Moisture Sensor ${this.id} returned an invalid reading: { raw: ${rawReading}, normalized: ${normalizedReading} }`,
+          `${this.model} { id: ${this.id} } returned an invalid reading: { raw: ${rawReading}, normalized: ${normalizedReading} }`,
         );
         return;
       }
@@ -59,7 +59,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       this.lastReading[ReadingType.moisture] = String(normalizedReading);
       this.lastReadingTime = new Date();
     } catch (error) {
-      this.logger.error(`Failed to read Capacitive Moisture Sensor ${this.id}. ${error}`);
+      this.logger.error(`Failed to read ${this.model} { id: ${this.id} }. ${error}`);
     }
   }
 
@@ -140,7 +140,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
   #getPercentMoisture(rawReading: number): number {
     if (this.lowCalibrationPoint == null || this.highCalibrationPoint == null) {
       throw new Error(
-        `Calibration points not set for moisture sensor ${this.id}. Please calibrate the sensor first.`,
+        `Calibration points not set for ${this.model} { id: ${this.id} }. Please calibrate the sensor first.`,
       );
     }
     if (
@@ -148,7 +148,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       rawReading > CapacitiveMoistureSensor.MAX_SENSOR_READING
     ) {
       throw new Error(
-        `Invalid reading for moisture sensor ${this.id}: ${this.lastReading[ReadingType.moisture]}`,
+        `Invalid reading for ${this.model} { id: ${this.id} }: ${this.lastReading[ReadingType.moisture]}`,
       );
     }
 
