@@ -165,7 +165,7 @@ describe("SensorList.ts tests", function () {
     const mockSensorData = {
       id: 3,
       name: "test sensor 3",
-      model: "not a recognized model",
+      model: "not a recognized model" as string,
       address: null,
     } as SDBSensor;
     const loggerSpy = sinon.spy();

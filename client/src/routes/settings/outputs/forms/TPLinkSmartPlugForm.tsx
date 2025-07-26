@@ -20,7 +20,7 @@ export default function TPLinkSmartPlugForm({
   const getDevices = useQuery({
     queryKey: ["tplinksmartplug-output-pins", selectedOutput?.model],
     queryFn: () =>
-      getAvailableDevicesAsync("tplink-smart-plug", undefined, filterUsed),
+      getAvailableDevicesAsync("TPLINK_SMART_PLUG", undefined, filterUsed),
   });
 
   return (
