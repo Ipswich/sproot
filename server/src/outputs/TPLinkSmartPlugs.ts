@@ -30,8 +30,8 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
     );
     this.#client = new Client({
       defaultSendOptions: {
-        transport: "udp",
-        useSharedSocket: true,
+        // transport: "udp",
+        // useSharedSocket: true,
       },
     });
 

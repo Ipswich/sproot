@@ -36,9 +36,9 @@ export default class OutputAutomationManager {
     if (!this.#isRunnable(now, automationTimeout)) {
       return this.#lastEvaluation;
     } else {
-      this.#lastRunAt = now.getTime();
+      // this.#lastRunAt = now.getTime();
       // Round down to the nearest tenth of a second, give an extra 100ms of slop because eventloop
-      // this.#lastRunAt = Math.floor(now.getTime() / 100) * 100 - 100;
+      this.#lastRunAt = Math.floor(now.getTime() / 100) * 100 - 100;
     }
     const evaluatedAutomations = Object.values(this.#automations)
       .map((automation) => {
@@ -113,9 +113,10 @@ export default class OutputAutomationManager {
 
   #isRunnable(now: Date, automationTimeout: number): boolean {
     return (
-      this.#lastRunAt == null || this.#lastRunAt + automationTimeout * 1000 < now.getTime()
+      this.#lastRunAt == null ||
+      // this.#lastRunAt + automationTimeout * 1000 < now.getTime()
       // Round "now" up to the nearest tenth second. Very high granularity can cause weirdness with non real-time ticks.
-      // this.#lastRunAt + automationTimeout * 1000 <= Math.ceil(now.getTime() / 100) * 100
+      this.#lastRunAt + automationTimeout * 1000 <= Math.ceil(now.getTime() / 100) * 100
     );
   }
 }
