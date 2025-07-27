@@ -33,7 +33,7 @@ export abstract class OutputBase implements IOutputBase {
   #automationManager: OutputAutomationManager;
   #updateMissCount = 0;
   #isInitializing = false;
-  #isExecuting = false;
+  // #isExecuting = false;
 
   constructor(
     sdbOutput: SDBOutput,
@@ -243,15 +243,15 @@ export abstract class OutputBase implements IOutputBase {
   protected async executeStateHelperAsync(
     executionFnAsync: (value: number) => Promise<void>,
   ): Promise<void> {
-    if (this.#isExecuting) {
-      this.logger.warn(
-        `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
-      );
-      return;
-    }
+    // if (this.#isExecuting) {
+    //   this.logger.warn(
+    //     `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
+    //   );
+    //   return;
+    // }
     let validatedValue = undefined;
     try {
-      this.#isExecuting = true;
+      // this.#isExecuting = true;
       switch (this.controlMode) {
         case ControlMode.manual:
           validatedValue = this.#validateAndFixValue(this.state.manual.value);
@@ -270,7 +270,7 @@ export abstract class OutputBase implements IOutputBase {
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
     } finally {
-      this.#isExecuting = false;
+      // this.#isExecuting = false;
     }
   }
 
