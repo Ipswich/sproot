@@ -32,7 +32,7 @@ export abstract class OutputBase implements IOutputBase {
   #chartDataPointInterval: number;
   #automationManager: OutputAutomationManager;
   #updateMissCount = 0;
-  #isInitializing = false;
+  // #isInitializing = false;
   // #isExecuting = false;
 
   constructor(
@@ -100,17 +100,17 @@ export abstract class OutputBase implements IOutputBase {
 
   /** Initializes all of the data for this output */
   async initializeAsync() {
-    if (this.#isInitializing) {
-      return;
-    }
+    // if (this.#isInitializing) {
+    //   return;
+    // }
     try {
-      this.#isInitializing = true;
+      // this.#isInitializing = true;
       await this.state.initializeAsync();
       await this.loadCacheFromDatabaseAsync();
       this.loadChartData();
       await this.loadAutomationsAsync();
     } finally {
-      this.#isInitializing = false;
+      // this.#isInitializing = false;
     }
   }
 
