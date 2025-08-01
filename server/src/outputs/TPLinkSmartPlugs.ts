@@ -9,6 +9,7 @@ import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 
 class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
   readonly availablePlugs: Record<string, Plug> = {};
+  readonly initializingPlugs: Record<string, string[]> = {};
   #client: Client;
 
   constructor(
@@ -57,7 +58,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
     this.#client.on("discovery-invalid", (error: unknown) => {
       this.logger.error(`TPLink Smart Plug client error: ${error}`);
     });
-    this.#client.startDiscovery();
+    this.#client.startDiscovery({ deviceTypes: ["plug"] });
   }
 
   getHosts(): string[] {
@@ -85,29 +86,49 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
-    if (!this.boardRecord[output.address]) {
-      this.boardRecord[output.address] = [];
-      this.boardRecord[output.address].push(output.pin);
-      this.usedPins[output.address] = [];
+    if (this.initializingPlugs[output.address]?.includes(output.pin)) {
+      this.logger.warn(
+        `TPLink Smart Plug ${output.id} is already being initialized. Skipping creation.`,
+      );
+      return undefined;
     }
+    try {
+      this.initializingPlugs[output.address] ??= [];
+      this.initializingPlugs[output.address]?.push(output.pin);
 
-    const plug = this.#client.devices.get(output.pin);
-    if (plug == undefined) {
-      throw new Error("TPLink Smart Plug device could not be found creation failed");
+      if (!this.boardRecord[output.address]) {
+        this.boardRecord[output.address] = [];
+        this.boardRecord[output.address].push(output.pin);
+        this.usedPins[output.address] = [];
+      }
+
+      const plug = (await this.#client.getDevice({
+        host: output.address,
+        childId: output.pin,
+      })) as Plug;
+
+      this.outputs[output.id] = new TPLinkPlug(
+        plug,
+        output,
+        this.sprootDB,
+        this.maxCacheSize,
+        this.initialCacheLookback,
+        this.maxChartDataSize,
+        this.chartDataPointInterval,
+        this.logger,
+      );
+      await this.outputs[output.id]?.initializeAsync();
+    } catch (error) {
+      this.logger.error(
+        `Error creating TPLink Smart Plug output {id: ${output.id}, name: ${output.name}}: ${error}`,
+      );
+    } finally {
+      this.usedPins[output.address]?.push(output.pin);
+      this.initializingPlugs[output.address] = this.initializingPlugs[output.address]!.filter(
+        (pin) => pin !== output.pin,
+      );
+      return this.outputs[output.id];
     }
-    this.outputs[output.id] = new TPLinkPlug(
-      plug as Plug,
-      output,
-      this.sprootDB,
-      this.maxCacheSize,
-      this.initialCacheLookback,
-      this.maxChartDataSize,
-      this.chartDataPointInterval,
-      this.logger,
-    );
-    await this.outputs[output.id]?.initializeAsync();
-    this.usedPins[output.address]?.push(output.pin);
-    return this.outputs[output.id];
   }
 
   [Symbol.dispose](): void {

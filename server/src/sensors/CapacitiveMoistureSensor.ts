@@ -83,6 +83,11 @@ export class CapacitiveMoistureSensor extends ADS1115 {
     // Take an average
     const filteredSum = relevantReadings.reduce((acc, reading) => acc + reading, 0) ?? 0;
     const averageReading = (filteredSum + rawAsPercentMoisture) / (relevantReadings.length + 1);
+    if (isNaN(averageReading)) {
+      this.logger.error(
+        `Average reading is NaN - ${this.model} { id: ${this.id} }, raw: ${rawReading}, percent: ${rawAsPercentMoisture}, historical: ${relevantReadings}`,
+      );
+    }
     return averageReading;
   }
 

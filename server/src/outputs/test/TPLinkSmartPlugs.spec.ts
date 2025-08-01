@@ -118,6 +118,63 @@ describe("tplinkPlug.ts tests", function () {
     assert.isUndefined(tplinkSmartPlugs.boardRecord["127.0.0.1"]);
   });
 
+  it("creation should skip outputs that are already being created", async function () {
+    const warnStub = sinon.stub();
+    sinon
+      .stub(winston, "createLogger")
+      .callsFake(
+        () => ({ info: () => {}, warn: warnStub, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
+    await delay(20);
+    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
+
+    await Promise.allSettled([
+      tplinkSmartPlugs.createOutputAsync({
+        id: 1,
+        model: "TPLINK_SMART_PLUG",
+        address: "127.0.0.1",
+        name: "test output 1",
+        pin: childIds[0]?.externalId,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput),
+      tplinkSmartPlugs.createOutputAsync({
+        id: 1,
+        model: "TPLINK_SMART_PLUG",
+        address: "127.0.0.1",
+        name: "test output 1",
+        pin: childIds[0]?.externalId,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput),
+      tplinkSmartPlugs.createOutputAsync({
+        id: 1,
+        model: "TPLINK_SMART_PLUG",
+        address: "127.0.0.1",
+        name: "test output 1",
+        pin: childIds[0]?.externalId,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput),
+    ]);
+
+    assert.equal(warnStub.callCount, 2);
+    await tplinkSmartPlugs.createOutputAsync({
+      id: 1,
+      model: "TPLINK_SMART_PLUG",
+      address: "127.0.0.1",
+      name: "test output 1",
+      pin: childIds[0]?.externalId,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput);
+
+    assert.equal(warnStub.callCount, 2); // No warnings - output should be successfully created as a single call (no interfering runs).
+  });
+
   it("should return output data (no functions)", async function () {
     sinon
       .stub(winston, "createLogger")

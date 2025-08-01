@@ -32,8 +32,7 @@ export abstract class OutputBase implements IOutputBase {
   #chartDataPointInterval: number;
   #automationManager: OutputAutomationManager;
   #updateMissCount = 0;
-  // #isInitializing = false;
-  // #isExecuting = false;
+  #isExecuting = false;
 
   constructor(
     sdbOutput: SDBOutput,
@@ -100,18 +99,10 @@ export abstract class OutputBase implements IOutputBase {
 
   /** Initializes all of the data for this output */
   async initializeAsync() {
-    // if (this.#isInitializing) {
-    //   return;
-    // }
-    try {
-      // this.#isInitializing = true;
-      await this.state.initializeAsync();
-      await this.loadCacheFromDatabaseAsync();
-      this.loadChartData();
-      await this.loadAutomationsAsync();
-    } finally {
-      // this.#isInitializing = false;
-    }
+    await this.state.initializeAsync();
+    await this.loadCacheFromDatabaseAsync();
+    this.loadChartData();
+    await this.loadAutomationsAsync();
   }
 
   updateName(name: string): void {
@@ -243,12 +234,12 @@ export abstract class OutputBase implements IOutputBase {
   protected async executeStateHelperAsync(
     executionFnAsync: (value: number) => Promise<void>,
   ): Promise<void> {
-    // if (this.#isExecuting) {
-    //   this.logger.warn(
-    //     `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
-    //   );
-    //   return;
-    // }
+    if (this.#isExecuting) {
+      this.logger.warn(
+        `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
+      );
+      return;
+    }
     let validatedValue = undefined;
     try {
       // this.#isExecuting = true;
@@ -270,7 +261,7 @@ export abstract class OutputBase implements IOutputBase {
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
     } finally {
-      // this.#isExecuting = false;
+      this.#isExecuting = false;
     }
   }
 
