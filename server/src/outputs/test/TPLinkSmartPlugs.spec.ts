@@ -49,7 +49,7 @@ describe("tplinkPlug.ts tests", function () {
     tplinkSmartPlugs.disposeOutput({} as OutputBase);
     const output1 = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 1",
       pin: childIds[0]?.externalId,
@@ -58,7 +58,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
     const output2 = await tplinkSmartPlugs.createOutputAsync({
       id: 2,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 2",
       pin: childIds[1]?.externalId,
@@ -67,7 +67,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
     const output3 = await tplinkSmartPlugs.createOutputAsync({
       id: 3,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 3",
       pin: childIds[2]?.externalId,
@@ -76,7 +76,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
     const output4 = await tplinkSmartPlugs.createOutputAsync({
       id: 4,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 4",
       pin: childIds[3]?.externalId,
@@ -118,6 +118,63 @@ describe("tplinkPlug.ts tests", function () {
     assert.isUndefined(tplinkSmartPlugs.boardRecord["127.0.0.1"]);
   });
 
+  it("creation should skip outputs that are already being created", async function () {
+    const warnStub = sinon.stub();
+    sinon
+      .stub(winston, "createLogger")
+      .callsFake(
+        () => ({ info: () => {}, warn: warnStub, error: () => {} }) as unknown as winston.Logger,
+      );
+    const logger = winston.createLogger();
+
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
+    await delay(20);
+    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
+
+    await Promise.allSettled([
+      tplinkSmartPlugs.createOutputAsync({
+        id: 1,
+        model: "TPLINK_SMART_PLUG",
+        address: "127.0.0.1",
+        name: "test output 1",
+        pin: childIds[0]?.externalId,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput),
+      tplinkSmartPlugs.createOutputAsync({
+        id: 1,
+        model: "TPLINK_SMART_PLUG",
+        address: "127.0.0.1",
+        name: "test output 1",
+        pin: childIds[0]?.externalId,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput),
+      tplinkSmartPlugs.createOutputAsync({
+        id: 1,
+        model: "TPLINK_SMART_PLUG",
+        address: "127.0.0.1",
+        name: "test output 1",
+        pin: childIds[0]?.externalId,
+        isPwm: false,
+        isInvertedPwm: false,
+      } as SDBOutput),
+    ]);
+
+    assert.equal(warnStub.callCount, 2);
+    await tplinkSmartPlugs.createOutputAsync({
+      id: 1,
+      model: "TPLINK_SMART_PLUG",
+      address: "127.0.0.1",
+      name: "test output 1",
+      pin: childIds[0]?.externalId,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput);
+
+    assert.equal(warnStub.callCount, 2); // No warnings - output should be successfully created as a single call (no interfering runs).
+  });
+
   it("should return output data (no functions)", async function () {
     sinon
       .stub(winston, "createLogger")
@@ -130,7 +187,7 @@ describe("tplinkPlug.ts tests", function () {
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       address: "127.0.0.1",
       name: "test output 1",
       pin: childIds[0]?.externalId,
@@ -155,13 +212,13 @@ describe("tplinkPlug.ts tests", function () {
       );
     const logger = winston.createLogger();
 
-    const setStateStub = sinon.stub(Plug.prototype, "setPowerState").resolves();
+    const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves();
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       name: "test output 1",
       pin: childIds[0]?.externalId,
       isPwm: false,
@@ -177,8 +234,8 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 100);
     await tplinkSmartPlugs.executeOutputStateAsync();
     //Creation calls once.
-    assert.equal(setStateStub.callCount, 1);
-    assert.equal(setStateStub.getCall(0).args[0], true);
+    assert.equal(setStatePowerStub.callCount, 1);
+    assert.equal(setStatePowerStub.getCall(0).args[0], true);
 
     //Automatic Low
     await tplinkSmartPlugs.setNewOutputStateAsync(
@@ -188,8 +245,8 @@ describe("tplinkPlug.ts tests", function () {
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 0);
     await tplinkSmartPlugs.executeOutputStateAsync();
-    assert.equal(setStateStub.callCount, 2);
-    assert.equal(setStateStub.getCall(1).args[0], false);
+    assert.equal(setStatePowerStub.callCount, 2);
+    assert.equal(setStatePowerStub.getCall(1).args[0], false);
 
     //Swap to Manual
     tplinkSmartPlugs.updateControlMode("1", ControlMode.manual);
@@ -202,8 +259,8 @@ describe("tplinkPlug.ts tests", function () {
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 0);
     await tplinkSmartPlugs.executeOutputStateAsync();
-    assert.equal(setStateStub.callCount, 3);
-    assert.equal(setStateStub.getCall(2).args[0], false);
+    assert.equal(setStatePowerStub.callCount, 3);
+    assert.equal(setStatePowerStub.getCall(2).args[0], false);
 
     //Manual High
     await tplinkSmartPlugs.setNewOutputStateAsync(
@@ -213,21 +270,21 @@ describe("tplinkPlug.ts tests", function () {
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.manual.value, 100);
     await tplinkSmartPlugs.executeOutputStateAsync();
-    assert.equal(setStateStub.callCount, 4);
-    assert.equal(setStateStub.getCall(3).args[0], true);
+    assert.equal(setStatePowerStub.callCount, 4);
+    assert.equal(setStatePowerStub.getCall(3).args[0], true);
 
     //Swap to Automatic
     tplinkSmartPlugs.updateControlMode("1", ControlMode.automatic);
 
     //Execute Automatic Low
     await tplinkSmartPlugs.executeOutputStateAsync();
-    assert.equal(setStateStub.callCount, 5);
-    assert.equal(setStateStub.getCall(4).args[0], false);
+    assert.equal(setStatePowerStub.callCount, 5);
+    assert.equal(setStatePowerStub.getCall(4).args[0], false);
 
     //Inverted PWM Execution
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       name: "test output 1",
       pin: childIds[0]?.externalId,
       isPwm: true,
@@ -241,8 +298,8 @@ describe("tplinkPlug.ts tests", function () {
     );
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 100);
     await tplinkSmartPlugs.executeOutputStateAsync("1"); //Receives individual output id as well.
-    assert.equal(setStateStub.callCount, 6);
-    assert.equal(setStateStub.getCall(5).args[0], false);
+    assert.equal(setStatePowerStub.callCount, 6);
+    assert.equal(setStatePowerStub.getCall(5).args[0], false);
 
     //PWM error handling
     await tplinkSmartPlugs.setNewOutputStateAsync(
@@ -252,7 +309,7 @@ describe("tplinkPlug.ts tests", function () {
     );
     await tplinkSmartPlugs.executeOutputStateAsync("1"); //Receives individual output id as well.
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 0);
-    assert.equal(setStateStub.callCount, 7);
+    assert.equal(setStatePowerStub.callCount, 7);
 
     await tplinkSmartPlugs.setNewOutputStateAsync(
       "1",
@@ -261,12 +318,12 @@ describe("tplinkPlug.ts tests", function () {
     );
     await tplinkSmartPlugs.executeOutputStateAsync("1"); //Receives individual output id as well.
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 100);
-    assert.equal(setStateStub.callCount, 8);
+    assert.equal(setStatePowerStub.callCount, 8);
 
     //Non-PWM error handling
     await tplinkSmartPlugs.createOutputAsync({
       id: 2,
-      model: "tplinkPlug",
+      model: "TPLINK_SMART_PLUG",
       name: "test output 1",
       pin: childIds[0]?.externalId,
       isPwm: false,
@@ -280,6 +337,6 @@ describe("tplinkPlug.ts tests", function () {
       ControlMode.automatic,
     );
     await tplinkSmartPlugs.executeOutputStateAsync("2");
-    assert.equal(setStateStub.callCount, 8);
+    assert.equal(setStatePowerStub.callCount, 8);
   });
 });

@@ -1,4 +1,5 @@
 import { SDBOutput } from "@sproot/database/SDBOutput";
+import { Models } from "@sproot/outputs/Models";
 import { Knex } from "knex";
 
 export async function seed(knex: Knex): Promise<void> {
@@ -6,7 +7,7 @@ export async function seed(knex: Knex): Promise<void> {
   await knex("outputs").insert<SDBOutput>([
     {
       id: 1,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Relay #1",
       color: "#82c91e",
@@ -17,7 +18,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: 2,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Relay #2",
       color: "#40c057",
@@ -28,7 +29,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: 3,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Relay #3",
       color: "#12b886",
@@ -39,7 +40,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: 4,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Relay #4",
       color: "#15aabf",
@@ -50,7 +51,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: 5,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #1",
       color: "#228be6",
@@ -61,7 +62,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: 6,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #2",
       color: "#4c6ef5",
@@ -72,7 +73,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: 7,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #3",
       color: "#7950f2",
@@ -83,7 +84,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: 8,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #4",
       color: "#be4bdb",
