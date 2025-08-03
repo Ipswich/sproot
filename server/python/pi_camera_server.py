@@ -80,17 +80,27 @@ class InterserviceAuthentication:
             return False
 
         key = os.environ.get("INTERSERVICE_AUTHENTICATION_KEY", "")
-        rounded_time_stamp = (
-            (datetime.now(timezone.utc) + timedelta(minutes=30))
+        now_rounded_time_stamp = (
+            (datetime.now(timezone.utc))
             .replace(minute=0, second=0, microsecond=0)
             .strftime("%Y-%m-%dT%H:%M:%S.000Z")
         )
-        h = hmac.new(
+        last_rounded_time_stamp = (
+            (datetime.now(timezone.utc) - timedelta(hours=1))
+            .replace(minute=0, second=0, microsecond=0)
+            .strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        )
+        h_now = hmac.new(
             key.encode("ascii"),
-            (rounded_time_stamp).encode("ascii"),
+            (now_rounded_time_stamp).encode("ascii"),
             hashlib.sha256,
         )
-        return h.hexdigest() == token
+        h_last = hmac.new(
+            key.encode("ascii"),
+            (last_rounded_time_stamp).encode("ascii"),
+            hashlib.sha256,
+        )
+        return h_now.hexdigest() == token or h_last.hexdigest() == token
 
 
 # Initialize camera and output

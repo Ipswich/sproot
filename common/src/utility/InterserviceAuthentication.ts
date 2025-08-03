@@ -9,10 +9,6 @@ export function generateInterserviceAuthenticationToken(key: string, now: Date =
 
 function getUtcRoundedHourIso(now: Date = new Date()): string {
   const newNow = new Date(now.getTime());
-
-  if (newNow.getUTCMinutes() >= 30) {
-    newNow.setUTCHours(newNow.getUTCHours() + 1);
-  }
   newNow.setUTCMinutes(0, 0, 0);
 
   return newNow.toISOString().replace(/\.\d{3}Z$/, ".000Z");

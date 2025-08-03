@@ -30,22 +30,13 @@ describe("InterserviceAuthentication.ts tests", function () {
       assert.notStrictEqual(token1, token2, "Tokens should differ for different times");
     });
 
-    it("should round time to the nearest hour (down)", function () {
+    it("should round time down to the nearest hour (truncate minutes)", function () {
       const key = "test-key";
-      const now = new Date("2023-01-01T12:15:00Z");
+      const now = new Date("2023-01-01T12:59:00Z");
       const token = generateInterserviceAuthenticationToken(key, now);
       const roundedTime = new Date("2023-01-01T12:00:00Z");
       const expectedToken = generateInterserviceAuthenticationToken(key, roundedTime);
       assert.strictEqual(token, expectedToken, "Token should match for rounded-down time");
-    });
-
-    it("should round time to the nearest hour (up)", function () {
-      const key = "test-key";
-      const now = new Date("2023-01-01T12:45:00Z");
-      const token = generateInterserviceAuthenticationToken(key, now);
-      const roundedTime = new Date("2023-01-01T13:00:00Z");
-      const expectedToken = generateInterserviceAuthenticationToken(key, roundedTime);
-      assert.strictEqual(token, expectedToken, "Token should match for rounded-up time");
     });
   });
 });
