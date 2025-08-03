@@ -242,7 +242,7 @@ export abstract class OutputBase implements IOutputBase {
     }
     let validatedValue = undefined;
     try {
-      // this.#isExecuting = true;
+      this.#isExecuting = true;
       switch (this.controlMode) {
         case ControlMode.manual:
           validatedValue = this.#validateAndFixValue(this.state.manual.value);

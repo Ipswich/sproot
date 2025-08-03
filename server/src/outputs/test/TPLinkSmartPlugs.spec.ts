@@ -3,7 +3,7 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { TPLinkSmartPlugs, TPLinkPlug } from "../TPLinkSmartPlugs";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { UdpServer, Device as SimulatedDevice } from "tplink-smarthome-simulator";
+import { Device as SimulatedDevice } from "tplink-smarthome-simulator";
 import { Plug } from "tplink-smarthome-api";
 
 import chai, { assert } from "chai";
@@ -22,10 +22,8 @@ describe("tplinkPlug.ts tests", function () {
     responseDelay: 0,
   });
   simulatedHS300.start();
-  UdpServer.start();
-  this.afterAll(() => {
-    simulatedHS300.stop();
-    UdpServer.stop();
+  this.afterAll(async () => {
+    await simulatedHS300.stop();
   });
   afterEach(() => {
     sinon.restore();
@@ -41,7 +39,7 @@ describe("tplinkPlug.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
     await delay(20);
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
 
@@ -127,7 +125,7 @@ describe("tplinkPlug.ts tests", function () {
       );
     const logger = winston.createLogger();
 
-    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
     await delay(20);
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
 
@@ -181,7 +179,7 @@ describe("tplinkPlug.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
     await delay(20);
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
 

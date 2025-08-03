@@ -19,6 +19,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
     maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
+    sharedSocketTimeout: number = 5000,
   ) {
     super(
       sprootDB,
@@ -31,8 +32,10 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
     );
     this.#client = new Client({
       defaultSendOptions: {
-        // transport: "udp",
-        // useSharedSocket: true,
+        timeout: 2000,
+        transport: "udp",
+        useSharedSocket: true,
+        sharedSocketTimeout: sharedSocketTimeout,
       },
     });
 
@@ -132,6 +135,9 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
   }
 
   [Symbol.dispose](): void {
+    for (const output of Object.values(this.outputs)) {
+      output.dispose();
+    }
     this.#client.removeAllListeners();
     this.#client.stopDiscovery();
   }
