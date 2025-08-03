@@ -1,3 +1,4 @@
+import { I2CBus } from "i2c-bus";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { ADS1115 } from "./ADS1115";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -16,6 +17,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
 
   constructor(
     sdbSensor: SDBSensor,
+    i2cBus: I2CBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -27,6 +29,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       sdbSensor,
       ReadingType.moisture,
       CapacitiveMoistureSensor.GAIN,
+      i2cBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,

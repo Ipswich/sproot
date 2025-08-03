@@ -1,5 +1,5 @@
-import bme280, { Bme280 } from "bme280";
-import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
+import { openSync, I2CBus } from "i2c-bus";
+import { BME280, BME280Device, Bme280Device } from "@sproot/sproot-server/src/sensors/BME280";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
@@ -11,7 +11,12 @@ import winston from "winston";
 const mockSprootDB = new MockSprootDB();
 
 describe("BME280.ts tests", function () {
+  let i2cBus: I2CBus;
+  beforeEach(() => {
+    i2cBus = openSync(1);
+  });
   afterEach(() => {
+    i2cBus.closeSync();
     sinon.restore();
   });
   it("should initialize a BME280 sensor", async () => {
@@ -59,7 +64,7 @@ describe("BME280.ts tests", function () {
         logTime: new Date().toISOString(),
       } as SDBReading,
     ]);
-    sinon.stub(bme280, "open").resolves({ close: async function () {} } as Bme280); // Don't create a real sensor - needs I2C bus
+    sinon.stub(BME280Device, "open").resolves(); // Don't create a real sensor - needs I2C bus
 
     sinon.stub(winston, "createLogger").callsFake(
       () =>
@@ -73,6 +78,7 @@ describe("BME280.ts tests", function () {
 
     const bme280Sensor = await new BME280(
       mockBME280Data,
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -117,15 +123,20 @@ describe("BME280.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    const readStub = sinon.stub().resolves(mockReading as bme280.data);
-    const closeStub = sinon.stub().resolves();
-    const openStub = sinon.stub(bme280, "open").resolves({
-      read: readStub as Bme280["read"],
-      close: closeStub as Bme280["close"],
-    } as Bme280); // Don't create a real sensor - needs I2C bus
+    const readStub = sinon.stub().resolves(
+      mockReading as {
+        temperature: number;
+        humidity: number;
+        pressure: number;
+      },
+    );
+    const openStub = sinon.stub(BME280Device, "open").resolves({
+      readAsync: readStub as Bme280Device["readAsync"],
+    } as Bme280Device);
 
     let bme280Sensor = await new BME280(
       mockBME280Data,
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -147,7 +158,16 @@ describe("BME280.ts tests", function () {
     await bme280Sensor?.disposeAsync();
 
     // GetReading throws an errror
-    bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger).initAsync();
+    bme280Sensor = await new BME280(
+      mockBME280Data,
+      i2cBus,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    ).initAsync();
 
     openStub.rejects(new Error("Failed to open sensor"));
     await bme280Sensor!.takeReadingAsync();

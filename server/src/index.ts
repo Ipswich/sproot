@@ -28,6 +28,9 @@ mainAsync().then((app) => {
           // Cleanup sensors and turn off outputs
           await app.get("sensorList").disposeAsync();
           app.get("outputList")[Symbol.dispose]();
+
+          // Close I2C bus
+          app.get("i2cBus").close();
           // Close database connection
           await app.get("sprootDB").disposeAsync();
         } catch (err) {

@@ -1,3 +1,4 @@
+import { I2CBus, openSync } from "i2c-bus";
 import { ADS1115, Ads1115Device } from "@sproot/sproot-server/src/sensors/ADS1115";
 
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -11,8 +12,13 @@ import winston from "winston";
 const mockSprootDB = new MockSprootDB();
 
 describe("ADS1115.ts tests", function () {
+  let i2cBus: I2CBus;
+  beforeEach(() => {
+    i2cBus = openSync(1);
+  });
   afterEach(() => {
     sinon.restore();
+    i2cBus.closeSync();
   });
   it("should initialize an ADS1115 sensor", async () => {
     const mockADS1115Data = {
@@ -47,14 +53,13 @@ describe("ADS1115.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    sinon
-      .stub(Ads1115Device, "openAsync")
-      .resolves({ measureAsync: async (_mux, _gain) => 1234 } as Ads1115Device);
+    sinon.stub(Ads1115Device.prototype, "measureAsync").resolves(1234);
 
     const ads1115Sensor = await new ADS1115(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -95,13 +100,14 @@ describe("ADS1115.ts tests", function () {
     );
 
     const logger = winston.createLogger();
-    const openStub = sinon.stub(Ads1115Device, "openAsync").resolves({
-      measureAsync: async (_mux, _gain) => mockReading,
-    } as Ads1115Device);
+    const measureAsyncStub = sinon
+      .stub(Ads1115Device.prototype, "measureAsync")
+      .resolves(mockReading);
     let ads1115Sensor = await new ADS1115(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -112,7 +118,7 @@ describe("ADS1115.ts tests", function () {
 
     await ads1115Sensor!.takeReadingAsync();
 
-    assert.isTrue(openStub.calledOnce);
+    assert.isTrue(measureAsyncStub.calledOnce);
     assert.equal(ads1115Sensor!.lastReading[ReadingType.voltage], String(mockReading / 10000));
 
     await ads1115Sensor?.disposeAsync();
@@ -122,6 +128,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -130,7 +137,7 @@ describe("ADS1115.ts tests", function () {
       logger,
     ).initAsync();
 
-    openStub.rejects(new Error("Failed to open sensor"));
+    measureAsyncStub.rejects(new Error("Failed to open sensor"));
     await ads1115Sensor!.takeReadingAsync();
     assert.isUndefined(ads1115Sensor!.lastReading[ReadingType.voltage]);
     assert.isTrue(loggerSpy.calledOnce);
@@ -179,6 +186,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data1,
       ReadingType.voltage,
       "2/3",
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -191,6 +199,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data2,
       ReadingType.voltage,
       "2/3",
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -203,6 +212,7 @@ describe("ADS1115.ts tests", function () {
       mockADS1115Data3,
       ReadingType.voltage,
       "2/3",
+      i2cBus,
       mockSprootDB,
       5,
       5,

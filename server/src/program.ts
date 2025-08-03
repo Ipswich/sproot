@@ -18,6 +18,7 @@ import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
+import { openSync } from "i2c-bus";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -28,7 +29,9 @@ export default async function setupAsync(): Promise<Express> {
   app.set("knexConnection", knexConnection);
 
   const sprootDB = new SprootDB(knexConnection);
+  const i2cBus = openSync(1);
   app.set("sprootDB", sprootDB);
+  app.set("i2cBus", i2cBus);
   app.set("logger", logger);
 
   await defaultUserCheck(sprootDB, logger);
@@ -43,6 +46,7 @@ export default async function setupAsync(): Promise<Express> {
 
   logger.info("Creating sensor and output lists. . .");
   const sensorList = new SensorList(
+    i2cBus,
     sprootDB,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
@@ -52,6 +56,7 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set("sensorList", sensorList);
   const outputList = new OutputList(
+    i2cBus,
     sprootDB,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,

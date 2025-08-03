@@ -1,3 +1,4 @@
+import { I2CBus } from "i2c-bus";
 import { PCA9685 } from "../PCA9685";
 import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -13,6 +14,7 @@ import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 class OutputList implements Disposable {
+  #i2cBus: I2CBus;
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #TPLinkSmartPlugs: TPLinkSmartPlugs;
@@ -25,6 +27,7 @@ class OutputList implements Disposable {
   chartDataPointInterval: number;
 
   constructor(
+    i2cBus: I2CBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -33,8 +36,10 @@ class OutputList implements Disposable {
     logger: winston.Logger,
   ) {
     this.#sprootDB = sprootDB;
+    this.#i2cBus = i2cBus;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
+      this.#i2cBus,
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,

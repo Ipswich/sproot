@@ -54,7 +54,6 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
-    "bme280": "github:jhoffi/bme280-typings",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "cron": "^4.1.0",

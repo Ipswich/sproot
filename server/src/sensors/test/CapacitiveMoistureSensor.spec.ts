@@ -1,3 +1,4 @@
+import { I2CBus, openSync } from "i2c-bus";
 import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
 import { Ads1115Device } from "../ADS1115";
 
@@ -12,7 +13,12 @@ import winston from "winston";
 const mockSprootDB = new MockSprootDB();
 
 describe("CapacitiveMoistureSensor.ts tests", function () {
+  let i2cBus: I2CBus;
+  beforeEach(() => {
+    i2cBus = openSync(1);
+  });
   afterEach(() => {
+    i2cBus.closeSync();
     sinon.restore();
   });
 
@@ -50,12 +56,11 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    sinon
-      .stub(Ads1115Device, "openAsync")
-      .resolves({ measureAsync: async (_mux, _gain) => 15000 } as Ads1115Device);
+    sinon.stub(Ads1115Device.prototype, "measureAsync").resolves(15000);
 
     const sensor = await new CapacitiveMoistureSensor(
       mockSensorData,
+      i2cBus,
       mockSprootDB,
       5,
       5,
@@ -99,11 +104,13 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     );
 
     const logger = winston.createLogger();
-    const openStub = sinon.stub(Ads1115Device, "openAsync").resolves({
-      measureAsync: async (_mux, _gain) => mockReading,
-    } as Ads1115Device);
+
+    const measureAsyncStub = sinon
+      .stub(Ads1115Device.prototype, "measureAsync")
+      .resolves(mockReading);
     let capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
+      i2cBus,
       stubbedMockDB,
       5,
       5,
@@ -114,12 +121,12 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
 
     await capacitiveMoistureSensor!.takeReadingAsync();
 
-    assert.isTrue(openStub.calledOnce);
+    assert.isTrue(measureAsyncStub.calledOnce);
     assert.equal(
       capacitiveMoistureSensor!.lastReading[ReadingType.moisture],
       String(85.71428571428572), // calibrated value
     );
-    openStub.resetHistory();
+    measureAsyncStub.resetHistory();
     await capacitiveMoistureSensor?.disposeAsync();
 
     // GetReading with cached values should average the readings
@@ -147,6 +154,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
     capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
+      i2cBus,
       stubbedMockDB,
       500,
       500,
@@ -155,18 +163,19 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       logger,
     ).initAsync();
     await capacitiveMoistureSensor!.takeReadingAsync();
-    assert.isTrue(openStub.calledOnce);
+    assert.isTrue(measureAsyncStub.calledOnce);
     assert.equal(
       capacitiveMoistureSensor!.lastReading[ReadingType.moisture],
       String(24.28571428571429), // calibrated value
     );
 
-    openStub.resetHistory();
+    measureAsyncStub.resetHistory();
     await capacitiveMoistureSensor?.disposeAsync();
 
     // GetReading throws an errror
     capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
+      i2cBus,
       stubbedMockDB,
       5,
       5,
@@ -175,7 +184,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       logger,
     ).initAsync();
 
-    openStub.rejects(new Error("Failed to open sensor"));
+    measureAsyncStub.rejects(new Error("Failed to open sensor"));
     await capacitiveMoistureSensor!.takeReadingAsync();
     assert.isUndefined(capacitiveMoistureSensor!.lastReading[ReadingType.moisture]);
     assert.isTrue(loggerSpy.calledOnce);

@@ -1,5 +1,5 @@
 import { Pca9685Driver } from "pca9685";
-import { openSync } from "i2c-bus";
+import { I2CBus } from "i2c-bus";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -8,7 +8,9 @@ import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 
 class PCA9685 extends MultiOutputBase {
+  #i2cBus: I2CBus;
   constructor(
+    i2cBus: I2CBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -26,6 +28,7 @@ class PCA9685 extends MultiOutputBase {
       frequency,
       logger,
     );
+    this.#i2cBus = i2cBus;
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
@@ -33,7 +36,7 @@ class PCA9685 extends MultiOutputBase {
     if (!this.boardRecord[output.address]) {
       this.boardRecord[output.address] = new Pca9685Driver(
         {
-          i2c: openSync(1),
+          i2c: this.#i2cBus,
           address: parseInt(output.address),
           frequency: this.frequency,
           debug: false,

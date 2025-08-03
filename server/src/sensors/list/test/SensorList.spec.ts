@@ -1,3 +1,4 @@
+import { I2CBus, openSync } from "i2c-bus";
 import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
 import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -15,6 +16,10 @@ import { ChartSeries, DataSeries } from "@sproot/utility/ChartData";
 const mockSprootDB = new MockSprootDB();
 
 describe("SensorList.ts tests", function () {
+  let i2cBus: I2CBus;
+  beforeEach(() => {
+    i2cBus = openSync(1);
+  });
   afterEach(() => {
     sinon.restore();
   });
@@ -68,7 +73,7 @@ describe("SensorList.ts tests", function () {
     } as BME280);
     const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
 
-    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
+    const sensorList = new SensorList(i2cBus, mockSprootDB, 5, 5, 3, 5, logger);
     try {
       await sensorList.initializeOrRegenerateAsync();
 
@@ -129,9 +134,9 @@ describe("SensorList.ts tests", function () {
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sinon
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
+      .resolves(new BME280(mockBME280Data, i2cBus, mockSprootDB, 5, 5, 3, 5, logger));
 
-    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
+    const sensorList = new SensorList(i2cBus, mockSprootDB, 5, 5, 3, 5, logger);
     try {
       await sensorList.initializeOrRegenerateAsync();
       const sensorData = sensorList.sensorData;
@@ -183,7 +188,7 @@ describe("SensorList.ts tests", function () {
       .stub(MockSprootDB.prototype, "getSensorsAsync")
       .resolves([mockBME280Data]);
     const getAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
-    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
+    const sensorList = new SensorList(i2cBus, mockSprootDB, 5, 5, 3, 5, logger);
 
     try {
       await sensorList.initializeOrRegenerateAsync();
@@ -196,7 +201,7 @@ describe("SensorList.ts tests", function () {
       getAddressesStub.resolves(["28-00000"]);
       sinon
         .stub(BME280.prototype, "initAsync")
-        .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
+        .resolves(new BME280(mockBME280Data, i2cBus, mockSprootDB, 5, 5, 3, 5, logger));
       await sensorList.initializeOrRegenerateAsync();
 
       mockDS18B20Data["address"] = "28-00000";
@@ -231,7 +236,7 @@ describe("SensorList.ts tests", function () {
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sinon.stub(DS18B20.prototype, "takeReadingAsync").rejects();
 
-    const sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
+    const sensorList = new SensorList(i2cBus, mockSprootDB, 5, 5, 3, 5, logger);
     try {
       await sensorList.initializeOrRegenerateAsync();
     } finally {

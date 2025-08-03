@@ -1,4 +1,4 @@
-import { openPromisified, PromisifiedBus } from "i2c-bus";
+import { I2CBus, PromisifiedBus } from "i2c-bus";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase } from "./base/SensorBase";
@@ -8,10 +8,13 @@ import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 export class ADS1115 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;
   readonly gain: "2/3" | "1" | "2" | "4" | "8" | "16";
+  #i2cBus: I2CBus;
+  #ads1115Device: Ads1115Device;
   constructor(
     sdbSensor: SDBSensor,
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
+    i2cBus: I2CBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -30,6 +33,8 @@ export class ADS1115 extends SensorBase {
       logger,
     );
     this.gain = gain;
+    this.#i2cBus = i2cBus;
+    this.#ads1115Device = new Ads1115Device(this.#i2cBus, Number(sdbSensor.address));
   }
 
   override async initAsync(): Promise<ADS1115 | null> {
@@ -66,9 +71,7 @@ export class ADS1115 extends SensorBase {
       | "3+GND";
     const calculatedGain = (this.gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
 
-    const ads1115 = await Ads1115Device.openAsync(1, Number(this.address));
-
-    return await ads1115.measureAsync(mux, calculatedGain);
+    return await this.#ads1115Device.measureAsync(mux, calculatedGain);
   }
 }
 
@@ -103,11 +106,7 @@ export class Ads1115Device {
     "16": 0b0000101000000000, // +/- 0.256V
   };
 
-  public static async openAsync(busNum: number, addr = 0x48) {
-    return openPromisified(busNum).then((bus: PromisifiedBus) => new Ads1115Device(bus, addr));
-  }
-
-  private static addressQueues: Map<number, Promise<unknown>> = new Map();
+  static #addressQueues: Map<number, Promise<unknown>> = new Map();
 
   #gain: number = Ads1115Device.gains["1"];
   #bus: PromisifiedBus;
@@ -115,8 +114,8 @@ export class Ads1115Device {
   #delay: number;
   #shift: number;
 
-  constructor(bus: PromisifiedBus, addr = 0x48, delay = 15, shift = 0) {
-    this.#bus = bus;
+  constructor(bus: I2CBus, addr = 0x48, delay = 15, shift = 0) {
+    this.#bus = bus.promisifiedBus();
     this.#addr = addr;
     this.#delay = delay;
     this.#shift = shift;
@@ -177,11 +176,11 @@ export class Ads1115Device {
     };
 
     // Get the current queue for this address, or a resolved promise if none
-    const prev = Ads1115Device.addressQueues.get(this.#addr) ?? Promise.resolve();
+    const prev = Ads1115Device.#addressQueues.get(this.#addr) ?? Promise.resolve();
     // Chain the new measure onto the queue
     const next = prev.then(doMeasure, doMeasure);
     // Update the queue for this address
-    Ads1115Device.addressQueues.set(
+    Ads1115Device.#addressQueues.set(
       this.#addr,
       next.catch(() => {}),
     );

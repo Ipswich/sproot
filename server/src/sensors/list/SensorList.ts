@@ -1,3 +1,4 @@
+import { I2CBus } from "i2c-bus";
 import { BME280 } from "../BME280";
 import { DS18B20 } from "../DS18B20";
 import { ADS1115 } from "../ADS1115";
@@ -13,6 +14,7 @@ import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 class SensorList {
+  #i2cBus: I2CBus;
   #sprootDB: ISprootDB;
   #sensors: Record<string, SensorBase> = {};
   #logger: winston.Logger;
@@ -23,6 +25,7 @@ class SensorList {
   #chartData: SensorListChartData;
 
   constructor(
+    i2cBus: I2CBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -31,6 +34,7 @@ class SensorList {
     logger: winston.Logger,
   ) {
     this.#sprootDB = sprootDB;
+    this.#i2cBus = i2cBus;
     this.#maxCacheSize = maxCacheSize;
     this.#initialCacheLookback = initialCacheLookback;
     this.#maxChartDataSize = maxChartDataSize;
@@ -261,6 +265,7 @@ class SensorList {
         }
         newSensor = await new BME280(
           sensor,
+          this.#i2cBus,
           this.#sprootDB,
           this.#maxCacheSize,
           this.#initialCacheLookback,
@@ -296,6 +301,7 @@ class SensorList {
           sensor,
           ReadingType.voltage,
           "1",
+          this.#i2cBus,
           this.#sprootDB,
           this.#maxCacheSize,
           this.#initialCacheLookback,
@@ -314,6 +320,7 @@ class SensorList {
         }
         newSensor = await new CapacitiveMoistureSensor(
           sensor,
+          this.#i2cBus,
           this.#sprootDB,
           this.#maxCacheSize,
           this.#initialCacheLookback,
