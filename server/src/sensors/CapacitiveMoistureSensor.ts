@@ -104,24 +104,19 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       this.highCalibrationPoint = CapacitiveMoistureSensor.DEFAULT_HIGH_CALIBRATION_VOLTAGE;
     }
 
-    // Guard against too high or too low readings
-    if (
-      rawReading < CapacitiveMoistureSensor.MIN_SENSOR_READING ||
-      rawReading > CapacitiveMoistureSensor.MAX_SENSOR_READING
-    ) {
-      this.logger.warn(
-        `Moisture sensor ${this.id} reading out of bounds: ${rawReading}. Expected range: ${CapacitiveMoistureSensor.MIN_SENSOR_READING} - ${CapacitiveMoistureSensor.MAX_SENSOR_READING}`,
-      );
-      return;
-    }
-
-    // Update calibration points if the reading is outside the current range
+    // Update calibration points, maxing if necessary
     if (rawReading < this.lowCalibrationPoint) {
       shouldUpdateCalibration = true;
-      this.lowCalibrationPoint = rawReading;
+      this.lowCalibrationPoint =
+        rawReading < CapacitiveMoistureSensor.MIN_SENSOR_READING
+          ? CapacitiveMoistureSensor.MIN_SENSOR_READING
+          : rawReading;
     } else if (rawReading > this.highCalibrationPoint) {
       shouldUpdateCalibration = true;
-      this.highCalibrationPoint = rawReading;
+      this.highCalibrationPoint =
+        rawReading > CapacitiveMoistureSensor.MAX_SENSOR_READING
+          ? CapacitiveMoistureSensor.MAX_SENSOR_READING
+          : rawReading;
     }
 
     if (shouldUpdateCalibration) {
