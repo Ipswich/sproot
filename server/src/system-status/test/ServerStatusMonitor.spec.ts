@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import sinon from "sinon";
-import { ServerStatusMonitor } from "../status";
+import { SystemStatusMonitor } from "../SystemStatusMonitor";
 
 describe("ServerStatsManager", () => {
   let sprootDBMock: any;
@@ -12,17 +12,19 @@ describe("ServerStatsManager", () => {
   });
 
   it("should return stats with correct properties", async () => {
-    const manager = new ServerStatusMonitor(sprootDBMock);
+    using manager = new SystemStatusMonitor(sprootDBMock);
     const stats = await manager.getStatsAsync();
 
     assert.strictEqual(typeof stats.uptime, "number");
     assert.strictEqual(typeof stats.memoryUsage, "number");
     assert.strictEqual(typeof stats.cpuUsage, "number");
     assert.strictEqual(stats.databaseSize, 12345);
+    assert.strictEqual(typeof stats.totalDiskSize, "number");
+    assert.strictEqual(typeof stats.freeDiskSize, "number");
   });
 
   it("should call getDatabaseSizeAsync", async () => {
-    const manager = new ServerStatusMonitor(sprootDBMock);
+    using manager = new SystemStatusMonitor(sprootDBMock);
     await manager.getStatsAsync();
     assert.strictEqual(sprootDBMock.getDatabaseSizeAsync.calledOnce, true);
   });

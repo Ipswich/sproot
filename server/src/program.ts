@@ -18,6 +18,7 @@ import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
+import { SystemStatusMonitor } from "./system-status/SystemStatusMonitor";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -28,7 +29,9 @@ export default async function setupAsync(): Promise<Express> {
   app.set("knexConnection", knexConnection);
 
   const sprootDB = new SprootDB(knexConnection);
+  const systemStatusMonitor = new SystemStatusMonitor(sprootDB);
   app.set("sprootDB", sprootDB);
+  app.set("systemStatusMonitor", systemStatusMonitor);
   app.set("logger", logger);
 
   await defaultUserCheck(sprootDB, logger);
