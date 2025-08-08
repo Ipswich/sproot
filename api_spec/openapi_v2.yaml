@@ -314,7 +314,8 @@ paths:
       summary: Get system status.
       description: >
         Returns the current status of the system, including uptime, memory usage, CPU usage, and other
-        relevant information. This is useful for monitoring the health of the system.
+        relevant information. This is useful for monitoring the health of the system. Uptime is in 
+        seconds, memory metrics are in MB, CPU usage is a percentage, and disk sizes are in MB.
       responses:
         200:
           description: "Success"
