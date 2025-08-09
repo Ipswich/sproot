@@ -10,7 +10,7 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
-import ModelList from "../ModelList";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 class OutputList implements Disposable {
   #sprootDB: ISprootDB;
@@ -124,9 +124,9 @@ class OutputList implements Disposable {
     filterUsed?: boolean,
   ): Record<string, string>[] {
     switch (model) {
-      case ModelList.PCA9685.toLowerCase():
+      case Models.PCA9685:
         return []; //this.#PCA9685.getAvailableChildIds(address);
-      case ModelList.TPLinkSmartPlug.toLowerCase():
+      case Models.TPLINK_SMART_PLUG:
         return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:
         return [];
@@ -273,11 +273,11 @@ class OutputList implements Disposable {
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | undefined;
     switch (output.model.toLowerCase()) {
-      case ModelList.PCA9685.toLowerCase(): {
+      case Models.PCA9685.toLowerCase(): {
         newOutput = await this.#PCA9685.createOutputAsync(output);
         break;
       }
-      case ModelList.TPLinkSmartPlug.toLowerCase(): {
+      case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
@@ -291,11 +291,11 @@ class OutputList implements Disposable {
 
   #deleteOutput(output: OutputBase): void {
     switch (output.model.toLowerCase()) {
-      case ModelList.PCA9685.toLowerCase(): {
+      case Models.PCA9685.toLowerCase(): {
         this.#PCA9685.disposeOutput(output);
         break;
       }
-      case ModelList.TPLinkSmartPlug.toLowerCase(): {
+      case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         this.#TPLinkSmartPlugs.disposeOutput(output);
         break;
       }
