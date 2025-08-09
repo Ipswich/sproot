@@ -240,8 +240,8 @@ export abstract class OutputBase implements IOutputBase {
       );
       return;
     }
-    let validatedValue = undefined;
     try {
+      let validatedValue = undefined;
       this.#isExecuting = true;
       switch (this.controlMode) {
         case ControlMode.manual:
