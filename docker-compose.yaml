@@ -10,6 +10,7 @@ services:
     environment:
       - TZ=${TZ}
       - NODE_ENV=${NODE_ENV}
+      - LOG_DEBUG=${LOG_DEBUG}
       - DEFAULT_USER=${DEFAULT_USER}
       - DEFAULT_USER_EMAIL=${DEFAULT_USER_EMAIL}
       - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD}

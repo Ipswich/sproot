@@ -38,7 +38,10 @@ export default function setupLogger(app: Express): winston.Logger {
     ],
   });
 
-  if (process.env["NODE_ENV"]?.toLowerCase() !== "production") {
+  if (
+    process.env["NODE_ENV"]?.toLowerCase() !== "production" ||
+    process.env["LOG_DEBUG"]?.toLowerCase() === "true"
+  ) {
     logger.add(
       new winston.transports.Console({
         level: "debug",
@@ -50,14 +53,16 @@ export default function setupLogger(app: Express): winston.Logger {
       }),
     );
     logger.add(
-      new winston.transports.File({
+      new winston.transports.DailyRotateFile({
         filename: "logs/debug.log",
-        level: "debug",
+        datePattern: "YYYY-MM-DD",
+        level: "debug-%DATE%.log",
         format: winston.format.combine(
           winston.format.errors({ stack: true }),
           winston.format.colorize(),
           winston.format.printf(formatForDebug),
         ),
+        maxFiles: "30d",
       }),
     );
     app.use(
