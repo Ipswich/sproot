@@ -95,7 +95,11 @@ class OutputList implements Disposable {
     const promises = Object.keys(this.outputs).map(
       async (key) => await this.outputs[key]?.executeStateAsync(),
     );
-    await Promise.allSettled(promises);
+    try {
+      await Promise.all(promises);
+    } catch (err) {
+      this.#logger.error(`Error executing output state for all outputs: ${err}`);
+    }
   }
 
   async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
