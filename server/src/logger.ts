@@ -54,9 +54,9 @@ export default function setupLogger(app: Express): winston.Logger {
     );
     logger.add(
       new winston.transports.DailyRotateFile({
-        filename: "logs/debug.log",
+        filename: "logs/debug-%DATE%.log",
         datePattern: "YYYY-MM-DD",
-        level: "debug-%DATE%.log",
+        level: "debug",
         format: winston.format.combine(
           winston.format.errors({ stack: true }),
           winston.format.colorize(),
