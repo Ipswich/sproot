@@ -21,7 +21,13 @@ describe("Conditions.ts tests", () => {
       const conditions = new Conditions(1, sprootDB);
       // Sensor stubs
       const sensor = sinon.createStubInstance(SensorBase);
-      sensor.lastReading = { temperature: "50", humidity: "49", pressure: "51" };
+      sensor.lastReading = {
+        temperature: "50",
+        humidity: "49",
+        pressure: "51",
+        moisture: "0",
+        voltage: "0",
+      };
       const sensorList = sinon.createStubInstance(SensorList);
       sinon.stub(sensorList, "sensors").value({ 1: sensor });
       // Output stubs

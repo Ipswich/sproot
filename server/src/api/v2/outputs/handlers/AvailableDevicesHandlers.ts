@@ -1,7 +1,7 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
-import ModelList from "../../../../outputs/ModelList";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 export async function getAvailableDevices(
   request: Request,
@@ -28,7 +28,7 @@ export async function getAvailableDevices(
   }
 
   try {
-    const models = Object.values(ModelList).map((model) => model.toLowerCase());
+    const models = Object.keys(Models).map((model) => model.toLowerCase());
     if (models.includes(request.params["model"]!.toLowerCase())) {
       const pins = outputList.getAvailableDevices(
         request.params["model"]!.toLowerCase(),
@@ -48,7 +48,9 @@ export async function getAvailableDevices(
         error: {
           name: "Bad Request",
           url: request.originalUrl,
-          details: [`Model '${request.params["model"]}' not recognized`],
+          details: [
+            `Model '${request.params["model"]}' not recognized, supported models are: ${Object.keys(models).join(", ")}`,
+          ],
         },
         ...response.locals["defaultProperties"],
       };

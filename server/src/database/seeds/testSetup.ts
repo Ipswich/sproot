@@ -1,3 +1,4 @@
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { Knex } from "knex";
 
 export async function seed(knex: Knex): Promise<void> {
@@ -32,7 +33,7 @@ export async function seed(knex: Knex): Promise<void> {
   await knex("outputs").insert([
     {
       id: "1",
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Relay #1",
       color: "#82c91e",
@@ -43,7 +44,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
     {
       id: "5",
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #1",
       color: "#228be6",
@@ -55,8 +56,44 @@ export async function seed(knex: Knex): Promise<void> {
   ]);
 
   await knex("sensors").insert([
-    { id: 1, name: "BME280", model: "BME280", address: "0x76", color: "#82c91e" },
-    { id: 2, name: "DS18B20", model: "DS18B20", address: "28-583bd446df61", color: "#40c057" },
+    {
+      id: 1,
+      name: "BME280",
+      model: "BME280",
+      address: "0x76",
+      color: "#82c91e",
+      lowCalibrationPoint: null,
+      highCalibrationPoint: null,
+    },
+    {
+      id: 2,
+      name: "DS18B20",
+      model: "DS18B20",
+      address: "28-583bd446df61",
+      color: "#40c057",
+      lowCalibrationPoint: null,
+      highCalibrationPoint: null,
+    },
+    {
+      id: 3,
+      name: "Capacitive Moisture Sensor",
+      model: "CAPACITIVE_MOISTURE_SENSOR",
+      address: "0x48",
+      color: "#228be6",
+      pin: "0",
+      lowCalibrationPoint: 0,
+      highCalibrationPoint: 100,
+    },
+    {
+      id: 4,
+      name: "ADS1115",
+      model: "ADS1115",
+      address: "0x48",
+      color: "#ff8787",
+      pin: "1",
+      lowCalibrationPoint: null,
+      highCalibrationPoint: null,
+    },
   ]);
 
   await knex("automations").insert([

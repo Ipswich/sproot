@@ -68,6 +68,7 @@ describe("QueueCache.ts tests", function () {
         assert.deepEqual(queueCache.get(2, 3), [3, 4, 5]);
         assert.deepEqual(queueCache.get(2, 8), [3, 4, 5]);
         assert.deepEqual(queueCache.get(undefined, 3), [1, 2, 3]);
+        assert.deepEqual(queueCache.get(-3, undefined), [3, 4, 5]);
         assert.deepEqual(queueCache.get(5, 3), []);
         assert.deepEqual(queueCache.get(-1, 3), []);
       });
