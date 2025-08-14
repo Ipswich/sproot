@@ -90,16 +90,14 @@ class OutputList implements Disposable {
 
   async executeOutputStateAsync(outputId?: string) {
     if (outputId) {
+      this.#logger.verbose(`Executing output state {outputId: ${outputId}}`);
       return await this.outputs[outputId]?.executeStateAsync();
     }
+    this.#logger.verbose(`Executing output state for all outputs`);
     const promises = Object.keys(this.outputs).map(
       async (key) => await this.outputs[key]?.executeStateAsync(),
     );
-    try {
-      await Promise.all(promises);
-    } catch (err) {
-      this.#logger.error(`Error executing output state for all outputs: ${err}`);
-    }
+    await Promise.all(promises);
   }
 
   async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
@@ -138,6 +136,7 @@ class OutputList implements Disposable {
   }
 
   [Symbol.dispose](): void {
+    this.#logger.debug("Disposing of system OutputList");
     for (const key in this.#outputs) {
       try {
         this.#deleteOutput(this.#outputs[key]!);

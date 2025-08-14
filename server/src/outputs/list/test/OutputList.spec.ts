@@ -63,6 +63,7 @@ describe("OutputList.ts tests", function () {
           ({
             info: () => {},
             error: () => {},
+            debug: () => {},
             startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );
@@ -120,6 +121,7 @@ describe("OutputList.ts tests", function () {
           ({
             info: () => {},
             error: () => {},
+            debug: () => {},
             startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );
@@ -187,6 +189,7 @@ describe("OutputList.ts tests", function () {
           ({
             info: () => {},
             error: () => {},
+            debug: () => {},
             startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );

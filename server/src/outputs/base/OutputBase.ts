@@ -57,7 +57,7 @@ export abstract class OutputBase implements IOutputBase {
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
-    this.#automationManager = new OutputAutomationManager(sprootDB);
+    this.#automationManager = new OutputAutomationManager(sprootDB, logger);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
