@@ -59,7 +59,7 @@ class PCA9685 extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  override getAvailableDevices(_address: string): AvailableDevice[] {
+  override getAvailableDevices(_address?: string): AvailableDevice[] {
     return [];
     // const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
     // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
@@ -93,7 +93,8 @@ class PCA9685Output extends OutputBase {
 
   async executeStateAsync(): Promise<void> {
     await this.executeStateHelperAsync(async (value) => {
-      Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value));
+      // setDutyCycle takes a decimal value -> 50% == .5; 33% == .33;
+      Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value / 100));
     });
   }
 

@@ -9,8 +9,7 @@ import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
-import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
-import ModelList from "../ModelList";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 class OutputList implements Disposable {
   #sprootDB: ISprootDB;
@@ -90,32 +89,25 @@ class OutputList implements Disposable {
 
   async executeOutputStateAsync(outputId?: string) {
     if (outputId) {
+      this.#logger.verbose(`Executing output state {outputId: ${outputId}}`);
       return await this.outputs[outputId]?.executeStateAsync();
     }
+    this.#logger.verbose(`Executing output state for all outputs`);
     const promises = Object.keys(this.outputs).map(
       async (key) => await this.outputs[key]?.executeStateAsync(),
     );
-    await Promise.allSettled(promises);
+    await Promise.all(promises);
   }
 
   async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
-    outputId
-      ? await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now)
-      : Object.values(this.#outputs).forEach(
-          async (output) => await output.runAutomationsAsync(sensorList, this, now),
-        );
-  }
-
-  getAutomations() {
-    const allAutomations = {} as Record<number, Record<string, OutputAutomation>>;
-    for (const output of Object.values(this.#outputs)) {
-      const automations = output.getAutomations();
-      if (Object.keys(automations).length > 0) {
-        allAutomations[output.id] = automations;
-      }
+    if (outputId) {
+      await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now);
+      return;
     }
-
-    return allAutomations;
+    const promises = Object.values(this.#outputs).map(
+      async (output) => await output.runAutomationsAsync(sensorList, this, now),
+    );
+    await Promise.allSettled(promises);
   }
 
   getAvailableDevices(
@@ -124,9 +116,9 @@ class OutputList implements Disposable {
     filterUsed?: boolean,
   ): Record<string, string>[] {
     switch (model) {
-      case ModelList.PCA9685.toLowerCase():
-        return []; //this.#PCA9685.getAvailableChildIds(address);
-      case ModelList.TPLinkSmartPlug.toLowerCase():
+      case Models.PCA9685:
+        return this.#PCA9685.getAvailableDevices(address);
+      case Models.TPLINK_SMART_PLUG:
         return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:
         return [];
@@ -134,6 +126,7 @@ class OutputList implements Disposable {
   }
 
   [Symbol.dispose](): void {
+    this.#logger.debug("Disposing of system OutputList");
     for (const key in this.#outputs) {
       try {
         this.#deleteOutput(this.#outputs[key]!);
@@ -273,11 +266,11 @@ class OutputList implements Disposable {
   async #createOutputAsync(output: SDBOutput): Promise<void> {
     let newOutput: OutputBase | undefined;
     switch (output.model.toLowerCase()) {
-      case ModelList.PCA9685.toLowerCase(): {
+      case Models.PCA9685.toLowerCase(): {
         newOutput = await this.#PCA9685.createOutputAsync(output);
         break;
       }
-      case ModelList.TPLinkSmartPlug.toLowerCase(): {
+      case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
@@ -291,11 +284,11 @@ class OutputList implements Disposable {
 
   #deleteOutput(output: OutputBase): void {
     switch (output.model.toLowerCase()) {
-      case ModelList.PCA9685.toLowerCase(): {
+      case Models.PCA9685.toLowerCase(): {
         this.#PCA9685.disposeOutput(output);
         break;
       }
-      case ModelList.TPLinkSmartPlug.toLowerCase(): {
+      case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         this.#TPLinkSmartPlugs.disposeOutput(output);
         break;
       }

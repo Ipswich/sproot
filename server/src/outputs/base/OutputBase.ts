@@ -11,10 +11,11 @@ import OutputAutomationManager from "../../automation/outputs/OutputAutomationMa
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
-  readonly model: string;
+  readonly model: keyof typeof Models;
   readonly address: string;
   readonly pin: string;
   name: string;
@@ -31,6 +32,7 @@ export abstract class OutputBase implements IOutputBase {
   #chartDataPointInterval: number;
   #automationManager: OutputAutomationManager;
   #updateMissCount = 0;
+  #isExecuting = false;
 
   constructor(
     sdbOutput: SDBOutput,
@@ -55,7 +57,7 @@ export abstract class OutputBase implements IOutputBase {
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
-    this.#automationManager = new OutputAutomationManager(sprootDB);
+    this.#automationManager = new OutputAutomationManager(sprootDB, logger);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
@@ -232,32 +234,44 @@ export abstract class OutputBase implements IOutputBase {
   protected async executeStateHelperAsync(
     executionFnAsync: (value: number) => Promise<void>,
   ): Promise<void> {
-    //Local helper function
-    const validateAndFixValue = (value: number) => {
-      if (!this.isPwm && value != 0 && value != 100) {
-        this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
-        return;
-      }
-      const validatedValue = (this.isInvertedPwm ? 100 - value : value) / 100;
-      this.logger.verbose(
-        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue * 100}`,
+    if (this.#isExecuting) {
+      this.logger.warn(
+        `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
       );
-      return validatedValue;
-    };
-
-    let validatedValue = undefined;
+      return;
+    }
     try {
+      let validatedValue = undefined;
+      this.#isExecuting = true;
       switch (this.controlMode) {
         case ControlMode.manual:
-          validatedValue = validateAndFixValue(this.state.manual.value);
-          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
+          validatedValue = this.#validateAndFixValue(this.state.manual.value);
+          break;
         case ControlMode.automatic:
-          validatedValue = validateAndFixValue(this.state.automatic.value);
-          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
+          validatedValue = this.#validateAndFixValue(this.state.automatic.value);
+          break;
       }
+      if (validatedValue === undefined) {
+        return undefined;
+      }
+      this.logger.verbose(
+        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
+      );
+      await executionFnAsync(validatedValue);
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
+    } finally {
+      this.#isExecuting = false;
     }
+  }
+
+  #validateAndFixValue(value: number): number | undefined {
+    if (!this.isPwm && value != 0 && value != 100) {
+      this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
+      return;
+    }
+    const validatedValue = this.isInvertedPwm ? 100 - value : value;
+    return validatedValue;
   }
 
   #updateChartData(): void {

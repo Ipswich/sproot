@@ -15,11 +15,10 @@ function isBetweenTimeStamp(
   const [startHours, startMinutes] = startTime.split(":").map(Number);
   const [endHours, endMinutes] = endTime.split(":").map(Number);
 
-  //In case now isn't really "now".
   const nowHours = now.getHours();
-  const nowMInutes = now.getMinutes();
+  const nowMinutes = now.getMinutes();
   const nowDate = new Date();
-  nowDate.setHours(nowHours, nowMInutes, 0, 0);
+  nowDate.setHours(nowHours, nowMinutes, 0, 0);
 
   const start = new Date();
   start.setHours(startHours!, startMinutes, 0, 0);
