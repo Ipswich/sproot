@@ -9,7 +9,6 @@ import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
-import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 class OutputList implements Disposable {
@@ -101,23 +100,14 @@ class OutputList implements Disposable {
   }
 
   async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
-    outputId
-      ? await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now)
-      : Object.values(this.#outputs).forEach(
-          async (output) => await output.runAutomationsAsync(sensorList, this, now),
-        );
-  }
-
-  getAutomations() {
-    const allAutomations = {} as Record<number, Record<string, OutputAutomation>>;
-    for (const output of Object.values(this.#outputs)) {
-      const automations = output.getAutomations();
-      if (Object.keys(automations).length > 0) {
-        allAutomations[output.id] = automations;
-      }
+    if (outputId) {
+      await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now);
+      return;
     }
-
-    return allAutomations;
+    const promises = Object.values(this.#outputs).map(
+      async (output) => await output.runAutomationsAsync(sensorList, this, now),
+    );
+    await Promise.allSettled(promises);
   }
 
   getAvailableDevices(
@@ -127,7 +117,7 @@ class OutputList implements Disposable {
   ): Record<string, string>[] {
     switch (model) {
       case Models.PCA9685:
-        return []; //this.#PCA9685.getAvailableChildIds(address);
+        return this.#PCA9685.getAvailableDevices(address);
       case Models.TPLINK_SMART_PLUG:
         return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:

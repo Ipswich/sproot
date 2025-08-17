@@ -78,8 +78,19 @@ export default class OutputAutomationManager {
     } else {
       //No automations evaluated to true
       if (this.#lastEvaluation.names.length != 0) {
+        const nowString = now.toLocaleString("en-US", {
+          timeZone: process.env["TZ"],
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour12: true,
+          fractionalSecondDigits: 3,
+        });
         this.#logger.debug(
-          `No automations evaluated to true, but the last one probably did {name: ${this.#lastEvaluation.names}, value: ${this.#lastEvaluation.value}}. `,
+          `No automations evaluated to true, but the last one probably did {"now": ${nowString}, name: ${this.#lastEvaluation.names}, value: ${this.#lastEvaluation.value}}.`,
         );
       }
 

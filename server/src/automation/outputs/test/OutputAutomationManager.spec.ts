@@ -23,7 +23,7 @@ describe("OutputAutomationManager.ts tests", () => {
       }) as unknown as winston.Logger,
   );
   const mockLogger = winston.createLogger();
-  
+
   describe("evaluate", () => {
     it("should return the automation's value (conditions met)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
