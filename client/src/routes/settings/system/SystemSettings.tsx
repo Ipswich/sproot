@@ -1,18 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { powerOffAsync, pingAsync } from "../../../requests/requests_v2";
 import { Fragment } from "react/jsx-runtime";
-import { Stack, Button, Modal, Group, Loader, rem } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { Stack, Modal, Group, Loader } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { pingAsync } from "../../../requests/requests_v2";
+import { useQuery } from "@tanstack/react-query";
+import RestartButton from "./RestartButton";
+import SystemStatus from "./Status";
 
 export default function SystemSettings() {
   const [serverIsOnline, setServerIsOnline] = useState(true);
-  const powerOffQuery = useMutation({
-    mutationFn: () => {
-      return powerOffAsync();
-    },
-  });
-
   const pingQuery = useQuery({
     queryKey: ["ping"],
     queryFn: () => {
@@ -34,14 +29,9 @@ export default function SystemSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [
-    confirmModalOpened,
-    { open: openConfirmModal, close: closeConfirmModal },
-  ] = useDisclosure(false);
-
   return (
     <Fragment>
-      <Stack h="600" justify="center" align="center">
+      <Stack h="600" align="center">
         {!serverIsOnline ? (
           <Modal
             overlayProps={{
@@ -66,42 +56,11 @@ export default function SystemSettings() {
             </Stack>
           </Modal>
         ) : (
-          <Button
-            size="xl"
-            w={rem(300)}
-            onClick={() => {
-              openConfirmModal();
-            }}
-          >
-            Restart System
-          </Button>
+          <Fragment>
+            <SystemStatus />
+            <RestartButton />
+          </Fragment>
         )}
-
-        <Modal
-          overlayProps={{
-            backgroundOpacity: 0.55,
-            blur: 3,
-          }}
-          centered
-          size="xs"
-          opened={confirmModalOpened}
-          onClose={closeConfirmModal}
-          title="Restart System?"
-        >
-          <Group justify="space-between">
-            <Button onClick={closeConfirmModal}>Cancel</Button>
-            <Button
-              color="red"
-              loading={powerOffQuery.isPending}
-              onClick={() => {
-                closeConfirmModal();
-                powerOffQuery.mutate();
-              }}
-            >
-              Confirm
-            </Button>
-          </Group>
-        </Modal>
       </Stack>
     </Fragment>
   );

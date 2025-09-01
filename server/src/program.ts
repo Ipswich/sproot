@@ -76,35 +76,35 @@ export default async function setupAsync(): Promise<Express> {
 
   //State update loop
   const updateStateCronJob = new CronJob(
-      Constants.CRON.EVERY_SECOND,
-      async () => {
-        try {
-          logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
-          await Promise.all([
-            cameraManager.initializeOrRegenerateAsync(),
-            sensorList.initializeOrRegenerateAsync(),
-            outputList.initializeOrRegenerateAsync(),
-          ]);
-          //Add triggers and whatnot here.
+    Constants.CRON.EVERY_SECOND,
+    async () => {
+      try {
+        logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
+        await Promise.all([
+          cameraManager.initializeOrRegenerateAsync(),
+          sensorList.initializeOrRegenerateAsync(),
+          outputList.initializeOrRegenerateAsync(),
+        ]);
+        //Add triggers and whatnot here.
 
-          await outputList.runAutomationsAsync(sensorList, new Date());
+        await outputList.runAutomationsAsync(sensorList, new Date());
 
-          //Execute any changes made to state.
-          await outputList.executeOutputStateAsync();
-        } catch (e) {
-          logger.error(`Exception in state update loop: ${e}`);
-        }
-      },
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      (err) => logger.error(`State update cron error: ${err}`),
-    );
+        //Execute any changes made to state.
+        await outputList.executeOutputStateAsync();
+      } catch (e) {
+        logger.error(`Exception in state update loop: ${e}`);
+      }
+    },
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    (err) => logger.error(`State update cron error: ${err}`),
+  );
   updateStateCronJob.start();
   app.set("updateStateCronJob", updateStateCronJob);
 
