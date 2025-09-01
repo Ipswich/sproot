@@ -8,6 +8,7 @@ services:
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
+      LOG_DEBUG: true
       DEFAULT_USER: dev-test
       DEFAULT_USER_EMAIL: dev-test@example.com
       DEFAULT_USER_PASSWORD: password
