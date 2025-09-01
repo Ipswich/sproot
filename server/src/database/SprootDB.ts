@@ -470,6 +470,14 @@ export class SprootDB implements ISprootDB {
     return this.#connection("users").insert(user);
   }
 
+  async getDatabaseSizeAsync(): Promise<number> {
+    const result = await this.#connection.raw(
+      "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size FROM information_schema.tables WHERE table_schema = ?",
+      [this.#connection.client.database()],
+    );
+    return parseFloat(result[0][0].size);
+  }
+
   disposeAsync(): Promise<void> {
     return this.#connection.destroy();
   }

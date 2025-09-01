@@ -307,6 +307,52 @@ paths:
                               example:
                                 - "Failed to power off system."
                                 - "System is not available."
+  /api/v2/system/status:
+    get:
+      tags:
+        - "System"
+      summary: Get system status.
+      description: >
+        Returns the current status of the system, including uptime, memory usage, CPU usage, and other
+        relevant information. This is useful for monitoring the health of the system. Uptime is in 
+        seconds, memory metrics are in MB, CPU usage is a percentage, and disk sizes are in MB.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            properties:
+                              allof:
+                                $ref: "#/components/schemas/SystemStatus"
+                          
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/status"
+                          details:
+                            items:
+                              example: "Failed to retrieve system status."
   /api/v2/ping:
     get:
       tags:
@@ -4414,6 +4460,39 @@ components:
           nullable: true
           type: string
           example: "23:59"
+    
+    SystemStatus:
+      description: >
+        An object containing the current system status, including uptime, memory usage, CPU usage,
+        database size, total disk size, and free disk size. All memory metrics are in MB.
+      type: object
+      required:
+        - "uptimeSeconds"
+        - "heapUsageMB"
+        - "memoryUsageMB"
+        - "cpuUsage"
+        - "databaseSizeMB"
+        - "totalDiskSizeMB"
+        - "freeDiskSizeMB"
+      properties:
+        uptime:
+          type: number
+          example: 3600
+        memoryUsage:
+          type: number
+          example: 2048000
+        cpuUsage:
+          type: number
+          example: 15.5
+        databaseSize: 
+          type: number
+          example: 250
+        totalDiskSize:
+          type: number
+          example: 64000 
+        freeDiskSize:
+          type: number
+          example: 32000
 
   securitySchemes:
     bearerAuth:

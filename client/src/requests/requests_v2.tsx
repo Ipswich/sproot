@@ -12,6 +12,7 @@ import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { AvailableDevice } from "@sproot/outputs/AvailableDevice";
 import { ReadingType } from "@sproot/sensors/ReadingType";
+import { SystemStatus } from "@sproot/system/SystemStatus";
 import {
   SuccessResponse,
   ErrorResponse,
@@ -758,6 +759,20 @@ export async function updateCameraSettingsAsync(
   if (!response.ok) {
     console.error(`Error updating camera settings: ${response}`);
   }
+}
+
+export async function getSystemStatusAsync(): Promise<SystemStatus> {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/status`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching camera settings: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
 }
 
 function queryBuilder(
