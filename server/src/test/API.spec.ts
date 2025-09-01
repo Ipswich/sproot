@@ -983,4 +983,32 @@ describe("API Tests", async () => {
       });
     });
   });
+
+  describe("System Routes", async () => {
+    describe("Status", async () => {
+      describe("GET", async () => {
+        it("should return 200 and system status", async () => {
+          const response = await request(server).get("/api/v2/system/status").expect(200);
+          const content = response.body["content"];
+          validateMiddlewareValues(response);
+          assert.containsAllKeys(content.data, [
+            "uptime",
+            "memoryUsage",
+            "heapUsage",
+            "cpuUsage",
+            "databaseSize",
+            "totalDiskSize",
+            "freeDiskSize",
+          ]);
+          assert.isNumber(content.data.uptime);
+          assert.isNumber(content.data.memoryUsage);
+          assert.isNumber(content.data.heapUsage);
+          assert.isNumber(content.data.cpuUsage);
+          assert.isNumber(content.data.databaseSize);
+          assert.isNumber(content.data.totalDiskSize);
+          assert.isNumber(content.data.freeDiskSize);
+        });
+      });
+    });
+  });
 });

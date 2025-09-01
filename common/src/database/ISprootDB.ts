@@ -128,6 +128,8 @@ interface ISprootDB {
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
+
+  getDatabaseSizeAsync(): Promise<number>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -392,6 +394,10 @@ class MockSprootDB implements ISprootDB {
 
   async addUserAsync(_user: SDBUser): Promise<void> {
     return;
+  }
+
+  async getDatabaseSizeAsync(): Promise<number> {
+    return 0;
   }
 }
 

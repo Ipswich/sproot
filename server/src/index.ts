@@ -28,6 +28,10 @@ mainAsync().then((app) => {
           // Cleanup sensors and turn off outputs
           await app.get("sensorList").disposeAsync();
           app.get("outputList")[Symbol.dispose]();
+
+          // Cleanup system status monitor
+          app.get("systemStatusMonitor")[Symbol.dispose]();
+
           // Close database connection
           await app.get("sprootDB").disposeAsync();
         } catch (err) {
