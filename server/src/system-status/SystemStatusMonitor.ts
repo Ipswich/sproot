@@ -14,11 +14,12 @@ export class SystemStatusMonitor {
     this.#sprootDB = sprootDB;
   }
 
-  async getStatsAsync(): Promise<SystemStatus> {
+  async getStatusAsync(): Promise<SystemStatus> {
     const fileStats = await statfsAsync("/");
     return {
       uptime: process.uptime(),
-      memoryUsage: process.memoryUsage.rss() / 1024 / 1024,
+      memoryUsage: process.memoryUsage().rss / 1024 / 1024,
+      heapUsage: process.memoryUsage().heapUsed / 1024 / 1024,
       cpuUsage: this.#cpuMonitor.getAverageUsage(),
       databaseSize: await this.#sprootDB.getDatabaseSizeAsync(),
       totalDiskSize: (fileStats.blocks * fileStats.bsize) / 1024 / 1024,
@@ -56,19 +57,34 @@ class CpuMonitor {
   }
 
   #getCpuTimes() {
-    const cpus = os.cpus();
+    // Get CPU usage for just this process and its children
+    // process.cpuUsage() returns user/system microseconds for this process
+    // We need to convert to milliseconds and estimate percent usage
 
-    let idle = 0;
-    let total = 0;
+    const cpuUsage = process.cpuUsage();
+    const userMs = cpuUsage.user / 1000;
+    const systemMs = cpuUsage.system / 1000;
+    const totalProcessMs = userMs + systemMs;
 
-    for (const cpu of cpus) {
-      for (const [type, value] of Object.entries(cpu.times)) {
-        total += value;
-        if (type === "idle") idle += value;
-      }
-    }
+    // Get elapsed time since process started
+    const uptimeMs = process.uptime() * 1000;
 
-    return { idle, total };
+    // Get number of CPUs
+    const numCpus = os.cpus().length;
+
+    // Total available CPU time (ms) for all cores
+    const totalAvailableMs = uptimeMs * numCpus;
+
+    // Usage percent for this process and its children
+    const usagePercent = totalAvailableMs > 0 ? (totalProcessMs / totalAvailableMs) * 100 : 0;
+
+    // For compatibility with previous code, return "idle" and "total"
+    // Here, "idle" is the unused portion, "total" is totalAvailableMs
+    return {
+      idle: totalAvailableMs - totalProcessMs,
+      total: totalAvailableMs,
+      usagePercent,
+    };
   }
 
   #startSampling() {

@@ -980,6 +980,7 @@ describe("API Tests", async () => {
           assert.containsAllKeys(content.data, [
             "uptime",
             "memoryUsage",
+            "heapUsage",
             "cpuUsage",
             "databaseSize",
             "totalDiskSize",
@@ -987,6 +988,7 @@ describe("API Tests", async () => {
           ]);
           assert.isNumber(content.data.uptime);
           assert.isNumber(content.data.memoryUsage);
+          assert.isNumber(content.data.heapUsage);
           assert.isNumber(content.data.cpuUsage);
           assert.isNumber(content.data.databaseSize);
           assert.isNumber(content.data.totalDiskSize);

@@ -9,7 +9,7 @@ export async function systemStatusMonitorHandlerAsync(
   const systemStatusMonitor = request.app.get("systemStatusMonitor") as SystemStatusMonitor;
 
   try {
-    const stats = await systemStatusMonitor.getStatsAsync();
+    const stats = await systemStatusMonitor.getStatusAsync();
     return {
       statusCode: 200,
       content: {

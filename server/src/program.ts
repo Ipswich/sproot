@@ -75,18 +75,16 @@ export default async function setupAsync(): Promise<Express> {
   app.set("automationDataManager", automationDataManager);
 
   //State update loop
-  app.set(
-    "updateStateCronJob",
-    new CronJob(
+  const updateStateCronJob = new CronJob(
       Constants.CRON.EVERY_SECOND,
       async () => {
         try {
+          logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
           await Promise.all([
             cameraManager.initializeOrRegenerateAsync(),
             sensorList.initializeOrRegenerateAsync(),
             outputList.initializeOrRegenerateAsync(),
           ]);
-          logger.debug("Total memory usage: " + process.memoryUsage.rss() / 1024 / 1024 + "MB");
           //Add triggers and whatnot here.
 
           await outputList.runAutomationsAsync(sensorList, new Date());
@@ -98,9 +96,17 @@ export default async function setupAsync(): Promise<Express> {
         }
       },
       null,
-      true,
-    ),
-  );
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      (err) => logger.error(`State update cron error: ${err}`),
+    );
+  updateStateCronJob.start();
+  app.set("updateStateCronJob", updateStateCronJob);
 
   // Update loop - once a minute, that's the "frequency" of the system.
   app.set(

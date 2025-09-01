@@ -4467,12 +4467,13 @@ components:
         database size, total disk size, and free disk size. All memory metrics are in MB.
       type: object
       required:
-        - "uptime"
-        - "memoryUsage"
+        - "uptimeSeconds"
+        - "heapUsageMB"
+        - "memoryUsageMB"
         - "cpuUsage"
-        - "databaseSize"
-        - "totalDiskSize"
-        - "freeDiskSize"
+        - "databaseSizeMB"
+        - "totalDiskSizeMB"
+        - "freeDiskSizeMB"
       properties:
         uptime:
           type: number
