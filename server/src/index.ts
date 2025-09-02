@@ -20,7 +20,8 @@ mainAsync().then((app) => {
       server.close(async () => {
         // Stop updating database and sensors
         app.get("updateDatabaseCronJob").stop();
-        app.get("updateStateCronJob").stop();
+        app.get("evaluateAutomationsCronJob").stop();
+        app.get("updateDeviceListsCronJob").stop();
         try {
           // Cleanup Cameras
           app.get("cameraManager").dispose();

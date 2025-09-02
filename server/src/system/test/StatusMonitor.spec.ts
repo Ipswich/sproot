@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import sinon from "sinon";
-import { SystemStatusMonitor } from "../SystemStatusMonitor";
+import { SystemStatusMonitor } from "../StatusMonitor";
 
 describe("ServerStatsManager", () => {
   let sprootDBMock: any;
