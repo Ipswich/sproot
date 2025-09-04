@@ -2,16 +2,19 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
 import { OutputAutomation } from "./OutputAutomation";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
 
 export default class OutputAutomationManager {
   #automations: Record<number, OutputAutomation>;
   #sprootDB: ISprootDB;
+  #logger: winston.Logger;
   #lastRunAt: number | null = null;
   #lastEvaluation: { names: string[]; value: number | null } = { names: [], value: null };
 
-  constructor(sprootDB: ISprootDB) {
+  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#automations = {};
     this.#sprootDB = sprootDB;
+    this.#logger = logger;
   }
 
   get automations() {
@@ -36,7 +39,9 @@ export default class OutputAutomationManager {
     if (!this.#isRunnable(now, automationTimeout)) {
       return this.#lastEvaluation;
     } else {
-      this.#lastRunAt = now.getTime();
+      // this.#lastRunAt = now.getTime();
+      // Round down to the nearest tenth of a second, give an extra 100ms of slop because eventloop
+      this.#lastRunAt = Math.floor(now.getTime() / 100) * 100 - 100;
     }
     const evaluatedAutomations = Object.values(this.#automations)
       .map((automation) => {
@@ -72,6 +77,23 @@ export default class OutputAutomationManager {
       };
     } else {
       //No automations evaluated to true
+      if (this.#lastEvaluation.names.length != 0) {
+        const nowString = now.toLocaleString("en-US", {
+          timeZone: process.env["TZ"],
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour12: true,
+          fractionalSecondDigits: 3,
+        });
+        this.#logger.debug(
+          `No automations evaluated to true, but the last one probably did {"now": ${nowString}, name: ${this.#lastEvaluation.names}, value: ${this.#lastEvaluation.value}}.`,
+        );
+      }
+
       this.#lastEvaluation = { names: [], value: null };
     }
     return this.#lastEvaluation;
@@ -110,6 +132,18 @@ export default class OutputAutomationManager {
   }
 
   #isRunnable(now: Date, automationTimeout: number): boolean {
-    return this.#lastRunAt == null || this.#lastRunAt + automationTimeout * 1000 <= now.getTime();
+    const runnable =
+      this.#lastRunAt == null ||
+      // this.#lastRunAt + automationTimeout * 1000 < now.getTime()
+      // Round "now" up to the nearest tenth second. Very high granularity can cause weirdness with non real-time ticks.
+      this.#lastRunAt + automationTimeout * 1000 <= Math.ceil(now.getTime() / 100) * 100;
+
+    if (!runnable && this.#lastEvaluation.names.length != 0) {
+      this.#logger.debug(
+        `Output Automations are not runnable for this output. Last run at ${new Date(this.#lastRunAt!).toISOString()}. Now is ${new Date(Math.ceil(now.getTime() / 100) * 100).toISOString()}. Timeout is ${automationTimeout} seconds.`,
+      );
+    }
+
+    return runnable;
   }
 }

@@ -108,7 +108,9 @@ export async function getSensorsAsync(): Promise<Record<string, ISensorBase>> {
   return deserializedResponse.content?.data;
 }
 
-export async function getSupportedSensorModelsAsync(): Promise<string[]> {
+export async function getSupportedSensorModelsAsync(): Promise<
+  Record<string, string>
+> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/sensors/supported-models`,
     {
@@ -497,7 +499,9 @@ export async function deleteOutputActionAsync(id: number): Promise<void> {
   }
 }
 
-export async function getSupportedOutputModelsAsync(): Promise<string[]> {
+export async function getSupportedOutputModelsAsync(): Promise<
+  Record<string, string>
+> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/outputs/supported-models`,
     {

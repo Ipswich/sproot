@@ -281,7 +281,7 @@ class Timelapse {
     this.#timer = setTimeout(async () => {
       if (
         (this.#startTime === null && this.#endTime === null) ||
-        isBetweenTimeStamp(this.#startTime, this.#endTime, new Date())
+        isBetweenTimeStamp(this.#startTime, this.#endTime)
       ) {
         await this.addImage();
       }
