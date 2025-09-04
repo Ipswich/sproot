@@ -21,6 +21,7 @@ class SensorList {
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
   #chartData: SensorListChartData;
+  #isUpdating: boolean = false;
 
   constructor(
     sprootDB: ISprootDB,
@@ -87,83 +88,95 @@ class SensorList {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
-    let sensorListChanges = false;
-    const profiler = this.#logger.startTimer();
-    await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
-      this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
-    });
-    const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
+    if (this.#isUpdating) {
+      this.#logger.warn(
+        "SensorList is already updating, skipping initializeOrRegenerateAsync call.",
+      );
+      return;
+    }
+    this.#isUpdating = true;
 
-    const promises = [];
-    for (const sensor of sensorsFromDatabase) {
-      let sensorChanges = false;
-      const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
-      if (key && this.#sensors[key]) {
-        //Update if it exists
-        if (this.#sensors[key].name != sensor.name) {
-          //Also updates chartSeries data (and chart data)
-          this.#sensors[key].updateName(sensor.name);
-          sensorChanges = true;
-        }
+    try {
+      let sensorListChanges = false;
+      const profiler = this.#logger.startTimer();
+      await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
+        this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
+      });
+      const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
 
-        if (this.#sensors[key].color != sensor.color) {
-          //Also updates chartSeries data (and chart data)
-          this.#sensors[key].updateColor(sensor.color);
-          sensorChanges = true;
-        }
+      const promises = [];
+      for (const sensor of sensorsFromDatabase) {
+        let sensorChanges = false;
+        const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
+        if (key && this.#sensors[key]) {
+          //Update if it exists
+          if (this.#sensors[key].name != sensor.name) {
+            //Also updates chartSeries data (and chart data)
+            this.#sensors[key].updateName(sensor.name);
+            sensorChanges = true;
+          }
 
-        if (this.#sensors[key].pin != sensor.pin) {
-          this.#sensors[key].pin = sensor.pin;
-          sensorChanges = true;
-        }
+          if (this.#sensors[key].color != sensor.color) {
+            //Also updates chartSeries data (and chart data)
+            this.#sensors[key].updateColor(sensor.color);
+            sensorChanges = true;
+          }
 
-        if (sensorChanges) {
-          this.#logger.info(
-            `Updating sensor {model: ${this.#sensors[key].model}, id: ${this.#sensors[key].id}}`,
-          );
-          sensorListChanges = true;
-        }
-      } else {
-        //Create if it doesn't
-        this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
-        promises.push(
-          this.#createSensorAsync(sensor).catch((err) =>
-            this.#logger.error(
-              `Could not build sensor {model: ${sensor.model}, id: ${sensor.id}}. ${err}`,
+          if (this.#sensors[key].pin != sensor.pin) {
+            this.#sensors[key].pin = sensor.pin;
+            sensorChanges = true;
+          }
+
+          if (sensorChanges) {
+            this.#logger.info(
+              `Updating sensor {model: ${this.#sensors[key].model}, id: ${this.#sensors[key].id}}`,
+            );
+            sensorListChanges = true;
+          }
+        } else {
+          //Create if it doesn't
+          this.#logger.info(`Creating sensor {model: ${sensor.model}, id: ${sensor.id}}`);
+          promises.push(
+            this.#createSensorAsync(sensor).catch((err) =>
+              this.#logger.error(
+                `Could not build sensor {model: ${sensor.model}, id: ${sensor.id}}. ${err}`,
+              ),
             ),
-          ),
-        );
-        sensorListChanges = true;
-      }
-    }
-    await Promise.allSettled(promises);
-
-    //Remove deleted ones
-    const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
-    for (const key in this.#sensors) {
-      if (!sensorIdsFromDatabase.includes(key)) {
-        try {
-          this.#logger.info(
-            `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
           );
-          this.#disposeSensorAsync(this.#sensors[key]!);
           sensorListChanges = true;
-        } catch (err) {
-          this.#logger.error(
-            `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}. ${err}`,
-          );
         }
       }
-    }
+      await Promise.allSettled(promises);
 
-    if (sensorListChanges) {
-      this.loadChartData();
-      this.loadChartSeries();
+      //Remove deleted ones
+      const sensorIdsFromDatabase = sensorsFromDatabase.map((sensor) => sensor.id.toString());
+      for (const key in this.#sensors) {
+        if (!sensorIdsFromDatabase.includes(key)) {
+          try {
+            this.#logger.info(
+              `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
+            );
+            this.#disposeSensorAsync(this.#sensors[key]!);
+            sensorListChanges = true;
+          } catch (err) {
+            this.#logger.error(
+              `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}. ${err}`,
+            );
+          }
+        }
+      }
+
+      if (sensorListChanges) {
+        this.loadChartData();
+        this.loadChartSeries();
+      }
+      profiler.done({
+        message: "SensorList initializeOrRegenerate time",
+        level: "debug",
+      });
+    } finally {
+      this.#isUpdating = false;
     }
-    profiler.done({
-      message: "SensorList initializeOrRegenerate time",
-      level: "debug",
-    });
   }
 
   updateDataStoresAsync = async () => {

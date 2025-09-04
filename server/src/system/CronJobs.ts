@@ -6,7 +6,7 @@ import { SensorList } from "../sensors/list/SensorList";
 import { SystemStatusMonitor } from "./StatusMonitor";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 
-export function createUpdateDeviceListsCronJob(
+export function createUpdateStateCronJob(
   cameraManager: CameraManager,
   sensorList: SensorList,
   outputList: OutputList,
@@ -29,6 +29,9 @@ export function createUpdateDeviceListsCronJob(
           sensorList.initializeOrRegenerateAsync(),
           outputList.initializeOrRegenerateAsync(),
         ]);
+
+        await outputList.runAutomationsAsync(sensorList, new Date());
+        await outputList.executeOutputStateAsync();
       } catch (e) {
         logger.error(`Exception in device update loop: ${e}`);
       } finally {
@@ -44,41 +47,6 @@ export function createUpdateDeviceListsCronJob(
     null,
     null,
     (err) => logger.error(`Device update cron error: ${err}`),
-  );
-}
-
-export function createAutomationEvaluationCronJob(
-  sensorList: SensorList,
-  outputList: OutputList,
-  logger: winston.Logger,
-) {
-  let running = false;
-  return new CronJob(
-    Constants.CRON.EVERY_SECOND,
-    async function () {
-      if (running) {
-        logger.warn("Automation evaluation cron skipped: previous job still running.");
-        return;
-      }
-      running = true;
-      try {
-        await outputList.runAutomationsAsync(sensorList, new Date());
-        await outputList.executeOutputStateAsync();
-      } catch (e) {
-        logger.error(`Exception in automation evaluation loop: ${e}`);
-      } finally {
-        running = false;
-      }
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    (err) => logger.error(`Automation evaluation cron error: ${err}`),
   );
 }
 

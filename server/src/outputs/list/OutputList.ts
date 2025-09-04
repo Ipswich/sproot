@@ -18,6 +18,7 @@ class OutputList implements Disposable {
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
   #chartData: OutputListChartData;
+  #isUpdating: boolean = false;
   maxCacheSize: number;
   initialCacheLookback: number;
   maxChartDataSize: number;
@@ -141,97 +142,107 @@ class OutputList implements Disposable {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
-    let outputListChanges = false;
-    const profiler = this.#logger.startTimer();
-    const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
-
-    const promises = [];
-    for (const output of outputsFromDatabase) {
-      const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
-      if (key) {
-        //Update if it exists
-        await this.#outputs[key]!.loadAutomationsAsync();
-
-        if (this.#outputs[key]?.name != output.name) {
-          outputListChanges = true;
-          //Also updates chart data (and series)
-          this.#outputs[key]!.updateName(output.name);
-        }
-
-        if (this.#outputs[key]?.isPwm != output.isPwm) {
-          outputListChanges = true;
-          this.#outputs[key]!.isPwm = output.isPwm;
-        }
-
-        if (this.#outputs[key]?.isInvertedPwm != output.isInvertedPwm) {
-          outputListChanges = true;
-          this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
-        }
-
-        if (this.#outputs[key]?.color != output.color) {
-          outputListChanges = true;
-          //Also updates chart data (and series)
-          this.#outputs[key]!.updateColor(output.color);
-        }
-
-        if (this.#outputs[key]?.automationTimeout != output.automationTimeout) {
-          outputListChanges = true;
-          this.#outputs[key]!.automationTimeout = output.automationTimeout;
-        }
-
-        if (outputListChanges) {
-          this.#logger.info(
-            `Updating output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
-          );
-        }
-      } else {
-        //Create if it doesn't
-        this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
-        promises.push(
-          this.#createOutputAsync(output).catch((err) =>
-            this.#logger.error(
-              `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
-            ),
-          ),
-        );
-        outputListChanges = true;
-      }
-    }
-    await Promise.allSettled(promises);
-
-    //Remove deleted ones
-    const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
-    for (const key in this.#outputs) {
-      if (!outputIdsFromDatabase.includes(key)) {
-        try {
-          this.#logger.info(
-            `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
-          );
-          this.#deleteOutput(this.#outputs[key]!);
-          delete this.#outputs[key];
-          outputListChanges = true;
-        } catch (err) {
-          this.#logger.error(
-            `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
-          );
-        }
-      }
-    }
-
-    if (outputListChanges) {
-      const data = Object.values(this.outputs).map((output) => output.getChartData().data);
-      const series = Object.values(this.outputs).map((output) => output.getChartData().series);
-      this.#chartData.loadChartData(data, "output");
-      this.#chartData.loadChartSeries(series);
-      this.#logger.info(
-        `Loaded aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
+    if (this.#isUpdating) {
+      this.#logger.warn(
+        "OutputList is already updating, skipping initializeOrRegenerateAsync call.",
       );
+      return;
     }
+    try {
+      let outputListChanges = false;
+      const profiler = this.#logger.startTimer();
+      const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
 
-    profiler.done({
-      message: "OutputList initializeOrRegenerate time",
-      level: "debug",
-    });
+      const promises = [];
+      for (const output of outputsFromDatabase) {
+        const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
+        if (key) {
+          //Update if it exists
+          await this.#outputs[key]!.loadAutomationsAsync();
+
+          if (this.#outputs[key]?.name != output.name) {
+            outputListChanges = true;
+            //Also updates chart data (and series)
+            this.#outputs[key]!.updateName(output.name);
+          }
+
+          if (this.#outputs[key]?.isPwm != output.isPwm) {
+            outputListChanges = true;
+            this.#outputs[key]!.isPwm = output.isPwm;
+          }
+
+          if (this.#outputs[key]?.isInvertedPwm != output.isInvertedPwm) {
+            outputListChanges = true;
+            this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
+          }
+
+          if (this.#outputs[key]?.color != output.color) {
+            outputListChanges = true;
+            //Also updates chart data (and series)
+            this.#outputs[key]!.updateColor(output.color);
+          }
+
+          if (this.#outputs[key]?.automationTimeout != output.automationTimeout) {
+            outputListChanges = true;
+            this.#outputs[key]!.automationTimeout = output.automationTimeout;
+          }
+
+          if (outputListChanges) {
+            this.#logger.info(
+              `Updating output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
+            );
+          }
+        } else {
+          //Create if it doesn't
+          this.#logger.info(`Creating output {model: ${output.model}, id: ${output.id}}`);
+          promises.push(
+            this.#createOutputAsync(output).catch((err) =>
+              this.#logger.error(
+                `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
+              ),
+            ),
+          );
+          outputListChanges = true;
+        }
+      }
+      await Promise.allSettled(promises);
+
+      //Remove deleted ones
+      const outputIdsFromDatabase = outputsFromDatabase.map((output) => output.id.toString());
+      for (const key in this.#outputs) {
+        if (!outputIdsFromDatabase.includes(key)) {
+          try {
+            this.#logger.info(
+              `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
+            );
+            this.#deleteOutput(this.#outputs[key]!);
+            delete this.#outputs[key];
+            outputListChanges = true;
+          } catch (err) {
+            this.#logger.error(
+              `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
+            );
+          }
+        }
+      }
+
+      if (outputListChanges) {
+        const data = Object.values(this.outputs).map((output) => output.getChartData().data);
+        const series = Object.values(this.outputs).map((output) => output.getChartData().series);
+        this.#chartData.loadChartData(data, "output");
+        this.#chartData.loadChartSeries(series);
+        this.#logger.info(
+          `Loaded aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
+        );
+      }
+
+      profiler.done({
+        message: "OutputList initializeOrRegenerate time",
+        level: "debug",
+      });
+    } finally {
+      this.#isUpdating = false;
+    }
   }
 
   async updateDataStoresAsync(): Promise<void> {
