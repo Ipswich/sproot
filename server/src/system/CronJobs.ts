@@ -13,10 +13,10 @@ export function createUpdateStateCronJob(
   systemStatusMonitor: SystemStatusMonitor,
   logger: winston.Logger,
 ) {
+  let running = false;
   return new CronJob(
     Constants.CRON.EVERY_SECOND,
     async function () {
-      let running = false;
       if (running) {
         logger.warn("Device update cron skipped: previous job still running.");
         return;

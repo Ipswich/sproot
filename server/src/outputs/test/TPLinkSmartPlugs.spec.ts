@@ -34,10 +34,7 @@ describe("tplinkPlug.ts tests", function () {
   }
 
   it("should create and delete TPLink Smart Plugs outputs", async function () {
-    sinon
-      .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
-    const logger = winston.createLogger();
+    const logger = winston.createLogger({ silent: true });
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
     await delay(20);
@@ -203,12 +200,7 @@ describe("tplinkPlug.ts tests", function () {
   });
 
   it("should update and apply states with respect to control mode", async function () {
-    sinon
-      .stub(winston, "createLogger")
-      .callsFake(
-        () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
-      );
-    const logger = winston.createLogger();
+    const logger = winston.createLogger({ silent: true });
 
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves();
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);

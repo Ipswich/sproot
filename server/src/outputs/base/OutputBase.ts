@@ -174,12 +174,18 @@ export abstract class OutputBase implements IOutputBase {
     outputList: OutputList,
     now: Date,
   ): Promise<void> {
+    const evaluateProfiler = this.logger.startTimer();
     const result = this.#automationManager.evaluate(
       sensorList,
       outputList,
       this.automationTimeout,
       now,
     );
+    evaluateProfiler.done({
+      message: `Output ${this.id} automation evaluation time`,
+      level: "debug",
+    });
+    const stateProfiler = this.logger.startTimer();
     if (result.value != null) {
       await this.state.setNewStateAsync(
         {
@@ -199,6 +205,10 @@ export abstract class OutputBase implements IOutputBase {
         ControlMode.automatic,
       );
     }
+    stateProfiler.done({
+      message: `Output ${this.id} setNewStateAsync time`,
+      level: "debug",
+    });
   }
 
   protected addCurrentStateToCache(): void {
