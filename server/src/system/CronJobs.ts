@@ -23,6 +23,7 @@ export function createUpdateStateCronJob(
       }
       running = true;
       try {
+        const profiler = logger.startTimer();
         logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
         await Promise.all([
           cameraManager.initializeOrRegenerateAsync(),
@@ -32,6 +33,7 @@ export function createUpdateStateCronJob(
 
         await outputList.runAutomationsAsync(sensorList, new Date());
         await outputList.executeOutputStateAsync();
+        profiler.done({ message: "Device update loop time", level: "debug" });
       } catch (e) {
         logger.error(`Exception in device update loop: ${e}`);
       } finally {
