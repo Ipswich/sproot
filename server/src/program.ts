@@ -82,11 +82,9 @@ export default async function setupAsync(): Promise<Express> {
     systemStatusMonitor,
     logger,
   );
-  updateStateCronJob.start();
   app.set("updateStateCronJob", updateStateCronJob);
 
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
-  updateDatabaseCronJob.start();
   app.set("updateDatabaseCronJob", updateDatabaseCronJob);
 
   app.use(cors());

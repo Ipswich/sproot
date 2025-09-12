@@ -172,7 +172,7 @@ class TPLinkPlug extends OutputBase {
   async executeStateAsync(): Promise<void> {
     const profiler = this.logger.startTimer();
     await this.executeStateHelperAsync(async (value) => {
-      await this.tplinkPlug.setPowerState(!!value, { timeout: 10000});
+      await this.tplinkPlug.setPowerState(!!value, { timeout: 800 });
     });
     profiler.done({ message: `Output ${this.id} executeStateAsync time`, level: "debug" });
   }

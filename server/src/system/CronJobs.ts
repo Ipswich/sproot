@@ -17,6 +17,7 @@ export function createUpdateStateCronJob(
   return new CronJob(
     Constants.CRON.EVERY_SECOND,
     async function () {
+      logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
       if (running) {
         logger.warn("Device update cron skipped: previous job still running.");
         return;
@@ -24,7 +25,6 @@ export function createUpdateStateCronJob(
       running = true;
       try {
         const profiler = logger.startTimer();
-        logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
         await Promise.all([
           cameraManager.initializeOrRegenerateAsync(),
           sensorList.initializeOrRegenerateAsync(),
@@ -40,14 +40,16 @@ export function createUpdateStateCronJob(
         running = false;
       }
     },
+    () => {
+      logger.warn("Device update cron stopped.");
+    },
+    true,
     null,
     null,
     null,
     null,
     null,
-    null,
-    null,
-    null,
+    true,
     (err) => logger.error(`Device update cron error: ${err}`),
   );
 }
@@ -75,8 +77,10 @@ export function createDatabaseUpdateCronJob(
         running = false;
       }
     },
-    null,
-    null,
+    () => {
+      logger.warn("Database update cron stopped.");
+    },
+    true,
     null,
     null,
     null,
