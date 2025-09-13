@@ -7,6 +7,7 @@ import {
   ColorInput,
   ScrollArea,
   ColorPicker,
+  NumberInput,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { addSensorAsync } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -15,9 +16,10 @@ import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
 import { useRevalidator } from "react-router-dom";
+import { Models } from "@sproot/sproot-common/src/sensors/Models";
 
 interface NewSensorModalProps {
-  supportedModels: string[];
+  supportedModels: Record<string, string>;
   modalOpened: boolean;
   closeModal: () => void;
   setIsStale: (isStale: boolean) => void;
@@ -32,6 +34,9 @@ export default function NewSensorModal({
   const revalidator = useRevalidator();
   const addSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
+      if (newSensorValues.pin != null) {
+        newSensorValues.pin = String(newSensorValues.pin);
+      }
       await addSensorAsync(newSensorValues);
     },
     onSettled: () => {
@@ -46,6 +51,7 @@ export default function NewSensorModal({
       color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
       address: "",
+      pin: null,
     },
 
     validate: {
@@ -65,6 +71,8 @@ export default function NewSensorModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
+      pin: (value: string | null) =>
+        !value || (value.length > 0 && value.length <= 64) ? null : null,
     },
   });
 
@@ -114,7 +122,9 @@ export default function NewSensorModal({
           />
           <Select
             label="Model"
-            data={supportedModels}
+            data={Object.keys(supportedModels).map((key) => {
+              return { value: key, label: supportedModels[key]! };
+            })}
             allowDeselect={false}
             placeholder="Model Name"
             required
@@ -126,6 +136,19 @@ export default function NewSensorModal({
             placeholder="0x76"
             {...newSensorForm.getInputProps("address")}
           />
+          {(newSensorForm.values.model === Models.ADS1115 ||
+            newSensorForm.values.model ===
+              Models.CAPACITIVE_MOISTURE_SENSOR) && (
+            <NumberInput
+              defaultValue={0}
+              label="Pin"
+              clampBehavior="strict"
+              allowDecimal={false}
+              min={0}
+              max={3}
+              {...newSensorForm.getInputProps("pin")}
+            />
+          )}
           <Group justify="flex-end" mt="md">
             <Button type="submit">Add Sensor</Button>
           </Group>

@@ -21,8 +21,17 @@ export default function setupLogger(app: Express): winston.Logger {
       winston.format.errors({ stack: true }),
       winston.format.timestamp({
         format: () => {
-          return new Date().toLocaleString("en-US", {
+          const date = new Date();
+          return date.toLocaleString("en-US", {
             timeZone: process.env["TZ"],
+            hour: "numeric",
+            minute: "2-digit",
+            second: "2-digit",
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+            hour12: true,
+            fractionalSecondDigits: 3,
           });
         },
       }),

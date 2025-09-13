@@ -10,12 +10,24 @@ import { SDBOutputActionView } from "@sproot/sproot-common/dist/database/SDBOutp
 import { OutputList } from "../../../outputs/list/OutputList";
 import { SensorList } from "../../../sensors/list/SensorList";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
 
 describe("OutputAutomationManager.ts tests", () => {
+  sinon.stub(winston, "createLogger").callsFake(
+    () =>
+      ({
+        info: () => {},
+        error: () => {},
+        debug: () => {},
+        startTimer: () => ({ done: () => {} }) as winston.Profiler,
+      }) as unknown as winston.Logger,
+  );
+  const mockLogger = winston.createLogger();
+
   describe("evaluate", () => {
     it("should return the automation's value (conditions met)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automationManager = new OutputAutomationManager(sprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
@@ -52,11 +64,12 @@ describe("OutputAutomationManager.ts tests", () => {
 
     it("should return the last result (not runnable)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automationManager = new OutputAutomationManager(sprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
-      const now = new Date();
+      // A timestamp rounded to a solid second.
+      const now = new Date(Math.ceil(new Date().getTime() / 1000) * 1000 - 500);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
         {
@@ -105,23 +118,23 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
 
-      //Add some time (longer automationInterval), not runnable
+      //Beyond 200ms of 61s, not runnable (tenth of a second granularity)
       result = automationManager.evaluate(
         sensorListMock,
         outputListMock,
         61,
-        new Date(now.getTime() + 60000),
+        new Date(now.getTime() + 60800),
       );
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
       assert.equal(result?.value, 75);
 
-      //Add same time, this should make the automation runnable again
+      //Within 200ms of 61s, runnable (tenth of a second granularity)
       result = automationManager.evaluate(
         sensorListMock,
         outputListMock,
-        60,
-        new Date(now.getTime() + 60000),
+        61,
+        new Date(now.getTime() + 60801),
       );
       assert.equal(result?.names.length, 1);
       assert.equal(result?.names[0], "test");
@@ -130,7 +143,7 @@ describe("OutputAutomationManager.ts tests", () => {
 
     it("should return a result with null (conditions not met)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automationManager = new OutputAutomationManager(sprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
       const now = new Date();
@@ -168,7 +181,7 @@ describe("OutputAutomationManager.ts tests", () => {
 
     it("should return a value (more than one automation evaluates to true (same values))", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automationManager = new OutputAutomationManager(sprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
@@ -224,7 +237,7 @@ describe("OutputAutomationManager.ts tests", () => {
 
     it("should return a result with null (more than one automation evaluates to true (different values))", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automationManager = new OutputAutomationManager(sprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
@@ -282,7 +295,7 @@ describe("OutputAutomationManager.ts tests", () => {
   describe("loadAsync", () => {
     it("should load all automations from the database", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automationManager = new OutputAutomationManager(sprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
 
       sprootDB.getAutomationsForOutputAsync.resolves([
         {
