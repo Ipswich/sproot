@@ -166,7 +166,8 @@ class TPLinkPlug extends OutputBase {
       logger,
     );
     this.tplinkPlug = tplinkPlug;
-    this.tplinkPlug.on("power-update", this.#powerUpdateFunction);
+    this.tplinkPlug.on("power-on", () => this.#powerUpdateFunction(true));
+    this.tplinkPlug.on("power-off", () => this.#powerUpdateFunction(false));
   }
 
   async executeStateAsync(): Promise<void> {
@@ -184,21 +185,30 @@ class TPLinkPlug extends OutputBase {
         this.logger.error(`Disposal error turning off TPLink Smart Plug ${this.id}`);
       });
     }
-    this.tplinkPlug.removeListener("power-update", this.#powerUpdateFunction);
+    this.tplinkPlug.removeAllListeners("power-on");
+    this.tplinkPlug.removeAllListeners("power-off");
   }
 
   async #powerUpdateFunction(value: boolean) {
     // This should make sure that if someone externally changes the power state of the plug when it's
     // in manual mode, it updates the state in Sproot. Otherwise, we'll just ignore it.
-    if (this.controlMode == ControlMode.manual) {
-      this.logger.info(
-        `TPLink Smart Plug ${this.id} power state updated to ${value} from external call. Updating state.`,
+    try {
+      if (this.controlMode == ControlMode.manual) {
+        this.logger.info(
+          `TPLink Smart Plug ${this.id} power state updated to ${value} from external call. Updating state.`,
+        );
+        await this.state.setNewStateAsync({
+          value: value ? 100 : 0,
+          controlMode: ControlMode.manual,
+          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+        });
+      } else {
+        await this.executeStateAsync();
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error updating state from external for TPLink Smart Plug ${this.id}: ${error}`,
       );
-      await this.state.setNewStateAsync({
-        value: value ? 100 : 0,
-        controlMode: ControlMode.manual,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      });
     }
   }
 }

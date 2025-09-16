@@ -117,17 +117,15 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should update and apply states with respect to control mode", async function () {
-    sinon
-      .stub(winston, "createLogger")
-      .callsFake(
-        () =>
-          ({
-            info: () => {},
-            error: () => {},
-            verbose: () => {},
-            debug: () => {},
-          }) as unknown as winston.Logger,
-      );
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          verbose: () => {},
+          debug: () => {},
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
