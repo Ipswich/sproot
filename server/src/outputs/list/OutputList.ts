@@ -76,16 +76,12 @@ class OutputList implements Disposable {
     return this.#chartData;
   }
 
-  updateControlMode(outputId: string, controlMode: ControlMode): void {
-    this.#outputs[outputId]?.state.updateControlMode(controlMode);
+  async updateControlModeAsync(outputId: string, controlMode: ControlMode): Promise<void> {
+    this.#outputs[outputId]?.updateControlModeAsync(controlMode);
   }
 
-  async setNewOutputStateAsync(
-    outputId: string,
-    newState: SDBOutputState,
-    targetControlMode: ControlMode,
-  ): Promise<void> {
-    await this.#outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
+  async setAndExecuteNewStateAsync(outputId: string, newState: SDBOutputState): Promise<void> {
+    await this.#outputs[outputId]?.setAndExecuteNewStateAsync(newState);
   }
 
   async executeOutputStateAsync(outputId?: string) {

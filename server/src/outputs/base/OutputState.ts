@@ -3,6 +3,7 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
 import { IOutputState, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 
 export class OutputState implements IOutputState {
+  lastValue: number;
   manual: SDBOutputState;
   automatic: SDBOutputState;
   controlMode: ControlMode;
@@ -21,6 +22,7 @@ export class OutputState implements IOutputState {
       logTime: new Date().toISOString(),
     } as SDBOutputState;
     this.controlMode = ControlMode.automatic;
+    this.lastValue = 0;
     this.#sprootDB = sprootDB;
     this.#outputId = outputId;
   }
@@ -29,7 +31,7 @@ export class OutputState implements IOutputState {
     const lastState = await this.#sprootDB.getLastOutputStateAsync(this.#outputId);
     if (lastState[0]?.controlMode == ControlMode.manual) {
       this.controlMode = ControlMode.manual;
-      await this.setNewStateAsync(lastState[0], ControlMode.manual);
+      await this.setNewStateAsync(lastState[0]);
     }
   }
 
@@ -65,6 +67,7 @@ export class OutputState implements IOutputState {
    * @param controlMode Mode to give system control to.
    */
   updateControlMode(controlMode: ControlMode) {
+    this.lastValue = this.value;
     // this.logger.info(`Output ${this.id} control mode changed to ${controlMode}`);
     this.controlMode = controlMode;
   }
@@ -77,14 +80,15 @@ export class OutputState implements IOutputState {
    * @param newState New state to set
    * @param targetControlMode Determines which state will be overwritten
    */
-  async setNewStateAsync(newState: SDBOutputState, targetControlMode: ControlMode) {
+  async setNewStateAsync(newState: SDBOutputState) {
+    this.lastValue = this.value;
     newState.value = Math.min(100, Math.max(0, newState.value));
-    switch (targetControlMode) {
+    switch (newState.controlMode) {
       case ControlMode.manual:
-        this.manual = { ...newState, controlMode: ControlMode.manual };
+        this.manual = newState;
         break;
       case ControlMode.automatic:
-        this.automatic = { ...newState, controlMode: ControlMode.automatic };
+        this.automatic = newState;
         break;
     }
     await this.updateDatabaseStateAsync();

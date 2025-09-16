@@ -121,8 +121,8 @@ export abstract class OutputBase implements IOutputBase {
    * @param newState The new state
    * @param targetControlMode The control mode to apply it to
    */
-  async setNewStateAsync(newState: SDBOutputState, targetControlMode: ControlMode): Promise<void> {
-    await this.state.setNewStateAsync(newState, targetControlMode);
+  async setAndExecuteNewStateAsync(newState: SDBOutputState): Promise<void> {
+    await this.state.setNewStateAsync(newState);
     await this.executeStateAsync();
   }
 
@@ -169,6 +169,11 @@ export abstract class OutputBase implements IOutputBase {
     }
   }
 
+  async updateControlModeAsync(controlMode: ControlMode): Promise<void> {
+    this.state.updateControlMode(controlMode);
+    await this.executeStateAsync();
+  }
+
   async runAutomationsAsync(
     sensorList: SensorList,
     outputList: OutputList,
@@ -182,23 +187,17 @@ export abstract class OutputBase implements IOutputBase {
     );
     const stateProfiler = this.logger.startTimer();
     if (result.value != null) {
-      await this.state.setNewStateAsync(
-        {
-          value: result.value,
-          controlMode: ControlMode.automatic,
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        } as SDBOutputState,
-        ControlMode.automatic,
-      );
+      await this.setAndExecuteNewStateAsync({
+        value: result.value,
+        controlMode: ControlMode.automatic,
+        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      } as SDBOutputState);
     } else {
-      await this.state.setNewStateAsync(
-        {
-          value: 0,
-          controlMode: ControlMode.automatic,
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        } as SDBOutputState,
-        ControlMode.automatic,
-      );
+      await this.setAndExecuteNewStateAsync({
+        value: 0,
+        controlMode: ControlMode.automatic,
+        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      } as SDBOutputState);
     }
     stateProfiler.done({
       message: `Output ${this.id} setNewStateAsync time`,
@@ -245,17 +244,17 @@ export abstract class OutputBase implements IOutputBase {
       );
       return;
     }
+    if (this.value == this.state.lastValue) {
+      console.log("SKIPPING EXECUTION: ", this.value, this.state.lastValue);
+      this.logger.debug(
+        `Output { Model: ${this.model}, id: ${this.id} } value has not changed. Skipping state execution.`,
+      );
+      return;
+    }
+
     try {
-      let validatedValue = undefined;
+      let validatedValue = this.#validateAndFixValue(this.value);
       this.#isExecuting = true;
-      switch (this.controlMode) {
-        case ControlMode.manual:
-          validatedValue = this.#validateAndFixValue(this.state.manual.value);
-          break;
-        case ControlMode.automatic:
-          validatedValue = this.#validateAndFixValue(this.state.automatic.value);
-          break;
-      }
       if (validatedValue === undefined) {
         return undefined;
       }
@@ -275,8 +274,7 @@ export abstract class OutputBase implements IOutputBase {
       this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
       return;
     }
-    const validatedValue = this.isInvertedPwm ? 100 - value : value;
-    return validatedValue;
+    return this.isInvertedPwm ? 100 - value : value;
   }
 
   #updateChartData(): void {

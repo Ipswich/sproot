@@ -50,24 +50,13 @@ export abstract class MultiOutputBase {
     return cleanObject;
   }
 
-  updateControlMode = (outputId: string, controlMode: ControlMode) =>
+  async updateControlModeAsync(outputId: string, controlMode: ControlMode) {
     this.outputs[outputId]?.state.updateControlMode(controlMode);
-
-  setNewOutputStateAsync = async (
-    outputId: string,
-    newState: SDBOutputState,
-    targetControlMode: ControlMode,
-  ) => this.outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
-
-  async executeOutputStateAsync(outputId?: string) {
-    if (outputId) {
-      return await this.outputs[outputId]?.executeStateAsync();
-    }
-    const promises = Object.keys(this.outputs).map(
-      async (key) => await this.outputs[key]?.executeStateAsync(),
-    );
-    await Promise.allSettled(promises);
+    await this.outputs[outputId]?.executeStateAsync();
   }
+
+  setAndExecuteNewStateAsync = async (outputId: string, newState: SDBOutputState) =>
+    this.outputs[outputId]?.setAndExecuteNewStateAsync(newState);
 
   disposeOutput(output: OutputBase): void {
     const usedPins = this.usedPins[output.address];

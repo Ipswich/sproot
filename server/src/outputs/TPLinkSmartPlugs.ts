@@ -194,14 +194,11 @@ class TPLinkPlug extends OutputBase {
       this.logger.info(
         `TPLink Smart Plug ${this.id} power state updated to ${value} from external call. Updating state.`,
       );
-      await this.state.setNewStateAsync(
-        {
-          value: value ? 100 : 0,
-          controlMode: ControlMode.manual,
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        },
-        ControlMode.manual,
-      );
+      await this.state.setNewStateAsync({
+        value: value ? 100 : 0,
+        controlMode: ControlMode.manual,
+        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      });
     }
   }
 }
