@@ -271,7 +271,6 @@ describe("tplinkPlug.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    console.log(tplinkSmartPlugs.outputs["1"]?.state);
     await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
       value: 100,
       controlMode: ControlMode.automatic,
