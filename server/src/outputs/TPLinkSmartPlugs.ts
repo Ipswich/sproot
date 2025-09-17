@@ -174,12 +174,20 @@ class TPLinkPlug extends OutputBase {
     });
   }
 
-  async executeStateAsync(): Promise<void> {
-    const profiler = this.logger.startTimer();
+  async executeStateAsync(forceExecution: boolean = false): Promise<void> {
     await this.executeStateHelperAsync(async (value) => {
-      await this.tplinkPlug.setPowerState(!!value, { timeout: 800 });
-    });
-    profiler.done({ message: `Output ${this.id} executeStateAsync time`, level: "debug" });
+      let result = false;
+      while (!result) {
+        try {
+          result = await this.tplinkPlug.setPowerState(!!value, { timeout: 800 });
+        } catch (error) {
+          this.logger.error(
+            `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying...`,
+          );
+          continue;
+        }
+      }
+    }, forceExecution);
   }
 
   dispose(): void {
@@ -197,17 +205,20 @@ class TPLinkPlug extends OutputBase {
     // This should make sure that if someone externally changes the power state of the plug when it's
     // in manual mode, it updates the state in Sproot. Otherwise, we'll just ignore it.
     try {
-      this.logger.info(
-        `TPLink Smart Plug ${this.id} power state updated to ${value} from external call. Updating state.`,
-      );
       if (this.controlMode == ControlMode.manual) {
+        this.logger.info(
+          `TPLink Smart Plug ${this.id} updated from external call. Updating manual state to ${value} to reflect these changes.`,
+        );
         await this.state.setNewStateAsync({
           value: value ? 100 : 0,
           controlMode: ControlMode.manual,
           logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
         });
       } else {
-        await this.executeStateAsync();
+        this.logger.info(
+          `TPLink Smart Plug ${this.id} updated from external call. Overriding external { state: ${value} } with internal { state: ${this.value} }.`,
+        );
+        await this.executeStateAsync(true);
       }
     } catch (error) {
       this.logger.error(

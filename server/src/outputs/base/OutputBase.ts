@@ -89,10 +89,7 @@ export abstract class OutputBase implements IOutputBase {
 
   /**
    * Executes the current state of the output, setting the physical state of the output to the recorded state
-   * (respecting the current ControlMode). This should be called after state.setNewState() to ensure that the
-   * physical state of the output is always in sync with the recorded state of the output.
-   *
-   * See setNewState
+   * (respecting the current ControlMode).
    */
   abstract executeStateAsync(): Promise<void>;
   abstract dispose(): void;
@@ -237,18 +234,21 @@ export abstract class OutputBase implements IOutputBase {
 
   protected async executeStateHelperAsync(
     executionFnAsync: (value: number) => Promise<void>,
+    forceExecution: boolean,
   ): Promise<void> {
-    if (this.#isExecuting) {
-      this.logger.warn(
-        `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
-      );
-      return;
-    }
-    if (this.value == this.state.lastValue) {
-      this.logger.verbose(
-        `Output { Model: ${this.model}, id: ${this.id} } value has not changed. Skipping state execution.`,
-      );
-      return;
+    if (!forceExecution) {
+      if (this.#isExecuting) {
+        this.logger.warn(
+          `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
+        );
+        return;
+      }
+      if (this.value == this.state.lastValue) {
+        this.logger.verbose(
+          `Output { Model: ${this.model}, id: ${this.id} } value has not changed. Skipping state execution.`,
+        );
+        return;
+      }
     }
 
     try {

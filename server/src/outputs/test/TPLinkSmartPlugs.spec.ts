@@ -199,7 +199,7 @@ describe("tplinkPlug.ts tests", function () {
   it("should update and apply states with respect to control mode", async function () {
     const logger = winston.createLogger({ silent: true });
 
-    const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves();
+    const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
     await delay(20);
     const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
@@ -310,5 +310,90 @@ describe("tplinkPlug.ts tests", function () {
       controlMode: ControlMode.automatic,
     });
     assert.equal(setStatePowerStub.callCount, 7);
+  });
+
+  it("should handle power-on and power-off events", async function () {
+    const infoStub = sinon.stub();
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: infoStub,
+          warn: () => {},
+          error: () => {},
+          verbose: () => {},
+        }) as unknown as winston.Logger,
+    );
+    const logger = winston.createLogger();
+    const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
+    await delay(20);
+    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
+    const plug = await tplinkSmartPlugs.createOutputAsync({
+      id: 1,
+      model: "TPLINK_SMART_PLUG",
+      name: "test output 1",
+      pin: childIds[0]?.externalId,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput);
+
+    // Some simple "If we're in manual, does it update the state to reflect this?"
+    await plug!.updateControlModeAsync(ControlMode.manual);
+
+    assert.equal(infoStub.callCount, 2);
+    assert.equal(plug!.controlMode, ControlMode.manual);
+    assert.equal(plug!.value, 0);
+
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-on");
+    assert.equal(infoStub.callCount, 3);
+    assert.equal(plug!.controlMode, ControlMode.manual);
+    assert.equal(plug!.value, 100);
+
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-off");
+    assert.equal(infoStub.callCount, 4);
+    assert.equal(plug!.controlMode, ControlMode.manual);
+    assert.equal(plug!.value, 0);
+
+    // Some simple "If we're in automatic, does it reapply the state we were just in?"
+    await plug!.updateControlModeAsync(ControlMode.automatic);
+    await plug!.setAndExecuteNewStateAsync({
+      controlMode: ControlMode.automatic,
+      value: 100,
+    } as SDBOutputState);
+    assert.equal(plug!.controlMode, ControlMode.automatic);
+    assert.equal(plug!.value, 100);
+    assert.equal(setStatePowerStub.callCount, 1);
+
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-off");
+    assert.equal(plug!.controlMode, ControlMode.automatic);
+    assert.equal(plug!.value, 100);
+    assert.equal(setStatePowerStub.callCount, 2);
+
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-on");
+    assert.equal(plug!.controlMode, ControlMode.automatic);
+    assert.equal(plug!.value, 100);
+    assert.equal(setStatePowerStub.callCount, 3);
+
+    // Without forcing an execution in the listener, the following sequence
+    // would fail to turn the output off.
+    await plug!.setAndExecuteNewStateAsync({
+      controlMode: ControlMode.automatic,
+      value: 0,
+    } as SDBOutputState);
+
+    await plug!.setAndExecuteNewStateAsync({
+      controlMode: ControlMode.automatic,
+      value: 0,
+    } as SDBOutputState);
+
+    assert.equal(setStatePowerStub.callCount, 4);
+    assert.equal(plug!.controlMode, ControlMode.automatic);
+    assert.equal(plug!.value, 0);
+
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-on");
+
+    assert.equal(setStatePowerStub.callCount, 5);
+    assert.equal(plug!.controlMode, ControlMode.automatic);
+    assert.equal(plug!.value, 0);
   });
 });
