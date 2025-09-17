@@ -86,7 +86,7 @@ describe("tplinkPlug.ts tests", function () {
 
     tplinkSmartPlugs.outputs["1"]?.state.updateControlMode(ControlMode.manual);
     tplinkSmartPlugs.outputs["2"]?.state.updateControlMode(ControlMode.manual);
-    await tplinkSmartPlugs.outputs["2"]?.setAndExecuteNewStateAsync({
+    await tplinkSmartPlugs.outputs["2"]?.setAndExecuteStateAsync({
       value: 0,
       controlMode: ControlMode.manual,
       logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
@@ -213,7 +213,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
 
     //Automatic High
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("1", <SDBOutputState>{
       value: 100,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
@@ -223,7 +223,7 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(setStatePowerStub.callCount, 1);
 
     //Automatic Low
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("1", <SDBOutputState>{
       value: 0,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
@@ -238,7 +238,7 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(setStatePowerStub.callCount, 2);
 
     //Manual High
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("1", <SDBOutputState>{
       value: 100,
       controlMode: ControlMode.manual,
       logTime: new Date().toISOString(),
@@ -249,7 +249,7 @@ describe("tplinkPlug.ts tests", function () {
 
     //Automatic Low (+1 execution call, switching back to automatic mode (low -> high))
     tplinkSmartPlugs.updateControlModeAsync("1", ControlMode.automatic);
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("1", <SDBOutputState>{
       value: 0,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
@@ -271,7 +271,7 @@ describe("tplinkPlug.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("1", <SDBOutputState>{
       value: 100,
       controlMode: ControlMode.automatic,
     });
@@ -280,14 +280,14 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(setStatePowerStub.getCall(4).args[0], false);
 
     //PWM error handling
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("1", <SDBOutputState>{
       value: -1,
       controlMode: ControlMode.automatic,
     });
     assert.equal(tplinkSmartPlugs.outputs["1"]?.state.automatic.value, 0);
     assert.equal(setStatePowerStub.callCount, 6);
 
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("1", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("1", <SDBOutputState>{
       value: 101,
       controlMode: ControlMode.automatic,
     });
@@ -305,7 +305,7 @@ describe("tplinkPlug.ts tests", function () {
     } as SDBOutput);
 
     //Execute non-pwm output (not 0 or 100)
-    await tplinkSmartPlugs.setAndExecuteNewStateAsync("2", <SDBOutputState>{
+    await tplinkSmartPlugs.setAndExecuteStateAsync("2", <SDBOutputState>{
       value: 75,
       controlMode: ControlMode.automatic,
     });
@@ -314,11 +314,12 @@ describe("tplinkPlug.ts tests", function () {
 
   it("should handle power-on and power-off events", async function () {
     const infoStub = sinon.stub();
+    const warnStub = sinon.stub();
     sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
           info: infoStub,
-          warn: () => {},
+          warn: warnStub,
           error: () => {},
           verbose: () => {},
         }) as unknown as winston.Logger,
@@ -356,7 +357,7 @@ describe("tplinkPlug.ts tests", function () {
 
     // Some simple "If we're in automatic, does it reapply the state we were just in?"
     await plug!.updateControlModeAsync(ControlMode.automatic);
-    await plug!.setAndExecuteNewStateAsync({
+    await plug!.setAndExecuteStateAsync({
       controlMode: ControlMode.automatic,
       value: 100,
     } as SDBOutputState);
@@ -376,12 +377,12 @@ describe("tplinkPlug.ts tests", function () {
 
     // Without forcing an execution in the listener, the following sequence
     // would fail to turn the output off.
-    await plug!.setAndExecuteNewStateAsync({
+    await plug!.setAndExecuteStateAsync({
       controlMode: ControlMode.automatic,
       value: 0,
     } as SDBOutputState);
 
-    await plug!.setAndExecuteNewStateAsync({
+    await plug!.setAndExecuteStateAsync({
       controlMode: ControlMode.automatic,
       value: 0,
     } as SDBOutputState);

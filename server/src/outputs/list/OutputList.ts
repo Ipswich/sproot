@@ -80,8 +80,12 @@ class OutputList implements Disposable {
     this.#outputs[outputId]?.updateControlModeAsync(controlMode);
   }
 
-  async setAndExecuteNewStateAsync(outputId: string, newState: SDBOutputState): Promise<void> {
-    await this.#outputs[outputId]?.setAndExecuteNewStateAsync(newState);
+  async setAndExecuteStateAsync(outputId: string, newState: SDBOutputState): Promise<void> {
+    await this.#outputs[outputId]?.setAndExecuteStateAsync(newState);
+  }
+
+  async setStateAsync(outputId: string, newState: SDBOutputState): Promise<void> {
+    await this.#outputs[outputId]?.setStateAsync(newState);
   }
 
   async executeOutputStateAsync(outputId?: string) {

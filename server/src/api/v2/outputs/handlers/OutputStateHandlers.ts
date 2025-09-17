@@ -116,13 +116,16 @@ export async function setManualStateAsync(request: Request, response: Response) 
     return manualStateResponse;
   }
 
-  const state = {
+  await outputList.setStateAsync(outputId, {
     value: value,
     controlMode: ControlMode.manual,
     logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-  } as SDBOutputState;
+  } as SDBOutputState);
 
-  await outputList.setAndExecuteNewStateAsync(outputId, state);
+  if (output.state.controlMode == ControlMode.manual) {
+    await outputList.executeOutputStateAsync(outputId);
+  }
+
   manualStateResponse = {
     statusCode: 200,
     content: {

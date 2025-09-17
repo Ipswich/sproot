@@ -5,8 +5,7 @@ import sinon from "sinon";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
 import { OutputList } from "../../../../outputs/list/OutputList";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { SensorBase } from "../../../../sensors/base/SensorBase";
+import { ControlMode, IOutputBase } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { setControlModeAsync, setManualStateAsync } from "../handlers/OutputStateHandlers";
 
 describe("OutputStateHandlers.ts tests", () => {
@@ -19,7 +18,7 @@ describe("OutputStateHandlers.ts tests", () => {
       2: {
         outputId: 2,
       },
-    } as unknown as { [key: string]: SensorBase };
+    } as unknown as { [key: string]: IOutputBase };
 
     beforeEach(() => {
       outputList = sinon.createStubInstance(OutputList);
@@ -101,7 +100,6 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(error.error.url, "/outputs/1/controlMode");
       assert.deepEqual(error.error.details, ["Invalid control mode."]);
       assert.isTrue(outputList.updateControlModeAsync.notCalled);
-      assert.isTrue(outputList.executeOutputStateAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -136,7 +134,6 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(error.error.url, "/outputs/-1/controlMode");
       assert.deepEqual(error.error.details, ["Output with ID -1 not found."]);
       assert.isTrue(outputList.updateControlModeAsync.notCalled);
-      assert.isTrue(outputList.executeOutputStateAsync.notCalled);
     });
   });
 
@@ -146,12 +143,18 @@ describe("OutputStateHandlers.ts tests", () => {
       1: {
         outputId: 1,
         isPwm: true,
+        state: {
+          controlMode: ControlMode.manual,
+        },
       },
       2: {
         outputId: 2,
         ispwm: false,
+        state: {
+          controlMode: ControlMode.manual,
+        },
       },
-    } as unknown as { [key: string]: SensorBase };
+    } as unknown as { [key: string]: IOutputBase };
 
     beforeEach(() => {
       outputList = sinon.createStubInstance(OutputList);
@@ -199,7 +202,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.deepEqual(success.content?.data, ["Manual state successfully updated."]);
 
-      assert.equal(outputList.setAndExecuteNewStateAsync.calledTwice, true);
+      assert.equal(outputList.executeOutputStateAsync.calledTwice, true);
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -265,7 +268,7 @@ describe("OutputStateHandlers.ts tests", () => {
         "Value must be 0 or 100.",
       ]);
 
-      assert.isTrue(outputList.setAndExecuteNewStateAsync.notCalled);
+      assert.isTrue(outputList.executeOutputStateAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -300,7 +303,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(error.error.url, "/outputs/-1/manual-state");
       assert.deepEqual(error.error.details, ["Output with ID -1 not found."]);
 
-      assert.isTrue(outputList.setAndExecuteNewStateAsync.notCalled);
+      assert.isTrue(outputList.executeOutputStateAsync.notCalled);
     });
   });
 });

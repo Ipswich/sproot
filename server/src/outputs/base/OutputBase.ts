@@ -118,9 +118,13 @@ export abstract class OutputBase implements IOutputBase {
    * @param newState The new state
    * @param targetControlMode The control mode to apply it to
    */
-  async setAndExecuteNewStateAsync(newState: SDBOutputState): Promise<void> {
+  async setAndExecuteStateAsync(newState: SDBOutputState): Promise<void> {
     await this.state.setNewStateAsync(newState);
     await this.executeStateAsync();
+  }
+
+  async setStateAsync(newState: SDBOutputState): Promise<void> {
+    await this.state.setNewStateAsync(newState);
   }
 
   getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
@@ -182,24 +186,23 @@ export abstract class OutputBase implements IOutputBase {
       this.automationTimeout,
       now,
     );
-    const stateProfiler = this.logger.startTimer();
     if (result.value != null) {
-      await this.setAndExecuteNewStateAsync({
+      await this.state.setNewStateAsync({
         value: result.value,
         controlMode: ControlMode.automatic,
         logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
       } as SDBOutputState);
     } else {
-      await this.setAndExecuteNewStateAsync({
+      await this.state.setNewStateAsync({
         value: 0,
         controlMode: ControlMode.automatic,
         logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
       } as SDBOutputState);
     }
-    stateProfiler.done({
-      message: `Output ${this.id} setNewStateAsync time`,
-      level: "debug",
-    });
+
+    if (this.controlMode === ControlMode.automatic) {
+      await this.executeStateAsync();
+    }
   }
 
   protected addCurrentStateToCache(): void {

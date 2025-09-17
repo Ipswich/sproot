@@ -55,8 +55,8 @@ export abstract class MultiOutputBase {
     await this.outputs[outputId]?.executeStateAsync();
   }
 
-  setAndExecuteNewStateAsync = async (outputId: string, newState: SDBOutputState) =>
-    this.outputs[outputId]?.setAndExecuteNewStateAsync(newState);
+  setAndExecuteStateAsync = async (outputId: string, newState: SDBOutputState) =>
+    this.outputs[outputId]?.setAndExecuteStateAsync(newState);
 
   disposeOutput(output: OutputBase): void {
     const usedPins = this.usedPins[output.address];
