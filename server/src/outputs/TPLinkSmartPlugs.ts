@@ -145,6 +145,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
 
 class TPLinkPlug extends OutputBase {
   tplinkPlug: Plug;
+  #externalCallRunning = false;
 
   constructor(
     tplinkPlug: Plug,
@@ -166,13 +167,11 @@ class TPLinkPlug extends OutputBase {
       logger,
     );
     this.tplinkPlug = tplinkPlug;
-    this.tplinkPlug.on("power-on", () => {
-      this.logger.info("TPLINK POWER-ON SIGNAL RECEIVED!")
-      this.#powerUpdateFunctionAsync(true);
+    this.tplinkPlug.on("power-on", async () => {
+      await this.#powerUpdateFunctionAsync(true);
     });
-    this.tplinkPlug.on("power-off", () => {
-      this.logger.info("TPLINK POWER-OFF SIGNAL RECEIVED!")
-      this.#powerUpdateFunctionAsync(false);
+    this.tplinkPlug.on("power-off", async () => {
+      await this.#powerUpdateFunctionAsync(false);
     });
   }
 
@@ -207,7 +206,11 @@ class TPLinkPlug extends OutputBase {
   async #powerUpdateFunctionAsync(value: boolean): Promise<void> {
     // This should make sure that if someone externally changes the power state of the plug when it's
     // in manual mode, it updates the state in Sproot. Otherwise, we'll just ignore it.
+    if (this.#externalCallRunning) {
+      return;
+    }
     let retryCount = 0;
+    this.#externalCallRunning = true;
     while (retryCount < 3) {
       retryCount++;
       try {
@@ -234,6 +237,7 @@ class TPLinkPlug extends OutputBase {
         );
       }
     }
+    this.#externalCallRunning = false;
     if (retryCount >= 3) {
       this.logger.error(
         `POTENTIAL STATE MISMATCH DETECTED! TPLink Smart Plug ${this.id} failed to update from external call after 3 tries!`,
