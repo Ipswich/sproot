@@ -105,6 +105,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
         this.usedPins[output.address] = [];
       }
 
+      // Could also grab this from availablePlugs[output.pin]!
       const plug = (await this.#client.getDevice({
         host: output.address,
         childId: output.pin,
@@ -167,6 +168,13 @@ class TPLinkPlug extends OutputBase {
       logger,
     );
     this.tplinkPlug = tplinkPlug;
+    this.tplinkPlug.on("power-on", () => {
+      this.logger.warn("Power on from external!");
+    });
+    this.tplinkPlug.on("power-off", () => {
+      this.logger.warn("Power off from external!");
+    });
+
     this.tplinkPlug.on("power-on", async () => {
       await this.#powerUpdateFunctionAsync(true);
     });
