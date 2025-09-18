@@ -167,9 +167,11 @@ class TPLinkPlug extends OutputBase {
     );
     this.tplinkPlug = tplinkPlug;
     this.tplinkPlug.on("power-on", () => {
+      this.logger.info("TPLINK POWER-ON SIGNAL RECEIVED!")
       this.#powerUpdateFunctionAsync(true);
     });
     this.tplinkPlug.on("power-off", () => {
+      this.logger.info("TPLINK POWER-OFF SIGNAL RECEIVED!")
       this.#powerUpdateFunctionAsync(false);
     });
   }
