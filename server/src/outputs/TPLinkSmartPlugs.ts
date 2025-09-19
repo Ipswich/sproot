@@ -89,6 +89,17 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
+    // Add a bit of a delay, just in case the discovery hasn't found anything yet
+    // Basically "If we don't have this key, wait 500ms and check again. Then, if
+    // it ain't there, it ain't there."
+    if (Object.keys(this.availablePlugs).indexOf(output.pin) == -1) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (Object.keys(this.availablePlugs).indexOf(output.pin) == -1) {
+        this.logger.warn(`TPLink Smart Plug ${output.id} could not be located. Skipping creation.`);
+        return undefined;
+      }
+    }
+
     if (this.initializingPlugs[output.address]?.includes(output.pin)) {
       this.logger.warn(
         `TPLink Smart Plug ${output.id} is already being initialized. Skipping creation.`,
@@ -105,11 +116,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
         this.usedPins[output.address] = [];
       }
 
-      // Could also grab this from availablePlugs[output.pin]!
-      const plug = (await this.#client.getDevice({
-        host: output.address,
-        childId: output.pin,
-      })) as Plug;
+      const plug = this.availablePlugs[output.pin]!;
 
       this.outputs[output.id] = new TPLinkPlug(
         plug,
@@ -168,12 +175,6 @@ class TPLinkPlug extends OutputBase {
       logger,
     );
     this.tplinkPlug = tplinkPlug;
-    this.tplinkPlug.on("power-on", () => {
-      this.logger.warn("Power on from external!");
-    });
-    this.tplinkPlug.on("power-off", () => {
-      this.logger.warn("Power off from external!");
-    });
 
     this.tplinkPlug.on("power-on", async () => {
       await this.#powerUpdateFunctionAsync(true);

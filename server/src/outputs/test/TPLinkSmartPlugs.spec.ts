@@ -3,7 +3,7 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { TPLinkSmartPlugs, TPLinkPlug } from "../TPLinkSmartPlugs";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { Device as SimulatedDevice } from "tplink-smarthome-simulator";
+import { Device as SimulatedDevice, UdpServer } from "tplink-smarthome-simulator";
 import { Plug } from "tplink-smarthome-api";
 
 import chai, { assert } from "chai";
@@ -14,67 +14,66 @@ import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 const mockSprootDB = new MockSprootDB();
 
-describe("tplinkPlug.ts tests", function () {
+describe("tplinkPlug.ts tests", async function () {
   const simulatedHS300 = new SimulatedDevice({
     model: "hs300",
     address: "127.0.0.1",
     port: 9999,
     responseDelay: 0,
   });
-  simulatedHS300.start();
+  this.beforeAll(async () => {
+    await simulatedHS300.start();
+    await UdpServer.start();
+  });
   this.afterAll(async () => {
+    UdpServer.stop();
     await simulatedHS300.stop();
   });
+
   afterEach(() => {
     sinon.restore();
   });
-  // Helper function, some of these take a very small blip to pick up the mocked devices
-  function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
 
   it("should create and delete TPLink Smart Plugs outputs", async function () {
     const logger = winston.createLogger({ silent: true });
 
-    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
-    await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 5000);
 
     // disposing with nothing shouldn't cause issues
     tplinkSmartPlugs.disposeOutput({} as OutputBase);
     const output1 = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
-      address: "127.0.0.1",
+      address: simulatedHS300.address,
       name: "test output 1",
-      pin: childIds[0]?.externalId,
+      pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
     const output2 = await tplinkSmartPlugs.createOutputAsync({
       id: 2,
       model: "TPLINK_SMART_PLUG",
-      address: "127.0.0.1",
+      address: simulatedHS300.address,
       name: "test output 2",
-      pin: childIds[1]?.externalId,
+      pin: simulatedHS300.children[1]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
     const output3 = await tplinkSmartPlugs.createOutputAsync({
       id: 3,
       model: "TPLINK_SMART_PLUG",
-      address: "127.0.0.1",
+      address: simulatedHS300.address,
       name: "test output 3",
-      pin: childIds[2]?.externalId,
+      pin: simulatedHS300.children[2]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
     const output4 = await tplinkSmartPlugs.createOutputAsync({
       id: 4,
       model: "TPLINK_SMART_PLUG",
-      address: "127.0.0.1",
+      address: simulatedHS300.address,
       name: "test output 4",
-      pin: childIds[3]?.externalId,
+      pin: simulatedHS300.children[3]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -120,46 +119,53 @@ describe("tplinkPlug.ts tests", function () {
     const logger = winston.createLogger();
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
-    await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
 
-    await Promise.allSettled([
-      tplinkSmartPlugs.createOutputAsync({
-        id: 1,
-        model: "TPLINK_SMART_PLUG",
-        address: "127.0.0.1",
-        name: "test output 1",
-        pin: childIds[0]?.externalId,
-        isPwm: false,
-        isInvertedPwm: false,
-      } as SDBOutput),
-      tplinkSmartPlugs.createOutputAsync({
-        id: 1,
-        model: "TPLINK_SMART_PLUG",
-        address: "127.0.0.1",
-        name: "test output 1",
-        pin: childIds[0]?.externalId,
-        isPwm: false,
-        isInvertedPwm: false,
-      } as SDBOutput),
-      tplinkSmartPlugs.createOutputAsync({
-        id: 1,
-        model: "TPLINK_SMART_PLUG",
-        address: "127.0.0.1",
-        name: "test output 1",
-        pin: childIds[0]?.externalId,
-        isPwm: false,
-        isInvertedPwm: false,
-      } as SDBOutput),
-    ]);
+    (await tplinkSmartPlugs.createOutputAsync({
+      id: 1,
+      model: "TPLINK_SMART_PLUG",
+      address: simulatedHS300.address,
+      name: "test output 1",
+      pin: simulatedHS300.children[0]?.sysinfo.id,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput),
+      await Promise.allSettled([
+        tplinkSmartPlugs.createOutputAsync({
+          id: 1,
+          model: "TPLINK_SMART_PLUG",
+          address: simulatedHS300.address,
+          name: "test output 1",
+          pin: simulatedHS300.children[0]?.sysinfo.id,
+          isPwm: false,
+          isInvertedPwm: false,
+        } as SDBOutput),
+        tplinkSmartPlugs.createOutputAsync({
+          id: 1,
+          model: "TPLINK_SMART_PLUG",
+          address: simulatedHS300.address,
+          name: "test output 1",
+          pin: simulatedHS300.children[0]?.sysinfo.id,
+          isPwm: false,
+          isInvertedPwm: false,
+        } as SDBOutput),
+        tplinkSmartPlugs.createOutputAsync({
+          id: 1,
+          model: "TPLINK_SMART_PLUG",
+          address: simulatedHS300.address,
+          name: "test output 1",
+          pin: simulatedHS300.children[0]?.sysinfo.id,
+          isPwm: false,
+          isInvertedPwm: false,
+        } as SDBOutput),
+      ]));
 
     assert.equal(warnStub.callCount, 2);
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
-      address: "127.0.0.1",
+      address: simulatedHS300.address,
       name: "test output 1",
-      pin: childIds[0]?.externalId,
+      pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -170,26 +176,26 @@ describe("tplinkPlug.ts tests", function () {
   it("should return output data (no functions)", async function () {
     sinon
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(
+        () => ({ info: () => {}, error: () => {}, warn: () => {} }) as unknown as winston.Logger,
+      );
     const logger = winston.createLogger();
 
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
-    await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
-      address: "127.0.0.1",
+      address: simulatedHS300.address,
       name: "test output 1",
-      pin: childIds[0]?.externalId,
+      pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
     const outputData = tplinkSmartPlugs.outputData;
 
     assert.equal(outputData["1"]!["name"], "test output 1");
-    assert.equal(outputData["1"]!["pin"], childIds[0]?.externalId);
+    assert.equal(outputData["1"]!["pin"], simulatedHS300.children[0]?.sysinfo.id);
     assert.equal(outputData["1"]!["isPwm"], false);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.exists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
@@ -198,16 +204,13 @@ describe("tplinkPlug.ts tests", function () {
 
   it("should update and apply states with respect to control mode", async function () {
     const logger = winston.createLogger({ silent: true });
-
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
-    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
-    await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
       name: "test output 1",
-      pin: childIds[0]?.externalId,
+      pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -266,7 +269,7 @@ describe("tplinkPlug.ts tests", function () {
       id: 1,
       model: "TPLINK_SMART_PLUG",
       name: "test output 1",
-      pin: childIds[0]?.externalId,
+      pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: true,
       isInvertedPwm: true,
     } as SDBOutput);
@@ -299,7 +302,7 @@ describe("tplinkPlug.ts tests", function () {
       id: 2,
       model: "TPLINK_SMART_PLUG",
       name: "test output 1",
-      pin: childIds[0]?.externalId,
+      pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -327,13 +330,11 @@ describe("tplinkPlug.ts tests", function () {
     const logger = winston.createLogger();
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
     using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
-    await delay(20);
-    const childIds = tplinkSmartPlugs.getAvailableDevices("127.0.0.1");
     const plug = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
       name: "test output 1",
-      pin: childIds[0]?.externalId,
+      pin: simulatedHS300.children[0]?.sysinfo.id,
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
@@ -350,6 +351,7 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 100);
 
+    await new Promise((r) => setTimeout(r, 10)); // Wait for any debounced calls to finish
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-off");
     assert.equal(infoStub.callCount, 4);
     assert.equal(plug!.controlMode, ControlMode.manual);
@@ -370,6 +372,7 @@ describe("tplinkPlug.ts tests", function () {
     assert.equal(plug!.value, 100);
     assert.equal(setStatePowerStub.callCount, 2);
 
+    await new Promise((r) => setTimeout(r, 10)); // Wait for any debounced calls to finish
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-on");
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 100);
