@@ -18,7 +18,7 @@ import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
-import { createDatabaseUpdateCronJob, createUpdateStateCronJob } from "./system/CronJobs";
+import { createDatabaseUpdateCronJob, createRunAutomationsCronJob, createUpdateDevicesCronJob } from "./system/CronJobs";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -75,14 +75,17 @@ export default async function setupAsync(): Promise<Express> {
   app.set("automationDataManager", automationDataManager);
 
   // Cron Jobs
-  const updateStateCronJob = createUpdateStateCronJob(
+  const updateDevicesCronJob = createUpdateDevicesCronJob(
     cameraManager,
     sensorList,
     outputList,
     systemStatusMonitor,
     logger,
   );
-  app.set("updateStateCronJob", updateStateCronJob);
+  app.set("updateDevicesCronJob", updateDevicesCronJob);
+
+  const automationsCronJuob = createRunAutomationsCronJob(sensorList, outputList, logger);
+  app.set("automationsCronJuob", automationsCronJuob);
 
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
   app.set("updateDatabaseCronJob", updateDatabaseCronJob);

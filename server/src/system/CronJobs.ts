@@ -6,7 +6,7 @@ import { SensorList } from "../sensors/list/SensorList";
 import { SystemStatusMonitor } from "./StatusMonitor";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 
-export function createUpdateStateCronJob(
+export function createUpdateDevicesCronJob(
   cameraManager: CameraManager,
   sensorList: SensorList,
   outputList: OutputList,
@@ -23,19 +23,18 @@ export function createUpdateStateCronJob(
         return;
       }
       running = true;
+      const profiler = logger.startTimer();
       try {
-        const profiler = logger.startTimer();
         await Promise.all([
           cameraManager.initializeOrRegenerateAsync(),
           sensorList.initializeOrRegenerateAsync(),
           outputList.initializeOrRegenerateAsync(),
         ]);
 
-        await outputList.runAutomationsAsync(sensorList, new Date());
-        profiler.done({ message: "Device update loop time", level: "debug" });
       } catch (e) {
         logger.error(`Exception in device update loop: ${e}`);
       } finally {
+        profiler.done({ message: "Device update loop time", level: "debug" });
         running = false;
       }
     },
@@ -50,6 +49,44 @@ export function createUpdateStateCronJob(
     null,
     true,
     (err) => logger.error(`Device update cron error: ${err}`),
+  );
+}
+
+export function createRunAutomationsCronJob(
+  sensorList: SensorList,
+  outputList: OutputList,
+  logger: winston.Logger,
+) {
+  let running = false;
+  return new CronJob(
+    Constants.CRON.EVERY_SECOND,
+    async function () {
+      if (running) {
+        logger.warn("Automation cron skipped: previous job still running.");
+        return;
+      }
+      running = true;
+      const profiler = logger.startTimer();
+      try {
+        await outputList.runAutomationsAsync(sensorList, new Date());
+      } catch (e) {
+        logger.error(`Exception in automation loop: ${e}`);
+      } finally {
+        profiler.done({ message: "Automation loop time", level: "debug" });
+        running = false;
+      }
+    },
+    () => {
+      logger.warn("Automation cron stopped.");
+    },
+    true,
+    null,
+    null,
+    null,
+    null,
+    null,
+    true,
+    (err) => logger.error(`Automation cron error: ${err}`),
   );
 }
 
