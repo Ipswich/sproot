@@ -232,14 +232,13 @@ class TPLinkPlug extends OutputBase {
             controlMode: ControlMode.manual,
             logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
           });
-          break;
         } else {
           this.logger.info(
             `TPLink Smart Plug ${this.id} updated from external call. Overriding external { state: ${value} } with internal { state: ${this.value} }.`,
           );
           await this.executeStateAsync(true);
-          break;
         }
+        break;
       } catch (error) {
         this.logger.error(
           `Error updating state from external for TPLink Smart Plug ${this.id}: ${error}. Retrying (${retryCount}). . .`,
