@@ -18,7 +18,11 @@ import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
-import { createDatabaseUpdateCronJob, createRunAutomationsCronJob, createUpdateDevicesCronJob } from "./system/CronJobs";
+import {
+  createDatabaseUpdateCronJob,
+  createRunAutomationsCronJob,
+  createUpdateDevicesCronJob,
+} from "./system/CronJobs";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -29,9 +33,7 @@ export default async function setupAsync(): Promise<Express> {
   app.set("knexConnection", knexConnection);
 
   const sprootDB = new SprootDB(knexConnection);
-  const systemStatusMonitor = new SystemStatusMonitor(sprootDB);
   app.set("sprootDB", sprootDB);
-  app.set("systemStatusMonitor", systemStatusMonitor);
   app.set("logger", logger);
 
   await defaultUserCheck(sprootDB, logger);
@@ -63,6 +65,9 @@ export default async function setupAsync(): Promise<Express> {
     logger,
   );
   app.set("outputList", outputList);
+
+  const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB);
+  app.set("systemStatusMonitor", systemStatusMonitor);
 
   logger.info("Initializing camera manager, and sensor and output lists. . .");
   await Promise.all([

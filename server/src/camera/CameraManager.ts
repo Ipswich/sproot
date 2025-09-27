@@ -20,6 +20,8 @@ class CameraManager {
   #currentSettings: SDBCameraSettings | null = null;
   #isUpdating: boolean = false;
 
+  #imageCaptureCronJob: CronJob;
+
   #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
 
@@ -29,7 +31,7 @@ class CameraManager {
     this.#logger = logger;
     this.#imageCapture = new ImageCapture(logger);
     this.#livestream = new Livestream(logger);
-    new CronJob(
+    this.#imageCaptureCronJob = new CronJob(
       CRON.EVERY_MINUTE,
       async () => {
         if (this.#picameraServerProcess !== null) {
@@ -88,6 +90,13 @@ class CameraManager {
     return this.#imageCapture.getTimelapseArchiveSizeAsync();
   }
 
+  getLastTimelapseGenerationDuration() {
+    if (this.#currentSettings?.timelapseEnabled) {
+      return this.#imageCapture.getLastTimelapseGenerationDuration();
+    }
+    return null;
+  }
+
   /**
    * Regenerates the timelapse archive.
    * @returns A promise that resolves when the timelapse archive has been regenerated.
@@ -121,30 +130,27 @@ class CameraManager {
 
       if (settings[0] != undefined) {
         this.#currentSettings = settings[0];
+        if (this.#currentSettings.enabled) {
+          // Don't await these here - internally, they keeps track if they're running
+          // so this should prevent it from blocking until its done.
+          this.#imageCapture
+            .runImageRetentionAsync(
+              this.#currentSettings.imageRetentionSize,
+              this.#currentSettings.imageRetentionDays,
+            )
+            .then(() => {
+              this.#imageCapture.regenerateTimelapseArchiveAsync();
+            });
+          this.createCameraProcess(this.#currentSettings);
+          await this.#livestream.connectToLivestreamAsync(
+            this.#baseUrl,
+            this.generateRequestHeaders(),
+          );
 
-        // Don't await these here - internally, they keeps track if they're running
-        // so this should prevent it from blocking until its done.
-        this.#imageCapture
-          .runImageRetentionAsync(
-            this.#currentSettings.imageRetentionSize,
-            this.#currentSettings.imageRetentionDays,
-          )
-          .then(() => {
-            this.#imageCapture.regenerateTimelapseArchiveAsync(true);
-          });
-      } else {
-        return;
-      }
-      if (this.#currentSettings.enabled) {
-        this.createCameraProcess(this.#currentSettings);
-        await this.#livestream.connectToLivestreamAsync(
-          this.#baseUrl,
-          this.generateRequestHeaders(),
-        );
+          this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
 
-        this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
-
-        return;
+          return;
+        }
       }
 
       this.#livestream.disconnectFromLivestream();
@@ -155,6 +161,7 @@ class CameraManager {
 
   dispose(): void {
     this.#disposed = true;
+    this.#imageCaptureCronJob.stop();
     this.cleanupCameraProcess();
   }
 

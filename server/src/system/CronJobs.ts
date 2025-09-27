@@ -30,7 +30,6 @@ export function createUpdateDevicesCronJob(
           sensorList.initializeOrRegenerateAsync(),
           outputList.initializeOrRegenerateAsync(),
         ]);
-
       } catch (e) {
         logger.error(`Exception in device update loop: ${e}`);
       } finally {

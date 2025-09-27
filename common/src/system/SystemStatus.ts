@@ -6,6 +6,6 @@ export type SystemStatus = {
   databaseSize: number;
   totalDiskSize: number;
   freeDiskSize: number;
-  // timelapseDirectorySize?: number; // in MB, optional
-  // lastArchiveDuration?: number; // in seconds, optional
+  timelapseDirectorySize: number | null; // in MB, optional
+  lastTimelapseGenerationDuration: number | null; // in seconds
 };

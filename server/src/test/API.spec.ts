@@ -999,6 +999,8 @@ describe("API Tests", async () => {
             "databaseSize",
             "totalDiskSize",
             "freeDiskSize",
+            "timelapseDirectorySize",
+            "lastTimelapseGenerationDuration",
           ]);
           assert.isNumber(content.data.uptime);
           assert.isNumber(content.data.memoryUsage);
@@ -1007,6 +1009,8 @@ describe("API Tests", async () => {
           assert.isNumber(content.data.databaseSize);
           assert.isNumber(content.data.totalDiskSize);
           assert.isNumber(content.data.freeDiskSize);
+          assert.isNumber(content.data.timelapseDirectorySize);
+          assert.isNumber(content.data.lastTimelapseGenerationDuration);
         });
       });
     });

@@ -129,17 +129,19 @@ export abstract class SensorBase implements ISensorBase {
     try {
       await this.intitializeCacheAndChartDataAsync();
       this.#updateInterval = setInterval(async () => {
+        // If we're already taking a reading, skip this interval
         if (this.#isTakingReading) {
-          this.#isTakingReading = true;
-          try {
-            await this.takeReadingAsync();
-          } catch (err) {
-            this.logger.error(
-              `Error taking reading for sensor {${this.model}, id: ${this.id}, address: ${this.address}}. ${err}`,
-            );
-          } finally {
-            this.#isTakingReading = false;
-          }
+          return null;
+        }
+        this.#isTakingReading = true;
+        try {
+          await this.takeReadingAsync();
+        } catch (err) {
+          this.logger.error(
+            `Error taking reading for sensor {${this.model}, id: ${this.id}, address: ${this.address}}. ${err}`,
+          );
+        } finally {
+          this.#isTakingReading = false;
         }
       }, maxSensorReadTime);
     } catch (err) {

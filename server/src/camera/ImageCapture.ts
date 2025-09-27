@@ -72,11 +72,15 @@ class ImageCapture {
     return null;
   }
 
+  getLastTimelapseGenerationDuration(): number | null {
+    return this.#timelapse.lastArchiveGenerationDuration;
+  }
+
   async getTimelapseArchiveAsync(): Promise<fs.ReadStream | null> {
     return this.#timelapse.getTimelapseArchiveAsync();
   }
 
-  async getTimelapseArchiveSizeAsync(): Promise<number> {
+  async getTimelapseArchiveSizeAsync(): Promise<number | null> {
     return this.#timelapse.getTimelapseArchiveSizeAsync();
   }
 

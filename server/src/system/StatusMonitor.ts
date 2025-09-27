@@ -3,14 +3,17 @@ import { statfs } from "fs";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { promisify } from "util";
 import { SystemStatus } from "@sproot/sproot-common/dist/system/SystemStatus";
+import { CameraManager } from "../camera/CameraManager";
 
 const statfsAsync = promisify(statfs);
 
 export class SystemStatusMonitor {
   #cpuMonitor: CpuMonitor = new CpuMonitor(1000, 5);
+  #cameraManager: CameraManager;
   #sprootDB: ISprootDB;
 
-  constructor(sprootDB: ISprootDB) {
+  constructor(cameraManager: CameraManager, sprootDB: ISprootDB) {
+    this.#cameraManager = cameraManager;
     this.#sprootDB = sprootDB;
   }
 
@@ -24,8 +27,8 @@ export class SystemStatusMonitor {
       databaseSize: await this.#sprootDB.getDatabaseSizeAsync(),
       totalDiskSize: (fileStats.blocks * fileStats.bsize) / 1024 / 1024,
       freeDiskSize: (fileStats.bavail * fileStats.bsize) / 1024 / 1024,
-      // timelapseDirectorySize: this.timelapseDirectorySize,
-      // lastArchiveDuration: this.lastArchiveDuration,
+      timelapseDirectorySize: await this.#cameraManager.getTimelapseArchiveSizeAsync(),
+      lastTimelapseGenerationDuration: this.#cameraManager.getLastTimelapseGenerationDuration(),
     };
   }
 
