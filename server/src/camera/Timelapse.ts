@@ -92,6 +92,9 @@ class Timelapse {
     }
   }
 
+  /**
+   * @returns The size of the timelapse archive in MB, or null if timelapse is disabled.
+   */
   async getTimelapseArchiveSizeAsync(): Promise<number | null> {
     if (!this.#enabled) {
       return null;
@@ -105,7 +108,7 @@ class Timelapse {
       }
       const timelapseFile = path.join(ARCHIVE_DIRECTORY, archiveFile);
       const stats = await fs.promises.stat(timelapseFile);
-      return stats.size;
+      return stats.size / (1024 * 1024);
     } catch (error) {
       return 0;
     }
