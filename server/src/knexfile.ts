@@ -15,9 +15,18 @@ function getConnectionConfiguration(databaseSuffix: string) {
   };
 }
 
+const poolConfig = {
+  min: 2,
+  max: 10,
+  acquireTimeoutMillis: 10000,
+  idleTimeoutMillis: 60000,
+  reapIntervalMillis: 30000,
+};
+
 const config: { [key: string]: Knex.Config } = {
   development: {
     client: "mysql2",
+    pool: poolConfig,
     connection: getConnectionConfiguration("-development"),
     migrations: {
       loadExtensions: [".js"],
@@ -32,6 +41,7 @@ const config: { [key: string]: Knex.Config } = {
 
   test: {
     client: "mysql2",
+    pool: poolConfig,
     connection: getConnectionConfiguration("-test"),
     migrations: {
       loadExtensions: [".ts"],
@@ -46,6 +56,7 @@ const config: { [key: string]: Knex.Config } = {
 
   production: {
     client: "mysql2",
+    pool: poolConfig,
     connection: getConnectionConfiguration(""),
     migrations: {
       loadExtensions: [".js"],

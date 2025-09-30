@@ -1,4 +1,4 @@
-import knexConfig from ".././knexfile";
+import knexConfig from "../knexfile";
 import knex, { Knex } from "knex";
 
 export async function getKnexConnectionAsync(): Promise<Knex<any, unknown>> {
