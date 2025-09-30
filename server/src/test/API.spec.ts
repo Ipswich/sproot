@@ -989,30 +989,42 @@ describe("API Tests", async () => {
       describe("GET", async () => {
         it("should return 200 and system status", async () => {
           const response = await request(server).get("/api/v2/system/status").expect(200);
-          const content = response.body["content"];
+          const data = response.body["content"].data;
           validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, [
-            "uptime",
-            "memoryUsage",
-            "heapUsage",
-            "cpuUsage",
-            "databaseSize",
-            "totalDiskSize",
-            "freeDiskSize",
-            "timelapseDirectorySize",
-            "lastTimelapseGenerationDuration",
-          ]);
-          assert.isNumber(content.data.uptime);
-          assert.isNumber(content.data.memoryUsage);
-          assert.isNumber(content.data.heapUsage);
-          assert.isNumber(content.data.cpuUsage);
-          assert.isNumber(content.data.databaseSize);
-          assert.isNumber(content.data.totalDiskSize);
-          assert.isNumber(content.data.freeDiskSize);
-          assert.isNumber(content.data.timelapseDirectorySize);
-          assert.isNumber(content.data.lastTimelapseGenerationDuration);
+
+          assert.equal(countLeafProperties(data), 14);
+
+          assert.isNumber(data.process.uptime);
+          assert.isNumber(data.process.memoryUsage);
+          assert.isNumber(data.process.heapUsage);
+          assert.isNumber(data.process.cpuUsage);
+          assert.isNumber(data.database.size);
+          assert.isNumber(data.database.connectionsUsed);
+          assert.isNumber(data.database.connectionsFree);
+          assert.isNumber(data.database.pendingAcquires);
+          assert.isNumber(data.database.pendingCreates);
+          assert.isNumber(data.system.totalDiskSize);
+          assert.isNumber(data.system.freeDiskSize);
+          assert.isNumber(data.timelapse.directorySize);
+          assert.isNumber(data.timelapse.lastArchiveGenerationDuration);
         });
       });
     });
   });
 });
+
+function countLeafProperties(obj: unknown): number {
+  if (obj === null) return 1;
+
+  if (typeof obj !== "object") {
+    return 1;
+  }
+
+  let count = 0;
+  for (const key in obj as Record<string, unknown>) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      count += countLeafProperties((obj as Record<string, unknown>)[key]);
+    }
+  }
+  return count;
+}

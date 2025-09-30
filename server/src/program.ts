@@ -66,7 +66,7 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set("outputList", outputList);
 
-  const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB);
+  const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB, knexConnection);
   app.set("systemStatusMonitor", systemStatusMonitor);
 
   logger.info("Initializing camera manager, and sensor and output lists. . .");

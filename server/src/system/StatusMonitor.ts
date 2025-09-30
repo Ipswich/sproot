@@ -4,6 +4,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { promisify } from "util";
 import { SystemStatus } from "@sproot/sproot-common/dist/system/SystemStatus";
 import { CameraManager } from "../camera/CameraManager";
+import { Knex } from "knex";
 
 const statfsAsync = promisify(statfs);
 
@@ -11,24 +12,40 @@ export class SystemStatusMonitor {
   #cpuMonitor: CpuMonitor = new CpuMonitor(1000, 5);
   #cameraManager: CameraManager;
   #sprootDB: ISprootDB;
+  #knexConnection: Knex;
 
-  constructor(cameraManager: CameraManager, sprootDB: ISprootDB) {
+  constructor(cameraManager: CameraManager, sprootDB: ISprootDB, knexConnection: Knex) {
     this.#cameraManager = cameraManager;
     this.#sprootDB = sprootDB;
+    this.#knexConnection = knexConnection;
   }
 
   async getStatusAsync(): Promise<SystemStatus> {
     const fileStats = await statfsAsync("/");
+    const pool = (this.#knexConnection.client as Knex.Client).pool!;
     return {
-      uptime: process.uptime(),
-      memoryUsage: process.memoryUsage().rss / 1024 / 1024,
-      heapUsage: process.memoryUsage().heapUsed / 1024 / 1024,
-      cpuUsage: this.#cpuMonitor.getAverageUsage(),
-      databaseSize: await this.#sprootDB.getDatabaseSizeAsync(),
-      totalDiskSize: (fileStats.blocks * fileStats.bsize) / 1024 / 1024,
-      freeDiskSize: (fileStats.bavail * fileStats.bsize) / 1024 / 1024,
-      timelapseDirectorySize: await this.#cameraManager.getTimelapseArchiveSizeAsync(),
-      lastTimelapseGenerationDuration: this.#cameraManager.getLastTimelapseGenerationDuration(),
+      system: {
+        totalDiskSize: (fileStats.blocks * fileStats.bsize) / 1024 / 1024,
+        freeDiskSize: (fileStats.bavail * fileStats.bsize) / 1024 / 1024,
+      },
+      process: {
+        uptime: process.uptime(),
+        memoryUsage: process.memoryUsage().rss / 1024 / 1024,
+        heapUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+        cpuUsage: this.#cpuMonitor.getAverageUsage(),
+      },
+      database: {
+        size: await this.#sprootDB.getDatabaseSizeAsync(),
+        connectionsUsed: pool.numUsed(),
+        connectionsFree: pool.numFree(),
+        pendingAcquires: pool.numPendingAcquires(),
+        pendingCreates: pool.numPendingCreates(),
+      },
+      timelapse: {
+        imageCount: null, //await this.#cameraManager.getTimelapseImageCountAsync(),
+        directorySize: await this.#cameraManager.getTimelapseArchiveSizeAsync(),
+        lastArchiveGenerationDuration: this.#cameraManager.getLastTimelapseGenerationDuration(),
+      },
     };
   }
 
