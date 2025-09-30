@@ -33,23 +33,25 @@ class BME280 extends SensorBase {
   }
 
   override async takeReadingAsync(): Promise<void> {
+    let sensor: bme280.Bme280 | null = null;
     const profiler = this.logger.startTimer();
-    await bme280
-      .open({
+    try {
+      sensor = await bme280.open({
         i2cBusNumber: 1,
         i2cAddress: Number(this.address),
-      })
-      .then(async (sensor) => {
-        const reading = await sensor.read();
-        this.lastReading[ReadingType.temperature] = String(reading.temperature);
-        this.lastReading[ReadingType.humidity] = String(reading.humidity);
-        this.lastReading[ReadingType.pressure] = String(reading.pressure);
-        this.lastReadingTime = new Date();
-        await sensor.close();
-      })
-      .catch((err) => {
-        this.logger.error(`Failed to read BME280 sensor ${this.id}. ${err}`);
       });
+      const reading = await sensor.read();
+      this.lastReading[ReadingType.temperature] = String(reading.temperature);
+      this.lastReading[ReadingType.humidity] = String(reading.humidity);
+      this.lastReading[ReadingType.pressure] = String(reading.pressure);
+      this.lastReadingTime = new Date();
+    } catch (err) {
+      this.logger.error(`Failed to read BME280 sensor ${this.id}. ${err}`);
+    } finally {
+      if (sensor !== null) {
+        await sensor.close();
+      }
+    }
     profiler.done({
       message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
       level: "debug",

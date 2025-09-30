@@ -365,14 +365,13 @@ class SensorList {
       }
     }
 
-    await Promise.allSettled(promises).then((results) => {
-      results.forEach((result) => {
-        if (result.status === "rejected") {
-          this.#logger.error(
-            `Could not add unrecognized DS18B20 sensor to database ${result.reason}`,
-          );
-        }
-      });
+    const awaitedPromises = await Promise.allSettled(promises);
+    awaitedPromises.forEach((result) => {
+      if (result.status === "rejected") {
+        this.#logger.error(
+          `Could not add unrecognized DS18B20 sensor to database ${result.reason}`,
+        );
+      }
     });
   }
 

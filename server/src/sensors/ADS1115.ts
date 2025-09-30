@@ -104,7 +104,8 @@ export class Ads1115Device {
   };
 
   public static async openAsync(busNum: number, addr = 0x48) {
-    return openPromisified(busNum).then((bus: PromisifiedBus) => new Ads1115Device(bus, addr));
+    const bus = await openPromisified(busNum);
+    return new Ads1115Device(bus, addr);
   }
 
   private static addressQueues: Map<number, Promise<unknown>> = new Map();
