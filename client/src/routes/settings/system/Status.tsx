@@ -3,7 +3,12 @@ import { getSystemStatusAsync } from "../../../requests/requests_v2";
 import { Fragment } from "react/jsx-runtime";
 import { useEffect } from "react";
 import { Accordion, Table, Title } from "@mantine/core";
-import { IconCpu, IconDatabase, IconLibraryPhoto, IconStack } from "@tabler/icons-react";
+import {
+  IconCpu,
+  IconDatabase,
+  IconLibraryPhoto,
+  IconStack,
+} from "@tabler/icons-react";
 
 export default function SystemStatus() {
   const systemStatusQuery = useQuery({
@@ -28,10 +33,7 @@ export default function SystemStatus() {
       {systemStatusQuery.isLoading && <p>Loading...</p>}
       {systemStatusQuery.isError && <p>Error loading system status.</p>}
       {systemStatusQuery.data && (
-        <Accordion
-          w="90%"
-          multiple={true}
-        >
+        <Accordion w="90%" multiple={true}>
           <Accordion.Item value="process">
             <Accordion.Control icon={<IconCpu />}>Process</Accordion.Control>
             <Accordion.Panel>
@@ -45,7 +47,10 @@ export default function SystemStatus() {
                   <Table.Tr>
                     <Table.Th w={130}>Uptime</Table.Th>
                     <Table.Td>
-                      {(systemStatusQuery.data.process.uptime / 3600).toFixed(2)} hours
+                      {(systemStatusQuery.data.process.uptime / 3600).toFixed(
+                        2,
+                      )}{" "}
+                      hours
                     </Table.Td>
                   </Table.Tr>
                   <Table.Tr>
@@ -83,13 +88,19 @@ export default function SystemStatus() {
                   <Table.Tr>
                     <Table.Th>Total Disk Size</Table.Th>
                     <Table.Td>
-                      {(systemStatusQuery.data.system.totalDiskSize / 1024).toFixed(2)} GB
+                      {(
+                        systemStatusQuery.data.system.totalDiskSize / 1024
+                      ).toFixed(2)}{" "}
+                      GB
                     </Table.Td>
                   </Table.Tr>
                   <Table.Tr>
                     <Table.Th>Free Disk Size</Table.Th>
                     <Table.Td>
-                      {(systemStatusQuery.data.system.freeDiskSize / 1024).toFixed(2)} GB
+                      {(
+                        systemStatusQuery.data.system.freeDiskSize / 1024
+                      ).toFixed(2)}{" "}
+                      GB
                     </Table.Td>
                   </Table.Tr>
                 </Table.Tbody>
@@ -97,7 +108,9 @@ export default function SystemStatus() {
             </Accordion.Panel>
           </Accordion.Item>
           <Accordion.Item value="database">
-            <Accordion.Control icon={<IconDatabase />}>Database</Accordion.Control>
+            <Accordion.Control icon={<IconDatabase />}>
+              Database
+            </Accordion.Control>
             <Accordion.Panel>
               <Table
                 variant="vertical"
@@ -141,7 +154,9 @@ export default function SystemStatus() {
             </Accordion.Panel>
           </Accordion.Item>
           <Accordion.Item value="timelapse">
-            <Accordion.Control icon={<IconLibraryPhoto />}>Timelapse</Accordion.Control>
+            <Accordion.Control icon={<IconLibraryPhoto />}>
+              Timelapse
+            </Accordion.Control>
             <Accordion.Panel>
               <Table
                 variant="vertical"
@@ -153,19 +168,26 @@ export default function SystemStatus() {
                   <Table.Tr>
                     <Table.Th>Image Count</Table.Th>
                     <Table.Td>
-                      {(systemStatusQuery.data.timelapse.imageCount ?? 0)}
+                      {systemStatusQuery.data.timelapse.imageCount ?? 0}
                     </Table.Td>
                   </Table.Tr>
                   <Table.Tr>
                     <Table.Th>Archive Size</Table.Th>
                     <Table.Td>
-                      {(systemStatusQuery.data.timelapse.directorySize ?? 0).toFixed(2)} MB
+                      {(
+                        systemStatusQuery.data.timelapse.directorySize ?? 0
+                      ).toFixed(2)}{" "}
+                      MB
                     </Table.Td>
                   </Table.Tr>
                   <Table.Tr>
                     <Table.Th>Generation Duration</Table.Th>
                     <Table.Td>
-                      {(systemStatusQuery.data.timelapse.lastArchiveGenerationDuration ?? 0).toFixed(2)} Seconds
+                      {(
+                        systemStatusQuery.data.timelapse
+                          .lastArchiveGenerationDuration ?? 0
+                      ).toFixed(2)}{" "}
+                      Seconds
                     </Table.Td>
                   </Table.Tr>
                 </Table.Tbody>
@@ -177,5 +199,3 @@ export default function SystemStatus() {
     </Fragment>
   );
 }
-
-
