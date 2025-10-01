@@ -150,7 +150,7 @@ class Timelapse {
       );
       this.#archiveProgressPercentage = -1;
     } finally {
-      this.#lastArchiveGenerationDuration = Date.now() - startTime / 1000; // seconds
+      this.#lastArchiveGenerationDuration = (Date.now() - startTime) / 1000; // seconds
       // The setTimeout should force cleanup of resources before actually calling things "done."
       setTimeout(() => {
         profiler.done({
