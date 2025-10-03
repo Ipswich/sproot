@@ -33,7 +33,7 @@ export class ADS1115 extends SensorBase {
   }
 
   override async initAsync(): Promise<ADS1115 | null> {
-    return await this.createSensorAsync(ADS1115.MAX_SENSOR_READ_TIME);
+    return this.createSensorAsync(ADS1115.MAX_SENSOR_READ_TIME);
   }
 
   override async disposeAsync(): Promise<void> {
@@ -65,10 +65,7 @@ export class ADS1115 extends SensorBase {
       | "2+GND"
       | "3+GND";
     const calculatedGain = (this.gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
-
-    const ads1115 = await Ads1115Device.openAsync(1, Number(this.address));
-
-    return await ads1115.measureAsync(mux, calculatedGain);
+    return Ads1115Device.getReadingAsync(Number(this.address), mux, calculatedGain);
   }
 }
 
@@ -104,8 +101,16 @@ export class Ads1115Device {
   };
 
   public static async openAsync(busNum: number, addr = 0x48) {
-    const bus = await openPromisified(busNum);
-    return new Ads1115Device(bus, addr);
+    return new Ads1115Device(await openPromisified(busNum), addr);
+  }
+
+  public static async getReadingAsync(
+    address: number,
+    mux: keyof typeof Ads1115Device.MUX,
+    gain: keyof typeof Ads1115Device.gains,
+  ) {
+    await using device = await Ads1115Device.openAsync(1, address);
+    return await device.measureAsync(mux, gain);
   }
 
   private static addressQueues: Map<number, Promise<unknown>> = new Map();
@@ -188,5 +193,9 @@ export class Ads1115Device {
     );
     // Return the result of this measure
     return next;
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.#bus.close();
   }
 }

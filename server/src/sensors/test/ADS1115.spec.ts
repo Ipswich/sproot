@@ -97,6 +97,7 @@ describe("ADS1115.ts tests", function () {
     const logger = winston.createLogger();
     const openStub = sinon.stub(Ads1115Device, "openAsync").resolves({
       measureAsync: async (_mux, _gain) => mockReading,
+      [Symbol.asyncDispose]: async () => {},
     } as Ads1115Device);
     let ads1115Sensor = await new ADS1115(
       mockADS1115Data,

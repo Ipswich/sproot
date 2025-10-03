@@ -101,6 +101,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     const logger = winston.createLogger();
     const openStub = sinon.stub(Ads1115Device, "openAsync").resolves({
       measureAsync: async (_mux, _gain) => mockReading,
+      [Symbol.asyncDispose]: async () => {},
     } as Ads1115Device);
     let capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
