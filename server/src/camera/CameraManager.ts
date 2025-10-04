@@ -86,6 +86,10 @@ class CameraManager {
     return this.#imageCapture.getTimelapseArchiveAsync();
   }
 
+  getTimelapseImageCount() {
+    return this.#imageCapture.getTimelapseImageCount();
+  }
+
   getTimelapseArchiveSizeAsync() {
     return this.#imageCapture.getTimelapseArchiveSizeAsync();
   }

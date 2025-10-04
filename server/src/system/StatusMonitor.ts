@@ -42,7 +42,7 @@ export class SystemStatusMonitor {
         pendingCreates: pool.numPendingCreates(),
       },
       timelapse: {
-        imageCount: null, //await this.#cameraManager.getTimelapseImageCountAsync(),
+        imageCount: this.#cameraManager.getTimelapseImageCount(),
         directorySize: await this.#cameraManager.getTimelapseArchiveSizeAsync(),
         lastArchiveGenerationDuration: this.#cameraManager.getLastTimelapseGenerationDuration(),
       },

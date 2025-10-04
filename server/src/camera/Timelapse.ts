@@ -25,6 +25,7 @@ class Timelapse {
   #isGeneratingTimelapseArchive: boolean = false;
   #archiveProgressPercentage: number = 0;
   #lastArchiveGenerationDuration: number | null = null;
+  #archiveImageCount: number = 0;
 
   constructor(addImageToTimelapseFunction: AddImageToTimelapseFunction, logger: winston.Logger) {
     this.addImageToTimelapseFunction = addImageToTimelapseFunction;
@@ -52,6 +53,10 @@ class Timelapse {
       this.#enabled = true;
       this.start();
     }
+  }
+
+  get timelapseImageCount(): number {
+    return this.#archiveImageCount;
   }
 
   get lastArchiveGenerationDuration(): number | null {
@@ -137,6 +142,7 @@ class Timelapse {
       this.#archiveProgressPercentage = 0;
 
       const imageData = await this.getTimelapseFileDataAsync();
+      this.#archiveImageCount = imageData.length;
       if (imageData.length === 0) {
         this.#logger.info("No timelapse images found to archive");
         return;
