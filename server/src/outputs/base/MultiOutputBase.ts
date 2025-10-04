@@ -64,7 +64,7 @@ export abstract class MultiOutputBase {
       const index = usedPins.indexOf(output.pin);
       if (index !== -1) {
         usedPins.splice(index, 1);
-        output.dispose();
+        output[Symbol.dispose]();
         delete this.outputs[output.id];
         if (usedPins.length === 0) {
           delete this.boardRecord[output.address];

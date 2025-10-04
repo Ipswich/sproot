@@ -71,7 +71,7 @@ describe("BME280.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const bme280Sensor = await new BME280(
+    await using bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
       5,
@@ -90,9 +90,6 @@ describe("BME280.ts tests", function () {
     assert.equal(bme280Sensor!.units[ReadingType.temperature], "°C");
     assert.equal(bme280Sensor!.units[ReadingType.humidity], "%rH");
     assert.equal(bme280Sensor!.units[ReadingType.pressure], "hPa");
-
-    //Cleanup
-    await bme280Sensor?.disposeAsync();
   });
 
   it("should get a reading from a BME280 sensor", async () => {
@@ -124,7 +121,7 @@ describe("BME280.ts tests", function () {
       close: closeStub as Bme280["close"],
     } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    let bme280Sensor = await new BME280(
+    await using bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
       5,
@@ -144,19 +141,22 @@ describe("BME280.ts tests", function () {
     assert.equal(bme280Sensor!.lastReading[ReadingType.humidity], String(mockReading.humidity));
     assert.equal(bme280Sensor!.lastReading[ReadingType.pressure], String(mockReading.pressure));
 
-    await bme280Sensor?.disposeAsync();
-
     // GetReading throws an errror
-    bme280Sensor = await new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger).initAsync();
+    await using bme280Sensor2 = await new BME280(
+      mockBME280Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    ).initAsync();
 
     openStub.rejects(new Error("Failed to open sensor"));
-    await bme280Sensor!.takeReadingAsync();
-    assert.isUndefined(bme280Sensor!.lastReading[ReadingType.temperature]);
-    assert.isUndefined(bme280Sensor!.lastReading[ReadingType.humidity]);
-    assert.isUndefined(bme280Sensor!.lastReading[ReadingType.pressure]);
+    await bme280Sensor2!.takeReadingAsync();
+    assert.isUndefined(bme280Sensor2!.lastReading[ReadingType.temperature]);
+    assert.isUndefined(bme280Sensor2!.lastReading[ReadingType.humidity]);
+    assert.isUndefined(bme280Sensor2!.lastReading[ReadingType.pressure]);
     assert.isTrue(loggerSpy.calledOnce);
-
-    //Cleanup
-    await bme280Sensor?.disposeAsync();
   });
 });

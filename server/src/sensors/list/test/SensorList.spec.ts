@@ -61,7 +61,7 @@ describe("SensorList.ts tests", function () {
       lastReading: { humidity: "", pressure: "", temperature: "" },
       lastReadingTime: null,
       units: { temperature: "°C", humidity: "%", pressure: "hPa" },
-      disposeAsync: async () => {},
+      [Symbol.asyncDispose]: async () => {},
       getChartData: () => {
         return { data: {} as Record<ReadingType, DataSeries>, series: {} as ChartSeries };
       },

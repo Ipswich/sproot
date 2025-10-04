@@ -69,7 +69,7 @@ export abstract class SensorBase implements ISensorBase {
   }
 
   abstract initAsync(): Promise<SensorBase | null>;
-  abstract disposeAsync(): Promise<void>;
+  abstract [Symbol.asyncDispose](): Promise<void>;
   abstract takeReadingAsync(): Promise<void>;
 
   updateName(name: string): void {

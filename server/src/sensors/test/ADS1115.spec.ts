@@ -51,7 +51,7 @@ describe("ADS1115.ts tests", function () {
       .stub(Ads1115Device, "openAsync")
       .resolves({ measureAsync: async (_mux, _gain) => 1234 } as Ads1115Device);
 
-    const ads1115Sensor = await new ADS1115(
+    await using ads1115Sensor = await new ADS1115(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
@@ -71,8 +71,6 @@ describe("ADS1115.ts tests", function () {
     assert.equal(ads1115Sensor!.address, mockADS1115Data.address);
     assert.equal(ads1115Sensor!.pin, mockADS1115Data.pin);
     assert.equal(ads1115Sensor!.units[ReadingType.voltage], "V");
-
-    await ads1115Sensor!.disposeAsync();
   });
 
   it("should take a reading from an ADS1115 sensor", async () => {
@@ -99,7 +97,7 @@ describe("ADS1115.ts tests", function () {
       measureAsync: async (_mux, _gain) => mockReading,
       [Symbol.asyncDispose]: async () => {},
     } as Ads1115Device);
-    let ads1115Sensor = await new ADS1115(
+    await using ads1115Sensor = await new ADS1115(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
@@ -116,10 +114,8 @@ describe("ADS1115.ts tests", function () {
     assert.isTrue(openStub.calledOnce);
     assert.equal(ads1115Sensor!.lastReading[ReadingType.voltage], String(mockReading / 10000));
 
-    await ads1115Sensor?.disposeAsync();
-
     // GetReading throws an errror
-    ads1115Sensor = await new ADS1115(
+    await using ads1115Sensor2 = await new ADS1115(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
@@ -132,12 +128,9 @@ describe("ADS1115.ts tests", function () {
     ).initAsync();
 
     openStub.rejects(new Error("Failed to open sensor"));
-    await ads1115Sensor!.takeReadingAsync();
-    assert.isUndefined(ads1115Sensor!.lastReading[ReadingType.voltage]);
+    await ads1115Sensor2!.takeReadingAsync();
+    assert.isUndefined(ads1115Sensor2!.lastReading[ReadingType.voltage]);
     assert.isTrue(loggerSpy.calledOnce);
-
-    //Cleanup
-    await ads1115Sensor?.disposeAsync();
   });
 
   it("should run takeReadingAsync sequentially between two sensors", async () => {

@@ -144,7 +144,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
 
   [Symbol.dispose](): void {
     for (const output of Object.values(this.outputs)) {
-      output.dispose();
+      output[Symbol.dispose]();
     }
     this.#client.removeAllListeners();
     this.#client.stopDiscovery();
@@ -201,7 +201,7 @@ class TPLinkPlug extends OutputBase {
     }, forceExecution);
   }
 
-  dispose(): void {
+  [Symbol.dispose](): void {
     if (this.controlMode == ControlMode.automatic) {
       // Catch this so it doesn't blow up
       this.tplinkPlug.setPowerState(false).catch(() => {

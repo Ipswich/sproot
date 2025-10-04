@@ -55,7 +55,7 @@ class DS18B20 extends SensorBase {
     });
   }
 
-  override disposeAsync(): Promise<void> {
+  override [Symbol.asyncDispose](): Promise<void> {
     this.internalDispose();
     return Promise.resolve();
   }

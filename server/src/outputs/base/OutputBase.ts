@@ -92,7 +92,7 @@ export abstract class OutputBase implements IOutputBase {
    * (respecting the current ControlMode).
    */
   abstract executeStateAsync(): Promise<void>;
-  abstract dispose(): void;
+  abstract [Symbol.dispose](): void;
 
   /** Initializes all of the data for this output */
   async initializeAsync() {

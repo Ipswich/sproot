@@ -36,7 +36,7 @@ export class ADS1115 extends SensorBase {
     return this.createSensorAsync(ADS1115.MAX_SENSOR_READ_TIME);
   }
 
-  override async disposeAsync(): Promise<void> {
+  override async [Symbol.asyncDispose](): Promise<void> {
     return this.internalDispose();
   }
 

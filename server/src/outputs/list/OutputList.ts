@@ -305,7 +305,7 @@ class OutputList implements Disposable {
       }
       default: {
         if (this.#outputs[output.id] !== undefined) {
-          this.#outputs[output.id]!.dispose();
+          this.#outputs[output.id]![Symbol.dispose]();
         }
       }
     }

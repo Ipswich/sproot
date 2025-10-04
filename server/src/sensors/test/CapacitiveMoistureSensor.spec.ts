@@ -54,7 +54,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       .stub(Ads1115Device, "openAsync")
       .resolves({ measureAsync: async (_mux, _gain) => 15000 } as Ads1115Device);
 
-    const sensor = await new CapacitiveMoistureSensor(
+    await using sensor = await new CapacitiveMoistureSensor(
       mockSensorData,
       mockSprootDB,
       5,
@@ -72,8 +72,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     assert.equal(sensor.address, mockSensorData.address);
     assert.equal(sensor.pin, mockSensorData.pin);
     assert.equal(sensor.units[ReadingType.moisture], "%");
-
-    await sensor.disposeAsync();
   });
 
   it("should take a reading from a CapacitiveMoistureSensor", async () => {
@@ -103,7 +101,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       measureAsync: async (_mux, _gain) => mockReading,
       [Symbol.asyncDispose]: async () => {},
     } as Ads1115Device);
-    let capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
+    await using capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
       stubbedMockDB,
       5,
@@ -121,7 +119,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       String(85.71428571428572), // calibrated value
     );
     openStub.resetHistory();
-    await capacitiveMoistureSensor?.disposeAsync();
 
     // GetReading with cached values should average the readings
     const mockedReadings = [];
@@ -146,7 +143,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     }
 
     stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
-    capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
+    await using capacitiveMoistureSensor2 = await new CapacitiveMoistureSensor(
       mockADS1115Data,
       stubbedMockDB,
       500,
@@ -155,18 +152,17 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       5,
       logger,
     ).initAsync();
-    await capacitiveMoistureSensor!.takeReadingAsync();
+    await capacitiveMoistureSensor2!.takeReadingAsync();
     assert.isTrue(openStub.calledOnce);
     assert.equal(
-      capacitiveMoistureSensor!.lastReading[ReadingType.moisture],
+      capacitiveMoistureSensor2!.lastReading[ReadingType.moisture],
       String(24.28571428571429), // calibrated value
     );
 
     openStub.resetHistory();
-    await capacitiveMoistureSensor?.disposeAsync();
 
     // GetReading throws an errror
-    capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
+    await using capacitiveMoistureSensor3 = await new CapacitiveMoistureSensor(
       mockADS1115Data,
       stubbedMockDB,
       5,
@@ -177,11 +173,8 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     ).initAsync();
 
     openStub.rejects(new Error("Failed to open sensor"));
-    await capacitiveMoistureSensor!.takeReadingAsync();
-    assert.isUndefined(capacitiveMoistureSensor!.lastReading[ReadingType.moisture]);
+    await capacitiveMoistureSensor3!.takeReadingAsync();
+    assert.isUndefined(capacitiveMoistureSensor3!.lastReading[ReadingType.moisture]);
     assert.isTrue(loggerSpy.calledOnce);
-
-    //Cleanup
-    await capacitiveMoistureSensor?.disposeAsync();
   });
 });

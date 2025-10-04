@@ -337,7 +337,7 @@ class Timelapse {
     }
   }
 
-  dispose(): void {
+  [Symbol.dispose](): void {
     this.#enabled = false;
     this.stop();
   }

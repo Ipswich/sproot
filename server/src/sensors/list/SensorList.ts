@@ -377,7 +377,7 @@ class SensorList {
   }
 
   async #disposeSensorAsync(sensor: SensorBase) {
-    await this.#sensors[sensor.id]!.disposeAsync();
+    await this.#sensors[sensor.id]![Symbol.asyncDispose]();
     delete this.#sensors[sensor.id];
   }
 
