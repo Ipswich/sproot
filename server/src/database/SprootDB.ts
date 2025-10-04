@@ -493,7 +493,7 @@ export class SprootDB implements ISprootDB {
     return parseFloat(result[0][0].size);
   }
 
-  disposeAsync(): Promise<void> {
-    return this.#connection.destroy();
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.#connection.destroy();
   }
 }

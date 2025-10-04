@@ -17,7 +17,7 @@ export type SystemStatus = {
     pendingCreates: number;
   };
   timelapse: {
-    imageCount: number | null;
+    imageCount: number;
     directorySize: number | null; // in MB, optional
     lastArchiveGenerationDuration: number | null; // in seconds
   };

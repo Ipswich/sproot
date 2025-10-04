@@ -189,8 +189,9 @@ class SensorList {
     }
   };
 
-  disposeAsync = async () =>
+  async [Symbol.asyncDispose]() {
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
+  }
 
   loadChartData() {
     //Format cached readings for recharts

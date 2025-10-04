@@ -26,7 +26,7 @@ describe("ServerStatsManager", () => {
   });
 
   it("should return stats with correct properties", async () => {
-    const manager = new CameraManager(
+    await using manager = new CameraManager(
       sprootDBMock,
       "test_key",
       winston.createLogger({
@@ -48,15 +48,13 @@ describe("ServerStatsManager", () => {
     assert.strictEqual(typeof stats.database.pendingCreates, "number");
     assert.strictEqual(typeof stats.system.totalDiskSize, "number");
     assert.strictEqual(typeof stats.system.freeDiskSize, "number");
-    assert.strictEqual(stats.timelapse.imageCount, null);
+    assert.strictEqual(stats.timelapse.imageCount, 0);
     assert.strictEqual(stats.timelapse.directorySize, null);
     assert.strictEqual(stats.timelapse.lastArchiveGenerationDuration, null);
-
-    manager.dispose();
   });
 
   it("should call getDatabaseSizeAsync", async () => {
-    const manager = new CameraManager(
+    await using manager = new CameraManager(
       sprootDBMock,
       "test_key",
       winston.createLogger({
@@ -67,7 +65,5 @@ describe("ServerStatsManager", () => {
     using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
     await monitor.getStatusAsync();
     assert.strictEqual(sprootDBMock.getDatabaseSizeAsync.calledOnce, true);
-
-    manager.dispose();
   });
 });

@@ -163,9 +163,9 @@ class CameraManager {
     }
   }
 
-  dispose(): void {
+  async [Symbol.asyncDispose](): Promise<void> {
     this.#disposed = true;
-    this.#imageCaptureCronJob.stop();
+    await this.#imageCaptureCronJob.stop();
     this.cleanupCameraProcess();
   }
 
@@ -224,13 +224,13 @@ class CameraManager {
         }
       });
 
-      this.#picameraServerProcess.on("close", (code, signal) => {
+      this.#picameraServerProcess.on("close", async (code, signal) => {
         this.#logger.info(
           `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
         );
         //SIGINT should basically only come from a ctrl-c, everything is dying at this point
         if (signal === "SIGINT") {
-          this.dispose();
+          await this[Symbol.asyncDispose]();
           return;
         }
         this.cleanupCameraProcess();
