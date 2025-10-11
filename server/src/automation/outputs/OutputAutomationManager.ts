@@ -44,44 +44,44 @@ export default class OutputAutomationManager {
       // Round down to the nearest tenth of a second, give an extra 100ms of slop because eventloop
       this.#lastRunAt = Math.floor(now.getTime() / 100) * 100 - 100;
     }
-    const evaluatedAutomations = Object.values(this.#automations)
-      .map((automation) => {
-        return {
-          id: automation.id,
-          name: automation.name,
-          value: automation.evaluate(sensorList, outputList, now),
-          // Maybe add more info here for debugging.
-          conditions: automation.conditions,
-        };
-      })
-      .filter((r) => r.value != null) as {
+    const evaluatedAutomations = Object.values(this.#automations).map((automation) => {
+      return {
+        id: automation.id,
+        name: automation.name,
+        value: automation.evaluate(sensorList, outputList, now),
+        // Maybe add more info here for debugging.
+        conditions: automation.conditions,
+      };
+    });
+
+    const filteredEvaluatedAutomations = evaluatedAutomations.filter((r) => r.value != null) as {
       id: number;
       name: string;
       value: number;
       conditions: Conditions;
     }[];
 
-    if (evaluatedAutomations.length > 1) {
+    if (filteredEvaluatedAutomations.length > 1) {
       //More than one automation evaluated to true
-      const firstValue = evaluatedAutomations[0]!.value;
-      if (evaluatedAutomations.every((automation) => automation.value == firstValue)) {
+      const firstValue = filteredEvaluatedAutomations[0]!.value;
+      if (filteredEvaluatedAutomations.every((automation) => automation.value == firstValue)) {
         //No collisions between these
         this.#lastEvaluation = {
-          names: evaluatedAutomations.map((automation) => automation.name),
+          names: filteredEvaluatedAutomations.map((automation) => automation.name),
           value: firstValue,
         };
       } else {
         //Collisions between these
         this.#lastEvaluation = {
-          names: evaluatedAutomations.map((automation) => automation.name),
+          names: filteredEvaluatedAutomations.map((automation) => automation.name),
           value: null,
         };
       }
-    } else if (evaluatedAutomations.length == 1) {
+    } else if (filteredEvaluatedAutomations.length == 1) {
       //Only one automation evaluated to true
       this.#lastEvaluation = {
-        names: [evaluatedAutomations[0]!.name],
-        value: evaluatedAutomations[0]!.value,
+        names: [filteredEvaluatedAutomations[0]!.name],
+        value: filteredEvaluatedAutomations[0]!.value,
       };
     } else {
       //No automations evaluated to true

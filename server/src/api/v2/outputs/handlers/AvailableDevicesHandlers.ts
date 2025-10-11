@@ -11,7 +11,7 @@ export async function getAvailableDevices(
   let getAvailableIdentifiersResponse: SuccessResponse | ErrorResponse;
 
   const errorDetails: string[] = [];
-  if (request.params["model"] === undefined) {
+  if (request.params["model"] == undefined) {
     errorDetails.push("Model cannot be undefined.");
   }
   if (errorDetails.length > 0) {
@@ -28,10 +28,9 @@ export async function getAvailableDevices(
   }
 
   try {
-    const models = Object.keys(Models).map((model) => model.toLowerCase());
-    if (models.includes(request.params["model"]!.toLowerCase())) {
+    if ((Object.values(Models) as string[]).includes(request.params["model"]!)) {
       const pins = outputList.getAvailableDevices(
-        request.params["model"]!.toLowerCase(),
+        request.params["model"]!,
         request.query["address"] as string,
         request.query["filterUsed"] as boolean | undefined,
       );
@@ -49,7 +48,7 @@ export async function getAvailableDevices(
           name: "Bad Request",
           url: request.originalUrl,
           details: [
-            `Model '${request.params["model"]}' not recognized, supported models are: ${Object.keys(models).join(", ")}`,
+            `Model '${request.params["model"]}' not recognized, supported models are: ${Object.values(Models).join(", ")}`,
           ],
         },
         ...response.locals["defaultProperties"],
