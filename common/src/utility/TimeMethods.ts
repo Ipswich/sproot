@@ -1,3 +1,5 @@
+const TIMESTAMP_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+
 /**
  * Includes start time, excludes end time.
  */
@@ -9,7 +11,7 @@ function isBetweenTimeStamp(
   if (!startTime || !endTime) {
     return false;
   }
-  if (!startTime.match(/^\d{2}:\d{2}$/) || !endTime.match(/^\d{2}:\d{2}$/)) {
+  if (!startTime.match(TIMESTAMP_REGEX) || !endTime.match(TIMESTAMP_REGEX)) {
     return false;
   }
   const [startH, startM] = startTime.split(":").map(Number);

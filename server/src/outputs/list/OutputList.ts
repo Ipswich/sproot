@@ -94,9 +94,7 @@ class OutputList implements Disposable {
       return await this.outputs[outputId]?.executeStateAsync();
     }
     this.#logger.verbose(`Executing output state for all outputs`);
-    const promises = Object.keys(this.outputs).map(
-      async (key) => await this.outputs[key]?.executeStateAsync(),
-    );
+    const promises = Object.keys(this.outputs).map((key) => this.outputs[key]?.executeStateAsync());
     await Promise.all(promises);
   }
 
@@ -105,8 +103,8 @@ class OutputList implements Disposable {
       await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now);
       return;
     }
-    const promises = Object.values(this.#outputs).map(
-      async (output) => await output.runAutomationsAsync(sensorList, this, now),
+    const promises = Object.values(this.#outputs).map((output) =>
+      output.runAutomationsAsync(sensorList, this, now),
     );
     await Promise.allSettled(promises);
   }

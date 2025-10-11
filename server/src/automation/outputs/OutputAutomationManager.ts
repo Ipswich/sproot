@@ -3,6 +3,7 @@ import { OutputList } from "../../outputs/list/OutputList";
 import { OutputAutomation } from "./OutputAutomation";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
+import { Conditions } from "../conditions/Conditions";
 
 export default class OutputAutomationManager {
   #automations: Record<number, OutputAutomation>;
@@ -49,9 +50,16 @@ export default class OutputAutomationManager {
           id: automation.id,
           name: automation.name,
           value: automation.evaluate(sensorList, outputList, now),
+          // Maybe add more info here for debugging.
+          conditions: automation.conditions,
         };
       })
-      .filter((r) => r.value != null) as { id: number; name: string; value: number }[];
+      .filter((r) => r.value != null) as {
+      id: number;
+      name: string;
+      value: number;
+      conditions: Conditions;
+    }[];
 
     if (evaluatedAutomations.length > 1) {
       //More than one automation evaluated to true
@@ -78,19 +86,15 @@ export default class OutputAutomationManager {
     } else {
       //No automations evaluated to true
       if (this.#lastEvaluation.names.length != 0) {
-        const nowString = now.toLocaleString("en-US", {
-          timeZone: process.env["TZ"],
-          hour: "numeric",
-          minute: "2-digit",
-          second: "2-digit",
-          year: "numeric",
-          month: "numeric",
-          day: "numeric",
-          hour12: true,
-          fractionalSecondDigits: 3,
-        });
         this.#logger.debug(
-          `No automations evaluated to true, but the last one probably did {"now": ${nowString}, name: ${this.#lastEvaluation.names}, value: ${this.#lastEvaluation.value}}.`,
+          `No automations evaluated to true, but the last one probably did {lastRunAt: ${new Date(this.#lastRunAt!).toISOString()}, "now": ${now.toISOString()}, name: ${this.#lastEvaluation.names}, value: ${this.#lastEvaluation.value}}.`,
+        );
+        this.#logger.debug(
+          `Automations: ${Object.values(evaluatedAutomations)
+            .map(
+              (a) => `${a.name} (name: ${a.name}, value: ${a.value}, conditions: ${a.conditions})`,
+            )
+            .join(",\n")}`,
         );
       }
 

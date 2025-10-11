@@ -84,7 +84,6 @@ export default async function setupAsync(): Promise<Express> {
     cameraManager,
     sensorList,
     outputList,
-    systemStatusMonitor,
     logger,
   );
   app.set("updateDevicesCronJob", updateDevicesCronJob);

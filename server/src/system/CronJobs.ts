@@ -3,21 +3,18 @@ import winston from "winston";
 import { CameraManager } from "../camera/CameraManager";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
-import { SystemStatusMonitor } from "./StatusMonitor";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 
 export function createUpdateDevicesCronJob(
   cameraManager: CameraManager,
   sensorList: SensorList,
   outputList: OutputList,
-  systemStatusMonitor: SystemStatusMonitor,
   logger: winston.Logger,
 ) {
   let running = false;
   return new CronJob(
     Constants.CRON.EVERY_SECOND,
     async function () {
-      logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
       if (running) {
         logger.warn("Device update cron skipped: previous job still running.");
         return;
