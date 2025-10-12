@@ -99,7 +99,7 @@ export abstract class OutputBase implements IOutputBase {
     await this.state.initializeAsync();
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
-    await this.loadAutomationsAsync();
+    await this.#automationManager.loadAsync(this.id);
   }
 
   updateName(name: string): void {
@@ -180,6 +180,7 @@ export abstract class OutputBase implements IOutputBase {
     outputList: OutputList,
     now: Date,
   ): Promise<void> {
+    await this.#automationManager.loadAsync(this.id);
     const result = this.#automationManager.evaluate(
       sensorList,
       outputList,
@@ -229,10 +230,6 @@ export abstract class OutputBase implements IOutputBase {
     this.logger.info(
       `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
     );
-  }
-
-  async loadAutomationsAsync(): Promise<void> {
-    await this.#automationManager.loadAsync(this.id);
   }
 
   protected async executeStateHelperAsync(

@@ -156,8 +156,6 @@ class OutputList implements Disposable {
         const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
         if (key) {
           //Update if it exists
-          await this.#outputs[key]!.loadAutomationsAsync();
-
           if (this.#outputs[key]?.name != output.name) {
             outputListChanges = true;
             //Also updates chart data (and series)

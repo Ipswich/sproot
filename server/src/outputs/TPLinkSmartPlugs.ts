@@ -153,7 +153,7 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
 
 class TPLinkPlug extends OutputBase {
   tplinkPlug: Plug;
-  #externalCallRunning = false;
+  #powerUpdateEventRunning = false;
 
   constructor(
     tplinkPlug: Plug,
@@ -215,17 +215,17 @@ class TPLinkPlug extends OutputBase {
   async #powerUpdateFunctionAsync(value: boolean): Promise<void> {
     // This should make sure that if someone externally changes the power state of the plug when it's
     // in manual mode, it updates the state in Sproot. Otherwise, we'll just ignore it.
-    if (this.#externalCallRunning) {
+    if (this.#powerUpdateEventRunning) {
       return;
     }
     let retryCount = 0;
-    this.#externalCallRunning = true;
+    this.#powerUpdateEventRunning = true;
     while (retryCount < 3) {
       retryCount++;
       try {
         if (this.controlMode == ControlMode.manual) {
           this.logger.info(
-            `TPLink Smart Plug ${this.id} updated from external call. Updating manual state to ${value} to reflect these changes.`,
+            `TPLink Smart Plug {id: ${this.id}} state change detected. Updating manual state to ${value ? 100 : 0} to reflect this.`,
           );
           await this.state.setNewStateAsync({
             value: value ? 100 : 0,
@@ -234,21 +234,21 @@ class TPLinkPlug extends OutputBase {
           });
         } else {
           this.logger.info(
-            `TPLink Smart Plug ${this.id} updated from external call. Overriding external { state: ${value} } with internal { state: ${this.value} }.`,
+            `TPLink Smart Plug {id: ${this.id}} state change detected. Overwriting external { state: ${value ? 100 : 0} } with internal { state: ${this.value} }. This may be redundant, but better safe than sorry.`,
           );
           await this.executeStateAsync(true);
         }
         break;
       } catch (error) {
         this.logger.error(
-          `Error updating state from external for TPLink Smart Plug ${this.id}: ${error}. Retrying (${retryCount}). . .`,
+          `Error updating state for TPLink Smart Plug {id: ${this.id}}: ${error}. Retrying (${retryCount}). . .`,
         );
       }
     }
-    this.#externalCallRunning = false;
+    this.#powerUpdateEventRunning = false;
     if (retryCount >= 3) {
       this.logger.error(
-        `POTENTIAL STATE MISMATCH DETECTED! TPLink Smart Plug ${this.id} failed to update from external call after 3 tries!`,
+        `POTENTIAL STATE MISMATCH DETECTED! TPLink Smart Plug {id: ${this.id}} failed to update from power update event after 3 tries!`,
       );
     }
   }

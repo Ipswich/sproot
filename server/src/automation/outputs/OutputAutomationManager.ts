@@ -92,7 +92,8 @@ export default class OutputAutomationManager {
         this.#logger.debug(
           `Automations: ${Object.values(evaluatedAutomations)
             .map(
-              (a) => `${a.name} (name: ${a.name}, value: ${a.value}, conditions: ${a.conditions})`,
+              (a) =>
+                `${a.name} (name: ${a.name}, value: ${a.value}, conditions: ${JSON.stringify(a.conditions)})`,
             )
             .join(",\n")}`,
         );
