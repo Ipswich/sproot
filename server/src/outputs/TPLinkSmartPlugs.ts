@@ -50,8 +50,13 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
       }
     });
     this.#client.on("plug-offline", (plug: Plug) => {
+      // Clean up non-responsive plugs
       if (plug.childId != undefined) {
         delete this.availablePlugs[plug.childId];
+        const device = Object.values(this.outputs).find((o) => o.pin == plug.childId);
+        if (device) {
+          this.disposeOutput(device);
+        }
       }
     });
 
@@ -202,14 +207,15 @@ class TPLinkPlug extends OutputBase {
   }
 
   [Symbol.dispose](): void {
+    this.tplinkPlug.removeAllListeners("power-on");
+    this.tplinkPlug.removeAllListeners("power-off");
+
     if (this.controlMode == ControlMode.automatic) {
       // Catch this so it doesn't blow up
       this.tplinkPlug.setPowerState(false).catch(() => {
         this.logger.error(`Disposal error turning off TPLink Smart Plug ${this.id}`);
       });
     }
-    this.tplinkPlug.removeAllListeners("power-on");
-    this.tplinkPlug.removeAllListeners("power-off");
   }
 
   async #powerUpdateFunctionAsync(value: boolean): Promise<void> {

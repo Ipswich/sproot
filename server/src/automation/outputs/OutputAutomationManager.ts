@@ -113,15 +113,14 @@ export default class OutputAutomationManager {
   // }
 
   async loadAsync(outputId: number) {
-    // clear out the old ones
-    this.#automations = {};
-
     // Get all of the automations for this ID.
     const rawAutomations = await this.#sprootDB.getAutomationsForOutputAsync(outputId);
+
+    const newAutomations: Record<number, OutputAutomation> = {};
     const loadPromises = [];
     for (const automation of rawAutomations) {
-      //create a new local automation object
-      this.#automations[automation.automationId] = new OutputAutomation(
+      // Create a new local automation object
+      newAutomations[automation.automationId] = new OutputAutomation(
         automation.automationId,
         automation.name,
         automation.value,
@@ -130,10 +129,11 @@ export default class OutputAutomationManager {
       );
 
       // And load its conditions
-      loadPromises.push(this.#automations[automation.automationId]!.conditions.loadAsync());
+      loadPromises.push(newAutomations[automation.automationId]!.conditions.loadAsync());
     }
 
     await Promise.all(loadPromises);
+    this.#automations = newAutomations;
   }
 
   #isRunnable(now: Date, automationTimeout: number): boolean {
@@ -142,12 +142,6 @@ export default class OutputAutomationManager {
       // this.#lastRunAt + automationTimeout * 1000 < now.getTime()
       // Round "now" up to the nearest tenth second. Very high granularity can cause weirdness with non real-time ticks.
       this.#lastRunAt + automationTimeout * 1000 <= Math.ceil(now.getTime() / 100) * 100;
-
-    if (!runnable && this.#lastEvaluation.names.length != 0) {
-      this.#logger.debug(
-        `Output Automations are not runnable for this output. Last run at ${new Date(this.#lastRunAt!).toISOString()}. Now is ${new Date(Math.ceil(now.getTime() / 100) * 100).toISOString()}. Timeout is ${automationTimeout} seconds.`,
-      );
-    }
 
     return runnable;
   }

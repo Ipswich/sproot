@@ -109,6 +109,34 @@ describe("tplinkPlug.ts tests", async function () {
     assert.isUndefined(tplinkSmartPlugs.boardRecord["127.0.0.1"]);
   });
 
+  it("available TPLink Smart Plugs should be tracked", async function () {
+    const logger = winston.createLogger({ silent: true });
+    using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 5000);
+
+    // No devices should be available at first - takes a hot sec for events to get emitted
+    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 0);
+
+    // Wait a moment for the device to be detected
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 6);
+
+    const output1 = await tplinkSmartPlugs.createOutputAsync({
+      id: 1,
+      model: "TPLINK_SMART_PLUG",
+      address: simulatedHS300.address,
+      name: "test output 1",
+      pin: simulatedHS300.children[0]?.sysinfo.id,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput);
+
+    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 5);
+    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices(undefined, false)).length, 6);
+    tplinkSmartPlugs.disposeOutput(output1!);
+
+    assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 6);
+  });
+
   it("creation should skip outputs that are already being created", async function () {
     const warnStub = sinon.stub();
     sinon
