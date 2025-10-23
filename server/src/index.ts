@@ -19,21 +19,22 @@ mainAsync().then((app) => {
       server.closeAllConnections();
       server.close(async () => {
         // Stop updating database and sensors
-        app.get("updateDatabaseCronJob").stop();
-        app.get("updateStateCronJob").stop();
+        await app.get("updateDatabaseCronJob").stop();
+        await app.get("automationsCronJuob").stop();
+        await app.get("updateDevicesCronJob").stop();
         try {
           // Cleanup Cameras
-          app.get("cameraManager").dispose();
+          await app.get("cameraManager")[Symbol.asyncDispose]();
 
           // Cleanup sensors and turn off outputs
-          await app.get("sensorList").disposeAsync();
+          await app.get("sensorList")[Symbol.asyncDispose]();
           app.get("outputList")[Symbol.dispose]();
 
           // Cleanup system status monitor
           app.get("systemStatusMonitor")[Symbol.dispose]();
 
           // Close database connection
-          await app.get("sprootDB").disposeAsync();
+          await app.get("sprootDB")[Symbol.asyncDispose]();
         } catch (err) {
           //Dgaf, swallow anything, we're shutting down anyway.
           logger.error(err);

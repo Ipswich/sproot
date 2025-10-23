@@ -1,11 +1,24 @@
 export type SystemStatus = {
-  uptime: number;
-  memoryUsage: number;
-  heapUsage: number;
-  cpuUsage: number;
-  databaseSize: number;
-  totalDiskSize: number;
-  freeDiskSize: number;
-  // timelapseDirectorySize?: number; // in MB, optional
-  // lastArchiveDuration?: number; // in seconds, optional
+  system: {
+    totalDiskSize: number;
+    freeDiskSize: number;
+  };
+  process: {
+    uptime: number;
+    memoryUsage: number;
+    heapUsage: number;
+    cpuUsage: number;
+  };
+  database: {
+    size: number;
+    connectionsUsed: number;
+    connectionsFree: number;
+    pendingAcquires: number;
+    pendingCreates: number;
+  };
+  timelapse: {
+    imageCount: number;
+    directorySize: number | null; // in MB, optional
+    lastArchiveGenerationDuration: number | null; // in seconds
+  };
 };

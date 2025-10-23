@@ -1,30 +1,30 @@
 import { assert } from "chai";
 import { isBetweenTimeStamp } from "../TimeMethods";
 
-describe("TimeMethods", () => {
-  describe("isBetweenTimeStamp", () => {
-    it("should return true when time is between start and end time", () => {
+describe("TimeMethods", function () {
+  describe("isBetweenTimeStamp", function () {
+    it("should return true when time is between start and end time", function () {
       const now = new Date();
       now.setHours(12, 30, 0, 0);
 
       assert.isTrue(isBetweenTimeStamp("10:00", "14:00", now));
     });
 
-    it("should return true when time is exactly at start time", () => {
+    it("should return true when time is exactly at start time", function () {
       const now = new Date();
       now.setHours(10, 0, 0, 0);
 
       assert.isTrue(isBetweenTimeStamp("10:00", "14:00", now));
     });
 
-    it("should return false when time is exactly at end time", () => {
+    it("should return false when time is exactly at end time", function () {
       const now = new Date();
       now.setHours(14, 0, 0, 0);
 
       assert.isFalse(isBetweenTimeStamp("10:00", "14:00", now));
     });
 
-    it("should handle cross-midnight scenarios (end before start)", () => {
+    it("should handle cross-midnight scenarios (end before start)", function () {
       // Test time after start time (evening)
       const evening = new Date();
       evening.setHours(22, 0, 0, 0);
@@ -41,21 +41,21 @@ describe("TimeMethods", () => {
       assert.isFalse(isBetweenTimeStamp("21:00", "05:00", afternoon));
     });
 
-    it("should handle different minute values correctly", () => {
+    it("should handle different minute values correctly", function () {
       const now = new Date();
       now.setHours(10, 45, 0, 0);
 
       assert.isTrue(isBetweenTimeStamp("10:30", "11:15", now));
     });
 
-    it("should ignore seconds and milliseconds in comparisons", () => {
+    it("should ignore seconds and milliseconds in comparisons", function () {
       const now = new Date();
       now.setHours(10, 30, 45, 999);
 
       assert.isTrue(isBetweenTimeStamp("10:00", "11:00", now));
     });
 
-    it("should return false if either start or end time is not provided", () => {
+    it("should return false if either start or end time is not provided", function () {
       const now = new Date();
       now.setHours(10, 30, 0, 0);
 
@@ -66,7 +66,7 @@ describe("TimeMethods", () => {
       assert.isFalse(isBetweenTimeStamp(null, null, now));
     });
 
-    it("should return false if start or end time is not in HH:MM format", () => {
+    it("should return false if start or end time is not in HH:MM format", function () {
       const now = new Date();
       now.setHours(10, 30, 0, 0);
 

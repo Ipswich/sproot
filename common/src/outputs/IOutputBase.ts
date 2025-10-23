@@ -1,4 +1,5 @@
 import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
+import { Models } from "./Models";
 
 enum ControlMode {
   manual = "manual",
@@ -7,7 +8,7 @@ enum ControlMode {
 
 interface IOutputBase {
   id: number;
-  model: string;
+  model: keyof typeof Models;
   address: string;
   name: string | null;
   pin: string;

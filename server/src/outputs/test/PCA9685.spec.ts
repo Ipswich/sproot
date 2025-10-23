@@ -11,6 +11,7 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {
@@ -31,7 +32,7 @@ describe("PCA9685.ts tests", function () {
 
     const output1 = await pca9685.createOutputAsync({
       id: 1,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -40,7 +41,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
     const output2 = await pca9685.createOutputAsync({
       id: 2,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 2",
       pin: "1",
@@ -49,7 +50,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
     const output3 = await pca9685.createOutputAsync({
       id: 3,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 3",
       pin: "2",
@@ -58,7 +59,7 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
     const output4 = await pca9685.createOutputAsync({
       id: 4,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 4",
       pin: "3",
@@ -98,7 +99,7 @@ describe("PCA9685.ts tests", function () {
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -116,18 +117,22 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should update and apply states with respect to control mode", async function () {
-    sinon
-      .stub(winston, "createLogger")
-      .callsFake(
-        () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
-      );
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          verbose: () => {},
+          debug: () => {},
+        }) as unknown as winston.Logger,
+    );
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -136,69 +141,55 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Automatic High
-    await pca9685.setNewOutputStateAsync(
-      "1",
-      <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
-      ControlMode.automatic,
-    );
+    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+      value: 100,
+      controlMode: ControlMode.automatic,
+      logTime: new Date().toISOString(),
+    });
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
-    await pca9685.executeOutputStateAsync();
     assert.equal(setDutyCycleStub.callCount, 1);
     assert.equal(setDutyCycleStub.getCall(0).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(0).args[1], 1);
 
     //Automatic Low
-    await pca9685.setNewOutputStateAsync(
-      "1",
-      <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
-      ControlMode.automatic,
-    );
+    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+      value: 0,
+      controlMode: ControlMode.automatic,
+      logTime: new Date().toISOString(),
+    });
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 0);
-    await pca9685.executeOutputStateAsync();
     assert.equal(setDutyCycleStub.callCount, 2);
     assert.equal(setDutyCycleStub.getCall(1).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(1).args[1], 0);
 
-    //Swap to Manual
-    pca9685.updateControlMode("1", ControlMode.manual);
-
-    //Manual Low
-    await pca9685.setNewOutputStateAsync(
-      "1",
-      <SDBOutputState>{ value: 0, logTime: new Date().toISOString() },
-      ControlMode.manual,
-    );
-    assert.equal(pca9685.outputs["1"]?.state.manual.value, 0);
-    await pca9685.executeOutputStateAsync();
-    assert.equal(setDutyCycleStub.callCount, 3);
-    assert.equal(setDutyCycleStub.getCall(2).args[0], 0);
-    assert.equal(setDutyCycleStub.getCall(2).args[1], 0);
+    //Swap to Manual (+0 execution call, manual is also low)
+    pca9685.updateControlModeAsync("1", ControlMode.manual);
+    assert.equal(setDutyCycleStub.callCount, 2);
 
     //Manual High
-    await pca9685.setNewOutputStateAsync(
-      "1",
-      <SDBOutputState>{ value: 100, logTime: new Date().toISOString() },
-      ControlMode.manual,
-    );
+    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+      value: 100,
+      controlMode: ControlMode.manual,
+      logTime: new Date().toISOString(),
+    });
     assert.equal(pca9685.outputs["1"]?.state.manual.value, 100);
-    await pca9685.executeOutputStateAsync();
+    assert.equal(setDutyCycleStub.callCount, 3);
+    assert.equal(setDutyCycleStub.getCall(2).args[0], 0);
+    assert.equal(setDutyCycleStub.getCall(2).args[1], 1);
+
+    //Automatic Low (+1 execution call, switching back to automatic mode (low -> high))
+    pca9685.updateControlModeAsync("1", ControlMode.automatic);
     assert.equal(setDutyCycleStub.callCount, 4);
     assert.equal(setDutyCycleStub.getCall(3).args[0], 0);
-    assert.equal(setDutyCycleStub.getCall(3).args[1], 1);
 
-    //Swap to Automatic
-    pca9685.updateControlMode("1", ControlMode.automatic);
-
-    //Execute Automatic Low
-    await pca9685.executeOutputStateAsync();
-    assert.equal(setDutyCycleStub.callCount, 5);
-    assert.equal(setDutyCycleStub.getCall(4).args[0], 0);
-    assert.equal(setDutyCycleStub.getCall(4).args[1], 0);
+    //Automatic Low (+0 execution call, switching back to automatic mode (low -> low))
+    pca9685.updateControlModeAsync("1", ControlMode.automatic);
+    assert.equal(setDutyCycleStub.callCount, 4);
 
     //Inverted PWM Execution
     await pca9685.createOutputAsync({
       id: 1,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -206,36 +197,34 @@ describe("PCA9685.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    await pca9685.setNewOutputStateAsync(
-      "1",
-      <SDBOutputState>{ value: 100 },
-      ControlMode.automatic,
-    );
+    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+      value: 100,
+      controlMode: ControlMode.automatic,
+    });
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
-    await pca9685.executeOutputStateAsync("1"); //Receives individual output id as well.
-    assert.equal(setDutyCycleStub.callCount, 6);
-    assert.equal(setDutyCycleStub.getCall(5).args[0], 0);
-    assert.equal(setDutyCycleStub.getCall(5).args[1], 0);
+    assert.equal(setDutyCycleStub.callCount, 5);
+    assert.equal(setDutyCycleStub.getCall(4).args[0], 0);
+    assert.equal(setDutyCycleStub.getCall(4).args[1], 0);
 
     //PWM error handling
-    await pca9685.setNewOutputStateAsync("1", <SDBOutputState>{ value: -1 }, ControlMode.automatic);
-    await pca9685.executeOutputStateAsync("1"); //Receives individual output id as well.
+    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+      value: -1,
+      controlMode: ControlMode.automatic,
+    });
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 0);
-    assert.equal(setDutyCycleStub.callCount, 7);
+    assert.equal(setDutyCycleStub.callCount, 6);
 
-    await pca9685.setNewOutputStateAsync(
-      "1",
-      <SDBOutputState>{ value: 101 },
-      ControlMode.automatic,
-    );
-    await pca9685.executeOutputStateAsync("1"); //Receives individual output id as well.
+    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+      value: 101,
+      controlMode: ControlMode.automatic,
+    });
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
-    assert.equal(setDutyCycleStub.callCount, 8);
+    assert.equal(setDutyCycleStub.callCount, 7);
 
     //Non-PWM error handling
     await pca9685.createOutputAsync({
       id: 2,
-      model: "pca9685",
+      model: Models.PCA9685,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -244,8 +233,10 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Execute non-pwm output (not 0 or 100)
-    await pca9685.setNewOutputStateAsync("2", <SDBOutputState>{ value: 75 }, ControlMode.automatic);
-    await pca9685.executeOutputStateAsync("2");
-    assert.equal(setDutyCycleStub.callCount, 8);
+    await pca9685.setAndExecuteStateAsync("2", <SDBOutputState>{
+      value: 75,
+      controlMode: ControlMode.automatic,
+    });
+    assert.equal(setDutyCycleStub.callCount, 7);
   });
 });

@@ -9,6 +9,7 @@ import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { OutputBase } from "../../../../outputs/base/OutputBase";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 describe("OutputHandlers.ts tests", () => {
   describe("get", () => {
@@ -16,7 +17,7 @@ describe("OutputHandlers.ts tests", () => {
     const outputData = {
       1: {
         id: 1,
-        model: "pca9685",
+        model: Models.PCA9685,
         address: "0x40",
         name: "test output 1",
         pin: "0",
@@ -29,7 +30,7 @@ describe("OutputHandlers.ts tests", () => {
       },
       2: {
         id: 2,
-        model: "pca9685",
+        model: Models.PCA9685,
         address: "0x40",
         name: "test output 2",
         pin: "1",
@@ -138,7 +139,7 @@ describe("OutputHandlers.ts tests", () => {
 
     it("should return a 201 and add a new output", async () => {
       const newOutput = {
-        model: "pca9685",
+        model: Models.PCA9685,
         address: "0x40",
         name: "test output",
         pin: "0",
@@ -211,7 +212,7 @@ describe("OutputHandlers.ts tests", () => {
 
     it("should return a 503 if the database is unreachable", async () => {
       const newOutput = {
-        model: "pca9685",
+        model: Models.PCA9685,
         address: "0x40",
         name: "test output",
         pin: "0",
@@ -278,7 +279,7 @@ describe("OutputHandlers.ts tests", () => {
       const updatedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",
@@ -318,7 +319,7 @@ describe("OutputHandlers.ts tests", () => {
       const updatedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",
@@ -361,7 +362,7 @@ describe("OutputHandlers.ts tests", () => {
       const updatedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",
@@ -403,7 +404,7 @@ describe("OutputHandlers.ts tests", () => {
       const updatedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",
@@ -474,7 +475,7 @@ describe("OutputHandlers.ts tests", () => {
       const deletedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",
@@ -512,7 +513,7 @@ describe("OutputHandlers.ts tests", () => {
       const deletedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",
@@ -553,7 +554,7 @@ describe("OutputHandlers.ts tests", () => {
       const deletedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",
@@ -594,7 +595,7 @@ describe("OutputHandlers.ts tests", () => {
       const deletedOutput = {
         1: {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output",
           pin: "0",

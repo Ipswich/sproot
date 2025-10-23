@@ -31,32 +31,31 @@ class DS18B20 extends SensorBase {
   }
 
   override async initAsync(): Promise<DS18B20 | null> {
-    return this.createSensorAsync("DS18B20", this.MAX_SENSOR_READ_TIME);
+    return this.createSensorAsync(this.MAX_SENSOR_READ_TIME);
   }
 
   override async takeReadingAsync(): Promise<void> {
     const profiler = this.logger.startTimer();
-    await readTemperatureFromDeviceAsync(this.address!)
-      .then(async (result) => {
-        if (result === false) {
-          throw new Error("Invalid reading from sensor.");
-        }
-        const reading = String(result);
-        this.lastReading[ReadingType.temperature] = reading;
-        this.lastReadingTime = new Date();
-      })
-      .catch((err) => {
-        this.logger.error(
-          `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
-        );
-      });
+    try {
+      const result = await readTemperatureFromDeviceAsync(this.address!);
+      if (result === false) {
+        throw new Error("Invalid reading from sensor.");
+      }
+      const reading = String(result);
+      this.lastReading[ReadingType.temperature] = reading;
+      this.lastReadingTime = new Date();
+    } catch (err) {
+      this.logger.error(
+        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
+      );
+    }
     profiler.done({
       message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
       level: "debug",
     });
   }
 
-  override disposeAsync(): Promise<void> {
+  override [Symbol.asyncDispose](): Promise<void> {
     this.internalDispose();
     return Promise.resolve();
   }

@@ -29,6 +29,11 @@ interface ISprootDB {
   getDS18B20AddressesAsync(): Promise<SDBSensor[]>;
   addSensorAsync(sensor: SDBSensor): Promise<void>;
   updateSensorAsync(sensor: SDBSensor): Promise<void>;
+  updateSensorCalibrationAsync(
+    sensorId: number,
+    lowCalibrationPoint: number,
+    highCalibrationPoint: number,
+  ): Promise<void>;
   deleteSensorAsync(id: number): Promise<void>;
   addSensorReadingAsync(sensor: ISensorBase): Promise<void>;
   getSensorReadingsAsync(
@@ -313,6 +318,14 @@ class MockSprootDB implements ISprootDB {
   }
 
   async updateSensorAsync(_sensor: SDBSensor): Promise<void> {
+    return;
+  }
+
+  async updateSensorCalibrationAsync(
+    _sensorId: number,
+    _lowCalibrationPoint: number,
+    _highCalibrationPoint: number,
+  ): Promise<void> {
     return;
   }
 

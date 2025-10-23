@@ -2,16 +2,20 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
 import { OutputAutomation } from "./OutputAutomation";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
+import { Conditions } from "../conditions/Conditions";
 
 export default class OutputAutomationManager {
   #automations: Record<number, OutputAutomation>;
   #sprootDB: ISprootDB;
+  #logger: winston.Logger;
   #lastRunAt: number | null = null;
   #lastEvaluation: { names: string[]; value: number | null } = { names: [], value: null };
 
-  constructor(sprootDB: ISprootDB) {
+  constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     this.#automations = {};
     this.#sprootDB = sprootDB;
+    this.#logger = logger;
   }
 
   get automations() {
@@ -36,42 +40,65 @@ export default class OutputAutomationManager {
     if (!this.#isRunnable(now, automationTimeout)) {
       return this.#lastEvaluation;
     } else {
-      this.#lastRunAt = now.getTime();
+      // this.#lastRunAt = now.getTime();
+      // Round down to the nearest tenth of a second, give an extra 100ms of slop because eventloop
+      this.#lastRunAt = Math.floor(now.getTime() / 100) * 100 - 100;
     }
-    const evaluatedAutomations = Object.values(this.#automations)
-      .map((automation) => {
-        return {
-          id: automation.id,
-          name: automation.name,
-          value: automation.evaluate(sensorList, outputList, now),
-        };
-      })
-      .filter((r) => r.value != null) as { id: number; name: string; value: number }[];
+    const evaluatedAutomations = Object.values(this.#automations).map((automation) => {
+      return {
+        id: automation.id,
+        name: automation.name,
+        value: automation.evaluate(sensorList, outputList, now),
+        // Maybe add more info here for debugging.
+        conditions: automation.conditions,
+      };
+    });
 
-    if (evaluatedAutomations.length > 1) {
+    const filteredEvaluatedAutomations = evaluatedAutomations.filter((r) => r.value != null) as {
+      id: number;
+      name: string;
+      value: number;
+      conditions: Conditions;
+    }[];
+
+    if (filteredEvaluatedAutomations.length > 1) {
       //More than one automation evaluated to true
-      const firstValue = evaluatedAutomations[0]!.value;
-      if (evaluatedAutomations.every((automation) => automation.value == firstValue)) {
+      const firstValue = filteredEvaluatedAutomations[0]!.value;
+      if (filteredEvaluatedAutomations.every((automation) => automation.value == firstValue)) {
         //No collisions between these
         this.#lastEvaluation = {
-          names: evaluatedAutomations.map((automation) => automation.name),
+          names: filteredEvaluatedAutomations.map((automation) => automation.name),
           value: firstValue,
         };
       } else {
         //Collisions between these
         this.#lastEvaluation = {
-          names: evaluatedAutomations.map((automation) => automation.name),
+          names: filteredEvaluatedAutomations.map((automation) => automation.name),
           value: null,
         };
       }
-    } else if (evaluatedAutomations.length == 1) {
+    } else if (filteredEvaluatedAutomations.length == 1) {
       //Only one automation evaluated to true
       this.#lastEvaluation = {
-        names: [evaluatedAutomations[0]!.name],
-        value: evaluatedAutomations[0]!.value,
+        names: [filteredEvaluatedAutomations[0]!.name],
+        value: filteredEvaluatedAutomations[0]!.value,
       };
     } else {
       //No automations evaluated to true
+      if (this.#lastEvaluation.names.length != 0) {
+        this.#logger.debug(
+          `No automations evaluated to true, but the last one probably did {lastRunAt: ${new Date(this.#lastRunAt!).toISOString()}, "now": ${now.toISOString()}, name: ${this.#lastEvaluation.names}, value: ${this.#lastEvaluation.value}}.`,
+        );
+        this.#logger.debug(
+          `Automations: ${Object.values(evaluatedAutomations)
+            .map(
+              (a) =>
+                `${a.name} (name: ${a.name}, value: ${a.value}, conditions: ${JSON.stringify(a.conditions)})`,
+            )
+            .join(",\n")}`,
+        );
+      }
+
       this.#lastEvaluation = { names: [], value: null };
     }
     return this.#lastEvaluation;
@@ -86,15 +113,14 @@ export default class OutputAutomationManager {
   // }
 
   async loadAsync(outputId: number) {
-    // clear out the old ones
-    this.#automations = {};
-
     // Get all of the automations for this ID.
     const rawAutomations = await this.#sprootDB.getAutomationsForOutputAsync(outputId);
+
+    const newAutomations: Record<number, OutputAutomation> = {};
     const loadPromises = [];
     for (const automation of rawAutomations) {
-      //create a new local automation object
-      this.#automations[automation.automationId] = new OutputAutomation(
+      // Create a new local automation object
+      newAutomations[automation.automationId] = new OutputAutomation(
         automation.automationId,
         automation.name,
         automation.value,
@@ -103,13 +129,20 @@ export default class OutputAutomationManager {
       );
 
       // And load its conditions
-      loadPromises.push(this.#automations[automation.automationId]!.conditions.loadAsync());
+      loadPromises.push(newAutomations[automation.automationId]!.conditions.loadAsync());
     }
 
     await Promise.all(loadPromises);
+    this.#automations = newAutomations;
   }
 
   #isRunnable(now: Date, automationTimeout: number): boolean {
-    return this.#lastRunAt == null || this.#lastRunAt + automationTimeout * 1000 <= now.getTime();
+    const runnable =
+      this.#lastRunAt == null ||
+      // this.#lastRunAt + automationTimeout * 1000 < now.getTime()
+      // Round "now" up to the nearest tenth second. Very high granularity can cause weirdness with non real-time ticks.
+      this.#lastRunAt + automationTimeout * 1000 <= Math.ceil(now.getTime() / 100) * 100;
+
+    return runnable;
   }
 }

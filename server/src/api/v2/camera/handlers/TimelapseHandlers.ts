@@ -13,8 +13,9 @@ export async function getTimelapseArchiveAsync(
 ): Promise<void> {
   const cameraManager = request.app.get("cameraManager") as CameraManager;
   const timelapseArchive = await cameraManager.getTimelapseArchiveAsync();
+  const timelapseArchiveSize = await cameraManager.getTimelapseArchiveSizeAsync();
 
-  if (timelapseArchive === null) {
+  if (timelapseArchive === null || timelapseArchiveSize === null) {
     response.status(404).json({
       statusCode: 404,
       error: {
@@ -26,8 +27,6 @@ export async function getTimelapseArchiveAsync(
     });
     return;
   }
-
-  const timelapseArchiveSize = await cameraManager.getTimelapseArchiveSizeAsync();
 
   response.setHeader("Content-Type", "application/x-tar");
   response.setHeader("Content-Length", timelapseArchiveSize.toString());

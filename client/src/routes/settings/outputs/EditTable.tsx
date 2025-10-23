@@ -24,10 +24,11 @@ import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
+import { Models } from "@sproot/sproot-common/src/outputs/Models";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
-  supportedModels: string[];
+  supportedModels: Record<string, string>;
   setIsStale: (isStale: boolean) => void;
 }
 
@@ -183,7 +184,9 @@ export default function EditTable({
             <Fragment>
               <NativeSelect
                 label="Model"
-                data={supportedModels}
+                data={Object.keys(supportedModels).map((key) => {
+                  return { value: key, label: supportedModels[key]! };
+                })}
                 required
                 {...updateOutputForm.getInputProps("model")}
                 disabled
@@ -199,13 +202,12 @@ export default function EditTable({
                 required
                 {...updateOutputForm.getInputProps("automationTimeout")}
               />
-              {selectedOutput.model?.toLowerCase() === "pca9685" ? (
+              {selectedOutput.model === Models.PCA9685 ? (
                 <PCA9685Form
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
-              ) : selectedOutput.model?.toLowerCase() ===
-                "tplink-smart-plug" ? (
+              ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
@@ -233,13 +235,12 @@ export default function EditTable({
             </Fragment>
           ) : (
             <Fragment>
-              {updateOutputForm.values.model.toLowerCase() === "pca9685" ? (
+              {updateOutputForm.values.model === Models.PCA9685 ? (
                 <PCA9685Form
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
-              ) : updateOutputForm.values.model.toLowerCase() ===
-                "tplink-smart-plug" ? (
+              ) : updateOutputForm.values.model === Models.TPLINK_SMART_PLUG ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}

@@ -1,6 +1,5 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
-import { CronJob } from "cron";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Express } from "express";
@@ -18,7 +17,12 @@ import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
-import { SystemStatusMonitor } from "./system-status/SystemStatusMonitor";
+import { SystemStatusMonitor } from "./system/StatusMonitor";
+import {
+  createDatabaseUpdateCronJob,
+  createRunAutomationsCronJob,
+  createUpdateDevicesCronJob,
+} from "./system/CronJobs";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -29,9 +33,7 @@ export default async function setupAsync(): Promise<Express> {
   app.set("knexConnection", knexConnection);
 
   const sprootDB = new SprootDB(knexConnection);
-  const systemStatusMonitor = new SystemStatusMonitor(sprootDB);
   app.set("sprootDB", sprootDB);
-  app.set("systemStatusMonitor", systemStatusMonitor);
   app.set("logger", logger);
 
   await defaultUserCheck(sprootDB, logger);
@@ -64,6 +66,9 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set("outputList", outputList);
 
+  const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB, knexConnection);
+  app.set("systemStatusMonitor", systemStatusMonitor);
+
   logger.info("Initializing camera manager, and sensor and output lists. . .");
   await Promise.all([
     cameraManager.initializeOrRegenerateAsync(),
@@ -74,57 +79,20 @@ export default async function setupAsync(): Promise<Express> {
   const automationDataManager = new AutomationDataManager(sprootDB, outputList);
   app.set("automationDataManager", automationDataManager);
 
-  //State update loop
-  const updateStateCronJob = new CronJob(
-    Constants.CRON.EVERY_SECOND,
-    async () => {
-      try {
-        logger.debug(JSON.stringify(await systemStatusMonitor.getStatusAsync()));
-        await Promise.all([
-          cameraManager.initializeOrRegenerateAsync(),
-          sensorList.initializeOrRegenerateAsync(),
-          outputList.initializeOrRegenerateAsync(),
-        ]);
-        //Add triggers and whatnot here.
-
-        await outputList.runAutomationsAsync(sensorList, new Date());
-
-        //Execute any changes made to state.
-        await outputList.executeOutputStateAsync();
-      } catch (e) {
-        logger.error(`Exception in state update loop: ${e}`);
-      }
-    },
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    (err) => logger.error(`State update cron error: ${err}`),
+  // Cron Jobs
+  const updateDevicesCronJob = createUpdateDevicesCronJob(
+    cameraManager,
+    sensorList,
+    outputList,
+    logger,
   );
-  updateStateCronJob.start();
-  app.set("updateStateCronJob", updateStateCronJob);
+  app.set("updateDevicesCronJob", updateDevicesCronJob);
 
-  // Update loop - once a minute, that's the "frequency" of the system.
-  app.set(
-    "updateDatabaseCronJob",
-    new CronJob(
-      Constants.CRON.EVERY_MINUTE,
-      async () => {
-        try {
-          await sensorList.updateDataStoresAsync();
-          await outputList.updateDataStoresAsync();
-        } catch (e) {
-          logger.error(`Exception in database update loop: ${e}`);
-        }
-      },
-      null,
-      true,
-    ),
-  );
+  const automationsCronJuob = createRunAutomationsCronJob(sensorList, outputList, logger);
+  app.set("automationsCronJuob", automationsCronJuob);
+
+  const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
+  app.set("updateDatabaseCronJob", updateDatabaseCronJob);
 
   app.use(cors());
   app.use(cookieParser());

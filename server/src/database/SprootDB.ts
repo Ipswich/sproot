@@ -50,8 +50,23 @@ export class SprootDB implements ISprootDB {
       model: sensor.model,
       address: sensor.address,
       color: sensor.color,
+      pin: sensor.pin,
+      lowCalibrationPoint: sensor.lowCalibrationPoint,
+      highCalibrationPoint: sensor.highCalibrationPoint,
     });
   }
+
+  async updateSensorCalibrationAsync(
+    sensorId: number,
+    lowCalibrationPoint: number | null,
+    highCalibrationPoint: number | null,
+  ): Promise<void> {
+    return this.#connection("sensors").where("id", sensorId).update({
+      lowCalibrationPoint: lowCalibrationPoint,
+      highCalibrationPoint: highCalibrationPoint,
+    });
+  }
+
   async deleteSensorAsync(id: number): Promise<void> {
     return this.#connection("sensors").where("id", id).delete();
   }
@@ -478,7 +493,7 @@ export class SprootDB implements ISprootDB {
     return parseFloat(result[0][0].size);
   }
 
-  disposeAsync(): Promise<void> {
-    return this.#connection.destroy();
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.#connection.destroy();
   }
 }

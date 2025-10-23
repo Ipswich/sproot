@@ -8,12 +8,14 @@ import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/routes/settings/outputs/EditTable";
 import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/NewOutputModal";
 import { useQuery } from "@tanstack/react-query";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
+import { Models } from "@sproot/outputs/Models";
 
 export interface FormValues {
   id?: number;
   name: string;
   color: string;
-  model: string;
+  model: keyof typeof Models;
   address: string;
   pin: string;
   isPwm: boolean;
@@ -26,6 +28,10 @@ export default function OutputSettings() {
     newOutputModalOpened,
     { open: newOutputModalOpen, close: newOutputModalClose },
   ] = useDisclosure(false);
+  const [supportedModels, setSupportedModels] = useState(
+    {} as Record<string, string>,
+  );
+  const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [isStale, setIsStale] = useState(false);
 
   const getOutputsQuery = useQuery({
@@ -42,8 +48,12 @@ export default function OutputSettings() {
 
   const updateData = async () => {
     await Promise.all([
-      getOutputsQuery.refetch(),
-      getSupportedModelsQuery.refetch(),
+      getOutputsQuery.refetch().then((response) => {
+        setOutputs(response.data!);
+      }),
+      getSupportedModelsQuery.refetch().then((response) => {
+        setSupportedModels(response.data!);
+      }),
     ]);
   };
 
@@ -57,14 +67,14 @@ export default function OutputSettings() {
     <Fragment>
       <Stack h="600" justify="center" align="center">
         <NewOutputModal
-          supportedModels={getSupportedModelsQuery.data ?? []}
+          supportedModels={supportedModels}
           modalOpened={newOutputModalOpened}
           closeModal={newOutputModalClose}
           setIsStale={setIsStale}
         />
         <EditTable
-          outputs={getOutputsQuery.data ?? {}}
-          supportedModels={getSupportedModelsQuery.data ?? []}
+          outputs={outputs}
+          supportedModels={supportedModels}
           setIsStale={setIsStale}
         />
         {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (

@@ -55,17 +55,17 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      await outputState.setNewStateAsync(automaticState, ControlMode.automatic);
-      await outputState.setNewStateAsync(manualState, ControlMode.manual);
+      await outputState.setNewStateAsync(automaticState);
+      await outputState.setNewStateAsync(manualState);
       assert.deepEqual(outputState.automatic, automaticState);
       assert.deepEqual(outputState.manual, manualState);
 
       manualState.value = -1;
-      await outputState.setNewStateAsync(manualState, ControlMode.manual);
+      await outputState.setNewStateAsync(manualState);
       assert.equal(outputState.manual.value, 0);
 
       manualState.value = 101;
-      await outputState.setNewStateAsync(manualState, ControlMode.manual);
+      await outputState.setNewStateAsync(manualState);
       assert.equal(outputState.manual.value, 100);
     });
   });
@@ -84,8 +84,8 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      await outputState.setNewStateAsync(automaticState, ControlMode.automatic);
-      await outputState.setNewStateAsync(manualState, ControlMode.manual);
+      await outputState.setNewStateAsync(automaticState);
+      await outputState.setNewStateAsync(manualState);
 
       assert.deepEqual(outputState.get(), automaticState);
       outputState.updateControlMode(ControlMode.manual);
@@ -107,8 +107,8 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      await outputState.setNewStateAsync(automaticState, ControlMode.automatic);
-      await outputState.setNewStateAsync(manualState, ControlMode.manual);
+      await outputState.setNewStateAsync(automaticState);
+      await outputState.setNewStateAsync(manualState);
 
       assert.deepEqual(outputState.value, automaticState.value);
       outputState.updateControlMode(ControlMode.manual);
@@ -130,8 +130,8 @@ describe("OutputState.ts tests", () => {
         value: 25,
         logTime: "2022-01-02",
       } as SDBOutputState;
-      await outputState.setNewStateAsync(automaticState, ControlMode.automatic);
-      await outputState.setNewStateAsync(manualState, ControlMode.manual);
+      await outputState.setNewStateAsync(automaticState);
+      await outputState.setNewStateAsync(manualState);
 
       assert.deepEqual(outputState.logTime, automaticState.logTime);
       outputState.updateControlMode(ControlMode.manual);
@@ -148,7 +148,7 @@ describe("OutputState.ts tests", () => {
         value: 50,
         logTime: "2022-01-01",
       } as SDBOutputState;
-      localOutputState.setNewStateAsync(automaticState, ControlMode.automatic);
+      localOutputState.setNewStateAsync(automaticState);
 
       const addOutputStateAsyncStub = sinon.stub(localSprootDB, "addOutputStateAsync");
       await localOutputState.addCurrentStateToDatabaseAsync();

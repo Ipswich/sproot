@@ -62,7 +62,7 @@ describe("Timelapse.ts tests", function () {
   }
 
   it("should capture images at specified intervals when enabled", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     // Enable capturing every 5 minutes
     timelapse.updateSettings({
@@ -84,12 +84,10 @@ describe("Timelapse.ts tests", function () {
     clock.tick(5 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 2);
-
-    timelapse.dispose();
   });
 
   it("should only capture images during specified time range", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     // Set timelapse to run every 1 minute, but only between 12:00 and 12:10
     timelapse.updateSettings({
@@ -114,12 +112,10 @@ describe("Timelapse.ts tests", function () {
     clock.tick(2 * 60 * 1000); // 12:10
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 2);
-
-    timelapse.dispose();
   });
 
   it("should respect updated time range settings", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     // Initially allow captures between 12:00 and 12:10
     timelapse.updateSettings({
@@ -153,12 +149,10 @@ describe("Timelapse.ts tests", function () {
     clock.tick(28 * 60 * 1000); // 12:30
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 2);
-
-    timelapse.dispose();
   });
 
   it("should capture images when neither time range is specified", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -195,12 +189,10 @@ describe("Timelapse.ts tests", function () {
     clock.tick(1 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 1);
-
-    timelapse.dispose();
   });
 
   it("should create filenames with correct format", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -217,12 +209,10 @@ describe("Timelapse.ts tests", function () {
     // Verify filename format (date should be from our fixed clock time + 5 min)
     const expectedFileName = "testCamera_2025-05-26-12-05.jpg";
     assert.isTrue(fs.existsSync(path.join(tempDir, expectedFileName)));
-
-    timelapse.dispose();
   });
 
   it("should stop capturing when disabled", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     // Start capturing
     timelapse.updateSettings({
@@ -251,12 +241,10 @@ describe("Timelapse.ts tests", function () {
     clock.tick(10 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 1);
-
-    timelapse.dispose();
   });
 
   it("should update interval when settings change", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     // Start with 5 minute interval
     timelapse.updateSettings({
@@ -290,12 +278,10 @@ describe("Timelapse.ts tests", function () {
     clock.tick(2 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 3);
-
-    timelapse.dispose();
   });
 
   it("should not capture images when intervalMinutes is null", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -337,12 +323,10 @@ describe("Timelapse.ts tests", function () {
     clock.tick(10 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 1);
-
-    timelapse.dispose();
   });
 
   it("should use updated camera name for new captures", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     // Start with first camera name
     timelapse.updateSettings({
@@ -379,12 +363,10 @@ describe("Timelapse.ts tests", function () {
     const files2 = fs.readdirSync(tempDir);
     assert.lengthOf(files2, 2);
     assert.isTrue(files2.some((file) => file.includes("camera2")));
-
-    timelapse.dispose();
   });
 
   it("should stop all captures when dispose is called", async function () {
-    const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -399,7 +381,8 @@ describe("Timelapse.ts tests", function () {
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(countFilesInDir(), 1);
 
-    timelapse.dispose();
+    // Explicitly dispose the timelapse
+    timelapse[Symbol.dispose]();
 
     // Advance 10 more minutes - no new images
     clock.tick(10 * 60 * 1000);
@@ -413,7 +396,7 @@ describe("Timelapse.ts tests", function () {
       throw new Error("Add failed");
     };
 
-    const timelapse = new Timelapse(erroringAddFunctionAsync, logger);
+    using timelapse = new Timelapse(erroringAddFunctionAsync, logger);
     timelapse.updateSettings({
       name: "testCamera",
       timelapseEnabled: true,
@@ -432,13 +415,11 @@ describe("Timelapse.ts tests", function () {
 
     // No files should be created since the add function errors
     assert.equal(countFilesInDir(), 0);
-
-    timelapse.dispose();
   });
 
   describe("shouldGenerateTimelapseArchive tests", function () {
     it("should return false when timelapse is not enabled", function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
       timelapse.updateSettings({
         name: "testCamera",
@@ -452,7 +433,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should return true at midnight when no time range is specified", function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
       timelapse.updateSettings({
         name: "testCamera",
@@ -482,7 +463,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should return true when current time matches end time", function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
       timelapse.updateSettings({
         name: "testCamera",
@@ -513,7 +494,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should return false when only one of startTime or endTime is set", function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
       // Only startTime set
       timelapse.updateSettings({
@@ -539,7 +520,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should return false when time formats are invalid", function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
 
       timelapse.updateSettings({
         name: "testCamera",
@@ -582,7 +563,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should not create an archive when shouldGenerateTimelapseArchive returns false", async function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: false, // Disabled, so shouldGenerateTimelapseArchive will return false
@@ -596,7 +577,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should bypass shouldGenerateTimelapseArchive check when validateShouldRun is false", async function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: false, // Disabled, so shouldGenerateTimelapseArchive will return false
@@ -626,7 +607,7 @@ describe("Timelapse.ts tests", function () {
         "test image 2",
       );
 
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: true,
@@ -654,7 +635,7 @@ describe("Timelapse.ts tests", function () {
         "test image 2",
       );
 
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: true,
@@ -672,7 +653,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should skip archive generation when already in progress", async function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: true,
@@ -698,7 +679,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should not create an archive when no images exist", async function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: true,
@@ -714,7 +695,7 @@ describe("Timelapse.ts tests", function () {
     });
 
     it("should handle errors during archive creation", async function () {
-      const timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: true,
@@ -742,7 +723,7 @@ describe("Timelapse.ts tests", function () {
       });
       const logSpy = sinon.spy(testLogger, "info");
 
-      const timelapse = new Timelapse(testAddImageFunctionAsync, testLogger);
+      using timelapse = new Timelapse(testAddImageFunctionAsync, testLogger);
       timelapse.updateSettings({
         name: "testCamera",
         timelapseEnabled: true,

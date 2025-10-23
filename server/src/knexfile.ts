@@ -2,18 +2,32 @@ import type { Knex } from "knex";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 import { TypeCastField } from "mysql2";
 
+function getConnectionConfiguration(databaseSuffix: string) {
+  return {
+    host: process.env["DATABASE_HOST"]!,
+    user: process.env["DATABASE_USER"]!,
+    password: process.env["DATABASE_PASSWORD"]!,
+    database: `${Constants.DATABASE_NAME}${databaseSuffix}`,
+    port: parseInt(process.env["DATABASE_PORT"]!),
+    dateStrings: true,
+    typeCast: castTinyIntsToBooleans,
+    decimalNumbers: true,
+  };
+}
+
+const poolConfig = {
+  min: 2,
+  max: 10,
+  acquireTimeoutMillis: 10000,
+  idleTimeoutMillis: 60000,
+  reapIntervalMillis: 30000,
+};
+
 const config: { [key: string]: Knex.Config } = {
   development: {
     client: "mysql2",
-    connection: {
-      host: process.env["DATABASE_HOST"]!,
-      user: process.env["DATABASE_USER"]!,
-      password: process.env["DATABASE_PASSWORD"]!,
-      database: `${Constants.DATABASE_NAME}-development`,
-      port: parseInt(process.env["DATABASE_PORT"]!),
-      dateStrings: true,
-      typeCast: castTinyIntsToBooleans,
-    },
+    pool: poolConfig,
+    connection: getConnectionConfiguration("-development"),
     migrations: {
       loadExtensions: [".js"],
       directory: "dist/database/migrations",
@@ -27,15 +41,8 @@ const config: { [key: string]: Knex.Config } = {
 
   test: {
     client: "mysql2",
-    connection: {
-      host: process.env["DATABASE_HOST"]!,
-      user: process.env["DATABASE_USER"]!,
-      password: process.env["DATABASE_PASSWORD"]!,
-      database: `${Constants.DATABASE_NAME}-test`,
-      port: parseInt(process.env["DATABASE_PORT"]!),
-      dateStrings: true,
-      typeCast: castTinyIntsToBooleans,
-    },
+    pool: poolConfig,
+    connection: getConnectionConfiguration("-test"),
     migrations: {
       loadExtensions: [".ts"],
       directory: "src/database/migrations",
@@ -49,15 +56,8 @@ const config: { [key: string]: Knex.Config } = {
 
   production: {
     client: "mysql2",
-    connection: {
-      host: process.env["DATABASE_HOST"]!,
-      user: process.env["DATABASE_USER"]!,
-      password: process.env["DATABASE_PASSWORD"]!,
-      database: Constants.DATABASE_NAME,
-      port: parseInt(process.env["DATABASE_PORT"]!),
-      dateStrings: true,
-      typeCast: castTinyIntsToBooleans,
-    },
+    pool: poolConfig,
+    connection: getConnectionConfiguration(""),
     migrations: {
       loadExtensions: [".js"],
       directory: "dist/database/migrations",

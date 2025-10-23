@@ -1,3 +1,5 @@
+const TIMESTAMP_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+
 /**
  * Includes start time, excludes end time.
  */
@@ -9,30 +11,23 @@ function isBetweenTimeStamp(
   if (!startTime || !endTime) {
     return false;
   }
-  if (!startTime.match(/^\d{2}:\d{2}$/) || !endTime.match(/^\d{2}:\d{2}$/)) {
+  if (!startTime.match(TIMESTAMP_REGEX) || !endTime.match(TIMESTAMP_REGEX)) {
     return false;
   }
-  const [startHours, startMinutes] = startTime.split(":").map(Number);
-  const [endHours, endMinutes] = endTime.split(":").map(Number);
+  const [startH, startM] = startTime.split(":").map(Number);
+  const [endH, endM] = endTime.split(":").map(Number);
 
-  //In case now isn't really "now".
-  const nowHours = now.getHours();
-  const nowMInutes = now.getMinutes();
-  const nowDate = new Date();
-  nowDate.setHours(nowHours, nowMInutes, 0, 0);
+  const startMinutes = startH! * 60 + startM!;
+  const endMinutes = endH! * 60 + endM!;
 
-  const start = new Date();
-  start.setHours(startHours!, startMinutes, 0, 0);
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const end = new Date();
-  end.setHours(endHours!, endMinutes, 0, 0);
-
-  // If the end time is before the start time, assume it crosses midnight
-  if (end < start) {
-    return nowDate >= start || nowDate < end;
+  if (startMinutes <= endMinutes) {
+    return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+  } else {
+    // Wraparound case: e.g. 23:00 to 05:00
+    return currentMinutes >= startMinutes || currentMinutes < endMinutes;
   }
-
-  return nowDate >= start && nowDate < end;
 }
 
 export { isBetweenTimeStamp };

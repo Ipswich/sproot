@@ -9,7 +9,7 @@ import { SDBOutput } from "@sproot/database/SDBOutput";
 
 export abstract class MultiOutputBase {
   readonly boardRecord: Record<string, any> = {};
-  readonly outputs: Record<string, OutputBase>;
+  readonly outputs: Record<string, OutputBase> = {};
   readonly usedPins: Record<string, string[]> = {};
   protected sprootDB: ISprootDB;
   protected frequency: number;
@@ -35,7 +35,6 @@ export abstract class MultiOutputBase {
     this.chartDataPointInterval = chartDataPointInterval;
     this.frequency = frequency;
     this.logger = logger;
-    this.outputs = {};
   }
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
@@ -51,24 +50,13 @@ export abstract class MultiOutputBase {
     return cleanObject;
   }
 
-  updateControlMode = (outputId: string, controlMode: ControlMode) =>
+  async updateControlModeAsync(outputId: string, controlMode: ControlMode) {
     this.outputs[outputId]?.state.updateControlMode(controlMode);
-
-  setNewOutputStateAsync = async (
-    outputId: string,
-    newState: SDBOutputState,
-    targetControlMode: ControlMode,
-  ) => this.outputs[outputId]?.state.setNewStateAsync(newState, targetControlMode);
-
-  async executeOutputStateAsync(outputId?: string) {
-    if (outputId) {
-      return await this.outputs[outputId]?.executeStateAsync();
-    }
-    const promises = Object.keys(this.outputs).map(
-      async (key) => await this.outputs[key]?.executeStateAsync(),
-    );
-    await Promise.allSettled(promises);
+    await this.outputs[outputId]?.executeStateAsync();
   }
+
+  setAndExecuteStateAsync = async (outputId: string, newState: SDBOutputState) =>
+    this.outputs[outputId]?.setAndExecuteStateAsync(newState);
 
   disposeOutput(output: OutputBase): void {
     const usedPins = this.usedPins[output.address];
@@ -76,7 +64,7 @@ export abstract class MultiOutputBase {
       const index = usedPins.indexOf(output.pin);
       if (index !== -1) {
         usedPins.splice(index, 1);
-        output.dispose();
+        output[Symbol.dispose]();
         delete this.outputs[output.id];
         if (usedPins.length === 0) {
           delete this.boardRecord[output.address];

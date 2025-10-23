@@ -11,10 +11,11 @@ import OutputAutomationManager from "../../automation/outputs/OutputAutomationMa
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 export abstract class OutputBase implements IOutputBase {
   readonly id: number;
-  readonly model: string;
+  readonly model: keyof typeof Models;
   readonly address: string;
   readonly pin: string;
   name: string;
@@ -31,6 +32,7 @@ export abstract class OutputBase implements IOutputBase {
   #chartDataPointInterval: number;
   #automationManager: OutputAutomationManager;
   #updateMissCount = 0;
+  #isExecuting = false;
 
   constructor(
     sdbOutput: SDBOutput,
@@ -55,7 +57,7 @@ export abstract class OutputBase implements IOutputBase {
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
-    this.#automationManager = new OutputAutomationManager(sprootDB);
+    this.#automationManager = new OutputAutomationManager(sprootDB, logger);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
@@ -87,20 +89,17 @@ export abstract class OutputBase implements IOutputBase {
 
   /**
    * Executes the current state of the output, setting the physical state of the output to the recorded state
-   * (respecting the current ControlMode). This should be called after state.setNewState() to ensure that the
-   * physical state of the output is always in sync with the recorded state of the output.
-   *
-   * See setNewState
+   * (respecting the current ControlMode).
    */
   abstract executeStateAsync(): Promise<void>;
-  abstract dispose(): void;
+  abstract [Symbol.dispose](): void;
 
   /** Initializes all of the data for this output */
   async initializeAsync() {
     await this.state.initializeAsync();
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
-    await this.loadAutomationsAsync();
+    await this.#automationManager.loadAsync(this.id);
   }
 
   updateName(name: string): void {
@@ -119,9 +118,13 @@ export abstract class OutputBase implements IOutputBase {
    * @param newState The new state
    * @param targetControlMode The control mode to apply it to
    */
-  async setNewStateAsync(newState: SDBOutputState, targetControlMode: ControlMode): Promise<void> {
-    await this.state.setNewStateAsync(newState, targetControlMode);
+  async setAndExecuteStateAsync(newState: SDBOutputState): Promise<void> {
+    await this.state.setNewStateAsync(newState);
     await this.executeStateAsync();
+  }
+
+  async setStateAsync(newState: SDBOutputState): Promise<void> {
+    await this.state.setNewStateAsync(newState);
   }
 
   getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
@@ -167,11 +170,17 @@ export abstract class OutputBase implements IOutputBase {
     }
   }
 
+  async updateControlModeAsync(controlMode: ControlMode): Promise<void> {
+    this.state.updateControlMode(controlMode);
+    await this.executeStateAsync();
+  }
+
   async runAutomationsAsync(
     sensorList: SensorList,
     outputList: OutputList,
     now: Date,
   ): Promise<void> {
+    await this.#automationManager.loadAsync(this.id);
     const result = this.#automationManager.evaluate(
       sensorList,
       outputList,
@@ -179,23 +188,21 @@ export abstract class OutputBase implements IOutputBase {
       now,
     );
     if (result.value != null) {
-      await this.state.setNewStateAsync(
-        {
-          value: result.value,
-          controlMode: ControlMode.automatic,
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        } as SDBOutputState,
-        ControlMode.automatic,
-      );
+      await this.state.setNewStateAsync({
+        value: result.value,
+        controlMode: ControlMode.automatic,
+        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      } as SDBOutputState);
     } else {
-      await this.state.setNewStateAsync(
-        {
-          value: 0,
-          controlMode: ControlMode.automatic,
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        } as SDBOutputState,
-        ControlMode.automatic,
-      );
+      await this.state.setNewStateAsync({
+        value: 0,
+        controlMode: ControlMode.automatic,
+        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      } as SDBOutputState);
+    }
+
+    if (this.controlMode === ControlMode.automatic) {
+      await this.executeStateAsync();
     }
   }
 
@@ -225,39 +232,48 @@ export abstract class OutputBase implements IOutputBase {
     );
   }
 
-  async loadAutomationsAsync(): Promise<void> {
-    await this.#automationManager.loadAsync(this.id);
-  }
-
   protected async executeStateHelperAsync(
     executionFnAsync: (value: number) => Promise<void>,
+    forceExecution: boolean,
   ): Promise<void> {
-    //Local helper function
-    const validateAndFixValue = (value: number) => {
-      if (!this.isPwm && value != 0 && value != 100) {
-        this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
+    if (!forceExecution) {
+      if (this.#isExecuting) {
+        this.logger.warn(
+          `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
+        );
         return;
       }
-      const validatedValue = (this.isInvertedPwm ? 100 - value : value) / 100;
-      this.logger.verbose(
-        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue * 100}`,
-      );
-      return validatedValue;
-    };
-
-    let validatedValue = undefined;
-    try {
-      switch (this.controlMode) {
-        case ControlMode.manual:
-          validatedValue = validateAndFixValue(this.state.manual.value);
-          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
-        case ControlMode.automatic:
-          validatedValue = validateAndFixValue(this.state.automatic.value);
-          return validatedValue != undefined ? await executionFnAsync(validatedValue) : undefined;
+      if (this.value == this.state.lastValue) {
+        // this.logger.verbose(
+        //   `Output { Model: ${this.model}, id: ${this.id} } value has not changed. Skipping state execution.`,
+        // );
+        return;
       }
+    }
+
+    try {
+      let validatedValue = this.#validateAndFixValue(this.value);
+      this.#isExecuting = true;
+      if (validatedValue === undefined) {
+        return undefined;
+      }
+      this.logger.verbose(
+        `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
+      );
+      await executionFnAsync(validatedValue);
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
+    } finally {
+      this.#isExecuting = false;
     }
+  }
+
+  #validateAndFixValue(value: number): number | undefined {
+    if (!this.isPwm && value != 0 && value != 100) {
+      this.logger.error(`Could not set PWM for Output ${this.id}. Output is not a PWM output`);
+      return;
+    }
+    return this.isInvertedPwm ? 100 - value : value;
   }
 
   #updateChartData(): void {

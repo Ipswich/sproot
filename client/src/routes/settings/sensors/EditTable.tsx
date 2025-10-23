@@ -7,6 +7,7 @@ import {
   ColorInput,
   ScrollArea,
   ColorPicker,
+  NumberInput,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
@@ -20,10 +21,11 @@ import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTab
 import { useMutation } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useRevalidator } from "react-router-dom";
+import { Models } from "@sproot/sproot-common/src/sensors/Models";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
-  supportedModels: string[];
+  supportedModels: Record<string, string>;
   setIsStale: (isStale: boolean) => void;
 }
 
@@ -40,6 +42,9 @@ export default function EditTable({
 
   const updateSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
+      if (newSensorValues.pin != null) {
+        newSensorValues.pin = String(newSensorValues.pin);
+      }
       await updateSensorAsync(newSensorValues);
     },
     onSettled: () => {
@@ -65,6 +70,7 @@ export default function EditTable({
       color: selectedSensor.color,
       model: selectedSensor.model,
       address: selectedSensor.address,
+      pin: selectedSensor.pin ?? null,
     },
     validate: {
       id: (value: number) =>
@@ -87,6 +93,8 @@ export default function EditTable({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
+      pin: (value: string | null) =>
+        !value || (value.length > 0 && value.length <= 64) ? null : null,
     },
   });
 
@@ -97,6 +105,7 @@ export default function EditTable({
     updateSensorForm.setFieldValue("model", sensor.model);
     updateSensorForm.setFieldValue("address", sensor.address ?? "");
     updateSensorForm.setFieldValue("id", sensor.id);
+    updateSensorForm.setFieldValue("pin", sensor.pin ?? null);
     openModal();
   };
 
@@ -154,7 +163,9 @@ export default function EditTable({
           />
           <NativeSelect
             label="Model"
-            data={supportedModels}
+            data={Object.keys(supportedModels).map((key) => {
+              return { value: key, label: supportedModels[key]! };
+            })}
             required
             {...updateSensorForm.getInputProps("model")}
           />
@@ -164,6 +175,18 @@ export default function EditTable({
             placeholder={selectedSensor.address ?? ""}
             {...updateSensorForm.getInputProps("address")}
           />
+          {(updateSensorForm.values.model === Models.ADS1115 ||
+            updateSensorForm.values.model ===
+              Models.CAPACITIVE_MOISTURE_SENSOR) && (
+            <NumberInput
+              label="Pin"
+              clampBehavior="strict"
+              allowDecimal={false}
+              min={0}
+              max={3}
+              {...updateSensorForm.getInputProps("pin")}
+            />
+          )}
           <Group justify="space-between" mt="md">
             <Button
               disabled={isUpdating}

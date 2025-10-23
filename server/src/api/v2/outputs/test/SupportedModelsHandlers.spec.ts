@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { supportedModelsHandler } from "../handlers/SupportedModelsHandlers";
-import ModelList from "../../../../outputs/ModelList";
+import { ModelList } from "@sproot/sproot-common/src/outputs/Models";
 
 import { assert } from "chai";
 
@@ -17,7 +17,7 @@ describe("SupportedModelsHandler.ts tests", () => {
 
     const supportedModelsResponse = supportedModelsHandler(mockResponse);
 
-    assert.deepEqual(supportedModelsResponse.content?.data, Object.values(ModelList));
-    assert.equal((supportedModelsResponse.content?.data as Array<string>).length, 2);
+    assert.deepEqual(supportedModelsResponse.content?.data, ModelList);
+    assert.equal(Object.keys(supportedModelsResponse.content?.data).length, 2);
   });
 });

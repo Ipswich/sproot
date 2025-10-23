@@ -38,7 +38,7 @@
 //   it("should return a 200 and a list of available devices", async () => {
 //     const outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
 //     await delay(20)
-//     console.log(outputList.getAvailableDevices("tplink-smart-plug"))
+//     console.log(outputList.getAvailableDevices("tplink_smart_plug"))
 
 //   });
 // });

@@ -1,8 +1,8 @@
-import { RowDataPacket } from "mysql2";
+import { Models } from "@sproot/sproot-common/src/outputs/Models";
 
-type SDBOutput = RowDataPacket & {
+type SDBOutput = {
   id: number;
-  model: string;
+  model: keyof typeof Models;
   address: string;
   name: string;
   pin: string;

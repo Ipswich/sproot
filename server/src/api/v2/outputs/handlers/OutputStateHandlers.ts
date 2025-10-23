@@ -34,10 +34,10 @@ export async function setControlModeAsync(
 
   switch (request.body["controlMode"]) {
     case ControlMode.manual:
-      outputList.updateControlMode(outputId, ControlMode.manual);
+      await outputList.updateControlModeAsync(outputId, ControlMode.manual);
       break;
     case ControlMode.automatic:
-      outputList.updateControlMode(outputId, ControlMode.automatic);
+      await outputList.updateControlModeAsync(outputId, ControlMode.automatic);
       break;
     default:
       controlModeResponse = {
@@ -52,7 +52,6 @@ export async function setControlModeAsync(
       return controlModeResponse;
   }
 
-  await outputList.executeOutputStateAsync(String(request.params["outputId"]));
   controlModeResponse = {
     statusCode: 200,
     content: {
@@ -117,13 +116,16 @@ export async function setManualStateAsync(request: Request, response: Response) 
     return manualStateResponse;
   }
 
-  const state = {
+  await outputList.setStateAsync(outputId, {
     value: value,
+    controlMode: ControlMode.manual,
     logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-  } as SDBOutputState;
+  } as SDBOutputState);
 
-  await outputList.setNewOutputStateAsync(outputId, state, ControlMode.manual);
-  await outputList.executeOutputStateAsync(outputId);
+  if (output.state.controlMode == ControlMode.manual) {
+    await outputList.executeOutputStateAsync(outputId);
+  }
+
   manualStateResponse = {
     statusCode: 200,
     content: {

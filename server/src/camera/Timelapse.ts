@@ -24,6 +24,8 @@ class Timelapse {
   #endTime: string | null = null;
   #isGeneratingTimelapseArchive: boolean = false;
   #archiveProgressPercentage: number = 0;
+  #lastArchiveGenerationDuration: number | null = null;
+  #archiveImageCount: number = 0;
 
   constructor(addImageToTimelapseFunction: AddImageToTimelapseFunction, logger: winston.Logger) {
     this.addImageToTimelapseFunction = addImageToTimelapseFunction;
@@ -51,6 +53,14 @@ class Timelapse {
       this.#enabled = true;
       this.start();
     }
+  }
+
+  get timelapseImageCount(): number {
+    return this.#archiveImageCount;
+  }
+
+  get lastArchiveGenerationDuration(): number | null {
+    return this.#lastArchiveGenerationDuration;
   }
 
   get isGeneratingTimelapseArchive(): boolean {
@@ -87,7 +97,13 @@ class Timelapse {
     }
   }
 
-  async getTimelapseArchiveSizeAsync(): Promise<number> {
+  /**
+   * @returns The size of the timelapse archive in MB, or null if timelapse is disabled.
+   */
+  async getTimelapseArchiveSizeAsync(): Promise<number | null> {
+    if (!this.#enabled) {
+      return null;
+    }
     try {
       await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
       const files = await fs.promises.readdir(ARCHIVE_DIRECTORY);
@@ -97,13 +113,17 @@ class Timelapse {
       }
       const timelapseFile = path.join(ARCHIVE_DIRECTORY, archiveFile);
       const stats = await fs.promises.stat(timelapseFile);
-      return stats.size;
+      return stats.size / (1024 * 1024);
     } catch (error) {
       return 0;
     }
   }
 
   async generateTimelapseArchiveAsync(validateShouldRun: boolean): Promise<void> {
+    // Reset duration if timelapses are disabled
+    if (!this.#enabled) {
+      this.#lastArchiveGenerationDuration = null;
+    }
     if (validateShouldRun && !this.shouldGenerateTimelapseArchive()) {
       return;
     }
@@ -112,6 +132,7 @@ class Timelapse {
     }
     this.#isGeneratingTimelapseArchive = true;
 
+    const startTime = Date.now();
     const profiler = this.#logger.startTimer();
     try {
       await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
@@ -121,6 +142,7 @@ class Timelapse {
       this.#archiveProgressPercentage = 0;
 
       const imageData = await this.getTimelapseFileDataAsync();
+      this.#archiveImageCount = imageData.length;
       if (imageData.length === 0) {
         this.#logger.info("No timelapse images found to archive");
         return;
@@ -134,6 +156,7 @@ class Timelapse {
       );
       this.#archiveProgressPercentage = -1;
     } finally {
+      this.#lastArchiveGenerationDuration = (Date.now() - startTime) / 1000; // seconds
       // The setTimeout should force cleanup of resources before actually calling things "done."
       setTimeout(() => {
         profiler.done({
@@ -281,7 +304,7 @@ class Timelapse {
     this.#timer = setTimeout(async () => {
       if (
         (this.#startTime === null && this.#endTime === null) ||
-        isBetweenTimeStamp(this.#startTime, this.#endTime, new Date())
+        isBetweenTimeStamp(this.#startTime, this.#endTime)
       ) {
         await this.addImage();
       }
@@ -314,7 +337,7 @@ class Timelapse {
     }
   }
 
-  dispose(): void {
+  [Symbol.dispose](): void {
     this.#enabled = false;
     this.stop();
   }

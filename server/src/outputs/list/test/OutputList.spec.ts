@@ -6,6 +6,7 @@ import Pca9685Driver from "pca9685";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 const mockSprootDB = new MockSprootDB();
 
 describe("OutputList.ts tests", function () {
@@ -19,7 +20,7 @@ describe("OutputList.ts tests", function () {
       const getOutputsAsyncStub = sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
         {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 1",
           pin: "0",
@@ -29,7 +30,7 @@ describe("OutputList.ts tests", function () {
         } as SDBOutput,
         {
           id: 2,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 2",
           color: "lime",
@@ -39,7 +40,7 @@ describe("OutputList.ts tests", function () {
         } as SDBOutput,
         {
           id: 3,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 3",
           color: "green",
@@ -49,7 +50,7 @@ describe("OutputList.ts tests", function () {
         } as SDBOutput,
         {
           id: 4,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 4",
           pin: "3",
@@ -62,6 +63,7 @@ describe("OutputList.ts tests", function () {
           ({
             info: () => {},
             error: () => {},
+            debug: () => {},
             startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );
@@ -78,7 +80,7 @@ describe("OutputList.ts tests", function () {
       getOutputsAsyncStub.resolves([
         {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "1 tuptuo tset",
           pin: "0",
@@ -106,7 +108,7 @@ describe("OutputList.ts tests", function () {
       sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
         {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 1",
           pin: "0",
@@ -119,6 +121,7 @@ describe("OutputList.ts tests", function () {
           ({
             info: () => {},
             error: () => {},
+            debug: () => {},
             startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );
@@ -144,7 +147,7 @@ describe("OutputList.ts tests", function () {
       sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
         {
           id: 1,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 1",
           pin: "0",
@@ -154,7 +157,7 @@ describe("OutputList.ts tests", function () {
         } as SDBOutput,
         {
           id: 2,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 2",
           pin: "1",
@@ -163,7 +166,7 @@ describe("OutputList.ts tests", function () {
         } as SDBOutput,
         {
           id: 3,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 3",
           pin: "2",
@@ -173,7 +176,7 @@ describe("OutputList.ts tests", function () {
         } as SDBOutput,
         {
           id: 4,
-          model: "pca9685",
+          model: Models.PCA9685,
           address: "0x40",
           name: "test output 4",
           pin: "3",
@@ -186,6 +189,7 @@ describe("OutputList.ts tests", function () {
           ({
             info: () => {},
             error: () => {},
+            debug: () => {},
             startTimer: () => ({ done: () => {} }) as winston.Profiler,
           }) as unknown as winston.Logger,
       );

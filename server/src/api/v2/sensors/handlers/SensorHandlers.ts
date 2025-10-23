@@ -3,6 +3,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
+import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 /**
  * Possible statusCodes: 200, 404
@@ -67,16 +68,34 @@ export async function addAsync(
     model: request.body["model"],
     address: request.body["address"],
     color: request.body["color"],
+    pin: request.body["pin"],
   } as SDBSensor;
 
   const missingFields: Array<string> = [];
   if (newSensor.name == undefined || newSensor.name == null) {
     missingFields.push("Missing required field: name");
   }
-  if (newSensor.model == undefined || newSensor.name == null) {
+  if (newSensor.model == undefined || newSensor.model == null) {
     missingFields.push("Missing required field: model");
+  } else if (
+    !Object.keys(Models)
+      .map((key) => key)
+      .includes(newSensor.model)
+  ) {
+    missingFields.push(
+      `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(Models).join(", ")}`,
+    );
   }
-  if (newSensor.address == undefined || newSensor.name == null) {
+  if (
+    newSensor.model == ModelList.ADS1115 ||
+    newSensor.model == ModelList.CAPACITIVE_MOISTURE_SENSOR
+  ) {
+    if (newSensor.pin == undefined || newSensor.pin == null) {
+      missingFields.push("Missing required field: pin");
+    }
+  }
+
+  if (newSensor.address == undefined || newSensor.address == null) {
     missingFields.push("Missing required field: address");
   }
 
@@ -166,6 +185,11 @@ export async function updateAsync(
   sensorData.model = request.body["model"] ?? sensorData.model;
   sensorData.address = request.body["address"] ?? sensorData.address;
   sensorData.color = request.body["color"] ?? sensorData.color;
+  sensorData.pin = request.body["pin"] ?? sensorData.pin;
+  sensorData.lowCalibrationPoint =
+    request.body["lowCalibrationPoint"] ?? sensorData.lowCalibrationPoint;
+  sensorData.highCalibrationPoint =
+    request.body["highCalibrationPoint"] ?? sensorData.highCalibrationPoint;
 
   try {
     await sprootDB.updateSensorAsync(sensorData);

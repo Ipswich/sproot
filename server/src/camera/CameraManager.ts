@@ -18,6 +18,10 @@ class CameraManager {
   #livestream: Livestream;
   #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
   #currentSettings: SDBCameraSettings | null = null;
+  #isUpdating: boolean = false;
+
+  #imageCaptureCronJob: CronJob;
+
   #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
 
@@ -27,7 +31,7 @@ class CameraManager {
     this.#logger = logger;
     this.#imageCapture = new ImageCapture(logger);
     this.#livestream = new Livestream(logger);
-    new CronJob(
+    this.#imageCaptureCronJob = new CronJob(
       CRON.EVERY_MINUTE,
       async () => {
         if (this.#picameraServerProcess !== null) {
@@ -82,8 +86,19 @@ class CameraManager {
     return this.#imageCapture.getTimelapseArchiveAsync();
   }
 
+  getTimelapseImageCount() {
+    return this.#imageCapture.getTimelapseImageCount();
+  }
+
   getTimelapseArchiveSizeAsync() {
     return this.#imageCapture.getTimelapseArchiveSizeAsync();
+  }
+
+  getLastTimelapseGenerationDuration() {
+    if (this.#currentSettings?.timelapseEnabled) {
+      return this.#imageCapture.getLastTimelapseGenerationDuration();
+    }
+    return null;
   }
 
   /**
@@ -105,41 +120,52 @@ class CameraManager {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
+    if (this.#isUpdating) {
+      this.#logger.warn(
+        "CameraManager is already updating, skipping initializeOrRegenerateAsync call.",
+      );
+      return;
+    }
     if (this.#disposed) {
       return;
     }
-    const settings = await this.#sprootDB.getCameraSettingsAsync();
+    try {
+      const settings = await this.#sprootDB.getCameraSettingsAsync();
 
-    if (settings[0] != undefined) {
-      this.#currentSettings = settings[0];
+      if (settings[0] != undefined) {
+        this.#currentSettings = settings[0];
+        if (this.#currentSettings.enabled) {
+          // Don't await these here - internally, they keeps track if they're running
+          // so this should prevent it from blocking until its done.
+          this.#imageCapture
+            .runImageRetentionAsync(
+              this.#currentSettings.imageRetentionSize,
+              this.#currentSettings.imageRetentionDays,
+            )
+            .then(() => {
+              this.#imageCapture.regenerateTimelapseArchiveAsync();
+            });
+          this.createCameraProcess(this.#currentSettings);
+          await this.#livestream.connectToLivestreamAsync(
+            this.#baseUrl,
+            this.generateRequestHeaders(),
+          );
 
-      // Don't await these here - internally, they keeps track if they're running
-      // so this should prevent it from blocking until its done.
-      this.#imageCapture
-        .runImageRetentionAsync(
-          this.#currentSettings.imageRetentionSize,
-          this.#currentSettings.imageRetentionDays,
-        )
-        .then(() => {
-          this.#imageCapture.regenerateTimelapseArchiveAsync(true);
-        });
-    } else {
-      return;
+          this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
+
+          return;
+        }
+      }
+
+      this.#livestream.disconnectFromLivestream();
+    } finally {
+      this.#isUpdating = false;
     }
-    if (this.#currentSettings.enabled) {
-      this.createCameraProcess(this.#currentSettings);
-      await this.#livestream.connectToLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
-
-      this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
-
-      return;
-    }
-
-    this.#livestream.disconnectFromLivestream();
   }
 
-  dispose(): void {
+  async [Symbol.asyncDispose](): Promise<void> {
     this.#disposed = true;
+    await this.#imageCaptureCronJob.stop();
     this.cleanupCameraProcess();
   }
 
@@ -198,13 +224,13 @@ class CameraManager {
         }
       });
 
-      this.#picameraServerProcess.on("close", (code, signal) => {
+      this.#picameraServerProcess.on("close", async (code, signal) => {
         this.#logger.info(
           `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
         );
         //SIGINT should basically only come from a ctrl-c, everything is dying at this point
         if (signal === "SIGINT") {
-          this.dispose();
+          await this[Symbol.asyncDispose]();
           return;
         }
         this.cleanupCameraProcess();
