@@ -4,9 +4,8 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SensorList } from "../SensorList";
 
-import chai, { assert } from "chai";
-import chaiAsPromised from "chai-as-promised";
-chai.use(chaiAsPromised);
+import { assert } from "chai";
+import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
@@ -217,5 +216,71 @@ describe("SensorList.ts tests", function () {
 
     await using sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
     await sensorList.initializeOrRegenerateAsync();
+  });
+
+  it("should add unrecognized (ESP32) DS18B20 sensors to the database", async function () {
+    const scope = nock("http://127.0.0.12")
+      .get("/api/sensors/ds18b20/addresses")
+      .reply(200, { addresses: ["28-00000", "28-00001", "28-00002"] })
+      .persist();
+    const mockDS18B20Data1 = {
+      id: 1,
+      name: "test sensor 1",
+      model: "DS18B20",
+      address: "28-00004",
+    } as SDBSensor;
+    const mockDS18B20Data2 = {
+      id: 2,
+      name: "test sensor 2",
+      model: "ESP32_DS18B20",
+      address: "28-00001",
+      externalAddress: "http://127.0.0.12",
+    } as SDBSensor;
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
+    const logger = winston.createLogger();
+    sinon
+      .stub(MockSprootDB.prototype, "getSensorsAsync")
+      .resolves([mockDS18B20Data1, mockDS18B20Data2]);
+    sinon
+      .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
+      .resolves([mockDS18B20Data1, mockDS18B20Data2]);
+    const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
+    const ds18b20GetAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
+    await using sensorList = new SensorList(mockSprootDB, 5, 5, 3, 5, logger);
+
+    // Initial run, haven't actually created any sensors (no ESPs to scan).
+    await sensorList.initializeOrRegenerateAsync();
+    assert.equal(addSensorSpy.callCount, 0);
+
+    // Simulate connecting some DS18B20s and re-running initialization.
+    ds18b20GetAddressesStub.resolves(["28-00003", "28-00004", "28-00005"]);
+
+    await sensorList.initializeOrRegenerateAsync();
+    assert.equal(addSensorSpy.callCount, 4);
+
+    assert.equal(addSensorSpy.getCalls()[0]!.args[0].address, "28-00000");
+    assert.equal(addSensorSpy.getCalls()[0]!.args[0].model, "ESP32_DS18B20");
+    assert.equal(addSensorSpy.getCalls()[0]!.args[0].externalAddress, "http://127.0.0.12");
+
+    assert.equal(addSensorSpy.getCalls()[1]!.args[0].address, "28-00002");
+    assert.equal(addSensorSpy.getCalls()[1]!.args[0].model, "ESP32_DS18B20");
+    assert.equal(addSensorSpy.getCalls()[1]!.args[0].externalAddress, "http://127.0.0.12");
+
+    assert.equal(addSensorSpy.getCalls()[2]!.args[0].address, "28-00003");
+    assert.equal(addSensorSpy.getCalls()[2]!.args[0].model, "DS18B20");
+    assert.isUndefined(addSensorSpy.getCalls()[2]!.args[0].externalAddress);
+
+    assert.equal(addSensorSpy.getCalls()[3]!.args[0].address, "28-00005");
+    assert.equal(addSensorSpy.getCalls()[3]!.args[0].model, "DS18B20");
+    assert.isUndefined(addSensorSpy.getCalls()[3]!.args[0].externalAddress);
+
+    scope.done();
   });
 });

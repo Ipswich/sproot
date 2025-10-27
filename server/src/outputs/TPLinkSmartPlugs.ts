@@ -7,7 +7,7 @@ import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 
-class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
+class TPLinkSmartPlugs extends MultiOutputBase {
   readonly availablePlugs: Record<string, Plug> = {};
   readonly initializingPlugs: Record<string, string[]> = {};
   #client: Client;
@@ -49,13 +49,13 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
         this.availablePlugs[plug.childId] = plug;
       }
     });
-    this.#client.on("plug-offline", (plug: Plug) => {
+    this.#client.on("plug-offline", async (plug: Plug) => {
       // Clean up non-responsive plugs
       if (plug.childId != undefined) {
         delete this.availablePlugs[plug.childId];
         const device = Object.values(this.outputs).find((o) => o.pin == plug.childId);
         if (device) {
-          this.disposeOutput(device);
+          await this.disposeOutputAsync(device);
         }
       }
     });
@@ -83,7 +83,12 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
     }
 
     if (filterUsed) {
-      plugs = plugs.filter((plug) => !(this.usedPins[plug.host] ?? []).includes(plug.childId!));
+      plugs = plugs.filter((plug) => {
+        const usedForHost = Array.isArray(this.usedPins[plug.host])
+          ? (this.usedPins[plug.host] as string[])
+          : [];
+        return !usedForHost.includes(plug.childId!);
+      });
     }
 
     return plugs.map((plug) => ({
@@ -139,17 +144,19 @@ class TPLinkSmartPlugs extends MultiOutputBase implements Disposable {
         `Error creating TPLink Smart Plug output {id: ${output.id}, name: ${output.name}}: ${error}`,
       );
     } finally {
-      this.usedPins[output.address]?.push(output.pin);
+      if (Array.isArray(this.usedPins[output.address])) {
+        (this.usedPins[output.address] as string[]).push(output.pin);
+      }
       this.initializingPlugs[output.address] = this.initializingPlugs[output.address]!.filter(
         (pin) => pin !== output.pin,
       );
-      return this.outputs[output.id];
     }
+    return this.outputs[output.id];
   }
 
-  [Symbol.dispose](): void {
+  async [Symbol.asyncDispose](): Promise<void> {
     for (const output of Object.values(this.outputs)) {
-      output[Symbol.dispose]();
+      await output[Symbol.asyncDispose]();
     }
     this.#client.removeAllListeners();
     this.#client.stopDiscovery();
@@ -206,7 +213,7 @@ class TPLinkPlug extends OutputBase {
     }, forceExecution);
   }
 
-  [Symbol.dispose](): void {
+  override async [Symbol.asyncDispose](): Promise<void> {
     this.tplinkPlug.removeAllListeners("power-on");
     this.tplinkPlug.removeAllListeners("power-off");
 

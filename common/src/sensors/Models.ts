@@ -3,6 +3,10 @@ export const Models = {
   CAPACITIVE_MOISTURE_SENSOR: "CAPACITIVE_MOISTURE_SENSOR",
   DS18B20: "DS18B20",
   ADS1115: "ADS1115",
+  ESP32_BME280: "ESP32_BME280",
+  ESP32_CAPACITIVE_MOISTURE_SENSOR: "ESP32_CAPACITIVE_MOISTURE_SENSOR",
+  ESP32_DS18B20: "ESP32_DS18B20",
+  ESP32_ADS1115: "ESP32_ADS1115",
 } as const;
 
 export const ModelList: Record<keyof typeof Models, string> = {
@@ -10,4 +14,8 @@ export const ModelList: Record<keyof typeof Models, string> = {
   [Models.CAPACITIVE_MOISTURE_SENSOR]: "Capacitive Moisture Sensor",
   [Models.DS18B20]: "DS18B20",
   [Models.ADS1115]: "ADS1115",
+  [Models.ESP32_BME280]: "ESP32 BME280",
+  [Models.ESP32_CAPACITIVE_MOISTURE_SENSOR]: "ESP32 Capacitive Moisture Sensor",
+  [Models.ESP32_DS18B20]: "ESP32 DS18B20",
+  [Models.ESP32_ADS1115]: "ESP32 ADS1115",
 } as const;

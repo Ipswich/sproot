@@ -28,7 +28,7 @@ mainAsync().then((app) => {
 
           // Cleanup sensors and turn off outputs
           await app.get("sensorList")[Symbol.asyncDispose]();
-          app.get("outputList")[Symbol.dispose]();
+          await app.get("outputList")[Symbol.asyncDispose]();
 
           // Cleanup system status monitor
           app.get("systemStatusMonitor")[Symbol.dispose]();

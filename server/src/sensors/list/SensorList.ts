@@ -1,7 +1,11 @@
 import { BME280 } from "../BME280";
+import { ESP32_BME280 } from "../ESP32_BME280";
 import { DS18B20 } from "../DS18B20";
+import { ESP32_DS18B20 } from "../ESP32_DS18B20";
 import { ADS1115 } from "../ADS1115";
+import { ESP32_ADS1115 } from "../ESP32_ADS1115";
 import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
+import { ESP32_CapacitiveMoistureSensor } from "../ESP32_CapacitiveMoistureSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -55,6 +59,7 @@ class SensorList {
         id,
         name,
         model,
+        externalAddress,
         address,
         color,
         lastReading,
@@ -74,6 +79,7 @@ class SensorList {
         id,
         name,
         model,
+        externalAddress,
         address,
         color,
         lastReading,
@@ -284,11 +290,47 @@ class SensorList {
         ).initAsync();
         break;
 
+      case Models.ESP32_BME280.toLowerCase():
+        if (!sensor.externalAddress) {
+          throw new SensorListError("ESP32 BME280 external address cannot be null");
+        }
+        if (!sensor.address) {
+          throw new SensorListError("ESP32 BME280 sensor address cannot be null");
+        }
+        newSensor = await new ESP32_BME280(
+          sensor,
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
+
       case Models.DS18B20.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("DS18B20 sensor address cannot be null");
         }
         newSensor = await new DS18B20(
+          sensor,
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
+
+      case Models.ESP32_DS18B20.toLowerCase():
+        if (!sensor.externalAddress) {
+          throw new SensorListError("ESP32 DS18B20 external address cannot be null");
+        }
+        if (!sensor.address) {
+          throw new SensorListError("ESP32 DS18B20 sensor address cannot be null");
+        }
+        newSensor = await new ESP32_DS18B20(
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
@@ -319,6 +361,29 @@ class SensorList {
         ).initAsync();
         break;
 
+      case Models.ESP32_ADS1115.toLowerCase():
+        if (!sensor.externalAddress) {
+          throw new SensorListError("ESP32 ADS1115 external address cannot be null");
+        }
+        if (!sensor.address) {
+          throw new SensorListError("ESP32 ADS1115 sensor address cannot be null");
+        }
+        if (!sensor.pin) {
+          throw new SensorListError("ESP32 ADS1115 sensor pin cannot be null");
+        }
+        newSensor = await new ESP32_ADS1115(
+          sensor,
+          ReadingType.voltage,
+          "1",
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
+
       case Models.CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("Capacitive Moisture Sensor address cannot be null");
@@ -337,6 +402,28 @@ class SensorList {
         ).initAsync();
         break;
 
+      case Models.ESP32_CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
+        if (!sensor.externalAddress) {
+          throw new SensorListError(
+            "ESP32 Capacitive Moisture Sensor external address cannot be null",
+          );
+        }
+        if (!sensor.address) {
+          throw new SensorListError("ESP32 Capacitive Moisture Sensor address cannot be null");
+        }
+        if (!sensor.pin) {
+          throw new SensorListError("ESP32 Capacitive Moisture Sensor pin cannot be null");
+        }
+        newSensor = await new ESP32_CapacitiveMoistureSensor(
+          sensor,
+          this.#sprootDB,
+          this.#maxCacheSize,
+          this.#initialCacheLookback,
+          this.#maxChartDataSize,
+          this.#chartDataPointInterval,
+          this.#logger,
+        ).initAsync();
+        break;
       default:
         throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);
     }
@@ -346,16 +433,56 @@ class SensorList {
   }
 
   async #addUnreconizedDS18B20sToSDBAsync() {
-    // filter noise addresses (anything prefixed with "00")
-    const deviceAddresses = await DS18B20.getAddressesAsync();
+    // Get all DS18B20 sensors from database
     const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
-    const promises: Promise<void>[] = [];
-    for (const address of deviceAddresses) {
-      if (sensorsFromDatabase.some((s) => s.address === address)) {
+    const addToDatabasePromises: Promise<void>[] = [];
+
+    // Get all DS18B20s from known ESP32 devices with DS18B20s
+    const remoteDeviceExternalAddresses = Object.keys(ESP32_DS18B20.deviceRecord);
+    const remoteDeviceAddresses = [] as { externalAddress: string; deviceId: string }[];
+    await Promise.all(
+      remoteDeviceExternalAddresses.map(async (externalAddress) => {
+        const addresses = await ESP32_DS18B20.getAddressesAsync(externalAddress);
+        addresses.map((address) => {
+          remoteDeviceAddresses.push({ externalAddress: externalAddress, deviceId: address });
+        });
+      }),
+    );
+
+    // Filter remote devices
+    for (const addresses of remoteDeviceAddresses) {
+      if (
+        sensorsFromDatabase.some(
+          (s) => s.externalAddress == addresses.externalAddress && s.address === addresses.deviceId,
+        )
+      ) {
+        continue;
+      } else {
+        this.#logger.info(
+          `Adding unrecognized ESP32_DS18B20 sensor {externalAddress: ${addresses.externalAddress}, deviceId: ${addresses.deviceId} to database`,
+        );
+        addToDatabasePromises.push(
+          this.#sprootDB.addSensorAsync({
+            name: `New ESP32_DS18B20 ..${addresses.deviceId.slice(-4)}`,
+            model: Models.ESP32_DS18B20,
+            address: addresses.deviceId,
+            externalAddress: addresses.externalAddress,
+            color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
+          } as SDBSensor),
+        );
+      }
+    }
+
+    // Get all DS18B20s from local device
+    const localDeviceAddresses = await DS18B20.getAddressesAsync();
+
+    // Filter local devices
+    for (const address of localDeviceAddresses) {
+      if (sensorsFromDatabase.some((s) => s.externalAddress == null && s.address === address)) {
         continue;
       } else {
         this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);
-        promises.push(
+        addToDatabasePromises.push(
           this.#sprootDB.addSensorAsync({
             name: `New DS18B20 ..${address.slice(-4)}`,
             model: Models.DS18B20,
@@ -366,11 +493,11 @@ class SensorList {
       }
     }
 
-    const awaitedPromises = await Promise.allSettled(promises);
+    const awaitedPromises = await Promise.allSettled(addToDatabasePromises);
     awaitedPromises.forEach((result) => {
       if (result.status === "rejected") {
         this.#logger.error(
-          `Could not add unrecognized DS18B20 sensor to database ${result.reason}`,
+          `Could not add unrecognized (ESP) DS18B20 sensor to database ${result.reason}`,
         );
       }
     });

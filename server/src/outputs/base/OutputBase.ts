@@ -13,9 +13,10 @@ import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
-export abstract class OutputBase implements IOutputBase {
+export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
   readonly model: keyof typeof Models;
+  readonly externalAddress: string | null;
   readonly address: string;
   readonly pin: string;
   name: string;
@@ -45,6 +46,7 @@ export abstract class OutputBase implements IOutputBase {
   ) {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
+    this.externalAddress = sdbOutput.externalAddress;
     this.address = sdbOutput.address;
     this.pin = sdbOutput.pin;
     this.name = sdbOutput.name;
@@ -71,11 +73,23 @@ export abstract class OutputBase implements IOutputBase {
   }
 
   get outputData(): IOutputBase {
-    const { id, model, address, name, pin, isPwm, isInvertedPwm, color, state, automationTimeout } =
-      this;
+    const {
+      id,
+      model,
+      externalAddress,
+      address,
+      name,
+      pin,
+      isPwm,
+      isInvertedPwm,
+      color,
+      state,
+      automationTimeout,
+    } = this;
     return {
       id,
       model,
+      externalAddress,
       address,
       name,
       pin,
@@ -92,7 +106,7 @@ export abstract class OutputBase implements IOutputBase {
    * (respecting the current ControlMode).
    */
   abstract executeStateAsync(): Promise<void>;
-  abstract [Symbol.dispose](): void;
+  abstract [Symbol.asyncDispose](): Promise<void>;
 
   /** Initializes all of the data for this output */
   async initializeAsync() {
@@ -252,7 +266,7 @@ export abstract class OutputBase implements IOutputBase {
     }
 
     try {
-      let validatedValue = this.#validateAndFixValue(this.value);
+      const validatedValue = this.#validateAndFixValue(this.value);
       this.#isExecuting = true;
       if (validatedValue === undefined) {
         return undefined;

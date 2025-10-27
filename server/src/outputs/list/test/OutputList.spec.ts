@@ -69,7 +69,7 @@ describe("OutputList.ts tests", function () {
       );
       const logger = winston.createLogger();
 
-      using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
+      await using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
       // Create
       await outputList.initializeOrRegenerateAsync();
       assert.equal(Object.keys(outputList.outputs).length, 4);
@@ -96,8 +96,6 @@ describe("OutputList.ts tests", function () {
       assert.equal(outputList.outputs["1"]!.isPwm, false);
       assert.equal(outputList.outputs["1"]!.isInvertedPwm, true);
       assert.equal(outputList.outputs["1"]!.color, "pink");
-
-      outputList[Symbol.dispose]();
     });
   });
 
@@ -127,7 +125,7 @@ describe("OutputList.ts tests", function () {
       );
       const logger = winston.createLogger();
 
-      using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
+      await using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
       await outputList.initializeOrRegenerateAsync();
       const outputData = outputList.outputData;
 
@@ -194,11 +192,11 @@ describe("OutputList.ts tests", function () {
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
-      using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
+      await using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
 
       // Create
       await outputList.initializeOrRegenerateAsync();
-      outputList[Symbol.dispose]();
+      await outputList[Symbol.asyncDispose]();
       assert.isEmpty(outputList.outputs);
     });
   });

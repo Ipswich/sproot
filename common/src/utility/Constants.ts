@@ -22,3 +22,8 @@ export const IMAGE_DIRECTORY = "./images";
 export const TIMELAPSE_DIRECTORY = `${IMAGE_DIRECTORY}/timelapse`;
 export const TIMELAPSE_RESOURCES = `${STATIC_RESOURCES_DIRECTORY}/timelapse`;
 export const ARCHIVE_DIRECTORY = `${IMAGE_DIRECTORY}/archive`;
+
+export const CERTS_DIRECTORY = "./certs";
+export const CA_DIR = `${CERTS_DIRECTORY}/ca`;
+export const CA_KEY_PATH = `${CA_DIR}/ca.key.pem`;
+export const CA_CERT_PATH = `${CA_DIR}/ca.crt.pem`;

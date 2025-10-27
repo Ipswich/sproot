@@ -177,6 +177,7 @@ describe("API Tests", async () => {
           const content = response.body["content"];
           validateMiddlewareValues(response);
           assert.deepEqual(content.data, {
+            ESP32_PCA9685: "ESP32 PCA9685",
             PCA9685: "PCA9685",
             TPLINK_SMART_PLUG: "TPLink Smart Plug",
           });
@@ -638,6 +639,7 @@ describe("API Tests", async () => {
         "id",
         "name",
         "model",
+        "externalAddress",
         "address",
         "color",
         "lastReading",
@@ -810,6 +812,10 @@ describe("API Tests", async () => {
             DS18B20: "DS18B20",
             ADS1115: "ADS1115",
             CAPACITIVE_MOISTURE_SENSOR: "Capacitive Moisture Sensor",
+            ESP32_ADS1115: "ESP32 ADS1115",
+            ESP32_BME280: "ESP32 BME280",
+            ESP32_CAPACITIVE_MOISTURE_SENSOR: "ESP32 Capacitive Moisture Sensor",
+            ESP32_DS18B20: "ESP32 DS18B20",
           });
         });
       });

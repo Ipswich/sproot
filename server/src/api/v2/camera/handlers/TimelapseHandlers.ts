@@ -29,7 +29,7 @@ export async function getTimelapseArchiveAsync(
   }
 
   response.setHeader("Content-Type", "application/x-tar");
-  response.setHeader("Content-Length", timelapseArchiveSize.toString());
+  response.setHeader("Content-Length", (timelapseArchiveSize * 1024 * 1024).toString());
   response.setHeader("Content-Disposition", "attachment; filename=timelapse.tar");
 
   // Handle potential errors

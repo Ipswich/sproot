@@ -1,4 +1,5 @@
 import { PCA9685 } from "../PCA9685";
+import { ESP32_PCA9685 } from "../ESP32_PCA9685";
 import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
@@ -11,9 +12,10 @@ import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
-class OutputList implements Disposable {
+class OutputList implements AsyncDisposable {
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
+  #ESP32_PCA9685: ESP32_PCA9685;
   #TPLinkSmartPlugs: TPLinkSmartPlugs;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
@@ -35,6 +37,15 @@ class OutputList implements Disposable {
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
+      this.#sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      undefined,
+      this.#logger,
+    );
+    this.#ESP32_PCA9685 = new ESP32_PCA9685(
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -117,6 +128,8 @@ class OutputList implements Disposable {
     switch (model) {
       case Models.PCA9685:
         return this.#PCA9685.getAvailableDevices(address);
+      case Models.ESP32_PCA9685:
+        return this.#ESP32_PCA9685.getAvailableDevices(address);
       case Models.TPLINK_SMART_PLUG:
         return this.#TPLinkSmartPlugs.getAvailableDevices(address, filterUsed);
       default:
@@ -124,11 +137,11 @@ class OutputList implements Disposable {
     }
   }
 
-  [Symbol.dispose](): void {
+  async [Symbol.asyncDispose](): Promise<void> {
     this.#logger.debug("Disposing of system OutputList");
     for (const key in this.#outputs) {
       try {
-        this.#deleteOutput(this.#outputs[key]!);
+        await this.#deleteOutputAsync(this.#outputs[key]!);
       } catch (err) {
         this.#logger.error(
           `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
@@ -136,7 +149,7 @@ class OutputList implements Disposable {
       }
     }
     this.#outputs = {};
-    this.#TPLinkSmartPlugs[Symbol.dispose]();
+    await this.#TPLinkSmartPlugs[Symbol.asyncDispose]();
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
@@ -211,7 +224,7 @@ class OutputList implements Disposable {
             this.#logger.info(
               `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
             );
-            this.#deleteOutput(this.#outputs[key]!);
+            await this.#deleteOutputAsync(this.#outputs[key]!);
             delete this.#outputs[key];
             outputListChanges = true;
           } catch (err) {
@@ -277,6 +290,10 @@ class OutputList implements Disposable {
         newOutput = await this.#PCA9685.createOutputAsync(output);
         break;
       }
+      case Models.ESP32_PCA9685.toLowerCase(): {
+        newOutput = await this.#ESP32_PCA9685.createOutputAsync(output);
+        break;
+      }
       case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
@@ -289,19 +306,23 @@ class OutputList implements Disposable {
     }
   }
 
-  #deleteOutput(output: OutputBase): void {
+  async #deleteOutputAsync(output: OutputBase): Promise<void> {
     switch (output.model.toLowerCase()) {
       case Models.PCA9685.toLowerCase(): {
-        this.#PCA9685.disposeOutput(output);
+        await this.#PCA9685.disposeOutputAsync(output);
+        break;
+      }
+      case Models.ESP32_PCA9685.toLowerCase(): {
+        await this.#ESP32_PCA9685.disposeOutputAsync(output);
         break;
       }
       case Models.TPLINK_SMART_PLUG.toLowerCase(): {
-        this.#TPLinkSmartPlugs.disposeOutput(output);
+        await this.#TPLinkSmartPlugs.disposeOutputAsync(output);
         break;
       }
       default: {
         if (this.#outputs[output.id] !== undefined) {
-          this.#outputs[output.id]![Symbol.dispose]();
+          await this.#outputs[output.id]![Symbol.asyncDispose]();
         }
       }
     }

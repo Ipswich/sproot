@@ -1,5 +1,3 @@
-import { Pca9685Driver } from "pca9685";
-import { openSync } from "i2c-bus";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -7,7 +5,7 @@ import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDev
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 
-class PCA9685 extends MultiOutputBase {
+class ESP32_PCA9685 extends MultiOutputBase {
   constructor(
     sprootDB: ISprootDB,
     maxCacheSize: number,
@@ -29,23 +27,20 @@ class PCA9685 extends MultiOutputBase {
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
-    //Create new PCA9685 if one doesn't exist for this address.
-    if (!this.boardRecord[output.address]) {
-      this.boardRecord[output.address] = new Pca9685Driver(
-        {
-          i2c: openSync(1),
-          address: parseInt(output.address),
-          frequency: this.frequency,
-          debug: false,
-        },
-        () => {},
-      );
-      this.usedPins[output.address] = [];
+    if (output.externalAddress == undefined) {
+      this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing externalAddress.`);
+      return undefined;
     }
 
-    const pca9685Driver = this.boardRecord[output.address];
-    this.outputs[output.id] = new PCA9685Output(
-      pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
+    //Create new PCA9685 if one doesn't exist for this address.
+    if (!this.usedPins[output.externalAddress]) {
+      this.usedPins[output.externalAddress] = {};
+    }
+    if (!(this.usedPins[output.externalAddress] as Record<string, string[]>)[output.address]) {
+      (this.usedPins[output.externalAddress] as Record<string, string[]>)[output.address] = [];
+    }
+
+    this.outputs[output.id] = new ESP32_PCA9685Output(
       output,
       this.sprootDB,
       this.maxCacheSize,
@@ -55,9 +50,9 @@ class PCA9685 extends MultiOutputBase {
       this.logger,
     );
     await this.outputs[output.id]?.initializeAsync();
-    if (Array.isArray(this.usedPins[output.address])) {
-      (this.usedPins[output.address] as string[]).push(output.pin);
-    }
+    (this.usedPins[output.externalAddress] as Record<string, string[]>)[output.address]?.push(
+      output.pin,
+    );
     return this.outputs[output.id];
   }
 
@@ -75,11 +70,8 @@ class PCA9685 extends MultiOutputBase {
   }
 }
 
-class PCA9685Output extends OutputBase {
-  pca9685: Pca9685Driver;
-
+class ESP32_PCA9685Output extends OutputBase {
   constructor(
-    pca9685: Pca9685Driver,
     output: SDBOutput,
     sprootDB: ISprootDB,
     maxCacheSize: number,
@@ -97,19 +89,34 @@ class PCA9685Output extends OutputBase {
       chartDataPointInterval,
       logger,
     );
-    this.pca9685 = pca9685;
   }
 
   async executeStateAsync(forceExecution: boolean = false): Promise<void> {
     await this.executeStateHelperAsync(async (value) => {
-      // setDutyCycle takes a decimal value -> 50% == .5; 33% == .33;
-      Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value / 100));
+      await this.#setPCA9685ValueAsync(value);
     }, forceExecution);
   }
 
   override async [Symbol.asyncDispose](): Promise<void> {
-    this.pca9685.setDutyCycle(parseInt(this.pin), 0);
+    await this.#setPCA9685ValueAsync(0);
+  }
+
+  async #setPCA9685ValueAsync(value: number): Promise<void> {
+    await fetch(
+      this.outputData.externalAddress +
+        `/api/outputs/pca9685/${this.outputData.address}/${this.outputData.pin}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          value,
+        }),
+      },
+    );
+    return;
   }
 }
 
-export { PCA9685, PCA9685Output };
+export { ESP32_PCA9685, ESP32_PCA9685Output };
