@@ -3,7 +3,7 @@ import sinon from "sinon";
 import { Request, Response } from "express";
 
 import { getESP32ManifestAsync, getESP32FirmwareBinaryAsync } from "../handlers/ESP32Handlers";
-import { FirmwareManager } from "../../../../esp32/FirmwareManager";
+import { FirmwareManager } from "../../../../system/FirmwareManager";
 import { ErrorResponse } from "@sproot/api/v2/Responses";
 import { createReadStream } from "fs";
 

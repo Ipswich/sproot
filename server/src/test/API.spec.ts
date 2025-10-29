@@ -1023,30 +1023,23 @@ describe("API Tests", async () => {
       describe("Manifest", async () => {
         describe("GET", async () => {
           it("should return 200 and firmware info", async () => {
-            const response = await request(server).get("/api/v2/firmware/esp32/manifest").expect(200);
+            const response = await request(server)
+              .get("/api/v2/firmware/esp32/manifest")
+              .expect(200);
             const data = response.body["content"].data;
             validateMiddlewareValues(response);
 
-            assert.containsAllKeys(data, [
-              "version",
-              "url",
-              "sha256",
-            ]);
+            assert.containsAllKeys(data, ["version", "url", "sha256"]);
           });
         });
       });
       describe("Binary", async () => {
         describe("GET", async () => {
           it("should return 200 and firmware binary", async () => {
-            const response = await request(server)
-              .get("/api/v2/firmware/esp32/binary")
-              .expect(200);
+            const response = await request(server).get("/api/v2/firmware/esp32/binary").expect(200);
             validateMiddlewareValues(response);
 
-            assert.equal(
-              response.headers["content-type"],
-              "application/octet-stream",
-            );
+            assert.equal(response.headers["content-type"], "application/octet-stream");
             assert.isNotNull(response.body);
           });
         });

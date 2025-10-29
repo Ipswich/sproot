@@ -28,6 +28,12 @@ services:
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
       - ./docker_volumes/sproot/server/images:/sproot/server/images
+      - ./docker_volumes/sproot/server/certs:/sproot/server/certs
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    group_add:
+      - dialout
+    tty: true
     network_mode: "host"
     expose:
       - "3000"

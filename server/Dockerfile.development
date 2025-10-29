@@ -7,7 +7,7 @@ RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
 RUN apt-get update -y && apt-get upgrade -y
 
 # Install curl, nano, python, make, g++, git
-RUN apt-get install curl nano python3 make g++ git -y
+RUN apt-get install curl nano python3 make g++ git udev -y
 
 # Install camera dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends gnupg

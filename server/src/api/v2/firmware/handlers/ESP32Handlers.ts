@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { FirmwareManager } from "../../../../esp32/FirmwareManager";
+import { FirmwareManager } from "../../../../system/FirmwareManager";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 
 export async function getESP32ManifestAsync(
