@@ -3881,7 +3881,74 @@ paths:
                                 example: "true"
                               archiveProgress:
                                 type: number
-                                example: 75        
+                                example: 75 
+  /api/v2/firmware/esp32/manifest:
+    get:
+      tags:
+        - "Firmware"
+      summary: Get the ESP32 firmware manifest.
+      description: >
+        Returns the ESP32 firmware manifest, which contains information about the latest firmware version.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/FirmwareManifest"
+  /api/v2/firmware/esp32/binary:
+    get:
+      tags:
+        - "Firmware"
+      summary: Get the ESP32 firmware binary.
+      description: >
+        Streams the ESP32 firmware binary for download.
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"firmware.bin\""
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/firmware/esp32/binary"
+                          details:
+                            items:
+                              example: "Error retrieving firmware binary."
 
 components:
   schemas:
@@ -4515,6 +4582,25 @@ components:
         freeDiskSize:
           type: number
           example: 32000
+    
+    FirmwareManifest:
+      description: >
+        An object containing the firmware manifest information.
+      type: object
+      required:
+        - "version"
+        - "url"
+        - "sha256"
+      properties:
+        version:
+          type: string
+          example: "v1.0.0"
+        url:
+          type: string
+          example: "http://192.168.1.1/api/v2/firmware/esp32/binary"
+        sha256:
+          type: string
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
   securitySchemes:
     bearerAuth:

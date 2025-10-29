@@ -15,7 +15,7 @@ type ErrorResponse = ApiResponseBase & {
   error: {
     name: string;
     url: string;
-    details: [];
+    details: string[];
   };
 };
 

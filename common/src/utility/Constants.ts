@@ -23,6 +23,12 @@ export const TIMELAPSE_DIRECTORY = `${IMAGE_DIRECTORY}/timelapse`;
 export const TIMELAPSE_RESOURCES = `${STATIC_RESOURCES_DIRECTORY}/timelapse`;
 export const ARCHIVE_DIRECTORY = `${IMAGE_DIRECTORY}/archive`;
 
+// Firmware Constants
+export const FIRMWARE_DIRECTORY = `${STATIC_RESOURCES_DIRECTORY}/firmware`;
+export const ESP32_FIRMWARE_MANIFEST_PATH = `${FIRMWARE_DIRECTORY}/esp32/manifest.json`;
+export const ESP32_FIRMWARE_BINARY_PATH = `${FIRMWARE_DIRECTORY}/esp32/firmware.bin`;
+
+// Certificates Constants
 export const CERTS_DIRECTORY = "./certs";
 export const CA_DIR = `${CERTS_DIRECTORY}/ca`;
 export const CA_KEY_PATH = `${CA_DIR}/ca.key.pem`;
