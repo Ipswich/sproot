@@ -25,8 +25,11 @@ export const ARCHIVE_DIRECTORY = `${IMAGE_DIRECTORY}/archive`;
 
 // Firmware Constants
 export const FIRMWARE_DIRECTORY = `${STATIC_RESOURCES_DIRECTORY}/firmware`;
-export const ESP32_FIRMWARE_MANIFEST_PATH = `${FIRMWARE_DIRECTORY}/esp32/manifest.json`;
-export const ESP32_FIRMWARE_BINARY_PATH = `${FIRMWARE_DIRECTORY}/esp32/firmware.bin`;
+export const ESP32_MANIFEST_PATH = `${FIRMWARE_DIRECTORY}/esp32/manifest.json`;
+export const ESP32_BOOTLOADER_PATH = `${FIRMWARE_DIRECTORY}/esp32/bootloader.bin`;
+export const ESP32_PARTITIONS_PATH = `${FIRMWARE_DIRECTORY}/esp32/partitions.bin`;
+export const ESP32_BOOTAPP0_PATH = `${FIRMWARE_DIRECTORY}/esp32/boot_app0.bin`;
+export const ESP32_FIRMWARE_PATH = `${FIRMWARE_DIRECTORY}/esp32/firmware.bin`;
 
 // Certificates Constants
 export const CERTS_DIRECTORY = "./certs";
