@@ -2,7 +2,7 @@ type SDBExternalDevice = {
   id: number;
   name: string;
   type: string;
-  externalAddress: string;
+  address: string;
   secureToken: string | null;
 };
 

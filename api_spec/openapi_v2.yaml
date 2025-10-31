@@ -405,6 +405,74 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve external devices."
+    post:
+      tags:
+        - "System"
+      summary: Add a new external device.
+      description: >
+        Adds a new external device to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBExternalDevice"
+      responses:
+        201:
+          description: "External device created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBExternalDevice"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            example:
+                              - "Missing required field: name"
+                              - "Missing required field: address"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            items:
+                              example: "Failed to add external device."
+
+
   /api/v2/ping:
     get:
       tags:
@@ -4484,16 +4552,16 @@ components:
       type: object
       required:
         - "name"
-        - "externalId"
         - "address"
       properties:
         id:
           type: number
+          readOnly: true
           example: 1
         name:
           type: string
           example: "sproot-esp32-1C78"
-        externalAddress:
+        address:
           type: string
           example: "sproot-esp32-1C78.local"
 

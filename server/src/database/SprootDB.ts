@@ -25,6 +25,7 @@ import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { SDBExternalDevice } from "@sproot/database/SDBExternalDevice";
+import { encrypt, decrypt } from "@sproot/sproot-common/dist/utility/Crypto";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -36,18 +37,28 @@ export class SprootDB implements ISprootDB {
   async getSensorsAsync(): Promise<SDBSensor[]> {
     return this.#connection("sensors as s")
       .leftJoin("external_devices as ed", "s.externalDevice_id", "ed.id")
-      .select("s.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
+      .select(
+        "s.*",
+        "ed.name as externalDeviceName",
+        "ed.address as externalAddress",
+        "ed.secureToken",
+      );
   }
   async getSensorAsync(id: number): Promise<SDBSensor[]> {
     return this.#connection("sensors as s")
       .where("s.id", id)
       .leftJoin("external_devices as ed", "s.externalDevice_id", "ed.id")
-      .select("s.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
+      .select(
+        "s.*",
+        "ed.name as externalDeviceName",
+        "ed.address as externalAddress",
+        "ed.secureToken",
+      );
   }
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     return this.#connection("sensors as s")
       .leftJoin("external_devices as ed", "s.externalDevice_id", "ed.id")
-      .select("s.address", "ed.externalAddress")
+      .select("s.address", "ed.address as externalAddress")
       .whereIn("s.model", ["DS18B20", "ESP32_DS18B20"]);
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
@@ -80,16 +91,25 @@ export class SprootDB implements ISprootDB {
     return this.#connection("sensors").where("id", id).delete();
   }
 
+  async getExternalDevicesAsync(): Promise<SDBExternalDevice[]> {
+    const result = await this.#connection("external_devices").select("*");
+    result.forEach((device) => {
+      device.secureToken =
+        device.secureToken == null ? null : decrypt(device.secureToken, process.env["JWT_SECRET"]!);
+    });
+    return result;
+  }
+
   async addExternalDeviceAsync(externalDevice: SDBExternalDevice): Promise<void> {
-    return this.#connection("external_devices").insert(externalDevice);
+    const copy = { ...externalDevice };
+    copy.secureToken =
+      copy.secureToken == null ? null : encrypt(copy.secureToken, process.env["JWT_SECRET"]!);
+
+    return this.#connection("external_devices").insert(copy);
   }
 
   async deleteExternalDeviceAsync(id: number): Promise<void> {
     return this.#connection("external_devices").where("id", id).delete();
-  }
-
-  async getExternalDevicesAsync(): Promise<SDBExternalDevice[]> {
-    return this.#connection("external_devices").select("*");
   }
 
   async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {
@@ -134,13 +154,23 @@ export class SprootDB implements ISprootDB {
   async getOutputsAsync(): Promise<SDBOutput[]> {
     return this.#connection("outputs as o")
       .leftJoin("external_devices as ed", "o.externalDevice_id", "ed.id")
-      .select("o.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
+      .select(
+        "o.*",
+        "ed.name as externalDeviceName",
+        "ed.address as externalAddress",
+        "ed.secureToken",
+      );
   }
   async getOutputAsync(id: number): Promise<SDBOutput[]> {
     return this.#connection("outputs as o")
       .where("o.id", id)
       .leftJoin("external_devices as ed", "o.externalDevice_id", "ed.id")
-      .select("o.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
+      .select(
+        "o.*",
+        "ed.name as externalDeviceName",
+        "ed.address as externalAddress",
+        "ed.secureToken",
+      );
   }
   async addOutputAsync(output: SDBOutput): Promise<void> {
     return this.#connection("outputs").insert(output);

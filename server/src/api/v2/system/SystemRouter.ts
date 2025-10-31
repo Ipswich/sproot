@@ -1,7 +1,10 @@
 import express, { Request, Response } from "express";
 import { powerOffHandler } from "./PowerOffHandlers";
 import { systemStatusMonitorHandlerAsync } from "./StatusMonitorHandlers";
-import { getExternalDevicesHandlerAsync } from "./ExternalDevicesHandlers";
+import {
+  getExternalDevicesHandlerAsync,
+  postExternalDevicesHandlerAsync,
+} from "./ExternalDevicesHandlers";
 
 const router = express.Router();
 
@@ -21,6 +24,13 @@ router.get("/status", async (req: Request, res: Response) => {
 
 router.get("/external-devices", async (req: Request, res: Response) => {
   const response = await getExternalDevicesHandlerAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.post("/external-devices", async (req: Request, res: Response) => {
+  const response = await postExternalDevicesHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
