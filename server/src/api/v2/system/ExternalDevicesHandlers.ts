@@ -16,7 +16,10 @@ export async function getExternalDevicesHandlerAsync(
     const recognizedDevices = await sprootDB.getExternalDevicesAsync();
 
     const returnData = {
-      recognized: recognizedDevices,
+      recognized: recognizedDevices.map((device) => {
+        const { secureToken, ...deviceWithoutToken } = device;
+        return deviceWithoutToken;
+      }),
       unrecognized: mdnsService.devices.filter((service) => {
         return !recognizedDevices.some((device) => device.name === service.name);
       }),
