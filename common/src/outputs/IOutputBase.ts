@@ -18,6 +18,8 @@ interface IOutputBase {
   color: string;
   state: IOutputState;
   automationTimeout: number;
+  secureToken: string | null;
+  externalDeviceName: string | null;
 }
 
 type IOutputState = {

@@ -6,6 +6,8 @@ type SDBOutput = {
   externalAddress: string | null;
   address: string;
   name: string;
+  externalDeviceName: string | null;
+  secureToken: string | null;
   pin: string;
   isPwm: boolean;
   isInvertedPwm: boolean;

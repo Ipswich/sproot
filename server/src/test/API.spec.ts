@@ -640,6 +640,7 @@ describe("API Tests", async () => {
         "name",
         "model",
         "externalAddress",
+        "externalDeviceName",
         "address",
         "color",
         "lastReading",
@@ -1013,6 +1014,19 @@ describe("API Tests", async () => {
           assert.isNumber(data.system.freeDiskSize);
           assert.isNumber(data.timelapse.directorySize);
           assert.isNumber(data.timelapse.lastArchiveGenerationDuration);
+        });
+      });
+    });
+
+    describe("External Devices", async () => {
+      describe("GET", async () => {
+        it("should return 200 and a record of external devices", async () => {
+          const response = await request(server).get("/api/v2/system/external-devices").expect(200);
+          const data = response.body["content"].data;
+          validateMiddlewareValues(response);
+
+          assert.isArray(data.unrecognized);
+          assert.isArray(data.recognized);
         });
       });
     });

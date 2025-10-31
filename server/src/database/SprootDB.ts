@@ -24,6 +24,7 @@ import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import { SDBExternalDevice } from "@sproot/database/SDBExternalDevice";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -33,15 +34,21 @@ export class SprootDB implements ISprootDB {
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors").select("*");
+    return this.#connection("sensors as s")
+      .leftJoin("external_devices as ed", "s.externalDevice_id", "ed.id")
+      .select("s.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
   }
   async getSensorAsync(id: number): Promise<SDBSensor[]> {
-    return this.#connection("sensors").where("id", id).select("*");
+    return this.#connection("sensors as s")
+      .where("s.id", id)
+      .leftJoin("external_devices as ed", "s.externalDevice_id", "ed.id")
+      .select("s.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
   }
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors")
-      .whereIn("model", ["DS18B20", "ESP32_DS18B20"])
-      .select("address", "externalAddress");
+    return this.#connection("sensors as s")
+      .leftJoin("external_devices as ed", "s.externalDevice_id", "ed.id")
+      .select("s.address", "ed.externalAddress")
+      .whereIn("s.model", ["DS18B20", "ESP32_DS18B20"]);
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
     return this.#connection("sensors").insert(sensor);
@@ -71,6 +78,18 @@ export class SprootDB implements ISprootDB {
 
   async deleteSensorAsync(id: number): Promise<void> {
     return this.#connection("sensors").where("id", id).delete();
+  }
+
+  async addExternalDeviceAsync(externalDevice: SDBExternalDevice): Promise<void> {
+    return this.#connection("external_devices").insert(externalDevice);
+  }
+
+  async deleteExternalDeviceAsync(id: number): Promise<void> {
+    return this.#connection("external_devices").where("id", id).delete();
+  }
+
+  async getExternalDevicesAsync(): Promise<SDBExternalDevice[]> {
+    return this.#connection("external_devices").select("*");
   }
 
   async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {
@@ -113,10 +132,15 @@ export class SprootDB implements ISprootDB {
     return readings;
   }
   async getOutputsAsync(): Promise<SDBOutput[]> {
-    return this.#connection("outputs").select("*");
+    return this.#connection("outputs as o")
+      .leftJoin("external_devices as ed", "o.externalDevice_id", "ed.id")
+      .select("o.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
   }
   async getOutputAsync(id: number): Promise<SDBOutput[]> {
-    return this.#connection("outputs").where("id", id).select("*");
+    return this.#connection("outputs as o")
+      .where("o.id", id)
+      .leftJoin("external_devices as ed", "o.externalDevice_id", "ed.id")
+      .select("o.*", "ed.name as externalDeviceName", "ed.externalAddress", "ed.secureToken");
   }
   async addOutputAsync(output: SDBOutput): Promise<void> {
     return this.#connection("outputs").insert(output);

@@ -8,7 +8,7 @@ import {
   ESP32_BOOTLOADER_PATH,
   ESP32_PARTITIONS_PATH,
   ESP32_BOOTAPP0_PATH,
-} from "@sproot/sproot-common/src/utility/Constants";
+} from "@sproot/sproot-common/dist/utility/Constants";
 
 import type { FlashOptions } from "esptool-js";
 import winston from "winston";

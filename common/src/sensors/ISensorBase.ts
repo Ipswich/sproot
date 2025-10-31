@@ -14,6 +14,8 @@ interface ISensorBase {
   lastReading: Partial<Record<ReadingType, string | undefined>>;
   lastReadingTime: Date | null;
   readonly units: Partial<Record<ReadingType, string>>;
+  secureToken: string | null;
+  externalDeviceName: string | null;
 }
 
 export type { ISensorBase };

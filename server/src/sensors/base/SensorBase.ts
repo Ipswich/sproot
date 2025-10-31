@@ -12,8 +12,10 @@ import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   readonly id: number;
   readonly model: keyof typeof Models;
-  readonly externalAddress: string | null;
+  readonly externalAddress: string | null = null;
   readonly address: string | null;
+  readonly secureToken: string | null = null;
+  readonly externalDeviceName: string | null = null;
   name: string;
   lastReading: Record<ReadingType, string | undefined>;
   lastReadingTime: Date | null;
@@ -48,6 +50,8 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     this.model = sdbSensor.model;
     this.externalAddress = sdbSensor.externalAddress;
     this.address = sdbSensor.address;
+    this.externalDeviceName = sdbSensor.externalDeviceName;
+    this.secureToken = sdbSensor.secureToken;
     this.color = sdbSensor.color;
     this.pin = sdbSensor.pin;
     this.lastReading = {} as Record<ReadingType, string>;

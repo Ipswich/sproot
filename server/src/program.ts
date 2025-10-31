@@ -23,6 +23,7 @@ import {
   createRunAutomationsCronJob,
   createUpdateDevicesCronJob,
 } from "./system/CronJobs";
+import { MdnsService } from "./system/MdnsService";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -68,6 +69,9 @@ export default async function setupAsync(): Promise<Express> {
 
   const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB, knexConnection);
   app.set("systemStatusMonitor", systemStatusMonitor);
+
+  const mdnsService = new MdnsService(logger);
+  app.set("bonjourService", mdnsService);
 
   logger.info("Initializing camera manager, and sensor and output lists. . .");
   await Promise.all([

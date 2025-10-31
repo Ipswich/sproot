@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
+import { SDBExternalDevice } from "@sproot/sproot-common/src/database/SDBExternalDevice";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
 import { SDBUser } from "@sproot/sproot-common/src/database/SDBUser";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
@@ -64,6 +65,10 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
+
+  getExternalDevicesAsync(): Promise<SDBExternalDevice[]>;
+  deleteExternalDeviceAsync(id: number): Promise<void>;
+  addExternalDeviceAsync(sensor: SDBExternalDevice): Promise<void>;
 
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
@@ -314,6 +319,18 @@ class MockSprootDB implements ISprootDB {
   }
 
   async addSensorAsync(_sensor: SDBSensor): Promise<void> {
+    return;
+  }
+
+  async getExternalDevicesAsync(): Promise<SDBExternalDevice[]> {
+    return [];
+  }
+
+  async deleteExternalDeviceAsync(_id: number): Promise<void> {
+    return;
+  }
+
+  async addExternalDeviceAsync(_externalDevice: SDBExternalDevice): Promise<void> {
     return;
   }
 

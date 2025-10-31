@@ -353,6 +353,58 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve system status."
+  /api/v2/system/external-devices:
+    get:
+      tags:
+        - "System"
+      summary: Get external devices discovered via mDNS.
+      description: >
+        Returns a list of external devices discovered on the local network via mDNS/Bonjour.
+        This includes basic information about each device, such as name, host, and address.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - type: object
+                                properties:
+                                  recognizedDevices:
+                                    type: array
+                                    items:
+                                      $ref: "#/components/schemas/SDBExternalDevice"
+                                  unrecognizedDevices:
+                                    type: array
+                                    items:
+                                      $ref: "#/components/schemas/UnrecognizedExternalDevice"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            items:
+                              example: "Failed to retrieve external devices."
   /api/v2/ping:
     get:
       tags:
@@ -4425,6 +4477,26 @@ components:
                   type: string
                   example: "C"
 
+    SDBExternalDevice:
+      description: >
+        An external device object that is stored in the database. Likely means an ESP32. Contains all the information needed to 
+        reference an external device, including name, ID, and address.
+      type: object
+      required:
+        - "name"
+        - "externalId"
+        - "address"
+      properties:
+        id:
+          type: number
+          example: 1
+        name:
+          type: string
+          example: "sproot-esp32-1C78"
+        externalAddress:
+          type: string
+          example: "sproot-esp32-1C78.local"
+
     SupportedModels:
       description: >
         A Record of supported device models, mapped to a presentable label.
@@ -4601,6 +4673,29 @@ components:
         sha256:
           type: string
           example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    
+    UnrecognizedExternalDevice:
+      description: >
+        An object representing an external device discovered on the network.
+      type: object
+      required:
+        - "name"
+        - "host"
+        - "address"
+      properties:
+        name:
+          type: string
+          example: "sproot-esp32-1C78"
+        host:
+          type: string
+          example: "sproot-esp32-1C78.local"
+        address:
+          oneOf:
+          - type: string
+            example: "192.168.1.1"
+          - type: array
+            items:
+              type: string
 
   securitySchemes:
     bearerAuth:

@@ -18,6 +18,7 @@ mainAsync().then((app) => {
       logger.info("Shutting down...");
       server.closeAllConnections();
       server.close(async () => {
+        app.get("bonjourService")[Symbol.dispose]();
         // Stop updating database and sensors
         await app.get("updateDatabaseCronJob").stop();
         await app.get("automationsCronJuob").stop();

@@ -16,9 +16,11 @@ import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
   readonly model: keyof typeof Models;
-  readonly externalAddress: string | null;
+  readonly externalAddress: string | null = null;
   readonly address: string;
   readonly pin: string;
+  readonly secureToken: string | null = null;
+  readonly externalDeviceName: string | null = null;
   name: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
@@ -50,6 +52,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.address = sdbOutput.address;
     this.pin = sdbOutput.pin;
     this.name = sdbOutput.name;
+    this.externalDeviceName = sdbOutput.externalDeviceName;
+    this.secureToken = sdbOutput.secureToken;
     this.isPwm = sdbOutput.isPwm ? true : false;
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
     this.state = new OutputState(sdbOutput.id, sprootDB);
@@ -79,6 +83,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       externalAddress,
       address,
       name,
+      externalDeviceName,
       pin,
       isPwm,
       isInvertedPwm,
@@ -92,13 +97,14 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       externalAddress,
       address,
       name,
+      externalDeviceName,
       pin,
       isPwm,
       isInvertedPwm,
       color,
       state,
       automationTimeout,
-    };
+    } as unknown as IOutputBase;
   }
 
   /**

@@ -57,6 +57,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "bme280": "github:jhoffi/bme280-typings",
+    "bonjour-service": "^1.3.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "cron": "^4.3.0",

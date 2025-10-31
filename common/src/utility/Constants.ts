@@ -1,4 +1,5 @@
 export const DATABASE_NAME = "sproot";
+export const MDNS_SERVICE_TYPE = "sproot-device";
 
 // Cron Job Schedules
 export const CRON = {

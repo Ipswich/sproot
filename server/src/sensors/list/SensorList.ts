@@ -61,6 +61,7 @@ class SensorList {
         model,
         externalAddress,
         address,
+        externalDeviceName,
         color,
         lastReading,
         lastReadingTime,
@@ -80,6 +81,7 @@ class SensorList {
         name,
         model,
         externalAddress,
+        externalDeviceName,
         address,
         color,
         lastReading,
@@ -88,7 +90,7 @@ class SensorList {
         pin: pin ?? null,
         lowCalibrationPoint: lowCalibrationPoint ?? null,
         highCalibrationPoint: highCalibrationPoint ?? null,
-      };
+      } as ISensorBase;
     }
     return cleanObject;
   }
