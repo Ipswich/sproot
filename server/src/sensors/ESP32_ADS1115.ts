@@ -1,5 +1,6 @@
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MdnsService } from "../system/MdnsService";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
@@ -12,6 +13,7 @@ export class ESP32_ADS1115 extends SensorBase {
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -21,6 +23,7 @@ export class ESP32_ADS1115 extends SensorBase {
     super(
       sdbSensor,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -53,11 +56,13 @@ export class ESP32_ADS1115 extends SensorBase {
     if (this.pin == null || !(this.pin in ["0", "1", "2", "3"])) {
       throw new Error(`Invalid pin: ${this.pin}. Must be one of '0', '1', '2', or '3'.`);
     }
-
+    const ipAddress = this.mdnsService.getIPAddressByHostName(this.hostName);
+    if (ipAddress == null) {
+      throw new Error(`Could not resolve IP address for host name: ${this.hostName}`);
+    }
     const calculatedGain = (this.gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
     const response = await fetch(
-      this.externalAddress +
-        `/api/sensors/ads1115/${this.address}/${this.pin}?gain=${calculatedGain}`,
+      `http://${ipAddress}/api/sensors/ads1115/${this.address}/${this.pin}?gain=${calculatedGain}`,
       {
         method: "GET",
       },

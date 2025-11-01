@@ -11,6 +11,7 @@ import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { MdnsService } from "../../system/MdnsService";
 
 class OutputList implements AsyncDisposable {
   #sprootDB: ISprootDB;
@@ -28,6 +29,7 @@ class OutputList implements AsyncDisposable {
 
   constructor(
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -38,6 +40,7 @@ class OutputList implements AsyncDisposable {
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
       this.#sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -47,6 +50,7 @@ class OutputList implements AsyncDisposable {
     );
     this.#ESP32_PCA9685 = new ESP32_PCA9685(
       this.#sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -56,6 +60,7 @@ class OutputList implements AsyncDisposable {
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
       this.#sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

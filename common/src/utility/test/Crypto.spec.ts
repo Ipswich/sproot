@@ -7,7 +7,6 @@ describe("Crypto.ts tests", () => {
 
   it("should encrypt and decrypt a string correctly", () => {
     const encrypted = encrypt(testString, testSecret);
-    console.log(encrypted);
     assert.isString(encrypted);
     assert.notEqual(encrypted, testString);
     const decrypted = decrypt(encrypted, testSecret);

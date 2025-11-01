@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
       table.increments("id").notNullable();
       table.string("name").notNullable();
       table.string("type").notNullable();
-      table.string("address").notNullable();
+      table.string("hostName").notNullable();
       table.string("secureToken").defaultTo(null);
       table.primary(["id"]);
     });

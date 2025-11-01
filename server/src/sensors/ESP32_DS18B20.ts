@@ -2,16 +2,17 @@ import winston from "winston";
 
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MdnsService } from "../system/MdnsService";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 
 class ESP32_DS18B20 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
-  static deviceRecord: Record<string, string[]> = {};
 
   constructor(
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -21,6 +22,7 @@ class ESP32_DS18B20 extends SensorBase {
     super(
       sdbSensor,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -32,22 +34,17 @@ class ESP32_DS18B20 extends SensorBase {
 
   override async initAsync(): Promise<ESP32_DS18B20 | null> {
     const sensor = await this.createSensorAsync(this.MAX_SENSOR_READ_TIME);
-    if (sensor && this.externalAddress != null && this.address != null) {
-      if (ESP32_DS18B20.deviceRecord[this.externalAddress] == null) {
-        ESP32_DS18B20.deviceRecord[this.externalAddress] = [];
-      }
-      if (!ESP32_DS18B20.deviceRecord[this.externalAddress]?.includes(this.address)) {
-        ESP32_DS18B20.deviceRecord[this.externalAddress]?.push(this.address);
-      }
-    }
-
     return sensor;
   }
 
   override async takeReadingAsync(): Promise<void> {
     const profiler = this.logger.startTimer();
     try {
-      const result = await readTemperatureFromDeviceAsync(this.externalAddress!, this.address!);
+      const ipAddress = this.mdnsService.getIPAddressByHostName(this.hostName);
+      if (ipAddress == null) {
+        throw new Error(`Could not resolve IP address for host name: ${this.hostName}`);
+      }
+      const result = await readTemperatureFromDeviceAsync(ipAddress, this.address!);
       if (result === false || isNaN(result)) {
         throw new Error("Invalid reading from sensor.");
       }
@@ -67,21 +64,12 @@ class ESP32_DS18B20 extends SensorBase {
 
   override [Symbol.asyncDispose](): Promise<void> {
     this.internalDispose();
-    if (ESP32_DS18B20.deviceRecord[this.externalAddress!]?.includes(this.address!)) {
-      const index = ESP32_DS18B20.deviceRecord[this.externalAddress!]?.indexOf(this.address!);
-      if (index != null && index > -1) {
-        ESP32_DS18B20.deviceRecord[this.externalAddress!]?.splice(index, 1);
-      }
-      if (ESP32_DS18B20.deviceRecord[this.externalAddress!]?.length === 0) {
-        delete ESP32_DS18B20.deviceRecord[this.externalAddress!];
-      }
-    }
     return Promise.resolve();
   }
 
-  static async getAddressesAsync(externalAddress: string): Promise<string[]> {
+  static async getAddressesAsync(hostName: string): Promise<string[]> {
     try {
-      const response = await fetch(`${externalAddress}/api/sensors/ds18b20/addresses`, {
+      const response = await fetch(`http://${hostName}/api/sensors/ds18b20/addresses`, {
         method: "GET",
       });
       if (response.ok) {
@@ -100,7 +88,7 @@ async function readTemperatureFromDeviceAsync(
   externalAddress: string,
   address: string,
 ): Promise<number | false> {
-  const response = await fetch(`${externalAddress}/api/sensors/ds18b20/${address}`, {
+  const response = await fetch(`http://${externalAddress}/api/sensors/ds18b20/${address}`, {
     method: "GET",
   });
   if (response.ok) {

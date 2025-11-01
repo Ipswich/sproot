@@ -12,11 +12,12 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { MdnsService } from "../../system/MdnsService";
 
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
   readonly model: keyof typeof Models;
-  readonly externalAddress: string | null = null;
+  readonly hostName: string | null = null;
   readonly address: string;
   readonly pin: string;
   readonly secureToken: string | null = null;
@@ -28,6 +29,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   color: string;
   automationTimeout: number;
   readonly sprootDB: ISprootDB;
+  readonly mdnsService: MdnsService;
   readonly logger: winston.Logger;
   #cache: OutputCache;
   #initialCacheLookback: number;
@@ -40,6 +42,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   constructor(
     sdbOutput: SDBOutput,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -48,7 +51,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   ) {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
-    this.externalAddress = sdbOutput.externalAddress;
+    this.hostName = sdbOutput.hostName;
     this.address = sdbOutput.address;
     this.pin = sdbOutput.pin;
     this.name = sdbOutput.name;
@@ -60,6 +63,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.color = sdbOutput.color;
     this.automationTimeout = sdbOutput.automationTimeout;
     this.sprootDB = sprootDB;
+    this.mdnsService = mdnsService;
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
@@ -80,7 +84,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     const {
       id,
       model,
-      externalAddress,
+      hostName,
       address,
       name,
       externalDeviceName,
@@ -94,7 +98,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     return {
       id,
       model,
-      externalAddress,
+      hostName,
       address,
       name,
       externalDeviceName,

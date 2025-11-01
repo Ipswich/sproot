@@ -3,6 +3,7 @@ import winston from "winston";
 
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MdnsService } from "../system/MdnsService";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 
@@ -12,6 +13,7 @@ class DS18B20 extends SensorBase {
   constructor(
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -21,6 +23,7 @@ class DS18B20 extends SensorBase {
     super(
       sdbSensor,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

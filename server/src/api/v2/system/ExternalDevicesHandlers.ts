@@ -21,7 +21,7 @@ export async function getExternalDevicesHandlerAsync(
         return deviceWithoutToken;
       }),
       unrecognized: mdnsService.devices.filter((service) => {
-        return !recognizedDevices.some((device) => device.name === service.name);
+        return !recognizedDevices.some((device) => device.hostName === service.hostName);
       }),
     };
 
@@ -49,13 +49,13 @@ export async function postExternalDevicesHandlerAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const { name, address } = request.body;
+  const { name, hostName } = request.body;
 
   const errorStrings: string[] = [];
   if (!name || typeof name !== "string") {
     errorStrings.push("Invalid or missing 'name' field.");
   }
-  if (!address || typeof address !== "string") {
+  if (!hostName || typeof hostName !== "string") {
     errorStrings.push("Invalid or missing 'address' field.");
   }
 
@@ -74,16 +74,16 @@ export async function postExternalDevicesHandlerAsync(
   try {
     const newDevice = {
       name,
-      address: address,
+      hostName,
       type: "ESP32",
       secureToken: randomBytes(32).toString("hex"),
     } as SDBExternalDevice;
-    await sprootDB.addExternalDeviceAsync(newDevice);
+    const id = await sprootDB.addExternalDeviceAsync(newDevice);
 
     return {
       statusCode: 201,
       content: {
-        data: newDevice,
+        data: { id, name: newDevice.name, hostName: newDevice.hostName },
       },
       ...response.locals["defaultProperties"],
     };

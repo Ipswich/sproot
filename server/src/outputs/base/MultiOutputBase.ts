@@ -6,12 +6,14 @@ import { SDBOutputState } from "@sproot/database/SDBOutputState";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
+import { MdnsService } from "../../system/MdnsService";
 
 export abstract class MultiOutputBase implements AsyncDisposable {
   readonly boardRecord: Record<string, any> = {};
   readonly outputs: Record<string, OutputBase> = {};
   readonly usedPins: Record<string, string[] | Record<string, string[]>> = {};
   protected sprootDB: ISprootDB;
+  protected mdnsService: MdnsService;
   protected frequency: number;
   protected maxCacheSize: number;
   protected initialCacheLookback: number;
@@ -21,6 +23,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
 
   constructor(
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -29,6 +32,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     logger: winston.Logger,
   ) {
     this.sprootDB = sprootDB;
+    this.mdnsService = mdnsService;
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
@@ -60,10 +64,8 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     this.outputs[outputId]?.setAndExecuteStateAsync(newState);
 
   disposeOutputAsync(output: OutputBase): Promise<void> {
-    if (output.externalAddress) {
-      const usedPins = (this.usedPins[output.externalAddress] as Record<string, string[]>)[
-        output.address
-      ];
+    if (output.hostName) {
+      const usedPins = (this.usedPins[output.hostName] as Record<string, string[]>)[output.address];
       return this.#disposeOutputHelperAsync(output, usedPins);
     } else {
       const usedPins = this.usedPins[output.address];

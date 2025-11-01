@@ -1,4 +1,5 @@
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { MdnsService } from "../system/MdnsService";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
@@ -9,6 +10,7 @@ class ESP32_BME280 extends SensorBase {
   constructor(
     sdbsensor: SDBSensor,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -18,6 +20,7 @@ class ESP32_BME280 extends SensorBase {
     super(
       sdbsensor,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -34,8 +37,12 @@ class ESP32_BME280 extends SensorBase {
   override async takeReadingAsync(): Promise<void> {
     const profiler = this.logger.startTimer();
     try {
+      const ipAddress = this.mdnsService.getIPAddressByHostName(this.hostName);
+      if (ipAddress == null) {
+        throw new Error(`Could not resolve IP address for host name: ${this.hostName}`);
+      }
       this.lastReadingTime = new Date();
-      const response = await fetch(this.externalAddress + `/api/sensors/bme280/${this.address}`, {
+      const response = await fetch(`http://${ipAddress}/api/sensors/bme280/${this.address}`, {
         method: "GET",
       });
       if (response.ok) {

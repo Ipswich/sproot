@@ -1,6 +1,7 @@
 import bme280 from "bme280";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MdnsService } from "../system/MdnsService";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
@@ -10,6 +11,7 @@ class BME280 extends SensorBase {
   constructor(
     sdbsensor: SDBSensor,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -19,6 +21,7 @@ class BME280 extends SensorBase {
     super(
       sdbsensor,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

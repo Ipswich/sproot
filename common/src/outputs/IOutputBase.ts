@@ -9,7 +9,7 @@ enum ControlMode {
 interface IOutputBase {
   id: number;
   model: keyof typeof Models;
-  externalAddress: string | null;
+  hostName: string | null;
   address: string;
   name: string | null;
   pin: string;

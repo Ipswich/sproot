@@ -9,6 +9,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
+import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("DS18B20.ts tests", function () {
@@ -17,6 +18,7 @@ describe("DS18B20.ts tests", function () {
   });
 
   it("should create but not initialize a DS18B20 sensor", async function () {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockDS18B20Data = {
       id: 1,
       name: "test sensor 1",
@@ -33,7 +35,16 @@ describe("DS18B20.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    const ds18b20Sensor = new DS18B20(
+      mockDS18B20Data,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     assert.isTrue(ds18b20Sensor instanceof DS18B20);
     assert.equal(ds18b20Sensor.id, mockDS18B20Data.id);
@@ -44,6 +55,7 @@ describe("DS18B20.ts tests", function () {
   });
 
   it("should get a reading from a DS18B20 sensor, gracefully handling errors", async function () {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockDS18B20Data = {
       id: 1,
       name: "test sensor 1",
@@ -63,7 +75,16 @@ describe("DS18B20.ts tests", function () {
     let mockReading = "47 01 55 05 7f a5 a5 66 eb : crc=eb YES\n47 01 55 05 7f a5 a5 66 eb t=20437";
     const readFileStub = sinon.stub(promises, "readFile").resolves(mockReading);
 
-    await using ds18b20Sensor = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor = new DS18B20(
+      mockDS18B20Data,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
     await ds18b20Sensor.takeReadingAsync();
 
     assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(20.437));
@@ -71,7 +92,16 @@ describe("DS18B20.ts tests", function () {
     //Not a number reading
     mockReading = "47 01 55 05 7f a5 a5 66 eb : crc=eb YES\n47 01 55 05 7f a5 a5 66 eb t=test";
     readFileStub.resolves(mockReading);
-    await using ds18b20Sensor2 = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor2 = new DS18B20(
+      mockDS18B20Data,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     await ds18b20Sensor2.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor2.lastReading[ReadingType.temperature]);
@@ -81,7 +111,16 @@ describe("DS18B20.ts tests", function () {
     //No reading whatsoever
     mockReading = "YES";
     readFileStub.resolves(mockReading);
-    await using ds18b20Sensor3 = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor3 = new DS18B20(
+      mockDS18B20Data,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     await ds18b20Sensor3.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor3.lastReading[ReadingType.temperature]);
@@ -91,7 +130,16 @@ describe("DS18B20.ts tests", function () {
     //Error reading
     mockReading = "47 01 55 05 7f a5 a5 66 eb : crc=eb NO\n47 01 55 05 7f a5 a5 66 eb t=20437";
     readFileStub.resolves(mockReading);
-    await using ds18b20Sensor4 = new DS18B20(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor4 = new DS18B20(
+      mockDS18B20Data,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     await ds18b20Sensor4.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor4.lastReading[ReadingType.temperature]);
@@ -111,6 +159,7 @@ describe("DS18B20.ts tests", function () {
   });
 
   it("should load cached readings from the database, initializing a sensor", async function () {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockDS18B20Data = {
       id: 1,
       name: "test sensor 1",
@@ -146,6 +195,7 @@ describe("DS18B20.ts tests", function () {
     await using ds18b20Sensor = await new DS18B20(
       mockDS18B20Data,
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,

@@ -27,17 +27,31 @@ export class MdnsService implements Disposable {
     return this.#browser.services;
   }
 
-  get devices(): { name: string; host: string; address: string | string[] }[] {
-    const record: { name: string; host: string; address: string | string[] }[] = [];
+  get devices(): { name: string; hostName: string; address: string | string[] }[] {
+    const record: { name: string; hostName: string; address: string | string[] }[] = [];
     for (const service of this.#browser.services) {
       if (!service.addresses || service.addresses.length === 0) {
         continue;
       }
       const host = service.host;
       const address = service.addresses.length === 1 ? service.addresses[0]! : service.addresses;
-      record.push({ name: service.name, host, address });
+      record.push({ name: service.name, hostName: host, address });
     }
     return record;
+  }
+
+  getIPAddressByHostName(hostName: string | null): string | null {
+    if (hostName == null) {
+      return null;
+    }
+    for (const service of this.#browser.services) {
+      if (service.host === hostName) {
+        if (service.addresses && service.addresses.length > 0) {
+          return service.addresses[0]!;
+        }
+      }
+    }
+    return null;
   }
 
   [Symbol.dispose](): void {

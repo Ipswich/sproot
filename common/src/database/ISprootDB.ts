@@ -68,7 +68,7 @@ interface ISprootDB {
 
   getExternalDevicesAsync(): Promise<SDBExternalDevice[]>;
   deleteExternalDeviceAsync(id: number): Promise<void>;
-  addExternalDeviceAsync(sensor: SDBExternalDevice): Promise<void>;
+  addExternalDeviceAsync(sensor: SDBExternalDevice): Promise<number>;
 
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
@@ -330,8 +330,8 @@ class MockSprootDB implements ISprootDB {
     return;
   }
 
-  async addExternalDeviceAsync(_externalDevice: SDBExternalDevice): Promise<void> {
-    return;
+  async addExternalDeviceAsync(_externalDevice: SDBExternalDevice): Promise<number> {
+    return 1;
   }
 
   async updateSensorAsync(_sensor: SDBSensor): Promise<void> {

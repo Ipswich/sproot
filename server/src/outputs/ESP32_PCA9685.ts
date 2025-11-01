@@ -4,10 +4,12 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
+import { MdnsService } from "../system/MdnsService";
 
 class ESP32_PCA9685 extends MultiOutputBase {
   constructor(
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -17,6 +19,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
   ) {
     super(
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -27,22 +30,23 @@ class ESP32_PCA9685 extends MultiOutputBase {
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
-    if (output.externalAddress == undefined) {
-      this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing externalAddress.`);
+    if (output.hostName == undefined) {
+      this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing hostName.`);
       return undefined;
     }
 
     //Create new PCA9685 if one doesn't exist for this address.
-    if (!this.usedPins[output.externalAddress]) {
-      this.usedPins[output.externalAddress] = {};
+    if (!this.usedPins[output.hostName]) {
+      this.usedPins[output.hostName] = {};
     }
-    if (!(this.usedPins[output.externalAddress] as Record<string, string[]>)[output.address]) {
-      (this.usedPins[output.externalAddress] as Record<string, string[]>)[output.address] = [];
+    if (!(this.usedPins[output.hostName] as Record<string, string[]>)[output.address]) {
+      (this.usedPins[output.hostName] as Record<string, string[]>)[output.address] = [];
     }
 
     this.outputs[output.id] = new ESP32_PCA9685Output(
       output,
       this.sprootDB,
+      this.mdnsService,
       this.maxCacheSize,
       this.initialCacheLookback,
       this.maxChartDataSize,
@@ -50,9 +54,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.logger,
     );
     await this.outputs[output.id]?.initializeAsync();
-    (this.usedPins[output.externalAddress] as Record<string, string[]>)[output.address]?.push(
-      output.pin,
-    );
+    (this.usedPins[output.hostName] as Record<string, string[]>)[output.address]?.push(output.pin);
     return this.outputs[output.id];
   }
 
@@ -74,6 +76,7 @@ class ESP32_PCA9685Output extends OutputBase {
   constructor(
     output: SDBOutput,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -83,6 +86,7 @@ class ESP32_PCA9685Output extends OutputBase {
     super(
       output,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -102,9 +106,15 @@ class ESP32_PCA9685Output extends OutputBase {
   }
 
   async #setPCA9685ValueAsync(value: number): Promise<void> {
+    const ipAddress = this.mdnsService.getIPAddressByHostName(this.outputData.hostName);
+    if (ipAddress == null) {
+      this.logger.error(
+        `Failed to set PCA9685 output ${this.outputData.id} value. Unable to resolve hostname ${this.outputData.hostName}.`,
+      );
+      return;
+    }
     await fetch(
-      this.outputData.externalAddress +
-        `/api/outputs/pca9685/${this.outputData.address}/${this.outputData.pin}`,
+      `http://${ipAddress}/api/outputs/pca9685/${this.outputData.address}/${this.outputData.pin}`,
       {
         method: "PUT",
         headers: {

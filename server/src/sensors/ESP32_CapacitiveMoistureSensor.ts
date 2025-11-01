@@ -1,6 +1,7 @@
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { ESP32_ADS1115 } from "./ESP32_ADS1115";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MdnsService } from "../system/MdnsService";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import winston from "winston";
 
@@ -17,6 +18,7 @@ export class ESP32_CapacitiveMoistureSensor extends ESP32_ADS1115 {
   constructor(
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -28,6 +30,7 @@ export class ESP32_CapacitiveMoistureSensor extends ESP32_ADS1115 {
       ReadingType.moisture,
       ESP32_CapacitiveMoistureSensor.GAIN,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

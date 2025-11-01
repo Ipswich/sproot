@@ -639,7 +639,7 @@ describe("API Tests", async () => {
         "id",
         "name",
         "model",
-        "externalAddress",
+        "hostName",
         "externalDeviceName",
         "address",
         "color",
@@ -1027,6 +1027,28 @@ describe("API Tests", async () => {
 
           assert.isArray(data.unrecognized);
           assert.isArray(data.recognized);
+        });
+      });
+
+      describe("POST", async () => {
+        it("should return a 204 and add an external device to the database", async () => {
+          let externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
+          assert.isEmpty(externalDevices);
+          await request(server)
+            .post("/api/v2/system/external-devices")
+            .send({
+              name: "Test Device",
+              hostName: "sproot-device-8af4.local",
+            })
+            .expect(201);
+
+          externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
+          assert.lengthOf(externalDevices, 1);
+          assert.equal(externalDevices[0].id, 1);
+          assert.equal(externalDevices[0].name, "Test Device");
+          assert.equal(externalDevices[0].hostName, "sproot-device-8af4.local");
+          assert.equal(externalDevices[0].type, "ESP32");
+          assert.isString(externalDevices[0].secureToken);
         });
       });
     });

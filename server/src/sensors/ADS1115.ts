@@ -1,5 +1,6 @@
 import { openPromisified, PromisifiedBus } from "i2c-bus";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { MdnsService } from "../system/MdnsService";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
@@ -13,6 +14,7 @@ export class ADS1115 extends SensorBase {
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -22,6 +24,7 @@ export class ADS1115 extends SensorBase {
     super(
       sdbSensor,
       sprootDB,
+      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

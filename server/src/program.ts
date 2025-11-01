@@ -39,6 +39,9 @@ export default async function setupAsync(): Promise<Express> {
 
   await defaultUserCheck(sprootDB, logger);
 
+  const mdnsService = new MdnsService(logger);
+  app.set("bonjourService", mdnsService);
+
   logger.info("Creating camera manager. . .");
   const cameraManager = new CameraManager(
     sprootDB,
@@ -50,6 +53,7 @@ export default async function setupAsync(): Promise<Express> {
   logger.info("Creating sensor and output lists. . .");
   const sensorList = new SensorList(
     sprootDB,
+    mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
     Constants.MAX_CHART_DATA_POINTS,
@@ -59,6 +63,7 @@ export default async function setupAsync(): Promise<Express> {
   app.set("sensorList", sensorList);
   const outputList = new OutputList(
     sprootDB,
+    mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
     Constants.MAX_CHART_DATA_POINTS,
@@ -69,9 +74,6 @@ export default async function setupAsync(): Promise<Express> {
 
   const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB, knexConnection);
   app.set("systemStatusMonitor", systemStatusMonitor);
-
-  const mdnsService = new MdnsService(logger);
-  app.set("bonjourService", mdnsService);
 
   logger.info("Initializing camera manager, and sensor and output lists. . .");
   await Promise.all([

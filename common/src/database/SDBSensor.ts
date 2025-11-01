@@ -5,7 +5,7 @@ type SDBSensor = {
   name: string;
   externalDeviceName: string | null;
   model: keyof typeof Models;
-  externalAddress: string | null;
+  hostName: string | null;
   address: string | null;
   secureToken: string | null;
   color: string;

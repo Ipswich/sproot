@@ -4548,11 +4548,11 @@ components:
     SDBExternalDevice:
       description: >
         An external device object that is stored in the database. Likely means an ESP32. Contains all the information needed to 
-        reference an external device, including name, ID, and address.
+        reference an external device, including name, ID, and host name.
       type: object
       required:
         - "name"
-        - "address"
+        - "hostName"
       properties:
         id:
           type: number
@@ -4561,7 +4561,7 @@ components:
         name:
           type: string
           example: "sproot-esp32-1C78"
-        address:
+        hostName:
           type: string
           example: "sproot-esp32-1C78.local"
 

@@ -8,6 +8,7 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
+import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("ADS1115.ts tests", function () {
@@ -15,6 +16,7 @@ describe("ADS1115.ts tests", function () {
     sinon.restore();
   });
   it("should initialize an ADS1115 sensor", async () => {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockADS1115Data = {
       id: 1,
       name: "test sensor 1",
@@ -56,6 +58,7 @@ describe("ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,
@@ -74,6 +77,7 @@ describe("ADS1115.ts tests", function () {
   });
 
   it("should take a reading from an ADS1115 sensor", async () => {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockADS1115Data = {
       id: 1,
       name: "test sensor 1",
@@ -102,6 +106,7 @@ describe("ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,
@@ -120,6 +125,7 @@ describe("ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,
@@ -134,6 +140,7 @@ describe("ADS1115.ts tests", function () {
   });
 
   it("should run takeReadingAsync sequentially between two sensors", async () => {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const clock = sinon.useFakeTimers();
     const mockADS1115Data1 = {
       id: 1,
@@ -174,6 +181,7 @@ describe("ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,
@@ -186,6 +194,7 @@ describe("ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,
@@ -198,6 +207,7 @@ describe("ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,

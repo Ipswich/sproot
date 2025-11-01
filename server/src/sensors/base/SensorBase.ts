@@ -8,11 +8,12 @@ import { SensorChartData } from "./SensorChartData";
 import { SensorCache } from "./SensorCache";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { MdnsService } from "../../system/MdnsService";
 
 export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   readonly id: number;
   readonly model: keyof typeof Models;
-  readonly externalAddress: string | null = null;
+  readonly hostName: string | null = null;
   readonly address: string | null;
   readonly secureToken: string | null = null;
   readonly externalDeviceName: string | null = null;
@@ -25,6 +26,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   highCalibrationPoint: number | null = null;
   readonly units: Record<ReadingType, string>;
   readonly sprootDB: ISprootDB;
+  readonly mdnsService: MdnsService;
   readonly logger: winston.Logger;
   #updateInterval: NodeJS.Timeout | null = null;
   #cache: SensorCache;
@@ -38,6 +40,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   constructor(
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
+    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -48,7 +51,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     this.id = sdbSensor.id;
     this.name = sdbSensor.name;
     this.model = sdbSensor.model;
-    this.externalAddress = sdbSensor.externalAddress;
+    this.hostName = sdbSensor.hostName;
     this.address = sdbSensor.address;
     this.externalDeviceName = sdbSensor.externalDeviceName;
     this.secureToken = sdbSensor.secureToken;
@@ -57,6 +60,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.sprootDB = sprootDB;
+    this.mdnsService = mdnsService;
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
     this.#initialCacheLookback = initialCacheLookback;

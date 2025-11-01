@@ -9,6 +9,7 @@ import { assert } from "chai";
 import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
+import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_ADS1115.ts tests", function () {
@@ -16,6 +17,7 @@ describe("ESP32_ADS1115.ts tests", function () {
     sinon.restore();
   });
   it("should initialize an ESP32_ADS1115 sensor", async () => {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockADS1115Data = {
       id: 1,
       name: "test sensor 1",
@@ -53,6 +55,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,
@@ -72,6 +75,8 @@ describe("ESP32_ADS1115.ts tests", function () {
 
   it("should take a reading from an ESP32_ADS1115 sensor", async () => {
     let callCount = 0;
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
+    mockMdnsService.getIPAddressByHostName.returns("127.0.0.5");
     const scope = nock("http://127.0.0.5")
       .get(new RegExp("^/api/sensors/ads1115/0x48/[0-3]"))
       .reply(200, () => {
@@ -82,7 +87,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       id: 1,
       name: "test sensor 1",
       model: "ESP32_ADS1115",
-      externalAddress: "http://127.0.0.5",
+      hostName: "sproot-device-7ab3.local",
       address: "0x48",
       pin: "0",
     } as SDBSensor;
@@ -104,6 +109,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,
@@ -122,6 +128,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
+      mockMdnsService,
       5,
       5,
       3,

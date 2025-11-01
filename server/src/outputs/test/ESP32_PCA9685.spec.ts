@@ -10,6 +10,7 @@ import { assert } from "chai";
 import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
+import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_PCA9685.ts tests", function () {
@@ -18,6 +19,8 @@ describe("ESP32_PCA9685.ts tests", function () {
   });
 
   it("should create and delete PCA9685 outputs", async function () {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
+    mockMdnsService.getIPAddressByHostName.returns("127.0.0.1");
     const scope = nock("http://127.0.0.1")
       .persist()
       .put(/^\/api\/outputs\/pca9685\/0x(?:[0-7][0-9A-Fa-f]|[0-9A-Fa-f])\/(?:[0-9]|1[0-5])$/)
@@ -28,7 +31,7 @@ describe("ESP32_PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new ESP32_PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new ESP32_PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -45,7 +48,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const output2 = await pca9685.createOutputAsync({
       id: 2,
       model: Models.ESP32_PCA9685,
-      externalAddress: "http://127.0.0.1",
+      hostName: "sproot-device.local",
       address: "0x40",
       name: "test output 2",
       pin: "1",
@@ -55,7 +58,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const output3 = await pca9685.createOutputAsync({
       id: 3,
       model: Models.ESP32_PCA9685,
-      externalAddress: "http://127.0.0.1",
+      hostName: "sproot-device.local",
       address: "0x40",
       name: "test output 3",
       pin: "2",
@@ -65,7 +68,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const output4 = await pca9685.createOutputAsync({
       id: 4,
       model: Models.ESP32_PCA9685,
-      externalAddress: "http://127.0.0.1",
+      hostName: "sproot-device.local",
       address: "0x40",
       name: "test output 4",
       pin: "3",
@@ -75,7 +78,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     assert.equal(Object.keys(pca9685.outputs).length, 3);
     assert.exists(pca9685.outputs["4"]);
     assert.equal(
-      (pca9685.usedPins["http://127.0.0.1"] as Record<string, string[]>)["0x40"]!.length,
+      (pca9685.usedPins["sproot-device.local"] as Record<string, string[]>)["0x40"]!.length,
       3,
     );
 
@@ -83,7 +86,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     await pca9685.disposeOutputAsync(output4!);
     assert.equal(Object.keys(pca9685.outputs).length, 2);
     assert.equal(
-      (pca9685.usedPins["http://127.0.0.1"] as Record<string, string[]>)["0x40"]!.length,
+      (pca9685.usedPins["sproot-device.local"] as Record<string, string[]>)["0x40"]!.length,
       2,
     );
     assert.isUndefined(pca9685.outputs["4"]);
@@ -95,22 +98,24 @@ describe("ESP32_PCA9685.ts tests", function () {
     await pca9685.disposeOutputAsync(output2!);
     await pca9685.disposeOutputAsync(output3!);
     assert.equal(Object.keys(pca9685.outputs).length, 0);
-    assert.isEmpty((pca9685.usedPins["http://127.0.0.1"] as Record<string, string[]>)["0x40"]);
+    assert.isEmpty((pca9685.usedPins["sproot-device.local"] as Record<string, string[]>)["0x40"]);
 
     scope.done();
   });
 
   it("should return output data (no functions)", async function () {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
+    mockMdnsService.getIPAddressByHostName.returns("127.0.0.5");
     sinon
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new ESP32_PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new ESP32_PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.ESP32_PCA9685,
-      externalAddress: "http://127.0.0.1",
+      hostName: "sproot-device.local",
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -120,7 +125,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const outputData = pca9685.outputData;
 
     assert.equal(outputData["1"]!["name"], "test output 1");
-    assert.equal(outputData["1"]!["externalAddress"], "http://127.0.0.1");
+    assert.equal(outputData["1"]!["hostName"], "sproot-device.local");
     assert.equal(outputData["1"]!["pin"], "0");
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
@@ -128,6 +133,8 @@ describe("ESP32_PCA9685.ts tests", function () {
   });
 
   it("should update and apply states with respect to control mode", async function () {
+    const mockMdnsService = sinon.createStubInstance(MdnsService);
+    mockMdnsService.getIPAddressByHostName.returns("127.0.0.2");
     sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
@@ -155,11 +162,11 @@ describe("ESP32_PCA9685.ts tests", function () {
         return { status: "ok" };
       });
 
-    const pca9685 = new ESP32_PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new ESP32_PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
-      externalAddress: "http://127.0.0.2",
+      hostName: "sproot-device.local",
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -214,7 +221,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
-      externalAddress: "http://127.0.0.2",
+      hostName: "sproot-device.local",
       address: "0x40",
       name: "test output 1",
       pin: "0",
