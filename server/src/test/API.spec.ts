@@ -1051,6 +1051,41 @@ describe("API Tests", async () => {
           assert.isString(externalDevices[0].secureToken);
         });
       });
+
+      describe("PATCH", async () => {
+        it("should return a 200 and update an external device in the database", async () => {
+          let externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
+          const secureToken = externalDevices[0].secureToken;
+          assert.lengthOf(externalDevices, 1);
+          assert.equal(externalDevices[0].name, "Test Device");
+
+          await request(server)
+            .patch("/api/v2/system/external-devices/1")
+            .send({
+              name: "Updated Test Device",
+            })
+            .expect(200);
+
+          externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
+          assert.lengthOf(externalDevices, 1);
+          assert.equal(externalDevices[0].name, "Updated Test Device");
+          assert.equal(externalDevices[0].hostName, "sproot-device-8af4.local");
+          assert.equal(externalDevices[0].type, "ESP32");
+          assert.equal(externalDevices[0].secureToken, secureToken);
+        });
+      });
+
+      describe("DELETE", async () => {
+        it("should return a 200 and delete an external device from the database", async () => {
+          let externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
+          assert.lengthOf(externalDevices, 1);
+
+          await request(server).delete("/api/v2/system/external-devices/1").expect(200);
+
+          externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
+          assert.lengthOf(externalDevices, 0);
+        });
+      });
     });
   });
 

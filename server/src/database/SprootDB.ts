@@ -97,8 +97,17 @@ export class SprootDB implements ISprootDB {
     return (await this.#connection("external_devices").insert(copy))[0] ?? -1;
   }
 
-  async deleteExternalDeviceAsync(id: number): Promise<void> {
-    return this.#connection("external_devices").where("id", id).delete();
+  async deleteExternalDeviceAsync(id: number): Promise<number> {
+    return await this.#connection("external_devices").where("id", id).delete();
+  }
+
+  async updateExternalDeviceAsync(externalDevice: SDBExternalDevice): Promise<number> {
+    // Only name can be updated for now
+    return await this.#connection("external_devices").where("id", externalDevice.id).update({
+      name: externalDevice.name,
+      type: externalDevice.type,
+      hostName: externalDevice.hostName,
+    });
   }
 
   async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {

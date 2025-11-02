@@ -471,6 +471,170 @@ paths:
                           details:
                             items:
                               example: "Failed to add external device."
+  /api/v2/system/external-devices/{deviceId}:
+    patch:
+      tags:
+        - "System"
+      summary: Update an external device.
+      description: >
+        Updates an existing external device in the system.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "External Device Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Sproot-ESP32-1C78"
+      responses:
+        200:
+          description: "External device updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBExternalDevice"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            example:
+                              - "Missing required field: name"
+        404:
+          description: "External device not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            items:
+                              example: "External device with ID 1 not found."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            items:
+                              example: "Failed to update external device."
+    delete:
+      tags:
+        - "System"
+      summary: Delete an external device.
+      description: >
+        Deletes an existing external device from the system.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "External Device Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "External device deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "External device successfully deleted."
+        404:
+          description: "External device not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            items:
+                              example: "External device with ID 1 not found."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/external-devices"
+                          details:
+                            items:
+                              example: "Failed to delete external device."
 
 
   /api/v2/ping:

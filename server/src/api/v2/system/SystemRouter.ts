@@ -4,6 +4,8 @@ import { systemStatusMonitorHandlerAsync } from "./StatusMonitorHandlers";
 import {
   getExternalDevicesHandlerAsync,
   postExternalDevicesHandlerAsync,
+  patchExternalDevicesHandlerAsync,
+  deleteExternalDevicesHandlerAsync,
 } from "./ExternalDevicesHandlers";
 
 const router = express.Router();
@@ -31,6 +33,20 @@ router.get("/external-devices", async (req: Request, res: Response) => {
 
 router.post("/external-devices", async (req: Request, res: Response) => {
   const response = await postExternalDevicesHandlerAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.patch("/external-devices/:deviceId", async (req: Request, res: Response) => {
+  const response = await patchExternalDevicesHandlerAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.delete("/external-devices/:deviceId", async (req: Request, res: Response) => {
+  const response = await deleteExternalDevicesHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

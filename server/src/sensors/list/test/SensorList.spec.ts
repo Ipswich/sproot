@@ -266,17 +266,15 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    sinon
-      .stub(MockSprootDB.prototype, "getExternalDevicesAsync")
-      .resolves([
-        {
-          id: 1,
-          hostName: "sproot-device-7ab3.local",
-          type: "ESP32",
-          name: "Test ESP32",
-          secureToken: null,
-        } as SDBExternalDevice,
-      ]);
+    sinon.stub(MockSprootDB.prototype, "getExternalDevicesAsync").resolves([
+      {
+        id: 1,
+        hostName: "sproot-device-7ab3.local",
+        type: "ESP32",
+        name: "Test ESP32",
+        secureToken: null,
+      } as SDBExternalDevice,
+    ]);
     const mockGetDS18B20AddressesAsync = sinon.stub(
       MockSprootDB.prototype,
       "getDS18B20AddressesAsync",
