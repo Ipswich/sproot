@@ -9,7 +9,6 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("CapacitiveMoistureSensor.ts tests", function () {
@@ -18,7 +17,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
   });
 
   it("should initialize a CapacitiveMoistureSensor", async () => {
-    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockSensorData = {
       id: 1,
       name: "test sensor 1",
@@ -59,7 +57,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     await using sensor = await new CapacitiveMoistureSensor(
       mockSensorData,
       mockSprootDB,
-      mockMdnsService,
       5,
       5,
       3,
@@ -78,7 +75,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
   });
 
   it("should take a reading from a CapacitiveMoistureSensor", async () => {
-    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const stubbedMockDB = sinon.createStubInstance(MockSprootDB);
     const mockReading = 15000;
     stubbedMockDB.getSensorReadingsAsync.resolves([]);
@@ -108,7 +104,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     await using capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
       mockADS1115Data,
       stubbedMockDB,
-      mockMdnsService,
       5,
       5,
       3,
@@ -151,7 +146,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     await using capacitiveMoistureSensor2 = await new CapacitiveMoistureSensor(
       mockADS1115Data,
       stubbedMockDB,
-      mockMdnsService,
       500,
       500,
       3,
@@ -171,7 +165,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     await using capacitiveMoistureSensor3 = await new CapacitiveMoistureSensor(
       mockADS1115Data,
       stubbedMockDB,
-      mockMdnsService,
       5,
       5,
       3,

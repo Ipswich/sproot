@@ -1,4 +1,4 @@
-type SDBExternalDevice = {
+type SDBSubcontroller = {
   id: number;
   name: string;
   type: string;
@@ -6,4 +6,4 @@ type SDBExternalDevice = {
   secureToken: string | null;
 };
 
-export type { SDBExternalDevice };
+export type { SDBSubcontroller };

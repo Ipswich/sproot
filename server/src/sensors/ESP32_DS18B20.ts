@@ -5,12 +5,16 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { MdnsService } from "../system/MdnsService";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 
 class ESP32_DS18B20 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
+  #mdnsService: MdnsService;
+  subcontroller: SDBSubcontroller;
 
   constructor(
     sdbSensor: SDBSensor,
+    subcontroller: SDBSubcontroller,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -22,7 +26,6 @@ class ESP32_DS18B20 extends SensorBase {
     super(
       sdbSensor,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -30,6 +33,8 @@ class ESP32_DS18B20 extends SensorBase {
       [ReadingType.temperature],
       logger,
     );
+    this.#mdnsService = mdnsService;
+    this.subcontroller = subcontroller;
   }
 
   override async initAsync(): Promise<ESP32_DS18B20 | null> {
@@ -40,9 +45,11 @@ class ESP32_DS18B20 extends SensorBase {
   override async takeReadingAsync(): Promise<void> {
     const profiler = this.logger.startTimer();
     try {
-      const ipAddress = this.mdnsService.getIPAddressByHostName(this.hostName);
+      const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller!.hostName);
       if (ipAddress == null) {
-        throw new Error(`Could not resolve IP address for host name: ${this.hostName}`);
+        throw new Error(
+          `Could not resolve IP address for host name: ${this.subcontroller!.hostName}`,
+        );
       }
       const result = await readTemperatureFromDeviceAsync(ipAddress, this.address!);
       if (result === false || isNaN(result)) {

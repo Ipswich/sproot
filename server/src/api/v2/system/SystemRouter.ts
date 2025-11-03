@@ -2,11 +2,11 @@ import express, { Request, Response } from "express";
 import { powerOffHandler } from "./PowerOffHandlers";
 import { systemStatusMonitorHandlerAsync } from "./StatusMonitorHandlers";
 import {
-  getExternalDevicesHandlerAsync,
-  postExternalDevicesHandlerAsync,
-  patchExternalDevicesHandlerAsync,
-  deleteExternalDevicesHandlerAsync,
-} from "./ExternalDevicesHandlers";
+  getSubcontrollerHandlerAsync,
+  postSubcontrollerHandlerAsync,
+  patchSubcontrollerHandlerAsync,
+  deleteSubcontrollerAsync,
+} from "./SubcontrollerHandlers";
 
 const router = express.Router();
 
@@ -24,29 +24,29 @@ router.get("/status", async (req: Request, res: Response) => {
   return;
 });
 
-router.get("/external-devices", async (req: Request, res: Response) => {
-  const response = await getExternalDevicesHandlerAsync(req, res);
+router.get("/subcontrollers", async (req: Request, res: Response) => {
+  const response = await getSubcontrollerHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.post("/external-devices", async (req: Request, res: Response) => {
-  const response = await postExternalDevicesHandlerAsync(req, res);
+router.post("/subcontrollers", async (req: Request, res: Response) => {
+  const response = await postSubcontrollerHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.patch("/external-devices/:deviceId", async (req: Request, res: Response) => {
-  const response = await patchExternalDevicesHandlerAsync(req, res);
+router.patch("/subcontrollers/:deviceId", async (req: Request, res: Response) => {
+  const response = await patchSubcontrollerHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
 });
 
-router.delete("/external-devices/:deviceId", async (req: Request, res: Response) => {
-  const response = await deleteExternalDevicesHandlerAsync(req, res);
+router.delete("/subcontrollers/:deviceId", async (req: Request, res: Response) => {
+  const response = await deleteSubcontrollerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

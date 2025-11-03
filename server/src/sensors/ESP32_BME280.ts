@@ -4,11 +4,15 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 
 class ESP32_BME280 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;
+  #mdnsService: MdnsService;
+  subcontroller: SDBSubcontroller;
   constructor(
     sdbsensor: SDBSensor,
+    subcontroller: SDBSubcontroller,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -20,7 +24,6 @@ class ESP32_BME280 extends SensorBase {
     super(
       sdbsensor,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -28,6 +31,9 @@ class ESP32_BME280 extends SensorBase {
       [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
       logger,
     );
+
+    this.#mdnsService = mdnsService;
+    this.subcontroller = subcontroller;
   }
 
   override async initAsync(): Promise<ESP32_BME280 | null> {
@@ -37,9 +43,11 @@ class ESP32_BME280 extends SensorBase {
   override async takeReadingAsync(): Promise<void> {
     const profiler = this.logger.startTimer();
     try {
-      const ipAddress = this.mdnsService.getIPAddressByHostName(this.hostName);
+      const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
       if (ipAddress == null) {
-        throw new Error(`Could not resolve IP address for host name: ${this.hostName}`);
+        throw new Error(
+          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`,
+        );
       }
       this.lastReadingTime = new Date();
       const response = await fetch(`http://${ipAddress}/api/sensors/bme280/${this.address}`, {

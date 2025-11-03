@@ -1,7 +1,6 @@
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { ADS1115 } from "./ADS1115";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { MdnsService } from "../system/MdnsService";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import winston from "winston";
 
@@ -18,7 +17,6 @@ export class CapacitiveMoistureSensor extends ADS1115 {
   constructor(
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
-    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -30,7 +28,6 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       ReadingType.moisture,
       CapacitiveMoistureSensor.GAIN,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

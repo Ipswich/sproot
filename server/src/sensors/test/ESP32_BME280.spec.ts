@@ -9,6 +9,7 @@ import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_BME280.ts tests", function () {
@@ -17,6 +18,11 @@ describe("ESP32_BME280.ts tests", function () {
   });
   it("should initialize a BME280 sensor", async () => {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
@@ -74,6 +80,7 @@ describe("ESP32_BME280.ts tests", function () {
 
     await using bme280Sensor = await new ESP32_BME280(
       mockBME280Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -96,6 +103,11 @@ describe("ESP32_BME280.ts tests", function () {
 
   it("should get a reading from a BME280 sensor", async () => {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.3");
     let callCount = 0;
     const mockReading = {
@@ -113,7 +125,7 @@ describe("ESP32_BME280.ts tests", function () {
       id: 1,
       name: "test sensor 1",
       model: "ESP32_BME280",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
       address: "0x76",
     } as SDBSensor;
     const loggerSpy = sinon.spy();
@@ -129,6 +141,7 @@ describe("ESP32_BME280.ts tests", function () {
 
     await using bme280Sensor = await new ESP32_BME280(
       mockBME280Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -151,6 +164,7 @@ describe("ESP32_BME280.ts tests", function () {
     // GetReading throws an errror
     await using bme280Sensor2 = await new ESP32_BME280(
       mockBME280Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,

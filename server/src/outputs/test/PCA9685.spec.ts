@@ -12,7 +12,6 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
-import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {
@@ -21,14 +20,13 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should create and delete PCA9685 outputs", async function () {
-    const mockMdnsService = sinon.createStubInstance(MdnsService);
     sinon.createStubInstance(Pca9685Driver);
     sinon
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -92,14 +90,13 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should return output data (no functions)", async function () {
-    const mockMdnsService = sinon.createStubInstance(MdnsService);
     sinon.createStubInstance(Pca9685Driver);
     sinon
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -120,7 +117,6 @@ describe("PCA9685.ts tests", function () {
   });
 
   it("should update and apply states with respect to control mode", async function () {
-    const mockMdnsService = sinon.createStubInstance(MdnsService);
     sinon.stub(winston, "createLogger").callsFake(
       () =>
         ({
@@ -133,7 +129,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
-    const pca9685 = new PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,

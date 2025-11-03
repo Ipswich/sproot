@@ -6,7 +6,6 @@ import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { MdnsService } from "../system/MdnsService";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
   readonly availablePlugs: Record<string, Plug> = {};
@@ -15,7 +14,6 @@ class TPLinkSmartPlugs extends MultiOutputBase {
 
   constructor(
     sprootDB: ISprootDB,
-    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -25,7 +23,6 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   ) {
     super(
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -135,7 +132,6 @@ class TPLinkSmartPlugs extends MultiOutputBase {
         plug,
         output,
         this.sprootDB,
-        this.mdnsService,
         this.maxCacheSize,
         this.initialCacheLookback,
         this.maxChartDataSize,
@@ -175,7 +171,6 @@ class TPLinkPlug extends OutputBase {
     tplinkPlug: Plug,
     output: SDBOutput,
     sprootDB: ISprootDB,
-    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -185,7 +180,6 @@ class TPLinkPlug extends OutputBase {
     super(
       output,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

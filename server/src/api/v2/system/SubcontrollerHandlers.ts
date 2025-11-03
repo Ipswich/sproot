@@ -3,9 +3,9 @@ import { Request, Response } from "express";
 import { MdnsService } from "../../../system/MdnsService";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { randomBytes } from "crypto";
-import { SDBExternalDevice } from "@sproot/database/SDBExternalDevice";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 
-export async function getExternalDevicesHandlerAsync(
+export async function getSubcontrollerHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -13,7 +13,7 @@ export async function getExternalDevicesHandlerAsync(
   const mdnsService = request.app.get("bonjourService") as MdnsService;
 
   try {
-    const recognizedDevices = await sprootDB.getExternalDevicesAsync();
+    const recognizedDevices = await sprootDB.getSubcontrollersAsync();
 
     const returnData = {
       recognized: recognizedDevices.map((device) => {
@@ -36,7 +36,7 @@ export async function getExternalDevicesHandlerAsync(
     return {
       statusCode: 500,
       content: {
-        error: "Failed to retrieve external devices.",
+        error: "Failed to retrieve subcontrollers.",
         details: (error as Error).message,
       },
       ...response.locals["defaultProperties"],
@@ -44,7 +44,7 @@ export async function getExternalDevicesHandlerAsync(
   }
 }
 
-export async function postExternalDevicesHandlerAsync(
+export async function postSubcontrollerHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -77,8 +77,8 @@ export async function postExternalDevicesHandlerAsync(
       hostName,
       type: "ESP32",
       secureToken: randomBytes(32).toString("hex"),
-    } as SDBExternalDevice;
-    const id = await sprootDB.addExternalDeviceAsync(newDevice);
+    } as SDBSubcontroller;
+    const id = await sprootDB.addSubcontrollerAsync(newDevice);
 
     return {
       statusCode: 201,
@@ -91,7 +91,7 @@ export async function postExternalDevicesHandlerAsync(
     return {
       statusCode: 500,
       content: {
-        error: "Failed to add external device.",
+        error: "Failed to add subcontroller.",
         details: (error as Error).message,
       },
       ...response.locals["defaultProperties"],
@@ -99,7 +99,7 @@ export async function postExternalDevicesHandlerAsync(
   }
 }
 
-export async function patchExternalDevicesHandlerAsync(
+export async function patchSubcontrollerHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -138,7 +138,7 @@ export async function patchExternalDevicesHandlerAsync(
       };
     }
 
-    const deviceFromDBs = (await sprootDB.getExternalDevicesAsync()).filter(
+    const deviceFromDBs = (await sprootDB.getSubcontrollersAsync()).filter(
       (device) => device.id === id,
     );
     if (deviceFromDBs.length === 0) {
@@ -147,7 +147,7 @@ export async function patchExternalDevicesHandlerAsync(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`External device with id ${id} not found.`],
+          details: [`subcontroller with id ${id} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -155,7 +155,7 @@ export async function patchExternalDevicesHandlerAsync(
     const updatedDevice = deviceFromDBs[0]!;
     updatedDevice.name = name ?? updatedDevice.name;
 
-    await sprootDB.updateExternalDeviceAsync(updatedDevice);
+    await sprootDB.updateSubcontrollerAsync(updatedDevice);
 
     return {
       statusCode: 200,
@@ -168,7 +168,7 @@ export async function patchExternalDevicesHandlerAsync(
     return {
       statusCode: 500,
       content: {
-        error: "Failed to update external device.",
+        error: "Failed to update subcontroller.",
         details: (error as Error).message,
       },
       ...response.locals["defaultProperties"],
@@ -176,7 +176,7 @@ export async function patchExternalDevicesHandlerAsync(
   }
 }
 
-export async function deleteExternalDevicesHandlerAsync(
+export async function deleteSubcontrollerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
@@ -197,14 +197,14 @@ export async function deleteExternalDevicesHandlerAsync(
   }
 
   try {
-    const rowsDeleted = await sprootDB.deleteExternalDeviceAsync(id);
+    const rowsDeleted = await sprootDB.deleteSubcontrollersAsync(id);
     if (rowsDeleted === 0) {
       return {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`External device with id ${id} not found.`],
+          details: [`subcontroller with id ${id} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -213,7 +213,7 @@ export async function deleteExternalDevicesHandlerAsync(
     return {
       statusCode: 200,
       content: {
-        data: `External device with id ${id} deleted successfully.`,
+        data: `subcontroller with id ${id} deleted successfully.`,
       },
       ...response.locals["defaultProperties"],
     };
@@ -221,7 +221,7 @@ export async function deleteExternalDevicesHandlerAsync(
     return {
       statusCode: 500,
       content: {
-        error: "Failed to delete external device.",
+        error: "Failed to delete subcontroller.",
         details: (error as Error).message,
       },
       ...response.locals["defaultProperties"],

@@ -639,8 +639,7 @@ describe("API Tests", async () => {
         "id",
         "name",
         "model",
-        "hostName",
-        "externalDeviceName",
+        "subcontrollerId",
         "address",
         "color",
         "lastReading",
@@ -1018,10 +1017,10 @@ describe("API Tests", async () => {
       });
     });
 
-    describe("External Devices", async () => {
+    describe("Subcontrollers", async () => {
       describe("GET", async () => {
-        it("should return 200 and a record of external devices", async () => {
-          const response = await request(server).get("/api/v2/system/external-devices").expect(200);
+        it("should return 200 and a record of subcontrollers", async () => {
+          const response = await request(server).get("/api/v2/system/subcontrollers").expect(200);
           const data = response.body["content"].data;
           validateMiddlewareValues(response);
 
@@ -1031,59 +1030,59 @@ describe("API Tests", async () => {
       });
 
       describe("POST", async () => {
-        it("should return a 204 and add an external device to the database", async () => {
-          let externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
-          assert.isEmpty(externalDevices);
+        it("should return a 204 and add an subcontroller to the database", async () => {
+          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.isEmpty(subcontrollers);
           await request(server)
-            .post("/api/v2/system/external-devices")
+            .post("/api/v2/system/subcontrollers")
             .send({
               name: "Test Device",
               hostName: "sproot-device-8af4.local",
             })
             .expect(201);
 
-          externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
-          assert.lengthOf(externalDevices, 1);
-          assert.equal(externalDevices[0].id, 1);
-          assert.equal(externalDevices[0].name, "Test Device");
-          assert.equal(externalDevices[0].hostName, "sproot-device-8af4.local");
-          assert.equal(externalDevices[0].type, "ESP32");
-          assert.isString(externalDevices[0].secureToken);
+          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 1);
+          assert.equal(subcontrollers[0].id, 1);
+          assert.equal(subcontrollers[0].name, "Test Device");
+          assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
+          assert.equal(subcontrollers[0].type, "ESP32");
+          assert.isString(subcontrollers[0].secureToken);
         });
       });
 
       describe("PATCH", async () => {
-        it("should return a 200 and update an external device in the database", async () => {
-          let externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
-          const secureToken = externalDevices[0].secureToken;
-          assert.lengthOf(externalDevices, 1);
-          assert.equal(externalDevices[0].name, "Test Device");
+        it("should return a 200 and update an subcontroller in the database", async () => {
+          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          const secureToken = subcontrollers[0].secureToken;
+          assert.lengthOf(subcontrollers, 1);
+          assert.equal(subcontrollers[0].name, "Test Device");
 
           await request(server)
-            .patch("/api/v2/system/external-devices/1")
+            .patch("/api/v2/system/subcontrollers/1")
             .send({
               name: "Updated Test Device",
             })
             .expect(200);
 
-          externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
-          assert.lengthOf(externalDevices, 1);
-          assert.equal(externalDevices[0].name, "Updated Test Device");
-          assert.equal(externalDevices[0].hostName, "sproot-device-8af4.local");
-          assert.equal(externalDevices[0].type, "ESP32");
-          assert.equal(externalDevices[0].secureToken, secureToken);
+          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 1);
+          assert.equal(subcontrollers[0].name, "Updated Test Device");
+          assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
+          assert.equal(subcontrollers[0].type, "ESP32");
+          assert.equal(subcontrollers[0].secureToken, secureToken);
         });
       });
 
       describe("DELETE", async () => {
-        it("should return a 200 and delete an external device from the database", async () => {
-          let externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
-          assert.lengthOf(externalDevices, 1);
+        it("should return a 200 and delete an subcontroller from the database", async () => {
+          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 1);
 
-          await request(server).delete("/api/v2/system/external-devices/1").expect(200);
+          await request(server).delete("/api/v2/system/subcontrollers/1").expect(200);
 
-          externalDevices = await app.get("sprootDB").getExternalDevicesAsync();
-          assert.lengthOf(externalDevices, 0);
+          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 0);
         });
       });
     });

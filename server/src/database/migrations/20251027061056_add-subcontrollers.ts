@@ -1,8 +1,8 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
-  if (!(await knex.schema.hasTable("external_devices"))) {
-    await knex.schema.createTable("external_devices", (table) => {
+  if (!(await knex.schema.hasTable("subcontrollers"))) {
+    await knex.schema.createTable("subcontrollers", (table) => {
       table.increments("id").notNullable();
       table.string("name").notNullable();
       table.string("type").notNullable();
@@ -13,26 +13,26 @@ export async function up(knex: Knex): Promise<void> {
 
     await knex.schema.alterTable("sensors", (table) => {
       table
-        .integer("externalDevice_id")
+        .integer("subcontroller_id")
         .unsigned()
         .nullable()
         .defaultTo(null)
         .after("model")
         .references("id")
-        .inTable("external_devices")
+        .inTable("subcontrollers")
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
     });
 
     await knex.schema.alterTable("outputs", (table) => {
       table
-        .integer("externalDevice_id")
+        .integer("subcontroller_id")
         .unsigned()
         .nullable()
         .defaultTo(null)
         .after("model")
         .references("id")
-        .inTable("external_devices")
+        .inTable("subcontrollers")
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
     });
@@ -41,11 +41,11 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.alterTable("sensors", (table) => {
-    table.dropColumn("externalDevice_id");
+    table.dropColumn("subcontroller_id");
   });
   await knex.schema.alterTable("outputs", (table) => {
-    table.dropColumn("externalDevice_id");
+    table.dropColumn("subcontroller_id");
   });
 
-  await knex.schema.dropTableIfExists("external_devices");
+  await knex.schema.dropTableIfExists("subcontrollers");
 }

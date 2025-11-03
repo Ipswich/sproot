@@ -4,12 +4,16 @@ import { MdnsService } from "../system/MdnsService";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 
 export class ESP32_ADS1115 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;
   readonly gain: "2/3" | "1" | "2" | "4" | "8" | "16";
+  #mdnsService: MdnsService;
+  subcontroller: SDBSubcontroller;
   constructor(
     sdbSensor: SDBSensor,
+    subcontroller: SDBSubcontroller,
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
     sprootDB: ISprootDB,
@@ -23,7 +27,6 @@ export class ESP32_ADS1115 extends SensorBase {
     super(
       sdbSensor,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -32,6 +35,8 @@ export class ESP32_ADS1115 extends SensorBase {
       logger,
     );
     this.gain = gain;
+    this.#mdnsService = mdnsService;
+    this.subcontroller = subcontroller;
   }
 
   override async initAsync(): Promise<ESP32_ADS1115 | null> {
@@ -56,9 +61,9 @@ export class ESP32_ADS1115 extends SensorBase {
     if (this.pin == null || !(this.pin in ["0", "1", "2", "3"])) {
       throw new Error(`Invalid pin: ${this.pin}. Must be one of '0', '1', '2', or '3'.`);
     }
-    const ipAddress = this.mdnsService.getIPAddressByHostName(this.hostName);
+    const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
     if (ipAddress == null) {
-      throw new Error(`Could not resolve IP address for host name: ${this.hostName}`);
+      throw new Error(`Could not resolve IP address for host name: ${this.subcontroller.hostName}`);
     }
     const calculatedGain = (this.gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
     const response = await fetch(

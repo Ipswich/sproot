@@ -353,13 +353,13 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve system status."
-  /api/v2/system/external-devices:
+  /api/v2/system/subcontrollers:
     get:
       tags:
         - "System"
-      summary: Get external devices discovered via mDNS.
+      summary: Get subcontrollers discovered via mDNS.
       description: >
-        Returns a list of external devices discovered on the local network via mDNS/Bonjour.
+        Returns a list of subcontrollers discovered on the local network via mDNS/Bonjour.
         This includes basic information about each device, such as name, host, and address.
       responses:
         200:
@@ -381,11 +381,11 @@ paths:
                                   recognizedDevices:
                                     type: array
                                     items:
-                                      $ref: "#/components/schemas/SDBExternalDevice"
+                                      $ref: "#/components/schemas/SDBSubcontroller"
                                   unrecognizedDevices:
                                     type: array
                                     items:
-                                      $ref: "#/components/schemas/UnrecognizedExternalDevice"
+                                      $ref: "#/components/schemas/UnrecognizedSubcontrollers"
         500:
           description: "Internal server error"
           content:
@@ -401,25 +401,25 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             items:
-                              example: "Failed to retrieve external devices."
+                              example: "Failed to retrieve subcontrollers."
     post:
       tags:
         - "System"
-      summary: Add a new external device.
+      summary: Add a new subcontroller.
       description: >
-        Adds a new external device to the system.
+        Adds a new subcontroller to the system.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBExternalDevice"
+              $ref: "#/components/schemas/SDBSubcontroller"
       responses:
         201:
-          description: "External device created"
+          description: "subcontroller created"
           content:
             application/json:
               schema:
@@ -431,7 +431,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBExternalDevice"
+                            $ref: "#/components/schemas/SDBSubcontroller"
         400:
           description: "Bad request"
           content:
@@ -447,7 +447,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             example:
                               - "Missing required field: name"
@@ -467,22 +467,22 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             items:
-                              example: "Failed to add external device."
-  /api/v2/system/external-devices/{deviceId}:
+                              example: "Failed to add subcontroller."
+  /api/v2/system/subcontrollers/{deviceId}:
     patch:
       tags:
         - "System"
-      summary: Update an external device.
+      summary: Update an subcontroller.
       description: >
-        Updates an existing external device in the system.
+        Updates an existing subcontroller in the system.
       parameters:
         - in: path
           name: deviceId
           required: true
-          description: "External Device Id"
+          description: "subcontroller Id"
           schema:
             type: string
           example: "1"
@@ -498,7 +498,7 @@ paths:
                   example: "Sproot-ESP32-1C78"
       responses:
         200:
-          description: "External device updated"
+          description: "subcontroller updated"
           content:
             application/json:
               schema:
@@ -510,7 +510,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBExternalDevice"
+                            $ref: "#/components/schemas/SDBSubcontroller"
         400:
           description: "Bad request"
           content:
@@ -526,12 +526,12 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             example:
                               - "Missing required field: name"
         404:
-          description: "External device not found"
+          description: "subcontroller not found"
           content:
             application/json:
               schema:
@@ -545,10 +545,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             items:
-                              example: "External device with ID 1 not found."
+                              example: "subcontroller with ID 1 not found."
         500:
           description: "Internal server error"
           content:
@@ -564,27 +564,27 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             items:
-                              example: "Failed to update external device."
+                              example: "Failed to update subcontroller."
     delete:
       tags:
         - "System"
-      summary: Delete an external device.
+      summary: Delete an subcontroller.
       description: >
-        Deletes an existing external device from the system.
+        Deletes an existing subcontroller from the system.
       parameters:
         - in: path
           name: deviceId
           required: true
-          description: "External Device Id"
+          description: "subcontroller Id"
           schema:
             type: string
           example: "1"
       responses:
         200:
-          description: "External device deleted"
+          description: "subcontroller deleted"
           content:
             application/json:
               schema:
@@ -596,9 +596,9 @@ paths:
                       content:
                         properties:
                           data:
-                            example: "External device successfully deleted."
+                            example: "subcontroller successfully deleted."
         404:
-          description: "External device not found"
+          description: "subcontroller not found"
           content:
             application/json:
               schema:
@@ -612,10 +612,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             items:
-                              example: "External device with ID 1 not found."
+                              example: "subcontroller with ID 1 not found."
         500:
           description: "Internal server error"
           content:
@@ -631,10 +631,10 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/external-devices"
+                            example: "/api/v2/system/subcontrollers"
                           details:
                             items:
-                              example: "Failed to delete external device."
+                              example: "Failed to delete subcontroller."
 
 
   /api/v2/ping:
@@ -4709,10 +4709,10 @@ components:
                   type: string
                   example: "C"
 
-    SDBExternalDevice:
+    SDBSubcontroller:
       description: >
-        An external device object that is stored in the database. Likely means an ESP32. Contains all the information needed to 
-        reference an external device, including name, ID, and host name.
+        An subcontroller object that is stored in the database. Likely means an ESP32. Contains all the information needed to 
+        reference an subcontroller, including name, ID, and host name.
       type: object
       required:
         - "name"
@@ -4906,9 +4906,9 @@ components:
           type: string
           example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     
-    UnrecognizedExternalDevice:
+    UnrecognizedSubcontrollers:
       description: >
-        An object representing an external device discovered on the network.
+        An object representing an subcontroller discovered on the network.
       type: object
       required:
         - "name"

@@ -1,5 +1,5 @@
 import { PCA9685 } from "../PCA9685";
-import { ESP32_PCA9685 } from "../ESP32_PCA9685";
+import { ESP32_PCA9685, ESP32_PCA9685Output } from "../ESP32_PCA9685";
 import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
@@ -40,7 +40,6 @@ class OutputList implements AsyncDisposable {
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
       this.#sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -60,7 +59,6 @@ class OutputList implements AsyncDisposable {
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
       this.#sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -168,12 +166,36 @@ class OutputList implements AsyncDisposable {
       let outputListChanges = false;
       const profiler = this.#logger.startTimer();
       const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
+      const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
 
       const promises = [];
       for (const output of outputsFromDatabase) {
         const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
+        //Update if it exists
         if (key) {
-          //Update if it exists
+          // Check for Subcontroller changes
+          if (this.#outputs[key]?.subcontrollerId != output.subcontrollerId) {
+            outputListChanges = true;
+            this.#outputs[key]!.subcontrollerId = output.subcontrollerId;
+          }
+
+          if (this.#outputs[key] instanceof ESP32_PCA9685Output) {
+            const subcontroller = subcontrollersFromDatabase.find(
+              (sub) => sub.id == output.subcontrollerId,
+            );
+
+            if (subcontroller != null) {
+              if (
+                this.#outputs[key]?.subcontroller.name != subcontroller?.name ||
+                this.#outputs[key]?.subcontroller.hostName != subcontroller?.hostName
+              ) {
+                outputListChanges = true;
+                this.#outputs[key].subcontroller = subcontroller;
+              }
+            }
+          }
+
+          // Check for actual output changes
           if (this.#outputs[key]?.name != output.name) {
             outputListChanges = true;
             //Also updates chart data (and series)

@@ -10,6 +10,7 @@ import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_ADS1115.ts tests", function () {
@@ -18,6 +19,11 @@ describe("ESP32_ADS1115.ts tests", function () {
   });
   it("should initialize an ESP32_ADS1115 sensor", async () => {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     const mockADS1115Data = {
       id: 1,
       name: "test sensor 1",
@@ -52,6 +58,7 @@ describe("ESP32_ADS1115.ts tests", function () {
 
     await using ads1115Sensor = await new ESP32_ADS1115(
       mockADS1115Data,
+      mockSubcontroller,
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
@@ -76,6 +83,11 @@ describe("ESP32_ADS1115.ts tests", function () {
   it("should take a reading from an ESP32_ADS1115 sensor", async () => {
     let callCount = 0;
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.5");
     const scope = nock("http://127.0.0.5")
       .get(new RegExp("^/api/sensors/ads1115/0x48/[0-3]"))
@@ -87,7 +99,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       id: 1,
       name: "test sensor 1",
       model: "ESP32_ADS1115",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
       address: "0x48",
       pin: "0",
     } as SDBSensor;
@@ -106,6 +118,7 @@ describe("ESP32_ADS1115.ts tests", function () {
 
     await using ads1115Sensor = await new ESP32_ADS1115(
       mockADS1115Data,
+      mockSubcontroller,
       ReadingType.voltage,
       "2/3",
       mockSprootDB,
@@ -125,6 +138,7 @@ describe("ESP32_ADS1115.ts tests", function () {
     // GetReading throws an errror
     await using ads1115Sensor2 = await new ESP32_ADS1115(
       mockADS1115Data,
+      mockSubcontroller,
       ReadingType.voltage,
       "2/3",
       mockSprootDB,

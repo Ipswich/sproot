@@ -9,7 +9,7 @@ enum ControlMode {
 interface IOutputBase {
   id: number;
   model: keyof typeof Models;
-  hostName: string | null;
+  subcontrollerId: number | null;
   address: string;
   name: string | null;
   pin: string;
@@ -18,8 +18,6 @@ interface IOutputBase {
   color: string;
   state: IOutputState;
   automationTimeout: number;
-  secureToken: string | null;
-  externalDeviceName: string | null;
 }
 
 type IOutputState = {

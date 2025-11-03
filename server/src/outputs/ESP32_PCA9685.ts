@@ -1,5 +1,6 @@
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import winston from "winston";
@@ -7,6 +8,8 @@ import { MultiOutputBase } from "./base/MultiOutputBase";
 import { MdnsService } from "../system/MdnsService";
 
 class ESP32_PCA9685 extends MultiOutputBase {
+  #mdnsService: MdnsService;
+
   constructor(
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
@@ -19,7 +22,6 @@ class ESP32_PCA9685 extends MultiOutputBase {
   ) {
     super(
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -27,26 +29,37 @@ class ESP32_PCA9685 extends MultiOutputBase {
       frequency,
       logger,
     );
+    this.#mdnsService = mdnsService;
   }
 
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
-    if (output.hostName == undefined) {
-      this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing hostName.`);
+    if (output.subcontrollerId == undefined) {
+      this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing subcontrollerId.`);
+      return undefined;
+    }
+    const subcontroller = (await this.sprootDB.getSubcontrollersAsync()).find(
+      (device) => device.id == output.subcontrollerId,
+    );
+    if (subcontroller == null) {
+      this.logger.error(
+        `ESP32_PCA9685 Output ${output.id} references non-existent subcontrollerId ${output.subcontrollerId}.`,
+      );
       return undefined;
     }
 
     //Create new PCA9685 if one doesn't exist for this address.
-    if (!this.usedPins[output.hostName]) {
-      this.usedPins[output.hostName] = {};
+    if (!this.usedPins[output.subcontrollerId]) {
+      this.usedPins[output.subcontrollerId] = {};
     }
-    if (!(this.usedPins[output.hostName] as Record<string, string[]>)[output.address]) {
-      (this.usedPins[output.hostName] as Record<string, string[]>)[output.address] = [];
+    if (!(this.usedPins[output.subcontrollerId] as Record<string, string[]>)[output.address]) {
+      (this.usedPins[output.subcontrollerId] as Record<string, string[]>)[output.address] = [];
     }
 
     this.outputs[output.id] = new ESP32_PCA9685Output(
       output,
+      subcontroller,
       this.sprootDB,
-      this.mdnsService,
+      this.#mdnsService,
       this.maxCacheSize,
       this.initialCacheLookback,
       this.maxChartDataSize,
@@ -54,7 +67,9 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.logger,
     );
     await this.outputs[output.id]?.initializeAsync();
-    (this.usedPins[output.hostName] as Record<string, string[]>)[output.address]?.push(output.pin);
+    (this.usedPins[output.subcontrollerId] as Record<string, string[]>)[output.address]?.push(
+      output.pin,
+    );
     return this.outputs[output.id];
   }
 
@@ -73,8 +88,12 @@ class ESP32_PCA9685 extends MultiOutputBase {
 }
 
 class ESP32_PCA9685Output extends OutputBase {
+  subcontroller: SDBSubcontroller;
+  #mdnsService: MdnsService;
+
   constructor(
     output: SDBOutput,
+    subcontroller: SDBSubcontroller,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -86,13 +105,14 @@ class ESP32_PCA9685Output extends OutputBase {
     super(
       output,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
       logger,
     );
+    this.subcontroller = subcontroller;
+    this.#mdnsService = mdnsService;
   }
 
   async executeStateAsync(forceExecution: boolean = false): Promise<void> {
@@ -106,10 +126,10 @@ class ESP32_PCA9685Output extends OutputBase {
   }
 
   async #setPCA9685ValueAsync(value: number): Promise<void> {
-    const ipAddress = this.mdnsService.getIPAddressByHostName(this.outputData.hostName);
+    const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
     if (ipAddress == null) {
       this.logger.error(
-        `Failed to set PCA9685 output ${this.outputData.id} value. Unable to resolve hostname ${this.outputData.hostName}.`,
+        `Failed to set PCA9685 output ${this.outputData.id} value. Unable to resolve hostname ${this.subcontroller.hostName}.`,
       );
       return;
     }

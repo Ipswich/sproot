@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
-import { SDBExternalDevice } from "@sproot/sproot-common/src/database/SDBExternalDevice";
+import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
 import { SDBUser } from "@sproot/sproot-common/src/database/SDBUser";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
@@ -66,10 +66,10 @@ interface ISprootDB {
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
 
-  getExternalDevicesAsync(): Promise<SDBExternalDevice[]>;
-  addExternalDeviceAsync(sensor: SDBExternalDevice): Promise<number>;
-  updateExternalDeviceAsync(sensor: SDBExternalDevice): Promise<number>;
-  deleteExternalDeviceAsync(id: number): Promise<number>;
+  getSubcontrollersAsync(): Promise<SDBSubcontroller[]>;
+  addSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
+  updateSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
+  deleteSubcontrollersAsync(id: number): Promise<number>;
 
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
@@ -323,19 +323,19 @@ class MockSprootDB implements ISprootDB {
     return;
   }
 
-  async getExternalDevicesAsync(): Promise<SDBExternalDevice[]> {
+  async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
     return [];
   }
 
-  async addExternalDeviceAsync(_externalDevice: SDBExternalDevice): Promise<number> {
+  async addSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
     return 1;
   }
 
-  async updateExternalDeviceAsync(_externalDevice: SDBExternalDevice): Promise<number> {
+  async updateSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
     return 1;
   }
 
-  async deleteExternalDeviceAsync(_id: number): Promise<number> {
+  async deleteSubcontrollersAsync(_id: number): Promise<number> {
     return 1;
   }
 

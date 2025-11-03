@@ -6,12 +6,10 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
-import { MdnsService } from "../system/MdnsService";
 
 class PCA9685 extends MultiOutputBase {
   constructor(
     sprootDB: ISprootDB,
-    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -21,7 +19,6 @@ class PCA9685 extends MultiOutputBase {
   ) {
     super(
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
@@ -51,7 +48,6 @@ class PCA9685 extends MultiOutputBase {
       pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
       output,
       this.sprootDB,
-      this.mdnsService,
       this.maxCacheSize,
       this.initialCacheLookback,
       this.maxChartDataSize,
@@ -86,7 +82,6 @@ class PCA9685Output extends OutputBase {
     pca9685: Pca9685Driver,
     output: SDBOutput,
     sprootDB: ISprootDB,
-    mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -96,7 +91,6 @@ class PCA9685Output extends OutputBase {
     super(
       output,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,

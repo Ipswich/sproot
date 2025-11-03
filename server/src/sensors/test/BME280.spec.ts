@@ -8,7 +8,6 @@ import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("BME280.ts tests", function () {
@@ -16,7 +15,6 @@ describe("BME280.ts tests", function () {
     sinon.restore();
   });
   it("should initialize a BME280 sensor", async () => {
-    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
@@ -76,7 +74,6 @@ describe("BME280.ts tests", function () {
     await using bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
-      mockMdnsService,
       5,
       5,
       3,
@@ -96,7 +93,6 @@ describe("BME280.ts tests", function () {
   });
 
   it("should get a reading from a BME280 sensor", async () => {
-    const mockMdnsService = sinon.createStubInstance(MdnsService);
     const mockBME280Data = {
       id: 1,
       name: "test sensor 1",
@@ -128,7 +124,6 @@ describe("BME280.ts tests", function () {
     await using bme280Sensor = await new BME280(
       mockBME280Data,
       mockSprootDB,
-      mockMdnsService,
       5,
       5,
       3,
@@ -150,7 +145,6 @@ describe("BME280.ts tests", function () {
     await using bme280Sensor2 = await new BME280(
       mockBME280Data,
       mockSprootDB,
-      mockMdnsService,
       5,
       5,
       3,

@@ -2,7 +2,7 @@ import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
 import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBExternalDevice } from "@sproot/sproot-common/dist/database/SDBExternalDevice";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 import { SensorList } from "../SensorList";
 
 import { assert } from "chai";
@@ -127,7 +127,7 @@ describe("SensorList.ts tests", function () {
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
     sinon
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger));
+      .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
 
     await using sensorList = new SensorList(mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger);
     await sensorList.initializeOrRegenerateAsync();
@@ -189,7 +189,7 @@ describe("SensorList.ts tests", function () {
     getAddressesStub.resolves(["28-00000"]);
     sinon
       .stub(BME280.prototype, "initAsync")
-      .resolves(new BME280(mockBME280Data, mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger));
+      .resolves(new BME280(mockBME280Data, mockSprootDB, 5, 5, 3, 5, logger));
     await sensorList.initializeOrRegenerateAsync();
 
     mockDS18B20Data["address"] = "28-00000";
@@ -241,21 +241,21 @@ describe("SensorList.ts tests", function () {
       name: "test sensor 2",
       model: "ESP32_DS18B20",
       address: "28-00001", // Already exists in DB and on remote
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
     } as SDBSensor;
     const mockDS18B20Data3 = {
       id: 3,
       name: "test sensor 3",
       model: "DS18B20",
       address: "28-00002",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
     } as SDBSensor;
     const mockDS18B20Data4 = {
       id: 4,
       name: "test sensor 4",
       model: "DS18B20",
       address: "28-00000",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
     } as SDBSensor;
     sinon.stub(winston, "createLogger").callsFake(
       () =>
@@ -266,14 +266,14 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    sinon.stub(MockSprootDB.prototype, "getExternalDevicesAsync").resolves([
+    sinon.stub(MockSprootDB.prototype, "getSubcontrollersAsync").resolves([
       {
         id: 1,
         hostName: "sproot-device-7ab3.local",
         type: "ESP32",
         name: "Test ESP32",
         secureToken: null,
-      } as SDBExternalDevice,
+      } as SDBSubcontroller,
     ]);
     const mockGetDS18B20AddressesAsync = sinon.stub(
       MockSprootDB.prototype,
@@ -288,13 +288,15 @@ describe("SensorList.ts tests", function () {
     await sensorList.initializeOrRegenerateAsync();
     assert.equal(addSensorSpy.callCount, 2);
 
+    console.log(addSensorSpy.getCalls());
+
     assert.equal(addSensorSpy.getCalls()[0]!.args[0].address, "28-00000");
     assert.equal(addSensorSpy.getCalls()[0]!.args[0].model, "ESP32_DS18B20");
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].hostName, "sproot-device-7ab3.local");
+    assert.equal(addSensorSpy.getCalls()[0]!.args[0].subcontrollerId, 1);
 
     assert.equal(addSensorSpy.getCalls()[1]!.args[0].address, "28-00002");
     assert.equal(addSensorSpy.getCalls()[1]!.args[0].model, "ESP32_DS18B20");
-    assert.equal(addSensorSpy.getCalls()[1]!.args[0].hostName, "sproot-device-7ab3.local");
+    assert.equal(addSensorSpy.getCalls()[1]!.args[0].subcontrollerId, 1);
 
     // Simulate connecting some DS18B20s and re-running initialization.
     addSensorSpy.resetHistory();
@@ -316,15 +318,15 @@ describe("SensorList.ts tests", function () {
 
     assert.equal(addSensorSpy.getCalls()[0]!.args[0].address, "28-00006");
     assert.equal(addSensorSpy.getCalls()[0]!.args[0].model, "ESP32_DS18B20");
-    assert.equal(addSensorSpy.getCalls()[0]!.args[0].hostName, "sproot-device-7ab3.local");
+    assert.equal(addSensorSpy.getCalls()[0]!.args[0].subcontrollerId, 1);
 
     assert.equal(addSensorSpy.getCalls()[1]!.args[0].address, "28-00003");
     assert.equal(addSensorSpy.getCalls()[1]!.args[0].model, "DS18B20");
-    assert.isUndefined(addSensorSpy.getCalls()[1]!.args[0].hostName);
+    assert.isUndefined(addSensorSpy.getCalls()[1]!.args[0].subcontrollerId);
 
     assert.equal(addSensorSpy.getCalls()[2]!.args[0].address, "28-00005");
     assert.equal(addSensorSpy.getCalls()[2]!.args[0].model, "DS18B20");
-    assert.isUndefined(addSensorSpy.getCalls()[2]!.args[0].hostName);
+    assert.isUndefined(addSensorSpy.getCalls()[2]!.args[0].subcontrollerId);
 
     scope1.done();
     scope2.done();

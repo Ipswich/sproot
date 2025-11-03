@@ -14,7 +14,18 @@ import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_PCA9685.ts tests", function () {
-  afterEach(() => {
+  this.beforeEach(() => {
+    sinon.stub(mockSprootDB, "getSubcontrollersAsync").resolves([
+      {
+        id: 1,
+        type: "ESP32",
+        hostName: "sproot-device.local",
+        name: "PCA9685 Controller",
+        secureToken: "token",
+      },
+    ]);
+  });
+  this.afterEach(() => {
     sinon.restore();
   });
 
@@ -35,7 +46,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
-    // Missing external address
+    // Missing a subcontrollerID
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.ESP32_PCA9685,
@@ -48,7 +59,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const output2 = await pca9685.createOutputAsync({
       id: 2,
       model: Models.ESP32_PCA9685,
-      hostName: "sproot-device.local",
+      subcontrollerId: 1,
       address: "0x40",
       name: "test output 2",
       pin: "1",
@@ -58,7 +69,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const output3 = await pca9685.createOutputAsync({
       id: 3,
       model: Models.ESP32_PCA9685,
-      hostName: "sproot-device.local",
+      subcontrollerId: 1,
       address: "0x40",
       name: "test output 3",
       pin: "2",
@@ -68,7 +79,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const output4 = await pca9685.createOutputAsync({
       id: 4,
       model: Models.ESP32_PCA9685,
-      hostName: "sproot-device.local",
+      subcontrollerId: 1,
       address: "0x40",
       name: "test output 4",
       pin: "3",
@@ -77,18 +88,12 @@ describe("ESP32_PCA9685.ts tests", function () {
     } as SDBOutput);
     assert.equal(Object.keys(pca9685.outputs).length, 3);
     assert.exists(pca9685.outputs["4"]);
-    assert.equal(
-      (pca9685.usedPins["sproot-device.local"] as Record<string, string[]>)["0x40"]!.length,
-      3,
-    );
+    assert.equal((pca9685.usedPins["1"] as Record<string, string[]>)["0x40"]!.length, 3);
 
     // Dispose 1 output
     await pca9685.disposeOutputAsync(output4!);
     assert.equal(Object.keys(pca9685.outputs).length, 2);
-    assert.equal(
-      (pca9685.usedPins["sproot-device.local"] as Record<string, string[]>)["0x40"]!.length,
-      2,
-    );
+    assert.equal((pca9685.usedPins["1"] as Record<string, string[]>)["0x40"]!.length, 2);
     assert.isUndefined(pca9685.outputs["4"]);
 
     // disposing with a non existent pin should also not cause issues
@@ -98,7 +103,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     await pca9685.disposeOutputAsync(output2!);
     await pca9685.disposeOutputAsync(output3!);
     assert.equal(Object.keys(pca9685.outputs).length, 0);
-    assert.isEmpty((pca9685.usedPins["sproot-device.local"] as Record<string, string[]>)["0x40"]);
+    assert.isEmpty((pca9685.usedPins["1"] as Record<string, string[]>)["0x40"]);
 
     scope.done();
   });
@@ -115,7 +120,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.ESP32_PCA9685,
-      hostName: "sproot-device.local",
+      subcontrollerId: 1,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -125,7 +130,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const outputData = pca9685.outputData;
 
     assert.equal(outputData["1"]!["name"], "test output 1");
-    assert.equal(outputData["1"]!["hostName"], "sproot-device.local");
+    assert.equal(outputData["1"]!["subcontrollerId"], 1);
     assert.equal(outputData["1"]!["pin"], "0");
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
@@ -166,7 +171,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
-      hostName: "sproot-device.local",
+      subcontrollerId: 1,
       address: "0x40",
       name: "test output 1",
       pin: "0",
@@ -221,7 +226,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
-      hostName: "sproot-device.local",
+      subcontrollerId: 1,
       address: "0x40",
       name: "test output 1",
       pin: "0",

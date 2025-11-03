@@ -16,6 +16,7 @@ import { SensorListChartData } from "./SensorListChartData";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 import { MdnsService } from "../../system/MdnsService";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 
 class SensorList {
   #sprootDB: ISprootDB;
@@ -63,9 +64,8 @@ class SensorList {
         id,
         name,
         model,
-        hostName: hostName,
+        subcontrollerId,
         address,
-        externalDeviceName,
         color,
         lastReading,
         lastReadingTime,
@@ -84,8 +84,7 @@ class SensorList {
         id,
         name,
         model,
-        hostName: hostName,
-        externalDeviceName,
+        subcontrollerId: subcontrollerId ?? null,
         address,
         color,
         lastReading,
@@ -115,13 +114,41 @@ class SensorList {
         this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
       });
       const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
+      const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
 
       const promises = [];
       for (const sensor of sensorsFromDatabase) {
         let sensorChanges = false;
         const key = Object.keys(this.#sensors).find((key) => key === sensor.id.toString());
+        //Update if it exists
         if (key && this.#sensors[key]) {
-          //Update if it exists
+          // Check for Subcontroller changes
+          if (this.#sensors[key]?.subcontrollerId != sensor.subcontrollerId) {
+            sensorListChanges = true;
+            this.#sensors[key]!.subcontrollerId = sensor.subcontrollerId;
+          }
+
+          if (
+            this.#sensors[key] instanceof ESP32_BME280 ||
+            this.#sensors[key] instanceof ESP32_DS18B20 ||
+            this.#sensors[key] instanceof ESP32_ADS1115 ||
+            this.#sensors[key] instanceof ESP32_CapacitiveMoistureSensor
+          ) {
+            const subcontroller = subcontrollersFromDatabase.find(
+              (sub) => sub.id == sensor.subcontrollerId,
+            );
+
+            if (subcontroller != null) {
+              if (
+                this.#sensors[key]?.subcontroller!.name != subcontroller?.name ||
+                this.#sensors[key]?.subcontroller!.hostName != subcontroller?.hostName
+              ) {
+                sensorListChanges = true;
+                this.#sensors[key].subcontroller = subcontroller;
+              }
+            }
+          }
+
           if (this.#sensors[key].name != sensor.name) {
             //Also updates chartSeries data (and chart data)
             this.#sensors[key].updateName(sensor.name);
@@ -280,6 +307,8 @@ class SensorList {
 
   async #createSensorAsync(sensor: SDBSensor): Promise<void> {
     let newSensor: SensorBase | null = null;
+    let subcontroller: SDBSubcontroller | undefined;
+
     switch (sensor.model.toLowerCase()) {
       case Models.BME280.toLowerCase():
         if (!sensor.address) {
@@ -288,7 +317,6 @@ class SensorList {
         newSensor = await new BME280(
           sensor,
           this.#sprootDB,
-          this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#maxChartDataSize,
@@ -298,14 +326,23 @@ class SensorList {
         break;
 
       case Models.ESP32_BME280.toLowerCase():
-        if (!sensor.hostName) {
+        if (!sensor.subcontrollerId) {
           throw new SensorListError("ESP32 BME280 external address cannot be null");
         }
         if (!sensor.address) {
           throw new SensorListError("ESP32 BME280 sensor address cannot be null");
         }
+        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+          (device) => device.id == sensor.subcontrollerId,
+        );
+        if (!subcontroller) {
+          throw new SensorListError(
+            `ESP32 BME280 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
+          );
+        }
         newSensor = await new ESP32_BME280(
           sensor,
+          subcontroller,
           this.#sprootDB,
           this.#mdnsService,
           this.#maxCacheSize,
@@ -323,7 +360,6 @@ class SensorList {
         newSensor = await new DS18B20(
           sensor,
           this.#sprootDB,
-          this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#maxChartDataSize,
@@ -333,14 +369,23 @@ class SensorList {
         break;
 
       case Models.ESP32_DS18B20.toLowerCase():
-        if (!sensor.hostName) {
+        if (!sensor.subcontrollerId) {
           throw new SensorListError("ESP32 DS18B20 external address cannot be null");
         }
         if (!sensor.address) {
           throw new SensorListError("ESP32 DS18B20 sensor address cannot be null");
         }
+        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+          (device) => device.id == sensor.subcontrollerId,
+        );
+        if (!subcontroller) {
+          throw new SensorListError(
+            `ESP32 DS18B20 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
+          );
+        }
         newSensor = await new ESP32_DS18B20(
           sensor,
+          subcontroller,
           this.#sprootDB,
           this.#mdnsService,
           this.#maxCacheSize,
@@ -363,7 +408,6 @@ class SensorList {
           ReadingType.voltage,
           "1",
           this.#sprootDB,
-          this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#maxChartDataSize,
@@ -373,7 +417,7 @@ class SensorList {
         break;
 
       case Models.ESP32_ADS1115.toLowerCase():
-        if (!sensor.hostName) {
+        if (!sensor.subcontrollerId) {
           throw new SensorListError("ESP32 ADS1115 external address cannot be null");
         }
         if (!sensor.address) {
@@ -382,8 +426,17 @@ class SensorList {
         if (!sensor.pin) {
           throw new SensorListError("ESP32 ADS1115 sensor pin cannot be null");
         }
+        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+          (device) => device.id == sensor.subcontrollerId,
+        );
+        if (!subcontroller) {
+          throw new SensorListError(
+            `ESP32 ADS1115 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
+          );
+        }
         newSensor = await new ESP32_ADS1115(
           sensor,
+          subcontroller,
           ReadingType.voltage,
           "1",
           this.#sprootDB,
@@ -406,7 +459,6 @@ class SensorList {
         newSensor = await new CapacitiveMoistureSensor(
           sensor,
           this.#sprootDB,
-          this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
           this.#maxChartDataSize,
@@ -416,7 +468,7 @@ class SensorList {
         break;
 
       case Models.ESP32_CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
-        if (!sensor.hostName) {
+        if (!sensor.subcontrollerId) {
           throw new SensorListError(
             "ESP32 Capacitive Moisture Sensor external address cannot be null",
           );
@@ -427,8 +479,17 @@ class SensorList {
         if (!sensor.pin) {
           throw new SensorListError("ESP32 Capacitive Moisture Sensor pin cannot be null");
         }
+        subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
+          (device) => device.id == sensor.subcontrollerId,
+        );
+        if (!subcontroller) {
+          throw new SensorListError(
+            `ESP32 Capacitive Moisture Sensor references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
+          );
+        }
         newSensor = await new ESP32_CapacitiveMoistureSensor(
           sensor,
+          subcontroller,
           this.#sprootDB,
           this.#mdnsService,
           this.#maxCacheSize,
@@ -448,24 +509,32 @@ class SensorList {
 
   async #addUnreconizedDS18B20sToSDBAsync() {
     // Get all DS18B20 sensors from database
-    const externalDevices = await this.#sprootDB.getExternalDevicesAsync();
+    const subcontrollers = await this.#sprootDB.getSubcontrollersAsync();
     const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
     const addToDatabasePromises: Promise<void>[] = [];
 
     // Get all DS18B20s from known ESP32 devices
-    const remoteDeviceAddresses = [] as { hostName: string; deviceId: string }[];
+    const remoteDeviceAddresses = [] as {
+      subcontrollerId: number;
+      hostName: string;
+      deviceId: string;
+    }[];
     await Promise.all(
-      externalDevices.map(async (externalDevice) => {
-        const ipAddress = this.#mdnsService.getIPAddressByHostName(externalDevice.hostName);
+      subcontrollers.map(async (subcontroller) => {
+        const ipAddress = this.#mdnsService.getIPAddressByHostName(subcontroller.hostName);
         if (!ipAddress) {
           this.#logger.warn(
-            `Could not find IP address for ESP32 DS18B20 device with hostName ${externalDevice.hostName}, skipping...`,
+            `Could not find IP address for ESP32 DS18B20 device with hostName ${subcontroller.hostName}, skipping...`,
           );
           return;
         }
         const addresses = await ESP32_DS18B20.getAddressesAsync(ipAddress);
         addresses.map((address) => {
-          remoteDeviceAddresses.push({ hostName: externalDevice.hostName, deviceId: address });
+          remoteDeviceAddresses.push({
+            subcontrollerId: subcontroller.id,
+            hostName: subcontroller.hostName,
+            deviceId: address,
+          });
         });
       }),
     );
@@ -474,20 +543,20 @@ class SensorList {
     for (const addresses of remoteDeviceAddresses) {
       if (
         sensorsFromDatabase.some(
-          (s) => s.hostName == addresses.hostName && s.address === addresses.deviceId,
+          (s) => s.subcontrollerId == addresses.subcontrollerId && s.address === addresses.deviceId,
         )
       ) {
         continue;
       } else {
         this.#logger.info(
-          `Adding unrecognized ESP32_DS18B20 sensor {externalAddress: ${addresses.hostName}, deviceId: ${addresses.deviceId} to database`,
+          `Adding unrecognized ESP32_DS18B20 sensor {externalAddress: ${addresses.hostName}, deviceId: ${addresses.deviceId} to database}`,
         );
         addToDatabasePromises.push(
           this.#sprootDB.addSensorAsync({
             name: `New ESP32_DS18B20 ..${addresses.deviceId.slice(-4)}`,
             model: Models.ESP32_DS18B20,
             address: addresses.deviceId,
-            hostName: addresses.hostName,
+            subcontrollerId: addresses.subcontrollerId,
             color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
           } as SDBSensor),
         );
@@ -499,7 +568,7 @@ class SensorList {
 
     // Filter local devices
     for (const address of localDeviceAddresses) {
-      if (sensorsFromDatabase.some((s) => s.hostName == null && s.address === address)) {
+      if (sensorsFromDatabase.some((s) => s.subcontrollerId == null && s.address === address)) {
         continue;
       } else {
         this.#logger.info(`Adding unrecognized DS18B20 sensor ${address} to database`);

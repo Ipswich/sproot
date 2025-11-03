@@ -5,7 +5,7 @@ interface ISensorBase {
   id: number;
   name: string;
   model: keyof typeof Models;
-  hostName: string | null;
+  subcontrollerId: number | null;
   address: string | null;
   color: string;
   pin: string | null;
@@ -14,8 +14,6 @@ interface ISensorBase {
   lastReading: Partial<Record<ReadingType, string | undefined>>;
   lastReadingTime: Date | null;
   readonly units: Partial<Record<ReadingType, string>>;
-  secureToken: string | null;
-  externalDeviceName: string | null;
 }
 
 export type { ISensorBase };

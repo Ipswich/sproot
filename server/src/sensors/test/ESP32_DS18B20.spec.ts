@@ -9,6 +9,7 @@ import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_DS18B20.ts tests", function () {
@@ -18,12 +19,17 @@ describe("ESP32_DS18B20.ts tests", function () {
 
   it("should create but not initialize a DS18B20 sensor", async function () {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     const mockDS18B20Data = {
       id: 1,
       name: "test sensor 1",
       model: "DS18B20",
       address: "28-00000",
-      hostName: "http://127.0.0.10",
+      subcontrollerId: 1,
     } as SDBSensor;
     sinon.stub(winston, "createLogger").callsFake(
       () =>
@@ -37,6 +43,7 @@ describe("ESP32_DS18B20.ts tests", function () {
 
     const ds18b20Sensor = new ESP32_DS18B20(
       mockDS18B20Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -50,13 +57,17 @@ describe("ESP32_DS18B20.ts tests", function () {
     assert.equal(ds18b20Sensor.id, mockDS18B20Data.id);
     assert.equal(ds18b20Sensor.name, mockDS18B20Data.name);
     assert.equal(ds18b20Sensor.model, mockDS18B20Data.model);
-    assert.equal(ds18b20Sensor.hostName, mockDS18B20Data.hostName);
     assert.equal(ds18b20Sensor.address, mockDS18B20Data.address);
     assert.equal(ds18b20Sensor.units[ReadingType.temperature], "°C");
   });
 
   it("should get a reading from a DS18B20 sensor, gracefully handling errors", async function () {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.10");
     const scope = nock("http://127.0.0.10");
     const mockDS18B20Data = {
@@ -64,7 +75,7 @@ describe("ESP32_DS18B20.ts tests", function () {
       name: "test sensor 1",
       model: "DS18B20",
       address: "28-00000",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
     } as SDBSensor;
     const loggerSpy = sinon.spy();
     sinon.stub(winston, "createLogger").callsFake(
@@ -83,6 +94,7 @@ describe("ESP32_DS18B20.ts tests", function () {
 
     await using ds18b20Sensor = new ESP32_DS18B20(
       mockDS18B20Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -102,6 +114,7 @@ describe("ESP32_DS18B20.ts tests", function () {
       .reply(200, { temperature: "lol", address: "28-00000" });
     await using ds18b20Sensor2 = new ESP32_DS18B20(
       mockDS18B20Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -120,6 +133,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     scope.get("/api/sensors/ds18b20/28-00000").reply(500, { error: "Device error" });
     await using ds18b20Sensor4 = new ESP32_DS18B20(
       mockDS18B20Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -152,12 +166,17 @@ describe("ESP32_DS18B20.ts tests", function () {
 
   it("should load cached readings from the database, initializing a sensor", async function () {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     const mockDS18B20Data = {
       id: 1,
       name: "test sensor 1",
       model: "DS18B20",
       address: "28-00000",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
     } as SDBSensor;
     const recordsToLoad = 2;
     sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
@@ -187,6 +206,7 @@ describe("ESP32_DS18B20.ts tests", function () {
 
     await using ds18b20Sensor = await new ESP32_DS18B20(
       mockDS18B20Data,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,

@@ -11,6 +11,7 @@ import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
@@ -20,11 +21,16 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
 
   it("should initialize an ESP32_CapacitiveMoistureSensor", async () => {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     const mockSensorData = {
       id: 1,
       name: "test sensor 1",
       model: "CAPACITIVE_MOISTURE_SENSOR",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
       address: "0x48",
       pin: "0",
     } as SDBSensor;
@@ -56,6 +62,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
 
     await using sensor = await new ESP32_CapacitiveMoistureSensor(
       mockSensorData,
+      mockSubcontroller,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -71,13 +78,17 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     assert.equal(sensor.name, mockSensorData.name);
     assert.equal(sensor.model, mockSensorData.model);
     assert.equal(sensor.address, mockSensorData.address);
-    assert.equal(sensor.hostName, mockSensorData.hostName);
     assert.equal(sensor.pin, mockSensorData.pin);
     assert.equal(sensor.units[ReadingType.moisture], "%");
   });
 
   it("should take a reading from a CapacitiveMoistureSensor", async () => {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
+    const mockSubcontroller = {
+      id: 1,
+      name: "sproot-device-7ab3",
+      hostName: "sproot-device-7ab3.local",
+    } as SDBSubcontroller;
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.9");
     const stubbedMockDB = sinon.createStubInstance(MockSprootDB);
     stubbedMockDB.getSensorReadingsAsync.resolves([]);
@@ -94,7 +105,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     const mockADS1115Data = {
       id: 1,
       name: "test sensor 1",
-      hostName: "sproot-device-7ab3.local",
+      subcontrollerId: 1,
       model: "ADS1115",
       address: "0x48",
       pin: "0",
@@ -112,6 +123,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     const logger = winston.createLogger();
     await using capacitiveMoistureSensor = await new ESP32_CapacitiveMoistureSensor(
       mockADS1115Data,
+      mockSubcontroller,
       stubbedMockDB,
       mockMdnsService,
       5,
@@ -154,6 +166,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
     await using capacitiveMoistureSensor2 = await new ESP32_CapacitiveMoistureSensor(
       mockADS1115Data,
+      mockSubcontroller,
       stubbedMockDB,
       mockMdnsService,
       500,
@@ -172,6 +185,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     // GetReading throws an errror
     await using capacitiveMoistureSensor3 = await new ESP32_CapacitiveMoistureSensor(
       mockADS1115Data,
+      mockSubcontroller,
       stubbedMockDB,
       mockMdnsService,
       5,
