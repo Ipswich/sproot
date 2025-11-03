@@ -48,8 +48,14 @@ export class SprootDB implements ISprootDB {
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
     return this.#connection("sensors").insert({
-      ...sensor,
+      name: sensor.name,
+      model: sensor.model,
       subcontroller_id: sensor.subcontrollerId ?? null,
+      address: sensor.address,
+      color: sensor.color,
+      pin: sensor.pin,
+      lowCalibrationPoint: sensor.lowCalibrationPoint,
+      highCalibrationPoint: sensor.highCalibrationPoint,
     });
   }
   async updateSensorAsync(sensor: SDBSensor): Promise<void> {
@@ -57,8 +63,8 @@ export class SprootDB implements ISprootDB {
       .where("id", sensor.id)
       .update({
         name: sensor.name,
-        subcontroller_id: sensor.subcontrollerId ?? null,
         model: sensor.model,
+        subcontroller_id: sensor.subcontrollerId ?? null,
         address: sensor.address,
         color: sensor.color,
         pin: sensor.pin,
@@ -158,8 +164,15 @@ export class SprootDB implements ISprootDB {
   }
   async addOutputAsync(output: SDBOutput): Promise<void> {
     return this.#connection("outputs").insert({
-      ...output,
+      name: output.name,
+      model: output.model,
       subcontroller_id: output.subcontrollerId ?? null,
+      address: output.address,
+      color: output.color,
+      pin: output.pin,
+      isPwm: output.isPwm,
+      isInvertedPwm: output.isInvertedPwm,
+      automationTimeout: output.automationTimeout,
     });
   }
   async updateOutputAsync(output: SDBOutput): Promise<void> {
