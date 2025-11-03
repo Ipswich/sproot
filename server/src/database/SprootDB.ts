@@ -35,10 +35,10 @@ export class SprootDB implements ISprootDB {
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors").select("*");
+    return this.#connection("sensors").select("*", "subcontroller_id as subcontrollerId");
   }
   async getSensorAsync(id: number): Promise<SDBSensor[]> {
-    return this.#connection("sensors").select("*").where("id", id);
+    return this.#connection("sensors").select("*", "subcontroller_id as subcontrollerId").where("id", id);
   }
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     return this.#connection("sensors as s")
@@ -157,10 +157,10 @@ export class SprootDB implements ISprootDB {
     return readings;
   }
   async getOutputsAsync(): Promise<SDBOutput[]> {
-    return this.#connection("outputs").select("*");
+    return this.#connection("outputs").select("*", "subcontroller_id as subcontrollerId");
   }
   async getOutputAsync(id: number): Promise<SDBOutput[]> {
-    return this.#connection("outputs").select("*").where("id", id);
+    return this.#connection("outputs").select("*", "subcontroller_id as subcontrollerId").where("id", id);
   }
   async addOutputAsync(output: SDBOutput): Promise<void> {
     return this.#connection("outputs").insert({
