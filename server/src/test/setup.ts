@@ -36,12 +36,13 @@ before(async function () {
   console.log("Listening on port 3000");
 });
 
-after(() => {
-  server.close();
-  console.log("Server closed!");
-  process.nextTick(() => {
-    process.exit(0);
-  });
+after(async () => {
+  if (server) {
+    await new Promise<void>((resolve, reject) => {
+      server.close((err) => (err ? reject(err) : resolve()));
+    });
+    console.log("Server closed!");
+  }
 });
 
 export { app, server };
