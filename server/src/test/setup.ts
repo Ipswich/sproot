@@ -5,7 +5,10 @@ import mainAsync from "../program";
 
 let server: Server;
 let app: Express;
-before(async () => {
+before(async function () {
+  // increase hook timeout so long setup won't cause Mocha to bail out (use 20s here)
+  this.timeout(20000);
+
   await fs.promises.mkdir("images/timelapse", { recursive: true });
   await fs.promises.mkdir("images/archive", { recursive: true });
 
