@@ -10,15 +10,10 @@ export class MdnsService implements Disposable {
 
   constructor(logger: winston.Logger) {
     this.#logger = logger;
-
     this.#browser = this.#bonjour.find({ type: MDNS_SERVICE_TYPE }, (service) => {
-      this.#logger.info("Discovered MDNS service:", {
-        name: service.name,
-        type: service.type,
-        host: service.host,
-        port: service.port,
-        addresses: service.addresses,
-      });
+      this.#logger.info(
+        `Discovered MDNS service: ${service.name} at ${service.host}:${service.port}`,
+      );
     });
     this.#browser.services;
   }
