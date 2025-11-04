@@ -6,12 +6,12 @@ import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcont
 import { SensorList } from "../SensorList";
 
 import { assert } from "chai";
-import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { ChartSeries, DataSeries } from "@sproot/utility/ChartData";
 import { MdnsService } from "../../../system/MdnsService";
+import { ESP32_DS18B20 } from "../../ESP32_DS18B20";
 
 const mockSprootDB = new MockSprootDB();
 
@@ -225,11 +225,18 @@ describe("SensorList.ts tests", function () {
   });
 
   it("should add unrecognized (ESP32) DS18B20 sensors to the database", async function () {
+    const clock = sinon.useFakeTimers();
     const mockMdnsService = sinon.createStubInstance(MdnsService);
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.12");
-    const scope1 = nock("http://127.0.0.12")
-      .get("/api/sensors/ds18b20/addresses")
-      .reply(200, { addresses: ["28-00000", "28-00001", "28-00002"] }); // Three devices on remote device
+
+    // We're not using nock here because apparently fake timers skips node IO calls.
+    const mockESP32DS18B20 = sinon.stub(ESP32_DS18B20, "getAddressesAsync");
+    mockESP32DS18B20.callsFake(async (ipAddress?: string) => {
+      if (ipAddress === "127.0.0.12") {
+        return ["28-00000", "28-00001", "28-00002"];
+      }
+      return [];
+    });
     const mockDS18B20Data1 = {
       id: 1,
       name: "test sensor 1",
@@ -281,14 +288,12 @@ describe("SensorList.ts tests", function () {
     );
     mockGetDS18B20AddressesAsync.resolves([mockDS18B20Data1, mockDS18B20Data2]);
 
-    const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
+    const addSensorSpy = sinon.stub(mockSprootDB, "addSensorAsync");
     const ds18b20GetAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     await using sensorList = new SensorList(mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger);
 
     await sensorList.initializeOrRegenerateAsync();
     assert.equal(addSensorSpy.callCount, 2);
-
-    console.log(addSensorSpy.getCalls());
 
     assert.equal(addSensorSpy.getCalls()[0]!.args[0].address, "28-00000");
     assert.equal(addSensorSpy.getCalls()[0]!.args[0].model, "ESP32_DS18B20");
@@ -298,13 +303,15 @@ describe("SensorList.ts tests", function () {
     assert.equal(addSensorSpy.getCalls()[1]!.args[0].model, "ESP32_DS18B20");
     assert.equal(addSensorSpy.getCalls()[1]!.args[0].subcontrollerId, 1);
 
-    // Simulate connecting some DS18B20s and re-running initialization.
+    // Simulate connecting some DS18B20s.
     addSensorSpy.resetHistory();
     ds18b20GetAddressesStub.resolves(["28-00003", "28-00004", "28-00005"]); // 28-00003, 28-00004 - local devices, 28-00005 - remote device
-    const scope2 = nock("http://127.0.0.12")
-      .get("/api/sensors/ds18b20/addresses")
-      .reply(200, { addresses: ["28-00000", "28-00001", "28-00002", "28-00006"] });
-
+    mockESP32DS18B20.callsFake(async (ipAddress?: string) => {
+      if (ipAddress === "127.0.0.12") {
+        return ["28-00000", "28-00001", "28-00002", "28-00006"];
+      }
+      return [];
+    });
     mockGetDS18B20AddressesAsync.resolves([
       mockDS18B20Data1,
       mockDS18B20Data2,
@@ -312,7 +319,12 @@ describe("SensorList.ts tests", function () {
       mockDS18B20Data4,
     ]);
 
+    // Shouldn't retriger adding unrecognized sensors
     await sensorList.initializeOrRegenerateAsync();
+    assert.equal(addSensorSpy.callCount, 0);
+
+    // Advance the clock to trigger the periodic check
+    await clock.tickAsync(5100);
 
     assert.equal(addSensorSpy.callCount, 3);
 
@@ -328,7 +340,6 @@ describe("SensorList.ts tests", function () {
     assert.equal(addSensorSpy.getCalls()[2]!.args[0].model, "DS18B20");
     assert.isUndefined(addSensorSpy.getCalls()[2]!.args[0].subcontrollerId);
 
-    scope1.done();
-    scope2.done();
+    clock.restore();
   });
 });

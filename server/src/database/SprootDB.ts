@@ -45,7 +45,7 @@ export class SprootDB implements ISprootDB {
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     return this.#connection("sensors as s")
       .leftJoin("subcontrollers as ed", "s.subcontroller_id", "ed.id")
-      .select("s.address", "ed.hostName")
+      .select("s.*", "subcontroller_id as subcontrollerId", "ed.hostName")
       .whereIn("s.model", ["DS18B20", "ESP32_DS18B20"]);
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {

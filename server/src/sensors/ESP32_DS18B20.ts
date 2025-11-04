@@ -100,7 +100,7 @@ async function readTemperatureFromDeviceAsync(
   });
   if (response.ok) {
     const data = (await response.json()) as ESP32_DS18B20ReadingResponse;
-    return data.temperature / 1000;
+    return data.temperature;
   } else {
     return false;
   }

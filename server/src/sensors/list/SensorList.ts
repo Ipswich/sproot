@@ -29,6 +29,7 @@ class SensorList {
   #chartDataPointInterval: number;
   #chartData: SensorListChartData;
   #isUpdating: boolean = false;
+  #ds18b20UpdateSetInterval: NodeJS.Timeout | null = null;
 
   constructor(
     sprootDB: ISprootDB,
@@ -99,6 +100,17 @@ class SensorList {
   }
 
   async initializeOrRegenerateAsync(): Promise<void> {
+    if (!this.#ds18b20UpdateSetInterval) {
+      await this.addUnreconizedDS18B20sToSDBAsync().catch((err) => {
+        this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
+      });
+      this.#ds18b20UpdateSetInterval = setInterval(async () => {
+        await this.addUnreconizedDS18B20sToSDBAsync().catch((err) => {
+          this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
+        });
+      }, 5000);
+    }
+
     if (this.#isUpdating) {
       this.#logger.warn(
         "SensorList is already updating, skipping initializeOrRegenerateAsync call.",
@@ -110,9 +122,6 @@ class SensorList {
     try {
       let sensorListChanges = false;
       const profiler = this.#logger.startTimer();
-      await this.#addUnreconizedDS18B20sToSDBAsync().catch((err) => {
-        this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
-      });
       const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
       const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
 
@@ -229,6 +238,9 @@ class SensorList {
   };
 
   async [Symbol.asyncDispose]() {
+    if (this.#ds18b20UpdateSetInterval) {
+      clearInterval(this.#ds18b20UpdateSetInterval);
+    }
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
   }
 
@@ -507,7 +519,7 @@ class SensorList {
     }
   }
 
-  async #addUnreconizedDS18B20sToSDBAsync() {
+  async addUnreconizedDS18B20sToSDBAsync() {
     // Get all DS18B20 sensors from database
     const subcontrollers = await this.#sprootDB.getSubcontrollersAsync();
     const sensorsFromDatabase = await this.#sprootDB.getDS18B20AddressesAsync();
@@ -549,7 +561,7 @@ class SensorList {
         continue;
       } else {
         this.#logger.info(
-          `Adding unrecognized ESP32_DS18B20 sensor {externalAddress: ${addresses.hostName}, deviceId: ${addresses.deviceId} to database}`,
+          `Adding unrecognized ESP32_DS18B20 sensor {subcontrollerId: ${addresses.subcontrollerId}, deviceId: ${addresses.deviceId} to database}`,
         );
         addToDatabasePromises.push(
           this.#sprootDB.addSensorAsync({

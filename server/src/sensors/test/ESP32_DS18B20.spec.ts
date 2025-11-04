@@ -87,7 +87,7 @@ describe("ESP32_DS18B20.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
-    let mockReading = "20437";
+    let mockReading = "20.437";
     scope
       .get("/api/sensors/ds18b20/28-00000")
       .reply(200, { temperature: mockReading, address: "28-00000" });

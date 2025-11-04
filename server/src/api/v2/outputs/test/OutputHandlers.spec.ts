@@ -147,6 +147,7 @@ describe("OutputHandlers.ts tests", () => {
         isInvertedPwm: true,
         color: "#FF0000",
         automationTimeout: 60,
+        subcontrollerId: null,
       } as SDBOutput;
 
       const mockRequest = {
