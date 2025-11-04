@@ -99,7 +99,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
       .twice()
       .reply(200, () => {
         callCount++;
-        return { voltage: mockReading } as ESP32_ADS1115Response;
+        return { readings: { voltage: mockReading } } as ESP32_ADS1115Response;
       });
 
     const mockADS1115Data = {

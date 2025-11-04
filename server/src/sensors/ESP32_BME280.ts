@@ -54,7 +54,7 @@ class ESP32_BME280 extends SensorBase {
         method: "GET",
       });
       if (response.ok) {
-        const readings = (await response.json()) as ESP32_BME280Response;
+        const readings = ((await response.json()) as ESP32_BME280Response).readings;
         this.lastReading[ReadingType.temperature] = String(readings.temperature);
         this.lastReading[ReadingType.humidity] = String(readings.humidity);
         this.lastReading[ReadingType.pressure] = String(readings.pressure);
@@ -65,10 +65,10 @@ class ESP32_BME280 extends SensorBase {
       this.lastReading[ReadingType.temperature] = undefined;
       this.lastReading[ReadingType.humidity] = undefined;
       this.lastReading[ReadingType.pressure] = undefined;
-      this.logger.error(`Failed to read BME280 sensor ${this.id}. ${err}`);
+      this.logger.error(`Failed to read ESP32_BME280 sensor ${this.id}. ${err}`);
     }
     profiler.done({
-      message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
+      message: `Reading time for sensor {ESP32_BME280, id: ${this.id}, address: ${this.address}`,
       level: "debug",
     });
   }
@@ -80,9 +80,11 @@ class ESP32_BME280 extends SensorBase {
 }
 
 interface ESP32_BME280Response {
-  temperature: number;
-  humidity: number;
-  pressure: number;
+  readings: {
+    temperature: number;
+    humidity: number;
+    pressure: number;
+  };
 }
 
 export { ESP32_BME280 };

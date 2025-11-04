@@ -53,7 +53,7 @@ export class ESP32_ADS1115 extends SensorBase {
       this.lastReading[ReadingType.voltage] = (reading / 10000).toString();
       this.lastReadingTime = new Date();
     } catch (error) {
-      this.logger.error(`Failed to read ADS1115 sensor ${this.id}. ${error}`);
+      this.logger.error(`Failed to read ESP32_ADS1115 sensor ${this.id}. ${error}`);
     }
   }
 
@@ -73,7 +73,7 @@ export class ESP32_ADS1115 extends SensorBase {
       },
     );
     if (response.ok) {
-      const readings = (await response.json()) as ESP32_ADS1115Response;
+      const readings = ((await response.json()) as ESP32_ADS1115Response).readings;
       return readings.voltage;
     } else {
       throw new Error(`Invalid response from sensor: ${response.status} ${response.statusText}`);
@@ -82,7 +82,9 @@ export class ESP32_ADS1115 extends SensorBase {
 }
 
 export interface ESP32_ADS1115Response {
-  channel: number;
-  raw: number;
-  voltage: number;
+  readings: {
+    channel: number;
+    raw: number;
+    voltage: number;
+  };
 }

@@ -60,11 +60,11 @@ class ESP32_DS18B20 extends SensorBase {
       this.lastReadingTime = new Date();
     } catch (err) {
       this.logger.error(
-        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
+        `Failed to get reading for sensor {ESP32_DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
       );
     }
     profiler.done({
-      message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}`,
+      message: `Reading time for sensor {ESP32_DS18B20, id: ${this.id}, address: ${this.address}`,
       level: "debug",
     });
   }

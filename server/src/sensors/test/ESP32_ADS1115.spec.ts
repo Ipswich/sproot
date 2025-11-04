@@ -1,4 +1,7 @@
-import { ESP32_ADS1115 } from "@sproot/sproot-server/src/sensors/ESP32_ADS1115";
+import {
+  ESP32_ADS1115,
+  ESP32_ADS1115Response,
+} from "@sproot/sproot-server/src/sensors/ESP32_ADS1115";
 
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
@@ -93,7 +96,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       .get(new RegExp("^/api/sensors/ads1115/0x48/[0-3]"))
       .reply(200, () => {
         callCount++;
-        return { channel: 0, voltage: 1234, raw: 1234 };
+        return { readings: { channel: 0, voltage: 1234, raw: 1234 } } as ESP32_ADS1115Response;
       });
     const mockADS1115Data = {
       id: 1,

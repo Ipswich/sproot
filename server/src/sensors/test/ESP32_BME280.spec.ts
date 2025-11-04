@@ -111,9 +111,11 @@ describe("ESP32_BME280.ts tests", function () {
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.3");
     let callCount = 0;
     const mockReading = {
-      temperature: 21.2,
-      humidity: 45.6,
-      pressure: 1013.2,
+      readings: {
+        temperature: 21.2,
+        humidity: 45.6,
+        pressure: 1013.2,
+      },
     };
     const scope = nock("http://127.0.0.3")
       .get("/api/sensors/bme280/0x76")
@@ -156,10 +158,16 @@ describe("ESP32_BME280.ts tests", function () {
     assert.equal(callCount, 1);
     assert.equal(
       bme280Sensor!.lastReading[ReadingType.temperature],
-      String(mockReading.temperature),
+      String(mockReading.readings.temperature),
     );
-    assert.equal(bme280Sensor!.lastReading[ReadingType.humidity], String(mockReading.humidity));
-    assert.equal(bme280Sensor!.lastReading[ReadingType.pressure], String(mockReading.pressure));
+    assert.equal(
+      bme280Sensor!.lastReading[ReadingType.humidity],
+      String(mockReading.readings.humidity),
+    );
+    assert.equal(
+      bme280Sensor!.lastReading[ReadingType.pressure],
+      String(mockReading.readings.pressure),
+    );
 
     // GetReading throws an errror
     await using bme280Sensor2 = await new ESP32_BME280(
