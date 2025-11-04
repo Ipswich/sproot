@@ -50,7 +50,10 @@ export class ESP32_ADS1115 extends SensorBase {
   override async takeReadingAsync(): Promise<void> {
     try {
       const reading = await this.getReadingFromDeviceAsync();
-      this.lastReading[ReadingType.voltage] = (reading / 10000).toString();
+      this.lastReading[ReadingType.voltage] = ESP32_ADS1115.computeVoltage(
+        reading,
+        this.gain,
+      ).toString();
       this.lastReadingTime = new Date();
     } catch (error) {
       this.logger.error(`Failed to read ESP32_ADS1115 sensor ${this.id}. ${error}`);
@@ -74,16 +77,34 @@ export class ESP32_ADS1115 extends SensorBase {
     );
     if (response.ok) {
       const readings = ((await response.json()) as ESP32_ADS1115Response).readings;
-      return readings.voltage;
+      return readings.raw;
     } else {
       throw new Error(`Invalid response from sensor: ${response.status} ${response.statusText}`);
+    }
+  }
+
+  static computeVoltage(raw: number, gain: "2/3" | "1" | "2" | "4" | "8" | "16"): number {
+    switch (gain) {
+      case "2/3":
+        return (raw * 6.144) / 32768;
+      case "1":
+        return (raw * 4.096) / 32768;
+      case "2":
+        return (raw * 2.048) / 32768;
+      case "4":
+        return (raw * 1.024) / 32768;
+      case "8":
+        return (raw * 0.512) / 32768;
+      case "16":
+        return (raw * 0.256) / 32768;
+      default:
+        throw new Error("Invalid gain value");
     }
   }
 }
 
 export interface ESP32_ADS1115Response {
   readings: {
-    channel: number;
     raw: number;
     voltage: number;
   };

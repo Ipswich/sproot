@@ -43,7 +43,10 @@ export class ADS1115 extends SensorBase {
   override async takeReadingAsync(): Promise<void> {
     try {
       const reading = await this.getReadingFromDeviceAsync();
-      this.lastReading[ReadingType.voltage] = (reading / 10000).toString();
+      this.lastReading[ReadingType.voltage] = Ads1115Device.computeVoltage(
+        reading,
+        this.gain,
+      ).toString();
       this.lastReadingTime = new Date();
     } catch (error) {
       this.logger.error(`Failed to read ADS1115 sensor ${this.id}. ${error}`);
@@ -193,6 +196,25 @@ export class Ads1115Device {
     );
     // Return the result of this measure
     return next;
+  }
+
+  static computeVoltage(raw: number, gain: "2/3" | "1" | "2" | "4" | "8" | "16"): number {
+    switch (gain) {
+      case "2/3":
+        return (raw * 6.144) / 32768;
+      case "1":
+        return (raw * 4.096) / 32768;
+      case "2":
+        return (raw * 2.048) / 32768;
+      case "4":
+        return (raw * 1.024) / 32768;
+      case "8":
+        return (raw * 0.512) / 32768;
+      case "16":
+        return (raw * 0.256) / 32768;
+      default:
+        throw new Error("Invalid gain value");
+    }
   }
 
   async [Symbol.asyncDispose](): Promise<void> {

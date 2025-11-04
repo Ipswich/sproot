@@ -4,7 +4,7 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { ESP32_ADS1115Response } from "../ESP32_ADS1115";
+import { ESP32_ADS1115, ESP32_ADS1115Response } from "../ESP32_ADS1115";
 
 import { assert } from "chai";
 import nock from "nock";
@@ -99,7 +99,9 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
       .twice()
       .reply(200, () => {
         callCount++;
-        return { readings: { voltage: mockReading } } as ESP32_ADS1115Response;
+        return {
+          readings: { raw: mockReading, voltage: ESP32_ADS1115.computeVoltage(mockReading, "1") },
+        } as ESP32_ADS1115Response;
       });
 
     const mockADS1115Data = {
