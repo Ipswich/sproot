@@ -1,7 +1,7 @@
 import fs from "fs";
 import { Express } from "express";
 import { Server } from "http";
-import mainAsync from "../program";
+import mainAsync, { gracefulHaltAsync } from "../program";
 
 let server: Server;
 let app: Express;
@@ -34,15 +34,12 @@ before(async function () {
   app = await mainAsync();
   server = app.listen(3000);
   console.log("Listening on port 3000");
+  this.timeout(2000);
 });
 
 after(async () => {
-  if (server) {
-    await new Promise<void>((resolve, reject) => {
-      server.close((err) => (err ? reject(err) : resolve()));
-    });
-    console.log("Server closed!");
-  }
+  await gracefulHaltAsync(server, app);
+  console.log("Server closed!");
 });
 
 export { app, server };
