@@ -12,6 +12,7 @@ import {
 import { Fragment, useState } from "react";
 import {
   deleteOutputAsync,
+  getSubcontrollerAsync,
   updateOutputAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
@@ -19,12 +20,13 @@ import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms/PCA9685Form";
-import { FormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
+import { OutputFormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
+import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
@@ -43,8 +45,20 @@ export default function EditTable({
     useDisclosure(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const subcontrollersQuery = useQuery({
+    queryKey: ["get-subcontrollers"],
+    queryFn: () => getSubcontrollerAsync(),
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
+  });
+
   const updateOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
+      if (newOutputValues.subcontrollerId != undefined) {
+        newOutputValues.subcontrollerId = parseInt(
+          String(newOutputValues.subcontrollerId),
+        );
+      }
       newOutputValues.pin = String(newOutputValues.pin);
       await updateOutputAsync(newOutputValues);
     },
@@ -70,12 +84,13 @@ export default function EditTable({
       name: selectedOutput.name,
       color: selectedOutput.color,
       model: selectedOutput.model,
+      subcontrollerId: selectedOutput.subcontrollerId,
       address: selectedOutput.address,
       pin: selectedOutput.pin,
       isPwm: selectedOutput.isPwm,
       isInvertedPwm: selectedOutput.isInvertedPwm,
       automationTimeout: selectedOutput.automationTimeout,
-    } as FormValues,
+    } as OutputFormValues,
 
     validate: {
       id: (value: number | undefined) =>
@@ -94,6 +109,17 @@ export default function EditTable({
         value.length > 0 && value.length <= 64
           ? null
           : "Model must be between 1 and 64 characters",
+      subcontrollerId: (value: number | undefined) => {
+        if (updateOutputForm.values.model === Models.ESP32_PCA9685) {
+          return subcontrollersQuery.data?.recognized.some(
+            (dev) => dev.id === parseInt(String(value)),
+          )
+            ? null
+            : "Must be a valid subcontroller";
+        } else {
+          return null;
+        }
+      },
       address: (value: string) =>
         !value || (value.length > 0 && value.length <= 64)
           ? null
@@ -116,6 +142,10 @@ export default function EditTable({
     updateOutputForm.setFieldValue("name", output.name ?? "");
     updateOutputForm.setFieldValue("color", output.color);
     updateOutputForm.setFieldValue("model", output.model);
+    updateOutputForm.setFieldValue(
+      "subcontrollerId",
+      output.subcontrollerId ?? undefined,
+    );
     updateOutputForm.setFieldValue("address", output.address);
     updateOutputForm.setFieldValue("id", output.id);
     updateOutputForm.setFieldValue("pin", output.pin);
@@ -212,6 +242,14 @@ export default function EditTable({
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
+              ) : selectedOutput.model === Models.ESP32_PCA9685 ? (
+                subcontrollersQuery.isSuccess ? (
+                  <ESP32_PCA9685Form
+                    subcontrollers={subcontrollersQuery.data?.recognized}
+                    selectedOutput={selectedOutput}
+                    form={updateOutputForm}
+                  />
+                ) : null
               ) : null}
               <Group justify="space-between" mt="md">
                 <Button
@@ -235,16 +273,24 @@ export default function EditTable({
             </Fragment>
           ) : (
             <Fragment>
-              {updateOutputForm.values.model === Models.PCA9685 ? (
+              {selectedOutput.model === Models.PCA9685 ? (
                 <PCA9685Form
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
-              ) : updateOutputForm.values.model === Models.TPLINK_SMART_PLUG ? (
+              ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
                 <TPLinkSmartPlugForm
                   selectedOutput={selectedOutput}
                   form={updateOutputForm}
                 />
+              ) : selectedOutput.model === Models.ESP32_PCA9685 ? (
+                subcontrollersQuery.isSuccess ? (
+                  <ESP32_PCA9685Form
+                    subcontrollers={subcontrollersQuery.data?.recognized ?? []}
+                    selectedOutput={selectedOutput}
+                    form={updateOutputForm}
+                  />
+                ) : null
               ) : null}
               <Group justify="flex-end" mt="md">
                 <Button type="submit" disabled={isUpdating}>

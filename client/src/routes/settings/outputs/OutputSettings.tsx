@@ -11,11 +11,12 @@ import { useQuery } from "@tanstack/react-query";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Models } from "@sproot/outputs/Models";
 
-export interface FormValues {
+export interface OutputFormValues {
   id?: number;
   name: string;
   color: string;
   model: keyof typeof Models;
+  subcontrollerId?: number;
   address: string;
   pin: string;
   isPwm: boolean;

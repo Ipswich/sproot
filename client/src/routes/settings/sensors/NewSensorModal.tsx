@@ -10,13 +10,17 @@ import {
   NumberInput,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { addSensorAsync } from "@sproot/sproot-client/src/requests/requests_v2";
+import {
+  addSensorAsync,
+  getSubcontrollerAsync,
+} from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
 import { useRevalidator } from "react-router-dom";
 import { Models } from "@sproot/sproot-common/src/sensors/Models";
+import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";
 
 interface NewSensorModalProps {
   supportedModels: Record<string, string>;
@@ -37,6 +41,16 @@ export default function NewSensorModal({
       if (newSensorValues.pin != null) {
         newSensorValues.pin = String(newSensorValues.pin);
       }
+
+      if (
+        newSensorValues.model === Models.ADS1115 ||
+        newSensorValues.model === Models.CAPACITIVE_MOISTURE_SENSOR ||
+        newSensorValues.model === Models.BME280 ||
+        newSensorValues.model === Models.DS18B20
+      ) {
+        newSensorValues.subcontrollerId = null;
+      }
+
       await addSensorAsync(newSensorValues);
     },
     onSettled: () => {
@@ -44,11 +58,18 @@ export default function NewSensorModal({
       setIsStale(true);
     },
   });
+  const subcontrollersQuery = useQuery({
+    queryKey: ["get-subcontrollers"],
+    queryFn: () => getSubcontrollerAsync(),
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
+  });
 
   const newSensorForm = useForm({
     initialValues: {
       name: "",
       color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
+      subcontrollerId: subcontrollersQuery.data?.recognized?.[0]?.id,
       model: supportedModels[0] ?? "",
       address: "",
       pin: null,
@@ -67,6 +88,24 @@ export default function NewSensorModal({
         value.length > 0 && value.length <= 64
           ? null
           : "Model must be between 1 and 64 characters",
+      subcontrollerId: (value: number | undefined) => {
+        console.log(value);
+        if (
+          newSensorForm.values.model === Models.ESP32_ADS1115 ||
+          newSensorForm.values.model ===
+            Models.ESP32_CAPACITIVE_MOISTURE_SENSOR ||
+          newSensorForm.values.model === Models.ESP32_BME280 ||
+          newSensorForm.values.model === Models.ESP32_DS18B20
+        ) {
+          return subcontrollersQuery.data?.recognized.some(
+            (dev) => dev.id === parseInt(String(value)),
+          )
+            ? null
+            : "Must be a valid subcontroller";
+        } else {
+          return null;
+        }
+      },
       address: (value: string) =>
         !value || (value.length > 0 && value.length <= 64)
           ? null
@@ -86,7 +125,7 @@ export default function NewSensorModal({
         }}
         scrollAreaComponent={ScrollArea.Autosize}
         centered
-        size=""
+        size="xs"
         opened={modalOpened}
         onClose={closeModal}
         title="Add New"
@@ -130,6 +169,37 @@ export default function NewSensorModal({
             required
             {...newSensorForm.getInputProps("model")}
           />
+          {(newSensorForm.values.model === Models.ESP32_ADS1115 ||
+            newSensorForm.values.model ===
+              Models.ESP32_CAPACITIVE_MOISTURE_SENSOR ||
+            newSensorForm.values.model === Models.ESP32_BME280 ||
+            newSensorForm.values.model === Models.ESP32_DS18B20) && (
+            <Select
+              label="Host"
+              placeholder="Select Device"
+              data={
+                subcontrollersQuery.data?.recognized.map(
+                  (device: SDBSubcontroller) => ({
+                    value: String(device.id),
+                    label: device.name,
+                  }),
+                ) ?? []
+              }
+              {...newSensorForm.getInputProps("subcontrollerId")}
+              value={
+                newSensorForm.values.subcontrollerId != null
+                  ? String(newSensorForm.values.subcontrollerId)
+                  : null
+              }
+              onChange={(val) =>
+                newSensorForm.setFieldValue(
+                  "subcontrollerId",
+                  val !== null ? parseInt(val, 10) : undefined,
+                )
+              }
+              required
+            />
+          )}
           <TextInput
             maxLength={64}
             label="Address"
@@ -137,8 +207,10 @@ export default function NewSensorModal({
             {...newSensorForm.getInputProps("address")}
           />
           {(newSensorForm.values.model === Models.ADS1115 ||
+            newSensorForm.values.model === Models.CAPACITIVE_MOISTURE_SENSOR ||
+            newSensorForm.values.model === Models.ESP32_ADS1115 ||
             newSensorForm.values.model ===
-              Models.CAPACITIVE_MOISTURE_SENSOR) && (
+              Models.ESP32_CAPACITIVE_MOISTURE_SENSOR) && (
             <NumberInput
               defaultValue={0}
               label="Pin"

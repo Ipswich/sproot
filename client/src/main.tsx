@@ -25,6 +25,7 @@ import SensorSettings from "./routes/settings/sensors/SensorSettings";
 import SystemSettings from "./routes/settings/system/SystemSettings";
 import CameraSettings from "./routes/settings/camera/CameraSettings";
 import HomeRouter from "./routes/HomeRouter";
+import SubcontrollerSettings from "./routes/settings/subcontrollers/SubcontrollerSettings";
 
 // Create loader functions with fallback logic
 const liveViewLoader = async () => {
@@ -103,7 +104,11 @@ const router = createBrowserRouter([
         path: "/settings/sensors",
         element: <SensorSettings />,
       },
-      { path: "/settings/camera", element: <CameraSettings /> },
+      {
+        path: "/settings/camera",
+        element: <CameraSettings />,
+      },
+      { path: "/settings/subcontrollers", element: <SubcontrollerSettings /> },
       {
         path: "/settings/system",
         element: <SystemSettings />,

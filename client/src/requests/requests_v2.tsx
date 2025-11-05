@@ -4,6 +4,7 @@ import {
   AutomationOperator,
   IAutomation,
 } from "@sproot/automation/IAutomation";
+import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
@@ -777,6 +778,79 @@ export async function getSystemStatusAsync(): Promise<SystemStatus> {
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
+}
+
+export async function getSubcontrollerAsync(): Promise<{
+  recognized: SDBSubcontroller[];
+  unrecognized: {
+    name: string;
+    hostName: string;
+    address: string | string[];
+  }[];
+}> {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/subcontrollers`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching subcontrollers: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function addSubcontrollerAsync(device: {
+  name: string;
+  hostName: string;
+}): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/subcontrollers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(device),
+    mode: "cors",
+    // credentials: "include",
+  });
+
+  if (!response.ok) {
+    console.error(`Error adding subcontroller ${device.hostName}: ${response}`);
+  }
+}
+
+export async function updateSubcontrollerAsync(device: {
+  id: number;
+  name: string;
+  hostName: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/system/subcontrollers/${device.id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(device),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error updating subcontroller: ${response}`);
+  }
+}
+
+export async function deleteSubcontrollerAsync(id: number): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/system/subcontrollers/${id}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error deleting subcontroller: ${response}`);
+  }
 }
 
 function queryBuilder(

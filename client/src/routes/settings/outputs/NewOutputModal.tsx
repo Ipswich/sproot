@@ -10,17 +10,21 @@ import {
   NumberInput,
 } from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { addOutputAsync } from "@sproot/sproot-client/src/requests/requests_v2";
+import {
+  addOutputAsync,
+  getSubcontrollerAsync,
+} from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
 import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms/PCA9685Form";
-import { FormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
-import { useMutation } from "@tanstack/react-query";
+import { OutputFormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { Fragment } from "react";
 
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
+import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
 
 interface NewOutputModalProps {
   supportedModels: Record<string, string>;
@@ -38,6 +42,14 @@ export default function NewOutputModal({
   const revalidator = useRevalidator();
   const addOutputMutation = useMutation({
     mutationFn: async (newOutputValues: IOutputBase) => {
+      if (newOutputValues.subcontrollerId != undefined) {
+        newOutputValues.subcontrollerId = parseInt(
+          String(newOutputValues.subcontrollerId),
+        );
+      }
+      if (newOutputValues.model !== Models.ESP32_PCA9685) {
+        newOutputValues.subcontrollerId = null;
+      }
       newOutputValues.pin = String(newOutputValues.pin);
       await addOutputAsync(newOutputValues);
     },
@@ -45,6 +57,12 @@ export default function NewOutputModal({
       setIsStale(true);
       revalidator.revalidate();
     },
+  });
+  const subcontrollersQuery = useQuery({
+    queryKey: ["get-subcontrollers"],
+    queryFn: () => getSubcontrollerAsync(),
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
   });
 
   const newOutputForm = useForm({
@@ -58,11 +76,12 @@ export default function NewOutputModal({
       name: "",
       color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
       model: supportedModels[0] ?? "",
+      subcontrollerId: subcontrollersQuery.data?.recognized?.[0]?.id,
       address: "",
       pin: "0",
       isPwm: false,
       isInvertedPwm: false,
-    } as FormValues,
+    } as OutputFormValues,
 
     validate: {
       name: (value: string) =>
@@ -77,6 +96,17 @@ export default function NewOutputModal({
         value.length > 0 && value.length <= 64
           ? null
           : "Model must be between 1 and 64 characters",
+      subcontrollerId: (value: number | undefined) => {
+        if (newOutputForm.values.model === Models.ESP32_PCA9685) {
+          return subcontrollersQuery.data?.recognized.some(
+            (dev) => dev.id === parseInt(String(value)),
+          )
+            ? null
+            : "Must be a valid subcontroller";
+        } else {
+          return null;
+        }
+      },
       address: (value: string) =>
         !value || (value.length > 0 && value.length <= 64)
           ? null
@@ -164,6 +194,13 @@ export default function NewOutputModal({
             <PCA9685Form form={newOutputForm} />
           ) : newOutputForm.values.model === Models.TPLINK_SMART_PLUG ? (
             <TPLinkSmartPlugForm form={newOutputForm} />
+          ) : newOutputForm.values.model === Models.ESP32_PCA9685 ? (
+            subcontrollersQuery.isSuccess ? (
+              <ESP32_PCA9685Form
+                subcontrollers={subcontrollersQuery.data?.recognized}
+                form={newOutputForm}
+              />
+            ) : null
           ) : null}
           <Group justify="flex-end" mt="md">
             <Button type="submit">Add Output</Button>
