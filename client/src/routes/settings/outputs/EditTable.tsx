@@ -170,7 +170,10 @@ export default function EditTable({
         centered
         size="xs"
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          closeModal();
+          updateOutputForm.reset();
+        }}
         title="Edit"
       >
         <form
@@ -180,6 +183,7 @@ export default function EditTable({
             setIsUpdating(false);
             setSelectedOutput({} as IOutputBase);
             closeModal();
+            updateOutputForm.reset();
           })}
         >
           <TextInput
@@ -262,6 +266,7 @@ export default function EditTable({
                     setIsUpdating(false);
                     setSelectedOutput({} as IOutputBase);
                     closeModal();
+                    updateOutputForm.reset();
                   }}
                 >
                   Delete

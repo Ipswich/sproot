@@ -38,10 +38,12 @@ export default function NewSensorModal({
   const revalidator = useRevalidator();
   const addSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
-      if (newSensorValues.pin != null) {
-        newSensorValues.pin = String(newSensorValues.pin);
+      // BME280 does not use a pin
+      if (newSensorValues.model === Models.BME280) {
+        newSensorValues.pin = null;
       }
 
+      // If not an ESP32 subcontroller model, clear subcontrollerId
       if (
         newSensorValues.model === Models.ADS1115 ||
         newSensorValues.model === Models.CAPACITIVE_MOISTURE_SENSOR ||
@@ -49,6 +51,10 @@ export default function NewSensorModal({
         newSensorValues.model === Models.DS18B20
       ) {
         newSensorValues.subcontrollerId = null;
+      }
+
+      if (newSensorValues.pin != null) {
+        newSensorValues.pin = String(newSensorValues.pin);
       }
 
       await addSensorAsync(newSensorValues);
@@ -127,13 +133,17 @@ export default function NewSensorModal({
         centered
         size="xs"
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          closeModal();
+          newSensorForm.reset();
+        }}
         title="Add New"
       >
         <form
           onSubmit={newSensorForm.onSubmit(async (values) => {
             await addSensorMutation.mutateAsync(values as ISensorBase);
             closeModal();
+            newSensorForm.reset();
           })}
         >
           <TextInput

@@ -45,6 +45,11 @@ export default function EditTable({
 
   const updateSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
+      // BME280 does not use a pin
+      if (newSensorValues.model === Models.BME280) {
+        newSensorValues.pin = null;
+      }
+
       if (newSensorValues.pin != null) {
         newSensorValues.pin = String(newSensorValues.pin);
       }
@@ -152,7 +157,10 @@ export default function EditTable({
         centered
         size="xs"
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          closeModal();
+          updateSensorForm.reset();
+        }}
         title="Edit"
       >
         <form
@@ -162,6 +170,7 @@ export default function EditTable({
             setIsUpdating(false);
             setSelectedSensor({} as ISensorBase);
             closeModal();
+            updateSensorForm.reset();
           })}
         >
           <TextInput
@@ -260,6 +269,7 @@ export default function EditTable({
                 setIsUpdating(false);
                 setSelectedSensor({} as ISensorBase);
                 closeModal();
+                updateSensorForm.reset();
               }}
             >
               Delete

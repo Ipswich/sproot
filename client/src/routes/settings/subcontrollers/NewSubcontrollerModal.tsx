@@ -72,7 +72,10 @@ export default function NewSubcontrollerModal({
         centered
         size="xs"
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          closeModal();
+          newSubcontrollerForm.reset();
+        }}
         title="Configure ESP32s"
       >
         <form
@@ -112,6 +115,7 @@ export default function NewSubcontrollerModal({
                 });
                 setIsUpdating(false);
                 closeModal();
+                newSubcontrollerForm.reset();
               })();
             }}
           >

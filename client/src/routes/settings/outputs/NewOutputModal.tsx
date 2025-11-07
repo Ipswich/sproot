@@ -136,13 +136,17 @@ export default function NewOutputModal({
         centered
         size="xs"
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          closeModal();
+          newOutputForm.reset();
+        }}
         title="Add New"
       >
         <form
           onSubmit={newOutputForm.onSubmit(async (values) => {
             await addOutputMutation.mutateAsync(values as IOutputBase);
             closeModal();
+            newOutputForm.reset();
           })}
         >
           <TextInput

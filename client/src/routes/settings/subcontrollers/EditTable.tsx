@@ -93,7 +93,10 @@ export default function EditTable({
         centered
         size="xs"
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          updateDeviceForm.reset();
+          closeModal();
+        }}
         title="Edit"
       >
         <form
@@ -106,6 +109,7 @@ export default function EditTable({
             });
             setIsUpdating(false);
             setSelectedDevice({} as ISubcontroller);
+            updateDeviceForm.reset();
             closeModal();
           })}
         >
@@ -132,6 +136,7 @@ export default function EditTable({
                 delete subcontrollers[selectedDevice.id];
                 setIsUpdating(false);
                 setSelectedDevice({} as ISubcontroller);
+                updateDeviceForm.reset();
                 closeModal();
               }}
             >
