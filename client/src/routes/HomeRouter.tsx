@@ -25,5 +25,5 @@ export default function HomeRouter() {
   }
 
   // Final fallback - sensor settings
-  return <Navigate to="/settings/sensor" replace />;
+  return <Navigate to="/settings/sensors" replace />;
 }
