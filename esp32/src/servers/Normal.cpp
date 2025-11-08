@@ -15,7 +15,8 @@ void startNormalMode(AsyncWebServer& server)
   Serial.println("Starting Normal Mode...");
   uint64_t chipid = ESP.getEfuseMac();
   char hostname[32];
-  snprintf(hostname, sizeof(hostname), "sproot-esp32-%04llX", chipid & 0xFFFF); // Should give something like sensor-1A2B
+  uint16_t last16 = (chipid >> 32) & 0xFFFF;
+  snprintf(hostname, sizeof(hostname), "sproot-esp32-%04X", last16); // Should give something like sensor-1A2B
 
   if (!MDNS.begin(hostname)) {
     Serial.println("Error starting mDNS");
