@@ -73,3 +73,8 @@ void setupRoutes(AsyncWebServer& server)
     request->send(200, "text/plain", "pong"); 
   });
 }
+
+void stopNormalMode(AsyncWebServer& server) {
+  MDNS.end();
+  server.end();
+}

@@ -5,7 +5,7 @@
 
 const byte DNS_PORT = 53;
 
-void startSoftAPMode(AsyncWebServer & server, DNSServer & dnsServer)
+void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
 { 
   uint64_t chipid = ESP.getEfuseMac();
   char networkName[32];
@@ -141,9 +141,13 @@ void startSoftAPMode(AsyncWebServer & server, DNSServer & dnsServer)
     prefs.end();
 
     request->send(200, "application/json", "{\"status\":\"success\", \"message\":\"Credentials saved. Rebooting...\"}");
-    delay(1000);
-    ESP.restart();
+    Serial.println("Credendials saved! Swapping to normal server!");
   });
 
   server.begin();
+}
+
+void stopSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer) {
+  dnsServer.stop();
+  server.end();
 }
