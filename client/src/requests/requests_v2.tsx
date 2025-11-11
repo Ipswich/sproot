@@ -228,7 +228,7 @@ export async function updateAutomationAsync(
   id: number,
   name?: string,
   operator?: AutomationOperator,
-  enabled?: boolean
+  enabled?: boolean,
 ): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
     method: "PATCH",

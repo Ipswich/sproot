@@ -8,7 +8,10 @@ interface EditablesTableProps {
   editables: ISensorBase[] | IOutputBase[] | IAutomation[];
   onEditClick: (item: ISensorBase | IOutputBase | IAutomation) => void;
   onNameClick?: (item: ISensorBase | IOutputBase | IAutomation) => void;
-  onSwitchClick?: (item: { id: number, enabled: boolean }, enabled: boolean) => void;
+  onSwitchClick?: (
+    item: { id: number; enabled: boolean },
+    enabled: boolean,
+  ) => void;
 }
 
 export default function EditablesTable({
@@ -27,23 +30,34 @@ export default function EditablesTable({
     >
       <Table.Thead>
         <Table.Tr>
-          {onSwitchClick && <Table.Th style={{ textAlign: "center" }}>Enabled</Table.Th>}
+          {onSwitchClick && (
+            <Table.Th style={{ textAlign: "center" }}>Enabled</Table.Th>
+          )}
           <Table.Th style={{ textAlign: "center" }}>Name</Table.Th>
           <Table.Th style={{ textAlign: "center" }}>Edit</Table.Th>
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
         {[...editables]
-          .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
+          .sort((a, b) =>
+            (a.name || "").localeCompare(b.name || "", undefined, {
+              sensitivity: "base",
+            }),
+          )
           .map((editable) => (
             <Table.Tr key={editable.id}>
               {onSwitchClick && (
                 <Table.Td pl="" style={{ width: "25%" }} align="left">
                   <Group justify="center">
                     <Switch
-                      checked={(editable as { id: number, enabled: boolean }).enabled}
+                      checked={
+                        (editable as { id: number; enabled: boolean }).enabled
+                      }
                       onChange={(event) => {
-                        onSwitchClick(editable as { id: number, enabled: boolean }, event.currentTarget.checked);
+                        onSwitchClick(
+                          editable as { id: number; enabled: boolean },
+                          event.currentTarget.checked,
+                        );
                       }}
                     />
                   </Group>
@@ -54,8 +68,8 @@ export default function EditablesTable({
                 onClick={
                   onNameClick
                     ? () => {
-                      onNameClick(editable);
-                    }
+                        onNameClick(editable);
+                      }
                     : undefined
                 }
               >

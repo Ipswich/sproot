@@ -69,8 +69,22 @@ describe("OutputAutomation.ts tests", () => {
 
   it("should only evaluate enabled automations", async () => {
     const sprootDB = sinon.createStubInstance(MockSprootDB);
-    const automationEnabled = new OutputAutomation(1, "enabledAutomation", 100, "or", true, sprootDB);
-    const automationDisabled = new OutputAutomation(2, "disabledAutomation", 100, "or", false, sprootDB);
+    const automationEnabled = new OutputAutomation(
+      1,
+      "enabledAutomation",
+      100,
+      "or",
+      true,
+      sprootDB,
+    );
+    const automationDisabled = new OutputAutomation(
+      2,
+      "disabledAutomation",
+      100,
+      "or",
+      false,
+      sprootDB,
+    );
     const sensorListMock = sinon.createStubInstance(SensorList);
     const outputListMock = sinon.createStubInstance(OutputList);
 
@@ -88,7 +102,7 @@ describe("OutputAutomation.ts tests", () => {
         groupType: "anyOf",
         startTime: null,
         endTime: null,
-      } as SDBTimeCondition
+      } as SDBTimeCondition,
     ]);
     sprootDB.getWeekdayConditionsAsync.resolves([]);
     await automationEnabled.conditions.loadAsync();

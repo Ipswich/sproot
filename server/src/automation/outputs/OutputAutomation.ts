@@ -32,7 +32,7 @@ export class OutputAutomation implements IAutomation {
     if (!this.enabled) {
       return null;
     }
-    
+
     return this.conditions.evaluate(this.operator, sensorList, outputList, now) ? this.value : null;
   }
 }

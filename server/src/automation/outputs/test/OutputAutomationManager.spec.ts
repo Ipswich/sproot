@@ -304,18 +304,17 @@ describe("OutputAutomationManager.ts tests", () => {
       const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
-      const actionView = 
-        {
-          automationId: 1,
-          actionId: "1",
-          name: "test",
-          outputId: "1",
-          value: 75,
-          operator: "or",
-          enabled: false,
-        } as SDBOutputActionView;
+      const actionView = {
+        automationId: 1,
+        actionId: "1",
+        name: "test",
+        outputId: "1",
+        value: 75,
+        operator: "or",
+        enabled: false,
+      } as SDBOutputActionView;
 
-      sprootDB.getAutomationsForOutputAsync.resolves([ actionView ]);
+      sprootDB.getAutomationsForOutputAsync.resolves([actionView]);
 
       sprootDB.getSensorConditionsAsync.resolves([]);
       sprootDB.getOutputConditionsAsync.resolves([]);
@@ -334,10 +333,10 @@ describe("OutputAutomationManager.ts tests", () => {
       let result = automationManager.evaluate(sensorListMock, outputListMock, 0);
       assert.equal(result?.names.length, 0);
       assert.isNull(result.value);
-      
+
       // Same thing, but enabled
       actionView.enabled = true;
-      sprootDB.getAutomationsForOutputAsync.resolves([ actionView ]);
+      sprootDB.getAutomationsForOutputAsync.resolves([actionView]);
 
       await automationManager.loadAsync(1);
       result = automationManager.evaluate(sensorListMock, outputListMock, 0);

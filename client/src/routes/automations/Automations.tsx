@@ -3,7 +3,10 @@ import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
-import { getAutomationsAsync, updateAutomationAsync } from "../../requests/requests_v2";
+import {
+  getAutomationsAsync,
+  updateAutomationAsync,
+} from "../../requests/requests_v2";
 import EditablesTable from "../common/EditablesTable";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import EditAutomationModal from "./EditAutomationModal";
@@ -22,8 +25,13 @@ export default function Automations() {
   });
 
   const mutateAutomationEnabled = useMutation({
-    mutationFn: async (params: {id: number, enabled: boolean}) => {
-      await updateAutomationAsync(params.id, undefined, undefined, params.enabled);
+    mutationFn: async (params: { id: number; enabled: boolean }) => {
+      await updateAutomationAsync(
+        params.id,
+        undefined,
+        undefined,
+        params.enabled,
+      );
     },
     onSuccess: () => {
       getAutomationsQuery.refetch();
@@ -71,7 +79,7 @@ export default function Automations() {
                 viewAutomationModal();
               }}
               onSwitchClick={(item, enabled) => {
-                mutateAutomationEnabled.mutate({id: item.id, enabled});
+                mutateAutomationEnabled.mutate({ id: item.id, enabled });
               }}
             />
             <Button
