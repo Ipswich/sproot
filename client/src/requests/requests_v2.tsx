@@ -226,14 +226,15 @@ export async function addAutomationAsync(
 
 export async function updateAutomationAsync(
   id: number,
-  name: string,
-  operator: AutomationOperator,
+  name?: string,
+  operator?: AutomationOperator,
+  enabled?: boolean,
 ): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     mode: "cors",
-    body: JSON.stringify({ name, operator }),
+    body: JSON.stringify({ name, operator, enabled }),
     // credentials: "include",
   });
   if (!response.ok) {
