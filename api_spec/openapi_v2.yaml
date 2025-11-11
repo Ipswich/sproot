@@ -4047,8 +4047,6 @@ components:
         A generic automation object stored in the database. This is the base object that all automations
         are built from. Contains a just a name and an ID.
       type: object
-      required:
-        - "name"
       properties:
         id:
           readOnly: true
