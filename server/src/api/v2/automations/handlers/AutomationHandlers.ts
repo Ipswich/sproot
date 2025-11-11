@@ -199,10 +199,12 @@ export async function updateAsync(request: Request, response: Response) {
 
     automation.name = request.body["name"] ?? automation.name;
     automation.operator = request.body["operator"] ?? automation.operator;
+    automation.enabled = request.body["enabled"] ?? automation.enabled;
     await automationDataManager.updateAutomationAsync(
+      parseInt(request.params["automationId"]),
       automation.name,
       automation.operator,
-      parseInt(request.params["automationId"]),
+      automation.enabled,
     );
     updateAutomationResponse = {
       statusCode: 200,
