@@ -9,6 +9,7 @@ export class OutputAutomation implements IAutomation {
   name: string;
   value: number;
   operator: AutomationOperator;
+  enabled: boolean;
   conditions: Conditions;
 
   constructor(
@@ -16,16 +17,22 @@ export class OutputAutomation implements IAutomation {
     name: string,
     value: number,
     operator: AutomationOperator,
+    enabled: boolean,
     sprootDB: ISprootDB,
   ) {
     this.id = id;
     this.name = name;
     this.value = value;
     this.operator = operator;
+    this.enabled = enabled;
     this.conditions = new Conditions(this.id, sprootDB);
   }
 
   evaluate(sensorList: SensorList, outputList: OutputList, now: Date): number | null {
+    if (!this.enabled) {
+      return null;
+    }
+    
     return this.conditions.evaluate(this.operator, sensorList, outputList, now) ? this.value : null;
   }
 }

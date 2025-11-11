@@ -4060,10 +4060,9 @@ components:
         operator:
           type: string
           example: "or"
-        # conditions:
-        #   readOnly: true
-        #   allOf:
-        #     - $ref: "#/components/schemas/AutomationConditions"
+        enabled:
+          type: boolean
+          example: true
 
     OutputAction:
       description: >

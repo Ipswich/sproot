@@ -39,6 +39,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 75,
           operator: "or",
+          enabled: true,
         } as SDBOutputActionView,
       ]);
 
@@ -79,6 +80,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 75,
           operator: "or",
+          enabled: true,
         } as SDBOutputActionView,
       ]);
 
@@ -110,6 +112,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 25,
           operator: "or",
+          enabled: true,
         } as SDBOutputActionView,
       ]);
       await automationManager.loadAsync(1);
@@ -157,6 +160,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 75,
           operator: "or",
+          enabled: true,
         } as SDBOutputActionView,
       ]);
 
@@ -193,6 +197,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 50,
           operator: "or",
+          enabled: true,
         } as SDBOutputActionView,
         {
           automationId: 2,
@@ -201,6 +206,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 50,
           operator: "and",
+          enabled: true,
         } as SDBOutputActionView,
       ]);
 
@@ -249,6 +255,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 75,
           operator: "or",
+          enabled: true,
         } as SDBOutputActionView,
         {
           automationId: 2,
@@ -257,6 +264,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 50,
           operator: "and",
+          enabled: true,
         } as SDBOutputActionView,
       ]);
 
@@ -290,6 +298,52 @@ describe("OutputAutomationManager.ts tests", () => {
       assert.equal(result?.names[1], "test2");
       assert.isNull(result.value);
     });
+
+    it("should ignore disabled automations", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const automationManager = new OutputAutomationManager(sprootDB, mockLogger);
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const outputListMock = sinon.createStubInstance(OutputList);
+      const actionView = 
+        {
+          automationId: 1,
+          actionId: "1",
+          name: "test",
+          outputId: "1",
+          value: 75,
+          operator: "or",
+          enabled: false,
+        } as SDBOutputActionView;
+
+      sprootDB.getAutomationsForOutputAsync.resolves([ actionView ]);
+
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          groupType: "allOf",
+          startTime: null,
+          endTime: null,
+        } as SDBTimeCondition,
+      ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
+
+      await automationManager.loadAsync(1);
+      let result = automationManager.evaluate(sensorListMock, outputListMock, 0);
+      assert.equal(result?.names.length, 0);
+      assert.isNull(result.value);
+      
+      // Same thing, but enabled
+      actionView.enabled = true;
+      sprootDB.getAutomationsForOutputAsync.resolves([ actionView ]);
+
+      await automationManager.loadAsync(1);
+      result = automationManager.evaluate(sensorListMock, outputListMock, 0);
+      assert.equal(result?.names.length, 1);
+      assert.equal(result.value, 75);
+    });
   });
 
   describe("loadAsync", () => {
@@ -305,6 +359,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 75,
           operator: "or",
+          enabled: true,
         } as SDBOutputActionView,
         {
           automationId: 2,
@@ -313,6 +368,7 @@ describe("OutputAutomationManager.ts tests", () => {
           outputId: "1",
           value: 50,
           operator: "and",
+          enabled: true,
         } as SDBOutputActionView,
       ]);
 

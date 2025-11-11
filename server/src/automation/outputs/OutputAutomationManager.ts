@@ -125,6 +125,7 @@ export default class OutputAutomationManager {
         automation.name,
         automation.value,
         automation.operator,
+        automation.enabled,
         this.#sprootDB,
       );
 

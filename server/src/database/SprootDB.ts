@@ -201,8 +201,9 @@ export class SprootDB implements ISprootDB {
     name: string,
     operator: AutomationOperator,
     id: number,
+    enabled: boolean,
   ): Promise<void> {
-    return this.#connection("automations").where("id", id).update({ name, operator });
+    return this.#connection("automations").where("id", id).update({ name, operator, enabled });
   }
   async deleteAutomationAsync(automationId: number): Promise<void> {
     return this.#connection("automations").where("id", automationId).delete();

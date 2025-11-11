@@ -32,8 +32,8 @@ class AutomationDataManager {
     await this.#postAutomationChangeFunctionAsync();
   }
 
-  async updateAutomationAsync(name: string, operator: AutomationOperator, id: number) {
-    await this.#sprootDB.updateAutomationAsync(name, operator, id);
+  async updateAutomationAsync(id: number, name: string, operator: AutomationOperator, enabled: boolean) {
+    await this.#sprootDB.updateAutomationAsync(name, operator, id, enabled);
     await this.#postAutomationChangeFunctionAsync();
   }
 

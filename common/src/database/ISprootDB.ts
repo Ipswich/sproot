@@ -68,7 +68,7 @@ interface ISprootDB {
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
   addAutomationAsync(name: string, operator: AutomationOperator): Promise<number>;
-  updateAutomationAsync(name: string, operator: AutomationOperator, id: number): Promise<void>;
+  updateAutomationAsync(name: string, operator: AutomationOperator, id: number, enabled: boolean): Promise<void>;
   deleteAutomationAsync(automationId: number): Promise<void>;
 
   getOutputActionsAsync(): Promise<SDBOutputAction[]>;
@@ -218,6 +218,7 @@ class MockSprootDB implements ISprootDB {
     _name: string,
     _operator: AutomationOperator,
     _id: number,
+    _enabled: boolean,
   ): Promise<void> {
     return;
   }

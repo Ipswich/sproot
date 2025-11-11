@@ -1,10 +1,10 @@
-import { RowDataPacket } from "mysql2";
 import { AutomationOperator } from "../automation/IAutomation";
 
-type SDBAutomation = RowDataPacket & {
+type SDBAutomation = {
   automationId: number;
   name: string;
   operator: AutomationOperator;
+  enabled: boolean;
 };
 
 export type { SDBAutomation };
