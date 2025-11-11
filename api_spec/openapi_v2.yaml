@@ -4322,6 +4322,10 @@ components:
         model:
           type: string
           example: "PCA9685"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
         address:
           type: string
           example: "0x40"
@@ -4652,6 +4656,10 @@ components:
         model:
           type: string
           example: "DS18B20"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
         address:
           type: string
           example: "28-00000"

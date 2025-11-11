@@ -104,7 +104,6 @@ jobs:
           build-args: |
             VITE_VERSION=${{ env.VERSION }}
             VITE_API_SERVER_URL=
-            VITE_PRECONFIGURED=false
           file: ./${{ matrix.service }}/Dockerfile
           platforms: linux/arm64,linux/amd64
           push: true

@@ -21,7 +21,6 @@ env:
   DATABASE_PORT: 3306
   DATABASE_USER: root
   DATABASE_PASSWORD: root
-  PRECONFIGURED: false
 
 jobs:
   prettier:

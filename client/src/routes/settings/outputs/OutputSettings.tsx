@@ -78,13 +78,9 @@ export default function OutputSettings() {
           supportedModels={supportedModels}
           setIsStale={setIsStale}
         />
-        {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
-          <Fragment>
-            <Button size="xl" w={rem(300)} onClick={newOutputModalOpen}>
-              Add New
-            </Button>
-          </Fragment>
-        ) : null}
+        <Button size="xl" w={rem(300)} onClick={newOutputModalOpen}>
+          Add New
+        </Button>
       </Stack>
     </Fragment>
   );

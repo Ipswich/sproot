@@ -214,96 +214,65 @@ export default function EditTable({
             swatches={[...DefaultColors]}
             {...updateOutputForm.getInputProps("color")}
           />
-          {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
-            <Fragment>
-              <NativeSelect
-                label="Model"
-                data={Object.keys(supportedModels).map((key) => {
-                  return { value: key, label: supportedModels[key]! };
-                })}
-                required
-                {...updateOutputForm.getInputProps("model")}
-                disabled
+          <NativeSelect
+            label="Model"
+            data={Object.keys(supportedModels).map((key) => {
+              return { value: key, label: supportedModels[key]! };
+            })}
+            required
+            {...updateOutputForm.getInputProps("model")}
+            disabled
+          />
+          <NumberInput
+            min={0}
+            max={999999999}
+            step={1}
+            label="Automation Timeout"
+            suffix=" seconds"
+            stepHoldDelay={500}
+            stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+            required
+            {...updateOutputForm.getInputProps("automationTimeout")}
+          />
+          {selectedOutput.model === Models.PCA9685 ? (
+            <PCA9685Form
+              selectedOutput={selectedOutput}
+              form={updateOutputForm}
+            />
+          ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
+            <TPLinkSmartPlugForm
+              selectedOutput={selectedOutput}
+              form={updateOutputForm}
+            />
+          ) : selectedOutput.model === Models.ESP32_PCA9685 ? (
+            subcontrollersQuery.isSuccess ? (
+              <ESP32_PCA9685Form
+                subcontrollers={subcontrollersQuery.data?.recognized}
+                selectedOutput={selectedOutput}
+                form={updateOutputForm}
               />
-              <NumberInput
-                min={0}
-                max={999999999}
-                step={1}
-                label="Automation Timeout"
-                suffix=" seconds"
-                stepHoldDelay={500}
-                stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-                required
-                {...updateOutputForm.getInputProps("automationTimeout")}
-              />
-              {selectedOutput.model === Models.PCA9685 ? (
-                <PCA9685Form
-                  selectedOutput={selectedOutput}
-                  form={updateOutputForm}
-                />
-              ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
-                <TPLinkSmartPlugForm
-                  selectedOutput={selectedOutput}
-                  form={updateOutputForm}
-                />
-              ) : selectedOutput.model === Models.ESP32_PCA9685 ? (
-                subcontrollersQuery.isSuccess ? (
-                  <ESP32_PCA9685Form
-                    subcontrollers={subcontrollersQuery.data?.recognized}
-                    selectedOutput={selectedOutput}
-                    form={updateOutputForm}
-                  />
-                ) : null
-              ) : null}
-              <Group justify="space-between" mt="md">
-                <Button
-                  disabled={isUpdating}
-                  color="red"
-                  onClick={async () => {
-                    setIsUpdating(true);
-                    await deleteOutputMutation.mutateAsync(selectedOutput.id);
-                    delete outputs[selectedOutput.id];
-                    setIsUpdating(false);
-                    setSelectedOutput({} as IOutputBase);
-                    closeModal();
-                    updateOutputForm.reset();
-                  }}
-                >
-                  Delete
-                </Button>
-                <Button type="submit" disabled={isUpdating}>
-                  Update Output
-                </Button>
-              </Group>
-            </Fragment>
-          ) : (
-            <Fragment>
-              {selectedOutput.model === Models.PCA9685 ? (
-                <PCA9685Form
-                  selectedOutput={selectedOutput}
-                  form={updateOutputForm}
-                />
-              ) : selectedOutput.model === Models.TPLINK_SMART_PLUG ? (
-                <TPLinkSmartPlugForm
-                  selectedOutput={selectedOutput}
-                  form={updateOutputForm}
-                />
-              ) : selectedOutput.model === Models.ESP32_PCA9685 ? (
-                subcontrollersQuery.isSuccess ? (
-                  <ESP32_PCA9685Form
-                    subcontrollers={subcontrollersQuery.data?.recognized ?? []}
-                    selectedOutput={selectedOutput}
-                    form={updateOutputForm}
-                  />
-                ) : null
-              ) : null}
-              <Group justify="flex-end" mt="md">
-                <Button type="submit" disabled={isUpdating}>
-                  Update Output
-                </Button>
-              </Group>
-            </Fragment>
-          )}
+            ) : null
+          ) : null}
+          <Group justify="space-between" mt="md">
+            <Button
+              disabled={isUpdating}
+              color="red"
+              onClick={async () => {
+                setIsUpdating(true);
+                await deleteOutputMutation.mutateAsync(selectedOutput.id);
+                delete outputs[selectedOutput.id];
+                setIsUpdating(false);
+                setSelectedOutput({} as IOutputBase);
+                closeModal();
+                updateOutputForm.reset();
+              }}
+            >
+              Delete
+            </Button>
+            <Button type="submit" disabled={isUpdating}>
+              Update Output
+            </Button>
+          </Group>
         </form>
       </Modal>
       <EditablesTable

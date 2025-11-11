@@ -13,9 +13,7 @@ sproot is a Raspberry Pi-based greenhouse controller and monitoring system with 
 Grab the `docker-compose.yaml` file (or clone the repo), and run `sudo docker compose up -d`. Images exist for `linux/amd64` and `linux/arm64`.
 
 ### Building locally
-If you'd rather build the project yourself, clone the repo and comment/uncomment the relevant lines in the `docker-compose.yaml` file.
-
-Additionally, you'll find that there's a `.env.preconfigured` file. This file is useful for soft-locking sproot to the outputs it was designed around - 4 relays, 4 PWM controllers. When the images are built with this env file, the front end will no longer display the buttons to add or remove outputs. Please note that this won't prevent the API from making such changes.
+If you'd rather build the project yourself, clone the repo and edit the relevant lines in the `docker-compose.yaml` file and run `docker compose build [server | client]` from the root of the project.
 
 ## Running for Development
 ### Server
@@ -31,7 +29,8 @@ Foremost, I'd like to note that my implementation is soldered. This can still be
 
 The parts used in my implementation of Sproot are fairly common and easily acquired. I've ordered everything off of Amazon, but you could likely just as easily source things from Digikey, Mouser, or any other electronics supply store. Any links to parts are intended to be used as reference; however, for the most part, these are the parts I used (I tend to order plenty of replacements).
 
-Lastly, this section is scoped for the `preconfigured` option, though you should be able to extrapolate from the [circuitry](/schematics//Sproot%20Circuit.pdf) fairly easily if you want to expand on what's here.
+Lastly, this section is scoped for a basic "preconfigured" option, though you should be able to extrapolate from the [circuitry](/schematics//Sproot%20Circuit.pdf) fairly easily if you want to expand on what's here.
+I'm no electrical engineer, so sort of a "take it as a starting point" plan.
 
 #### Raspberry Pi
 You need one. I've been using a Raspberry Pi 3B+, but there's no reason this couldn't be implemented on something more modern, or maybe even less modern (must be 64-bit though).
@@ -54,6 +53,11 @@ You need one. I've been using a Raspberry Pi 3B+, but there's no reason this cou
 * (4x M2F, 11x F2F) [Jumper Wires](https://www.amazon.com/dp/B01EV70C78)
 * (some) [PCB Wire](https://www.amazon.com/dp/B07TX6BX47) - Possibly optional, but highly recommended.
 
+#### Outputs
+* [TPLink Smart Strip](https://www.amazon.com/dp/B07G95FFN3)
+
 #### Sensors
 * [BME280](https://www.amazon.com/dp/B07KR24P6P)
 * [DS18B20](https://www.amazon.com/dp/B08W27W7LJ)
+* [ADS1115](https://www.amazon.com/dp/B0DP43DDZG)
+* [Capacitive Moisture Sensors](www.amazon.com/dp/B094J8XD83)

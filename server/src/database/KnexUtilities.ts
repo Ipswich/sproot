@@ -47,8 +47,6 @@ async function createDatabaseIfNotExistsAsync(config: Knex.Config): Promise<bool
 async function seedDatabaseAsync(didCreateDatabase: Boolean, connection: Knex) {
   if (process.env["NODE_ENV"] == "test") {
     await connection.seed.run({ specific: `testSetup.ts` });
-  } else if (didCreateDatabase && process.env["PRECONFIGURED"] == "true") {
-    await connection.seed.run({ specific: `preconfigured.js` });
   }
 }
 

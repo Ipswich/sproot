@@ -21,7 +21,6 @@ services:
       - DATABASE_PORT=${DATABASE_PORT}
       - DATABASE_USER=${DATABASE_USER}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
-      - PRECONFIGURED=${PRECONFIGURED}
       - INTERSERVICE_AUTHENTICATION_KEY=${INTERSERVICE_AUTHENTICATION_KEY}
     volumes:
       - /run/udev:/run/udev:ro
@@ -49,7 +48,6 @@ services:
       dockerfile: ./client/Dockerfile
       args:
         - VITE_VERSION=${VERSION}
-        - VITE_PRECONFIGURED=${PRECONFIGURED}
         - VITE_API_SERVER_URL=${API_SERVER_URL}
     environment:
       - TZ=${TZ}

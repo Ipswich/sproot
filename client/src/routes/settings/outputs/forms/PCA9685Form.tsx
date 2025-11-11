@@ -24,44 +24,33 @@ export default function PCA9685Form({
         required
         {...form.getInputProps("address")}
       />
-      {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
-        <Fragment>
-          <NumberInput
-            required
-            defaultValue={parseInt(selectedOutput?.pin ?? "0")}
-            label="Pin"
-            clampBehavior="strict"
-            allowDecimal={false}
-            min={0}
-            max={15}
-            {...form.getInputProps("pin")}
-          />
-          <Stack pt="xs">
-            <Switch
-              label="Pwm-able"
-              defaultChecked={selectedOutput?.isPwm ?? false}
-              {...form.getInputProps("isPwm")}
-              onChange={() => {
-                setIsPwm(!isPwm);
-                form.setFieldValue("isPwm", !isPwm);
-              }}
-            />
-            <Switch
-              label="Invert PWM"
-              defaultChecked={selectedOutput?.isInvertedPwm ?? false}
-              {...form.getInputProps("isInvertedPwm")}
-              disabled={!isPwm}
-            />
-          </Stack>
-        </Fragment>
-      ) : (selectedOutput?.isPwm ?? false) ? (
+      <NumberInput
+        required
+        defaultValue={parseInt(selectedOutput?.pin ?? "0")}
+        label="Pin"
+        clampBehavior="strict"
+        allowDecimal={false}
+        min={0}
+        max={15}
+        {...form.getInputProps("pin")}
+      />
+      <Stack pt="xs">
+        <Switch
+          label="Pwm-able"
+          defaultChecked={selectedOutput?.isPwm ?? false}
+          {...form.getInputProps("isPwm")}
+          onChange={() => {
+            setIsPwm(!isPwm);
+            form.setFieldValue("isPwm", !isPwm);
+          }}
+        />
         <Switch
           label="Invert PWM"
           defaultChecked={selectedOutput?.isInvertedPwm ?? false}
           {...form.getInputProps("isInvertedPwm")}
           disabled={!isPwm}
         />
-      ) : null}
+      </Stack>
     </Fragment>
   );
 }
