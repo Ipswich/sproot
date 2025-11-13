@@ -818,7 +818,7 @@ export async function getSubcontrollerConnectionStatusAsync(
     console.error(`Error fetching subcontrollers: ${response}`);
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data["online"];
+  return deserializedResponse.content?.data.online ?? false;
 }
 
 export async function addSubcontrollerAsync(device: {

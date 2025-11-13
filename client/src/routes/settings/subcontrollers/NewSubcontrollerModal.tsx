@@ -7,8 +7,8 @@ import {
   TextInput,
 } from "@mantine/core";
 import { addSubcontrollerAsync } from "../../../requests/requests_v2";
-import { useMutation } from "@tanstack/react-query";
-import { Fragment, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Fragment, useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import { useRevalidator } from "react-router-dom";
 
@@ -31,13 +31,15 @@ export default function NewSubcontrollerModal({
   closeModal,
   setIsStale,
 }: NewSubcontrollerModalProps) {
+  const queryClient = useQueryClient();
   const revalidator = useRevalidator();
   const [isUpdating, setIsUpdating] = useState(false);
   const addSubcontrollerMutation = useMutation({
     mutationFn: async (payload: { name: string; hostName: string }) => {
       return addSubcontrollerAsync(payload);
     },
-    onSuccess: async () => {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subcontrollers"] });
       setIsStale(true);
       revalidator.revalidate();
     },
@@ -60,6 +62,16 @@ export default function NewSubcontrollerModal({
           : "Host Name must be between 1 and 256 characters",
     },
   });
+
+  useEffect(() => {
+    // When available devices change (or modal opens), refresh form values so
+    // the preselected host/name reflect the latest discovered devices.
+    newSubcontrollerForm.setValues({
+      name: devices[0]?.name || "",
+      hostName: devices[0]?.hostName || "",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devices, modalOpened]);
   return (
     <Fragment>
       <meta name="viewport" content="width=device-width, user-scalable=no" />
@@ -74,7 +86,10 @@ export default function NewSubcontrollerModal({
         opened={modalOpened}
         onClose={() => {
           closeModal();
-          newSubcontrollerForm.reset();
+          newSubcontrollerForm.setValues({
+            name: devices[0]?.name || "",
+            hostName: devices[0]?.hostName || "",
+          });
         }}
         title="Configure ESP32s"
       >
@@ -115,7 +130,10 @@ export default function NewSubcontrollerModal({
                 });
                 setIsUpdating(false);
                 closeModal();
-                newSubcontrollerForm.reset();
+                newSubcontrollerForm.setValues({
+                  name: devices[0]?.name || "",
+                  hostName: devices[0]?.hostName || "",
+                });
               })();
             }}
           >

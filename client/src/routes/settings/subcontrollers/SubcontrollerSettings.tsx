@@ -18,8 +18,8 @@ export default function SubcontrollerSettings() {
 
   const subcontrollerQuery = useQuery({
     queryKey: ["subcontrollers"],
-    queryFn: () => {
-      return getSubcontrollerAsync();
+    queryFn: async () => {
+      return await getSubcontrollerAsync();
     },
     refetchInterval: 60000,
   });
@@ -57,15 +57,7 @@ export default function SubcontrollerSettings() {
         )}
         <EditTable subcontrollers={subcontrollers} setIsStale={setIsStale} />
         <Fragment>
-          <Button
-            size="xl"
-            w={rem(300)}
-            onClick={newSubcontrollerModalOpen}
-            // disabled={
-            //   !subcontrollerQuery.isSuccess ||
-            //   (subcontrollerQuery.data?.unrecognized?.length ?? 0) === 0
-            // }
-          >
+          <Button size="xl" w={rem(300)} onClick={newSubcontrollerModalOpen}>
             Add New
           </Button>
         </Fragment>

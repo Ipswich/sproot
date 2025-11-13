@@ -12,7 +12,11 @@ import { ISubcontroller } from "@sproot/sproot-common/src/system/ISubcontroller"
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import { SubcontrollerFormValues } from "./NewSubcontrollerModal";
-import { IconAntennaBars5, IconAntennaBarsOff } from "@tabler/icons-react";
+import {
+  IconAntennaBars5,
+  IconAntennaBarsOff,
+  IconLoader,
+} from "@tabler/icons-react";
 
 interface EditTableProps {
   subcontrollers: ISubcontroller[];
@@ -160,18 +164,41 @@ export default function EditTable({
             label: "",
             Component: (editable: unknown) => {
               const device = editable as ISubcontroller;
-              const { data, isLoading, isError } = useQuery({
+              const connectionStatusQuery = useQuery<boolean>({
                 queryKey: ["subcontroller-connection-status", device.id],
                 queryFn: async () => {
-                  await getSubcontrollerConnectionStatusAsync(device.id);
+                  if (typeof device.id === "undefined" || device.id === null) {
+                    return false;
+                  }
+                  return await getSubcontrollerConnectionStatusAsync(device.id);
                 },
                 refetchInterval: 10000,
               });
 
-              return isLoading || isError || !data ? (
-                <IconAntennaBarsOff color="red" />
-              ) : (
-                <IconAntennaBars5 color="green" />
+              const isConnected =
+                connectionStatusQuery.data === true &&
+                !connectionStatusQuery.isError;
+
+              return (
+                <Fragment>
+                  {connectionStatusQuery.isLoading ? (
+                    <IconLoader
+                      size="28px"
+                      className="animate-spin"
+                      color="var(--mantine-color-gray-filled)"
+                    />
+                  ) : isConnected ? (
+                    <IconAntennaBars5
+                      size="28px"
+                      color="var(--mantine-color-green-filled)"
+                    />
+                  ) : (
+                    <IconAntennaBarsOff
+                      size="28px"
+                      color="var(--mantine-color-red-filled)"
+                    />
+                  )}
+                </Fragment>
               );
             },
           }}
