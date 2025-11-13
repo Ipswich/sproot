@@ -1,6 +1,6 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { MdnsService } from "../../../system/MdnsService";
+import { MdnsService } from "../../../../system/MdnsService";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { randomBytes } from "crypto";
 import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
@@ -42,6 +42,67 @@ export async function getSubcontrollerHandlerAsync(
       ...response.locals["defaultProperties"],
     };
   }
+}
+
+export async function getSubcontrollerOnlineAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
+  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const mdnsService = request.app.get("bonjourService") as MdnsService;
+  const { deviceId } = request.params;
+
+  let hostName: string | undefined;
+  try {
+    hostName = (await sprootDB.getSubcontrollersAsync()).find(
+      (device) => device.id.toString() === deviceId,
+    )?.hostName;
+  } catch {
+    return {
+      statusCode: 503,
+      error: {
+        name: "Service Unavailable",
+        url: request.originalUrl,
+        details: [`Database connection failed.`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+  }
+
+  if (!hostName) {
+    return {
+      statusCode: 404,
+      error: {
+        name: "Not Found",
+        url: request.originalUrl,
+        details: [`Subcontroller with id ${deviceId} not found.`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+  }
+  try {
+    const ipAddress = mdnsService.getIPAddressByHostName(hostName);
+    if (ipAddress) {
+      const fetchResponse = await fetch(`http://${ipAddress}/ping`, { method: "GET" });
+      if (fetchResponse.ok) {
+        return {
+          statusCode: 200,
+          content: {
+            data: { online: true },
+          },
+          ...response.locals["defaultProperties"],
+        };
+      }
+    }
+  } catch {}
+
+  return {
+    statusCode: 200,
+    content: {
+      data: { online: false },
+    },
+    ...response.locals["defaultProperties"],
+  };
 }
 
 export async function postSubcontrollerHandlerAsync(

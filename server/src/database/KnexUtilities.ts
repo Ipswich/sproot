@@ -6,7 +6,7 @@ export async function getKnexConnectionAsync(): Promise<Knex<any, unknown>> {
   if (!config) {
     throw new Error("Invalid NODE_ENV, could not find knex configuration.");
   }
-  const didCreateDatabase = await createDatabaseIfNotExistsAsync(config);
+  await createDatabaseIfNotExistsAsync(config);
 
   // Create table if it doesn't exist
   const connection = knex(config);
@@ -14,7 +14,7 @@ export async function getKnexConnectionAsync(): Promise<Knex<any, unknown>> {
   await connection.migrate.latest();
 
   // Run relevant seeds.
-  await seedDatabaseAsync(didCreateDatabase, connection);
+  await seedDatabaseAsync(connection);
 
   return connection;
 }
@@ -44,7 +44,7 @@ async function createDatabaseIfNotExistsAsync(config: Knex.Config): Promise<bool
   return didCreateDatabase;
 }
 
-async function seedDatabaseAsync(didCreateDatabase: Boolean, connection: Knex) {
+async function seedDatabaseAsync(connection: Knex) {
   if (process.env["NODE_ENV"] == "test") {
     await connection.seed.run({ specific: `testSetup.ts` });
   }

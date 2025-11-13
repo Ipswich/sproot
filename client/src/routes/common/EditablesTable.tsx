@@ -15,7 +15,7 @@ interface EditablesTableProps {
   ) => void;
   onSwitchClick?: (
     item: { id: number; enabled: boolean },
-    enabled: boolean
+    enabled: boolean,
   ) => void;
 }
 

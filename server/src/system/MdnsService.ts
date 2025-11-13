@@ -15,7 +15,6 @@ export class MdnsService implements Disposable {
         `Discovered MDNS service: ${service.name} at ${service.host}:${service.port}`,
       );
     });
-    this.#browser.services;
   }
 
   get services(): Service[] {

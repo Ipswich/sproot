@@ -1016,74 +1016,86 @@ describe("API Tests", async () => {
         });
       });
     });
+  });
 
-    describe("Subcontrollers", async () => {
-      describe("GET", async () => {
-        it("should return 200 and a record of subcontrollers", async () => {
-          const response = await request(server).get("/api/v2/system/subcontrollers").expect(200);
-          const data = response.body["content"].data;
-          validateMiddlewareValues(response);
+  describe("Subcontroller Routes", async () => {
+    describe("GET", async () => {
+      it("should return 200 and a record of subcontrollers", async () => {
+        const response = await request(server).get("/api/v2/subcontrollers").expect(200);
+        const data = response.body["content"].data;
+        validateMiddlewareValues(response);
 
-          assert.isArray(data.unrecognized);
-          assert.isArray(data.recognized);
-        });
+        assert.isArray(data.unrecognized);
+        assert.isArray(data.recognized);
       });
+    });
 
-      describe("POST", async () => {
-        it("should return a 204 and add an subcontroller to the database", async () => {
-          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-          assert.isEmpty(subcontrollers);
-          await request(server)
-            .post("/api/v2/system/subcontrollers")
-            .send({
-              name: "Test Device",
-              hostName: "sproot-device-8af4.local",
-            })
-            .expect(201);
+    describe("POST", async () => {
+      it("should return a 204 and add a subcontroller to the database", async () => {
+        let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+        assert.isEmpty(subcontrollers);
+        await request(server)
+          .post("/api/v2/subcontrollers")
+          .send({
+            name: "Test Device",
+            hostName: "sproot-device-8af4.local",
+          })
+          .expect(201);
 
-          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-          assert.lengthOf(subcontrollers, 1);
-          assert.equal(subcontrollers[0].id, 1);
-          assert.equal(subcontrollers[0].name, "Test Device");
-          assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
-          assert.equal(subcontrollers[0].type, "ESP32");
-          assert.isString(subcontrollers[0].secureToken);
-        });
+        subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+        assert.lengthOf(subcontrollers, 1);
+        assert.equal(subcontrollers[0].id, 1);
+        assert.equal(subcontrollers[0].name, "Test Device");
+        assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
+        assert.equal(subcontrollers[0].type, "ESP32");
+        assert.isString(subcontrollers[0].secureToken);
       });
+    });
 
-      describe("PATCH", async () => {
-        it("should return a 200 and update an subcontroller in the database", async () => {
-          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-          const secureToken = subcontrollers[0].secureToken;
-          assert.lengthOf(subcontrollers, 1);
-          assert.equal(subcontrollers[0].name, "Test Device");
+    describe("GET connection-status", async () => {
+      it("should return 200 and the connection status of the provided subcontroller", async () => {
+        const response = await request(server)
+          .get("/api/v2/subcontrollers/1/connection-status")
+          .expect(200);
+        const data = response.body["content"].data;
+        validateMiddlewareValues(response);
 
-          await request(server)
-            .patch("/api/v2/system/subcontrollers/1")
-            .send({
-              name: "Updated Test Device",
-            })
-            .expect(200);
-
-          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-          assert.lengthOf(subcontrollers, 1);
-          assert.equal(subcontrollers[0].name, "Updated Test Device");
-          assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
-          assert.equal(subcontrollers[0].type, "ESP32");
-          assert.equal(subcontrollers[0].secureToken, secureToken);
-        });
+        assert.isFalse(data["online"]);
       });
+    });
 
-      describe("DELETE", async () => {
-        it("should return a 200 and delete an subcontroller from the database", async () => {
-          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-          assert.lengthOf(subcontrollers, 1);
+    describe("PATCH", async () => {
+      it("should return a 200 and update a subcontroller in the database", async () => {
+        let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+        const secureToken = subcontrollers[0].secureToken;
+        assert.lengthOf(subcontrollers, 1);
+        assert.equal(subcontrollers[0].name, "Test Device");
 
-          await request(server).delete("/api/v2/system/subcontrollers/1").expect(200);
+        await request(server)
+          .patch("/api/v2/subcontrollers/1")
+          .send({
+            name: "Updated Test Device",
+          })
+          .expect(200);
 
-          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-          assert.lengthOf(subcontrollers, 0);
-        });
+        subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+        assert.lengthOf(subcontrollers, 1);
+        assert.equal(subcontrollers[0].name, "Updated Test Device");
+        assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
+        assert.equal(subcontrollers[0].type, "ESP32");
+        assert.equal(subcontrollers[0].secureToken, secureToken);
+      });
+    });
+
+    describe("DELETE", async () => {
+      it("should return a 200 and delete a subcontroller from the database", async () => {
+        let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+        assert.lengthOf(subcontrollers, 1);
+
+        await request(server).delete("/api/v2/subcontrollers/1").expect(200);
+
+        subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+        assert.lengthOf(subcontrollers, 0);
       });
     });
   });

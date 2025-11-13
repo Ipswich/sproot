@@ -789,7 +789,7 @@ export async function getSubcontrollerAsync(): Promise<{
     address: string | string[];
   }[];
 }> {
-  const response = await fetch(`${SERVER_URL}/api/v2/system/subcontrollers`, {
+  const response = await fetch(`${SERVER_URL}/api/v2/subcontrollers`, {
     method: "GET",
     headers: {},
     mode: "cors",
@@ -802,11 +802,30 @@ export async function getSubcontrollerAsync(): Promise<{
   return deserializedResponse.content?.data;
 }
 
+export async function getSubcontrollerConnectionStatusAsync(
+  id: number,
+): Promise<boolean> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/subcontrollers/${id}/connection-status`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching subcontrollers: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data["online"];
+}
+
 export async function addSubcontrollerAsync(device: {
   name: string;
   hostName: string;
 }): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/system/subcontrollers`, {
+  const response = await fetch(`${SERVER_URL}/api/v2/subcontrollers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(device),
@@ -825,7 +844,7 @@ export async function updateSubcontrollerAsync(device: {
   hostName: string;
 }): Promise<void> {
   const response = await fetch(
-    `${SERVER_URL}/api/v2/system/subcontrollers/${device.id}`,
+    `${SERVER_URL}/api/v2/subcontrollers/${device.id}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -840,15 +859,12 @@ export async function updateSubcontrollerAsync(device: {
 }
 
 export async function deleteSubcontrollerAsync(id: number): Promise<void> {
-  const response = await fetch(
-    `${SERVER_URL}/api/v2/system/subcontrollers/${id}`,
-    {
-      method: "DELETE",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    },
-  );
+  const response = await fetch(`${SERVER_URL}/api/v2/subcontrollers/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
   if (!response.ok) {
     console.error(`Error deleting subcontroller: ${response}`);
   }

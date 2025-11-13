@@ -353,10 +353,10 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve system status."
-  /api/v2/system/subcontrollers:
+  /api/v2/subcontrollers:
     get:
       tags:
-        - "System"
+        - "Subcontrollers"
       summary: Get subcontrollers discovered via mDNS.
       description: >
         Returns a list of subcontrollers discovered on the local network via mDNS/Bonjour.
@@ -401,13 +401,13 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             items:
                               example: "Failed to retrieve subcontrollers."
     post:
       tags:
-        - "System"
+        - "Subcontrollers"
       summary: Add a new subcontroller.
       description: >
         Adds a new subcontroller to the system.
@@ -447,7 +447,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             example:
                               - "Missing required field: name"
@@ -467,15 +467,15 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             items:
                               example: "Failed to add subcontroller."
-  /api/v2/system/subcontrollers/{deviceId}:
+  /api/v2/subcontrollers/{deviceId}:
     patch:
       tags:
-        - "System"
-      summary: Update an subcontroller.
+        - "Subcontrollers"
+      summary: Update a subcontroller.
       description: >
         Updates an existing subcontroller in the system.
       parameters:
@@ -526,7 +526,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             example:
                               - "Missing required field: name"
@@ -545,7 +545,7 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             items:
                               example: "subcontroller with ID 1 not found."
@@ -564,14 +564,14 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             items:
                               example: "Failed to update subcontroller."
     delete:
       tags:
-        - "System"
-      summary: Delete an subcontroller.
+        - "Subcontrollers"
+      summary: Delete a subcontroller.
       description: >
         Deletes an existing subcontroller from the system.
       parameters:
@@ -612,7 +612,7 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             items:
                               example: "subcontroller with ID 1 not found."
@@ -631,10 +631,81 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/subcontrollers"
+                            example: "/api/v2/subcontrollers"
                           details:
                             items:
                               example: "Failed to delete subcontroller."
+  /api/v2/subcontrollers/{deviceId}/connection-status:
+    get:
+      tags:
+        - "Subcontrollers"
+      summary: Get subcontroller connection status.
+      description: >
+        Returns the connection status of a subcontroller.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "subcontroller Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            properties:
+                              online:
+                                type: boolean
+                                example: true
+        404:
+          description: "subcontroller not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/subcontrollers/1/connection-status"
+                          details:
+                            items:
+                              example: "subcontroller with ID 1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/subcontrollers/1/connection-status"
+                          details:
+                            items:
+                              example: "Database connection failed."
 
 
   /api/v2/ping:
@@ -4716,8 +4787,8 @@ components:
 
     SDBSubcontroller:
       description: >
-        An subcontroller object that is stored in the database. Likely means an ESP32. Contains all the information needed to 
-        reference an subcontroller, including name, ID, and host name.
+        A subcontroller object that is stored in the database. Likely means an ESP32. Contains all the information needed to 
+        reference a subcontroller, including name, ID, and host name.
       type: object
       required:
         - "name"
@@ -4913,7 +4984,7 @@ components:
     
     UnrecognizedSubcontrollers:
       description: >
-        An object representing an subcontroller discovered on the network.
+        An object representing a subcontroller discovered on the network.
       type: object
       required:
         - "name"
