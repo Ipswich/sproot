@@ -3,14 +3,16 @@ import { Fragment, useState } from "react";
 import {
   deleteSubcontrollerAsync,
   updateSubcontrollerAsync,
+  getSubcontrollerConnectionStatusAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
 import { ISubcontroller } from "@sproot/sproot-common/src/system/ISubcontroller";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import { SubcontrollerFormValues } from "./NewSubcontrollerModal";
+import { IconAntennaBars5, IconAntennaBarsOff } from "@tabler/icons-react";
 
 interface EditTableProps {
   subcontrollers: ISubcontroller[];
@@ -153,6 +155,25 @@ export default function EditTable({
           editables={subcontrollers}
           onEditClick={(item) => {
             editTableOnClick(item as ISubcontroller);
+          }}
+          tableLeftComponent={{
+            label: "",
+            Component: (editable: unknown) => {
+              const device = editable as ISubcontroller;
+              const { data, isLoading, isError } = useQuery({
+                queryKey: ["subcontroller-connection-status", device.id],
+                queryFn: async () => {
+                  await getSubcontrollerConnectionStatusAsync(device.id);
+                },
+                refetchInterval: 10000,
+              });
+
+              return isLoading || isError || !data ? (
+                <IconAntennaBarsOff color="red" />
+              ) : (
+                <IconAntennaBars5 color="green" />
+              );
+            },
           }}
         />
       }

@@ -165,6 +165,7 @@ export default function EditAutomationModal({
                           id: targetAutomation.id,
                           operator: targetAutomation.operator,
                           name: mutateAutomationForm.values.name,
+                          enabled: targetAutomation.enabled,
                         });
                       }}
                     >
@@ -219,6 +220,7 @@ export default function EditAutomationModal({
                                   id: targetAutomation.id,
                                   operator: value as AutomationOperator,
                                   name: targetAutomation.name,
+                                  enabled: targetAutomation.enabled,
                                 });
                                 mutateAutomationForm.setFieldValue(
                                   "operator",

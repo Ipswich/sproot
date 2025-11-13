@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Button, Stack, rem } from "@mantine/core";
+import { Button, Stack, Switch, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery, useMutation } from "@tanstack/react-query";
 
@@ -78,8 +78,24 @@ export default function Automations() {
                 setViewAutomation(item as IAutomation);
                 viewAutomationModal();
               }}
-              onSwitchClick={(item, enabled) => {
-                mutateAutomationEnabled.mutate({ id: item.id, enabled });
+              tableLeftComponent={{
+                label: "Enabled",
+                Component: (editable: unknown) => {
+                  const automation = editable as IAutomation;
+                  return (
+                    <Switch
+                      checked={automation.enabled}
+                      onChange={(
+                        event: React.ChangeEvent<HTMLInputElement>,
+                      ) => {
+                        mutateAutomationEnabled.mutate({
+                          id: automation.id,
+                          enabled: event.currentTarget.checked,
+                        });
+                      }}
+                    />
+                  );
+                },
               }}
             />
             <Button
