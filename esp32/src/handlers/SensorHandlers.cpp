@@ -49,7 +49,7 @@ void handleBme280Get(AsyncWebServerRequest *request)
   uint8_t address = validateI2CHexAddress(address_str, 0x76, 0x77);
   if (address == 0)
   {
-    String error_json = String("{\"error\":\"Invalid ") + deviceName + " address format\"}";
+    String error_json = "{\"error\":\"Invalid " + deviceName + " address format\"}";
     request->send(400, "application/json", error_json);
   }
 

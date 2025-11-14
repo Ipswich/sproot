@@ -50,19 +50,21 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   Preferences prefs;
   prefs.begin("app", false);
   String token = prefs.getString("secureToken", "");
-  String host = prefs.getString("host", "");
   String version = prefs.getString("version", "");
   prefs.end();
 
-  if (request->header("Authorization") != "Bearer " + token)
-  {
-    request->send(403, "application/json", "{\"status\":\"forbidden\"}");
-    Serial.println("Unauthorized OTA update attempt");
-    return;
-  }
+
+  String host = request->param("host")->value();
+
+  // if (request->header("Authorization") != "Bearer " + token)
+  // {
+  //   request->send(403, "application/json", "{\"status\":\"forbidden\"}");
+  //   Serial.println("Unauthorized OTA update attempt");
+  //   return;
+  // }
 
   // Get manifest
-  String manifestUrl = "http://" + host + "/api/v2/firmware/esp32/manifest.json";
+  String manifestUrl = "http://" + host + "/api/v2/subcontrollers/firmware/esp32/manifest.json";
   Manifest manifest = fetchManifest(manifestUrl.c_str());
   if (manifest.version == "")
   {

@@ -171,7 +171,7 @@ export default function EditTable({
                     return false;
                   }
                   return await getSubcontrollerConnectionStatusAsync(device.id);
-                }
+                },
               });
 
               const isConnected =

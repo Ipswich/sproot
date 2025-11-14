@@ -8,6 +8,12 @@ import {
   deleteSubcontrollerAsync,
 } from "./handlers/SubcontrollerHandlers";
 
+import {
+  getESP32FirmwareBinaryAsync,
+  getESP32ManifestAsync,
+  updateESP32FirmwareOTAAsync,
+} from "./handlers/ESP32Handlers";
+
 const router = express.Router();
 
 router.get("/", async (req: Request, res: Response) => {
@@ -40,6 +46,22 @@ router.delete("/:deviceId", async (req: Request, res: Response) => {
 
 router.get("/:deviceId/connection-status", async (req: Request, res: Response) => {
   const response = await getSubcontrollerOnlineAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.get("/firmware/esp32/manifest", async (req: Request, res: Response) => {
+  const response = await getESP32ManifestAsync(req, res);
+  res.status(response.statusCode).json(response);
+});
+
+router.get("/firmware/esp32/binary", async (req: Request, res: Response) => {
+  await getESP32FirmwareBinaryAsync(req, res);
+});
+
+router.post("/firmware/esp32/ota-update/:deviceId", async (req: Request, res: Response) => {
+  const response = await updateESP32FirmwareOTAAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

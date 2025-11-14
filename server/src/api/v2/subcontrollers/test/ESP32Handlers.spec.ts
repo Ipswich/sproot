@@ -30,7 +30,7 @@ describe("ESP32Handlers.ts tests", function () {
         .resolves(JSON.stringify(fakeManifest));
 
       const req = {
-        originalUrl: "/api/v2/firmware/esp32/manifest",
+        originalUrl: "/api/v2/subcontrollers/firmwareesp32/manifest",
       };
 
       const res = {
@@ -59,7 +59,7 @@ describe("ESP32Handlers.ts tests", function () {
       sandbox.stub(FirmwareManager.ESP32, "getESP32ManifestAsync").rejects(err);
 
       const req = {
-        originalUrl: "/api/v2/firmware/esp32/manifest",
+        originalUrl: "/api/v2/subcontrollers/firmwareesp32/manifest",
       };
 
       const res = {
@@ -100,7 +100,7 @@ describe("ESP32Handlers.ts tests", function () {
 
       req = {
         app: {},
-        originalUrl: "/api/v2/firmware/esp32/firmware.bin",
+        originalUrl: "/api/v2/subcontrollers/firmwareesp32/firmware.bin",
       } as unknown as Request;
 
       res = {

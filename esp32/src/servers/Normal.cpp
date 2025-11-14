@@ -70,7 +70,12 @@ void setupRoutes(AsyncWebServer& server)
   // ===== General API Endpoints =====
   server.on("/ping", HTTP_GET, [](AsyncWebServerRequest *request)
   {
-    request->send(200, "text/plain", "pong"); 
+    Preferences prefs;
+    prefs.begin("app", false);
+    String version = prefs.getString("version", "");
+    prefs.end(); 
+
+    request->send(200, "application/json", "{ \"status\": \"pong\", \"version: \"" + version + "\" }"); 
   });
 }
 

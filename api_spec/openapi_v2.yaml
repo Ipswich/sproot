@@ -706,7 +706,179 @@ paths:
                           details:
                             items:
                               example: "Database connection failed."
-
+  /api/v2/subcontrollers/firmware/esp32/manifest:
+    get:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Get the ESP32 firmware manifest.
+      description: >
+        Returns the ESP32 firmware manifest, which contains information about the latest firmware version.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/FirmwareManifest"
+  /api/v2/subcontrollers/firmware/esp32/binary:
+    get:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Get the ESP32 firmware binary.
+      description: >
+        Streams the ESP32 firmware binary for download.
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"firmware.bin\""
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/binary"
+                          details:
+                            items:
+                              example: "Error retrieving firmware binary."
+  /api/v2/subcontrollers/firmware/esp32/ota-update/{deviceId}:
+    post:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Trigger an OTA update for the ESP32 subcontroller.
+      description: >
+        Triggers an OTA update for the specified ESP32 subcontroller. The device will download and install the latest firmware.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "subcontroller Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "OTA update triggered successfully."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Invalid device ID."
+        404:
+          description: "subcontroller not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "subcontroller with ID 1 not found."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Failed to trigger OTA update."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Database connection failed."
 
   /api/v2/ping:
     get:
@@ -4237,73 +4409,6 @@ paths:
                               archiveProgress:
                                 type: number
                                 example: 75 
-  /api/v2/firmware/esp32/manifest:
-    get:
-      tags:
-        - "Firmware"
-      summary: Get the ESP32 firmware manifest.
-      description: >
-        Returns the ESP32 firmware manifest, which contains information about the latest firmware version.
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            $ref: "#/components/schemas/FirmwareManifest"
-  /api/v2/firmware/esp32/binary:
-    get:
-      tags:
-        - "Firmware"
-      summary: Get the ESP32 firmware binary.
-      description: >
-        Streams the ESP32 firmware binary for download.
-      responses:
-        200:
-          description: "Success"
-          headers:
-            Content-Length:
-              description: "The size of the content in bytes."
-              schema:
-                type: string
-                example: "12345678"
-            Content-Disposition:
-              description: "Indicates that the content is a file attachment."
-              schema:
-                type: string
-                example: "attachment; filename=\"firmware.bin\""
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        500:
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 500
-                      error:
-                        properties:
-                          name:
-                            example: "Internal Server Error"
-                          url:
-                            example: "/api/v2/firmware/esp32/binary"
-                          details:
-                            items:
-                              example: "Error retrieving firmware binary."
 
 components:
   schemas:
@@ -4977,7 +5082,7 @@ components:
           example: "v1.0.0"
         url:
           type: string
-          example: "http://192.168.1.1/api/v2/firmware/esp32/binary"
+          example: "http://192.168.1.1/api/v2/subcontrollers/firmware/esp32/binary"
         sha256:
           type: string
           example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

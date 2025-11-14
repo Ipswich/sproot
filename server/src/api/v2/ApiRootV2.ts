@@ -15,7 +15,6 @@ import outputsRouter from "./outputs/OutputsRouter";
 import automationsRouter from "./automations/AutomationsRouter";
 import outputActionsRouter from "./automations/OutputActionRouter";
 import cameraRouter from "./camera/CameraRouter";
-import firmwareRouter from "./firmware/FirmwareRouter";
 import subcontrollersRouter from "./subcontrollers/SubcontrollersRouter";
 
 const spec_path = "../api_spec/openapi_v2.yaml";
@@ -67,7 +66,6 @@ function ApiRootV2(app: Express) {
   app.use("/api/v2/automations", authenticateMiddleware, automationsRouter);
   app.use("/api/v2/output-actions", authenticateMiddleware, outputActionsRouter);
   app.use("/api/v2/camera", authenticateMiddleware, cameraRouter);
-  app.use("/api/v2/firmware", authenticateMiddleware, firmwareRouter);
   app.use("/api/v2/subcontrollers", authenticateMiddleware, subcontrollersRouter);
 
   // Error handler - anything unexpected ends up here.
