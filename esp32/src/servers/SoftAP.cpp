@@ -14,10 +14,10 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
   Serial.println("Starting Soft AP mode...");
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
+  WiFi.softAPConfig(IPAddress(192,168,1,1), IPAddress(192,168,1,1), IPAddress(255,255,255,0));
   WiFi.softAP(networkName, "");
 
-  dnsServer.start(DNS_PORT, "*", IPAddress(192,168,4,1));
+  dnsServer.start(DNS_PORT, "*", IPAddress(192,168,1,1));
 
 
   server.on("/generate_204", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -141,7 +141,7 @@ void startSoftAPMode(AsyncWebServer& server, DNSServer& dnsServer)
     prefs.end();
 
     request->send(200, "application/json", "{\"status\":\"success\", \"message\":\"Credentials saved. Rebooting...\"}");
-    Serial.println("Credendials saved! Swapping to normal server!");
+    Serial.println("Credentials saved! Swapping to normal server!");
   });
 
   server.begin();

@@ -1,6 +1,7 @@
 #include "Normal.h"
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
+#include <Preferences.h>
 #include <WiFi.h>
 
 #include "sensors/Ds18b20.h"
@@ -75,7 +76,7 @@ void setupRoutes(AsyncWebServer& server)
     String version = prefs.getString("version", "");
     prefs.end(); 
 
-    request->send(200, "application/json", "{ \"status\": \"pong\", \"version: \"" + version + "\" }"); 
+    request->send(200, "application/json", "{ \"status\": \"pong\", \"version\": \"" + version + "\" }"); 
   });
 }
 

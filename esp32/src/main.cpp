@@ -65,7 +65,7 @@ void loop() {
     
     // Periodically re-check if Wi-Fi network is available
     if (millis() - lastWiFiCheck > wifiCheckInterval) {
-      Serial.println("Checking for Wi-Fi networks");
+      Serial.println("Updating in range Wi-Fi networks. . .");
       lastWiFiCheck = millis();
       prefs.begin("wifi", true);
       savedSSID = prefs.getString("ssid", "");
@@ -73,20 +73,25 @@ void loop() {
       prefs.end();
 
       if (savedSSID.length() > 0) {
+        WiFi.mode(WIFI_AP_STA); // allow scanning while keeping the AP
         int n = WiFi.scanNetworks(false, true);
-        Serial.printf("Looking for network: %s. %i networks detected.\n", savedSSID.c_str(), n);
-        for (int i = 0; i < n; i++) {
-          String networkName = WiFi.SSID(i);
-          if (networkName == savedSSID) {
-            Serial.printf("%s found in range, attempting connection.\n", networkName.c_str());
-            WiFi.begin(savedSSID.c_str(), savedPASS.c_str());
-            if (WiFi.waitForConnectResult() == WL_CONNECTED) {
-              Serial.println("Success! Switching to normal mode.\n");
-              switchToNormalMode();
-            } else {
-              Serial.println("Failed! Connection will be reattempted in 10 seconds.\n");
+        if (n < 0) {
+          Serial.printf("WiFi scan error: %d\n", n); // handle or retry later
+        } else {
+          Serial.printf("Looking for network: %s. %i networks detected.\n", savedSSID.c_str(), n);
+          for (int i = 0; i < n; i++) {
+            String networkName = WiFi.SSID(i);
+            if (networkName == savedSSID) {
+              Serial.printf("%s found in range, attempting connection.\n", networkName.c_str());
+              WiFi.begin(savedSSID.c_str(), savedPASS.c_str());
+              if (WiFi.waitForConnectResult() == WL_CONNECTED) {
+                Serial.println("Success! Switching to normal mode.\n");
+                switchToNormalMode();
+              } else {
+                Serial.println("Failed! Connection will be reattempted in 10 seconds.\n");
+              }
+              break;
             }
-            break;
           }
         }
       }

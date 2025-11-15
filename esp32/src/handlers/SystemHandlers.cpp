@@ -54,7 +54,22 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   prefs.end();
 
 
-  String host = request->param("host")->value();
+  // Parse JSON body from the onRequestBody buffer (data,len)
+  // Requires ArduinoJson (include <ArduinoJson.h> at top of the file)
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, data, len);
+  if (err) {
+    request->send(400, "application/json", "{\"error\":\"invalid json\"}");
+    return;
+  }
+
+  const char *host_c = doc["host"];
+  if (!host_c || host_c[0] == '\0') {
+    request->send(400, "application/json", "{\"error\":\"missing host\"}");
+    return;
+  }
+
+  String host = String(host_c);
 
   // if (request->header("Authorization") != "Bearer " + token)
   // {
@@ -64,7 +79,7 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   // }
 
   // Get manifest
-  String manifestUrl = "http://" + host + "/api/v2/subcontrollers/firmware/esp32/manifest.json";
+  String manifestUrl = "http://" + host + "/api/v2/subcontrollers/firmware/esp32/manifest";
   Manifest manifest = fetchManifest(manifestUrl.c_str());
   if (manifest.version == "")
   {
@@ -84,13 +99,10 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   String result = performOTAUpdate(firmwareURL.c_str(), manifest.sha256.c_str());
   if (result.indexOf("error") != -1)
   {
-    request->send(200, "application/json", result);
-    
-    // Update version in preferences and restart
-    prefs.putString("version", manifest.version);
-    ESP.restart();
-  } else {
+    Serial.println(result.c_str());
     request->send(500, "application/json", result);
+  } else {
+    request->send(202, "application/json", result);
   }
   return;
 }

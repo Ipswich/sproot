@@ -5074,15 +5074,15 @@ components:
       type: object
       required:
         - "version"
-        - "url"
+        - "path"
         - "sha256"
       properties:
         version:
           type: string
           example: "v1.0.0"
-        url:
+        path:
           type: string
-          example: "http://192.168.1.1/api/v2/subcontrollers/firmware/esp32/binary"
+          example: "/api/v2/subcontrollers/firmware/esp32/binary"
         sha256:
           type: string
           example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
