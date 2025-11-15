@@ -1,5 +1,5 @@
 {
-  "version": "v0.3.0",
+  "version": "v0.0.3",
   "path": "/api/v2/subcontrollers/firmware/esp32/binary",
-  "sha256": "TBD"
+  "sha256": "8f072d2d69d1bb63df655b5b41a5d638a118d17c986f65ad0f5e2e2d7e5273ad"
 }
