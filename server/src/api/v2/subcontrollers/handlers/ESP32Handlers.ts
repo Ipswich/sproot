@@ -140,7 +140,7 @@ export async function updateESP32FirmwareOTAAsync(
     };
   }
 
-  const ipAddress = "192.168.2.144"; // mdnsService.getIPAddressByHostName(device.hostName);
+  const ipAddress = "192.168.2.88"; // mdnsService.getIPAddressByHostName(device.hostName);
   if (!ipAddress) {
     return {
       statusCode: 404,
@@ -154,24 +154,37 @@ export async function updateESP32FirmwareOTAAsync(
   }
 
   try {
-    // await fetch(`http://${ipAddress}/api/system/update`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     "Authorization": `Bearer ${device.secureToken}`,
-    //   },
-    //   body: JSON.stringify({
-    //     host: request.get("host") || "",
-    //   }),
-    // });
-    console.log(`Initiating firmware update for device ${id} at ${ipAddress}`);
-    return {
-      statusCode: 200,
-      content: {
-        data: { message: "Firmware update initiated successfully." },
+    const result = await fetch(`http://${ipAddress}/api/system/update`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${device.secureToken}`,
       },
-      ...response.locals["defaultProperties"],
-    };
+      body: JSON.stringify({
+        host: request.get("host") || "",
+      }),
+    });
+    if (result.ok) {
+      return {
+        statusCode: 200,
+        content: {
+          data: { message: "Firmware update initiated successfully." },
+        },
+        ...response.locals["defaultProperties"],
+      };
+    } else {
+      const errorJson = (await result.json() as { status: string });
+      console.log(errorJson)
+      return {
+        statusCode: result.status,
+        error: {
+          name: "Firmware Update Failed",
+          url: request.originalUrl,
+          details: [`Failed to initiate firmware update: ${errorJson.status}`],
+        },
+        ...response.locals["defaultProperties"],
+      };
+    }
   } catch (e) {
     return {
       statusCode: 500,

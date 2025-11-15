@@ -822,6 +822,25 @@ paths:
                           details:
                             items:
                               example: "Invalid device ID."
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 403
+                      error:
+                        properties:
+                          name:
+                            example: "Forbidden"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "You do not have permission to trigger an OTA update for this device."
         404:
           description: "subcontroller not found"
           content:
