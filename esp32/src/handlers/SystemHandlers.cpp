@@ -83,14 +83,14 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   Manifest manifest = fetchManifest(manifestUrl.c_str());
   if (manifest.version == "")
   {
-    request->send(502, "application/json", "{\"status\":\"failed to fetch manifest\"}");
+    request->send(502, "application/json", "{\"status\": \"Failed to fetch manifest\"}");
     return;
   }
 
   // Verify version
   if (!isNewerVersion(manifest.version.c_str(), version.c_str()))
   {
-    request->send(304, "application/json", "{\"status\":\"firmware is up to date\"}");
+    request->send(400, "application/json", "{\"status\": \"Device already has the latest firmware.\"}");
     return;
   }
 
