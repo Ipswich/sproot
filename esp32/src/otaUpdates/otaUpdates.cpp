@@ -276,7 +276,7 @@ void otaTask(void *param)
   http.end();
 
   // Update version in preferences and restart
-  prefs.begin("app", true);
+  prefs.begin("app", false);
   prefs.putString("version", firmwareVersion);
   prefs.end();
   ESP.restart();
