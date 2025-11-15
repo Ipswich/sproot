@@ -59,13 +59,13 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, data, len);
   if (err) {
-    request->send(400, "application/json", "{\"error\":\"invalid json\"}");
+    request->send(400, "application/json", "{\"status\":\"invalid json\"}");
     return;
   }
 
   const char *host_c = doc["host"];
   if (!host_c || host_c[0] == '\0') {
-    request->send(400, "application/json", "{\"error\":\"missing host\"}");
+    request->send(400, "application/json", "{\"status\":\"missing host\"}");
     return;
   }
 
@@ -83,7 +83,7 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   Manifest manifest = fetchManifest(manifestUrl.c_str());
   if (manifest.version == "")
   {
-    request->send(502, "application/json", "{\"error\":\"failed to fetch manifest\"}");
+    request->send(502, "application/json", "{\"status\":\"failed to fetch manifest\"}");
     return;
   }
 
@@ -99,7 +99,6 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   String result = performOTAUpdate(firmwareURL.c_str(), manifest.sha256.c_str());
   if (result.indexOf("error") != -1)
   {
-    Serial.println(result.c_str());
     request->send(500, "application/json", result);
   } else {
     request->send(202, "application/json", result);
