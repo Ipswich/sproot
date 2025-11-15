@@ -12,7 +12,7 @@ struct Manifest
   String path;
 };
 
-String performOTAUpdate(const String firmwareUrl, const String &expectedSha);
+String performOTAUpdate(const String firmwareUrl, const String &expectedSha, const String manifestVersion);
 bool isNewerVersion(const char *latest, const char *current);
 Manifest fetchManifest(const char *manifestUrl);
 

@@ -96,7 +96,7 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Perform update
   String firmwareURL = "http://" + host + manifest.path;
-  String result = performOTAUpdate(firmwareURL.c_str(), manifest.sha256.c_str());
+  String result = performOTAUpdate(firmwareURL.c_str(), manifest.sha256.c_str(), manifest.version);
   if (result.indexOf("error") != -1)
   {
     request->send(500, "application/json", result);

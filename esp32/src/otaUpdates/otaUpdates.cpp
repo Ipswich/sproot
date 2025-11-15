@@ -1,5 +1,6 @@
 #include "otaUpdates/otaUpdates.h"
 #include "otaUpdates.h"
+#include <Preferences.h>
 
 int otaUpdateResult = 0; // 0: idle, 1: in progress, 2: success, -1: failure
 String otaUpdateResultMessage;
@@ -7,6 +8,7 @@ struct OTAParams
 {
   String firmwareUrl;
   String expectedSha;
+  String firmwareVersion;
   TaskHandle_t callerHandle;
 };
 
@@ -139,10 +141,12 @@ String getOTAUpdateResultMessage()
 void otaTask(void *param)
 {
   Serial.println("Starting Update Task");
+  Preferences prefs;
   setOTAUpdateResult(1, "OTA update in progress");
   OTAParams *p = static_cast<OTAParams *>(param);
   String firmwareUrl = p->firmwareUrl;
   String expectedSha = p->expectedSha;
+  String firmwareVersion = p->firmwareVersion;
   TaskHandle_t callerHandle = p->callerHandle;
   delete p;
 
@@ -272,20 +276,22 @@ void otaTask(void *param)
   http.end();
 
   // Update version in preferences and restart
-  // prefs.putString("version", manifest.version);
-  // ESP.restart();
+  prefs.begin("app", true);
+  prefs.putString("version", firmwareVersion);
+  prefs.end();
+  ESP.restart();
   xTaskNotifyGive(callerHandle);
   vTaskDelete(NULL);
   return;
 }
 
-String performOTAUpdate(String firmwareUrl, const String &expectedSha)
+String performOTAUpdate(String firmwareUrl, const String &expectedSha, const String firmwareVersion)
 {
   setOTAUpdateResult(0, "");
 
   TaskHandle_t caller = xTaskGetCurrentTaskHandle();
   xTaskNotifyStateClear(caller);
-  OTAParams *params = new OTAParams{firmwareUrl, expectedSha, caller};
+  OTAParams *params = new OTAParams{firmwareUrl, expectedSha, firmwareVersion, caller};
 
   xTaskCreatePinnedToCore(
       otaTask,
