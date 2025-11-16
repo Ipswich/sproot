@@ -129,6 +129,7 @@ export default function ReadingsChartContainer({
           toggledSensors,
         )}
         chartSeries={chartSeries}
+        readingType={readingType}
         chartRendering={chartDataQuery.isPending || chartRendering}
       />
     </Fragment>

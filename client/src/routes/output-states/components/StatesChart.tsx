@@ -1,5 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import {
   DataSeries,
   ChartSeries,
@@ -81,6 +82,28 @@ interface ChartTooltipProps {
 
 function ChartTooltip({ label, payload }: ChartTooltipProps) {
   if (!payload) return null;
+
+  const order = (
+    JSON.parse(
+      localStorage.getItem(`outputStateOrder`) ?? "[]",
+    ) as IOutputBase[]
+  ).map((s) => s.name);
+
+  const orderNames = Array.isArray(order) ? order : [];
+  const indexMap = new Map(orderNames.map((n, i) => [n, i]));
+
+  // Reorder payload to match orderNames. Items not in orderNames go to the end.
+  payload = [...payload].sort((a, b) => {
+    const nameA = String(a["name"]);
+    const nameB = String(b["name"]);
+    const idxA = indexMap.has(nameA)
+      ? indexMap.get(nameA)!
+      : Number.MAX_SAFE_INTEGER;
+    const idxB = indexMap.has(nameB)
+      ? indexMap.get(nameB)!
+      : Number.MAX_SAFE_INTEGER;
+    return idxA - idxB || nameA.localeCompare(nameB);
+  });
 
   return (
     <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
