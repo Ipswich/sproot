@@ -789,7 +789,7 @@ paths:
             type: string
           example: "1"
       responses:
-        200:
+        202:
           description: "Success"
           content:
             application/json:
@@ -879,6 +879,25 @@ paths:
                           details:
                             items:
                               example: "Failed to trigger OTA update."
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 502
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Gateway"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Failed to fetch manifest."
         503:
           description: "Service unavailable"
           content:
