@@ -140,7 +140,8 @@ export async function updateESP32FirmwareOTAAsync(
     };
   }
 
-  const ipAddress = "192.168.2.88"; // mdnsService.getIPAddressByHostName(device.hostName);
+  const ipAddress = "192.168.2.88";
+  // const ipAddress = mdnsService.getIPAddressByHostName(device.hostName);
   if (!ipAddress) {
     return {
       statusCode: 404,
@@ -166,15 +167,14 @@ export async function updateESP32FirmwareOTAAsync(
     });
     if (result.ok) {
       return {
-        statusCode: 200,
+        statusCode: 202,
         content: {
           data: { message: "Firmware update initiated successfully." },
         },
         ...response.locals["defaultProperties"],
       };
     } else {
-      const errorJson = (await result.json() as { status: string });
-      console.log(errorJson)
+      const errorJson = await result.json() as { status: string };
       return {
         statusCode: result.status,
         error: {
