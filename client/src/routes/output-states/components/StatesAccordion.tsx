@@ -34,8 +34,11 @@ export default function OutputAccordion() {
   });
 
   const updateOutputsAsync = async () => {
-    const lastOutputStateOrder =
-      localStorage.getItem("outputStateOrder")?.split(",") ?? ([] as string[]);
+    const lastOutputStateOrder = (
+      JSON.parse(
+        localStorage.getItem(`outputStateOrder`) ?? "[]",
+      ) as IOutputBase[]
+    ).map((s) => s.id);
     const retrievedOutputs = Object.values(
       (await getOutputsQuery.refetch()).data!,
     );
@@ -43,7 +46,7 @@ export default function OutputAccordion() {
 
     //Get outputs that don't exist in last list
     const newOutputs = retrievedOutputs.filter(
-      (output) => !lastOutputStateOrder.includes(String(output.id)),
+      (output) => !lastOutputStateOrder.includes(output.id),
     );
 
     //Add the outputs that do exist in the last list
@@ -104,10 +107,7 @@ export default function OutputAccordion() {
         const newIndex = items.findIndex((output) => output.id == over!.id);
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
-        localStorage.setItem(
-          "outputStateOrder",
-          updatedArray.map((output) => output.id).toString(),
-        );
+        localStorage.setItem("outputStateOrder", JSON.stringify(updatedArray));
         return updatedArray;
       });
     }
