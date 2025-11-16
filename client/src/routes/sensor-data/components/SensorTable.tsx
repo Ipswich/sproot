@@ -48,8 +48,11 @@ export default function SensorTable({
     refetchInterval: 60000,
   });
   const updateSensorsAsync = async () => {
-  
-    const lastSensorDataOrder = (JSON.parse(localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]") as ISensorBase[]).map(s => s.id);
+    const lastSensorDataOrder = (
+      JSON.parse(
+        localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]",
+      ) as ISensorBase[]
+    ).map((s) => s.id);
     const retrievedSensors = Object.values(
       (await getSensorsQuery.refetch()).data!,
     ).filter((sensor) => Object.keys(sensor.lastReading).includes(readingType));

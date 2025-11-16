@@ -34,7 +34,11 @@ export default function OutputAccordion() {
   });
 
   const updateOutputsAsync = async () => {
-    const lastOutputStateOrder = (JSON.parse(localStorage.getItem(`outputStateOrder`) ?? "[]") as IOutputBase[]).map(s => s.id);
+    const lastOutputStateOrder = (
+      JSON.parse(
+        localStorage.getItem(`outputStateOrder`) ?? "[]",
+      ) as IOutputBase[]
+    ).map((s) => s.id);
     const retrievedOutputs = Object.values(
       (await getOutputsQuery.refetch()).data!,
     );
@@ -103,10 +107,7 @@ export default function OutputAccordion() {
         const newIndex = items.findIndex((output) => output.id == over!.id);
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
-        localStorage.setItem(
-          "outputStateOrder",
-          JSON.stringify(updatedArray),
-        );
+        localStorage.setItem("outputStateOrder", JSON.stringify(updatedArray));
         return updatedArray;
       });
     }

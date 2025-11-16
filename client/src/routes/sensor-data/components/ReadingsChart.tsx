@@ -12,7 +12,7 @@ import { ResponsiveContainer } from "recharts";
 export interface ReadingsChartProps {
   dataSeries: DataSeries;
   chartSeries: ChartSeries[];
-  readingType: string
+  readingType: string;
   chartRendering: boolean;
 }
 
@@ -106,25 +106,38 @@ export default function ReadingsChart({
 interface ChartTooltipProps {
   label: string;
   payload:
-  | Record<string, { name: string; color: string; value: string }>[]
-  | undefined;
+    | Record<string, { name: string; color: string; value: string }>[]
+    | undefined;
   units: string;
   readingType: string;
 }
 
-function ChartTooltip({ label, payload, units, readingType }: ChartTooltipProps) {
+function ChartTooltip({
+  label,
+  payload,
+  units,
+  readingType,
+}: ChartTooltipProps) {
   if (!payload) return null;
 
-  const order = (JSON.parse(localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]") as ISensorBase[]).map(s => s.name );
+  const order = (
+    JSON.parse(
+      localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]",
+    ) as ISensorBase[]
+  ).map((s) => s.name);
   const orderNames = Array.isArray(order) ? order : [];
   const indexMap = new Map(orderNames.map((n, i) => [n, i]));
 
   // Reorder payload to match orderNames. Items not in orderNames go to the end.
   payload = [...payload].sort((a, b) => {
-    const nameA = String((a)["name"]);
-    const nameB = String((b)["name"]);
-    const idxA = indexMap.has(nameA) ? indexMap.get(nameA)! : Number.MAX_SAFE_INTEGER;
-    const idxB = indexMap.has(nameB) ? indexMap.get(nameB)! : Number.MAX_SAFE_INTEGER;
+    const nameA = String(a["name"]);
+    const nameB = String(b["name"]);
+    const idxA = indexMap.has(nameA)
+      ? indexMap.get(nameA)!
+      : Number.MAX_SAFE_INTEGER;
+    const idxB = indexMap.has(nameB)
+      ? indexMap.get(nameB)!
+      : Number.MAX_SAFE_INTEGER;
     return idxA - idxB || nameA.localeCompare(nameB);
   });
 
@@ -133,12 +146,11 @@ function ChartTooltip({ label, payload, units, readingType }: ChartTooltipProps)
       <Text fw={500} mb={5}>
         {label}
       </Text>
-      {payload
-        .map((item) => (
-          <Text key={String(item["name"])} c={item["color"]!} fz="sm">
-            {String(item["name"])}: {String(item["value"] + String(units))}
-          </Text>
-        ))}
+      {payload.map((item) => (
+        <Text key={String(item["name"])} c={item["color"]!} fz="sm">
+          {String(item["name"])}: {String(item["value"] + String(units))}
+        </Text>
+      ))}
     </Paper>
   );
 }
