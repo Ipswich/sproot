@@ -48,9 +48,8 @@ export default function SensorTable({
     refetchInterval: 60000,
   });
   const updateSensorsAsync = async () => {
-    const lastSensorDataOrder =
-      localStorage.getItem(`${readingType}-sensorDataOrder`)?.split(",") ??
-      ([] as string[]);
+  
+    const lastSensorDataOrder = (JSON.parse(localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]") as ISensorBase[]).map(s => s.id);
     const retrievedSensors = Object.values(
       (await getSensorsQuery.refetch()).data!,
     ).filter((sensor) => Object.keys(sensor.lastReading).includes(readingType));
@@ -58,7 +57,7 @@ export default function SensorTable({
 
     //Get sensors that don't exist in the last list
     const newSensors = retrievedSensors.filter(
-      (sensor) => !lastSensorDataOrder.includes(String(sensor.id)),
+      (sensor) => !lastSensorDataOrder.includes(sensor.id),
     );
 
     //Add the outputs that do exist in the last list
@@ -153,7 +152,7 @@ export default function SensorTable({
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
           `${readingType}-sensorDataOrder`,
-          updatedArray.map((sensor) => sensor.id).toString(),
+          JSON.stringify(updatedArray),
         );
         return updatedArray;
       });
