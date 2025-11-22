@@ -66,6 +66,7 @@ export async function getAllAsync(
     const outputConditions = await sprootDB.getOutputConditionsAsync(automationId);
     const timeConditions = await sprootDB.getTimeConditionsAsync(automationId);
     const weekdayConditions = await sprootDB.getWeekdayConditionsAsync(automationId);
+    const monthConditions = await sprootDB.getMonthConditionsAsync(automationId);
     getAllConditionsResponse = {
       statusCode: 200,
       content: {
@@ -89,6 +90,11 @@ export async function getAllAsync(
             allOf: weekdayConditions.filter((c) => c.groupType == "allOf"),
             anyOf: weekdayConditions.filter((c) => c.groupType == "anyOf"),
             oneOf: weekdayConditions.filter((c) => c.groupType == "oneOf"),
+          },
+          month: {
+            allOf: monthConditions.filter((c) => c.groupType == "allOf"),
+            anyOf: monthConditions.filter((c) => c.groupType == "anyOf"),
+            oneOf: monthConditions.filter((c) => c.groupType == "oneOf"),
           },
         },
       },

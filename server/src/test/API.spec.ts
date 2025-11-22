@@ -290,6 +290,8 @@ describe("API Tests", async () => {
         assert.lengthOf(content.data.sensor.oneOf, 2);
         assert.lengthOf(content.data.output.oneOf, 2);
         assert.lengthOf(content.data.time.oneOf, 2);
+        assert.lengthOf(content.data.weekday.oneOf, 2);
+        assert.lengthOf(content.data.month.oneOf, 2);
       });
     });
 

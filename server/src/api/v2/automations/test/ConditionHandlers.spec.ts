@@ -883,7 +883,7 @@ describe("ConditionHandlers.ts", () => {
       assert.deepEqual(success.content?.data, {
         id: 1,
         groupType: "allOf",
-        weekdays: 4095,
+        months: 4095,
       });
     });
 
@@ -2491,7 +2491,7 @@ describe("ConditionHandlers.ts", () => {
         },
         params: {
           automationId: "1",
-          type: "months",
+          type: "month",
           conditionId: "1",
         },
       } as unknown as Request;
