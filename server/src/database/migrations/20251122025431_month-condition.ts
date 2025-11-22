@@ -14,7 +14,7 @@ export async function up(knex: Knex): Promise<void> {
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table.string("groupType", 6).notNullable();
-      table.tinyint("weekdays").unsigned().notNullable().checkBetween([0, 127]);
+      table.tinyint("months").unsigned().notNullable().checkBetween([0, 127]);
       table.primary(["id"]);
       setTableDefaults(table);
     });
