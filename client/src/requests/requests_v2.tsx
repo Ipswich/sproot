@@ -452,6 +452,43 @@ export async function deleteWeekdayConditionAsync(
   }
 }
 
+export async function addMonthConditionAsync(
+  automationId: number,
+  groupType: ConditionGroupType,
+  months: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/month`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ groupType, months }),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function deleteMonthConditionAsync(
+  automationId: number,
+  id: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/month/${id}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error deleting month condition: ${response}`);
+  }
+}
+
 export async function getOutputActionsByAutomationIdAsync(
   automationId: number,
 ): Promise<SDBOutputAction[]> {

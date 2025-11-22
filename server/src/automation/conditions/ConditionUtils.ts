@@ -31,6 +31,15 @@ export function evaluateWeekday(now: Date, activeWeekdaysAsDecimal: number): boo
   return binary[6 - now.getDay()] == "1";
 }
 
+export function evaluateMonth(now: Date, activeMonthsAsDecimal: number): boolean {
+  let binary = activeMonthsAsDecimal.toString(2).padStart(12, "0");
+  if (binary.length > 12) {
+    binary = binary.slice(-12);
+  }
+
+  return binary[11 - now.getMonth()] == "1";
+}
+
 export function evaluateTime(
   now: Date,
   startTime?: string | null,

@@ -5,12 +5,15 @@ import {
   deleteSensorConditionAsync,
   deleteTimeConditionAsync,
   deleteWeekdayConditionAsync,
+  deleteMonthConditionAsync,
   getConditionsAsync,
 } from "../../../requests/requests_v2";
 import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { ConditionOperator } from "@sproot/automation/ConditionTypes";
 import {
   ReadingType,
@@ -24,7 +27,6 @@ import {
   convertCelsiusToFahrenheit,
   formatDecimalReadingForDisplay,
 } from "@sproot/sproot-common/src/utility/DisplayFormats";
-import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -78,13 +80,23 @@ export default function ConditionsTable({
     },
   });
 
+  const deleteMonthConditionMutation = useMutation({
+    mutationFn: async (conditionId: number) => {
+      await deleteMonthConditionAsync(automationId, conditionId);
+    },
+    onSettled: () => {
+      conditionsQueryFn.refetch();
+    },
+  });
+
   //local helper function
   function mapToDeleteConditionMutationAsync(
     condition:
       | SDBSensorCondition
       | SDBOutputCondition
       | SDBTimeCondition
-      | SDBWeekdayCondition,
+      | SDBWeekdayCondition
+      | SDBMonthCondition,
   ): (id: number) => Promise<void> {
     if ("sensorId" in condition && "readingType" in condition) {
       return async (conditionId: number) => {
@@ -101,6 +113,10 @@ export default function ConditionsTable({
     } else if ("weekdays" in condition) {
       return async (conditionId: number) => {
         await deleteWeekdayConditionMutation.mutateAsync(conditionId);
+      };
+    } else if ("months" in condition) {
+      return async (conditionId: number) => {
+        await deleteMonthConditionMutation.mutateAsync(conditionId);
       };
     }
     return async () => {};
@@ -208,7 +224,8 @@ function mapToType(
     | SDBSensorCondition
     | SDBOutputCondition
     | SDBTimeCondition
-    | SDBWeekdayCondition,
+    | SDBWeekdayCondition
+    | SDBMonthCondition,
 ): ReactNode {
   if ("sensorId" in condition && "readingType" in condition) {
     return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
@@ -218,6 +235,8 @@ function mapToType(
     return <TimeConditionRow {...(condition as SDBTimeCondition)} />;
   } else if ("weekdays" in condition) {
     return <WeekdayConditionRow {...(condition as SDBWeekdayCondition)} />;
+  } else if ("months" in condition) {
+    return <MonthConditionRow {...(condition as SDBMonthCondition)} />;
   }
   return <></>;
 }
@@ -311,4 +330,38 @@ function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
     response = days.slice(0, -1).join(", ") + ", or " + days.slice(-1);
   }
   return <Group>{`Day is ${response}`}</Group>;
+}
+
+function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
+  const bits = monthCondition.months.toString(2).padStart(12, "0");
+  const months = [];
+  for (let i = bits.length - 1; i >= 0; i--) {
+    if (bits[i] === "1") {
+      months.push(
+        [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ][i],
+      );
+    }
+  }
+  let response: string | undefined = "";
+  if (months.length == 1) {
+    response = months[0];
+  } else if (months.length == 2) {
+    response = `${months[0]} or ${months[1]}`;
+  } else {
+    response = months.slice(0, -1).join(", ") + ", or " + months.slice(-1);
+  }
+  return <Group>{`Month is ${response}`}</Group>;
 }

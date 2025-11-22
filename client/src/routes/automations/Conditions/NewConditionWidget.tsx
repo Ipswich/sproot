@@ -7,8 +7,6 @@ import {
   Select,
 } from "@mantine/core";
 import { useState } from "react";
-import SensorCondition from "./ConditionTypes/SensorCondition";
-import OutputCondition from "./ConditionTypes/OutputCondition";
 import {
   getOutputsAsync,
   getSensorsAsync,
@@ -16,8 +14,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
 import { ReadingType } from "@sproot/sensors/ReadingType";
+import SensorCondition from "./ConditionTypes/SensorCondition";
+import OutputCondition from "./ConditionTypes/OutputCondition";
 import TimeCondition from "./ConditionTypes/TimeCondition";
 import WeekdayCondition from "./ConditionTypes/WeekdayCondition";
+import MonthCondition from "./ConditionTypes/MonthCondition";
 
 export interface NewConditionWidgetProps {
   automationId: number;
@@ -61,6 +62,7 @@ export default function NewConditionWidget({
           data={[
             { value: "Time", label: "Time", disabled: false },
             { value: "Weekday", label: "Weekday", disabled: false },
+            { value: "Month", label: "Month", disabled: false },
             {
               value: "Sensor",
               label: "Sensor",
@@ -145,6 +147,14 @@ function updateDisplayedCondition(
     case "Weekday":
       return (
         <WeekdayCondition
+          toggleAddNewCondition={toggleAddNewCondition}
+          automationId={automationId}
+          groupType={groupType}
+        />
+      );
+    case "Month":
+      return (
+        <MonthCondition
           toggleAddNewCondition={toggleAddNewCondition}
           automationId={automationId}
           groupType={groupType}

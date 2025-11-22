@@ -7,6 +7,7 @@ import { SensorCondition } from "./conditions/SensorCondition";
 import { OutputCondition } from "./conditions/OutputCondition";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { WeekdayCondition } from "./conditions/WeekdayCondition";
+import { MonthCondition } from "./conditions/MonthCondition";
 
 /**
  * This class serves as an interface between changes in automation data and the things
@@ -102,9 +103,20 @@ class AutomationDataManager {
     return resultId;
   }
 
+  async addMonthConditionAsync(automationId: number, type: ConditionGroupType, months: number) {
+    const resultId = await this.#sprootDB.addMonthConditionAsync(automationId, type, months);
+    await this.#postAutomationChangeFunctionAsync();
+    return resultId;
+  }
+
   async updateConditionAsync(
     automationId: number,
-    condition: OutputCondition | SensorCondition | TimeCondition | WeekdayCondition,
+    condition:
+      | OutputCondition
+      | SensorCondition
+      | TimeCondition
+      | WeekdayCondition
+      | MonthCondition,
   ) {
     if (condition instanceof SensorCondition) {
       await this.#sprootDB.updateSensorConditionAsync(automationId, condition);
@@ -114,6 +126,8 @@ class AutomationDataManager {
       await this.#sprootDB.updateTimeConditionAsync(automationId, condition);
     } else if (condition instanceof WeekdayCondition) {
       await this.#sprootDB.updateWeekdayConditionAsync(automationId, condition);
+    } else if (condition instanceof MonthCondition) {
+      await this.#sprootDB.updateMonthConditionAsync(automationId, condition);
     } else {
       return;
     }
@@ -137,6 +151,11 @@ class AutomationDataManager {
 
   async deleteWeekdayConditionAsync(id: number) {
     await this.#sprootDB.deleteWeekdayConditionAsync(id);
+    await this.#postAutomationChangeFunctionAsync();
+  }
+
+  async deleteMonthConditionAsync(id: number) {
+    await this.#sprootDB.deleteMonthConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 

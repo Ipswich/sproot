@@ -20,8 +20,10 @@ import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
+import { SDBMonthCondition } from "./SDBMonthCondition";
 import { IWeekdayCondition } from "../automation/IWeekdayCondition";
 import { SDBCameraSettings } from "./SDBCameraSettings";
+import { IMonthCondition } from "@sproot/automation/IMonthCondition";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -126,6 +128,15 @@ interface ISprootDB {
   updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
   deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
 
+  getMonthConditionsAsync(automationId: number): Promise<SDBMonthCondition[]>;
+  addMonthConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    months: number,
+  ): Promise<number>;
+  updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void>;
+  deleteMonthConditionAsync(conditionId: number): Promise<void>;
+
   getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
   // addCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<number>;
   updateCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<void>;
@@ -157,6 +168,27 @@ class MockSprootDB implements ISprootDB {
   async deleteWeekdayConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
+
+  async getMonthConditionsAsync(_automationId: number): Promise<SDBMonthCondition[]> {
+    return [];
+  }
+  async addMonthConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _months: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateMonthConditionAsync(
+    _automationId: number,
+    _condition: IMonthCondition,
+  ): Promise<void> {
+    return;
+  }
+  async deleteMonthConditionAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+
   async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
     return [];
   }
