@@ -467,7 +467,7 @@ export async function addAsync(
           request.body.comparisonValue,
         );
         break;
-      case "time":
+      case "time": {
         const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
         if (request.body.startTime != null && !regex.test(request.body.startTime)) {
           invalidFields.push("Invalid or missing start time.");
@@ -491,6 +491,7 @@ export async function addAsync(
           request.body.endTime ?? null,
         );
         break;
+      }
       case "weekday":
         if (
           request.body.weekdays == null ||
@@ -680,14 +681,15 @@ export async function updateAsync(
       invalidDetails.push("Invalid or missing condition groupType.");
     }
     switch (conditionType) {
-      case "sensor":
+      case "sensor": {
+        const sdbSensorCondition = sdbcondition as SDBSensorCondition;
         condition = new SensorCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          request.body.sensorId ?? sdbcondition.sensorId,
-          request.body.readingType ?? sdbcondition.readingType,
-          request.body.operator ?? sdbcondition.operator,
-          request.body.comparisonValue ?? sdbcondition.comparisonValue,
+          sdbSensorCondition.id,
+          sdbSensorCondition.groupType,
+          request.body.sensorId ?? sdbSensorCondition.sensorId,
+          request.body.readingType ?? sdbSensorCondition.readingType,
+          request.body.operator ?? sdbSensorCondition.operator,
+          request.body.comparisonValue ?? sdbSensorCondition.comparisonValue,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -715,13 +717,15 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
-      case "output":
+      }
+      case "output": {
+        const sdbOutputCondition = sdbcondition as SDBOutputCondition;
         condition = new OutputCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          request.body.outputId ?? sdbcondition.outputId,
-          request.body.operator ?? sdbcondition.operator,
-          request.body.comparisonValue ?? sdbcondition.comparisonValue,
+          sdbOutputCondition.id,
+          sdbOutputCondition.groupType,
+          request.body.outputId ?? sdbOutputCondition.outputId,
+          request.body.operator ?? sdbOutputCondition.operator,
+          request.body.comparisonValue ?? sdbOutputCondition.comparisonValue,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -745,12 +749,15 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
-      case "time":
+      }
+      case "time": {
+        const sdbTimeCondition = sdbcondition as SDBTimeCondition;
+
         condition = new TimeCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          sdbcondition.startTime,
-          sdbcondition.endTime,
+          sdbTimeCondition.id,
+          sdbTimeCondition.groupType,
+          sdbTimeCondition.startTime,
+          sdbTimeCondition.endTime,
         );
         if (request.body.startTime !== undefined) {
           condition.startTime = request.body.startTime;
@@ -771,11 +778,14 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
-      case "weekday":
+      }
+      case "weekday": {
+        const sdbWeekdayCondition = sdbcondition as SDBWeekdayCondition;
+
         condition = new WeekdayCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          request.body.weekdays ?? sdbcondition.weekdays,
+          sdbWeekdayCondition.id,
+          sdbWeekdayCondition.groupType,
+          request.body.weekdays ?? sdbWeekdayCondition.weekdays,
         );
         if (
           request.body.weekdays === null ||
@@ -790,11 +800,14 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
-      case "month":
+      }
+      case "month": {
+        const sdbMonthCondition = sdbcondition as SDBMonthCondition;
+
         condition = new MonthCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          request.body.months ?? sdbcondition.months,
+          sdbMonthCondition.id,
+          sdbMonthCondition.groupType,
+          request.body.months ?? sdbMonthCondition.months,
         );
         if (request.body.months === null || request.body.months < 0 || request.body.months > 4095) {
           invalidDetails.push("Invalid months.");
@@ -805,6 +818,7 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
+      }
     }
 
     if (!updateResult) {
