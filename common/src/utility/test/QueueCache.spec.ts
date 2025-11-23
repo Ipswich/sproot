@@ -1,4 +1,4 @@
-import { QueueCache } from "../QueueCache";
+import { QueueCache } from "../QueueCache.js";
 
 import { assert } from "chai";
 import * as sinon from "sinon";

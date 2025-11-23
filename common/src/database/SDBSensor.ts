@@ -1,4 +1,4 @@
-import { Models } from "@sproot/sproot-common/src/sensors/Models";
+import { Models } from "@sproot/sproot-common/src/sensors/Models.js";
 
 type SDBSensor = {
   id: number;

@@ -1,9 +1,9 @@
 import { CronJob } from "cron";
 import winston from "winston";
-import { CameraManager } from "../camera/CameraManager";
-import { OutputList } from "../outputs/list/OutputList";
-import { SensorList } from "../sensors/list/SensorList";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import { CameraManager } from "../camera/CameraManager.js";
+import { OutputList } from "../outputs/list/OutputList.js";
+import { SensorList } from "../sensors/list/SensorList.js";
+import * as Constants from "@sproot/sproot-common/dist/utility/Constants.js";
 
 export function createUpdateDevicesCronJob(
   cameraManager: CameraManager,

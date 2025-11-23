@@ -1,6 +1,6 @@
-import { ITimeCondition } from "@sproot/automation/ITimeCondition";
-import { evaluateTime } from "./ConditionUtils";
-import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
+import { ITimeCondition } from "@sproot/automation/ITimeCondition.js";
+import { evaluateTime } from "./ConditionUtils.js";
+import { ConditionGroupType } from "@sproot/automation/ConditionTypes.js";
 
 export class TimeCondition implements ITimeCondition {
   id: number;

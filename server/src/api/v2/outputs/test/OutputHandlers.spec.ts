@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { addAsync, deleteAsync, get, updateAsync } from "../handlers/OutputHandlers";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
+import { addAsync, deleteAsync, get, updateAsync } from "../handlers/OutputHandlers.js";
 
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
 import sinon from "sinon";
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { OutputBase } from "../../../../outputs/base/OutputBase";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
+import { OutputBase } from "../../../../outputs/base/OutputBase.js";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
 
 describe("OutputHandlers.ts tests", () => {
   describe("get", () => {

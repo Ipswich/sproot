@@ -1,5 +1,5 @@
 import "dotenv/config";
-import mainAsync, { gracefulHaltAsync } from "./program";
+import mainAsync, { gracefulHaltAsync } from "./program.js";
 
 mainAsync().then((app) => {
   const server = app.listen(3000, () => {

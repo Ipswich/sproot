@@ -1,4 +1,4 @@
-import { SDBAutomation } from "./SDBAutomation";
+import { SDBAutomation } from "./SDBAutomation.js";
 
 type SDBOutputAction = {
   id: number;

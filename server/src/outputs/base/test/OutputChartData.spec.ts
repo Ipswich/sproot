@@ -1,11 +1,12 @@
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
+import { OutputCache } from "../OutputCache.js";
+import { OutputChartData } from "../OutputChartData.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats.js";
+
 import { assert } from "chai";
-import { OutputCache } from "../OutputCache";
-import { OutputChartData } from "../OutputChartData";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
-import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
 
 describe("OutputChartData.ts tests", function () {
   const mockSprootDB = new MockSprootDB();

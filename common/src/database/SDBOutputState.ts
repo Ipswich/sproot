@@ -1,4 +1,4 @@
-import { ControlMode } from "../outputs/IOutputBase";
+import { ControlMode } from "../outputs/IOutputBase.js";
 
 type SDBOutputState = {
   controlMode: ControlMode;

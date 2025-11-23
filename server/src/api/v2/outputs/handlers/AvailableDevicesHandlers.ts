@@ -1,7 +1,7 @@
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
 
 export async function getAvailableDevices(
   request: Request,

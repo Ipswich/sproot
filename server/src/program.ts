@@ -5,25 +5,25 @@ import cors from "cors";
 import express, { Express } from "express";
 import * as winston from "winston";
 
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SprootDB } from "./database/SprootDB";
-import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
-import { SensorList } from "./sensors/list/SensorList";
-import { OutputList } from "./outputs/list/OutputList";
+import * as Constants from "@sproot/sproot-common/dist/utility/Constants.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SprootDB } from "./database/SprootDB.js";
+import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser.js";
+import { SensorList } from "./sensors/list/SensorList.js";
+import { OutputList } from "./outputs/list/OutputList.js";
 
-import setupLogger from "./logger";
-import ApiRootV2 from "./api/v2/ApiRootV2";
-import { AutomationDataManager } from "./automation/AutomationDataManager";
-import { getKnexConnectionAsync } from "./database/KnexUtilities";
-import { CameraManager } from "./camera/CameraManager";
-import { SystemStatusMonitor } from "./system/StatusMonitor";
+import setupLogger from "./logger.js";
+import ApiRootV2 from "./api/v2/ApiRootV2.js";
+import { AutomationDataManager } from "./automation/AutomationDataManager.js";
+import { getKnexConnectionAsync } from "./database/KnexUtilities.js";
+import { CameraManager } from "./camera/CameraManager.js";
+import { SystemStatusMonitor } from "./system/StatusMonitor.js";
 import {
   createDatabaseUpdateCronJob,
   createRunAutomationsCronJob,
   createUpdateDevicesCronJob,
-} from "./system/CronJobs";
-import { MdnsService } from "./system/MdnsService";
+} from "./system/CronJobs.js";
+import { MdnsService } from "./system/MdnsService.js";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();

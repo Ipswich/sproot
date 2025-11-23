@@ -1,16 +1,16 @@
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ESP32_PCA9685 } from "@sproot/sproot-server/src/outputs/ESP32_PCA9685";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { OutputBase } from "../base/OutputBase";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
-import { ControlMode } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { ESP32_PCA9685 } from "@sproot/sproot-server/src/outputs/ESP32_PCA9685.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { OutputBase } from "../base/OutputBase.js";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
+import { ControlMode } from "@sproot/sproot-common/src/outputs/IOutputBase.js";
+import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState.js";
+import { MdnsService } from "../../system/MdnsService.js";
 
 import { assert } from "chai";
 import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
-import { MdnsService } from "../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_PCA9685.ts tests", function () {

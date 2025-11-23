@@ -1,9 +1,9 @@
 import express, { Request, Response } from "express";
-import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
-import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
-import { setControlModeAsync, setManualStateAsync } from "./handlers/OutputStateHandlers";
-import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
-import { getAvailableDevices } from "./handlers/AvailableDevicesHandlers";
+import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers.js";
+import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers.js";
+import { setControlModeAsync, setManualStateAsync } from "./handlers/OutputStateHandlers.js";
+import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers.js";
+import { getAvailableDevices } from "./handlers/AvailableDevicesHandlers.js";
 
 const router = express.Router();
 

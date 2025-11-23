@@ -1,19 +1,19 @@
 import { Request, Response } from "express";
-import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
-import { SDBAutomation } from "@sproot/database/SDBAutomation";
+import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses.js";
+import { SDBAutomation } from "@sproot/database/SDBAutomation.js";
 import {
   getAsync,
   getByIdAsync,
   addAsync,
   updateAsync,
   deleteAsync,
-} from "../handlers/AutomationHandlers";
+} from "../handlers/AutomationHandlers.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { AutomationDataManager } from "../../../../automation/AutomationDataManager.js";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 
 describe("AutomationHandlers", () => {
   describe("getAsync ", () => {

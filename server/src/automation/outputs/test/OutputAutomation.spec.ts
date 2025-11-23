@@ -1,10 +1,10 @@
-import { OutputAutomation } from "../OutputAutomation";
+import { OutputAutomation } from "../OutputAutomation.js";
 import { assert } from "chai";
 import sinon from "sinon";
-import { SensorList } from "../../../sensors/list/SensorList";
-import { OutputList } from "../../../outputs/list/OutputList";
-import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SensorList } from "../../../sensors/list/SensorList.js";
+import { OutputList } from "../../../outputs/list/OutputList.js";
+import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 
 describe("OutputAutomation.ts tests", () => {
   describe("evaluate", () => {

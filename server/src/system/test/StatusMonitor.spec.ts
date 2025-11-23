@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { SystemStatusMonitor } from "../StatusMonitor";
-import { CameraManager } from "../../camera/CameraManager";
+import { SystemStatusMonitor } from "../StatusMonitor.js";
+import { CameraManager } from "../../camera/CameraManager.js";
 import winston from "winston";
 
 describe("ServerStatsManager", () => {

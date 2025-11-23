@@ -1,4 +1,4 @@
-import { TimeCondition } from "../TimeCondition";
+import { TimeCondition } from "../TimeCondition.js";
 
 import { assert } from "chai";
 

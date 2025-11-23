@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { FirmwareManager } from "../../../../system/FirmwareManager";
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { ISprootDB } from "@sproot/database/ISprootDB";
-// import { MdnsService } from "../../../../system/MdnsService";
-import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
+import { FirmwareManager } from "../../../../system/FirmwareManager.js";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
+import { ISprootDB } from "@sproot/database/ISprootDB.js";
+// import { MdnsService } from "../../../../system/MdnsService.js";
+import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller.js";
 
 export async function getESP32ManifestAsync(
   req: Request,

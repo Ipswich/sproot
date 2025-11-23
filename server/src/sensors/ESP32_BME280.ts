@@ -1,10 +1,10 @@
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { MdnsService } from "../system/MdnsService";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SensorBase } from "./base/SensorBase";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor.js";
+import { MdnsService } from "../system/MdnsService.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { SensorBase } from "./base/SensorBase.js";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller.js";
 import winston from "winston";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 
 class ESP32_BME280 extends SensorBase {
   readonly MAX_SENSOR_READ_TIME = 3500;

@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { getDirectorySizeAsync, getSortedFileAsync, getOldestFilePathAsync } from "../Files";
+import { getDirectorySizeAsync, getSortedFileAsync, getOldestFilePathAsync } from "../Files.js";
 
 describe("Files Utility", () => {
   // Base temp directory for all tests

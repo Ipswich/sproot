@@ -1,12 +1,12 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AutomationOperator } from "@sproot/automation/IAutomation";
-import { OutputList } from "../../outputs/list/OutputList";
-import { SensorList } from "../../sensors/list/SensorList";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { AutomationOperator } from "@sproot/automation/IAutomation.js";
+import { OutputList } from "../../outputs/list/OutputList.js";
+import { SensorList } from "../../sensors/list/SensorList.js";
 
-import { OutputCondition } from "./OutputCondition";
-import { SensorCondition } from "./SensorCondition";
-import { TimeCondition } from "./TimeCondition";
-import { WeekdayCondition } from "./WeekdayCondition";
+import { OutputCondition } from "./OutputCondition.js";
+import { SensorCondition } from "./SensorCondition.js";
+import { TimeCondition } from "./TimeCondition.js";
+import { WeekdayCondition } from "./WeekdayCondition.js";
 
 type EnabledConditionTypes = SensorCondition | OutputCondition | TimeCondition | WeekdayCondition;
 

@@ -1,7 +1,7 @@
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { ADS1115 } from "./ADS1115";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { ADS1115 } from "./ADS1115.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor.js";
 import winston from "winston";
 
 export class CapacitiveMoistureSensor extends ADS1115 {

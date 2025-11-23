@@ -1,7 +1,7 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache.js";
 import winston from "winston";
 
 export class SensorCache {

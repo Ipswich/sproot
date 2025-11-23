@@ -1,7 +1,7 @@
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { SensorList } from "../../../../sensors/list/SensorList";
-import { ReadingType } from "@sproot/sensors/ReadingType";
+import { SensorList } from "../../../../sensors/list/SensorList.js";
+import { ReadingType } from "@sproot/sensors/ReadingType.js";
 
 export function sensorChartDataHandler(
   request: Request,

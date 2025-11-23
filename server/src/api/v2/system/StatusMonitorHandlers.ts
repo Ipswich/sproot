@@ -1,6 +1,6 @@
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { SystemStatusMonitor } from "../../../system/StatusMonitor";
+import { SystemStatusMonitor } from "../../../system/StatusMonitor.js";
 
 export async function systemStatusMonitorHandlerAsync(
   request: Request,

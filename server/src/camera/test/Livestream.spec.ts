@@ -2,7 +2,7 @@ import assert from "assert";
 import { Readable } from "stream";
 import winston from "winston";
 import sinon from "sinon";
-import Livestream from "../Livestream";
+import Livestream from "../Livestream.js";
 
 describe("Livestream.ts tests", () => {
   let logger: winston.Logger;

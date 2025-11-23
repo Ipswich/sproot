@@ -1,5 +1,5 @@
-import { ConditionOperator } from "@sproot/sproot-common/dist/automation/ConditionTypes";
-import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
+import { ConditionOperator } from "@sproot/sproot-common/dist/automation/ConditionTypes.js";
+import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods.js";
 
 export function evaluateNumber(
   reading: number,

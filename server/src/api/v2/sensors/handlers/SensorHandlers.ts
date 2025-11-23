@@ -1,9 +1,9 @@
-import { SensorList } from "../../../../sensors/list/SensorList";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBSensor } from "@sproot/database/SDBSensor";
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
+import { SensorList } from "../../../../sensors/list/SensorList.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBSensor } from "@sproot/database/SDBSensor.js";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models.js";
 
 /**
  * Possible statusCodes: 200, 404

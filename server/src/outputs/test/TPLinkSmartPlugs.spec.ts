@@ -1,8 +1,8 @@
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { TPLinkSmartPlugs, TPLinkPlug } from "../TPLinkSmartPlugs";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { TPLinkSmartPlugs, TPLinkPlug } from "../TPLinkSmartPlugs.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
 import { Device as SimulatedDevice, UdpServer } from "tplink-smarthome-simulator";
 import { Plug } from "tplink-smarthome-api";
 
@@ -11,7 +11,7 @@ import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
-import { OutputBase } from "../base/OutputBase";
+import { OutputBase } from "../base/OutputBase.js";
 const mockSprootDB = new MockSprootDB();
 
 describe("tplinkPlug.ts tests", async function () {

@@ -1,4 +1,4 @@
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
 import { Knex } from "knex";
 
 export async function seed(knex: Knex): Promise<void> {

@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 
 import sinon from "sinon";
-import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses.js";
 
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { ControlMode, IOutputBase } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { setControlModeAsync, setManualStateAsync } from "../handlers/OutputStateHandlers";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { ControlMode, IOutputBase } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
+import { setControlModeAsync, setManualStateAsync } from "../handlers/OutputStateHandlers.js";
 
 describe("OutputStateHandlers.ts tests", () => {
   describe("setControlModeAsync", async () => {

@@ -1,5 +1,5 @@
-import { ReadingType } from "../sensors/ReadingType";
-import { ConditionGroupType } from "./ConditionTypes";
+import { ReadingType } from "../sensors/ReadingType.js";
+import { ConditionGroupType } from "./ConditionTypes.js";
 
 interface ISensorCondition {
   id: number;

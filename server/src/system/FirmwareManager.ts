@@ -1,6 +1,7 @@
 import fs from "fs";
 import fsPromises from "fs/promises";
-import { SerialPort } from "serialport/dist/index";
+import { SerialPort } from "serialport";
+import esptool from "esptool-js";
 
 import {
   ESP32_MANIFEST_PATH,
@@ -8,7 +9,7 @@ import {
   ESP32_BOOTLOADER_PATH,
   ESP32_PARTITIONS_PATH,
   ESP32_BOOTAPP0_PATH,
-} from "@sproot/sproot-common/dist/utility/Constants";
+} from "@sproot/sproot-common/dist/utility/Constants.js";
 
 import type { FlashOptions } from "esptool-js";
 import winston from "winston";
@@ -34,9 +35,6 @@ class ESP32Manager {
 
     const serial = new SerialPort({ baudRate: 460800, path: portPath });
 
-    // esptool-js is published as an ES module; use dynamic import at runtime to avoid
-    // Node trying to load it as CommonJS when this project is CommonJS.
-    const esptool = await import("esptool-js");
     const { ESPLoader, Transport } = esptool;
 
     const transport = new Transport(serial);

@@ -1,16 +1,16 @@
-import { IMAGE_DIRECTORY, TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import { IMAGE_DIRECTORY, TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants.js";
 import {
   getDirectorySizeAsync,
   getOldestFilePathAsync,
   getSortedFileAsync,
-} from "@sproot/sproot-common/dist/utility/Files";
+} from "@sproot/sproot-common/dist/utility/Files.js";
 import fs, { createWriteStream } from "fs";
 import path from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import winston from "winston";
-import Timelapse from "./Timelapse";
-import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
+import Timelapse from "./Timelapse.js";
+import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings.js";
 
 class ImageCapture {
   #timelapse: Timelapse;

@@ -1,9 +1,9 @@
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { MdnsService } from "../../../../system/MdnsService";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MdnsService } from "../../../../system/MdnsService.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import { randomBytes } from "crypto";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller.js";
 
 export async function getSubcontrollerHandlerAsync(
   request: Request,

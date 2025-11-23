@@ -1,7 +1,7 @@
 import fs from "fs";
 import { Express } from "express";
 import { Server } from "http";
-import mainAsync, { gracefulHaltAsync } from "../program";
+import mainAsync, { gracefulHaltAsync } from "../program.js";
 
 let server: Server;
 let app: Express;

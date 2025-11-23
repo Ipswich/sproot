@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { outputChartDataHandler } from "../handlers/OutputChartDataHandlers";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { outputChartDataHandler } from "../handlers/OutputChartDataHandlers.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { SuccessResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse } from "@sproot/api/v2/Responses.js";
 
 describe("OutputChartDataHandlers.ts tests", () => {
   describe("outputChartDataHandler", () => {

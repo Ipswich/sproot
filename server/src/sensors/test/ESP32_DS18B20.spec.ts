@@ -1,15 +1,15 @@
-import { ESP32_DS18B20 } from "@sproot/sproot-server/src/sensors/ESP32_DS18B20";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { ESP32_DS18B20 } from "@sproot/sproot-server/src/sensors/ESP32_DS18B20.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading.js";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor.js";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller.js";
 
 import { assert } from "chai";
 import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
-import { MdnsService } from "../../system/MdnsService";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { MdnsService } from "../../system/MdnsService.js";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_DS18B20.ts tests", function () {

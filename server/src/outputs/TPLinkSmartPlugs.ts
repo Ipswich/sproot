@@ -1,16 +1,16 @@
-import { Client, Plug } from "tplink-smarthome-api";
-import { OutputBase } from "./base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import tplink from "tplink-smarthome-api";
+import { OutputBase } from "./base/OutputBase.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import winston from "winston";
-import { MultiOutputBase } from "./base/MultiOutputBase";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { MultiOutputBase } from "./base/MultiOutputBase.js";
+import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice.js";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
-  readonly availablePlugs: Record<string, Plug> = {};
+  readonly availablePlugs: Record<string, tplink.Plug> = {};
   readonly initializingPlugs: Record<string, string[]> = {};
-  #client: Client;
+  #client: tplink.Client;
 
   constructor(
     sprootDB: ISprootDB,
@@ -30,7 +30,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       undefined,
       logger,
     );
-    this.#client = new Client({
+    this.#client = new tplink.Client({
       defaultSendOptions: {
         timeout: connectionTimeout,
         transport: "udp",
@@ -39,17 +39,17 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       },
     });
 
-    this.#client.on("plug-new", (plug: Plug) => {
+    this.#client.on("plug-new", (plug: tplink.Plug) => {
       if (plug.childId != undefined) {
         this.availablePlugs[plug.childId] = plug;
       }
     });
-    this.#client.on("plug-online", (plug: Plug) => {
+    this.#client.on("plug-online", (plug: tplink.Plug) => {
       if (plug.childId != undefined) {
         this.availablePlugs[plug.childId] = plug;
       }
     });
-    this.#client.on("plug-offline", async (plug: Plug) => {
+    this.#client.on("plug-offline", async (plug: tplink.Plug) => {
       // Clean up non-responsive plugs
       if (plug.childId != undefined) {
         delete this.availablePlugs[plug.childId];
@@ -164,11 +164,11 @@ class TPLinkSmartPlugs extends MultiOutputBase {
 }
 
 class TPLinkPlug extends OutputBase {
-  tplinkPlug: Plug;
+  tplinkPlug: tplink.Plug;
   #powerUpdateEventRunning = false;
 
   constructor(
-    tplinkPlug: Plug,
+    tplinkPlug: tplink.Plug,
     output: SDBOutput,
     sprootDB: ISprootDB,
     maxCacheSize: number,

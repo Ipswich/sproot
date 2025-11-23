@@ -1,5 +1,5 @@
 import type { Knex } from "knex";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import * as Constants from "@sproot/sproot-common/dist/utility/Constants.js";
 import { TypeCastField } from "mysql2";
 
 function getConnectionConfiguration(databaseSuffix: string) {

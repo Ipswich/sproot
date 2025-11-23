@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { getTokenAsync } from "./handlers/TokenHandlers";
+import { getTokenAsync } from "./handlers/TokenHandlers.js";
 
 export default function initializeAuthenticationRoutes(
   isAuthEnabled: string,

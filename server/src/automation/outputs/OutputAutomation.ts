@@ -1,8 +1,8 @@
-import { OutputList } from "../../outputs/list/OutputList";
-import { SensorList } from "../../sensors/list/SensorList";
-import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation";
-import { Conditions } from "../conditions/Conditions";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { OutputList } from "../../outputs/list/OutputList.js";
+import { SensorList } from "../../sensors/list/SensorList.js";
+import { AutomationOperator, IAutomation } from "@sproot/automation/IAutomation.js";
+import { Conditions } from "../conditions/Conditions.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 
 export class OutputAutomation implements IAutomation {
   id: number;

@@ -2,8 +2,8 @@ import assert from "assert";
 import sinon from "sinon";
 import fs from "fs";
 import path from "path";
-import ImageCapture from "../ImageCapture";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import ImageCapture from "../ImageCapture.js";
+import * as Constants from "@sproot/sproot-common/dist/utility/Constants.js";
 import winston from "winston";
 import os from "os";
 

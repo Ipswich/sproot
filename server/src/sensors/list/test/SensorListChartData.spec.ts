@@ -1,8 +1,8 @@
 import { assert } from "chai";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
-import { SensorListChartData } from "../SensorListChartData";
-import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData.js";
+import { SensorListChartData } from "../SensorListChartData.js";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats.js";
 
 describe("SensorListChartData.ts tests", function () {
   describe("constructor", function () {

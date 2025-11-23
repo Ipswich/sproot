@@ -1,7 +1,7 @@
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
-import { OutputList } from "../../outputs/list/OutputList";
-import { evaluateNumber } from "./ConditionUtils";
-import { IOutputCondition } from "@sproot/automation/IOutputCondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes.js";
+import { OutputList } from "../../outputs/list/OutputList.js";
+import { evaluateNumber } from "./ConditionUtils.js";
+import { IOutputCondition } from "@sproot/automation/IOutputCondition.js";
 
 export class OutputCondition implements IOutputCondition {
   id: number;

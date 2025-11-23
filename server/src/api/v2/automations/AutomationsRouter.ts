@@ -6,8 +6,8 @@ import {
   addAsync,
   updateAsync,
   deleteAsync,
-} from "./handlers/AutomationHandlers";
-import conditionsRouter from "./ConditionsRouter";
+} from "./handlers/AutomationHandlers.js";
+import conditionsRouter from "./ConditionsRouter.js";
 
 const router = express.Router();
 

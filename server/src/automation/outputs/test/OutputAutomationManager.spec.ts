@@ -1,15 +1,15 @@
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import OutputAutomationManager from "../OutputAutomationManager";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import OutputAutomationManager from "../OutputAutomationManager.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
-import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
-import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
-import { SDBOutputActionView } from "@sproot/sproot-common/dist/database/SDBOutputAction";
-import { OutputList } from "../../../outputs/list/OutputList";
-import { SensorList } from "../../../sensors/list/SensorList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition.js";
+import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition.js";
+import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition.js";
+import { SDBOutputActionView } from "@sproot/sproot-common/dist/database/SDBOutputAction.js";
+import { OutputList } from "../../../outputs/list/OutputList.js";
+import { SensorList } from "../../../sensors/list/SensorList.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import winston from "winston";
 
 describe("OutputAutomationManager.ts tests", () => {

@@ -1,17 +1,17 @@
-import { BME280 } from "@sproot/sproot-server/src/sensors/BME280";
-import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
-import { SensorList } from "../SensorList";
+import { BME280 } from "@sproot/sproot-server/src/sensors/BME280.js";
+import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor.js";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller.js";
+import { SensorList } from "../SensorList.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { ChartSeries, DataSeries } from "@sproot/utility/ChartData.js";
+import { MdnsService } from "../../../system/MdnsService.js";
+import { ESP32_DS18B20 } from "../../ESP32_DS18B20.js";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { ChartSeries, DataSeries } from "@sproot/utility/ChartData";
-import { MdnsService } from "../../../system/MdnsService";
-import { ESP32_DS18B20 } from "../../ESP32_DS18B20";
 
 const mockSprootDB = new MockSprootDB();
 

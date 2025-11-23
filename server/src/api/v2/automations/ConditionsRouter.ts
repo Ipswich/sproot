@@ -7,7 +7,7 @@ import {
   getByTypeAsync,
   getOneOfByTypeAsync,
   deleteAsync,
-} from "./handlers/ConditionHandlers";
+} from "./handlers/ConditionHandlers.js";
 
 export default function conditionsRouter(router: Router): Router {
   router.get("/:automationId/conditions", async (req: Request, res: Response) => {

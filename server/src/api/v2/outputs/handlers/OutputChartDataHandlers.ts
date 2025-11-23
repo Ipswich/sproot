@@ -1,6 +1,6 @@
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { OutputList } from "../../../../outputs/list/OutputList";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
 
 export function outputChartDataHandler(
   request: Request,

@@ -1,8 +1,8 @@
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
-import { ReadingType } from "@sproot/sensors/ReadingType";
-import { SensorList } from "../../sensors/list/SensorList";
-import { evaluateNumber } from "./ConditionUtils";
-import { ISensorCondition } from "@sproot/automation/ISensorCondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes.js";
+import { ReadingType } from "@sproot/sensors/ReadingType.js";
+import { SensorList } from "../../sensors/list/SensorList.js";
+import { evaluateNumber } from "./ConditionUtils.js";
+import { ISensorCondition } from "@sproot/automation/ISensorCondition.js";
 
 export class SensorCondition implements ISensorCondition {
   id: number;

@@ -6,13 +6,13 @@ import {
   postSubcontrollerHandlerAsync,
   patchSubcontrollerHandlerAsync,
   deleteSubcontrollerAsync,
-} from "./handlers/SubcontrollerHandlers";
+} from "./handlers/SubcontrollerHandlers.js";
 
 import {
   getESP32FirmwareBinaryAsync,
   getESP32ManifestAsync,
   updateESP32FirmwareOTAAsync,
-} from "./handlers/ESP32Handlers";
+} from "./handlers/ESP32Handlers.js";
 
 const router = express.Router();
 

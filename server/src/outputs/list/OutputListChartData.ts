@@ -3,7 +3,7 @@ import {
   ChartData,
   DataSeries,
   ChartSeries,
-} from "@sproot/sproot-common/dist/utility/ChartData";
+} from "@sproot/sproot-common/dist/utility/ChartData.js";
 
 class OutputListChartData implements IChartable {
   chartData: ChartData;

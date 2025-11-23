@@ -1,4 +1,4 @@
-import { IAutomation } from "./IAutomation";
+import { IAutomation } from "./IAutomation.js";
 
 export interface IOutputAutomation extends IAutomation {
   outputAutomationId: string;

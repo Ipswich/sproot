@@ -1,14 +1,14 @@
-import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { addAsync, deleteAsync, getAsync, getByIdAsync } from "../handlers/OutputActionHandlers";
-import { SDBOutputAction } from "@sproot/sproot-common/dist/database/SDBOutputAction";
+import { addAsync, deleteAsync, getAsync, getByIdAsync } from "../handlers/OutputActionHandlers.js";
+import { SDBOutputAction } from "@sproot/sproot-common/dist/database/SDBOutputAction.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { SDBAutomation } from "@sproot/database/SDBAutomation";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { AutomationDataManager } from "../../../../automation/AutomationDataManager.js";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { SDBAutomation } from "@sproot/database/SDBAutomation.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 
 describe("OutputActionHandlers.ts tests", () => {
   describe("getAsync", () => {

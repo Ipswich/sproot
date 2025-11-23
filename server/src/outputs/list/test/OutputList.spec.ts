@@ -1,13 +1,13 @@
-import { OutputList } from "../OutputList";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import Pca9685Driver from "pca9685";
+import { OutputList } from "../OutputList.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
+import { MdnsService } from "../../../system/MdnsService.js";
+const Pca9685Driver: any = require("pca9685");
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
-import { MdnsService } from "../../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("OutputList.ts tests", function () {

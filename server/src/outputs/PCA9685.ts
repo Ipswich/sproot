@@ -1,11 +1,11 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
-import { OutputBase } from "./base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
+import { OutputBase } from "./base/OutputBase.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice.js";
+import { MultiOutputBase } from "./base/MultiOutputBase.js";
 import winston from "winston";
-import { MultiOutputBase } from "./base/MultiOutputBase";
 
 class PCA9685 extends MultiOutputBase {
   constructor(

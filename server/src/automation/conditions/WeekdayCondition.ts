@@ -1,6 +1,6 @@
-import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
-import { evaluateWeekday } from "./ConditionUtils";
-import { ConditionGroupType } from "@sproot/automation/ConditionTypes";
+import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition.js";
+import { evaluateWeekday } from "./ConditionUtils.js";
+import { ConditionGroupType } from "@sproot/automation/ConditionTypes.js";
 
 export class WeekdayCondition implements IWeekdayCondition {
   id: number;

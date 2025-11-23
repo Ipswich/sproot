@@ -1,12 +1,12 @@
-import { OutputList } from "../outputs/list/OutputList";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AutomationOperator } from "@sproot/automation/IAutomation";
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
-import { TimeCondition } from "./conditions/TimeCondition";
-import { SensorCondition } from "./conditions/SensorCondition";
-import { OutputCondition } from "./conditions/OutputCondition";
-import { ReadingType } from "@sproot/sensors/ReadingType";
-import { WeekdayCondition } from "./conditions/WeekdayCondition";
+import { OutputList } from "../outputs/list/OutputList.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { AutomationOperator } from "@sproot/automation/IAutomation.js";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes.js";
+import { TimeCondition } from "./conditions/TimeCondition.js";
+import { SensorCondition } from "./conditions/SensorCondition.js";
+import { OutputCondition } from "./conditions/OutputCondition.js";
+import { ReadingType } from "@sproot/sensors/ReadingType.js";
+import { WeekdayCondition } from "./conditions/WeekdayCondition.js";
 
 /**
  * This class serves as an interface between changes in automation data and the things

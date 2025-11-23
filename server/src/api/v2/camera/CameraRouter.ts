@@ -3,13 +3,13 @@ import {
   getLatestImageAsync,
   reconnectLivestreamAsync,
   streamHandlerAsync,
-} from "./handlers/CameraHandlers";
-import { getCameraSettings, updateCameraSettingsAsync } from "./handlers/CameraSettingsHandlers";
+} from "./handlers/CameraHandlers.js";
+import { getCameraSettings, updateCameraSettingsAsync } from "./handlers/CameraSettingsHandlers.js";
 import {
   getTimelapseArchiveAsync,
   getTimelapseGenerationStatus,
   postRegenerateTimelapseArchive,
-} from "./handlers/TimelapseHandlers";
+} from "./handlers/TimelapseHandlers.js";
 
 const router = express.Router();
 router.get("/settings", (req: Request, res: Response) => {

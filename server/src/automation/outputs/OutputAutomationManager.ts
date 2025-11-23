@@ -1,9 +1,9 @@
-import { SensorList } from "../../sensors/list/SensorList";
-import { OutputList } from "../../outputs/list/OutputList";
-import { OutputAutomation } from "./OutputAutomation";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SensorList } from "../../sensors/list/SensorList.js";
+import { OutputList } from "../../outputs/list/OutputList.js";
+import { OutputAutomation } from "./OutputAutomation.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import winston from "winston";
-import { Conditions } from "../conditions/Conditions";
+import { Conditions } from "../conditions/Conditions.js";
 
 export default class OutputAutomationManager {
   #automations: Record<number, OutputAutomation>;

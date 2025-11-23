@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 import sinon from "sinon";
 import { assert } from "chai";
-import { authorize } from "../Authorize";
+import { authorize } from "../Authorize.js";
 
 describe("Authenticate.ts tests", () => {
   const jwtSecret = "secret";

@@ -1,9 +1,9 @@
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { OutputCache } from "../OutputCache";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { OutputCache } from "../OutputCache.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import winston from "winston";
 
 describe("OutputCache.ts", function () {

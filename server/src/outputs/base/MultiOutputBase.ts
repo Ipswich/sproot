@@ -1,11 +1,11 @@
-import { ISprootDB } from "@sproot/database/ISprootDB";
-import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
+import { ISprootDB } from "@sproot/database/ISprootDB.js";
+import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase.js";
+import { SDBOutputState } from "@sproot/database/SDBOutputState.js";
+import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice.js";
+import { OutputBase } from "./OutputBase.js";
+import { SDBOutput } from "@sproot/database/SDBOutput.js";
 
 import winston from "winston";
-import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
-import { OutputBase } from "./OutputBase";
-import { SDBOutput } from "@sproot/database/SDBOutput";
 
 export abstract class MultiOutputBase implements AsyncDisposable {
   readonly boardRecord: Record<string, any> = {};

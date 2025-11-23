@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { generateInterserviceAuthenticationToken } from "../InterserviceAuthentication";
+import { generateInterserviceAuthenticationToken } from "../InterserviceAuthentication.js";
 
 describe("InterserviceAuthentication.ts tests", function () {
   describe("generateInterserviceAuthenticationToken", function () {

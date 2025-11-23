@@ -2,7 +2,7 @@ import { RowDataPacket } from "mysql2";
 import {
   ConditionGroupType,
   ConditionOperator,
-} from "@sproot/sproot-common/src/automation/ConditionTypes";
+} from "@sproot/sproot-common/src/automation/ConditionTypes.js";
 
 type SDBOutputCondition = RowDataPacket & {
   id: number;

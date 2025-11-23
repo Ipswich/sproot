@@ -1,12 +1,12 @@
 import { assert } from "chai";
 import * as sinon from "sinon";
 import { Request, Response } from "express";
-import { CameraManager } from "../../../../camera/CameraManager";
+import { CameraManager } from "../../../../camera/CameraManager.js";
 import {
   getTimelapseArchiveAsync,
   postRegenerateTimelapseArchive,
   getTimelapseGenerationStatus,
-} from "../handlers/TimelapseHandlers";
+} from "../handlers/TimelapseHandlers.js";
 import { createReadStream } from "fs";
 
 describe("TimelapseHandlers", () => {

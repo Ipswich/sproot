@@ -1,17 +1,17 @@
-import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { OutputCondition } from "../../../../automation/conditions/OutputCondition";
-import { SensorCondition } from "../../../../automation/conditions/SensorCondition";
-import { TimeCondition } from "../../../../automation/conditions/TimeCondition";
-import { WeekdayCondition } from "../../../../automation/conditions/WeekdayCondition";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
-import { ISprootDB } from "@sproot/database/ISprootDB";
-import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
-import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
-import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
-import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
-import { SensorList } from "../../../../sensors/list/SensorList";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { OutputCondition } from "../../../../automation/conditions/OutputCondition.js";
+import { SensorCondition } from "../../../../automation/conditions/SensorCondition.js";
+import { TimeCondition } from "../../../../automation/conditions/TimeCondition.js";
+import { WeekdayCondition } from "../../../../automation/conditions/WeekdayCondition.js";
+import { AutomationDataManager } from "../../../../automation/AutomationDataManager.js";
+import { ISprootDB } from "@sproot/database/ISprootDB.js";
+import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition.js";
+import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition.js";
+import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition.js";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition.js";
+import { SensorList } from "../../../../sensors/list/SensorList.js";
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503

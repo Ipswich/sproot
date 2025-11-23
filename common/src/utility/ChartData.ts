@@ -1,4 +1,4 @@
-import { formatDateForChart } from "./DisplayFormats";
+import { formatDateForChart } from "./DisplayFormats.js";
 
 export interface IChartable {
   chartData: Record<string | number | symbol, ChartData> | ChartData;

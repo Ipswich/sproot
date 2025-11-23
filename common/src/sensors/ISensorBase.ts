@@ -1,5 +1,5 @@
-import { Models } from "./Models";
-import { ReadingType } from "./ReadingType";
+import { Models } from "./Models.js";
+import { ReadingType } from "./ReadingType.js";
 
 interface ISensorBase {
   id: number;

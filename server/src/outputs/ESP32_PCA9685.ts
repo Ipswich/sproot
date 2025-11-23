@@ -1,11 +1,11 @@
-import { OutputBase } from "./base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
+import { OutputBase } from "./base/OutputBase.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice.js";
+import { MultiOutputBase } from "./base/MultiOutputBase.js";
+import { MdnsService } from "../system/MdnsService.js";
 import winston from "winston";
-import { MultiOutputBase } from "./base/MultiOutputBase";
-import { MdnsService } from "../system/MdnsService";
 
 class ESP32_PCA9685 extends MultiOutputBase {
   #mdnsService: MdnsService;

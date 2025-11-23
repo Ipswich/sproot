@@ -78,5 +78,6 @@
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^4.7.1",
     "yamljs": "^0.3.0"
-  }
+  },
+  "type": "module"
 }

@@ -1,8 +1,8 @@
-import { ChartData, DataPoint, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
+import { ChartData, DataPoint, DataSeries } from "@sproot/sproot-common/src/utility/ChartData.js";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { formatDateForChart, formatDecimalReadingForDisplay } from "../DisplayFormats";
+import { formatDateForChart, formatDecimalReadingForDisplay } from "../DisplayFormats.js";
 const sandbox = sinon.createSandbox();
 
 describe("ChartData.ts tests", function () {

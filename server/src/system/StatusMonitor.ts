@@ -1,9 +1,9 @@
 import os from "os";
 import { statfs } from "fs";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import { promisify } from "util";
-import { SystemStatus } from "@sproot/sproot-common/dist/system/SystemStatus";
-import { CameraManager } from "../camera/CameraManager";
+import { SystemStatus } from "@sproot/sproot-common/dist/system/SystemStatus.js";
+import { CameraManager } from "../camera/CameraManager.js";
 import { Knex } from "knex";
 
 const statfsAsync = promisify(statfs);

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { CameraManager } from "../../../../camera/CameraManager";
+import { CameraManager } from "../../../../camera/CameraManager.js";
 import winston from "winston";
 
 /**

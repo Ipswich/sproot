@@ -1,11 +1,11 @@
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
 import {
   IChartable,
   ChartData,
   DataSeries,
   ChartSeries,
-} from "@sproot/sproot-common/dist/utility/ChartData";
-import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
+} from "@sproot/sproot-common/dist/utility/ChartData.js";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats.js";
 
 export class OutputChartData implements IChartable {
   chartData: ChartData;

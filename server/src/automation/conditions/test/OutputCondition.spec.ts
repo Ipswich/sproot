@@ -1,8 +1,8 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { OutputBase } from "../../../outputs/base/OutputBase";
-import { OutputList } from "../../../outputs/list/OutputList";
-import { OutputCondition } from "../OutputCondition";
+import { OutputBase } from "../../../outputs/base/OutputBase.js";
+import { OutputList } from "../../../outputs/list/OutputList.js";
+import { OutputCondition } from "../OutputCondition.js";
 
 describe("OutputCondition.ts tests", () => {
   describe("evaluateNumber", () => {

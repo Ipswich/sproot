@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { isBetweenTimeStamp } from "../TimeMethods";
+import { isBetweenTimeStamp } from "../TimeMethods.js";
 
 describe("TimeMethods", function () {
   describe("isBetweenTimeStamp", function () {

@@ -1,14 +1,14 @@
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import winston from "winston";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { SensorChartData } from "../SensorChartData";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData";
-import { SensorCache } from "../SensorCache";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats";
+import { SensorChartData } from "../SensorChartData.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { DataSeries } from "@sproot/sproot-common/dist/utility/ChartData.js";
+import { SensorCache } from "../SensorCache.js";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading.js";
+import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFormats.js";
 
 describe("SensorChartData.ts tests", function () {
   const mockSprootDB = new MockSprootDB();

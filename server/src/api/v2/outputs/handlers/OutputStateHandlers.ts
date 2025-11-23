@@ -1,8 +1,8 @@
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
 import { Request, Response } from "express";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
 
 /**
  * Possible statusCodes: 200, 404

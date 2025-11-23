@@ -1,4 +1,4 @@
-import { SuccessResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse } from "@sproot/api/v2/Responses.js";
 import express, { Request, Response } from "express";
 
 const router = express.Router();

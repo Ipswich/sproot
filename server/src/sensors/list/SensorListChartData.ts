@@ -1,10 +1,10 @@
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
 import {
   IChartable,
   ChartData,
   DataSeries,
   ChartSeries,
-} from "@sproot/sproot-common/dist/utility/ChartData";
+} from "@sproot/sproot-common/dist/utility/ChartData.js";
 
 export class SensorListChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;

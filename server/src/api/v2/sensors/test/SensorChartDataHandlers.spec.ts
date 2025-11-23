@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { SensorList } from "../../../../sensors/list/SensorList";
-import { sensorChartDataHandler } from "../handlers/SensorChartDataHandlers";
+import { SensorList } from "../../../../sensors/list/SensorList.js";
+import { sensorChartDataHandler } from "../handlers/SensorChartDataHandlers.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { SuccessResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse } from "@sproot/api/v2/Responses.js";
 
 describe("SensorChartDataHandlers.ts tests", () => {
   describe("sensorChartDataHandler", () => {

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 
-import { getAsync, getByIdAsync, addAsync, deleteAsync } from "./handlers/OutputActionHandlers";
+import { getAsync, getByIdAsync, addAsync, deleteAsync } from "./handlers/OutputActionHandlers.js";
 
 const router = express.Router();
 router.get("/", async (req: Request, res: Response) => {

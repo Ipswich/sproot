@@ -1,7 +1,7 @@
-import { OutputState } from "../OutputState";
-import { SprootDB } from "../../../database/SprootDB";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { OutputState } from "../OutputState.js";
+import { SprootDB } from "../../../database/SprootDB.js";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
 
 import { assert } from "chai";
 import sinon from "sinon";

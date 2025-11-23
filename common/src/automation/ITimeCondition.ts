@@ -1,4 +1,4 @@
-import { ConditionGroupType } from "./ConditionTypes";
+import { ConditionGroupType } from "./ConditionTypes.js";
 
 interface ITimeCondition {
   id: number;

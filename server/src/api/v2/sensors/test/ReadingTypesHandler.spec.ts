@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { SensorList } from "../../../../sensors/list/SensorList";
-import { readingTypesHandler } from "../handlers/ReadingTypesHandler";
+import { SensorList } from "../../../../sensors/list/SensorList.js";
+import { readingTypesHandler } from "../handlers/ReadingTypesHandler.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { SuccessResponse } from "@sproot/api/v2/Responses";
+import { SuccessResponse } from "@sproot/api/v2/Responses.js";
 
 describe("ReadingTypesHandler.ts tests", () => {
   const mockResponse = {

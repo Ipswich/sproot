@@ -2,11 +2,11 @@ import { describe, it, beforeEach } from "mocha";
 import { assert } from "chai";
 import { createSandbox, SinonSandbox } from "sinon";
 import { Request, Response } from "express";
-import { getCameraSettings, updateCameraSettingsAsync } from "../handlers/CameraSettingsHandlers";
-import { CameraManager } from "../../../../camera/CameraManager";
-import { ISprootDB } from "@sproot/database/ISprootDB";
-import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
+import { getCameraSettings, updateCameraSettingsAsync } from "../handlers/CameraSettingsHandlers.js";
+import { CameraManager } from "../../../../camera/CameraManager.js";
+import { ISprootDB } from "@sproot/database/ISprootDB.js";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings.js";
+import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses.js";
 
 describe("CameraSettingsHandlers.ts tests", () => {
   let sandbox: SinonSandbox;

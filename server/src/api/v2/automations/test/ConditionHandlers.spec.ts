@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { SDBAutomation } from "@sproot/database/SDBAutomation";
-import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
+import { SDBAutomation } from "@sproot/database/SDBAutomation.js";
+import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition.js";
 import {
   getAllAsync,
   getOneOfByTypeAsync,
@@ -12,14 +12,14 @@ import {
   addAsync,
   updateAsync,
   deleteAsync,
-} from "../handlers/ConditionHandlers";
-import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
-import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { SensorList } from "../../../../sensors/list/SensorList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+} from "../handlers/ConditionHandlers.js";
+import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition.js";
+import { AutomationDataManager } from "../../../../automation/AutomationDataManager.js";
+import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition.js";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { SensorList } from "../../../../sensors/list/SensorList.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition.js";
 
 describe("ConditionHandlers.ts", () => {
   describe("getAllAsync", () => {

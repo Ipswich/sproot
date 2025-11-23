@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
-import { SensorList } from "../../../../sensors/list/SensorList";
-import { addAsync, deleteAsync, get, updateAsync } from "../handlers/SensorHandlers";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { SensorList } from "../../../../sensors/list/SensorList.js";
+import { addAsync, deleteAsync, get, updateAsync } from "../handlers/SensorHandlers.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor.js";
 import sinon from "sinon";
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { SensorBase } from "../../../../sensors/base/SensorBase";
-import { Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
+import { SensorBase } from "../../../../sensors/base/SensorBase.js";
+import { Models } from "@sproot/sproot-common/dist/sensors/Models.js";
 
 describe("SensorHandlers.ts tests", () => {
   describe("get", () => {

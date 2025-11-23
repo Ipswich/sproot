@@ -1,5 +1,5 @@
 import { type Knex } from "knex";
-import { setTableDefaults } from "../KnexUtilities";
+import { setTableDefaults } from "../KnexUtilities.js";
 
 export async function up(knex: Knex): Promise<void> {
   if (!(await knex.schema.hasTable("automations"))) {

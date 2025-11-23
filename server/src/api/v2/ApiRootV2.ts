@@ -5,17 +5,17 @@ import YAML from "yamljs";
 
 import addDefaultProperties, {
   createDefaultProperties,
-} from "./middleware/DefaultResponseProperties";
-import { authorize } from "./middleware/Authorize";
-import authenticationRouter from "./authentication/authenticationRouter";
-import pingRouter from "./ping/PingRouter";
-import systemRouter from "./system/SystemRouter";
-import sensorsRouter from "./sensors/SensorsRouter";
-import outputsRouter from "./outputs/OutputsRouter";
-import automationsRouter from "./automations/AutomationsRouter";
-import outputActionsRouter from "./automations/OutputActionRouter";
-import cameraRouter from "./camera/CameraRouter";
-import subcontrollersRouter from "./subcontrollers/SubcontrollersRouter";
+} from "./middleware/DefaultResponseProperties.js";
+import { authorize } from "./middleware/Authorize.js";
+import authenticationRouter from "./authentication/authenticationRouter.js";
+import pingRouter from "./ping/PingRouter.js";
+import systemRouter from "./system/SystemRouter.js";
+import sensorsRouter from "./sensors/SensorsRouter.js";
+import outputsRouter from "./outputs/OutputsRouter.js";
+import automationsRouter from "./automations/AutomationsRouter.js";
+import outputActionsRouter from "./automations/OutputActionRouter.js";
+import cameraRouter from "./camera/CameraRouter.js";
+import subcontrollersRouter from "./subcontrollers/SubcontrollersRouter.js";
 
 const spec_path = "../api_spec/openapi_v2.yaml";
 

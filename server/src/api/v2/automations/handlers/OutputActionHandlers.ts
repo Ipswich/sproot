@@ -1,8 +1,8 @@
-import { ISprootDB } from "@sproot/database/ISprootDB";
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
+import { ISprootDB } from "@sproot/database/ISprootDB.js";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { Request, Response } from "express";
-import { OutputList } from "../../../../outputs/list/OutputList";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { OutputList } from "../../../../outputs/list/OutputList.js";
+import { AutomationDataManager } from "../../../../automation/AutomationDataManager.js";
 
 /**
  * Possible statusCodes: 200, 401, 503

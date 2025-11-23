@@ -4,10 +4,10 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
 
-import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { getTokenAsync } from "../handlers/TokenHandlers";
-import { SDBUser } from "@sproot/database/SDBUser";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses.js";
+import { getTokenAsync } from "../handlers/TokenHandlers.js";
+import { SDBUser } from "@sproot/database/SDBUser.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 
 describe("TokenHandlers.ts tests", () => {
   describe("getTokenAsync", async () => {

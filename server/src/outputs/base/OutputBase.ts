@@ -1,17 +1,17 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { OutputCache } from "./OutputCache";
-import { OutputChartData } from "./OutputChartData";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
+import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
+import { OutputCache } from "./OutputCache.js";
+import { OutputChartData } from "./OutputChartData.js";
+import { OutputState } from "./OutputState.js";
+import { DataSeries, ChartSeries } from "@sproot/utility/ChartData.js";
+import OutputAutomationManager from "../../automation/outputs/OutputAutomationManager.js";
+import { SensorList } from "../../sensors/list/SensorList.js";
+import { OutputList } from "../list/OutputList.js";
+import { OutputAutomation } from "../../automation/outputs/OutputAutomation.js";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
 import winston from "winston";
-import { OutputState } from "./OutputState";
-import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
-import OutputAutomationManager from "../../automation/outputs/OutputAutomationManager";
-import { SensorList } from "../../sensors/list/SensorList";
-import { OutputList } from "../list/OutputList";
-import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;

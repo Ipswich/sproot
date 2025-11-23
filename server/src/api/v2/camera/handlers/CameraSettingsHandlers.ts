@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { CameraManager } from "../../../../camera/CameraManager";
-import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
-import { ISprootDB } from "@sproot/database/ISprootDB";
-import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import { CameraManager } from "../../../../camera/CameraManager.js";
+import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses.js";
+import { ISprootDB } from "@sproot/database/ISprootDB.js";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings.js";
 
 /**
  * Possible return codes: 200

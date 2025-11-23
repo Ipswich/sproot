@@ -2,9 +2,9 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { Request, Response } from "express";
 
-import { getESP32ManifestAsync, getESP32FirmwareBinaryAsync } from "../handlers/ESP32Handlers";
-import { FirmwareManager } from "../../../../system/FirmwareManager";
-import { ErrorResponse } from "@sproot/api/v2/Responses";
+import { getESP32ManifestAsync, getESP32FirmwareBinaryAsync } from "../handlers/ESP32Handlers.js";
+import { FirmwareManager } from "../../../../system/FirmwareManager.js";
+import { ErrorResponse } from "@sproot/api/v2/Responses.js";
 import { createReadStream } from "fs";
 
 describe("ESP32Handlers.ts tests", function () {

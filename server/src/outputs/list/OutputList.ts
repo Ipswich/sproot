@@ -1,17 +1,17 @@
-import { PCA9685 } from "../PCA9685";
-import { ESP32_PCA9685, ESP32_PCA9685Output } from "../ESP32_PCA9685";
-import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { OutputBase } from "../base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { PCA9685 } from "../PCA9685.js";
+import { ESP32_PCA9685, ESP32_PCA9685Output } from "../ESP32_PCA9685.js";
+import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
+import { OutputBase } from "../base/OutputBase.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
+import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData.js";
+import { SensorList } from "../../sensors/list/SensorList.js";
+import { OutputListChartData } from "./OutputListChartData.js";
+import { MdnsService } from "../../system/MdnsService.js";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
 import winston from "winston";
-import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
-import { OutputListChartData } from "./OutputListChartData";
-import { SensorList } from "../../sensors/list/SensorList";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
-import { MdnsService } from "../../system/MdnsService";
 
 class OutputList implements AsyncDisposable {
   #sprootDB: ISprootDB;

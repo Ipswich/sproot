@@ -1,8 +1,8 @@
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { PCA9685, PCA9685Output } from "@sproot/sproot-server/src/outputs/PCA9685";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase.js";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { PCA9685, PCA9685Output } from "@sproot/sproot-server/src/outputs/PCA9685.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
 import { Pca9685Driver } from "pca9685";
 
 import chai, { assert } from "chai";
@@ -10,8 +10,8 @@ import chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
-import { OutputBase } from "../base/OutputBase";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { OutputBase } from "../base/OutputBase.js";
+import { Models } from "@sproot/sproot-common/dist/outputs/Models.js";
 const mockSprootDB = new MockSprootDB();
 
 describe("PCA9685.ts tests", function () {

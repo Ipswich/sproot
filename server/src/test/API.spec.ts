@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import request from "supertest";
-import { validateMiddlewareValues } from "./utils";
-import { app, server } from "./setup";
+import { validateMiddlewareValues } from "./utils.js";
+import { app, server } from "./setup.js";
 
 describe("API Tests", async () => {
   // describe("Authentication Routes", async () => {

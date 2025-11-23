@@ -1,4 +1,4 @@
-import { AutomationOperator } from "../automation/IAutomation";
+import { AutomationOperator } from "../automation/IAutomation.js";
 
 type SDBAutomation = {
   automationId: number;

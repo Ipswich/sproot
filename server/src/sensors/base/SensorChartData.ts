@@ -1,15 +1,15 @@
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
 import {
   IChartable,
   ChartData,
   DataSeries,
   ChartSeries,
-} from "@sproot/sproot-common/dist/utility/ChartData";
+} from "@sproot/sproot-common/dist/utility/ChartData.js";
 import {
   formatDateForChart,
   formatDecimalReadingForDisplay,
-} from "@sproot/sproot-common/dist/utility/DisplayFormats";
+} from "@sproot/sproot-common/dist/utility/DisplayFormats.js";
 
 export class SensorChartData implements IChartable {
   chartData: Record<ReadingType, ChartData>;

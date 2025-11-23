@@ -1,4 +1,4 @@
-import { WeekdayCondition } from "../WeekdayCondition";
+import { WeekdayCondition } from "../WeekdayCondition.js";
 
 import { assert } from "chai";
 

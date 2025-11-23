@@ -1,31 +1,31 @@
-import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
-import { SDBAutomation } from "@sproot/database/SDBAutomation";
-import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
-import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
-import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
-import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
-import { AutomationOperator } from "@sproot/automation/IAutomation";
+import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser.js";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor.js";
+import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase.js";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading.js";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase.js";
+import { SDBAutomation } from "@sproot/database/SDBAutomation.js";
+import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition.js";
+import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition.js";
+import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition.js";
+import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes.js";
+import { AutomationOperator } from "@sproot/automation/IAutomation.js";
 import {
   SDBOutputAction,
   SDBOutputActionView,
-} from "@sproot/sproot-common/dist/database/SDBOutputAction";
+} from "@sproot/sproot-common/dist/database/SDBOutputAction.js";
 import { Knex } from "knex";
-import { IOutputCondition } from "@sproot/automation/IOutputCondition";
-import { ISensorCondition } from "@sproot/automation/ISensorCondition";
-import { ITimeCondition } from "@sproot/automation/ITimeCondition";
-import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
-import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
-import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
-import { encrypt, decrypt } from "@sproot/sproot-common/dist/utility/Crypto";
+import { IOutputCondition } from "@sproot/automation/IOutputCondition.js";
+import { ISensorCondition } from "@sproot/automation/ISensorCondition.js";
+import { ITimeCondition } from "@sproot/automation/ITimeCondition.js";
+import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition.js";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition.js";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings.js";
+import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller.js";
+import { encrypt, decrypt } from "@sproot/sproot-common/dist/utility/Crypto.js";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;

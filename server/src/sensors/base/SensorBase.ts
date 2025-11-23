@@ -1,13 +1,13 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
-import { ReadingType, Units } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading.js";
+import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor.js";
+import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase.js";
+import { ReadingType, Units } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { SensorChartData } from "./SensorChartData.js";
+import { SensorCache } from "./SensorCache.js";
+import { DataSeries, ChartSeries } from "@sproot/utility/ChartData.js";
+import { Models } from "@sproot/sproot-common/dist/sensors/Models.js";
 import winston from "winston";
-import { SensorChartData } from "./SensorChartData";
-import { SensorCache } from "./SensorCache";
-import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
-import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   readonly id: number;

@@ -1,18 +1,18 @@
-import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
-import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
-import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { OutputList } from "../../../outputs/list/OutputList";
-import { OutputBase } from "../../../outputs/base/OutputBase";
-import { SensorList } from "../../../sensors/list/SensorList";
-import { SensorBase } from "../../../sensors/base/SensorBase";
+import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition.js";
+import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition.js";
+import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
+import { OutputList } from "../../../outputs/list/OutputList.js";
+import { OutputBase } from "../../../outputs/base/OutputBase.js";
+import { SensorList } from "../../../sensors/list/SensorList.js";
+import { SensorBase } from "../../../sensors/base/SensorBase.js";
 
-import { Conditions } from "../Conditions";
+import { Conditions } from "../Conditions.js";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition.js";
 
 describe("Conditions.ts tests", () => {
   describe("evaluate", () => {

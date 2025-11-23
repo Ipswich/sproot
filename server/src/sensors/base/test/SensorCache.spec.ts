@@ -1,11 +1,11 @@
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import winston from "winston";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { SensorCache } from "../SensorCache";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading.js";
+import { SensorCache } from "../SensorCache.js";
+import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType.js";
 
 describe("SensorCache.ts tests", function () {
   const mockSprootDB = new MockSprootDB();

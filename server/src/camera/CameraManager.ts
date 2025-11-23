@@ -1,13 +1,13 @@
-import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/dist/utility/InterserviceAuthentication";
-import { CRON } from "@sproot/sproot-common/dist/utility/Constants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings.js";
+import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/dist/utility/InterserviceAuthentication.js";
+import { CRON } from "@sproot/sproot-common/dist/utility/Constants.js";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB.js";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import ImageCapture from "./ImageCapture.js";
+import Livestream from "./Livestream.js";
 import { CronJob } from "cron";
 
 import winston from "winston";
-import ImageCapture from "./ImageCapture";
-import Livestream from "./Livestream";
 
 class CameraManager {
   #sprootDB: ISprootDB;

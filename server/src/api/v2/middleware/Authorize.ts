@@ -1,7 +1,7 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
-import { ErrorResponse } from "@sproot/api/v2/Responses";
+import { ErrorResponse } from "@sproot/api/v2/Responses.js";
 
 // Validates JWT tokens in either the Authorization header or cookie
 export function authorize(isAuthEnabled: string, jwtSecret: string) {

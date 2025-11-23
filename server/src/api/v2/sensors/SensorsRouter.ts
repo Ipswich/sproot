@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
-import { addAsync, deleteAsync, get, updateAsync } from "./handlers/SensorHandlers";
-import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
-import { readingTypesHandler } from "./handlers/ReadingTypesHandler";
-import { sensorChartDataHandler } from "./handlers/SensorChartDataHandlers";
+import { addAsync, deleteAsync, get, updateAsync } from "./handlers/SensorHandlers.js";
+import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers.js";
+import { readingTypesHandler } from "./handlers/ReadingTypesHandler.js";
+import { sensorChartDataHandler } from "./handlers/SensorChartDataHandlers.js";
 
 const router = express.Router();
 

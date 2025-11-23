@@ -4,9 +4,9 @@ import os from "os";
 import winston from "winston";
 import sinon from "sinon";
 import { assert } from "chai";
-import Timelapse from "../Timelapse";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
-import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import Timelapse from "../Timelapse.js";
+import * as Constants from "@sproot/sproot-common/dist/utility/Constants.js";
+import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings.js";
 
 describe("Timelapse.ts tests", function () {
   const logger = winston.createLogger({

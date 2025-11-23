@@ -4,9 +4,9 @@ import {
   ARCHIVE_DIRECTORY,
   TIMELAPSE_DIRECTORY,
   TIMELAPSE_RESOURCES,
-} from "@sproot/sproot-common/dist/utility/Constants";
-import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings";
-import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
+} from "@sproot/sproot-common/dist/utility/Constants.js";
+import { SDBCameraSettings } from "@sproot/sproot-common/dist/database/SDBCameraSettings.js";
+import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods.js";
 import path from "path";
 import { PassThrough, pipeline } from "stream";
 import { spawn } from "child_process";

@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { encrypt, decrypt } from "../Crypto";
+import { encrypt, decrypt } from "../Crypto.js";
 
 describe("Crypto.ts tests", () => {
   const testSecret = "MY SECRET";

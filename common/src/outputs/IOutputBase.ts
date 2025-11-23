@@ -1,5 +1,5 @@
-import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
-import { Models } from "./Models";
+import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState.js";
+import { Models } from "./Models.js";
 
 enum ControlMode {
   manual = "manual",

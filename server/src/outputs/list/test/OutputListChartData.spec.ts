@@ -1,6 +1,6 @@
-import { DataPoint, DataSeries } from "@sproot/utility/ChartData";
+import { DataPoint, DataSeries } from "@sproot/utility/ChartData.js";
 import { assert } from "chai";
-import { OutputListChartData } from "../OutputListChartData";
+import { OutputListChartData } from "../OutputListChartData.js";
 
 describe("OutputListChartData", function () {
   describe("constructor", function () {

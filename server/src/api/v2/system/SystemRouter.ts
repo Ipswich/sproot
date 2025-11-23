@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
-import { powerOffHandler } from "./PowerOffHandlers";
-import { systemStatusMonitorHandlerAsync } from "./StatusMonitorHandlers";
+import { powerOffHandler } from "./PowerOffHandlers.js";
+import { systemStatusMonitorHandlerAsync } from "./StatusMonitorHandlers.js";
 
 const router = express.Router();
 
