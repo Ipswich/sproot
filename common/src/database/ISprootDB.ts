@@ -138,17 +138,20 @@ interface ISprootDB {
   ): Promise<number>;
   updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void>;
   deleteMonthConditionAsync(conditionId: number): Promise<void>;
-  
+
   getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]>;
   addDateRangeConditionAsync(
     automationId: number,
     groupType: ConditionGroupType,
     startMonth: number,
-    startDay: number,
+    startDate: number,
     endMonth: number,
-    endDay: number,
+    endDate: number,
   ): Promise<number>;
-  updateDateRangeConditionAsync(automationId: number, condition: IDateRangeCondition): Promise<void>;
+  updateDateRangeConditionAsync(
+    automationId: number,
+    condition: IDateRangeCondition,
+  ): Promise<void>;
   deleteDateRangeConditionAsync(conditionId: number): Promise<void>;
 
   getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
@@ -202,7 +205,7 @@ class MockSprootDB implements ISprootDB {
   async deleteMonthConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
-  
+
   async getDateRangeConditionsAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
     return [];
   }
@@ -210,9 +213,9 @@ class MockSprootDB implements ISprootDB {
     _automationId: number,
     _groupType: ConditionGroupType,
     _startMonth: number,
-    _startDay: number,
+    _startDate: number,
     _endMonth: number,
-    _endDay: number,
+    _endDate: number,
   ): Promise<number> {
     return 0;
   }

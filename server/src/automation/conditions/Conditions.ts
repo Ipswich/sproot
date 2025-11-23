@@ -10,7 +10,13 @@ import { WeekdayCondition } from "./WeekdayCondition";
 import { DateRangeCondition } from "./DateRangeCondition";
 import { MonthCondition } from "./MonthCondition";
 
-type EnabledConditionTypes = SensorCondition | OutputCondition | TimeCondition | WeekdayCondition | MonthCondition | DateRangeCondition;
+type EnabledConditionTypes =
+  | SensorCondition
+  | OutputCondition
+  | TimeCondition
+  | WeekdayCondition
+  | MonthCondition
+  | DateRangeCondition;
 
 export class Conditions {
   #automationId: number;
@@ -39,7 +45,11 @@ export class Conditions {
     time: { allOf: TimeCondition[]; anyOf: TimeCondition[]; oneOf: TimeCondition[] };
     weekday: { allOf: WeekdayCondition[]; anyOf: WeekdayCondition[]; oneOf: WeekdayCondition[] };
     month: { allOf: MonthCondition[]; anyOf: MonthCondition[]; oneOf: MonthCondition[] };
-    dateRange: { allOf: DateRangeCondition[]; anyOf: DateRangeCondition[]; oneOf: DateRangeCondition[] };
+    dateRange: {
+      allOf: DateRangeCondition[];
+      anyOf: DateRangeCondition[];
+      oneOf: DateRangeCondition[];
+    };
   } {
     return {
       sensor: {
@@ -255,9 +265,9 @@ export class Conditions {
             dateRangeCondition.id,
             dateRangeCondition.groupType,
             dateRangeCondition.startMonth,
-            dateRangeCondition.startDay,
+            dateRangeCondition.startDate,
             dateRangeCondition.endMonth,
-            dateRangeCondition.endDay,
+            dateRangeCondition.endDate,
           );
         });
       }),

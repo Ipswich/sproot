@@ -71,7 +71,14 @@ describe("ConditionHandlers.ts", () => {
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
       sprootDB.getDateRangeConditionsAsync.resolves([
-        { id: 1, groupType: "allOf", startMonth: 1, startDay: 1, endMonth: 12, endDay: 31 } as SDBDateRangeCondition,
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
       ]);
 
       const mockRequest = {
@@ -130,7 +137,9 @@ describe("ConditionHandlers.ts", () => {
           oneOf: [],
         },
         dateRange: {
-          allOf: [{ id: 1, groupType: "allOf", startMonth: 1, startDay: 1, endMonth: 12, endDay: 31 }],
+          allOf: [
+            { id: 1, groupType: "allOf", startMonth: 1, startDate: 1, endMonth: 12, endDate: 31 },
+          ],
           anyOf: [],
           oneOf: [],
         },
@@ -536,7 +545,14 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.getWeekdayConditionsAsync.resolves([]);
       sprootDB.getMonthConditionsAsync.resolves([]);
       sprootDB.getDateRangeConditionsAsync.resolves([
-        { id: 1, groupType: "allOf", startMonth: 1, startDay: 1, endMonth: 12, endDay: 31 } as SDBDateRangeCondition,
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
       ]);
 
       const mockRequest = {
@@ -550,7 +566,7 @@ describe("ConditionHandlers.ts", () => {
         },
         params: {
           automationId: "1",
-          type: "month",
+          type: "date-range",
         },
       } as unknown as Request;
 
@@ -559,7 +575,16 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.deepEqual(success.content?.data, {
-        allOf: [{ id: 1, groupType: "allOf", startMonth: 1, startDay: 1, endMonth: 12, endDay: 31 } as SDBDateRangeCondition,],
+        allOf: [
+          {
+            id: 1,
+            groupType: "allOf",
+            startMonth: 1,
+            startDate: 1,
+            endMonth: 12,
+            endDate: 31,
+          } as SDBDateRangeCondition,
+        ],
         anyOf: [],
         oneOf: [],
       });
@@ -969,22 +994,23 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.getTimeConditionsAsync.resolves([]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
       sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([{
-        id: 1,
-        groupType: "allOf",
-        startMonth: 1,
-        startDay: 1,
-        endMonth: 12,
-        endDay: 31,
-      } as SDBDateRangeCondition,
-      {
-        id: 2,
-        groupType: "allOf",
-        startMonth: 1,
-        startDay: 1,
-        endMonth: 6,
-        endDay: 30,
-      } as SDBDateRangeCondition,
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
+        {
+          id: 2,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 6,
+          endDate: 30,
+        } as SDBDateRangeCondition,
       ]);
 
       const mockRequest = {
@@ -1011,9 +1037,9 @@ describe("ConditionHandlers.ts", () => {
         id: 1,
         groupType: "allOf",
         startMonth: 1,
-        startDay: 1,
+        startDate: 1,
         endMonth: 12,
-        endDay: 31,
+        endDate: 31,
       });
     });
 
@@ -1473,14 +1499,14 @@ describe("ConditionHandlers.ts", () => {
         },
         params: {
           automationId: "1",
-          type: "month",
+          type: "date-range",
         },
         body: {
           groupType: "allOf",
           startMonth: 1,
-          startDay: 1,
+          startDate: 1,
           endMonth: 12,
-          endDay: 31,
+          endDate: 31,
         },
       } as unknown as Request;
 
@@ -1492,9 +1518,9 @@ describe("ConditionHandlers.ts", () => {
         id: 1,
         groupType: "allOf",
         startMonth: 1,
-        startDay: 1,
+        startDate: 1,
         endMonth: 12,
-        endDay: 31,
+        endDate: 31,
       });
     });
 
@@ -1730,7 +1756,7 @@ describe("ConditionHandlers.ts", () => {
         },
         body: {
           groupType: null,
-          weekdays: 16
+          weekdays: -1,
         },
       } as unknown as Request;
 
@@ -1778,7 +1804,7 @@ describe("ConditionHandlers.ts", () => {
         },
         body: {
           groupType: null,
-          months: 16
+          months: -1,
         },
       } as unknown as Request;
 
@@ -1789,7 +1815,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.deepEqual(error.error.details, [
         "Invalid or missing condition groupType.",
-        "Invalid or missing months. Weekdays should be a number between 0 and 4095.",
+        "Invalid or missing months. Months should be a number between 0 and 4095.",
       ]);
     });
 
@@ -1826,7 +1852,7 @@ describe("ConditionHandlers.ts", () => {
         },
         body: {
           groupType: null,
-          months: 16
+          months: 16,
         },
       } as unknown as Request;
 
@@ -2257,7 +2283,14 @@ describe("ConditionHandlers.ts", () => {
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       sprootDB.getDateRangeConditionsAsync.resolves([
-        { id: 1, groupType: "allOf", startMonth: 1, startDay: 31, endMonth: 12, endDay: 31 } as SDBDateRangeCondition,
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 31,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
       ]);
       sprootDB.updateTimeConditionAsync.resolves();
       const outputList = sinon.createStubInstance(OutputList);
@@ -2282,9 +2315,9 @@ describe("ConditionHandlers.ts", () => {
         body: {
           groupType: "anyOf",
           startMonth: 1,
-          startDay: 31,
+          startDate: 31,
           endMonth: 12,
-          endDay: 31,
+          endDate: 31,
         },
       } as unknown as Request;
 
@@ -2296,9 +2329,9 @@ describe("ConditionHandlers.ts", () => {
         id: 1,
         groupType: "anyOf",
         startMonth: 1,
-        startDay: 31,
+        startDate: 31,
         endMonth: 12,
-        endDay: 31,
+        endDate: 31,
       });
     });
 
@@ -2620,7 +2653,14 @@ describe("ConditionHandlers.ts", () => {
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       sprootDB.getDateRangeConditionsAsync.resolves([
-        { id: 1, groupType: "allOf", startMonth: 1, startDay: 31, endMonth: 12, endDay: 31 } as SDBDateRangeCondition,
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 31,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
       ]);
       const mockResponse = {
         locals: {
@@ -2649,9 +2689,9 @@ describe("ConditionHandlers.ts", () => {
         body: {
           groupType: null,
           startMonth: -1,
-          startDay: -1,
+          startDate: -1,
           endMonth: -1,
-          endDay: -1,
+          endDate: -1,
         },
       } as unknown as Request;
 
@@ -2659,7 +2699,12 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.statusCode, 400);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.deepEqual(error.error.details, ["Invalid start month.", "Invalid start day.", "Invalid end month.", "Invalid end day."]);
+      assert.deepEqual(error.error.details, [
+        "Invalid start month.",
+        "Invalid start date.",
+        "Invalid end month.",
+        "Invalid end date.",
+      ]);
     });
 
     it("should return a 404 if the automation does not exist", async () => {
@@ -3054,7 +3099,14 @@ describe("ConditionHandlers.ts", () => {
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       sprootDB.getDateRangeConditionsAsync.resolves([
-        { id: 1, groupType: "allOf", startMonth: 1, startDay: 31, endMonth: 12, endDay: 31 } as SDBDateRangeCondition,
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 31,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
       ]);
       sprootDB.deleteMonthConditionAsync.resolves();
       const outputList = sinon.createStubInstance(OutputList);

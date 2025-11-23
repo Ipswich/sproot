@@ -458,7 +458,7 @@ export class SprootDB implements ISprootDB {
   async deleteMonthConditionAsync(conditionId: number): Promise<void> {
     return this.#connection("date_range_conditions").where("id", conditionId).delete();
   }
-  
+
   async getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]> {
     return this.#connection("date_range_conditions")
       .where("automation_id", automationId)
@@ -468,9 +468,9 @@ export class SprootDB implements ISprootDB {
     automationId: number,
     groupType: ConditionGroupType,
     startMonth: number,
-    startDay: number,
+    startDate: number,
     endMonth: number,
-    endDay: number,
+    endDate: number,
   ): Promise<number> {
     return (
       (
@@ -478,23 +478,26 @@ export class SprootDB implements ISprootDB {
           automation_id: automationId,
           groupType,
           startMonth,
-          startDay,
+          startDate: startDate,
           endMonth,
-          endDay,
+          endDate: endDate,
         })
       )[0] ?? -1
     );
   }
-  async updateDateRangeConditionAsync(automationId: number, condition: IDateRangeCondition): Promise<void> {
+  async updateDateRangeConditionAsync(
+    automationId: number,
+    condition: IDateRangeCondition,
+  ): Promise<void> {
     return this.#connection("date_range_conditions")
       .where("automation_id", automationId)
       .and.where("id", condition.id)
       .update({
         groupType: condition.groupType,
         startMonth: condition.startMonth,
-        startDay: condition.startDay,
+        startDate: condition.startDate,
         endMonth: condition.endMonth,
-        endDay: condition.endDay,
+        endDate: condition.endDate,
       });
   }
   async deleteDateRangeConditionAsync(conditionId: number): Promise<void> {

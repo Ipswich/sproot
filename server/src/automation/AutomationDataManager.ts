@@ -110,21 +110,21 @@ class AutomationDataManager {
     return resultId;
   }
 
-async addDateRangeConditionAsync(
+  async addDateRangeConditionAsync(
     automationId: number,
     type: ConditionGroupType,
     startMonth: number,
-    startDay: number,
+    startDate: number,
     endMonth: number,
-    endDay: number,
+    endDate: number,
   ) {
     const resultId = await this.#sprootDB.addDateRangeConditionAsync(
       automationId,
       type,
       startMonth,
-      startDay,
+      startDate,
       endMonth,
-      endDay,
+      endDate,
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -138,7 +138,7 @@ async addDateRangeConditionAsync(
       | TimeCondition
       | WeekdayCondition
       | MonthCondition
-      | DateRangeCondition
+      | DateRangeCondition,
   ) {
     if (condition instanceof SensorCondition) {
       await this.#sprootDB.updateSensorConditionAsync(automationId, condition);

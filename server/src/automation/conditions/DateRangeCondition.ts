@@ -6,19 +6,26 @@ export class DateRangeCondition implements IDateRangeCondition {
   id: number;
   groupType: ConditionGroupType;
   startMonth: number;
-  startDay: number;
+  startDate: number;
   endMonth: number;
-  endDay: number;
-  constructor(id: number, groupType: ConditionGroupType, startMonth: number, startDay: number, endMonth: number, endDay: number) {
+  endDate: number;
+  constructor(
+    id: number,
+    groupType: ConditionGroupType,
+    startMonth: number,
+    startDate: number,
+    endMonth: number,
+    endDate: number,
+  ) {
     this.id = id;
     this.groupType = groupType;
     this.startMonth = startMonth;
-    this.startDay = startDay;
+    this.startDate = startDate;
     this.endMonth = endMonth;
-    this.endDay = endDay;
+    this.endDate = endDate;
   }
 
   evaluate(now: Date): boolean {
-    return evaluateDateRange(now, this.startMonth, this.startDay, this.endMonth, this.endDay);
+    return evaluateDateRange(now, this.startMonth, this.startDate, this.endMonth, this.endDate);
   }
 }

@@ -69,6 +69,7 @@ export async function getAllAsync(
     const timeConditions = await sprootDB.getTimeConditionsAsync(automationId);
     const weekdayConditions = await sprootDB.getWeekdayConditionsAsync(automationId);
     const monthConditions = await sprootDB.getMonthConditionsAsync(automationId);
+    const dateRangeConditions = await sprootDB.getDateRangeConditionsAsync(automationId);
     getAllConditionsResponse = {
       statusCode: 200,
       content: {
@@ -97,6 +98,11 @@ export async function getAllAsync(
             allOf: monthConditions.filter((c) => c.groupType == "allOf"),
             anyOf: monthConditions.filter((c) => c.groupType == "anyOf"),
             oneOf: monthConditions.filter((c) => c.groupType == "oneOf"),
+          },
+          dateRange: {
+            allOf: dateRangeConditions.filter((c) => c.groupType == "allOf"),
+            anyOf: dateRangeConditions.filter((c) => c.groupType == "anyOf"),
+            oneOf: dateRangeConditions.filter((c) => c.groupType == "oneOf"),
           },
         },
       },
@@ -412,7 +418,14 @@ export async function addAsync(
 
     const invalidFields = [];
     let resultId: number | undefined = undefined;
-    let creationResult: SensorCondition | OutputCondition | TimeCondition | WeekdayCondition | MonthCondition | DateRangeCondition | undefined = undefined;
+    let creationResult:
+      | SensorCondition
+      | OutputCondition
+      | TimeCondition
+      | WeekdayCondition
+      | MonthCondition
+      | DateRangeCondition
+      | undefined = undefined;
 
     if (!["allOf", "anyOf", "oneOf"].includes(request.body.groupType)) {
       invalidFields.push("Invalid or missing condition groupType.");
@@ -516,7 +529,9 @@ export async function addAsync(
           request.body.weekdays < 0 ||
           request.body.weekdays > 127
         ) {
-          invalidFields.push("Invalid or missing weekdays.");
+          invalidFields.push(
+            "Invalid or missing weekdays. Weekdays should be a number between 0 and 127.",
+          );
         }
         if (invalidFields.length > 0) {
           break;
@@ -534,7 +549,9 @@ export async function addAsync(
         break;
       case "month":
         if (request.body.months == null || request.body.months < 0 || request.body.months > 4095) {
-          invalidFields.push("Invalid or missing months.");
+          invalidFields.push(
+            "Invalid or missing months. Months should be a number between 0 and 4095.",
+          );
         }
         if (invalidFields.length > 0) {
           break;
@@ -554,32 +571,51 @@ export async function addAsync(
         ) {
           invalidFields.push("Invalid or missing start month.");
         }
-        if (request.body.startDay == null
-          || request.body.startDay < 1
-          || ([1, 3, 5, 7, 8, 10, 12].includes(request.body.startMonth) && request.body.startDay > 31)
-          || ([4, 6, 9, 11].includes(request.body.startMonth) && request.body.startDay > 30)
-          || (request.body.startMonth == 2 && request.body.startDay > 29)) {
-          invalidFields.push("Invalid or missing start day.");
+        if (
+          request.body.startDate == null ||
+          request.body.startDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.startMonth) &&
+            request.body.startDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.startMonth) && request.body.startDate > 30) ||
+          (request.body.startMonth == 2 && request.body.startDate > 29)
+        ) {
+          invalidFields.push("Invalid or missing start date.");
         }
-        if (request.body.endMonth == null || request.body.endMonth < 1 || request.body.endMonth > 12) {
+        if (
+          request.body.endMonth == null ||
+          request.body.endMonth < 1 ||
+          request.body.endMonth > 12
+        ) {
           invalidFields.push("Invalid or missing end month.");
         }
-        if (request.body.endDay == null
-          || request.body.endDay < 1
-          || ([1, 3, 5, 7, 8, 10, 12].includes(request.body.endMonth) && request.body.endDay > 31)
-          || ([4, 6, 9, 11].includes(request.body.endMonth) && request.body.endDay > 30)
-          || (request.body.endMonth == 2 && request.body.endDay > 29)) {
-          invalidFields.push("Invalid or missing end day.");
+        if (
+          request.body.endDate == null ||
+          request.body.endDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.endMonth) && request.body.endDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.endMonth) && request.body.endDate > 30) ||
+          (request.body.endMonth == 2 && request.body.endDate > 29)
+        ) {
+          invalidFields.push("Invalid or missing end date.");
         }
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addMonthConditionAsync(
+        resultId = await automationDataManager.addDateRangeConditionAsync(
           automationId,
           request.body.groupType,
-          request.body.months,
+          request.body.startMonth,
+          request.body.startDate,
+          request.body.endMonth,
+          request.body.endDate,
         );
-        creationResult = new DateRangeCondition(resultId, request.body.groupType, request.body.startDay, request.body.startMonth, request.body.endDay, request.body.endMonth);
+        creationResult = new DateRangeCondition(
+          resultId,
+          request.body.groupType,
+          request.body.startMonth,
+          request.body.startDate,
+          request.body.endMonth,
+          request.body.endDate,
+        );
         break;
     }
 
@@ -852,7 +888,7 @@ export async function updateAsync(
           request.body.weekdays < 0 ||
           request.body.weekdays > 127
         ) {
-          invalidDetails.push("Invalid weekdays.");
+          invalidDetails.push("Invalid weekdays value.");
         }
         if (invalidDetails.length > 0) {
           break;
@@ -870,7 +906,7 @@ export async function updateAsync(
           request.body.months ?? sdbMonthCondition.months,
         );
         if (request.body.months === null || request.body.months < 0 || request.body.months > 4095) {
-          invalidDetails.push("Invalid months.");
+          invalidDetails.push("Invalid months value.");
         }
         if (invalidDetails.length > 0) {
           break;
@@ -885,10 +921,10 @@ export async function updateAsync(
         condition = new DateRangeCondition(
           sdbDateRangeCondition.id,
           sdbDateRangeCondition.groupType,
-          request.body.startDay ?? sdbDateRangeCondition.startDay,
           request.body.startMonth ?? sdbDateRangeCondition.startMonth,
-          request.body.endDay ?? sdbDateRangeCondition.endDay,
+          request.body.startDate ?? sdbDateRangeCondition.startDate,
           request.body.endMonth ?? sdbDateRangeCondition.endMonth,
+          request.body.endDate ?? sdbDateRangeCondition.endDate,
         );
         if (
           request.body.startMonth === null ||
@@ -897,12 +933,15 @@ export async function updateAsync(
         ) {
           invalidDetails.push("Invalid start month.");
         }
-        if (request.body.startDay === null
-          || request.body.startDay < 1
-          || ([1, 3, 5, 7, 8, 10, 12].includes(request.body.startMonth) && request.body.startDay > 31)
-          || ([4, 6, 9, 11].includes(request.body.startMonth) && request.body.startDay > 30)
-          || (request.body.startMonth == 2 && request.body.startDay > 29)) {
-          invalidDetails.push("Invalid start day.");
+        if (
+          request.body.startDate === null ||
+          request.body.startDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.startMonth) &&
+            request.body.startDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.startMonth) && request.body.startDate > 30) ||
+          (request.body.startMonth == 2 && request.body.startDate > 29)
+        ) {
+          invalidDetails.push("Invalid start date.");
         }
         if (
           request.body.endMonth === null ||
@@ -911,12 +950,14 @@ export async function updateAsync(
         ) {
           invalidDetails.push("Invalid end month.");
         }
-        if (request.body.endDay === null
-          || request.body.endDay < 1
-          || ([1, 3, 5, 7, 8, 10, 12].includes(request.body.endMonth) && request.body.endDay > 31)
-          || ([4, 6, 9, 11].includes(request.body.endMonth) && request.body.endDay > 30)
-          || (request.body.endMonth == 2 && request.body.endDay > 29)) {
-          invalidDetails.push("Invalid end day.");
+        if (
+          request.body.endDate === null ||
+          request.body.endDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.endMonth) && request.body.endDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.endMonth) && request.body.endDate > 30) ||
+          (request.body.endMonth == 2 && request.body.endDate > 29)
+        ) {
+          invalidDetails.push("Invalid end date.");
         }
         if (invalidDetails.length > 0) {
           break;

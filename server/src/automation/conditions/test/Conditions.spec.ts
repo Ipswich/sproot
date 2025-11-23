@@ -391,18 +391,17 @@ describe("Conditions.ts tests", () => {
           id: 1,
           groupType: "allOf",
           startMonth: 1,
-          startDay: 1,
+          startDate: 1,
           endMonth: 1,
-          endDay: 31,
-          
+          endDate: 31,
         } as SDBDateRangeCondition,
         {
           id: 2,
           groupType: "anyOf",
           startMonth: 2,
-          startDay: 1,
+          startDate: 1,
           endMonth: 2,
-          endDay: 28,
+          endDate: 28,
         } as SDBDateRangeCondition,
       ]);
 
@@ -453,9 +452,9 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.id, 1);
       assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.groupType, "allOf");
       assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.startMonth, 1);
-      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.startDay, 1);
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.startDate, 1);
       assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.endMonth, 1);
-      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.endDay, 31);
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.endDate, 31);
 
       assert.equal(conditions.allOf.length, 4);
       assert.equal(conditions.anyOf.length, 5);

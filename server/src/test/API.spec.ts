@@ -633,7 +633,7 @@ describe("API Tests", async () => {
         });
       });
     });
-    
+
     describe("DateRange Conditions", async () => {
       describe("GET", async () => {
         it("should return 200 and all date range conditions", async () => {
@@ -651,7 +651,15 @@ describe("API Tests", async () => {
             .expect(200);
           const content = response.body["content"];
           validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, ["id", "automationId", "groupType", "startMonth", "startDay", "endMonth", "endDay"]);
+          assert.containsAllKeys(content.data, [
+            "id",
+            "automationId",
+            "groupType",
+            "startMonth",
+            "startDate",
+            "endMonth",
+            "endDate",
+          ]);
         });
       });
 
@@ -672,21 +680,29 @@ describe("API Tests", async () => {
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
-            assert.equal((await app.get("sprootDB").getDateRangeConditionsAsync(1))[2].startMonth, 13);
+            assert.equal(
+              (await app.get("sprootDB").getDateRangeConditionsAsync(1))[2].startMonth,
+              13,
+            );
             await request(server)
               .patch("/api/v2/automations/1/conditions/date-range/3")
               .send({
                 startMonth: 6,
               })
               .expect(200);
-            assert.equal((await app.get("sprootDB").getDateRangeConditionsAsync(1))[2].startMonth, 6);
+            assert.equal(
+              (await app.get("sprootDB").getDateRangeConditionsAsync(1))[2].startMonth,
+              6,
+            );
           });
         });
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
             assert.lengthOf(await app.get("sprootDB").getDateRangeConditionsAsync(1), 3);
-            await request(server).delete("/api/v2/automations/1/conditions/date-range/3").expect(200);
+            await request(server)
+              .delete("/api/v2/automations/1/conditions/date-range/3")
+              .expect(200);
             assert.lengthOf(await app.get("sprootDB").getDateRangeConditionsAsync(1), 2);
           });
         });

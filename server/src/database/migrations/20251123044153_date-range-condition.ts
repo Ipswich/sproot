@@ -15,9 +15,9 @@ export async function up(knex: Knex): Promise<void> {
         .onUpdate("CASCADE");
       table.string("groupType", 6).notNullable();
       table.tinyint("startMonth").unsigned().notNullable().checkBetween([1, 12]);
-      table.tinyint("startDay").unsigned().notNullable().checkBetween([1, 31]);
+      table.tinyint("startDate").unsigned().notNullable().checkBetween([1, 31]);
       table.tinyint("endMonth").unsigned().notNullable().checkBetween([1, 12]);
-      table.tinyint("endDay").unsigned().notNullable().checkBetween([1, 31]);
+      table.tinyint("endDate").unsigned().notNullable().checkBetween([1, 31]);
       table.primary(["id"]);
       setTableDefaults(table);
     });

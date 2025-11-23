@@ -29,7 +29,6 @@ import {
 } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { formatMilitaryTime } from "@sproot/sproot-common/src/utility/TimeMethods";
 
-
 export interface ConditionsTableProps {
   automationId: number;
   readOnly?: boolean;
@@ -121,7 +120,7 @@ export default function ConditionsTable({
         await deleteMonthConditionMutation.mutateAsync(conditionId);
       };
     }
-    return async () => { };
+    return async () => {};
   }
 
   useEffect(() => {
@@ -298,9 +297,7 @@ function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
   return (
     <Group>
       {!formattedStart && !formattedEnd && "Always"}
-      {formattedStart &&
-        !formattedEnd &&
-        `Time is ${formattedStart}`}
+      {formattedStart && !formattedEnd && `Time is ${formattedStart}`}
       {formattedStart &&
         formattedEnd &&
         `Time is between ${formattedStart} and ${formattedEnd}`}

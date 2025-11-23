@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { isBetweenTimeStamp, formatMilitaryTime } from "../TimeMethods";
+import { isBetweenTimeStamp, isBetweenMonthDate, formatMilitaryTime } from "../TimeMethods";
 
 describe("TimeMethods", function () {
   describe("isBetweenTimeStamp", function () {
@@ -74,6 +74,66 @@ describe("TimeMethods", function () {
       assert.isFalse(isBetweenTimeStamp("10:00", "11:00:00", now));
       assert.isFalse(isBetweenTimeStamp("10:00 AM", "11:00", now));
       assert.isFalse(isBetweenTimeStamp("10:00:00", "11:00", now));
+    });
+  });
+
+  describe("isBetweenMonthDate", () => {
+    it("should return true if now is on or between the start month/day and end month/day", () => {
+      const now = new Date();
+      now.setMonth(1);
+      now.setDate(28);
+      assert.isFalse(isBetweenMonthDate(3, 1, 12, 31, now));
+
+      // On start date
+      now.setMonth(2);
+      now.setDate(1);
+      assert.isTrue(isBetweenMonthDate(3, 1, 12, 31, now));
+
+      // Between start and end date
+      now.setMonth(5);
+      now.setDate(15);
+      assert.isTrue(isBetweenMonthDate(3, 1, 12, 31, now));
+
+      // On end date
+      now.setMonth(11);
+      now.setDate(31);
+      assert.isTrue(isBetweenMonthDate(3, 1, 12, 31, now));
+    });
+
+    it("should  handle leap years appropriately", () => {
+      const now = new Date();
+      now.setMonth(1);
+      now.setDate(28);
+      assert.isTrue(isBetweenMonthDate(2, 28, 3, 1, now));
+
+      now.setDate(29);
+      assert.isTrue(isBetweenMonthDate(2, 28, 3, 1, now));
+
+      now.setDate(30);
+      assert.isFalse(isBetweenMonthDate(2, 28, 3, 1, now));
+    });
+
+    it("should handle wrapping conditions appropriately", () => {
+      const now = new Date();
+      now.setMonth(9);
+      now.setDate(14);
+      assert.isFalse(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(9);
+      now.setDate(15);
+      assert.isTrue(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(0);
+      now.setDate(1);
+      assert.isTrue(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(1);
+      now.setDate(20);
+      assert.isTrue(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(1);
+      now.setDate(21);
+      assert.isFalse(isBetweenMonthDate(10, 15, 2, 20, now));
     });
   });
 

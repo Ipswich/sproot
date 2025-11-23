@@ -46,7 +46,14 @@ function formatMilitaryTime(timeString?: string | null): string | undefined {
   const hh = parseInt(parts[0]!, 10);
   let mm = parts[1] ?? "00";
   mm = mm.padStart(2, "0");
-  if (isNaN(hh) || hh < 0 || hh > 23 || isNaN(parseInt(mm)) || parseInt(mm) < 0 || parseInt(mm) > 59) {
+  if (
+    isNaN(hh) ||
+    hh < 0 ||
+    hh > 23 ||
+    isNaN(parseInt(mm)) ||
+    parseInt(mm) < 0 ||
+    parseInt(mm) > 59
+  ) {
     return timeString;
   }
   const period = hh >= 12 ? "PM" : "AM";
@@ -60,9 +67,9 @@ function formatMilitaryTime(timeString?: string | null): string | undefined {
 /**
  * Normalize a month and day to a canonical year for comparison. The year is set to 2001.
  * This is used to compare month and day values without worrying about leap years or the actual year.
- * @param month 
- * @param day 
- * @returns 
+ * @param month
+ * @param day
+ * @returns
  */
 function normalize(month: number, day: number): Date {
   if (month === 2 && day === 29) {
@@ -74,16 +81,16 @@ function normalize(month: number, day: number): Date {
 /**
  * Includes start date and end date.
  */
-function isBetweenMonthDay(
+function isBetweenMonthDate(
   startMonth: number,
-  startDay: number,
+  startDate: number,
   endMonth: number,
-  endDay: number,
+  endDate: number,
   now: Date = new Date(),
 ): boolean {
-  const current = normalize(now.getMonth() + 1, now.getDay());
-  const start = normalize(startMonth, startDay);
-  const end = normalize(endMonth, endDay);
+  const current = normalize(now.getMonth() + 1, now.getDate());
+  const start = normalize(startMonth, startDate);
+  const end = normalize(endMonth, endDate);
 
   if (start <= end) {
     // Normal range (e.g. Mar 1 → Dec 31)
@@ -94,5 +101,4 @@ function isBetweenMonthDay(
   }
 }
 
-
-export { isBetweenTimeStamp, isBetweenMonthDay, formatMilitaryTime };
+export { isBetweenTimeStamp, isBetweenMonthDate, formatMilitaryTime };

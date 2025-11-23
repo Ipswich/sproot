@@ -4,9 +4,9 @@ interface IDateRangeCondition {
   id: number;
   groupType: ConditionGroupType;
   startMonth: number;
-  startDay: number;
+  startDate: number;
   endMonth: number;
-  endDay: number;
+  endDate: number;
 }
 
 export type { IDateRangeCondition };
