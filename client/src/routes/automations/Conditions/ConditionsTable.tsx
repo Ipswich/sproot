@@ -6,6 +6,7 @@ import {
   deleteTimeConditionAsync,
   deleteWeekdayConditionAsync,
   deleteMonthConditionAsync,
+  deleteDateRangeConditionAsync,
   getConditionsAsync,
 } from "../../../requests/requests_v2";
 import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
@@ -14,6 +15,7 @@ import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { ConditionOperator } from "@sproot/automation/ConditionTypes";
 import {
   ReadingType,
@@ -90,6 +92,15 @@ export default function ConditionsTable({
     },
   });
 
+  const deleteDateRangeConditionMutation = useMutation({
+    mutationFn: async (conditionId: number) => {
+      await deleteDateRangeConditionAsync(automationId, conditionId);
+    },
+    onSettled: () => {
+      conditionsQueryFn.refetch();
+    },
+  });
+
   //local helper function
   function mapToDeleteConditionMutationAsync(
     condition:
@@ -97,7 +108,8 @@ export default function ConditionsTable({
       | SDBOutputCondition
       | SDBTimeCondition
       | SDBWeekdayCondition
-      | SDBMonthCondition,
+      | SDBMonthCondition
+      | SDBDateRangeCondition,
   ): (id: number) => Promise<void> {
     if ("sensorId" in condition && "readingType" in condition) {
       return async (conditionId: number) => {
@@ -118,6 +130,15 @@ export default function ConditionsTable({
     } else if ("months" in condition) {
       return async (conditionId: number) => {
         await deleteMonthConditionMutation.mutateAsync(conditionId);
+      };
+    } else if (
+      "startMonth" in condition &&
+      "startDate" in condition &&
+      "endMonth" in condition &&
+      "endDate" in condition
+    ) {
+      return async (conditionId: number) => {
+        await deleteDateRangeConditionMutation.mutateAsync(conditionId);
       };
     }
     return async () => {};
@@ -238,6 +259,13 @@ function mapToType(
     return <WeekdayConditionRow {...(condition as SDBWeekdayCondition)} />;
   } else if ("months" in condition) {
     return <MonthConditionRow {...(condition as SDBMonthCondition)} />;
+  } else if (
+    "startMonth" in condition &&
+    "startDate" in condition &&
+    "endMonth" in condition &&
+    "endDate" in condition
+  ) {
+    return <DateRangeConditionRow {...(condition as SDBDateRangeCondition)} />;
   }
   return <></>;
 }
@@ -366,4 +394,57 @@ function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
     response = months.slice(0, -1).join(", ") + ", or " + months.slice(-1);
   }
   return <Group>{`Month is ${response}`}</Group>;
+}
+
+function DateRangeConditionRow(dateRangeCondition: {
+  startMonth: number;
+  startDate: number;
+  endMonth: number;
+  endDate: number;
+}): ReactNode {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  function getOrdinalSuffix(day: number) {
+    if (day % 10 == 1 && day != 11) {
+      return "st";
+    } else if (day % 10 == 2 && day != 12) {
+      return "nd";
+    } else if (day % 10 == 3 && day != 13) {
+      return "rd";
+    } else {
+      return "th";
+    }
+  }
+  const startMonth = months[dateRangeCondition.startMonth - 1];
+  const endMonth = months[dateRangeCondition.endMonth - 1];
+  return (
+    <Group>
+      {startMonth == endMonth &&
+      dateRangeCondition.startDate == dateRangeCondition.endDate ? (
+        <Fragment>
+          Date is {startMonth} {dateRangeCondition.startDate}
+          {getOrdinalSuffix(dateRangeCondition.startDate)}
+        </Fragment>
+      ) : (
+        <Fragment>
+          Date is between {startMonth} {dateRangeCondition.startDate}
+          {getOrdinalSuffix(dateRangeCondition.startDate)} and {endMonth}{" "}
+          {dateRangeCondition.endDate}
+          {getOrdinalSuffix(dateRangeCondition.endDate)}
+        </Fragment>
+      )}
+    </Group>
+  );
 }
