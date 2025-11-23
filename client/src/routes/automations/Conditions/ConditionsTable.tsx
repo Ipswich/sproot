@@ -27,6 +27,8 @@ import {
   convertCelsiusToFahrenheit,
   formatDecimalReadingForDisplay,
 } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { formatMilitaryTime } from "@sproot/sproot-common/src/utility/TimeMethods";
+
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -119,7 +121,7 @@ export default function ConditionsTable({
         await deleteMonthConditionMutation.mutateAsync(conditionId);
       };
     }
-    return async () => {};
+    return async () => { };
   }
 
   useEffect(() => {
@@ -290,15 +292,18 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
 }
 
 function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
+  const formattedStart = formatMilitaryTime(timeCondition.startTime);
+  const formattedEnd = formatMilitaryTime(timeCondition.endTime);
+
   return (
     <Group>
-      {!timeCondition.startTime && !timeCondition.endTime && "Always"}
-      {timeCondition.startTime &&
-        !timeCondition.endTime &&
-        `Time is ${timeCondition.startTime}`}
-      {timeCondition.startTime &&
-        timeCondition.endTime &&
-        `Time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
+      {!formattedStart && !formattedEnd && "Always"}
+      {formattedStart &&
+        !formattedEnd &&
+        `Time is ${formattedStart}`}
+      {formattedStart &&
+        formattedEnd &&
+        `Time is between ${formattedStart} and ${formattedEnd}`}
     </Group>
   );
 }

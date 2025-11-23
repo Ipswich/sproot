@@ -21,9 +21,11 @@ import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { SDBMonthCondition } from "./SDBMonthCondition";
+import { SDBDateRangeCondition } from "./SDBDateRangeCondition";
 import { IWeekdayCondition } from "../automation/IWeekdayCondition";
-import { SDBCameraSettings } from "./SDBCameraSettings";
 import { IMonthCondition } from "@sproot/automation/IMonthCondition";
+import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
+import { SDBCameraSettings } from "./SDBCameraSettings";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -136,6 +138,18 @@ interface ISprootDB {
   ): Promise<number>;
   updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void>;
   deleteMonthConditionAsync(conditionId: number): Promise<void>;
+  
+  getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]>;
+  addDateRangeConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    startMonth: number,
+    startDay: number,
+    endMonth: number,
+    endDay: number,
+  ): Promise<number>;
+  updateDateRangeConditionAsync(automationId: number, condition: IDateRangeCondition): Promise<void>;
+  deleteDateRangeConditionAsync(conditionId: number): Promise<void>;
 
   getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
   // addCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<number>;
@@ -186,6 +200,29 @@ class MockSprootDB implements ISprootDB {
     return;
   }
   async deleteMonthConditionAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+  
+  async getDateRangeConditionsAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
+    return [];
+  }
+  async addDateRangeConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _startMonth: number,
+    _startDay: number,
+    _endMonth: number,
+    _endDay: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateDateRangeConditionAsync(
+    _automationId: number,
+    _condition: IDateRangeCondition,
+  ): Promise<void> {
+    return;
+  }
+  async deleteDateRangeConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
 

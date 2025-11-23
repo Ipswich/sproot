@@ -114,6 +114,8 @@ export default function MonthCondition({
             >
               Apr
             </Chip>
+          </Group>
+          <Group justify="center" gap={"0px"}>
             <Chip
               size="xs"
               px="0px"
@@ -146,6 +148,8 @@ export default function MonthCondition({
             >
               Aug
             </Chip>
+          </Group>
+          <Group justify="center" gap={"0px"}>
             <Chip
               size="xs"
               px="0px"
@@ -179,7 +183,6 @@ export default function MonthCondition({
               Dec
             </Chip>
           </Group>
-          <Group pt="xs" justify="center"></Group>
           <Group pt="xs" justify="center">
             <Button
               type="submit"

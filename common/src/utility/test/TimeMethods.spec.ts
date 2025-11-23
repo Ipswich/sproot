@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { isBetweenTimeStamp } from "../TimeMethods";
+import { isBetweenTimeStamp, formatMilitaryTime } from "../TimeMethods";
 
 describe("TimeMethods", function () {
   describe("isBetweenTimeStamp", function () {
@@ -74,6 +74,28 @@ describe("TimeMethods", function () {
       assert.isFalse(isBetweenTimeStamp("10:00", "11:00:00", now));
       assert.isFalse(isBetweenTimeStamp("10:00 AM", "11:00", now));
       assert.isFalse(isBetweenTimeStamp("10:00:00", "11:00", now));
+    });
+  });
+
+  describe("formatMilitaryTime", function () {
+    it("should format time correctly", function () {
+      assert.equal(formatMilitaryTime("00:00"), "12:00AM");
+      assert.equal(formatMilitaryTime("01:30"), "1:30AM");
+      assert.equal(formatMilitaryTime("12:00"), "12:00PM");
+      assert.equal(formatMilitaryTime("13:15"), "1:15PM");
+      assert.equal(formatMilitaryTime("23:45"), "11:45PM");
+    });
+
+    it("should return undefined for null or undefined input", function () {
+      assert.isUndefined(formatMilitaryTime(null));
+      assert.isUndefined(formatMilitaryTime(undefined));
+    });
+
+    it("should return the original string if it doesn't match the expected format", function () {
+      assert.equal(formatMilitaryTime("invalid"), "invalid");
+      assert.equal(formatMilitaryTime("2:00"), "2:00");
+      assert.equal(formatMilitaryTime("25:00"), "25:00");
+      assert.equal(formatMilitaryTime("10:60"), "10:60");
     });
   });
 });

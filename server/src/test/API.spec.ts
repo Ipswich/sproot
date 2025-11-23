@@ -633,6 +633,65 @@ describe("API Tests", async () => {
         });
       });
     });
+    
+    describe("DateRange Conditions", async () => {
+      describe("GET", async () => {
+        it("should return 200 and all date range conditions", async () => {
+          const response = await request(server)
+            .get("/api/v2/automations/1/conditions/date-range")
+            .expect(200);
+          const content = response.body["content"];
+          validateMiddlewareValues(response);
+          assert.lengthOf(content.data.oneOf, 2);
+        });
+
+        it("should return 200 and a single date range condition", async () => {
+          const response = await request(server)
+            .get("/api/v2/automations/1/conditions/date-range/1")
+            .expect(200);
+          const content = response.body["content"];
+          validateMiddlewareValues(response);
+          assert.containsAllKeys(content.data, ["id", "automationId", "groupType", "startMonth", "startDay", "endMonth", "endDay"]);
+        });
+      });
+
+      describe("Create, Update, Delete", async () => {
+        describe("POST", async () => {
+          it("should return 201", async () => {
+            assert.lengthOf(await app.get("sprootDB").getDateRangeConditionsAsync(1), 2);
+            await request(server)
+              .post("/api/v2/automations/1/conditions/date-range")
+              .send({
+                groupType: "oneOf",
+                startMonth: 13,
+              })
+              .expect(201);
+            assert.lengthOf(await app.get("sprootDB").getDateRangeConditionsAsync(1), 3);
+          });
+        });
+
+        describe("PATCH", async () => {
+          it("should return 200", async () => {
+            assert.equal((await app.get("sprootDB").getDateRangeConditionsAsync(1))[2].startMonth, 13);
+            await request(server)
+              .patch("/api/v2/automations/1/conditions/date-range/3")
+              .send({
+                startMonth: 6,
+              })
+              .expect(200);
+            assert.equal((await app.get("sprootDB").getDateRangeConditionsAsync(1))[2].startMonth, 6);
+          });
+        });
+
+        describe("DELETE", async () => {
+          it("should return 200", async () => {
+            assert.lengthOf(await app.get("sprootDB").getDateRangeConditionsAsync(1), 3);
+            await request(server).delete("/api/v2/automations/1/conditions/date-range/3").expect(200);
+            assert.lengthOf(await app.get("sprootDB").getDateRangeConditionsAsync(1), 2);
+          });
+        });
+      });
+    });
   });
 
   describe("Output Action Routes", async () => {

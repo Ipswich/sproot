@@ -156,6 +156,27 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 2, automation_id: 1, groupType: "oneOf", months: 4095 },
   ]);
 
+  await knex("date_range_conditions").insert([
+    {
+      id: 1,
+      automation_id: 1,
+      groupType: "oneOf",
+      startDay: 1,
+      startMonth: 1,
+      endDay: 31,
+      endMonth: 12,
+    },
+    {
+      id: 2,
+      automation_id: 1,
+      groupType: "oneOf",
+      startDay: 1,
+      startMonth: 3,
+      endDay: 31,
+      endMonth: 5,
+    },
+  ]);
+  
   await knex("output_actions").insert([
     { id: 1, automation_id: 1, output_id: 1, value: 100 },
     { id: 2, automation_id: 1, output_id: 1, value: 0 },

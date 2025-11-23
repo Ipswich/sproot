@@ -7,8 +7,10 @@ import { OutputCondition } from "./OutputCondition";
 import { SensorCondition } from "./SensorCondition";
 import { TimeCondition } from "./TimeCondition";
 import { WeekdayCondition } from "./WeekdayCondition";
+import { DateRangeCondition } from "./DateRangeCondition";
+import { MonthCondition } from "./MonthCondition";
 
-type EnabledConditionTypes = SensorCondition | OutputCondition | TimeCondition | WeekdayCondition;
+type EnabledConditionTypes = SensorCondition | OutputCondition | TimeCondition | WeekdayCondition | MonthCondition | DateRangeCondition;
 
 export class Conditions {
   #automationId: number;
@@ -16,6 +18,8 @@ export class Conditions {
   #outputConditions: Record<string, OutputCondition>;
   #timeConditions: Record<string, TimeCondition>;
   #weekdayConditions: Record<string, WeekdayCondition>;
+  #monthConditions: Record<string, MonthCondition>;
+  #dateRangeConditions: Record<string, DateRangeCondition>;
   #sprootDB: ISprootDB;
 
   constructor(automationId: number, sprootDB: ISprootDB) {
@@ -24,6 +28,8 @@ export class Conditions {
     this.#outputConditions = {};
     this.#timeConditions = {};
     this.#weekdayConditions = {};
+    this.#monthConditions = {};
+    this.#dateRangeConditions = {};
     this.#sprootDB = sprootDB;
   }
 
@@ -32,6 +38,8 @@ export class Conditions {
     output: { allOf: OutputCondition[]; anyOf: OutputCondition[]; oneOf: OutputCondition[] };
     time: { allOf: TimeCondition[]; anyOf: TimeCondition[]; oneOf: TimeCondition[] };
     weekday: { allOf: WeekdayCondition[]; anyOf: WeekdayCondition[]; oneOf: WeekdayCondition[] };
+    month: { allOf: MonthCondition[]; anyOf: MonthCondition[]; oneOf: MonthCondition[] };
+    dateRange: { allOf: DateRangeCondition[]; anyOf: DateRangeCondition[]; oneOf: DateRangeCondition[] };
   } {
     return {
       sensor: {
@@ -54,6 +62,16 @@ export class Conditions {
         anyOf: [...Object.values(this.#weekdayConditions)].filter((c) => c.groupType == "anyOf"),
         oneOf: [...Object.values(this.#weekdayConditions)].filter((c) => c.groupType == "oneOf"),
       },
+      month: {
+        allOf: [...Object.values(this.#monthConditions)].filter((c) => c.groupType == "allOf"),
+        anyOf: [...Object.values(this.#monthConditions)].filter((c) => c.groupType == "anyOf"),
+        oneOf: [...Object.values(this.#monthConditions)].filter((c) => c.groupType == "oneOf"),
+      },
+      dateRange: {
+        allOf: [...Object.values(this.#dateRangeConditions)].filter((c) => c.groupType == "allOf"),
+        anyOf: [...Object.values(this.#dateRangeConditions)].filter((c) => c.groupType == "anyOf"),
+        oneOf: [...Object.values(this.#dateRangeConditions)].filter((c) => c.groupType == "oneOf"),
+      },
     };
   }
 
@@ -63,6 +81,8 @@ export class Conditions {
       ...Object.values(this.#outputConditions),
       ...Object.values(this.#timeConditions),
       ...Object.values(this.#weekdayConditions),
+      ...Object.values(this.#monthConditions),
+      ...Object.values(this.#dateRangeConditions),
     ].filter((c) => c.groupType == "allOf");
   }
 
@@ -72,6 +92,8 @@ export class Conditions {
       ...Object.values(this.#outputConditions),
       ...Object.values(this.#timeConditions),
       ...Object.values(this.#weekdayConditions),
+      ...Object.values(this.#monthConditions),
+      ...Object.values(this.#dateRangeConditions),
     ].filter((c) => c.groupType == "anyOf");
   }
 
@@ -81,6 +103,8 @@ export class Conditions {
       ...Object.values(this.#outputConditions),
       ...Object.values(this.#timeConditions),
       ...Object.values(this.#weekdayConditions),
+      ...Object.values(this.#monthConditions),
+      ...Object.values(this.#dateRangeConditions),
     ].filter((c) => c.groupType == "oneOf");
   }
 
@@ -101,6 +125,12 @@ export class Conditions {
         return condition.evaluate(now);
       }
       if (condition instanceof WeekdayCondition) {
+        return condition.evaluate(now);
+      }
+      if (condition instanceof MonthCondition) {
+        return condition.evaluate(now);
+      }
+      if (condition instanceof DateRangeCondition) {
         return condition.evaluate(now);
       }
     };
@@ -153,6 +183,8 @@ export class Conditions {
     this.#outputConditions = {};
     this.#timeConditions = {};
     this.#weekdayConditions = {};
+    this.#monthConditions = {};
+    this.#dateRangeConditions = {};
 
     const promises = [];
     promises.push(
@@ -201,6 +233,31 @@ export class Conditions {
             weekdayCondition.id,
             weekdayCondition.groupType,
             weekdayCondition.weekdays,
+          );
+        });
+      }),
+    );
+    promises.push(
+      this.#sprootDB.getMonthConditionsAsync(this.#automationId).then((monthConditions) => {
+        monthConditions.map((monthCondition) => {
+          this.#monthConditions[monthCondition.id] = new MonthCondition(
+            monthCondition.id,
+            monthCondition.groupType,
+            monthCondition.months,
+          );
+        });
+      }),
+    );
+    promises.push(
+      this.#sprootDB.getDateRangeConditionsAsync(this.#automationId).then((dateRangeConditions) => {
+        dateRangeConditions.map((dateRangeCondition) => {
+          this.#dateRangeConditions[dateRangeCondition.id] = new DateRangeCondition(
+            dateRangeCondition.id,
+            dateRangeCondition.groupType,
+            dateRangeCondition.startMonth,
+            dateRangeCondition.startDay,
+            dateRangeCondition.endMonth,
+            dateRangeCondition.endDay,
           );
         });
       }),

@@ -1,5 +1,5 @@
 import { ConditionOperator } from "@sproot/sproot-common/dist/automation/ConditionTypes";
-import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMethods";
+import { isBetweenTimeStamp, isBetweenMonthDay } from "@sproot/sproot-common/dist/utility/TimeMethods";
 
 export function evaluateNumber(
   reading: number,
@@ -66,4 +66,20 @@ export function evaluateTime(
   }
   // anything else, return false.
   return false;
+}
+
+export function evaluateDateRange(
+  now: Date,
+  startMonth: number,
+  startDay: number,
+  endMonth: number,
+  endDay: number,
+): boolean {
+  return isBetweenMonthDay(
+    startMonth,
+    startDay,
+    endMonth,
+    endDay,
+    now
+  );
 }

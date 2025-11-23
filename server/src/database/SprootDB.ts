@@ -26,6 +26,8 @@ import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { IMonthCondition } from "@sproot/automation/IMonthCondition";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -454,7 +456,49 @@ export class SprootDB implements ISprootDB {
       });
   }
   async deleteMonthConditionAsync(conditionId: number): Promise<void> {
-    return this.#connection("month_conditions").where("id", conditionId).delete();
+    return this.#connection("date_range_conditions").where("id", conditionId).delete();
+  }
+  
+  async getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]> {
+    return this.#connection("date_range_conditions")
+      .where("automation_id", automationId)
+      .select(["id", "automation_id as automationId", "groupType", "months"]);
+  }
+  async addDateRangeConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    startMonth: number,
+    startDay: number,
+    endMonth: number,
+    endDay: number,
+  ): Promise<number> {
+    return (
+      (
+        await this.#connection("date_range_conditions").insert({
+          automation_id: automationId,
+          groupType,
+          startMonth,
+          startDay,
+          endMonth,
+          endDay,
+        })
+      )[0] ?? -1
+    );
+  }
+  async updateDateRangeConditionAsync(automationId: number, condition: IDateRangeCondition): Promise<void> {
+    return this.#connection("date_range_conditions")
+      .where("automation_id", automationId)
+      .and.where("id", condition.id)
+      .update({
+        groupType: condition.groupType,
+        startMonth: condition.startMonth,
+        startDay: condition.startDay,
+        endMonth: condition.endMonth,
+        endDay: condition.endDay,
+      });
+  }
+  async deleteDateRangeConditionAsync(conditionId: number): Promise<void> {
+    return this.#connection("date_range_conditions").where("id", conditionId).delete();
   }
 
   async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
