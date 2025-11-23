@@ -456,13 +456,21 @@ export class SprootDB implements ISprootDB {
       });
   }
   async deleteMonthConditionAsync(conditionId: number): Promise<void> {
-    return this.#connection("date_range_conditions").where("id", conditionId).delete();
+    return this.#connection("month_conditions").where("id", conditionId).delete();
   }
 
   async getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]> {
     return this.#connection("date_range_conditions")
       .where("automation_id", automationId)
-      .select(["id", "automation_id as automationId", "groupType", "months"]);
+      .select([
+        "id",
+        "automation_id as automationId",
+        "groupType",
+        "startMonth",
+        "startDate",
+        "endMonth",
+        "endDate",
+      ]);
   }
   async addDateRangeConditionAsync(
     automationId: number,
@@ -478,9 +486,9 @@ export class SprootDB implements ISprootDB {
           automation_id: automationId,
           groupType,
           startMonth,
-          startDate: startDate,
+          startDate,
           endMonth,
-          endDate: endDate,
+          endDate,
         })
       )[0] ?? -1
     );

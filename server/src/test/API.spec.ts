@@ -613,14 +613,14 @@ describe("API Tests", async () => {
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
-            assert.equal((await app.get("sprootDB").getMonthConditionsAsync(1))[2].months, 5);
+            assert.equal((await app.get("sprootDB").getMonthConditionsAsync(1))[2].months, 13);
             await request(server)
               .patch("/api/v2/automations/1/conditions/month/3")
               .send({
                 months: 14,
               })
               .expect(200);
-            assert.equal((await app.get("sprootDB").getMonthConditionsAsync(1))[2].months, 6);
+            assert.equal((await app.get("sprootDB").getMonthConditionsAsync(1))[2].months, 14);
           });
         });
 
@@ -671,7 +671,10 @@ describe("API Tests", async () => {
               .post("/api/v2/automations/1/conditions/date-range")
               .send({
                 groupType: "oneOf",
-                startMonth: 13,
+                startMonth: 1,
+                startDate: 1,
+                endMonth: 1,
+                endDate: 31,
               })
               .expect(201);
             assert.lengthOf(await app.get("sprootDB").getDateRangeConditionsAsync(1), 3);
@@ -682,7 +685,7 @@ describe("API Tests", async () => {
           it("should return 200", async () => {
             assert.equal(
               (await app.get("sprootDB").getDateRangeConditionsAsync(1))[2].startMonth,
-              13,
+              1,
             );
             await request(server)
               .patch("/api/v2/automations/1/conditions/date-range/3")
