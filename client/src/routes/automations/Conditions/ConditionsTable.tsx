@@ -141,7 +141,7 @@ export default function ConditionsTable({
         await deleteDateRangeConditionMutation.mutateAsync(conditionId);
       };
     }
-    return async () => {};
+    return async () => { };
   }
 
   useEffect(() => {
@@ -273,17 +273,17 @@ function mapToType(
 function mapOperatorToText(operator: ConditionOperator) {
   switch (operator) {
     case "less":
-      return <Code fw={700}>&lt;</Code>;
+      return <Code mx={"-10px"} fw={700}>&lt;</Code>;
     case "lessOrEqual":
-      return <Code fw={700}>&lt;=</Code>;
+      return <Code mx={"-10px"} fw={700}>&lt;=</Code>;
     case "greater":
-      return <Code fw={700}>&gt;</Code>;
+      return <Code mx={"-10px"} fw={700}>&gt;</Code>;
     case "greaterOrEqual":
-      return <Code fw={700}>&gt;=</Code>;
+      return <Code mx={"-10px"} fw={700}>&gt;=</Code>;
     case "equal":
-      return <Code fw={700}>=</Code>;
+      return <Code mx={"-10px"} fw={700}>=</Code>;
     case "notEqual":
-      return <Code fw={700}>!=</Code>;
+      return <Code mx={"-10px"} fw={700}>!=</Code>;
   }
 }
 
@@ -304,6 +304,11 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
       {mapOperatorToText(sensorCondition.operator)}{" "}
       {formatDecimalReadingForDisplay(String(comparisonValue))}
       {readingType}
+      {sensorCondition.comparisonLookback != null ? (<Fragment>
+        <Code mx={"-10px"} fw={700}>for</Code>
+        {` ${sensorCondition.comparisonLookback} ${sensorCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
+      </Fragment>)
+        : ""}
     </Group>
   );
 }
@@ -314,6 +319,12 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
       {outputCondition.outputName} is{" "}
       {mapOperatorToText(outputCondition.operator)}{" "}
       {formatDecimalReadingForDisplay(String(outputCondition.comparisonValue))}%
+      {outputCondition.comparisonLookback != null ? (<Fragment>
+        <Code mx={"-10px"} fw={700}>for</Code>
+        {` ${outputCondition.comparisonLookback} ${outputCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
+      </Fragment>)
+        : ""}
+
     </Group>
   );
 }
@@ -432,7 +443,7 @@ function DateRangeConditionRow(dateRangeCondition: {
   return (
     <Group>
       {startMonth == endMonth &&
-      dateRangeCondition.startDate == dateRangeCondition.endDate ? (
+        dateRangeCondition.startDate == dateRangeCondition.endDate ? (
         <Fragment>
           Date is {startMonth} {dateRangeCondition.startDate}
           {getOrdinalSuffix(dateRangeCondition.startDate)}

@@ -297,6 +297,7 @@ export async function addSensorConditionAsync(
   groupType: ConditionGroupType,
   operator: ConditionOperator,
   comparisonValue: number,
+  comparisonLookback: number | null,
   sensorId: string,
   readingType: ReadingType,
 ): Promise<void> {
@@ -309,6 +310,7 @@ export async function addSensorConditionAsync(
         groupType,
         operator,
         comparisonValue,
+        comparisonLookback,
         sensorId,
         readingType,
       }),
@@ -343,6 +345,7 @@ export async function addOutputConditionAsync(
   groupType: ConditionGroupType,
   operator: ConditionOperator,
   comparisonValue: number,
+  comparisonLookback: number | null,
   outputId: string,
 ): Promise<void> {
   const response = await fetch(
@@ -350,12 +353,13 @@ export async function addOutputConditionAsync(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupType, operator, comparisonValue, outputId }),
+      body: JSON.stringify({ groupType, operator, comparisonValue, comparisonLookback, outputId }),
       mode: "cors",
       // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
+  console.log(`Added output condition: ${JSON.stringify(deserializedResponse.content?.data)}`);
   return deserializedResponse.content?.data;
 }
 
