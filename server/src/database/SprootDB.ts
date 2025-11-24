@@ -259,6 +259,7 @@ export class SprootDB implements ISprootDB {
         "sc.groupType",
         "sc.operator",
         "sc.comparisonValue",
+        "sc.comparisonLookback",
         "sc.sensor_id as sensorId",
         "sc.readingType",
         "s.name as sensorName",
@@ -271,6 +272,7 @@ export class SprootDB implements ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     sensorId: number,
     readingType: string,
   ): Promise<number> {
@@ -281,6 +283,7 @@ export class SprootDB implements ISprootDB {
           groupType: type,
           operator,
           comparisonValue,
+          comparisonLookback,
           sensor_id: sensorId,
           readingType,
         })
@@ -298,6 +301,7 @@ export class SprootDB implements ISprootDB {
         groupType: condition.groupType,
         operator: condition.operator,
         comparisonValue: condition.comparisonValue,
+        comparisonLookback: condition.comparisonLookback,
         sensor_id: condition.sensorId,
         readingType: condition.readingType,
       });
@@ -313,6 +317,7 @@ export class SprootDB implements ISprootDB {
         "oc.groupType",
         "oc.operator",
         "oc.comparisonValue",
+        "oc.comparisonLookback",
         "oc.output_id as outputId",
         "o.name as outputName",
       ])
@@ -324,6 +329,7 @@ export class SprootDB implements ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     outputId: number,
   ): Promise<number> {
     return (
@@ -333,6 +339,7 @@ export class SprootDB implements ISprootDB {
           groupType: type,
           operator,
           comparisonValue,
+          comparisonLookback,
           output_id: outputId,
         })
       )[0] ?? -1
@@ -349,6 +356,7 @@ export class SprootDB implements ISprootDB {
         groupType: condition.groupType,
         operator: condition.operator,
         comparisonValue: condition.comparisonValue,
+        comparisonLookback: condition.comparisonLookback,
         output_id: condition.outputId,
       });
   }

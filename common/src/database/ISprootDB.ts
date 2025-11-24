@@ -94,6 +94,7 @@ interface ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     sensorId: number,
     readingType: string,
   ): Promise<number>;
@@ -106,6 +107,7 @@ interface ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     outputId: number,
   ): Promise<number>;
   updateOutputConditionAsync(automationId: number, condition: IOutputCondition): Promise<void>;
@@ -310,6 +312,7 @@ class MockSprootDB implements ISprootDB {
     _type: ConditionGroupType,
     _operator: ConditionOperator,
     _comparisonValue: number,
+    _comparisonLookback: number | null,
     _sensorId: number,
     _readingType: string,
   ): Promise<number> {
@@ -332,6 +335,7 @@ class MockSprootDB implements ISprootDB {
     _type: ConditionGroupType,
     _operator: ConditionOperator,
     _comparisonValue: number,
+    _comparisonLookback: number | null,
     _outputId: number,
   ): Promise<number> {
     return 0;

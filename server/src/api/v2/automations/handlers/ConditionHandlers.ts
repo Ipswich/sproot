@@ -438,6 +438,9 @@ export async function addAsync(
         if (request.body.comparisonValue == null) {
           invalidFields.push("Invalid or missing comparison value.");
         }
+        if (request.body.comparisonLookback != null && isNaN(request.body.comparisonLookback)) {
+          invalidFields.push("Invalid comparison lookback value.");
+        }
         if (request.body.sensorId == null || isNaN(request.body.sensorId)) {
           invalidFields.push("Invalid or missing sensor Id.");
         } else if (
@@ -456,6 +459,7 @@ export async function addAsync(
           request.body.groupType,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
           request.body.sensorId,
           request.body.readingType,
         );
@@ -466,6 +470,7 @@ export async function addAsync(
           request.body.readingType,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
         );
         break;
       case "output":
@@ -474,6 +479,9 @@ export async function addAsync(
         }
         if (request.body.comparisonValue == null) {
           invalidFields.push("Invalid or missing comparison value.");
+        }
+        if (request.body.comparisonLookback != null && isNaN(request.body.comparisonLookback)) {
+          invalidFields.push("Invalid comparison lookback value.");
         }
         if (request.body.outputId == null || isNaN(request.body.outputId)) {
           invalidFields.push("Invalid or missing output Id.");
@@ -488,6 +496,7 @@ export async function addAsync(
           request.body.groupType,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
           request.body.outputId,
         );
         creationResult = new OutputCondition(
@@ -496,6 +505,7 @@ export async function addAsync(
           request.body.outputId,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
         );
         break;
       case "time": {
@@ -786,6 +796,7 @@ export async function updateAsync(
           request.body.readingType ?? sdbSensorCondition.readingType,
           request.body.operator ?? sdbSensorCondition.operator,
           request.body.comparisonValue ?? sdbSensorCondition.comparisonValue,
+          request.body.comparisonLookback ?? sdbSensorCondition.comparisonLookback,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -796,6 +807,9 @@ export async function updateAsync(
         }
         if (isNaN(condition.comparisonValue)) {
           invalidDetails.push("Invalid comparison value.");
+        }
+        if (condition.comparisonLookback != null && isNaN(condition.comparisonLookback)) {
+          invalidDetails.push("Invalid comparison lookback value.");
         }
         if (isNaN(condition.sensorId)) {
           invalidDetails.push("Invalid sensor Id.");
@@ -822,6 +836,7 @@ export async function updateAsync(
           request.body.outputId ?? sdbOutputCondition.outputId,
           request.body.operator ?? sdbOutputCondition.operator,
           request.body.comparisonValue ?? sdbOutputCondition.comparisonValue,
+          request.body.comparisonLookback ?? sdbOutputCondition.comparisonLookback,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -832,6 +847,9 @@ export async function updateAsync(
         }
         if (isNaN(condition.comparisonValue)) {
           invalidDetails.push("Invalid comparison value.");
+        }
+        if (condition.comparisonLookback != null && isNaN(condition.comparisonLookback)) {
+          invalidDetails.push("Invalid comparison lookback value.");
         }
         if (isNaN(condition.outputId)) {
           invalidDetails.push("Invalid output Id.");

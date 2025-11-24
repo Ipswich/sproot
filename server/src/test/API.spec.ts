@@ -333,6 +333,7 @@ describe("API Tests", async () => {
                 groupType: "oneOf",
                 operator: "greater",
                 comparisonValue: 20,
+                comparisionLookback: 3,
                 sensorId: 1,
                 readingType: "temperature",
               })
@@ -408,6 +409,7 @@ describe("API Tests", async () => {
                 groupType: "oneOf",
                 operator: "greater",
                 comparisonValue: 20,
+                comparisionLookback: 3,
                 outputId: 1,
               })
               .expect(201);

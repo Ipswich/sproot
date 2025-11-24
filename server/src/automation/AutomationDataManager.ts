@@ -49,6 +49,7 @@ class AutomationDataManager {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     sensorId: number,
     readingType: ReadingType,
   ) {
@@ -57,6 +58,7 @@ class AutomationDataManager {
       type,
       operator,
       comparisonValue,
+      comparisonLookback,
       sensorId,
       readingType,
     );
@@ -69,6 +71,7 @@ class AutomationDataManager {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     outputId: number,
   ) {
     const resultId = await this.#sprootDB.addOutputConditionAsync(
@@ -76,6 +79,7 @@ class AutomationDataManager {
       type,
       operator,
       comparisonValue,
+      comparisonLookback,
       outputId,
     );
     await this.#postAutomationChangeFunctionAsync();

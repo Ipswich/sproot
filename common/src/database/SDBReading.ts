@@ -1,7 +1,6 @@
-import { RowDataPacket } from "mysql2";
 import { ReadingType } from "../sensors/ReadingType";
 
-type SDBReading = RowDataPacket & {
+type SDBReading = {
   metric: ReadingType;
   data: string;
   units: string;

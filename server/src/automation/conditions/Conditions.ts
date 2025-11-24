@@ -207,6 +207,7 @@ export class Conditions {
             sensorCondition.readingType,
             sensorCondition.operator,
             sensorCondition.comparisonValue,
+            sensorCondition.comparisonLookback,
           );
         });
       }),
@@ -220,6 +221,7 @@ export class Conditions {
             outputCondition.outputId,
             outputCondition.operator,
             outputCondition.comparisonValue,
+            outputCondition.comparisonLookback,
           );
         });
       }),

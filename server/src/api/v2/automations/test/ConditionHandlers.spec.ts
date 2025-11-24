@@ -1256,6 +1256,7 @@ describe("ConditionHandlers.ts", () => {
         readingType: "temperature",
         operator: "equal",
         comparisonValue: 50,
+        comparisonLookback: null,
       });
     });
 
@@ -1313,6 +1314,7 @@ describe("ConditionHandlers.ts", () => {
         outputId: 1,
         operator: "equal",
         comparisonValue: 50,
+        comparisonLookback: null,
       });
     });
 
@@ -2034,6 +2036,7 @@ describe("ConditionHandlers.ts", () => {
         readingType: "humidity",
         operator: "less",
         comparisonValue: 51,
+        comparisonLookback: undefined,
       });
     });
 
@@ -2101,6 +2104,7 @@ describe("ConditionHandlers.ts", () => {
         outputId: 2,
         operator: "less",
         comparisonValue: 51,
+        comparisonLookback: undefined,
       });
     });
 
