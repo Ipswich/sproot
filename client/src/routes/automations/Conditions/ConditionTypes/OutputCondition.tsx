@@ -1,4 +1,12 @@
-import { Button, Group, Select, Slider, Stack, Space, NumberInput } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Select,
+  Slider,
+  Stack,
+  Space,
+  NumberInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
@@ -35,8 +43,6 @@ export default function OutputCondition({
       comparisonLookback: number | null;
       outputId: string;
     }) => {
-
-
       if (outputCondition.comparisonLookback == 0) {
         outputCondition.comparisonLookback = null;
       }
@@ -83,7 +89,8 @@ export default function OutputCondition({
           ? null
           : "Comparison value must be provided",
       comparisonLookback: (value: number) =>
-        (value >= 0 && value <= 1440) ? null
+        value >= 0 && value <= 1440
+          ? null
           : "Comparison lookback must be empty between 1 and 1440 minutes",
     },
   });

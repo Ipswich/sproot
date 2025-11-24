@@ -42,11 +42,14 @@ export class SensorCondition implements ISensorCondition {
       }
       result = readings.every((reading) => {
         // If reading is older than the lookback period, ignore it
-        if (new Date(reading.logTime.replace(" ", "T") + "Z").getTime() < now.getTime() - this.comparisonLookback! * 60000) {
+        if (
+          new Date(reading.logTime.replace(" ", "T") + "Z").getTime() <
+          now.getTime() - this.comparisonLookback! * 60000
+        ) {
           return false;
         }
 
-        return evaluateNumber(parseFloat(reading.data), this.operator, this.comparisonValue)
+        return evaluateNumber(parseFloat(reading.data), this.operator, this.comparisonValue);
       });
     } else {
       const reading = sensorList.sensors[this.sensorId]?.lastReading[this.readingType];

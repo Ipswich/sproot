@@ -241,9 +241,9 @@ export default function SensorCondition({
               min={0}
               max={1440}
               suffix={
-              sensorConditionForm.values.comparisonLookback === 1
-                ? " minute"
-                : " minutes"
+                sensorConditionForm.values.comparisonLookback === 1
+                  ? " minute"
+                  : " minutes"
               }
               {...sensorConditionForm.getInputProps("comparisonLookback")}
             />

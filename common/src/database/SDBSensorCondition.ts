@@ -4,7 +4,7 @@ import {
 } from "@sproot/sproot-common/src/automation/ConditionTypes";
 import { ReadingType } from "../sensors/ReadingType";
 
-type SDBSensorCondition ={
+type SDBSensorCondition = {
   id: number;
   automationId: number;
   groupType: ConditionGroupType;

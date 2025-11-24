@@ -38,11 +38,14 @@ export class OutputCondition implements IOutputCondition {
       }
       result = outputValues.every((outputValue) => {
         // If reading is older than the lookback period, ignore it
-        if (new Date(outputValue.logTime.replace(" ", "T") + "Z").getTime() < now.getTime() - this.comparisonLookback! * 60000) {
+        if (
+          new Date(outputValue.logTime.replace(" ", "T") + "Z").getTime() <
+          now.getTime() - this.comparisonLookback! * 60000
+        ) {
           return false;
         }
 
-        return evaluateNumber(outputValue.value, this.operator, this.comparisonValue)
+        return evaluateNumber(outputValue.value, this.operator, this.comparisonValue);
       });
     } else {
       const outputValue = outputList.outputs[this.outputId]?.value;

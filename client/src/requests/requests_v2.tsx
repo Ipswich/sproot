@@ -353,13 +353,21 @@ export async function addOutputConditionAsync(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupType, operator, comparisonValue, comparisonLookback, outputId }),
+      body: JSON.stringify({
+        groupType,
+        operator,
+        comparisonValue,
+        comparisonLookback,
+        outputId,
+      }),
       mode: "cors",
       // credentials: "include",
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
-  console.log(`Added output condition: ${JSON.stringify(deserializedResponse.content?.data)}`);
+  console.log(
+    `Added output condition: ${JSON.stringify(deserializedResponse.content?.data)}`,
+  );
   return deserializedResponse.content?.data;
 }
 

@@ -49,47 +49,84 @@ describe("OutputCondition.ts tests", () => {
     });
 
     it("should return the result of the condition for all readings in the lookback period", () => {
-      const outputCondition = new OutputCondition(
-        1,
-        "allOf",
-        1,
-        "greater",
-        50,
-        3,
-      );
+      const outputCondition = new OutputCondition(1, "allOf", 1, "greater", 50, 3);
       const outputListMock = sinon.createStubInstance(OutputList);
       const outputMock = sinon.createStubInstance(OutputBase);
       const now = new Date();
       sinon.stub(outputListMock, "outputs").value({ 1: outputMock });
 
       outputMock.getCachedReadings.withArgs(3).returns([
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 51 },
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 52 },
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 53 },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 51,
+        },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 52,
+        },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 53,
+        },
       ]);
       assert.isTrue(outputCondition.evaluate(outputListMock));
 
       // One reading is not greater than comparison value
       outputMock.getCachedReadings.withArgs(3).returns([
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 49 },
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 52 },
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 53 },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 49,
+        },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 52,
+        },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 53,
+        },
       ]);
       assert.isFalse(outputCondition.evaluate(outputListMock));
 
       // Not enough readings in the lookback period
       outputMock.getCachedReadings.withArgs(3).returns([
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 52 },
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 53 },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 52,
+        },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 53,
+        },
       ]);
       assert.isFalse(outputCondition.evaluate(outputListMock));
 
       // One reading is outside the lookback period
-      const oldReading = new Date(now.getTime() - 4 * 60000)
+      const oldReading = new Date(now.getTime() - 4 * 60000);
       outputMock.getCachedReadings.withArgs(3).returns([
-        { logTime: oldReading.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 51 },
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 52 },
-        { logTime: now.toISOString().slice(0, 19).replace("T", " "), controlMode: ControlMode.automatic, value: 53 },
+        {
+          logTime: oldReading.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 51,
+        },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 52,
+        },
+        {
+          logTime: now.toISOString().slice(0, 19).replace("T", " "),
+          controlMode: ControlMode.automatic,
+          value: 53,
+        },
       ]);
       assert.isFalse(outputCondition.evaluate(outputListMock));
     });

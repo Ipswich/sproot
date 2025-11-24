@@ -1,4 +1,3 @@
-
 import { ReadingType } from "../sensors/ReadingType";
 
 type SDBReading = {

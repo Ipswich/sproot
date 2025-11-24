@@ -140,9 +140,24 @@ describe("SensorCondition.ts tests", () => {
 
       sensorMock.getCachedReadings.withArgs(3).returns({
         temperature: [
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "51" },
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "52" },
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "53" },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "51",
+          },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
         ],
       });
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
@@ -150,29 +165,69 @@ describe("SensorCondition.ts tests", () => {
       // One reading is not greater than comparison value
       sensorMock.getCachedReadings.withArgs(3).returns({
         temperature: [
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "49" },
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "52" },
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "53" },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "49",
+          },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
         ],
       });
       assert.isFalse(sensorCondition.evaluate(sensorListMock));
-      
+
       // Not enough readings in the lookback period
       sensorMock.getCachedReadings.withArgs(3).returns({
         temperature: [
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "52" },
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "53" },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
         ],
       });
       assert.isFalse(sensorCondition.evaluate(sensorListMock));
-      
+
       // One reading is outside the lookback period
-      const oldReading = new Date(now.getTime() - 4 * 60000)
+      const oldReading = new Date(now.getTime() - 4 * 60000);
       sensorMock.getCachedReadings.withArgs(3).returns({
         temperature: [
-          { logTime: oldReading.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "51" },
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "52" },
-          { logTime: now.toISOString().slice(0, 19).replace("T", " "), metric: ReadingType.temperature, units: "°F", data: "53" },
+          {
+            logTime: oldReading.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "51",
+          },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString().slice(0, 19).replace("T", " "),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
         ],
       });
       assert.isFalse(sensorCondition.evaluate(sensorListMock));
