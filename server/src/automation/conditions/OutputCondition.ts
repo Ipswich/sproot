@@ -28,20 +28,16 @@ export class OutputCondition implements IOutputCondition {
   }
 
   evaluate(outputList: OutputList, now: Date = new Date()): boolean {
-    let result: boolean;
-
-    const lastOutputValue = outputList.outputs[this.outputId]?.value;
-    result =
-      lastOutputValue != null
+    if (this.comparisonLookback == null || this.comparisonLookback == 0) {
+      const lastOutputValue = outputList.outputs[this.outputId]?.value;
+      return lastOutputValue != null
         ? evaluateNumber(lastOutputValue, this.operator, this.comparisonValue)
         : false;
-    if (this.comparisonLookback == null || this.comparisonLookback == 0) {
-      return result;
     }
 
     const outputValues = outputList.outputs[this.outputId]
       ?.getCachedReadings()
-      .slice(-this.comparisonLookback, -1)
+      .slice(-this.comparisonLookback)
       .filter(
         (outputState) =>
           new Date(outputState.logTime).getTime() >=
@@ -49,15 +45,12 @@ export class OutputCondition implements IOutputCondition {
       )
       .map((outputState) => outputState.value);
 
-    outputValues?.push(lastOutputValue!);
     if (outputValues == null || outputValues.length < this.comparisonLookback) {
       return false;
     }
 
-    result = outputValues.every((outputValue) => {
+    return outputValues.every((outputValue) => {
       return evaluateNumber(outputValue, this.operator, this.comparisonValue);
     });
-
-    return result;
   }
 }

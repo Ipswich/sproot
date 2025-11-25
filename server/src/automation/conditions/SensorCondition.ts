@@ -32,19 +32,16 @@ export class SensorCondition implements ISensorCondition {
   }
 
   evaluate(sensorList: SensorList, now: Date = new Date()): boolean {
-    let result: boolean;
-    const lastSensorValue = sensorList.sensors[this.sensorId]?.lastReading[this.readingType];
-    result =
-      lastSensorValue != null
+    if (this.comparisonLookback == null || this.comparisonLookback == 0) {
+      const lastSensorValue = sensorList.sensors[this.sensorId]?.lastReading[this.readingType];
+      return lastSensorValue != null
         ? evaluateNumber(parseFloat(lastSensorValue), this.operator, this.comparisonValue)
         : false;
-    if (this.comparisonLookback == null || this.comparisonLookback == 0) {
-      return result;
     }
 
     const sensorValues = sensorList.sensors[this.sensorId]
       ?.getCachedReadings()
-      ?.[this.readingType]?.slice(-this.comparisonLookback, -1)
+      ?.[this.readingType]?.slice(-this.comparisonLookback)
       ?.filter(
         (lastReading) =>
           new Date(lastReading.logTime).getTime() >=
@@ -52,15 +49,12 @@ export class SensorCondition implements ISensorCondition {
       )
       ?.map((lastReading) => lastReading.data);
 
-    sensorValues?.push(lastSensorValue!);
     if (sensorValues == null || sensorValues.length < this.comparisonLookback) {
       return false;
     }
 
-    result = sensorValues.every((sensorValue) => {
+    return sensorValues.every((sensorValue) => {
       return evaluateNumber(parseFloat(sensorValue), this.operator, this.comparisonValue);
     });
-
-    return result;
   }
 }

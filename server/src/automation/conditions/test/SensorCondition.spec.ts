@@ -135,7 +135,6 @@ describe("SensorCondition.ts tests", () => {
       );
       const sensorListMock = sinon.createStubInstance(SensorList);
       const sensorMock = sinon.createStubInstance(SensorBase);
-      sensorMock.lastReading = { temperature: "53" } as Record<ReadingType, string>;
 
       const now = new Date();
       sinon.stub(sensorListMock, "sensors").value({ 1: sensorMock });

@@ -52,7 +52,6 @@ describe("OutputCondition.ts tests", () => {
       const outputCondition = new OutputCondition(1, "allOf", 1, "greater", 50, 3);
       const outputListMock = sinon.createStubInstance(OutputList);
       const outputMock = sinon.createStubInstance(OutputBase);
-      sinon.stub(outputMock, "value").get(() => 53);
       const now = new Date();
       sinon.stub(outputListMock, "outputs").value({ 1: outputMock });
 
