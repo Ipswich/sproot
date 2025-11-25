@@ -29,31 +29,35 @@ export class OutputCondition implements IOutputCondition {
 
   evaluate(outputList: OutputList, now: Date = new Date()): boolean {
     let result: boolean;
-    if (this.comparisonLookback != null) {
-      const outputValues = outputList.outputs[this.outputId]?.getCachedReadings(
-        this.comparisonLookback,
-      );
-      if (outputValues == null || outputValues.length < this.comparisonLookback) {
-        return false;
-      }
-      result = outputValues.every((outputValue) => {
-        // If reading is older than the lookback period, ignore it
-        if (
-          new Date(outputValue.logTime.replace(" ", "T") + "Z").getTime() <
-          now.getTime() - this.comparisonLookback! * 60000
-        ) {
-          return false;
-        }
 
-        return evaluateNumber(outputValue.value, this.operator, this.comparisonValue);
-      });
-    } else {
-      const outputValue = outputList.outputs[this.outputId]?.value;
-
-      return outputValue != null
-        ? evaluateNumber(outputValue, this.operator, this.comparisonValue)
+    const lastOutputValue = outputList.outputs[this.outputId]?.value;
+    result =
+      lastOutputValue != null
+        ? evaluateNumber(lastOutputValue, this.operator, this.comparisonValue)
         : false;
+    if (this.comparisonLookback == null || this.comparisonLookback == 0) {
+      return result;
     }
+
+    const outputValues = outputList.outputs[this.outputId]
+      ?.getCachedReadings()
+      .slice(-this.comparisonLookback, -1)
+      .filter(
+        (outputState) =>
+          new Date(outputState.logTime).getTime() >=
+          now.getTime() - this.comparisonLookback! * 60000,
+      )
+      .map((outputState) => outputState.value);
+
+    outputValues?.push(lastOutputValue!);
+    if (outputValues == null || outputValues.length < this.comparisonLookback) {
+      return false;
+    }
+
+    result = outputValues.every((outputValue) => {
+      return evaluateNumber(outputValue, this.operator, this.comparisonValue);
+    });
+
     return result;
   }
 }

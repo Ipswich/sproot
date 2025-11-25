@@ -33,31 +33,34 @@ export class SensorCondition implements ISensorCondition {
 
   evaluate(sensorList: SensorList, now: Date = new Date()): boolean {
     let result: boolean;
-    if (this.comparisonLookback != null) {
-      const readings = sensorList.sensors[this.sensorId]?.getCachedReadings(
-        this.comparisonLookback,
-      )[this.readingType];
-      if (readings == null || readings.length < this.comparisonLookback) {
-        return false;
-      }
-      result = readings.every((reading) => {
-        // If reading is older than the lookback period, ignore it
-        if (
-          new Date(reading.logTime.replace(" ", "T") + "Z").getTime() <
-          now.getTime() - this.comparisonLookback! * 60000
-        ) {
-          return false;
-        }
-
-        return evaluateNumber(parseFloat(reading.data), this.operator, this.comparisonValue);
-      });
-    } else {
-      const reading = sensorList.sensors[this.sensorId]?.lastReading[this.readingType];
-
-      return reading != null
-        ? evaluateNumber(parseFloat(reading), this.operator, this.comparisonValue)
+    const lastSensorValue = sensorList.sensors[this.sensorId]?.lastReading[this.readingType];
+    result =
+      lastSensorValue != null
+        ? evaluateNumber(parseFloat(lastSensorValue), this.operator, this.comparisonValue)
         : false;
+    if (this.comparisonLookback == null || this.comparisonLookback == 0) {
+      return result;
     }
+
+    const sensorValues = sensorList.sensors[this.sensorId]
+      ?.getCachedReadings()
+      ?.[this.readingType]?.slice(-this.comparisonLookback, -1)
+      ?.filter(
+        (lastReading) =>
+          new Date(lastReading.logTime).getTime() >=
+          now.getTime() - this.comparisonLookback! * 60000,
+      )
+      ?.map((lastReading) => lastReading.data);
+
+    sensorValues?.push(lastSensorValue!);
+    if (sensorValues == null || sensorValues.length < this.comparisonLookback) {
+      return false;
+    }
+
+    result = sensorValues.every((sensorValue) => {
+      return evaluateNumber(parseFloat(sensorValue), this.operator, this.comparisonValue);
+    });
+
     return result;
   }
 }

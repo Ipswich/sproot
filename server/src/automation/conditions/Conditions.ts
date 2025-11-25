@@ -126,10 +126,10 @@ export class Conditions {
   ): boolean {
     const evaluateByConditionFlavor = (condition: EnabledConditionTypes) => {
       if (condition instanceof SensorCondition) {
-        return condition.evaluate(sensorList);
+        return condition.evaluate(sensorList, now);
       }
       if (condition instanceof OutputCondition) {
-        return condition.evaluate(outputList);
+        return condition.evaluate(outputList, now);
       }
       if (condition instanceof TimeCondition) {
         return condition.evaluate(now);
