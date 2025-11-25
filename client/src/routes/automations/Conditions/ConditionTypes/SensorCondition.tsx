@@ -41,7 +41,7 @@ export default function SensorCondition({
   sensors,
 }: SensorConditionProps) {
   const condtionsQuery = useQuery({
-    queryKey: ["conditions"],
+    queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
   const addSensorMutation = useMutation({

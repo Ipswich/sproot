@@ -20,7 +20,7 @@ export default function MonthCondition({
   groupType,
 }: MonthConditionProps) {
   const conditionsQuery = useQuery({
-    queryKey: ["conditions"],
+    queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
 

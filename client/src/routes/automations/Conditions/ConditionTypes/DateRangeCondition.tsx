@@ -21,7 +21,7 @@ export default function DateRangeCondition({
   groupType,
 }: DateRangeConditionProps) {
   const conditionsQuery = useQuery({
-    queryKey: ["conditions"],
+    queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
 
@@ -197,12 +197,14 @@ export default function DateRangeCondition({
           <Group justify="space-between" gap={"0px"}>
             <Stack w={"45%"}>
               <Select
+                required
                 data={monthOptions}
                 label="Start Month"
                 allowDeselect={false}
                 {...dateRangeConditionForm.getInputProps("startMonth")}
               />
               <Select
+                required
                 w={"60%"}
                 key={startMonth}
                 data={startDayOptions}
@@ -213,12 +215,14 @@ export default function DateRangeCondition({
             </Stack>
             <Stack w={"45%"}>
               <Select
+                required
                 data={monthOptions}
                 label="End Month"
                 allowDeselect={false}
                 {...dateRangeConditionForm.getInputProps("endMonth")}
               />
               <Select
+                required
                 w={"60%"}
                 key={endMonth}
                 data={endDayOptions}

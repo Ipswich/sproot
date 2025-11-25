@@ -25,6 +25,8 @@ import {
   ConditionGroupType,
   ConditionOperator,
 } from "@sproot/automation/ConditionTypes";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -275,6 +277,16 @@ export async function getConditionsAsync(automationId: number): Promise<{
     anyOf: SDBWeekdayCondition[];
     oneOf: SDBWeekdayCondition[];
   };
+  month: {
+    allOf: SDBMonthCondition[];
+    anyOf: SDBMonthCondition[];
+    oneOf: SDBMonthCondition[];
+  };
+  dateRange: {
+    allOf: SDBDateRangeCondition[];
+    anyOf: SDBDateRangeCondition[];
+    oneOf: SDBDateRangeCondition[];
+  };
 }> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions`,
@@ -365,9 +377,6 @@ export async function addOutputConditionAsync(
     },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
-  console.log(
-    `Added output condition: ${JSON.stringify(deserializedResponse.content?.data)}`,
-  );
   return deserializedResponse.content?.data;
 }
 

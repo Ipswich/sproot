@@ -43,8 +43,11 @@ export default function ConditionsTable({
   const [addNewConditionOpened, { toggle: toggleAddNewCondition }] =
     useDisclosure(false);
   const conditionsQueryFn = useQuery({
-    queryKey: ["conditions"],
-    queryFn: () => getConditionsAsync(automationId),
+    queryKey: ["conditions", automationId],
+    queryFn: async () => {
+      const data = await getConditionsAsync(automationId);
+      return data;
+    },
   });
 
   const deleteSensorConditionMutation = useMutation({
@@ -167,13 +170,15 @@ export default function ConditionsTable({
             <Fragment>
               <Title order={6}>All Of</Title>
               <DeletablesTable
-                deletables={allOfConditions.map((condition) => {
-                  return {
-                    displayLabel: mapToType(condition),
-                    id: condition.id,
-                    deleteFn: mapToDeleteConditionMutationAsync(condition),
-                  };
-                })}
+                deletables={allOfConditions
+                  .sort((a, b) => sortTypes(a, b))
+                  .map((condition) => {
+                    return {
+                      displayLabel: mapToType(condition),
+                      id: condition.id,
+                      deleteFn: mapToDeleteConditionMutationAsync(condition),
+                    };
+                  })}
                 readOnly={readOnly ?? false}
               />
             </Fragment>
@@ -182,13 +187,15 @@ export default function ConditionsTable({
             <Fragment>
               <Title order={6}>Any Of</Title>
               <DeletablesTable
-                deletables={anyOfConditions.map((condition) => {
-                  return {
-                    displayLabel: mapToType(condition),
-                    id: condition.id,
-                    deleteFn: mapToDeleteConditionMutationAsync(condition),
-                  };
-                })}
+                deletables={anyOfConditions
+                  .sort((a, b) => sortTypes(a, b))
+                  .map((condition) => {
+                    return {
+                      displayLabel: mapToType(condition),
+                      id: condition.id,
+                      deleteFn: mapToDeleteConditionMutationAsync(condition),
+                    };
+                  })}
                 readOnly={readOnly ?? false}
               />
             </Fragment>
@@ -197,13 +204,15 @@ export default function ConditionsTable({
             <Fragment>
               <Title order={6}>One Of</Title>
               <DeletablesTable
-                deletables={oneOfConditions.map((condition) => {
-                  return {
-                    displayLabel: mapToType(condition),
-                    id: condition.id,
-                    deleteFn: mapToDeleteConditionMutationAsync(condition),
-                  };
-                })}
+                deletables={oneOfConditions
+                  .sort((a, b) => sortTypes(a, b))
+                  .map((condition) => {
+                    return {
+                      displayLabel: mapToType(condition),
+                      id: condition.id,
+                      deleteFn: mapToDeleteConditionMutationAsync(condition),
+                    };
+                  })}
                 readOnly={readOnly ?? false}
               />
             </Fragment>
@@ -241,13 +250,81 @@ export default function ConditionsTable({
   );
 }
 
+function sortTypes(
+  a:
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
+  b:
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
+) {
+  const rankOf = (
+    c:
+      | SDBSensorCondition
+      | SDBOutputCondition
+      | SDBTimeCondition
+      | SDBWeekdayCondition
+      | SDBMonthCondition
+      | SDBDateRangeCondition,
+  ) => {
+    if ("sensorId" in c && "readingType" in c) return 0; // Sensor
+    if ("outputId" in c) return 1; // Output
+    if ("months" in c) return 2; // Month
+    if ("weekdays" in c) return 3; // Weekday
+    if (
+      "startMonth" in c &&
+      "startDate" in c &&
+      "endMonth" in c &&
+      "endDate" in c
+    )
+      return 4; // DateRange
+    if ("startTime" in c && "endTime" in c) return 5; // Time
+    return 99;
+  };
+
+  const ra = rankOf(a);
+  const rb = rankOf(b);
+  if (ra !== rb) return ra - rb;
+
+  const ida =
+    (
+      a as
+        | SDBSensorCondition
+        | SDBOutputCondition
+        | SDBTimeCondition
+        | SDBWeekdayCondition
+        | SDBMonthCondition
+        | SDBDateRangeCondition
+    )?.id ?? 0;
+  const idb =
+    (
+      b as
+        | SDBSensorCondition
+        | SDBOutputCondition
+        | SDBTimeCondition
+        | SDBWeekdayCondition
+        | SDBMonthCondition
+        | SDBDateRangeCondition
+    )?.id ?? 0;
+  return ida - idb;
+}
+
 function mapToType(
   condition:
     | SDBSensorCondition
     | SDBOutputCondition
     | SDBTimeCondition
     | SDBWeekdayCondition
-    | SDBMonthCondition,
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
 ): ReactNode {
   if ("sensorId" in condition && "readingType" in condition) {
     return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
@@ -413,18 +490,18 @@ function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
     if (bits[i] === "1") {
       months.push(
         [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
           "December",
+          "November",
+          "October",
+          "September",
+          "August",
+          "July",
+          "June",
+          "May",
+          "April",
+          "March",
+          "February",
+          "January",
         ][i],
       );
     }

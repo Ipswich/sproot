@@ -33,7 +33,7 @@ export default function OutputCondition({
   outputs,
 }: OutputConditionProps) {
   const condtionsQuery = useQuery({
-    queryKey: ["conditions"],
+    queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
   const addOutputMutation = useMutation({

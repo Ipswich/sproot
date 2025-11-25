@@ -75,10 +75,10 @@ export default function NewConditionWidget({
                 !getOutputsQuery.isSuccess ||
                 Object.keys(getOutputsQuery.data).length == 0,
             },
-            { value: "Time", label: "Time", disabled: false },
             { value: "Weekday", label: "Weekday", disabled: false },
             { value: "Month", label: "Month", disabled: false },
             { value: "Date Range", label: "Date Range", disabled: false },
+            { value: "Time", label: "Time", disabled: false },
           ]}
           onChange={(value) => setConditionType(value)}
         />
@@ -86,7 +86,11 @@ export default function NewConditionWidget({
           w={"45%"}
           label="Group"
           value={groupType}
-          data={["allOf", "anyOf", "oneOf"]}
+          data={[
+            { value: "allOf", label: "All Of" },
+            { value: "anyOf", label: "Any Of" },
+            { value: "oneOf", label: "One Of" },
+          ]}
           onChange={(value) => setGroupType(value)}
         />
       </Group>
