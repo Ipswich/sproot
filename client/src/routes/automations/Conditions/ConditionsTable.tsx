@@ -25,10 +25,7 @@ import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
-import {
-  convertCelsiusToFahrenheit,
-  formatDecimalReadingForDisplay,
-} from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { convertCelsiusToFahrenheit } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { formatMilitaryTime } from "@sproot/sproot-common/src/utility/TimeMethods";
 
 export interface ConditionsTableProps {
@@ -395,15 +392,16 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
     sensorCondition.readingType == ReadingType.temperature &&
     localStorage.getItem("temperature-useAlternateUnits") == "true"
   ) {
-    comparisonValue = convertCelsiusToFahrenheit(comparisonValue) ?? 0;
+    comparisonValue = parseFloat(
+      String(convertCelsiusToFahrenheit(comparisonValue) ?? 0),
+    );
     readingType = "°F";
   }
 
   return (
     <Group>
       {sensorCondition.sensorName} is{" "}
-      {mapOperatorToText(sensorCondition.operator)}{" "}
-      {formatDecimalReadingForDisplay(String(comparisonValue))}
+      {mapOperatorToText(sensorCondition.operator)} {String(comparisonValue)}
       {readingType}
       {sensorCondition.comparisonLookback != null ? (
         <Fragment>
@@ -424,7 +422,7 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
     <Group>
       {outputCondition.outputName} is{" "}
       {mapOperatorToText(outputCondition.operator)}{" "}
-      {formatDecimalReadingForDisplay(String(outputCondition.comparisonValue))}%
+      {String(outputCondition.comparisonValue)}%
       {outputCondition.comparisonLookback != null ? (
         <Fragment>
           <Code mx={"-10px"} fw={700}>

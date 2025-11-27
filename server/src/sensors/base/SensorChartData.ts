@@ -8,7 +8,6 @@ import {
 } from "@sproot/sproot-common/dist/utility/ChartData";
 import {
   formatDateForChart,
-  formatDecimalReadingForDisplay,
 } from "@sproot/sproot-common/dist/utility/DisplayFormats";
 
 export class SensorChartData implements IChartable {
@@ -62,7 +61,7 @@ export class SensorChartData implements IChartable {
       const value = this.get().data[key].find((x) => x.name == formattedDate);
       if (value) {
         value.units = reading.units;
-        value[sensorName] = Number(formatDecimalReadingForDisplay(reading.data));
+        value[sensorName] = Number(reading.data);
       }
     }
   }
@@ -85,7 +84,7 @@ export class SensorChartData implements IChartable {
         this.chartData[key].addDataPoint({
           name,
           units: lastCacheData.units,
-          [sensorName]: Number(formatDecimalReadingForDisplay(lastCacheData.data)),
+          [sensorName]: Number(lastCacheData.data),
         });
       }
     }
@@ -97,9 +96,9 @@ export class SensorChartData implements IChartable {
       lastChartData &&
       lastCacheData &&
       lastChartData.name ==
-        formatDateForChart(
-          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
-        )
+      formatDateForChart(
+        new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
+      )
     ) {
       return true;
     }
