@@ -1,4 +1,12 @@
-import { Button, Group, Select, Slider, Stack, Space } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Select,
+  Slider,
+  Stack,
+  Space,
+  NumberInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
@@ -25,20 +33,25 @@ export default function OutputCondition({
   outputs,
 }: OutputConditionProps) {
   const condtionsQuery = useQuery({
-    queryKey: ["conditions"],
+    queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
   const addOutputMutation = useMutation({
     mutationFn: async (outputCondition: {
       operator: ConditionOperator;
       comparisonValue: number;
+      comparisonLookback: number | null;
       outputId: string;
     }) => {
+      if (outputCondition.comparisonLookback == 0) {
+        outputCondition.comparisonLookback = null;
+      }
       await addOutputConditionAsync(
         automationId,
         groupType,
         outputCondition.operator,
         outputCondition.comparisonValue,
+        outputCondition.comparisonLookback,
         outputCondition.outputId,
       );
     },
@@ -52,6 +65,7 @@ export default function OutputCondition({
       outputId: String(outputs[0]!.id),
       operator: "less" as ConditionOperator,
       comparisonValue: 50,
+      comparisonLookback: 0,
     },
 
     validate: {
@@ -74,6 +88,10 @@ export default function OutputCondition({
         value != null && value != undefined && value <= 100 && value >= 0
           ? null
           : "Comparison value must be provided",
+      comparisonLookback: (value: number) =>
+        value >= 0 && value <= 1440
+          ? null
+          : "Comparison lookback must be empty between 1 and 1440 minutes",
     },
   });
 
@@ -131,18 +149,36 @@ export default function OutputCondition({
               {...outputConditionForm.getInputProps("operator")}
             />
           </Group>
-          <Slider
-            min={0}
-            max={100}
-            step={1}
-            label={(value) => `${value}%`}
-            marks={[
-              { value: 20, label: "20%" },
-              { value: 50, label: "50%" },
-              { value: 80, label: "80%" },
-            ]}
-            {...outputConditionForm.getInputProps("comparisonValue")}
-          />
+          <Stack>
+            <Slider
+              min={0}
+              max={100}
+              step={1}
+              label={(value) => `${value}%`}
+              marks={[
+                { value: 20, label: "20%" },
+                { value: 50, label: "50%" },
+                { value: 80, label: "80%" },
+              ]}
+              {...outputConditionForm.getInputProps("comparisonValue")}
+            />
+            <Group pt="15px" justify="center">
+              for
+              <NumberInput
+                required
+                w={"40%"}
+                step={1}
+                min={0}
+                max={1440}
+                suffix={
+                  outputConditionForm.values.comparisonLookback === 1
+                    ? " minute"
+                    : " minutes"
+                }
+                {...outputConditionForm.getInputProps("comparisonLookback")}
+              />
+            </Group>
+          </Stack>
           <Group justify="center" mt="md">
             <Button type="submit">Save</Button>
           </Group>

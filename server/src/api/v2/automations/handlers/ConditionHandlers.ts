@@ -12,6 +12,10 @@ import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SensorList } from "../../../../sensors/list/SensorList";
+import { MonthCondition } from "../../../../automation/conditions/MonthCondition";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
+import { DateRangeCondition } from "../../../../automation/conditions/DateRangeCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -64,6 +68,8 @@ export async function getAllAsync(
     const outputConditions = await sprootDB.getOutputConditionsAsync(automationId);
     const timeConditions = await sprootDB.getTimeConditionsAsync(automationId);
     const weekdayConditions = await sprootDB.getWeekdayConditionsAsync(automationId);
+    const monthConditions = await sprootDB.getMonthConditionsAsync(automationId);
+    const dateRangeConditions = await sprootDB.getDateRangeConditionsAsync(automationId);
     getAllConditionsResponse = {
       statusCode: 200,
       content: {
@@ -87,6 +93,16 @@ export async function getAllAsync(
             allOf: weekdayConditions.filter((c) => c.groupType == "allOf"),
             anyOf: weekdayConditions.filter((c) => c.groupType == "anyOf"),
             oneOf: weekdayConditions.filter((c) => c.groupType == "oneOf"),
+          },
+          month: {
+            allOf: monthConditions.filter((c) => c.groupType == "allOf"),
+            anyOf: monthConditions.filter((c) => c.groupType == "anyOf"),
+            oneOf: monthConditions.filter((c) => c.groupType == "oneOf"),
+          },
+          dateRange: {
+            allOf: dateRangeConditions.filter((c) => c.groupType == "allOf"),
+            anyOf: dateRangeConditions.filter((c) => c.groupType == "anyOf"),
+            oneOf: dateRangeConditions.filter((c) => c.groupType == "oneOf"),
           },
         },
       },
@@ -126,7 +142,7 @@ export async function getByTypeAsync(
   if (isNaN(automationId)) {
     invalidFields.push("Invalid or missing automation Id.");
   }
-  if (!["sensor", "output", "time", "weekday"].includes(type)) {
+  if (!["sensor", "output", "time", "weekday", "month", "date-range"].includes(type)) {
     invalidFields.push("Invalid or missing condition type.");
   }
 
@@ -162,7 +178,9 @@ export async function getByTypeAsync(
       | SDBSensorCondition[]
       | SDBOutputCondition[]
       | SDBTimeCondition[]
-      | SDBWeekdayCondition[] = [];
+      | SDBWeekdayCondition[]
+      | SDBMonthCondition[]
+      | SDBDateRangeCondition[] = [];
     switch (type) {
       case "sensor":
         conditions = await sprootDB.getSensorConditionsAsync(automationId);
@@ -175,6 +193,12 @@ export async function getByTypeAsync(
         break;
       case "weekday":
         conditions = await sprootDB.getWeekdayConditionsAsync(automationId);
+        break;
+      case "month":
+        conditions = await sprootDB.getMonthConditionsAsync(automationId);
+        break;
+      case "date-range":
+        conditions = await sprootDB.getDateRangeConditionsAsync(automationId);
         break;
     }
 
@@ -224,7 +248,7 @@ export async function getOneOfByTypeAsync(
   if (isNaN(automationId)) {
     invalidFields.push("Invalid or missing automation Id.");
   }
-  if (!["sensor", "output", "time", "weekday"].includes(type)) {
+  if (!["sensor", "output", "time", "weekday", "month", "date-range"].includes(type)) {
     invalidFields.push("Invalid or missing condition type.");
   }
   if (isNaN(conditionId)) {
@@ -263,7 +287,9 @@ export async function getOneOfByTypeAsync(
       | SDBSensorCondition[]
       | SDBOutputCondition[]
       | SDBTimeCondition[]
-      | SDBWeekdayCondition[] = [];
+      | SDBWeekdayCondition[]
+      | SDBMonthCondition[]
+      | SDBDateRangeCondition[] = [];
     switch (type) {
       case "sensor":
         condition = (await sprootDB.getSensorConditionsAsync(automationId)).filter(
@@ -285,6 +311,15 @@ export async function getOneOfByTypeAsync(
           (conditions) => conditions.id == conditionId,
         );
         break;
+      case "month":
+        condition = (await sprootDB.getMonthConditionsAsync(automationId)).filter(
+          (conditions) => conditions.id == conditionId,
+        );
+        break;
+      case "date-range":
+        condition = (await sprootDB.getDateRangeConditionsAsync(automationId)).filter(
+          (conditions) => conditions.id == conditionId,
+        );
     }
 
     if (condition.length == 0) {
@@ -335,13 +370,19 @@ export async function addAsync(
   let addConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
-  const conditionType = request.params["type"] as "sensor" | "output" | "time" | "weekday";
+  const conditionType = request.params["type"] as
+    | "sensor"
+    | "output"
+    | "time"
+    | "weekday"
+    | "month"
+    | "date-range";
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
     invalidDetails.push("Invalid or missing automation Id.");
   }
-  if (!["sensor", "output", "time", "weekday"].includes(conditionType)) {
+  if (!["sensor", "output", "time", "weekday", "month", "date-range"].includes(conditionType)) {
     invalidDetails.push("Invalid or missing condition type.");
   }
 
@@ -377,7 +418,14 @@ export async function addAsync(
 
     const invalidFields = [];
     let resultId: number | undefined = undefined;
-    let creationResult: SensorCondition | OutputCondition | TimeCondition | undefined = undefined;
+    let creationResult:
+      | SensorCondition
+      | OutputCondition
+      | TimeCondition
+      | WeekdayCondition
+      | MonthCondition
+      | DateRangeCondition
+      | undefined = undefined;
 
     if (!["allOf", "anyOf", "oneOf"].includes(request.body.groupType)) {
       invalidFields.push("Invalid or missing condition groupType.");
@@ -389,6 +437,9 @@ export async function addAsync(
         }
         if (request.body.comparisonValue == null) {
           invalidFields.push("Invalid or missing comparison value.");
+        }
+        if (request.body.comparisonLookback != null && isNaN(request.body.comparisonLookback)) {
+          invalidFields.push("Invalid comparison lookback value.");
         }
         if (request.body.sensorId == null || isNaN(request.body.sensorId)) {
           invalidFields.push("Invalid or missing sensor Id.");
@@ -408,6 +459,7 @@ export async function addAsync(
           request.body.groupType,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
           request.body.sensorId,
           request.body.readingType,
         );
@@ -418,6 +470,7 @@ export async function addAsync(
           request.body.readingType,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
         );
         break;
       case "output":
@@ -426,6 +479,9 @@ export async function addAsync(
         }
         if (request.body.comparisonValue == null) {
           invalidFields.push("Invalid or missing comparison value.");
+        }
+        if (request.body.comparisonLookback != null && isNaN(request.body.comparisonLookback)) {
+          invalidFields.push("Invalid comparison lookback value.");
         }
         if (request.body.outputId == null || isNaN(request.body.outputId)) {
           invalidFields.push("Invalid or missing output Id.");
@@ -440,6 +496,7 @@ export async function addAsync(
           request.body.groupType,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
           request.body.outputId,
         );
         creationResult = new OutputCondition(
@@ -448,9 +505,10 @@ export async function addAsync(
           request.body.outputId,
           request.body.operator,
           request.body.comparisonValue,
+          request.body.comparisonLookback ?? null,
         );
         break;
-      case "time":
+      case "time": {
         const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
         if (request.body.startTime != null && !regex.test(request.body.startTime)) {
           invalidFields.push("Invalid or missing start time.");
@@ -474,13 +532,16 @@ export async function addAsync(
           request.body.endTime ?? null,
         );
         break;
+      }
       case "weekday":
         if (
           request.body.weekdays == null ||
           request.body.weekdays < 0 ||
           request.body.weekdays > 127
         ) {
-          invalidFields.push("Invalid or missing weekdays.");
+          invalidFields.push(
+            "Invalid or missing weekdays. Weekdays should be a number between 0 and 127.",
+          );
         }
         if (invalidFields.length > 0) {
           break;
@@ -494,6 +555,76 @@ export async function addAsync(
           resultId,
           request.body.groupType,
           request.body.weekdays,
+        );
+        break;
+      case "month":
+        if (request.body.months == null || request.body.months < 0 || request.body.months > 4095) {
+          invalidFields.push(
+            "Invalid or missing months. Months should be a number between 0 and 4095.",
+          );
+        }
+        if (invalidFields.length > 0) {
+          break;
+        }
+        resultId = await automationDataManager.addMonthConditionAsync(
+          automationId,
+          request.body.groupType,
+          request.body.months,
+        );
+        creationResult = new MonthCondition(resultId, request.body.groupType, request.body.months);
+        break;
+      case "date-range":
+        if (
+          request.body.startMonth == null ||
+          request.body.startMonth < 1 ||
+          request.body.startMonth > 12
+        ) {
+          invalidFields.push("Invalid or missing start month.");
+        }
+        if (
+          request.body.startDate == null ||
+          request.body.startDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.startMonth) &&
+            request.body.startDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.startMonth) && request.body.startDate > 30) ||
+          (request.body.startMonth == 2 && request.body.startDate > 29)
+        ) {
+          invalidFields.push("Invalid or missing start date.");
+        }
+        if (
+          request.body.endMonth == null ||
+          request.body.endMonth < 1 ||
+          request.body.endMonth > 12
+        ) {
+          invalidFields.push("Invalid or missing end month.");
+        }
+        if (
+          request.body.endDate == null ||
+          request.body.endDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.endMonth) && request.body.endDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.endMonth) && request.body.endDate > 30) ||
+          (request.body.endMonth == 2 && request.body.endDate > 29)
+        ) {
+          invalidFields.push("Invalid or missing end date.");
+        }
+        if (invalidFields.length > 0) {
+          break;
+        }
+        resultId = await automationDataManager.addDateRangeConditionAsync(
+          automationId,
+          request.body.groupType,
+          request.body.startMonth,
+          request.body.startDate,
+          request.body.endMonth,
+          request.body.endDate,
+        );
+        creationResult = new DateRangeCondition(
+          resultId,
+          request.body.groupType,
+          request.body.startMonth,
+          request.body.startDate,
+          request.body.endMonth,
+          request.body.endDate,
         );
         break;
     }
@@ -553,7 +684,7 @@ export async function updateAsync(
   if (isNaN(automationId)) {
     invalidDetails.push("Invalid or missing automation Id.");
   }
-  if (!["sensor", "output", "time", "weekday"].includes(conditionType)) {
+  if (!["sensor", "output", "time", "weekday", "month", "date-range"].includes(conditionType)) {
     invalidDetails.push("Invalid or missing condition type.");
   }
   if (isNaN(conditionId)) {
@@ -594,7 +725,9 @@ export async function updateAsync(
       | SDBSensorCondition[]
       | SDBOutputCondition[]
       | SDBTimeCondition[]
-      | SDBWeekdayCondition[] = [];
+      | SDBWeekdayCondition[]
+      | SDBMonthCondition[]
+      | SDBDateRangeCondition[] = [];
     switch (conditionType) {
       case "sensor":
         conditions = await sprootDB.getSensorConditionsAsync(automationId);
@@ -607,6 +740,12 @@ export async function updateAsync(
         break;
       case "weekday":
         conditions = await sprootDB.getWeekdayConditionsAsync(automationId);
+        break;
+      case "month":
+        conditions = await sprootDB.getMonthConditionsAsync(automationId);
+        break;
+      case "date-range":
+        conditions = await sprootDB.getDateRangeConditionsAsync(automationId);
         break;
     }
 
@@ -632,26 +771,32 @@ export async function updateAsync(
       | OutputCondition
       | TimeCondition
       | WeekdayCondition
+      | MonthCondition
+      | DateRangeCondition
       | undefined = undefined;
     let updateResult:
       | SensorCondition
       | OutputCondition
       | TimeCondition
       | WeekdayCondition
+      | MonthCondition
+      | DateRangeCondition
       | undefined = undefined;
     sdbcondition.groupType = request.body.groupType ?? sdbcondition.groupType;
     if (!["allOf", "anyOf", "oneOf"].includes(sdbcondition.groupType)) {
       invalidDetails.push("Invalid or missing condition groupType.");
     }
     switch (conditionType) {
-      case "sensor":
+      case "sensor": {
+        const sdbSensorCondition = sdbcondition as SDBSensorCondition;
         condition = new SensorCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          request.body.sensorId ?? sdbcondition.sensorId,
-          request.body.readingType ?? sdbcondition.readingType,
-          request.body.operator ?? sdbcondition.operator,
-          request.body.comparisonValue ?? sdbcondition.comparisonValue,
+          sdbSensorCondition.id,
+          sdbSensorCondition.groupType,
+          request.body.sensorId ?? sdbSensorCondition.sensorId,
+          request.body.readingType ?? sdbSensorCondition.readingType,
+          request.body.operator ?? sdbSensorCondition.operator,
+          request.body.comparisonValue ?? sdbSensorCondition.comparisonValue,
+          request.body.comparisonLookback ?? sdbSensorCondition.comparisonLookback,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -662,6 +807,9 @@ export async function updateAsync(
         }
         if (isNaN(condition.comparisonValue)) {
           invalidDetails.push("Invalid comparison value.");
+        }
+        if (condition.comparisonLookback != null && isNaN(condition.comparisonLookback)) {
+          invalidDetails.push("Invalid comparison lookback value.");
         }
         if (isNaN(condition.sensorId)) {
           invalidDetails.push("Invalid sensor Id.");
@@ -679,13 +827,16 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
-      case "output":
+      }
+      case "output": {
+        const sdbOutputCondition = sdbcondition as SDBOutputCondition;
         condition = new OutputCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          request.body.outputId ?? sdbcondition.outputId,
-          request.body.operator ?? sdbcondition.operator,
-          request.body.comparisonValue ?? sdbcondition.comparisonValue,
+          sdbOutputCondition.id,
+          sdbOutputCondition.groupType,
+          request.body.outputId ?? sdbOutputCondition.outputId,
+          request.body.operator ?? sdbOutputCondition.operator,
+          request.body.comparisonValue ?? sdbOutputCondition.comparisonValue,
+          request.body.comparisonLookback ?? sdbOutputCondition.comparisonLookback,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
@@ -696,6 +847,9 @@ export async function updateAsync(
         }
         if (isNaN(condition.comparisonValue)) {
           invalidDetails.push("Invalid comparison value.");
+        }
+        if (condition.comparisonLookback != null && isNaN(condition.comparisonLookback)) {
+          invalidDetails.push("Invalid comparison lookback value.");
         }
         if (isNaN(condition.outputId)) {
           invalidDetails.push("Invalid output Id.");
@@ -709,12 +863,15 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
-      case "time":
+      }
+      case "time": {
+        const sdbTimeCondition = sdbcondition as SDBTimeCondition;
+
         condition = new TimeCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          sdbcondition.startTime,
-          sdbcondition.endTime,
+          sdbTimeCondition.id,
+          sdbTimeCondition.groupType,
+          sdbTimeCondition.startTime,
+          sdbTimeCondition.endTime,
         );
         if (request.body.startTime !== undefined) {
           condition.startTime = request.body.startTime;
@@ -735,18 +892,21 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
-      case "weekday":
+      }
+      case "weekday": {
+        const sdbWeekdayCondition = sdbcondition as SDBWeekdayCondition;
+
         condition = new WeekdayCondition(
-          sdbcondition.id,
-          sdbcondition.groupType,
-          request.body.weekdays ?? sdbcondition.weekdays,
+          sdbWeekdayCondition.id,
+          sdbWeekdayCondition.groupType,
+          request.body.weekdays ?? sdbWeekdayCondition.weekdays,
         );
         if (
           request.body.weekdays === null ||
           request.body.weekdays < 0 ||
           request.body.weekdays > 127
         ) {
-          invalidDetails.push("Invalid weekdays.");
+          invalidDetails.push("Invalid weekdays value.");
         }
         if (invalidDetails.length > 0) {
           break;
@@ -754,6 +914,76 @@ export async function updateAsync(
         await automationDataManager.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
+      }
+      case "month": {
+        const sdbMonthCondition = sdbcondition as SDBMonthCondition;
+
+        condition = new MonthCondition(
+          sdbMonthCondition.id,
+          sdbMonthCondition.groupType,
+          request.body.months ?? sdbMonthCondition.months,
+        );
+        if (request.body.months === null || request.body.months < 0 || request.body.months > 4095) {
+          invalidDetails.push("Invalid months value.");
+        }
+        if (invalidDetails.length > 0) {
+          break;
+        }
+        await automationDataManager.updateConditionAsync(automationId, condition);
+        updateResult = condition;
+        break;
+      }
+      case "date-range": {
+        const sdbDateRangeCondition = sdbcondition as SDBDateRangeCondition;
+
+        condition = new DateRangeCondition(
+          sdbDateRangeCondition.id,
+          sdbDateRangeCondition.groupType,
+          request.body.startMonth ?? sdbDateRangeCondition.startMonth,
+          request.body.startDate ?? sdbDateRangeCondition.startDate,
+          request.body.endMonth ?? sdbDateRangeCondition.endMonth,
+          request.body.endDate ?? sdbDateRangeCondition.endDate,
+        );
+        if (
+          request.body.startMonth === null ||
+          request.body.startMonth < 1 ||
+          request.body.startMonth > 12
+        ) {
+          invalidDetails.push("Invalid start month.");
+        }
+        if (
+          request.body.startDate === null ||
+          request.body.startDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.startMonth) &&
+            request.body.startDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.startMonth) && request.body.startDate > 30) ||
+          (request.body.startMonth == 2 && request.body.startDate > 29)
+        ) {
+          invalidDetails.push("Invalid start date.");
+        }
+        if (
+          request.body.endMonth === null ||
+          request.body.endMonth < 1 ||
+          request.body.endMonth > 12
+        ) {
+          invalidDetails.push("Invalid end month.");
+        }
+        if (
+          request.body.endDate === null ||
+          request.body.endDate < 1 ||
+          ([1, 3, 5, 7, 8, 10, 12].includes(request.body.endMonth) && request.body.endDate > 31) ||
+          ([4, 6, 9, 11].includes(request.body.endMonth) && request.body.endDate > 30) ||
+          (request.body.endMonth == 2 && request.body.endDate > 29)
+        ) {
+          invalidDetails.push("Invalid end date.");
+        }
+        if (invalidDetails.length > 0) {
+          break;
+        }
+        await automationDataManager.updateConditionAsync(automationId, condition);
+        updateResult = condition;
+        break;
+      }
     }
 
     if (!updateResult) {
@@ -805,13 +1035,19 @@ export async function deleteAsync(
 
   const automationId = parseInt(request.params["automationId"] ?? "");
   const conditionId = parseInt(request.params["conditionId"] ?? "");
-  const conditionType = request.params["type"] as "sensor" | "output" | "time" | "weekday";
+  const conditionType = request.params["type"] as
+    | "sensor"
+    | "output"
+    | "time"
+    | "weekday"
+    | "month"
+    | "date-range";
 
   const invalidDetails = [];
   if (isNaN(automationId)) {
     invalidDetails.push("Invalid or missing automation Id.");
   }
-  if (!["sensor", "output", "time", "weekday"].includes(conditionType)) {
+  if (!["sensor", "output", "time", "weekday", "month", "date-range"].includes(conditionType)) {
     invalidDetails.push("Invalid or missing condition type.");
   }
   if (isNaN(conditionId)) {
@@ -852,7 +1088,9 @@ export async function deleteAsync(
       | SDBSensorCondition[]
       | SDBOutputCondition[]
       | SDBTimeCondition[]
-      | SDBWeekdayCondition[] = [];
+      | SDBWeekdayCondition[]
+      | SDBMonthCondition[]
+      | SDBDateRangeCondition[] = [];
     switch (conditionType) {
       case "sensor":
         conditions = await sprootDB.getSensorConditionsAsync(automationId);
@@ -865,6 +1103,12 @@ export async function deleteAsync(
         break;
       case "weekday":
         conditions = await sprootDB.getWeekdayConditionsAsync(automationId);
+        break;
+      case "month":
+        conditions = await sprootDB.getMonthConditionsAsync(automationId);
+        break;
+      case "date-range":
+        conditions = await sprootDB.getDateRangeConditionsAsync(automationId);
         break;
     }
 
@@ -896,6 +1140,12 @@ export async function deleteAsync(
     }
     if (conditionType === "weekday") {
       await automationDataManager.deleteWeekdayConditionAsync(conditionId);
+    }
+    if (conditionType === "month") {
+      await automationDataManager.deleteMonthConditionAsync(conditionId);
+    }
+    if (conditionType === "date-range") {
+      await automationDataManager.deleteDateRangeConditionAsync(conditionId);
     }
 
     deleteConditionResponse = {

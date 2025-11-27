@@ -55,6 +55,8 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
       const result = automationManager.evaluate(sensorListMock, outputListMock, 60);
@@ -96,6 +98,8 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
       let result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
@@ -176,6 +180,8 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
       const result = automationManager.evaluate(sensorListMock, outputListMock, 60, now);
@@ -231,6 +237,8 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
 
@@ -289,6 +297,8 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
 
@@ -328,6 +338,8 @@ describe("OutputAutomationManager.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
       let result = automationManager.evaluate(sensorListMock, outputListMock, 0);
@@ -418,6 +430,8 @@ describe("OutputAutomationManager.ts tests", () => {
       sprootDB.getTimeConditionsAsync.onSecondCall().resolves([]);
 
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       await automationManager.loadAsync(1);
 

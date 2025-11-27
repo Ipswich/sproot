@@ -7,6 +7,8 @@ import { SensorCondition } from "./conditions/SensorCondition";
 import { OutputCondition } from "./conditions/OutputCondition";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { WeekdayCondition } from "./conditions/WeekdayCondition";
+import { MonthCondition } from "./conditions/MonthCondition";
+import { DateRangeCondition } from "./conditions/DateRangeCondition";
 
 /**
  * This class serves as an interface between changes in automation data and the things
@@ -47,6 +49,7 @@ class AutomationDataManager {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     sensorId: number,
     readingType: ReadingType,
   ) {
@@ -55,6 +58,7 @@ class AutomationDataManager {
       type,
       operator,
       comparisonValue,
+      comparisonLookback,
       sensorId,
       readingType,
     );
@@ -67,6 +71,7 @@ class AutomationDataManager {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     outputId: number,
   ) {
     const resultId = await this.#sprootDB.addOutputConditionAsync(
@@ -74,6 +79,7 @@ class AutomationDataManager {
       type,
       operator,
       comparisonValue,
+      comparisonLookback,
       outputId,
     );
     await this.#postAutomationChangeFunctionAsync();
@@ -102,9 +108,41 @@ class AutomationDataManager {
     return resultId;
   }
 
+  async addMonthConditionAsync(automationId: number, type: ConditionGroupType, months: number) {
+    const resultId = await this.#sprootDB.addMonthConditionAsync(automationId, type, months);
+    await this.#postAutomationChangeFunctionAsync();
+    return resultId;
+  }
+
+  async addDateRangeConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    startMonth: number,
+    startDate: number,
+    endMonth: number,
+    endDate: number,
+  ) {
+    const resultId = await this.#sprootDB.addDateRangeConditionAsync(
+      automationId,
+      type,
+      startMonth,
+      startDate,
+      endMonth,
+      endDate,
+    );
+    await this.#postAutomationChangeFunctionAsync();
+    return resultId;
+  }
+
   async updateConditionAsync(
     automationId: number,
-    condition: OutputCondition | SensorCondition | TimeCondition | WeekdayCondition,
+    condition:
+      | OutputCondition
+      | SensorCondition
+      | TimeCondition
+      | WeekdayCondition
+      | MonthCondition
+      | DateRangeCondition,
   ) {
     if (condition instanceof SensorCondition) {
       await this.#sprootDB.updateSensorConditionAsync(automationId, condition);
@@ -114,6 +152,10 @@ class AutomationDataManager {
       await this.#sprootDB.updateTimeConditionAsync(automationId, condition);
     } else if (condition instanceof WeekdayCondition) {
       await this.#sprootDB.updateWeekdayConditionAsync(automationId, condition);
+    } else if (condition instanceof MonthCondition) {
+      await this.#sprootDB.updateMonthConditionAsync(automationId, condition);
+    } else if (condition instanceof DateRangeCondition) {
+      await this.#sprootDB.updateDateRangeConditionAsync(automationId, condition);
     } else {
       return;
     }
@@ -137,6 +179,16 @@ class AutomationDataManager {
 
   async deleteWeekdayConditionAsync(id: number) {
     await this.#sprootDB.deleteWeekdayConditionAsync(id);
+    await this.#postAutomationChangeFunctionAsync();
+  }
+
+  async deleteMonthConditionAsync(id: number) {
+    await this.#sprootDB.deleteMonthConditionAsync(id);
+    await this.#postAutomationChangeFunctionAsync();
+  }
+
+  async deleteDateRangeConditionAsync(id: number) {
+    await this.#sprootDB.deleteDateRangeConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 

@@ -20,6 +20,8 @@ import { OutputList } from "../../../../outputs/list/OutputList";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 
 describe("ConditionHandlers.ts", () => {
   describe("getAllAsync", () => {
@@ -64,6 +66,19 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
+      ]);
+      sprootDB.getMonthConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
+      ]);
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
       ]);
 
       const mockRequest = {
@@ -113,6 +128,18 @@ describe("ConditionHandlers.ts", () => {
         },
         weekday: {
           allOf: [{ id: 1, groupType: "allOf", weekdays: 127 }],
+          anyOf: [],
+          oneOf: [],
+        },
+        month: {
+          allOf: [{ id: 1, groupType: "allOf", months: 4095 }],
+          anyOf: [],
+          oneOf: [],
+        },
+        dateRange: {
+          allOf: [
+            { id: 1, groupType: "allOf", startMonth: 1, startDate: 1, endMonth: 12, endDate: 31 },
+          ],
           anyOf: [],
           oneOf: [],
         },
@@ -258,6 +285,8 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.getTimeConditionsAsync.resolves([]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -320,6 +349,8 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.getTimeConditionsAsync.resolves([]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -367,6 +398,8 @@ describe("ConditionHandlers.ts", () => {
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -414,6 +447,8 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.getWeekdayConditionsAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -436,6 +471,120 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.deepEqual(success.content?.data, {
         allOf: [{ id: 1, groupType: "allOf", weekdays: 127 }],
+        anyOf: [],
+        oneOf: [],
+      });
+    });
+
+    it("should return a 200 and all of the conditions of a given type for a given automation (month)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
+      ]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "month",
+        },
+      } as unknown as Request;
+
+      const success = (await getByTypeAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        allOf: [{ id: 1, groupType: "allOf", months: 4095 }],
+        anyOf: [],
+        oneOf: [],
+      });
+    });
+
+    it("should return a 200 and all of the conditions of a given type for a given automation (date range)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "date-range",
+        },
+      } as unknown as Request;
+
+      const success = (await getByTypeAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        allOf: [
+          {
+            id: 1,
+            groupType: "allOf",
+            startMonth: 1,
+            startDate: 1,
+            endMonth: 12,
+            endDate: 31,
+          } as SDBDateRangeCondition,
+        ],
         anyOf: [],
         oneOf: [],
       });
@@ -776,6 +925,124 @@ describe("ConditionHandlers.ts", () => {
       });
     });
 
+    it("should return a 200 and the condition of a given type and conditionId for a given automation (month)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
+        { id: 2, groupType: "allOf", months: 2047 } as SDBMonthCondition,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "month",
+          conditionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await getOneOfByTypeAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "allOf",
+        months: 4095,
+      });
+    });
+
+    it("should return a 200 and the condition of a given type and conditionId for a given automation (date range)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getSensorConditionsAsync.resolves([]);
+      sprootDB.getOutputConditionsAsync.resolves([]);
+      sprootDB.getTimeConditionsAsync.resolves([]);
+      sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
+        {
+          id: 2,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 6,
+          endDate: 30,
+        } as SDBDateRangeCondition,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "date-range",
+          conditionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await getOneOfByTypeAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "allOf",
+        startMonth: 1,
+        startDate: 1,
+        endMonth: 12,
+        endDate: 31,
+      });
+    });
+
     it("should return a 400 and details for the invalid request", async () => {
       const mockResponse = {
         locals: {
@@ -989,6 +1256,7 @@ describe("ConditionHandlers.ts", () => {
         readingType: "temperature",
         operator: "equal",
         comparisonValue: 50,
+        comparisonLookback: null,
       });
     });
 
@@ -1046,6 +1314,7 @@ describe("ConditionHandlers.ts", () => {
         outputId: 1,
         operator: "equal",
         comparisonValue: 50,
+        comparisonLookback: null,
       });
     });
 
@@ -1148,6 +1417,112 @@ describe("ConditionHandlers.ts", () => {
         id: 1,
         groupType: "allOf",
         weekdays: 127,
+      });
+    });
+
+    it("should return a 201 and the month condition added to the automation", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.addMonthConditionAsync.resolves(1);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "month",
+        },
+        body: {
+          groupType: "allOf",
+          months: 4095,
+        },
+      } as unknown as Request;
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "allOf",
+        months: 4095,
+      });
+    });
+
+    it("should return a 201 and the date range condition added to the automation", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.addDateRangeConditionAsync.resolves(1);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "date-range",
+        },
+        body: {
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 12,
+          endDate: 31,
+        },
+      } as unknown as Request;
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "allOf",
+        startMonth: 1,
+        startDate: 1,
+        endMonth: 12,
+        endDate: 31,
       });
     });
 
@@ -1350,6 +1725,153 @@ describe("ConditionHandlers.ts", () => {
       ]);
     });
 
+    it("should return a 400 and details for the invalid request (weekday)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "weekday",
+        },
+        body: {
+          groupType: null,
+          weekdays: -1,
+        },
+      } as unknown as Request;
+
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.deepEqual(error.error.details, [
+        "Invalid or missing condition groupType.",
+        "Invalid or missing weekdays. Weekdays should be a number between 0 and 127.",
+      ]);
+    });
+
+    it("should return a 400 and details for the invalid request (month)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "month",
+        },
+        body: {
+          groupType: null,
+          months: -1,
+        },
+      } as unknown as Request;
+
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.deepEqual(error.error.details, [
+        "Invalid or missing condition groupType.",
+        "Invalid or missing months. Months should be a number between 0 and 4095.",
+      ]);
+    });
+
+    it("should return a 400 and details for the invalid request (date range)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "date-range",
+        },
+        body: {
+          groupType: null,
+          months: 16,
+        },
+      } as unknown as Request;
+
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.deepEqual(error.error.details, [
+        "Invalid or missing condition groupType.",
+        "Invalid or missing start month.",
+        "Invalid or missing start date.",
+        "Invalid or missing end month.",
+        "Invalid or missing end date.",
+      ]);
+    });
+
     it("should return a 404 if the automation does not exist", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       const outputList = sinon.createStubInstance(OutputList);
@@ -1514,6 +2036,7 @@ describe("ConditionHandlers.ts", () => {
         readingType: "humidity",
         operator: "less",
         comparisonValue: 51,
+        comparisonLookback: undefined,
       });
     });
 
@@ -1581,6 +2104,7 @@ describe("ConditionHandlers.ts", () => {
         outputId: 2,
         operator: "less",
         comparisonValue: 51,
+        comparisonLookback: undefined,
       });
     });
 
@@ -1691,6 +2215,127 @@ describe("ConditionHandlers.ts", () => {
         id: 1,
         groupType: "anyOf",
         weekdays: 127,
+      });
+    });
+
+    it("should return a 200 and the month condition updated for the automation", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getMonthConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
+      ]);
+      sprootDB.updateTimeConditionAsync.resolves();
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "month",
+          conditionId: "1",
+        },
+        body: {
+          groupType: "anyOf",
+          month: 4095,
+        },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "anyOf",
+        months: 4095,
+      });
+    });
+
+    it("should return a 200 and the date range condition updated for the automation", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 31,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
+      ]);
+      sprootDB.updateTimeConditionAsync.resolves();
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "date-range",
+          conditionId: "1",
+        },
+        body: {
+          groupType: "anyOf",
+          startMonth: 1,
+          startDate: 31,
+          endMonth: 12,
+          endDate: 31,
+        },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        groupType: "anyOf",
+        startMonth: 1,
+        startDate: 31,
+        endMonth: 12,
+        endDate: 31,
       });
     });
 
@@ -1908,6 +2553,162 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.deepEqual(error.error.details, ["Invalid start time.", "Invalid end time."]);
+    });
+
+    it("should return a 400 and details for the invalid request (weekday)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getWeekdayConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", weekdays: 13 } as SDBWeekdayCondition,
+      ]);
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "weekday",
+          conditionId: "1",
+        },
+        body: {
+          groupType: null,
+          weekdays: -1,
+        },
+      } as unknown as Request;
+
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(error.error.details, ["Invalid weekdays value."]);
+    });
+
+    it("should return a 400 and details for the invalid request (month)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getMonthConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", months: 13 } as SDBMonthCondition,
+      ]);
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "month",
+          conditionId: "1",
+        },
+        body: {
+          groupType: null,
+          months: -1,
+        },
+      } as unknown as Request;
+
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(error.error.details, ["Invalid months value."]);
+    });
+
+    it("should return a 400 and details for the invalid request (date range)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 31,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
+      ]);
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "date-range",
+          conditionId: "1",
+        },
+        body: {
+          groupType: null,
+          startMonth: -1,
+          startDate: -1,
+          endMonth: -1,
+          endDate: -1,
+        },
+      } as unknown as Request;
+
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(error.error.details, [
+        "Invalid start month.",
+        "Invalid start date.",
+        "Invalid end month.",
+        "Invalid end date.",
+      ]);
     });
 
     it("should return a 404 if the automation does not exist", async () => {
@@ -2232,6 +3033,103 @@ describe("ConditionHandlers.ts", () => {
         params: {
           automationId: "1",
           type: "weekday",
+          conditionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, { message: "Condition deleted successfully." });
+    });
+
+    it("should return a 200 with a message (month)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getMonthConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
+      ]);
+      sprootDB.deleteMonthConditionAsync.resolves();
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "month",
+          conditionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.deepEqual(success.content?.data, { message: "Condition deleted successfully." });
+    });
+
+    it("should return a 200 with a message (dateRange)", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
+      ]);
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 31,
+          endMonth: 12,
+          endDate: 31,
+        } as SDBDateRangeCondition,
+      ]);
+      sprootDB.deleteMonthConditionAsync.resolves();
+      const outputList = sinon.createStubInstance(OutputList);
+      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationDataManager":
+                return automationDataManager;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "date-range",
           conditionId: "1",
         },
       } as unknown as Request;

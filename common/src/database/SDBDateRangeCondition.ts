@@ -1,10 +1,13 @@
 import { ConditionGroupType } from "@sproot/sproot-common/src/automation/ConditionTypes";
 
-type SDBWeekdayCondition = {
+type SDBDateRangeCondition = {
   id: number;
   automationId: number;
   groupType: ConditionGroupType;
-  weekdays: number;
+  startMonth: number;
+  startDate: number;
+  endMonth: number;
+  endDate: number;
 };
 
-export type { SDBWeekdayCondition };
+export type { SDBDateRangeCondition };

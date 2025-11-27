@@ -41,13 +41,14 @@ export default function SensorCondition({
   sensors,
 }: SensorConditionProps) {
   const condtionsQuery = useQuery({
-    queryKey: ["conditions"],
+    queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
   const addSensorMutation = useMutation({
     mutationFn: async (sensorCondition: {
       operator: ConditionOperator;
       comparisonValue: number;
+      comparisonLookback: number | null;
       sensorId: string;
       readingType: ReadingType;
     }) => {
@@ -58,12 +59,16 @@ export default function SensorCondition({
         sensorCondition.comparisonValue =
           convertFahrenheitToCelsius(sensorCondition.comparisonValue) ?? 0;
       }
+      if (sensorCondition.comparisonLookback == 0) {
+        sensorCondition.comparisonLookback = null;
+      }
 
       await addSensorConditionAsync(
         automationId,
         groupType,
         sensorCondition.operator,
         sensorCondition.comparisonValue,
+        sensorCondition.comparisonLookback,
         sensorCondition.sensorId,
         sensorCondition.readingType,
       );
@@ -79,6 +84,7 @@ export default function SensorCondition({
       readingType: Object.keys(sensors[0]!.units)[0],
       operator: "less" as ConditionOperator,
       comparisonValue: 0,
+      comparisonLookback: 0,
     },
 
     validate: {
@@ -105,6 +111,10 @@ export default function SensorCondition({
         value != null && value != undefined
           ? null
           : "Comparison value must be provided",
+      comparisonLookback: (value: number) =>
+        value != null && value >= 0 && value <= 1440
+          ? null
+          : "Comparison lookback must be between 0 and 1440 minutes",
     },
   });
 
@@ -215,13 +225,27 @@ export default function SensorCondition({
           <Group justify="center">
             <NumberInput
               required
-              w={"50%"}
+              w={"40%"}
               step={1}
               decimalScale={3}
               stepHoldDelay={500}
               stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
               suffix={getSuffix()}
               {...sensorConditionForm.getInputProps("comparisonValue")}
+            />
+            for
+            <NumberInput
+              required
+              w={"40%"}
+              step={1}
+              min={0}
+              max={1440}
+              suffix={
+                sensorConditionForm.values.comparisonLookback === 1
+                  ? " minute"
+                  : " minutes"
+              }
+              {...sensorConditionForm.getInputProps("comparisonLookback")}
             />
           </Group>
           <Group justify="center">

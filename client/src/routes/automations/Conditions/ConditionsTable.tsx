@@ -5,12 +5,17 @@ import {
   deleteSensorConditionAsync,
   deleteTimeConditionAsync,
   deleteWeekdayConditionAsync,
+  deleteMonthConditionAsync,
+  deleteDateRangeConditionAsync,
   getConditionsAsync,
 } from "../../../requests/requests_v2";
 import { Button, Code, Collapse, Group, Space, Title } from "@mantine/core";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { ConditionOperator } from "@sproot/automation/ConditionTypes";
 import {
   ReadingType,
@@ -20,11 +25,8 @@ import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
-import {
-  convertCelsiusToFahrenheit,
-  formatDecimalReadingForDisplay,
-} from "@sproot/sproot-common/src/utility/DisplayFormats";
-import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { convertCelsiusToFahrenheit } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { formatMilitaryTime } from "@sproot/sproot-common/src/utility/TimeMethods";
 
 export interface ConditionsTableProps {
   automationId: number;
@@ -38,8 +40,11 @@ export default function ConditionsTable({
   const [addNewConditionOpened, { toggle: toggleAddNewCondition }] =
     useDisclosure(false);
   const conditionsQueryFn = useQuery({
-    queryKey: ["conditions"],
-    queryFn: () => getConditionsAsync(automationId),
+    queryKey: ["conditions", automationId],
+    queryFn: async () => {
+      const data = await getConditionsAsync(automationId);
+      return data;
+    },
   });
 
   const deleteSensorConditionMutation = useMutation({
@@ -78,13 +83,33 @@ export default function ConditionsTable({
     },
   });
 
+  const deleteMonthConditionMutation = useMutation({
+    mutationFn: async (conditionId: number) => {
+      await deleteMonthConditionAsync(automationId, conditionId);
+    },
+    onSettled: () => {
+      conditionsQueryFn.refetch();
+    },
+  });
+
+  const deleteDateRangeConditionMutation = useMutation({
+    mutationFn: async (conditionId: number) => {
+      await deleteDateRangeConditionAsync(automationId, conditionId);
+    },
+    onSettled: () => {
+      conditionsQueryFn.refetch();
+    },
+  });
+
   //local helper function
   function mapToDeleteConditionMutationAsync(
     condition:
       | SDBSensorCondition
       | SDBOutputCondition
       | SDBTimeCondition
-      | SDBWeekdayCondition,
+      | SDBWeekdayCondition
+      | SDBMonthCondition
+      | SDBDateRangeCondition,
   ): (id: number) => Promise<void> {
     if ("sensorId" in condition && "readingType" in condition) {
       return async (conditionId: number) => {
@@ -101,6 +126,19 @@ export default function ConditionsTable({
     } else if ("weekdays" in condition) {
       return async (conditionId: number) => {
         await deleteWeekdayConditionMutation.mutateAsync(conditionId);
+      };
+    } else if ("months" in condition) {
+      return async (conditionId: number) => {
+        await deleteMonthConditionMutation.mutateAsync(conditionId);
+      };
+    } else if (
+      "startMonth" in condition &&
+      "startDate" in condition &&
+      "endMonth" in condition &&
+      "endDate" in condition
+    ) {
+      return async (conditionId: number) => {
+        await deleteDateRangeConditionMutation.mutateAsync(conditionId);
       };
     }
     return async () => {};
@@ -129,13 +167,15 @@ export default function ConditionsTable({
             <Fragment>
               <Title order={6}>All Of</Title>
               <DeletablesTable
-                deletables={allOfConditions.map((condition) => {
-                  return {
-                    displayLabel: mapToType(condition),
-                    id: condition.id,
-                    deleteFn: mapToDeleteConditionMutationAsync(condition),
-                  };
-                })}
+                deletables={allOfConditions
+                  .sort((a, b) => sortTypes(a, b))
+                  .map((condition) => {
+                    return {
+                      displayLabel: mapToType(condition),
+                      id: condition.id,
+                      deleteFn: mapToDeleteConditionMutationAsync(condition),
+                    };
+                  })}
                 readOnly={readOnly ?? false}
               />
             </Fragment>
@@ -144,13 +184,15 @@ export default function ConditionsTable({
             <Fragment>
               <Title order={6}>Any Of</Title>
               <DeletablesTable
-                deletables={anyOfConditions.map((condition) => {
-                  return {
-                    displayLabel: mapToType(condition),
-                    id: condition.id,
-                    deleteFn: mapToDeleteConditionMutationAsync(condition),
-                  };
-                })}
+                deletables={anyOfConditions
+                  .sort((a, b) => sortTypes(a, b))
+                  .map((condition) => {
+                    return {
+                      displayLabel: mapToType(condition),
+                      id: condition.id,
+                      deleteFn: mapToDeleteConditionMutationAsync(condition),
+                    };
+                  })}
                 readOnly={readOnly ?? false}
               />
             </Fragment>
@@ -159,13 +201,15 @@ export default function ConditionsTable({
             <Fragment>
               <Title order={6}>One Of</Title>
               <DeletablesTable
-                deletables={oneOfConditions.map((condition) => {
-                  return {
-                    displayLabel: mapToType(condition),
-                    id: condition.id,
-                    deleteFn: mapToDeleteConditionMutationAsync(condition),
-                  };
-                })}
+                deletables={oneOfConditions
+                  .sort((a, b) => sortTypes(a, b))
+                  .map((condition) => {
+                    return {
+                      displayLabel: mapToType(condition),
+                      id: condition.id,
+                      deleteFn: mapToDeleteConditionMutationAsync(condition),
+                    };
+                  })}
                 readOnly={readOnly ?? false}
               />
             </Fragment>
@@ -203,12 +247,81 @@ export default function ConditionsTable({
   );
 }
 
+function sortTypes(
+  a:
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
+  b:
+    | SDBSensorCondition
+    | SDBOutputCondition
+    | SDBTimeCondition
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
+) {
+  const rankOf = (
+    c:
+      | SDBSensorCondition
+      | SDBOutputCondition
+      | SDBTimeCondition
+      | SDBWeekdayCondition
+      | SDBMonthCondition
+      | SDBDateRangeCondition,
+  ) => {
+    if ("sensorId" in c && "readingType" in c) return 0; // Sensor
+    if ("outputId" in c) return 1; // Output
+    if ("months" in c) return 2; // Month
+    if ("weekdays" in c) return 3; // Weekday
+    if (
+      "startMonth" in c &&
+      "startDate" in c &&
+      "endMonth" in c &&
+      "endDate" in c
+    )
+      return 4; // DateRange
+    if ("startTime" in c && "endTime" in c) return 5; // Time
+    return 99;
+  };
+
+  const ra = rankOf(a);
+  const rb = rankOf(b);
+  if (ra !== rb) return ra - rb;
+
+  const ida =
+    (
+      a as
+        | SDBSensorCondition
+        | SDBOutputCondition
+        | SDBTimeCondition
+        | SDBWeekdayCondition
+        | SDBMonthCondition
+        | SDBDateRangeCondition
+    )?.id ?? 0;
+  const idb =
+    (
+      b as
+        | SDBSensorCondition
+        | SDBOutputCondition
+        | SDBTimeCondition
+        | SDBWeekdayCondition
+        | SDBMonthCondition
+        | SDBDateRangeCondition
+    )?.id ?? 0;
+  return ida - idb;
+}
+
 function mapToType(
   condition:
     | SDBSensorCondition
     | SDBOutputCondition
     | SDBTimeCondition
-    | SDBWeekdayCondition,
+    | SDBWeekdayCondition
+    | SDBMonthCondition
+    | SDBDateRangeCondition,
 ): ReactNode {
   if ("sensorId" in condition && "readingType" in condition) {
     return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
@@ -218,6 +331,15 @@ function mapToType(
     return <TimeConditionRow {...(condition as SDBTimeCondition)} />;
   } else if ("weekdays" in condition) {
     return <WeekdayConditionRow {...(condition as SDBWeekdayCondition)} />;
+  } else if ("months" in condition) {
+    return <MonthConditionRow {...(condition as SDBMonthCondition)} />;
+  } else if (
+    "startMonth" in condition &&
+    "startDate" in condition &&
+    "endMonth" in condition &&
+    "endDate" in condition
+  ) {
+    return <DateRangeConditionRow {...(condition as SDBDateRangeCondition)} />;
   }
   return <></>;
 }
@@ -225,17 +347,41 @@ function mapToType(
 function mapOperatorToText(operator: ConditionOperator) {
   switch (operator) {
     case "less":
-      return <Code fw={700}>&lt;</Code>;
+      return (
+        <Code mx={"-10px"} fw={700}>
+          &lt;
+        </Code>
+      );
     case "lessOrEqual":
-      return <Code fw={700}>&lt;=</Code>;
+      return (
+        <Code mx={"-10px"} fw={700}>
+          &lt;=
+        </Code>
+      );
     case "greater":
-      return <Code fw={700}>&gt;</Code>;
+      return (
+        <Code mx={"-10px"} fw={700}>
+          &gt;
+        </Code>
+      );
     case "greaterOrEqual":
-      return <Code fw={700}>&gt;=</Code>;
+      return (
+        <Code mx={"-10px"} fw={700}>
+          &gt;=
+        </Code>
+      );
     case "equal":
-      return <Code fw={700}>=</Code>;
+      return (
+        <Code mx={"-10px"} fw={700}>
+          =
+        </Code>
+      );
     case "notEqual":
-      return <Code fw={700}>!=</Code>;
+      return (
+        <Code mx={"-10px"} fw={700}>
+          !=
+        </Code>
+      );
   }
 }
 
@@ -246,16 +392,27 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
     sensorCondition.readingType == ReadingType.temperature &&
     localStorage.getItem("temperature-useAlternateUnits") == "true"
   ) {
-    comparisonValue = convertCelsiusToFahrenheit(comparisonValue) ?? 0;
+    comparisonValue = parseFloat(
+      String(convertCelsiusToFahrenheit(comparisonValue) ?? 0),
+    );
     readingType = "°F";
   }
 
   return (
     <Group>
       {sensorCondition.sensorName} is{" "}
-      {mapOperatorToText(sensorCondition.operator)}{" "}
-      {formatDecimalReadingForDisplay(String(comparisonValue))}
+      {mapOperatorToText(sensorCondition.operator)} {String(comparisonValue)}
       {readingType}
+      {sensorCondition.comparisonLookback != null ? (
+        <Fragment>
+          <Code mx={"-10px"} fw={700}>
+            for
+          </Code>
+          {` ${sensorCondition.comparisonLookback} ${sensorCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
+        </Fragment>
+      ) : (
+        ""
+      )}
     </Group>
   );
 }
@@ -265,21 +422,32 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
     <Group>
       {outputCondition.outputName} is{" "}
       {mapOperatorToText(outputCondition.operator)}{" "}
-      {formatDecimalReadingForDisplay(String(outputCondition.comparisonValue))}%
+      {String(outputCondition.comparisonValue)}%
+      {outputCondition.comparisonLookback != null ? (
+        <Fragment>
+          <Code mx={"-10px"} fw={700}>
+            for
+          </Code>
+          {` ${outputCondition.comparisonLookback} ${outputCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
+        </Fragment>
+      ) : (
+        ""
+      )}
     </Group>
   );
 }
 
 function TimeConditionRow(timeCondition: SDBTimeCondition): ReactNode {
+  const formattedStart = formatMilitaryTime(timeCondition.startTime);
+  const formattedEnd = formatMilitaryTime(timeCondition.endTime);
+
   return (
     <Group>
-      {!timeCondition.startTime && !timeCondition.endTime && "Always"}
-      {timeCondition.startTime &&
-        !timeCondition.endTime &&
-        `Time is ${timeCondition.startTime}`}
-      {timeCondition.startTime &&
-        timeCondition.endTime &&
-        `Time is between ${timeCondition.startTime} and ${timeCondition.endTime}`}
+      {!formattedStart && !formattedEnd && "Always"}
+      {formattedStart && !formattedEnd && `Time is ${formattedStart}`}
+      {formattedStart &&
+        formattedEnd &&
+        `Time is between ${formattedStart} and ${formattedEnd}`}
     </Group>
   );
 }
@@ -311,4 +479,91 @@ function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
     response = days.slice(0, -1).join(", ") + ", or " + days.slice(-1);
   }
   return <Group>{`Day is ${response}`}</Group>;
+}
+
+function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
+  const bits = monthCondition.months.toString(2).padStart(12, "0");
+  const months = [];
+  for (let i = bits.length - 1; i >= 0; i--) {
+    if (bits[i] === "1") {
+      months.push(
+        [
+          "December",
+          "November",
+          "October",
+          "September",
+          "August",
+          "July",
+          "June",
+          "May",
+          "April",
+          "March",
+          "February",
+          "January",
+        ][i],
+      );
+    }
+  }
+  let response: string | undefined = "";
+  if (months.length == 1) {
+    response = months[0];
+  } else if (months.length == 2) {
+    response = `${months[0]} or ${months[1]}`;
+  } else {
+    response = months.slice(0, -1).join(", ") + ", or " + months.slice(-1);
+  }
+  return <Group>{`Month is ${response}`}</Group>;
+}
+
+function DateRangeConditionRow(dateRangeCondition: {
+  startMonth: number;
+  startDate: number;
+  endMonth: number;
+  endDate: number;
+}): ReactNode {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  function getOrdinalSuffix(day: number) {
+    if (day % 10 == 1 && day != 11) {
+      return "st";
+    } else if (day % 10 == 2 && day != 12) {
+      return "nd";
+    } else if (day % 10 == 3 && day != 13) {
+      return "rd";
+    } else {
+      return "th";
+    }
+  }
+  const startMonth = months[dateRangeCondition.startMonth - 1];
+  const endMonth = months[dateRangeCondition.endMonth - 1];
+  return (
+    <Group>
+      {startMonth == endMonth &&
+      dateRangeCondition.startDate == dateRangeCondition.endDate ? (
+        <Fragment>
+          Date is {startMonth} {dateRangeCondition.startDate}
+          {getOrdinalSuffix(dateRangeCondition.startDate)}
+        </Fragment>
+      ) : (
+        <Fragment>
+          Date is between {startMonth} {dateRangeCondition.startDate}
+          {getOrdinalSuffix(dateRangeCondition.startDate)} and {endMonth}{" "}
+          {dateRangeCondition.endDate}
+          {getOrdinalSuffix(dateRangeCondition.endDate)}
+        </Fragment>
+      )}
+    </Group>
+  );
 }

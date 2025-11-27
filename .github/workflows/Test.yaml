@@ -41,7 +41,7 @@ jobs:
     needs: prettier
     name: Run Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false

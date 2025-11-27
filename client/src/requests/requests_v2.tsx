@@ -25,6 +25,8 @@ import {
   ConditionGroupType,
   ConditionOperator,
 } from "@sproot/automation/ConditionTypes";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -275,6 +277,16 @@ export async function getConditionsAsync(automationId: number): Promise<{
     anyOf: SDBWeekdayCondition[];
     oneOf: SDBWeekdayCondition[];
   };
+  month: {
+    allOf: SDBMonthCondition[];
+    anyOf: SDBMonthCondition[];
+    oneOf: SDBMonthCondition[];
+  };
+  dateRange: {
+    allOf: SDBDateRangeCondition[];
+    anyOf: SDBDateRangeCondition[];
+    oneOf: SDBDateRangeCondition[];
+  };
 }> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions`,
@@ -297,6 +309,7 @@ export async function addSensorConditionAsync(
   groupType: ConditionGroupType,
   operator: ConditionOperator,
   comparisonValue: number,
+  comparisonLookback: number | null,
   sensorId: string,
   readingType: ReadingType,
 ): Promise<void> {
@@ -309,6 +322,7 @@ export async function addSensorConditionAsync(
         groupType,
         operator,
         comparisonValue,
+        comparisonLookback,
         sensorId,
         readingType,
       }),
@@ -343,6 +357,7 @@ export async function addOutputConditionAsync(
   groupType: ConditionGroupType,
   operator: ConditionOperator,
   comparisonValue: number,
+  comparisonLookback: number | null,
   outputId: string,
 ): Promise<void> {
   const response = await fetch(
@@ -350,7 +365,13 @@ export async function addOutputConditionAsync(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ groupType, operator, comparisonValue, outputId }),
+      body: JSON.stringify({
+        groupType,
+        operator,
+        comparisonValue,
+        comparisonLookback,
+        outputId,
+      }),
       mode: "cors",
       // credentials: "include",
     },
@@ -449,6 +470,89 @@ export async function deleteWeekdayConditionAsync(
   );
   if (!response.ok) {
     console.error(`Error deleting weekday condition: ${response}`);
+  }
+}
+
+export async function addMonthConditionAsync(
+  automationId: number,
+  groupType: ConditionGroupType,
+  months: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/month`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ groupType, months }),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function deleteMonthConditionAsync(
+  automationId: number,
+  id: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/month/${id}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error deleting month condition: ${response}`);
+  }
+}
+
+export async function addDateRangeConditionAsync(
+  automationId: number,
+  groupType: ConditionGroupType,
+  startMonth: number,
+  startDate: number,
+  endMonth: number,
+  endDate: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/date-range`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        groupType,
+        startMonth,
+        startDate,
+        endMonth,
+        endDate,
+      }),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function deleteDateRangeConditionAsync(
+  automationId: number,
+  id: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/automations/${automationId}/conditions/date-range/${id}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error deleting month condition: ${response}`);
   }
 }
 
