@@ -84,6 +84,21 @@ class ESP32Manager {
     const stats = await fsPromises.stat(ESP32_FIRMWARE_PATH);
     return { stream: fs.createReadStream(ESP32_FIRMWARE_PATH), size: stats.size };
   }
+
+  static async getESP32BootloaderBinaryAsync(): Promise<{ stream: fs.ReadStream; size: number }> {
+    const stats = await fsPromises.stat(ESP32_BOOTLOADER_PATH);
+    return { stream: fs.createReadStream(ESP32_BOOTLOADER_PATH), size: stats.size };
+  }
+
+  static async getESP32PartitionsBinaryAsync(): Promise<{ stream: fs.ReadStream; size: number }> {
+    const stats = await fsPromises.stat(ESP32_PARTITIONS_PATH);
+    return { stream: fs.createReadStream(ESP32_PARTITIONS_PATH), size: stats.size };
+  }
+
+  static async getESP32ApplicationBinaryAsync(): Promise<{ stream: fs.ReadStream; size: number }> {
+    const stats = await fsPromises.stat(ESP32_BOOTAPP0_PATH);
+    return { stream: fs.createReadStream(ESP32_BOOTAPP0_PATH), size: stats.size };
+  }
 }
 
 export class FirmwareManager {

@@ -79,6 +79,144 @@ export async function getESP32FirmwareBinaryAsync(
   }
 }
 
+export async function getESP32BootloaderBinaryAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  try {
+    const data = await FirmwareManager.ESP32.getESP32BootloaderBinaryAsync();
+    response.status(200);
+    response.setHeader("Content-Type", "application/octet-stream");
+    response.setHeader("Content-Disposition", "attachment; filename=bootloader.bin");
+    response.setHeader("Content-Length", data.size.toString());
+
+    // Handle potential errors
+    data.stream.on("error", (e) => {
+      if (!response.headersSent) {
+        response.status(500).json({
+          statusCode: 500,
+          error: {
+            name: "Internal Server Error",
+            url: request.originalUrl,
+            details: [`Failed to retrieve ESP32 bootloader: ${(e as Error).message}`],
+          },
+          ...response.locals["defaultProperties"],
+        });
+      } else {
+        response.destroy();
+      }
+    });
+
+    response.once("close", () => {
+      data.stream.destroy();
+    });
+
+    data.stream.pipe(response);
+  } catch (e) {
+    response.status(500).json({
+      statusCode: 500,
+      error: {
+        name: "Internal Server Error",
+        url: request.originalUrl,
+        details: [`Failed to retrieve ESP32 bootloader: ${(e as Error).message}`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+  }
+}
+
+export async function getESP32PartitionsBinaryAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  try {
+    const data = await FirmwareManager.ESP32.getESP32PartitionsBinaryAsync();
+    response.status(200);
+    response.setHeader("Content-Type", "application/octet-stream");
+    response.setHeader("Content-Disposition", "attachment; filename=partitions.bin");
+    response.setHeader("Content-Length", data.size.toString());
+
+    // Handle potential errors
+    data.stream.on("error", (e) => {
+      if (!response.headersSent) {
+        response.status(500).json({
+          statusCode: 500,
+          error: {
+            name: "Internal Server Error",
+            url: request.originalUrl,
+            details: [`Failed to retrieve ESP32 partitions: ${(e as Error).message}`],
+          },
+          ...response.locals["defaultProperties"],
+        });
+      } else {
+        response.destroy();
+      }
+    });
+
+    response.once("close", () => {
+      data.stream.destroy();
+    });
+
+    data.stream.pipe(response);
+  } catch (e) {
+    response.status(500).json({
+      statusCode: 500,
+      error: {
+        name: "Internal Server Error",
+        url: request.originalUrl,
+        details: [`Failed to retrieve ESP32 partitions: ${(e as Error).message}`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+  }
+}
+
+export async function getESP32ApplicationBinaryAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  try {
+    const data = await FirmwareManager.ESP32.getESP32ApplicationBinaryAsync();
+    response.status(200);
+    response.setHeader("Content-Type", "application/octet-stream");
+    response.setHeader("Content-Disposition", "attachment; filename=boot_app0.bin");
+    response.setHeader("Content-Length", data.size.toString());
+
+    // Handle potential errors
+    data.stream.on("error", (e) => {
+      if (!response.headersSent) {
+        response.status(500).json({
+          statusCode: 500,
+          error: {
+            name: "Internal Server Error",
+            url: request.originalUrl,
+            details: [`Failed to retrieve ESP32 application binary: ${(e as Error).message}`],
+          },
+          ...response.locals["defaultProperties"],
+        });
+      } else {
+        response.destroy();
+      }
+    });
+
+    response.once("close", () => {
+      data.stream.destroy();
+    });
+
+    data.stream.pipe(response);
+  } catch (e) {
+    response.status(500).json({
+      statusCode: 500,
+      error: {
+        name: "Internal Server Error",
+        url: request.originalUrl,
+        details: [`Failed to retrieve ESP32 application binary: ${(e as Error).message}`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+  }
+}
+
 export async function updateESP32FirmwareOTAAsync(
   request: Request,
   response: Response,
@@ -159,7 +297,7 @@ export async function updateESP32FirmwareOTAAsync(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${device.secureToken}`,
+        Authorization: `Bearer ${device.secureToken}`,
       },
       body: JSON.stringify({
         host: request.get("host") || "",
@@ -174,7 +312,7 @@ export async function updateESP32FirmwareOTAAsync(
         ...response.locals["defaultProperties"],
       };
     } else {
-      const errorJson = await result.json() as { status: string };
+      const errorJson = (await result.json()) as { status: string };
       return {
         statusCode: result.status,
         error: {

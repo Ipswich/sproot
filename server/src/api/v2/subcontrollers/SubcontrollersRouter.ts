@@ -9,8 +9,11 @@ import {
 } from "./handlers/SubcontrollerHandlers";
 
 import {
+  getESP32ApplicationBinaryAsync,
+  getESP32BootloaderBinaryAsync,
   getESP32FirmwareBinaryAsync,
   getESP32ManifestAsync,
+  getESP32PartitionsBinaryAsync,
   updateESP32FirmwareOTAAsync,
 } from "./handlers/ESP32Handlers";
 
@@ -58,6 +61,18 @@ router.get("/firmware/esp32/manifest", async (req: Request, res: Response) => {
 
 router.get("/firmware/esp32/binary", async (req: Request, res: Response) => {
   await getESP32FirmwareBinaryAsync(req, res);
+});
+
+router.get("/firmware/esp32/bootloader", async (req: Request, res: Response) => {
+  await getESP32BootloaderBinaryAsync(req, res);
+});
+
+router.get("/firmware/esp32/partitions", async (req: Request, res: Response) => {
+  await getESP32PartitionsBinaryAsync(req, res);
+});
+
+router.get("/firmware/esp32/application", async (req: Request, res: Response) => {
+  await getESP32ApplicationBinaryAsync(req, res);
 });
 
 router.post("/firmware/esp32/ota-update/:deviceId", async (req: Request, res: Response) => {
