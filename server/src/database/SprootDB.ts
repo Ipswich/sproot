@@ -11,6 +11,8 @@ import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
 import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
+import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
 import {
@@ -22,10 +24,12 @@ import { IOutputCondition } from "@sproot/automation/IOutputCondition";
 import { ISensorCondition } from "@sproot/automation/ISensorCondition";
 import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
-import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { IMonthCondition } from "@sproot/automation/IMonthCondition";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 import { encrypt, decrypt } from "@sproot/sproot-common/dist/utility/Crypto";
+import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -318,6 +322,7 @@ export class SprootDB implements ISprootDB {
         "sc.groupType",
         "sc.operator",
         "sc.comparisonValue",
+        "sc.comparisonLookback",
         "sc.sensor_id as sensorId",
         "sc.readingType",
         "s.name as sensorName",
@@ -330,6 +335,7 @@ export class SprootDB implements ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     sensorId: number,
     readingType: string,
   ): Promise<number> {
@@ -340,6 +346,7 @@ export class SprootDB implements ISprootDB {
           groupType: type,
           operator,
           comparisonValue,
+          comparisonLookback,
           sensor_id: sensorId,
           readingType,
         })
@@ -357,6 +364,7 @@ export class SprootDB implements ISprootDB {
         groupType: condition.groupType,
         operator: condition.operator,
         comparisonValue: condition.comparisonValue,
+        comparisonLookback: condition.comparisonLookback,
         sensor_id: condition.sensorId,
         readingType: condition.readingType,
       });
@@ -372,6 +380,7 @@ export class SprootDB implements ISprootDB {
         "oc.groupType",
         "oc.operator",
         "oc.comparisonValue",
+        "oc.comparisonLookback",
         "oc.output_id as outputId",
         "o.name as outputName",
       ])
@@ -383,6 +392,7 @@ export class SprootDB implements ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     outputId: number,
   ): Promise<number> {
     return (
@@ -392,6 +402,7 @@ export class SprootDB implements ISprootDB {
           groupType: type,
           operator,
           comparisonValue,
+          comparisonLookback,
           output_id: outputId,
         })
       )[0] ?? -1
@@ -408,6 +419,7 @@ export class SprootDB implements ISprootDB {
         groupType: condition.groupType,
         operator: condition.operator,
         comparisonValue: condition.comparisonValue,
+        comparisonLookback: condition.comparisonLookback,
         output_id: condition.outputId,
       });
   }
@@ -483,6 +495,92 @@ export class SprootDB implements ISprootDB {
   }
   async deleteWeekdayConditionAsync(conditionId: number): Promise<void> {
     return this.#connection("weekday_conditions").where("id", conditionId).delete();
+  }
+
+  async getMonthConditionsAsync(automationId: number): Promise<SDBMonthCondition[]> {
+    return this.#connection("month_conditions")
+      .where("automation_id", automationId)
+      .select(["id", "automation_id as automationId", "groupType", "months"]);
+  }
+  async addMonthConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    months: number,
+  ): Promise<number> {
+    return (
+      (
+        await this.#connection("month_conditions").insert({
+          automation_id: automationId,
+          groupType,
+          months,
+        })
+      )[0] ?? -1
+    );
+  }
+  async updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void> {
+    return this.#connection("month_conditions")
+      .where("automation_id", automationId)
+      .and.where("id", condition.id)
+      .update({
+        groupType: condition.groupType,
+        months: condition.months,
+      });
+  }
+  async deleteMonthConditionAsync(conditionId: number): Promise<void> {
+    return this.#connection("month_conditions").where("id", conditionId).delete();
+  }
+
+  async getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]> {
+    return this.#connection("date_range_conditions")
+      .where("automation_id", automationId)
+      .select([
+        "id",
+        "automation_id as automationId",
+        "groupType",
+        "startMonth",
+        "startDate",
+        "endMonth",
+        "endDate",
+      ]);
+  }
+  async addDateRangeConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    startMonth: number,
+    startDate: number,
+    endMonth: number,
+    endDate: number,
+  ): Promise<number> {
+    return (
+      (
+        await this.#connection("date_range_conditions").insert({
+          automation_id: automationId,
+          groupType,
+          startMonth,
+          startDate,
+          endMonth,
+          endDate,
+        })
+      )[0] ?? -1
+    );
+  }
+  async updateDateRangeConditionAsync(
+    automationId: number,
+    condition: IDateRangeCondition,
+  ): Promise<void> {
+    return this.#connection("date_range_conditions")
+      .where("automation_id", automationId)
+      .and.where("id", condition.id)
+      .update({
+        groupType: condition.groupType,
+        startMonth: condition.startMonth,
+        startDate: condition.startDate,
+        endMonth: condition.endMonth,
+        endDate: condition.endDate,
+      });
+  }
+  async deleteDateRangeConditionAsync(conditionId: number): Promise<void> {
+    return this.#connection("date_range_conditions").where("id", conditionId).delete();
   }
 
   async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {

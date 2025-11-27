@@ -21,7 +21,11 @@ import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
+import { SDBMonthCondition } from "./SDBMonthCondition";
+import { SDBDateRangeCondition } from "./SDBDateRangeCondition";
 import { IWeekdayCondition } from "../automation/IWeekdayCondition";
+import { IMonthCondition } from "@sproot/automation/IMonthCondition";
+import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBCameraSettings } from "./SDBCameraSettings";
 
 interface ISprootDB {
@@ -96,6 +100,7 @@ interface ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     sensorId: number,
     readingType: string,
   ): Promise<number>;
@@ -108,6 +113,7 @@ interface ISprootDB {
     type: ConditionGroupType,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
     outputId: number,
   ): Promise<number>;
   updateOutputConditionAsync(automationId: number, condition: IOutputCondition): Promise<void>;
@@ -131,6 +137,30 @@ interface ISprootDB {
   ): Promise<number>;
   updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
   deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
+
+  getMonthConditionsAsync(automationId: number): Promise<SDBMonthCondition[]>;
+  addMonthConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    months: number,
+  ): Promise<number>;
+  updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void>;
+  deleteMonthConditionAsync(conditionId: number): Promise<void>;
+
+  getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]>;
+  addDateRangeConditionAsync(
+    automationId: number,
+    groupType: ConditionGroupType,
+    startMonth: number,
+    startDate: number,
+    endMonth: number,
+    endDate: number,
+  ): Promise<number>;
+  updateDateRangeConditionAsync(
+    automationId: number,
+    condition: IDateRangeCondition,
+  ): Promise<void>;
+  deleteDateRangeConditionAsync(conditionId: number): Promise<void>;
 
   getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
   // addCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<number>;
@@ -163,6 +193,50 @@ class MockSprootDB implements ISprootDB {
   async deleteWeekdayConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
+
+  async getMonthConditionsAsync(_automationId: number): Promise<SDBMonthCondition[]> {
+    return [];
+  }
+  async addMonthConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _months: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateMonthConditionAsync(
+    _automationId: number,
+    _condition: IMonthCondition,
+  ): Promise<void> {
+    return;
+  }
+  async deleteMonthConditionAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+
+  async getDateRangeConditionsAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
+    return [];
+  }
+  async addDateRangeConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _startMonth: number,
+    _startDate: number,
+    _endMonth: number,
+    _endDate: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateDateRangeConditionAsync(
+    _automationId: number,
+    _condition: IDateRangeCondition,
+  ): Promise<void> {
+    return;
+  }
+  async deleteDateRangeConditionAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+
   async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
     return [];
   }
@@ -244,6 +318,7 @@ class MockSprootDB implements ISprootDB {
     _type: ConditionGroupType,
     _operator: ConditionOperator,
     _comparisonValue: number,
+    _comparisonLookback: number | null,
     _sensorId: number,
     _readingType: string,
   ): Promise<number> {
@@ -266,6 +341,7 @@ class MockSprootDB implements ISprootDB {
     _type: ConditionGroupType,
     _operator: ConditionOperator,
     _comparisonValue: number,
+    _comparisonLookback: number | null,
     _outputId: number,
   ): Promise<number> {
     return 0;

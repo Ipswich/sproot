@@ -4,8 +4,9 @@ interface IOutputCondition {
   id: number;
   groupType: ConditionGroupType;
   outputId: number;
-  comparisonValue: number;
   operator: string;
+  comparisonValue: number;
+  comparisonLookback: number | null;
 }
 
 export type { IOutputCondition };

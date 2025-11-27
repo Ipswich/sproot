@@ -30,6 +30,9 @@ describe("OutputAutomation.ts tests", () => {
         } as SDBTimeCondition,
       ]);
       sprootDB.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.getMonthConditionsAsync.resolves([]);
+      sprootDB.getDateRangeConditionsAsync.resolves([]);
+
       await automation.conditions.loadAsync();
       assert.equal(automation.evaluate(sensorListMock, outputListMock, new Date()), 75);
     });
@@ -105,6 +108,9 @@ describe("OutputAutomation.ts tests", () => {
       } as SDBTimeCondition,
     ]);
     sprootDB.getWeekdayConditionsAsync.resolves([]);
+    sprootDB.getMonthConditionsAsync.resolves([]);
+    sprootDB.getDateRangeConditionsAsync.resolves([]);
+
     await automationEnabled.conditions.loadAsync();
     await automationDisabled.conditions.loadAsync();
 

@@ -9,6 +9,7 @@ export class OutputCondition implements IOutputCondition {
   outputId: number;
   operator: ConditionOperator;
   comparisonValue: number;
+  comparisonLookback: number | null;
 
   constructor(
     id: number,
@@ -16,18 +17,40 @@ export class OutputCondition implements IOutputCondition {
     outputId: number,
     operator: ConditionOperator,
     comparisonValue: number,
+    comparisonLookback: number | null,
   ) {
     this.id = id;
     this.groupType = groupType;
     this.outputId = outputId;
     this.operator = operator;
     this.comparisonValue = comparisonValue;
+    this.comparisonLookback = comparisonLookback;
   }
 
-  evaluate(outputList: OutputList): boolean {
-    const outputValue = outputList.outputs[this.outputId]?.value;
-    return outputValue != null
-      ? evaluateNumber(outputValue, this.operator, this.comparisonValue)
-      : false;
+  evaluate(outputList: OutputList, now: Date = new Date()): boolean {
+    if (this.comparisonLookback == null || this.comparisonLookback == 0) {
+      const lastOutputValue = outputList.outputs[this.outputId]?.value;
+      return lastOutputValue != null
+        ? evaluateNumber(lastOutputValue, this.operator, this.comparisonValue)
+        : false;
+    }
+
+    const outputValues = outputList.outputs[this.outputId]
+      ?.getCachedReadings()
+      .slice(-this.comparisonLookback)
+      .filter(
+        (outputState) =>
+          new Date(outputState.logTime).getTime() >=
+          now.getTime() - this.comparisonLookback! * 60000,
+      )
+      .map((outputState) => outputState.value);
+
+    if (outputValues == null || outputValues.length < this.comparisonLookback) {
+      return false;
+    }
+
+    return outputValues.every((outputValue) => {
+      return evaluateNumber(outputValue, this.operator, this.comparisonValue);
+    });
   }
 }

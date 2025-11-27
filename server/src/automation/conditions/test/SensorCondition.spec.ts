@@ -16,6 +16,7 @@ describe("SensorCondition.ts tests", () => {
         ReadingType.temperature,
         "equal",
         50,
+        null,
       );
       const sensorListMock = sinon.createStubInstance(SensorList);
       const sensorMock = sinon.createStubInstance(SensorBase);
@@ -120,6 +121,117 @@ describe("SensorCondition.ts tests", () => {
         voltage: "0",
       };
       assert.isTrue(sensorCondition.evaluate(sensorListMock));
+    });
+
+    it("should return the result of the condition for all readings in the lookback period", () => {
+      const sensorCondition = new SensorCondition(
+        1,
+        "allOf",
+        1,
+        ReadingType.temperature,
+        "greater",
+        50,
+        3,
+      );
+      const sensorListMock = sinon.createStubInstance(SensorList);
+      const sensorMock = sinon.createStubInstance(SensorBase);
+
+      const now = new Date();
+      sinon.stub(sensorListMock, "sensors").value({ 1: sensorMock });
+
+      sensorMock.getCachedReadings.returns({
+        temperature: [
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "51",
+          },
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
+        ],
+      });
+      assert.isTrue(sensorCondition.evaluate(sensorListMock, now));
+
+      // One reading is not greater than comparison value
+      sensorMock.getCachedReadings.returns({
+        temperature: [
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "49",
+          },
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
+        ],
+      });
+      assert.isFalse(sensorCondition.evaluate(sensorListMock, now));
+
+      // Not enough readings in the lookback period
+      sensorMock.getCachedReadings.returns({
+        temperature: [
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
+        ],
+      });
+      assert.isFalse(sensorCondition.evaluate(sensorListMock, now));
+
+      // One reading is outside the lookback period
+      const oldReading = new Date(now.getTime() - 4 * 60000);
+      sensorMock.getCachedReadings.returns({
+        temperature: [
+          {
+            logTime: oldReading.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "51",
+          },
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "52",
+          },
+          {
+            logTime: now.toISOString(),
+            metric: ReadingType.temperature,
+            units: "°F",
+            data: "53",
+          },
+        ],
+      });
+      assert.isFalse(sensorCondition.evaluate(sensorListMock, now));
     });
   });
 });

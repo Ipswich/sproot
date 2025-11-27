@@ -20,7 +20,7 @@ export default function WeekdayCondition({
   groupType,
 }: WeekdayConditionProps) {
   const conditionsQuery = useQuery({
-    queryKey: ["conditions"],
+    queryKey: ["conditions", automationId],
     queryFn: () => getConditionsAsync(automationId),
   });
 

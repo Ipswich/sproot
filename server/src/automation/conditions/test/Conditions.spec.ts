@@ -13,6 +13,8 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
+import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
+import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 
 describe("Conditions.ts tests", () => {
   describe("evaluate", () => {
@@ -47,11 +49,15 @@ describe("Conditions.ts tests", () => {
       const outputConditions = [] as SDBOutputCondition[];
       const timeConditions = [] as SDBTimeCondition[];
       const weekdayConditions = [] as SDBWeekdayCondition[];
+      const monthConditions = [] as SDBMonthCondition[];
+      const dateRangeConditions = [] as SDBDateRangeCondition[];
 
       sprootDB.getSensorConditionsAsync.resolves(sensorConditions);
       sprootDB.getOutputConditionsAsync.resolves(outputConditions);
       sprootDB.getTimeConditionsAsync.resolves(timeConditions);
       sprootDB.getWeekdayConditionsAsync.resolves(weekdayConditions);
+      sprootDB.getMonthConditionsAsync.resolves(monthConditions);
+      sprootDB.getDateRangeConditionsAsync.resolves(dateRangeConditions);
 
       // Add some sensor Conditions
       sensorConditions.push({
@@ -376,6 +382,28 @@ describe("Conditions.ts tests", () => {
         { id: 1, groupType: "allOf", weekdays: 5 } as SDBWeekdayCondition,
         { id: 2, groupType: "anyOf", weekdays: 2 } as SDBWeekdayCondition,
       ]);
+      sprootDB.getMonthConditionsAsync.resolves([
+        { id: 1, groupType: "allOf", months: 3 } as SDBMonthCondition,
+        { id: 2, groupType: "anyOf", months: 6 } as SDBMonthCondition,
+      ]);
+      sprootDB.getDateRangeConditionsAsync.resolves([
+        {
+          id: 1,
+          groupType: "allOf",
+          startMonth: 1,
+          startDate: 1,
+          endMonth: 1,
+          endDate: 31,
+        } as SDBDateRangeCondition,
+        {
+          id: 2,
+          groupType: "anyOf",
+          startMonth: 2,
+          startDate: 1,
+          endMonth: 2,
+          endDate: 28,
+        } as SDBDateRangeCondition,
+      ]);
 
       const conditions = new Conditions(1, sprootDB);
       await conditions.loadAsync();
@@ -415,8 +443,21 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.weekday.allOf[0]?.groupType, "allOf");
       assert.equal(conditions.groupedConditions.weekday.allOf[0]?.weekdays, 5);
 
-      assert.equal(conditions.allOf.length, 2);
-      assert.equal(conditions.anyOf.length, 3);
+      assert.equal(conditions.groupedConditions.month.allOf.length, 1);
+      assert.equal(conditions.groupedConditions.month.allOf[0]?.id, 1);
+      assert.equal(conditions.groupedConditions.month.allOf[0]?.groupType, "allOf");
+      assert.equal(conditions.groupedConditions.month.allOf[0]?.months, 3);
+
+      assert.equal(conditions.groupedConditions.dateRange.allOf.length, 1);
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.id, 1);
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.groupType, "allOf");
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.startMonth, 1);
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.startDate, 1);
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.endMonth, 1);
+      assert.equal(conditions.groupedConditions.dateRange.allOf[0]?.endDate, 31);
+
+      assert.equal(conditions.allOf.length, 4);
+      assert.equal(conditions.anyOf.length, 5);
       assert.equal(conditions.oneOf.length, 1);
     });
   });

@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { isBetweenTimeStamp } from "../TimeMethods";
+import { isBetweenTimeStamp, isBetweenMonthDate, formatMilitaryTime } from "../TimeMethods";
 
 describe("TimeMethods", function () {
   describe("isBetweenTimeStamp", function () {
@@ -74,6 +74,88 @@ describe("TimeMethods", function () {
       assert.isFalse(isBetweenTimeStamp("10:00", "11:00:00", now));
       assert.isFalse(isBetweenTimeStamp("10:00 AM", "11:00", now));
       assert.isFalse(isBetweenTimeStamp("10:00:00", "11:00", now));
+    });
+  });
+
+  describe("isBetweenMonthDate", () => {
+    it("should return true if now is on or between the start month/day and end month/day", () => {
+      const now = new Date();
+      now.setMonth(1);
+      now.setDate(28);
+      assert.isFalse(isBetweenMonthDate(3, 1, 12, 31, now));
+
+      // On start date
+      now.setMonth(2);
+      now.setDate(1);
+      assert.isTrue(isBetweenMonthDate(3, 1, 12, 31, now));
+
+      // Between start and end date
+      now.setMonth(5);
+      now.setDate(15);
+      assert.isTrue(isBetweenMonthDate(3, 1, 12, 31, now));
+
+      // On end date
+      now.setMonth(11);
+      now.setDate(31);
+      assert.isTrue(isBetweenMonthDate(3, 1, 12, 31, now));
+    });
+
+    it("should  handle leap years appropriately", () => {
+      const now = new Date();
+      now.setMonth(1);
+      now.setDate(28);
+      assert.isTrue(isBetweenMonthDate(2, 28, 3, 1, now));
+
+      now.setDate(29);
+      assert.isTrue(isBetweenMonthDate(2, 28, 3, 1, now));
+
+      now.setDate(30);
+      assert.isFalse(isBetweenMonthDate(2, 28, 3, 1, now));
+    });
+
+    it("should handle wrapping conditions appropriately", () => {
+      const now = new Date();
+      now.setMonth(9);
+      now.setDate(14);
+      assert.isFalse(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(9);
+      now.setDate(15);
+      assert.isTrue(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(0);
+      now.setDate(1);
+      assert.isTrue(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(1);
+      now.setDate(20);
+      assert.isTrue(isBetweenMonthDate(10, 15, 2, 20, now));
+
+      now.setMonth(1);
+      now.setDate(21);
+      assert.isFalse(isBetweenMonthDate(10, 15, 2, 20, now));
+    });
+  });
+
+  describe("formatMilitaryTime", function () {
+    it("should format time correctly", function () {
+      assert.equal(formatMilitaryTime("00:00"), "12:00AM");
+      assert.equal(formatMilitaryTime("01:30"), "1:30AM");
+      assert.equal(formatMilitaryTime("12:00"), "12:00PM");
+      assert.equal(formatMilitaryTime("13:15"), "1:15PM");
+      assert.equal(formatMilitaryTime("23:45"), "11:45PM");
+    });
+
+    it("should return undefined for null or undefined input", function () {
+      assert.isUndefined(formatMilitaryTime(null));
+      assert.isUndefined(formatMilitaryTime(undefined));
+    });
+
+    it("should return the original string if it doesn't match the expected format", function () {
+      assert.equal(formatMilitaryTime("invalid"), "invalid");
+      assert.equal(formatMilitaryTime("2:00"), "2:00");
+      assert.equal(formatMilitaryTime("25:00"), "25:00");
+      assert.equal(formatMilitaryTime("10:60"), "10:60");
     });
   });
 });

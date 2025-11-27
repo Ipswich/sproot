@@ -6,8 +6,9 @@ interface ISensorCondition {
   groupType: ConditionGroupType;
   sensorId: number;
   readingType: ReadingType;
-  comparisonValue: number;
   operator: string;
+  comparisonValue: number;
+  comparisonLookback: number | null;
 }
 
 export type { ISensorCondition };

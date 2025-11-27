@@ -2414,6 +2414,8 @@ paths:
               - "output"
               - "time"
               - "weekday"
+              - "month"
+              - "date-range"
       responses:
         200:
           description: "Success"
@@ -2434,6 +2436,8 @@ paths:
                                 - $ref: "#/components/schemas/OutputCondition"
                                 - $ref: "#/components/schemas/TimeCondition"
                                 - $ref: "#/components/schemas/WeekdayCondition"
+                                - $ref: "#/components/schemas/MonthCondition"
+                                - $ref: "#/components/schemas/DateRangeCondition"
         400:
           description: "Bad request"
           content:
@@ -2540,6 +2544,8 @@ paths:
               - "output"
               - "time"
               - "weekday"
+              - "month"
+              - "date-range"
       requestBody:
         required: true
         content:
@@ -2550,6 +2556,8 @@ paths:
                 - $ref: "#/components/schemas/OutputCondition"
                 - $ref: "#/components/schemas/TimeCondition"
                 - $ref: "#/components/schemas/WeekdayCondition"
+                - $ref: "#/components/schemas/MonthCondition"
+                - $ref: "#/components/schemas/DateRangeCondition"
       responses:
         201:
           description: "Created"
@@ -2569,6 +2577,8 @@ paths:
                               - $ref: "#/components/schemas/OutputCondition"
                               - $ref: "#/components/schemas/TimeCondition"
                               - $ref: "#/components/schemas/WeekdayCondition"
+                              - $ref: "#/components/schemas/MonthCondition"
+                              - $ref: "#/components/schemas/DateRangeCondition"
         400:
           description: "Bad request"
           content:
@@ -2676,6 +2686,8 @@ paths:
               - "output"
               - "time"
               - "weekday"
+              - "month"
+              - "date-range"
         - in: path
           name: conditionId
           required: true
@@ -2702,6 +2714,8 @@ paths:
                               - $ref: "#/components/schemas/OutputCondition"
                               - $ref: "#/components/schemas/TimeCondition"
                               - $ref: "#/components/schemas/WeekdayCondition"
+                              - $ref: "#/components/schemas/MonthCondition"
+                              - $ref: "#/components/schemas/DateRangeCondition"
 
         401:
           description: "Unauthorized"
@@ -2789,6 +2803,8 @@ paths:
               - "output"
               - "time"
               - "weekday"
+              - "month"
+              - "date-range"
         - in: path
           name: conditionId
           required: true
@@ -2806,6 +2822,8 @@ paths:
                 - $ref: "#/components/schemas/OutputCondition"
                 - $ref: "#/components/schemas/TimeCondition"
                 - $ref: "#/components/schemas/WeekdayCondition"
+                - $ref: "#/components/schemas/MonthCondition"
+                - $ref: "#/components/schemas/DateRangeCondition"
       responses:
         200:
           description: "Success"
@@ -2825,6 +2843,8 @@ paths:
                               - $ref: "#/components/schemas/OutputCondition"
                               - $ref: "#/components/schemas/TimeCondition"
                               - $ref: "#/components/schemas/WeekdayCondition"
+                              - $ref: "#/components/schemas/MonthCondition"
+                              - $ref: "#/components/schemas/DateRangeCondition"
         400:
           description: "Bad request"
           content:
@@ -2932,6 +2952,8 @@ paths:
               - "output"
               - "time"
               - "weekday"
+              - "month"
+              - "date-range"
         - in: path
           name: conditionId
           required: true
@@ -4669,6 +4691,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
             anyOf:
               items:
                 anyOf:
@@ -4676,6 +4700,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
             oneOf:
               items:
                 anyOf:
@@ -4683,6 +4709,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
         output:
           type: object
           properties:
@@ -4693,6 +4721,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
             anyOf:
               items:
                 anyOf:
@@ -4700,6 +4730,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
             oneOf:
               items:
                 anyOf:
@@ -4707,6 +4739,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
         time:
           type: object
           properties:
@@ -4717,6 +4751,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
             anyOf:
               items:
                 anyOf:
@@ -4724,6 +4760,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
             oneOf:
               items:
                 anyOf:
@@ -4731,6 +4769,8 @@ components:
                   - $ref: "#/components/schemas/OutputCondition"
                   - $ref: "#/components/schemas/TimeCondition"
                   - $ref: "#/components/schemas/WeekdayCondition"
+                  - $ref: "#/components/schemas/MonthCondition"
+                  - $ref: "#/components/schemas/DateRangeCondition"
       
     SensorCondition:
       description: >
@@ -4759,6 +4799,10 @@ components:
             comparisonValue:
               type: number
               example: 50
+            comparisonLookback:
+              nullable: true
+              type: number
+              example: 3
             sensorId:
               type: number
               example: 1
@@ -4796,6 +4840,10 @@ components:
           comparisonValue:
             type: number
             example: 50
+          comparisonLookback:
+            nullable: true
+            type: number
+            example: 3
           outputId:
             type: number
             example: 1
@@ -4849,6 +4897,60 @@ components:
             description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
             type: number
             example: 127
+
+    MonthCondition:
+      description: >
+        Defines a condition based on the months of the year.
+      allOf:
+      - type: object
+      - properties:
+          id:
+            type: number
+            readOnly: true
+            example: 1
+          groupType: 
+            type: string
+            enum:
+              - allOf
+              - anyOf
+              - oneOf
+          months:
+            description: "A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc."
+            type: number
+            example: 4095
+    
+    DateRangeCondition:
+      description: >
+        Defines a condition for an interval of dates of the year.
+      allOf:
+      - type: object
+      - properties:
+          id:
+            type: number
+            readOnly: true
+            example: 1
+          groupType: 
+            type: string
+            enum:
+              - allOf
+              - anyOf
+              - oneOf
+          startMonth:
+            description: "The month the date range starts on, as a number from 1 to 12."
+            type: number
+            example: 1
+          startDay:
+            description: "The day the date range starts on, with the first day of the month as 1 and the last day as 28-31."
+            type: number
+            example: 1
+          endMonth:
+            description: "The month the date range ends on, as a number from 1 to 12."
+            type: number
+            example: 12
+          endDay:
+            description: "The day the date range ends on, with the first day of the month as 1 and the last day as 28-31."
+            type: number
+            example: 31
 
     SDBSensor:
       description: >
