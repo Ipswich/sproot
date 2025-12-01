@@ -4,6 +4,8 @@ import { MdnsService } from "../../../../system/MdnsService";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { randomBytes } from "crypto";
 import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { SensorList } from "../../../../sensors/list/SensorList";
+import { OutputList } from "../../../../outputs/list/OutputList";
 
 export async function getSubcontrollerHandlerAsync(
   request: Request,
@@ -270,6 +272,12 @@ export async function deleteSubcontrollerAsync(
         ...response.locals["defaultProperties"],
       };
     }
+    const sensorList = request.app.get("sensorList") as SensorList;
+    const outputList = request.app.get("sensorList") as OutputList;
+    Promise.all([
+      sensorList.initializeOrRegenerateAsync(),
+      outputList.initializeOrRegenerateAsync(),
+    ]);
 
     return {
       statusCode: 200,
