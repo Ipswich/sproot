@@ -6,6 +6,7 @@ import EditTable from "@sproot/sproot-client/src/routes/settings/subcontrollers/
 import { useQuery } from "@tanstack/react-query";
 import NewSubcontrollerModal from "./NewSubcontrollerModal";
 import { ISubcontroller } from "@sproot/system/ISubcontroller";
+import FlashSubcontroller from "./FlashSubcontroller";
 
 export default function SubcontrollerSettings() {
   const [
@@ -58,9 +59,10 @@ export default function SubcontrollerSettings() {
         <EditTable subcontrollers={subcontrollers} setIsStale={setIsStale} />
         <Fragment>
           <Button size="xl" w={rem(300)} onClick={newSubcontrollerModalOpen}>
-            Add New
+            Connect
           </Button>
         </Fragment>
+        <FlashSubcontroller />
       </Stack>
     </Fragment>
   );
