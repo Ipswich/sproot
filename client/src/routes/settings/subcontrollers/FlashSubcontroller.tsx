@@ -223,6 +223,7 @@ export default function FlashSubcontroller(): JSX.Element {
       setProgress(100);
     } catch (err) {
       pushLog("error", `Error during flashing: ${(err as Error).message}`);
+      setProgress(-1);
     } finally {
       setIsFlashing(false);
     }
@@ -248,8 +249,26 @@ export default function FlashSubcontroller(): JSX.Element {
         </Button>
         <Stack>
           <Group align="center" gap="sm" style={{ width: "100%" }}>
-            <Text size="sm">Progress: {progress}%</Text>
-            <Progress value={progress} style={{ flex: 1 }} />
+            <Text w={"35%"} size="sm">
+              Progress: {progress}%
+            </Text>
+            <Progress
+              style={{ flex: 1 }}
+              value={progress}
+              color={(function () {
+                switch (progress) {
+                  case -1:
+                    return "red";
+                  case 0:
+                    return "blue";
+                  case 100:
+                    return "blue";
+                  default:
+                    return "green";
+                }
+              })()}
+              animated={progress < 100 && progress > 0}
+            />
           </Group>
         </Stack>
 

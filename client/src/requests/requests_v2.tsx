@@ -974,6 +974,41 @@ export async function deleteSubcontrollerAsync(id: number): Promise<void> {
   }
 }
 
+export async function getSubcontrollerManifestAsync(model: string) {
+  let response: Response;
+  try {
+    switch (model.toLowerCase()) {
+      case "esp32":
+        response = await fetch(
+          `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/manifest`,
+          {
+            method: "GET",
+            headers: {},
+            mode: "cors",
+            // credentials: "include",
+          },
+        );
+        break;
+      default:
+        throw new Error(`Unsupported subcontroller model: ${model}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching esp32 manifest: ${response.status} ${response.statusText}`,
+      );
+    }
+  } catch (e) {
+    console.error(`Error fetching esp32 manifest:`, e);
+    throw e;
+  }
+
+  return (await response.json()).content.data as Record<
+    "version" | "sha256" | "path",
+    string
+  >;
+}
+
 export async function getSubcontrollerBinaryAsync(model: string) {
   let response: Response;
   try {
