@@ -289,7 +289,7 @@ export default function FlashSubcontroller(): JSX.Element {
   );
 }
 
-function arrayBufferToBinaryString(ab: Uint8Array<ArrayBuffer>): string {
+function arrayBufferToBinaryString(ab: Uint8Array): string {
   const bytes = new Uint8Array(ab);
   let binary = "";
   for (let i = 0; i < bytes.length; i++) {
