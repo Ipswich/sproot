@@ -87,10 +87,11 @@ export async function getSubcontrollerOnlineAsync(
     if (ipAddress) {
       const fetchResponse = await fetch(`http://${ipAddress}/ping`, { method: "GET" });
       if (fetchResponse.ok) {
+        const responseData = (await fetchResponse.json()) as { status: string; version: string };
         return {
           statusCode: 200,
           content: {
-            data: { online: true },
+            data: { online: true, version: responseData.version },
           },
           ...response.locals["defaultProperties"],
         };

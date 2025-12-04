@@ -1202,6 +1202,7 @@ describe("API Tests", async () => {
         validateMiddlewareValues(response);
 
         assert.isFalse(data["online"]);
+        assert.isUndefined(data["version"]);
       });
     });
 
@@ -1246,20 +1247,59 @@ describe("API Tests", async () => {
           describe("GET", async () => {
             it("should return 200 and firmware info", async () => {
               const response = await request(server)
-                .get("/api/v2/subcontrollers/firmwareesp32/manifest")
+                .get("/api/v2/subcontrollers/firmware/esp32/manifest")
                 .expect(200);
               const data = response.body["content"].data;
               validateMiddlewareValues(response);
 
-              assert.containsAllKeys(data, ["version", "url", "sha256"]);
+              assert.containsAllKeys(data, ["version", "path", "sha256"]);
+            });
+          });
+        });
+        describe("Bootloader", async () => {
+          describe("GET", async () => {
+            it("should return 200 and esp32 bootloader binary", async () => {
+              const response = await request(server)
+                .get("/api/v2/subcontrollers/firmware/esp32/bootloader")
+                .expect(200);
+              validateMiddlewareValues(response);
+
+              assert.equal(response.headers["content-type"], "application/octet-stream");
+              assert.isNotNull(response.body);
+            });
+          });
+        });
+        describe("Partitions", async () => {
+          describe("GET", async () => {
+            it("should return 200 and esp32 partition binary", async () => {
+              const response = await request(server)
+                .get("/api/v2/subcontrollers/firmware/esp32/partitions")
+                .expect(200);
+              validateMiddlewareValues(response);
+
+              assert.equal(response.headers["content-type"], "application/octet-stream");
+              assert.isNotNull(response.body);
             });
           });
         });
         describe("Binary", async () => {
           describe("GET", async () => {
-            it("should return 200 and firmware binary", async () => {
+            it("should return 200 and esp32 application binary", async () => {
               const response = await request(server)
-                .get("/api/v2/subcontrollers/firmwareesp32/binary")
+                .get("/api/v2/subcontrollers/firmware/esp32/application")
+                .expect(200);
+              validateMiddlewareValues(response);
+
+              assert.equal(response.headers["content-type"], "application/octet-stream");
+              assert.isNotNull(response.body);
+            });
+          });
+        });
+        describe("Binary", async () => {
+          describe("GET", async () => {
+            it("should return 200 and esp32 firmware binary", async () => {
+              const response = await request(server)
+                .get("/api/v2/subcontrollers/firmware/esp32/binary")
                 .expect(200);
               validateMiddlewareValues(response);
 
