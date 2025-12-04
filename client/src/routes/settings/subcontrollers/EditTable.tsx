@@ -1,4 +1,12 @@
-import { Modal, TextInput, ScrollArea, Button, Group } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  ScrollArea,
+  Button,
+  Group,
+  Stack,
+  ActionIcon,
+} from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
   deleteSubcontrollerAsync,
@@ -15,8 +23,10 @@ import { SubcontrollerFormValues } from "./NewSubcontrollerModal";
 import {
   IconAntennaBars5,
   IconAntennaBarsOff,
+  IconDeviceFloppy,
   IconLoader,
 } from "@tabler/icons-react";
+import UpdateFirmwareContainer from "./UpdateFirmwareContainer";
 
 interface EditTableProps {
   subcontrollers: ISubcontroller[];
@@ -29,8 +39,10 @@ export default function EditTable({
 }: EditTableProps) {
   const revalidator = useRevalidator();
   const [selectedDevice, setSelectedDevice] = useState({} as ISubcontroller);
-  const [modalOpened, { open: openModal, close: closeModal }] =
-    useDisclosure(false);
+  const [
+    newSubcontrollerModalOpened,
+    { open: newSubcontrollerOpenModal, close: newSubcontrollerCloseModal },
+  ] = useDisclosure(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const updateSubcontrollerMutation = useMutation({
@@ -84,7 +96,7 @@ export default function EditTable({
     setSelectedDevice(device);
     updateDeviceForm.setFieldValue("name", device.name ?? "");
     updateDeviceForm.setFieldValue("id", device.id);
-    openModal();
+    newSubcontrollerOpenModal();
   };
 
   return (
@@ -98,10 +110,10 @@ export default function EditTable({
         scrollAreaComponent={ScrollArea.Autosize}
         centered
         size="xs"
-        opened={modalOpened}
+        opened={newSubcontrollerModalOpened}
         onClose={() => {
           updateDeviceForm.reset();
-          closeModal();
+          newSubcontrollerCloseModal();
         }}
         title="Edit"
       >
@@ -116,7 +128,7 @@ export default function EditTable({
             setIsUpdating(false);
             setSelectedDevice({} as ISubcontroller);
             updateDeviceForm.reset();
-            closeModal();
+            newSubcontrollerCloseModal();
           })}
         >
           <TextInput
@@ -124,12 +136,23 @@ export default function EditTable({
             required
             {...updateDeviceForm.getInputProps("id")}
           />
-          <TextInput
-            maxLength={64}
-            label="Name"
-            placeholder={selectedDevice.name || ""}
-            {...updateDeviceForm.getInputProps("name")}
-          />
+          <Stack>
+            <TextInput
+              maxLength={64}
+              label="Name"
+              placeholder={selectedDevice.name || ""}
+              rightSection={
+                selectedDevice == null ? null : (
+                  <ActionIcon type="submit">
+                    <IconDeviceFloppy />
+                  </ActionIcon>
+                )
+              }
+              {...updateDeviceForm.getInputProps("name")}
+            />
+
+            <UpdateFirmwareContainer id={selectedDevice.id} />
+          </Stack>
           <Group justify="space-between" mt="md">
             <Button
               disabled={isUpdating}
@@ -143,65 +166,72 @@ export default function EditTable({
                 setIsUpdating(false);
                 setSelectedDevice({} as ISubcontroller);
                 updateDeviceForm.reset();
-                closeModal();
+                newSubcontrollerCloseModal();
               }}
             >
               Delete
-            </Button>
-            <Button type="submit" disabled={isUpdating}>
-              Update Device
             </Button>
           </Group>
         </form>
       </Modal>
       {
-        <EditablesTable
-          editables={subcontrollers}
-          onEditClick={(item) => {
-            editTableOnClick(item as ISubcontroller);
-          }}
-          tableLeftComponent={{
-            label: "",
-            Component: (editable: unknown) => {
-              const device = editable as ISubcontroller;
-              const connectionStatusQuery = useQuery<boolean>({
-                queryKey: ["subcontroller-connection-status", device.id],
-                queryFn: async () => {
-                  if (typeof device.id === "undefined" || device.id === null) {
-                    return false;
-                  }
-                  return await getSubcontrollerConnectionStatusAsync(device.id);
-                },
-              });
+        <Fragment>
+          <EditablesTable
+            editables={subcontrollers}
+            onEditClick={(item) => {
+              editTableOnClick(item as ISubcontroller);
+            }}
+            tableLeftComponent={{
+              label: "",
+              Component: (editable: unknown) => {
+                const device = editable as ISubcontroller;
+                const connectionStatusQuery = useQuery<{
+                  online: boolean;
+                  version?: string;
+                }>({
+                  queryKey: ["subcontroller-connection-status", device.id],
+                  queryFn: async () => {
+                    if (
+                      typeof device.id === "undefined" ||
+                      device.id === null
+                    ) {
+                      return { online: false };
+                    }
+                    return await getSubcontrollerConnectionStatusAsync(
+                      device.id,
+                    );
+                  },
+                });
 
-              const isConnected =
-                connectionStatusQuery.data === true &&
-                !connectionStatusQuery.isError;
+                const isConnected =
+                  connectionStatusQuery.data?.online === true &&
+                  !connectionStatusQuery.isError;
 
-              return (
-                <Fragment>
-                  {connectionStatusQuery.isLoading ? (
-                    <IconLoader
-                      size="28px"
-                      className="animate-spin"
-                      color="var(--mantine-color-gray-filled)"
-                    />
-                  ) : isConnected ? (
-                    <IconAntennaBars5
-                      size="28px"
-                      color="var(--mantine-color-green-filled)"
-                    />
-                  ) : (
-                    <IconAntennaBarsOff
-                      size="28px"
-                      color="var(--mantine-color-red-filled)"
-                    />
-                  )}
-                </Fragment>
-              );
-            },
-          }}
-        />
+                return (
+                  <Fragment>
+                    {connectionStatusQuery.isLoading ? (
+                      <IconLoader
+                        size="28px"
+                        className="animate-spin"
+                        color="var(--mantine-color-gray-filled)"
+                      />
+                    ) : isConnected ? (
+                      <IconAntennaBars5
+                        size="28px"
+                        color="var(--mantine-color-green-filled)"
+                      />
+                    ) : (
+                      <IconAntennaBarsOff
+                        size="28px"
+                        color="var(--mantine-color-red-filled)"
+                      />
+                    )}
+                  </Fragment>
+                );
+              },
+            }}
+          />
+        </Fragment>
       }
     </Fragment>
   );

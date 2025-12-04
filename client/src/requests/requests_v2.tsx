@@ -908,7 +908,7 @@ export async function getSubcontrollerAsync(): Promise<{
 
 export async function getSubcontrollerConnectionStatusAsync(
   id: number,
-): Promise<boolean> {
+): Promise<{ online: boolean; version?: string }> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/subcontrollers/${id}/connection-status`,
     {
@@ -922,7 +922,7 @@ export async function getSubcontrollerConnectionStatusAsync(
     console.error(`Error fetching subcontrollers: ${response}`);
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data.online ?? false;
+  return deserializedResponse.content?.data;
 }
 
 export async function addSubcontrollerAsync(device: {
@@ -945,7 +945,6 @@ export async function addSubcontrollerAsync(device: {
 export async function updateSubcontrollerAsync(device: {
   id: number;
   name: string;
-  hostName: string;
 }): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/subcontrollers/${device.id}`,
@@ -960,6 +959,58 @@ export async function updateSubcontrollerAsync(device: {
   if (!response.ok) {
     console.error(`Error updating subcontroller: ${response}`);
   }
+}
+
+export async function getFirmwareManifestAsync(): Promise<{
+  version: string;
+  path: string;
+  sha256: string;
+}> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/manifest`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(
+      `Error fetching subcontroller firmware manifest: ${response}`,
+    );
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function triggerSubcontrollerFirmwareUpdateAsync(
+  id: number,
+): Promise<{ status: number; message: string }> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/ota-update/${id}`,
+    {
+      method: "POST",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(
+      `Error triggering subcontroller firmware update: ${response}`,
+    );
+    const deserializedResponse = (await response.json()) as ErrorResponse;
+    return {
+      status: response.status,
+      message: deserializedResponse.error.details[0]!,
+    };
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return {
+    status: response.status,
+    message: deserializedResponse.content?.data?.message,
+  };
 }
 
 export async function deleteSubcontrollerAsync(id: number): Promise<void> {
