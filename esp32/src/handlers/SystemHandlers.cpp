@@ -1,5 +1,6 @@
 #include "handlers/SystemHandlers.h"
 #include "otaUpdates/otaUpdates.h"
+#include "Version.h"
 
 #include <ESPAsyncWebServer.h>
 #include <Preferences.h>
@@ -50,7 +51,6 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   Preferences prefs;
   prefs.begin("app", false);
   String token = prefs.getString("secureToken", "");
-  String version = prefs.getString("version", "");
   prefs.end();
 
 
@@ -88,7 +88,7 @@ void handleTriggerOTAUpdatePost(AsyncWebServerRequest *request, uint8_t *data, s
   }
 
   // Verify version
-  if (!isNewerVersion(manifest.version.c_str(), version.c_str()))
+  if (!isNewerVersion(manifest.version.c_str(), String(VERSION).c_str()))
   {
     request->send(400, "application/json", "{\"status\": \"Device already has the latest firmware.\"}");
     return;

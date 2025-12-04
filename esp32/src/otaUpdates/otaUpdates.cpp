@@ -275,10 +275,7 @@ void otaTask(void *param)
   setOTAUpdateResult(2, "OTA successful!");
   http.end();
 
-  // Update version in preferences and restart
-  prefs.begin("app", false);
-  prefs.putString("version", firmwareVersion);
-  prefs.end();
+  // Restart
   ESP.restart();
   xTaskNotifyGive(callerHandle);
   vTaskDelete(NULL);

@@ -8,6 +8,7 @@
 #include "handlers/SensorHandlers.h"
 #include "handlers/OutputHandlers.h"
 #include "handlers/SystemHandlers.h"
+#include "Version.h"
 
 void setupRoutes(AsyncWebServer& server);
 
@@ -71,12 +72,7 @@ void setupRoutes(AsyncWebServer& server)
   // ===== General API Endpoints =====
   server.on("/ping", HTTP_GET, [](AsyncWebServerRequest *request)
   {
-    Preferences prefs;
-    prefs.begin("app", false);
-    String version = prefs.getString("version", "");
-    prefs.end(); 
-
-    request->send(200, "application/json", "{ \"status\": \"pong\", \"version\": \"" + version + "\" }"); 
+    request->send(200, "application/json", "{ \"status\": \"pong\", \"version\": \"" + String(VERSION) + "\" }"); 
   });
 }
 
