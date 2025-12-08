@@ -16,16 +16,16 @@ function formatDecimalReadingForDisplay(data: string): string {
   return parseFloat(data).toFixed(3);
 }
 
-function convertCelsiusToFahrenheit(value: number | string | undefined): number | undefined {
-  if (value === undefined) {
+function convertCelsiusToFahrenheit(value: number | string | undefined | null): number | undefined {
+  if (value == undefined || value == null) {
     return undefined;
   }
   const fahrenheitValue = (parseFloat(value.toString()) * 9) / 5 + 32;
   return Number(formatDecimalReadingForDisplay(fahrenheitValue.toString()));
 }
 
-function convertFahrenheitToCelsius(value: number | string | undefined): number | undefined {
-  if (value === undefined) {
+function convertFahrenheitToCelsius(value: number | string | undefined | null): number | undefined {
+  if (value == undefined || value == null) {
     return undefined;
   }
   const celsiusValue = ((parseFloat(value.toString()) - 32) * 5) / 9;
