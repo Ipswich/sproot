@@ -3,7 +3,8 @@ import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
 import { app, server } from "./setup";
 
-describe("API Tests", async () => {
+describe("API Tests", async function () {
+  this.timeout(2000);
   // describe("Authentication Routes", async () => {
   //   before(() => {
   //     process.env["AUTHENTICATION_ENABLED"] = "true";
