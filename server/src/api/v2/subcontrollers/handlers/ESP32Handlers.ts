@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { FirmwareManager } from "../../../../system/FirmwareManager";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { ISprootDB } from "@sproot/database/ISprootDB";
-// import { MdnsService } from "../../../../system/MdnsService";
 import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 
 export async function getESP32ManifestAsync(

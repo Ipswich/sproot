@@ -330,9 +330,8 @@ paths:
                       content:
                         properties:
                           data:
-                            properties:
-                              allof:
-                                $ref: "#/components/schemas/SystemStatus"
+                            allOf:
+                              - $ref: "#/components/schemas/SystemStatus"
                           
         500:
           description: "Internal server error"
@@ -5318,33 +5317,61 @@ components:
         An object containing the current system status, including uptime, memory usage, CPU usage,
         database size, total disk size, and free disk size. All memory metrics are in MB.
       type: object
-      required:
-        - "uptimeSeconds"
-        - "heapUsageMB"
-        - "memoryUsageMB"
-        - "cpuUsage"
-        - "databaseSizeMB"
-        - "totalDiskSizeMB"
-        - "freeDiskSizeMB"
       properties:
-        uptime:
-          type: number
-          example: 3600
-        memoryUsage:
-          type: number
-          example: 2048000
-        cpuUsage:
-          type: number
-          example: 15.5
-        databaseSize: 
-          type: number
-          example: 250
-        totalDiskSize:
-          type: number
-          example: 64000 
-        freeDiskSize:
-          type: number
-          example: 32000
+        system:
+          type: object
+          properties:
+            totalDiskSize:
+              type: number
+              example: 64000 
+            freeDiskSize:
+              type: number
+              example: 32000
+        process:
+          type: object
+          properties:
+            uptime:
+              type: number
+              example: 3600
+            memoryUsage:
+              type: number
+              example: 2048000
+            heapUsage:
+              type: number
+              example: 1024000
+            cpuUsage:
+              type: number
+              example: 15.5
+        database:
+          type: object
+          properties:
+            size:
+              type: number
+              example: 150
+            connectionsUsed:
+              type: number
+              example: 5
+            connectionsAvailable:
+              type: number
+              example: 15
+            pendingAcquires:
+              type: number
+              example: 0
+            pendingCreates:
+              type: number
+              example: 0
+        timelapse:
+          type: object
+          properties:
+            imageCount:
+              type: number
+              example: 5000
+            directorySize:
+              type: number
+              example: 2500
+            lastArchiveGenerationDuration:
+              type: number
+              example: 120
     
     FirmwareManifest:
       description: >

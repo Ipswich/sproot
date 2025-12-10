@@ -13,7 +13,7 @@
     "start": "npm run build && node ./dist/index.js",
     "start:dev": "npx nodemon --delay 3",
     "test": "npm run build && mocha -r ts-node/register --colors --ignore './src/test/**/*.spec.ts' './src/**/*.spec.ts'",
-    "test:api": "NODE_ENV=test && npm run build && mocha -r ts-node/register --file ./src/test/setup.ts --colors './src/test/**/*.spec.ts'",
+    "test:api": "NODE_ENV=test && INTERSERVICE_AUTHENTICATION_KEY=test && npm run build && mocha -r ts-node/register --file ./src/test/setup.ts --colors './src/test/**/*.spec.ts'",
     "check": "npm run prettier:check && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
   },
   "author": "Ben Steele",

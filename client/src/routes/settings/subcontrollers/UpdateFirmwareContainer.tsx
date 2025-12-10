@@ -28,7 +28,6 @@ export default function UpdateFirmwareContainer(props: { id: number }) {
   const updateFirmwareMutation = useMutation({
     mutationFn: async (id: number) => {
       const result = await triggerSubcontrollerFirmwareUpdateAsync(id);
-      console.log(result);
       return result;
     },
   });

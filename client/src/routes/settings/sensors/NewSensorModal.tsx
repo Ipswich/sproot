@@ -95,7 +95,6 @@ export default function NewSensorModal({
           ? null
           : "Model must be between 1 and 64 characters",
       subcontrollerId: (value: number | undefined) => {
-        console.log(value);
         if (
           newSensorForm.values.model === Models.ESP32_ADS1115 ||
           newSensorForm.values.model ===
