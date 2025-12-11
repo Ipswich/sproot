@@ -11,11 +11,12 @@ import { useQuery } from "@tanstack/react-query";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Models } from "@sproot/outputs/Models";
 
-export interface FormValues {
+export interface OutputFormValues {
   id?: number;
   name: string;
   color: string;
   model: keyof typeof Models;
+  subcontrollerId?: number;
   address: string;
   pin: string;
   isPwm: boolean;
@@ -77,13 +78,9 @@ export default function OutputSettings() {
           supportedModels={supportedModels}
           setIsStale={setIsStale}
         />
-        {import.meta.env["VITE_PRECONFIGURED"] != "true" ? (
-          <Fragment>
-            <Button size="xl" w={rem(300)} onClick={newOutputModalOpen}>
-              Add New
-            </Button>
-          </Fragment>
-        ) : null}
+        <Button size="xl" w={rem(300)} onClick={newOutputModalOpen}>
+          Add New
+        </Button>
       </Stack>
     </Fragment>
   );

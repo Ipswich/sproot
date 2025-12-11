@@ -96,6 +96,11 @@ export function getNavbarItems(
         href: "/settings/camera",
       } as Page,
       {
+        navLinkText: "Subcontrollers",
+        headerText: "Subcontrollers",
+        href: "/settings/subcontrollers",
+      } as Page,
+      {
         navLinkText: "System",
         headerText: "System Settings",
         href: "/settings/system",

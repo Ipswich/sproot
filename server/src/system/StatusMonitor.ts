@@ -8,7 +8,7 @@ import { Knex } from "knex";
 
 const statfsAsync = promisify(statfs);
 
-export class SystemStatusMonitor {
+export class SystemStatusMonitor implements Disposable {
   #cpuMonitor: CpuMonitor = new CpuMonitor(1000, 5);
   #cameraManager: CameraManager;
   #sprootDB: ISprootDB;

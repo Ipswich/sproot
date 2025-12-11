@@ -7,10 +7,10 @@ import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDev
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 
-export abstract class MultiOutputBase {
+export abstract class MultiOutputBase implements AsyncDisposable {
   readonly boardRecord: Record<string, any> = {};
   readonly outputs: Record<string, OutputBase> = {};
-  readonly usedPins: Record<string, string[]> = {};
+  readonly usedPins: Record<string, string[] | Record<string, string[]>> = {};
   protected sprootDB: ISprootDB;
   protected frequency: number;
   protected maxCacheSize: number;
@@ -39,6 +39,7 @@ export abstract class MultiOutputBase {
 
   abstract createOutputAsync(output: SDBOutput): Promise<IOutputBase | undefined>;
   abstract getAvailableDevices(host?: string): AvailableDevice[];
+  abstract [Symbol.asyncDispose](): Promise<void>;
 
   get outputData(): Record<string, IOutputBase> {
     const cleanObject: Record<string, IOutputBase> = {};
@@ -58,13 +59,24 @@ export abstract class MultiOutputBase {
   setAndExecuteStateAsync = async (outputId: string, newState: SDBOutputState) =>
     this.outputs[outputId]?.setAndExecuteStateAsync(newState);
 
-  disposeOutput(output: OutputBase): void {
-    const usedPins = this.usedPins[output.address];
+  disposeOutputAsync(output: OutputBase): Promise<void> {
+    if (output.subcontrollerId != undefined) {
+      const usedPins = (this.usedPins[output.subcontrollerId] as Record<string, string[]>)[
+        output.address
+      ];
+      return this.#disposeOutputHelperAsync(output, usedPins);
+    } else {
+      const usedPins = this.usedPins[output.address];
+      return this.#disposeOutputHelperAsync(output, usedPins as string[]);
+    }
+  }
+
+  async #disposeOutputHelperAsync(output: OutputBase, usedPins?: string[]): Promise<void> {
     if (usedPins) {
       const index = usedPins.indexOf(output.pin);
       if (index !== -1) {
         usedPins.splice(index, 1);
-        output[Symbol.dispose]();
+        await output[Symbol.asyncDispose]();
         delete this.outputs[output.id];
         if (usedPins.length === 0) {
           delete this.boardRecord[output.address];

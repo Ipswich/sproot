@@ -13,7 +13,7 @@ import { spawn } from "child_process";
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
 
-class Timelapse {
+class Timelapse implements Disposable {
   #logger: winston.Logger;
   #intervalMinutes: number | null = null;
   #timer: NodeJS.Timeout | null = null;

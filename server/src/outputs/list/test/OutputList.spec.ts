@@ -7,6 +7,7 @@ import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { MdnsService } from "../../../system/MdnsService";
 const mockSprootDB = new MockSprootDB();
 
 describe("OutputList.ts tests", function () {
@@ -15,6 +16,7 @@ describe("OutputList.ts tests", function () {
   });
   describe("initializeOrRegnerateAsync", function () {
     it("should create, update, and delete outputs.", async function () {
+      const mockMdnsService = sinon.createStubInstance(MdnsService);
       sinon.createStubInstance(Pca9685Driver);
 
       const getOutputsAsyncStub = sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
@@ -69,7 +71,7 @@ describe("OutputList.ts tests", function () {
       );
       const logger = winston.createLogger();
 
-      using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
+      await using outputList = new OutputList(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
       // Create
       await outputList.initializeOrRegenerateAsync();
       assert.equal(Object.keys(outputList.outputs).length, 4);
@@ -96,13 +98,12 @@ describe("OutputList.ts tests", function () {
       assert.equal(outputList.outputs["1"]!.isPwm, false);
       assert.equal(outputList.outputs["1"]!.isInvertedPwm, true);
       assert.equal(outputList.outputs["1"]!.color, "pink");
-
-      outputList[Symbol.dispose]();
     });
   });
 
   describe("outputData", function () {
     it("should return output data (no functions)", async function () {
+      const mockMdnsService = sinon.createStubInstance(MdnsService);
       sinon.createStubInstance(Pca9685Driver);
 
       sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
@@ -127,7 +128,7 @@ describe("OutputList.ts tests", function () {
       );
       const logger = winston.createLogger();
 
-      using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
+      await using outputList = new OutputList(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
       await outputList.initializeOrRegenerateAsync();
       const outputData = outputList.outputData;
 
@@ -141,6 +142,7 @@ describe("OutputList.ts tests", function () {
 
   describe("dispose", function () {
     it("should dispose of all outputs", async function () {
+      const mockMdnsService = sinon.createStubInstance(MdnsService);
       sinon.createStubInstance(Pca9685Driver);
 
       sinon.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
@@ -194,11 +196,11 @@ describe("OutputList.ts tests", function () {
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
-      using outputList = new OutputList(mockSprootDB, 5, 5, 5, 5, logger);
+      await using outputList = new OutputList(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
 
       // Create
       await outputList.initializeOrRegenerateAsync();
-      outputList[Symbol.dispose]();
+      await outputList[Symbol.asyncDispose]();
       assert.isEmpty(outputList.outputs);
     });
   });

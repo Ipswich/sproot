@@ -200,4 +200,6 @@ export async function seed(knex: Knex): Promise<void> {
     timelapseStartTime: null,
     timelapseEndTime: null,
   });
+
+  console.log("Seeding complete.");
 }

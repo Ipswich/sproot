@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { assert } from "chai";
 import sinon from "sinon";
 import { SystemStatusMonitor } from "../StatusMonitor";
 import { CameraManager } from "../../camera/CameraManager";

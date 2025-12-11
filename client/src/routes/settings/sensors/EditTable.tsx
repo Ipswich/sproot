@@ -8,20 +8,23 @@ import {
   ScrollArea,
   ColorPicker,
   NumberInput,
+  Select,
 } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
 import {
   deleteSensorAsync,
+  getSubcontrollerAsync,
   updateSensorAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useRevalidator } from "react-router-dom";
 import { Models } from "@sproot/sproot-common/src/sensors/Models";
+import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
@@ -42,6 +45,11 @@ export default function EditTable({
 
   const updateSensorMutation = useMutation({
     mutationFn: async (newSensorValues: ISensorBase) => {
+      // BME280 does not use a pin
+      if (newSensorValues.model === Models.BME280) {
+        newSensorValues.pin = null;
+      }
+
       if (newSensorValues.pin != null) {
         newSensorValues.pin = String(newSensorValues.pin);
       }
@@ -62,6 +70,12 @@ export default function EditTable({
       setIsStale(true);
     },
   });
+  const subcontrollersQuery = useQuery({
+    queryKey: ["get-subcontrollers"],
+    queryFn: () => getSubcontrollerAsync(),
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
+  });
 
   const updateSensorForm = useForm({
     initialValues: {
@@ -69,6 +83,7 @@ export default function EditTable({
       name: selectedSensor.name,
       color: selectedSensor.color,
       model: selectedSensor.model,
+      subcontrollerId: selectedSensor.subcontrollerId ?? undefined,
       address: selectedSensor.address,
       pin: selectedSensor.pin ?? null,
     },
@@ -89,6 +104,23 @@ export default function EditTable({
         value.length > 0 && value.length <= 64
           ? null
           : "Model must be between 1 and 64 characters",
+      subcontrollerId: (value: number | undefined) => {
+        if (
+          updateSensorForm.values.model === Models.ESP32_ADS1115 ||
+          updateSensorForm.values.model ===
+            Models.ESP32_CAPACITIVE_MOISTURE_SENSOR ||
+          updateSensorForm.values.model === Models.ESP32_BME280 ||
+          updateSensorForm.values.model === Models.ESP32_DS18B20
+        ) {
+          return subcontrollersQuery.data?.recognized.some(
+            (dev) => dev.id === parseInt(String(value)),
+          )
+            ? null
+            : "Must be a valid subcontroller";
+        } else {
+          return null;
+        }
+      },
       address: (value: string | null) =>
         !value || (value.length > 0 && value.length <= 64)
           ? null
@@ -103,6 +135,10 @@ export default function EditTable({
     updateSensorForm.setFieldValue("name", sensor.name);
     updateSensorForm.setFieldValue("color", sensor.color);
     updateSensorForm.setFieldValue("model", sensor.model);
+    updateSensorForm.setFieldValue(
+      "subcontrollerId",
+      sensor.subcontrollerId ?? undefined,
+    );
     updateSensorForm.setFieldValue("address", sensor.address ?? "");
     updateSensorForm.setFieldValue("id", sensor.id);
     updateSensorForm.setFieldValue("pin", sensor.pin ?? null);
@@ -121,7 +157,10 @@ export default function EditTable({
         centered
         size="xs"
         opened={modalOpened}
-        onClose={closeModal}
+        onClose={() => {
+          closeModal();
+          updateSensorForm.reset();
+        }}
         title="Edit"
       >
         <form
@@ -131,6 +170,7 @@ export default function EditTable({
             setIsUpdating(false);
             setSelectedSensor({} as ISensorBase);
             closeModal();
+            updateSensorForm.reset();
           })}
         >
           <TextInput
@@ -169,6 +209,37 @@ export default function EditTable({
             required
             {...updateSensorForm.getInputProps("model")}
           />
+          {(updateSensorForm.values.model === Models.ESP32_ADS1115 ||
+            updateSensorForm.values.model ===
+              Models.ESP32_CAPACITIVE_MOISTURE_SENSOR ||
+            updateSensorForm.values.model === Models.ESP32_BME280 ||
+            updateSensorForm.values.model === Models.ESP32_DS18B20) && (
+            <Select
+              label="Host"
+              placeholder="Select Device"
+              data={
+                subcontrollersQuery.data?.recognized.map(
+                  (device: SDBSubcontroller) => ({
+                    value: String(device.id),
+                    label: device.name,
+                  }),
+                ) ?? []
+              }
+              {...updateSensorForm.getInputProps("subcontrollerId")}
+              value={
+                updateSensorForm.values.subcontrollerId != null
+                  ? String(updateSensorForm.values.subcontrollerId)
+                  : null
+              }
+              onChange={(val) =>
+                updateSensorForm.setFieldValue(
+                  "subcontrollerId",
+                  val !== null ? parseInt(val, 10) : undefined,
+                )
+              }
+              required
+            />
+          )}
           <TextInput
             maxLength={64}
             label="Address"
@@ -198,6 +269,7 @@ export default function EditTable({
                 setIsUpdating(false);
                 setSelectedSensor({} as ISensorBase);
                 closeModal();
+                updateSensorForm.reset();
               }}
             >
               Delete

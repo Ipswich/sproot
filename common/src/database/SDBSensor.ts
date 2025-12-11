@@ -4,6 +4,7 @@ type SDBSensor = {
   id: number;
   name: string;
   model: keyof typeof Models;
+  subcontrollerId: number | null;
   address: string | null;
   color: string;
   pin: string | null;

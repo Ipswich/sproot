@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { SDBSensor } from "@sproot/sproot-common/src/database/SDBSensor";
 import { SDBOutput } from "@sproot/sproot-common/src/database/SDBOutput";
+import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";
 import { SDBReading } from "@sproot/sproot-common/src/database/SDBReading";
 import { SDBUser } from "@sproot/sproot-common/src/database/SDBUser";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
@@ -68,6 +69,11 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
+
+  getSubcontrollersAsync(): Promise<SDBSubcontroller[]>;
+  addSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
+  updateSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
+  deleteSubcontrollersAsync(id: number): Promise<number>;
 
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
@@ -397,6 +403,22 @@ class MockSprootDB implements ISprootDB {
 
   async addSensorAsync(_sensor: SDBSensor): Promise<void> {
     return;
+  }
+
+  async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
+    return [];
+  }
+
+  async addSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
+    return 1;
+  }
+
+  async updateSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
+    return 1;
+  }
+
+  async deleteSubcontrollersAsync(_id: number): Promise<number> {
+    return 1;
   }
 
   async updateSensorAsync(_sensor: SDBSensor): Promise<void> {

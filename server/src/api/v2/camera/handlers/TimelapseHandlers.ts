@@ -27,18 +27,30 @@ export async function getTimelapseArchiveAsync(
     });
     return;
   }
-
+  response.status(200);
   response.setHeader("Content-Type", "application/x-tar");
-  response.setHeader("Content-Length", timelapseArchiveSize.toString());
+  response.setHeader("Content-Length", (timelapseArchiveSize * 1024 * 1024).toString());
   response.setHeader("Content-Disposition", "attachment; filename=timelapse.tar");
 
   // Handle potential errors
   timelapseArchive.on("error", () => {
     if (!response.headersSent) {
-      response.status(500).send("Error streaming timelapse archive.");
+      response.status(500).json({
+        statusCode: 500,
+        error: {
+          name: "Internal Server Error",
+          url: request.originalUrl,
+          details: ["Error streaming timelapse archive"],
+        },
+        ...response.locals["defaultProperties"],
+      });
     } else {
-      response.end();
+      response.destroy();
     }
+  });
+
+  response.once("close", () => {
+    timelapseArchive.destroy();
   });
 
   timelapseArchive.pipe(response);

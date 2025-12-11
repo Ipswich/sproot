@@ -2,13 +2,13 @@ import { Select } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { Fragment } from "react";
-import { FormValues } from "../OutputSettings";
+import { OutputFormValues } from "../OutputSettings";
 import { useQuery } from "@tanstack/react-query";
 import { getAvailableDevicesAsync } from "../../../../requests/requests_v2";
 
 interface TPLinkSmartPlugProps {
   selectedOutput?: IOutputBase;
-  form: UseFormReturnType<FormValues>;
+  form: UseFormReturnType<OutputFormValues>;
   address?: string;
 }
 

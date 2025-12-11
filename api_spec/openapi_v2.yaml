@@ -330,9 +330,8 @@ paths:
                       content:
                         properties:
                           data:
-                            properties:
-                              allof:
-                                $ref: "#/components/schemas/SystemStatus"
+                            allOf:
+                              - $ref: "#/components/schemas/SystemStatus"
                           
         500:
           description: "Internal server error"
@@ -353,6 +352,709 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve system status."
+  /api/v2/subcontrollers:
+    get:
+      tags:
+        - "Subcontrollers"
+      summary: Get subcontrollers discovered via mDNS.
+      description: >
+        Returns a list of subcontrollers discovered on the local network via mDNS/Bonjour.
+        This includes basic information about each device, such as name, host, and address.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            allOf:
+                              - type: object
+                                properties:
+                                  recognizedDevices:
+                                    type: array
+                                    items:
+                                      $ref: "#/components/schemas/SDBSubcontroller"
+                                  unrecognizedDevices:
+                                    type: array
+                                    items:
+                                      $ref: "#/components/schemas/UnrecognizedSubcontrollers"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            items:
+                              example: "Failed to retrieve subcontrollers."
+    post:
+      tags:
+        - "Subcontrollers"
+      summary: Add a new subcontroller.
+      description: >
+        Adds a new subcontroller to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBSubcontroller"
+      responses:
+        201:
+          description: "subcontroller created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBSubcontroller"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            example:
+                              - "Missing required field: name"
+                              - "Missing required field: address"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            items:
+                              example: "Failed to add subcontroller."
+  /api/v2/subcontrollers/{deviceId}:
+    patch:
+      tags:
+        - "Subcontrollers"
+      summary: Update a subcontroller.
+      description: >
+        Updates an existing subcontroller in the system.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "subcontroller Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Sproot-ESP32-1C78"
+      responses:
+        200:
+          description: "subcontroller updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBSubcontroller"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            example:
+                              - "Missing required field: name"
+        404:
+          description: "subcontroller not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            items:
+                              example: "subcontroller with ID 1 not found."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            items:
+                              example: "Failed to update subcontroller."
+    delete:
+      tags:
+        - "Subcontrollers"
+      summary: Delete a subcontroller.
+      description: >
+        Deletes an existing subcontroller from the system.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "subcontroller Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "subcontroller deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "subcontroller successfully deleted."
+        404:
+          description: "subcontroller not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            items:
+                              example: "subcontroller with ID 1 not found."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers"
+                          details:
+                            items:
+                              example: "Failed to delete subcontroller."
+  /api/v2/subcontrollers/{deviceId}/connection-status:
+    get:
+      tags:
+        - "Subcontrollers"
+      summary: Get subcontroller connection status.
+      description: >
+        Returns the connection status of a subcontroller.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "subcontroller Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            properties:
+                              online:
+                                type: boolean
+                                example: true
+                              version:
+                                type: string
+                                example: "v1.0.0"
+        404:
+          description: "subcontroller not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/subcontrollers/1/connection-status"
+                          details:
+                            items:
+                              example: "subcontroller with ID 1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/subcontrollers/1/connection-status"
+                          details:
+                            items:
+                              example: "Database connection failed."
+  /api/v2/subcontrollers/firmware/esp32/manifest:
+    get:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Get the ESP32 firmware manifest.
+      description: >
+        Returns the ESP32 firmware manifest, which contains information about the latest firmware version.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/FirmwareManifest"
+  /api/v2/subcontrollers/firmware/esp32/binary:
+    get:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Get the ESP32 firmware binary.
+      description: >
+        Streams the ESP32 firmware binary for download.
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"firmware.bin\""
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/binary"
+                          details:
+                            items:
+                              example: "Error retrieving firmware binary."
+  /api/v2/subcontrollers/firmware/esp32/bootloader:
+    get:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Get the ESP32 bootloader binary.
+      description: >
+        Streams the ESP32 bootloader binary for download.
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"bootloader.bin\""
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/bootloader"
+                          details:
+                            items:
+                              example: "Error retrieving bootloader binary."
+  /api/v2/subcontrollers/firmware/esp32/partitions:
+    get:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Get the ESP32 partitions binary.
+      description: >
+        Streams the ESP32 partitions binary for download.
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"partitions.bin\""
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/partitions"
+                          details:
+                            items:
+                              example: "Error retrieving partitions binary."
+  /api/v2/subcontrollers/firmware/esp32/application:
+    get:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Get the ESP32 application binary.
+      description: >
+        Streams the ESP32 application binary for download.
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"boot_app0.bin\""
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/application"
+                          details:
+                            items:
+                              example: "Error retrieving application binary."
+  /api/v2/subcontrollers/firmware/esp32/ota-update/{deviceId}:
+    post:
+      tags:
+        - "Subcontroller Firmware"
+      summary: Trigger an OTA update for the ESP32 subcontroller.
+      description: >
+        Triggers an OTA update for the specified ESP32 subcontroller. The device will download and install the latest firmware.
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          description: "subcontroller Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        202:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "OTA update triggered successfully."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Invalid device ID."
+        403:
+          description: "Forbidden"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 403
+                      error:
+                        properties:
+                          name:
+                            example: "Forbidden"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "You do not have permission to trigger an OTA update for this device."
+        404:
+          description: "subcontroller not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "subcontroller with ID 1 not found."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Failed to trigger OTA update."
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 502
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Gateway"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Failed to fetch manifest."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/subcontrollers/firmware/esp32/ota-update/1"
+                          details:
+                            items:
+                              example: "Database connection failed."
+
   /api/v2/ping:
     get:
       tags:
@@ -3903,7 +4605,7 @@ paths:
                                 example: "true"
                               archiveProgress:
                                 type: number
-                                example: 75        
+                                example: 75 
 
 components:
   schemas:
@@ -3993,6 +4695,10 @@ components:
         model:
           type: string
           example: "PCA9685"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
         address:
           type: string
           example: "0x40"
@@ -4400,6 +5106,10 @@ components:
         model:
           type: string
           example: "DS18B20"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
         address:
           type: string
           example: "28-00000"
@@ -4456,6 +5166,26 @@ components:
                 temperature:
                   type: string
                   example: "C"
+
+    SDBSubcontroller:
+      description: >
+        A subcontroller object that is stored in the database. Likely means an ESP32. Contains all the information needed to 
+        reference a subcontroller, including name, ID, and host name.
+      type: object
+      required:
+        - "name"
+        - "hostName"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: "sproot-esp32-1C78"
+        hostName:
+          type: string
+          example: "sproot-esp32-1C78.local"
 
     SupportedModels:
       description: >
@@ -4587,33 +5317,103 @@ components:
         An object containing the current system status, including uptime, memory usage, CPU usage,
         database size, total disk size, and free disk size. All memory metrics are in MB.
       type: object
-      required:
-        - "uptimeSeconds"
-        - "heapUsageMB"
-        - "memoryUsageMB"
-        - "cpuUsage"
-        - "databaseSizeMB"
-        - "totalDiskSizeMB"
-        - "freeDiskSizeMB"
       properties:
-        uptime:
-          type: number
-          example: 3600
-        memoryUsage:
-          type: number
-          example: 2048000
-        cpuUsage:
-          type: number
-          example: 15.5
-        databaseSize: 
-          type: number
-          example: 250
-        totalDiskSize:
-          type: number
-          example: 64000 
-        freeDiskSize:
-          type: number
-          example: 32000
+        system:
+          type: object
+          properties:
+            totalDiskSize:
+              type: number
+              example: 64000 
+            freeDiskSize:
+              type: number
+              example: 32000
+        process:
+          type: object
+          properties:
+            uptime:
+              type: number
+              example: 3600
+            memoryUsage:
+              type: number
+              example: 2048000
+            heapUsage:
+              type: number
+              example: 1024000
+            cpuUsage:
+              type: number
+              example: 15.5
+        database:
+          type: object
+          properties:
+            size:
+              type: number
+              example: 150
+            connectionsUsed:
+              type: number
+              example: 5
+            connectionsAvailable:
+              type: number
+              example: 15
+            pendingAcquires:
+              type: number
+              example: 0
+            pendingCreates:
+              type: number
+              example: 0
+        timelapse:
+          type: object
+          properties:
+            imageCount:
+              type: number
+              example: 5000
+            directorySize:
+              type: number
+              example: 2500
+            lastArchiveGenerationDuration:
+              type: number
+              example: 120
+    
+    FirmwareManifest:
+      description: >
+        An object containing the firmware manifest information.
+      type: object
+      required:
+        - "version"
+        - "path"
+        - "sha256"
+      properties:
+        version:
+          type: string
+          example: "v1.0.0"
+        path:
+          type: string
+          example: "/api/v2/subcontrollers/firmware/esp32/binary"
+        sha256:
+          type: string
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    
+    UnrecognizedSubcontrollers:
+      description: >
+        An object representing a subcontroller discovered on the network.
+      type: object
+      required:
+        - "name"
+        - "host"
+        - "address"
+      properties:
+        name:
+          type: string
+          example: "sproot-esp32-1C78"
+        host:
+          type: string
+          example: "sproot-esp32-1C78.local"
+        address:
+          oneOf:
+          - type: string
+            example: "192.168.1.1"
+          - type: array
+            items:
+              type: string
 
   securitySchemes:
     bearerAuth:

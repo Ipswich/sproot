@@ -63,6 +63,7 @@ export async function addAsync(
 
   const newOutput = {
     model: request.body["model"],
+    subcontrollerId: request.body["subcontrollerId"],
     address: request.body["address"],
     name: request.body["name"],
     pin: request.body["pin"],
@@ -178,6 +179,7 @@ export async function updateAsync(
   }
 
   outputData.model = request.body["model"] ?? outputData.model;
+  outputData.subcontrollerId = request.body["subcontrollerId"] ?? outputData.subcontrollerId;
   outputData.address = request.body["address"] ?? outputData.address;
   outputData.name = request.body["name"] ?? outputData.name;
   outputData.pin = request.body["pin"] ?? outputData.pin;

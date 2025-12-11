@@ -66,6 +66,7 @@ export async function addAsync(
   const newSensor = {
     name: request.body["name"],
     model: request.body["model"],
+    subcontrollerId: request.body["subcontrollerId"],
     address: request.body["address"],
     color: request.body["color"],
     pin: request.body["pin"],
@@ -183,6 +184,7 @@ export async function updateAsync(
 
   sensorData.name = request.body["name"] ?? sensorData.name;
   sensorData.model = request.body["model"] ?? sensorData.model;
+  sensorData.subcontrollerId = request.body["subcontrollerId"] ?? sensorData.subcontrollerId;
   sensorData.address = request.body["address"] ?? sensorData.address;
   sensorData.color = request.body["color"] ?? sensorData.color;
   sensorData.pin = request.body["pin"] ?? sensorData.pin;

@@ -9,12 +9,13 @@ import { SensorCache } from "./SensorCache";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
-export abstract class SensorBase implements ISensorBase {
+export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   readonly id: number;
   readonly model: keyof typeof Models;
+  subcontrollerId: number | null = null;
   readonly address: string | null;
   name: string;
-  lastReading: Record<ReadingType, string>;
+  lastReading: Record<ReadingType, string | undefined>;
   lastReadingTime: Date | null;
   color: string;
   pin: string | null = null;
@@ -44,6 +45,7 @@ export abstract class SensorBase implements ISensorBase {
   ) {
     this.id = sdbSensor.id;
     this.name = sdbSensor.name;
+    this.subcontrollerId = sdbSensor.subcontrollerId;
     this.model = sdbSensor.model;
     this.address = sdbSensor.address;
     this.color = sdbSensor.color;

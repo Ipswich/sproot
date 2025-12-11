@@ -1,11 +1,12 @@
 import fs from "fs";
 import { Express } from "express";
 import { Server } from "http";
-import mainAsync from "../program";
+import mainAsync, { gracefulHaltAsync } from "../program";
 
 let server: Server;
 let app: Express;
-before(async () => {
+before(async function () {
+  this.timeout(0);
   await fs.promises.mkdir("images/timelapse", { recursive: true });
   await fs.promises.mkdir("images/archive", { recursive: true });
 
@@ -33,12 +34,9 @@ before(async () => {
   console.log("Listening on port 3000");
 });
 
-after(() => {
-  server.close();
+after(async () => {
+  await gracefulHaltAsync(server, app);
   console.log("Server closed!");
-  process.nextTick(() => {
-    process.exit(0);
-  });
 });
 
 export { app, server };

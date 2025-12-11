@@ -3,6 +3,7 @@ import { Models } from "@sproot/sproot-common/src/outputs/Models";
 type SDBOutput = {
   id: number;
   model: keyof typeof Models;
+  subcontrollerId: number | null;
   address: string;
   name: string;
   pin: string;

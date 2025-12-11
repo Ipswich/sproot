@@ -23,7 +23,8 @@ class ImageCapture {
       if (latestImage) {
         // Ensure the directory exists
         await fs.promises.mkdir(directory, { recursive: true });
-        await fs.promises.writeFile(path.join(directory, filename), latestImage);
+        const outputPath = path.join(directory, filename);
+        await fs.promises.writeFile(outputPath, latestImage as unknown as Uint8Array);
       }
     }, logger);
     this.#logger = logger;

@@ -4,6 +4,7 @@ import {
   AutomationOperator,
   IAutomation,
 } from "@sproot/automation/IAutomation";
+import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
@@ -882,6 +883,309 @@ export async function getSystemStatusAsync(): Promise<SystemStatus> {
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
+}
+
+export async function getSubcontrollerAsync(): Promise<{
+  recognized: SDBSubcontroller[];
+  unrecognized: {
+    name: string;
+    hostName: string;
+    address: string | string[];
+  }[];
+}> {
+  const response = await fetch(`${SERVER_URL}/api/v2/subcontrollers`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching subcontrollers: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function getSubcontrollerConnectionStatusAsync(
+  id: number,
+): Promise<{ online: boolean; version?: string }> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/subcontrollers/${id}/connection-status`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching subcontrollers: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function addSubcontrollerAsync(device: {
+  name: string;
+  hostName: string;
+}): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/subcontrollers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(device),
+    mode: "cors",
+    // credentials: "include",
+  });
+
+  if (!response.ok) {
+    console.error(`Error adding subcontroller ${device.hostName}: ${response}`);
+  }
+}
+
+export async function updateSubcontrollerAsync(device: {
+  id: number;
+  name: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/subcontrollers/${device.id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(device),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error updating subcontroller: ${response}`);
+  }
+}
+
+export async function getFirmwareManifestAsync(): Promise<{
+  version: string;
+  path: string;
+  sha256: string;
+}> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/manifest`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(
+      `Error fetching subcontroller firmware manifest: ${response}`,
+    );
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function triggerSubcontrollerFirmwareUpdateAsync(
+  id: number,
+): Promise<{ status: number; message: string }> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/ota-update/${id}`,
+    {
+      method: "POST",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(
+      `Error triggering subcontroller firmware update: ${response}`,
+    );
+    const deserializedResponse = (await response.json()) as ErrorResponse;
+    return {
+      status: response.status,
+      message: deserializedResponse.error.details[0]!,
+    };
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return {
+    status: response.status,
+    message: deserializedResponse.content?.data?.message,
+  };
+}
+
+export async function deleteSubcontrollerAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/subcontrollers/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting subcontroller: ${response}`);
+  }
+}
+
+export async function getSubcontrollerManifestAsync(model: string) {
+  let response: Response;
+  try {
+    switch (model.toLowerCase()) {
+      case "esp32":
+        response = await fetch(
+          `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/manifest`,
+          {
+            method: "GET",
+            headers: {},
+            mode: "cors",
+            // credentials: "include",
+          },
+        );
+        break;
+      default:
+        throw new Error(`Unsupported subcontroller model: ${model}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching esp32 manifest: ${response.status} ${response.statusText}`,
+      );
+    }
+  } catch (e) {
+    console.error(`Error fetching esp32 manifest:`, e);
+    throw e;
+  }
+
+  return (await response.json()).content.data as Record<
+    "version" | "sha256" | "path",
+    string
+  >;
+}
+
+export async function getSubcontrollerBinaryAsync(model: string) {
+  let response: Response;
+  try {
+    switch (model.toLowerCase()) {
+      case "esp32":
+        response = await fetch(
+          `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/binary`,
+          {
+            method: "GET",
+            headers: {},
+            mode: "cors",
+            // credentials: "include",
+          },
+        );
+        break;
+      default:
+        throw new Error(`Unsupported subcontroller model: ${model}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching esp32 binary: ${response.status} ${response.statusText}`,
+      );
+    }
+  } catch (e) {
+    console.error(`Error fetching esp32 binary:`, e);
+    throw e;
+  }
+
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+export async function getSubControllerBootloaderAsync(model: string) {
+  let response: Response;
+  try {
+    switch (model.toLowerCase()) {
+      case "esp32":
+        response = await fetch(
+          `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/bootloader`,
+          {
+            method: "GET",
+            headers: {},
+            mode: "cors",
+            // credentials: "include",
+          },
+        );
+        break;
+      default:
+        throw new Error(`Unsupported subcontroller model: ${model}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching esp32 bootloader: ${response.status} ${response.statusText}`,
+      );
+    }
+  } catch (e) {
+    console.error(`Error fetching esp32 bootloader:`, e);
+    throw e;
+  }
+
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+export async function getSubControllerPartitionsAsync(model: string) {
+  let response: Response;
+  try {
+    switch (model.toLowerCase()) {
+      case "esp32":
+        response = await fetch(
+          `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/partitions`,
+          {
+            method: "GET",
+            headers: {},
+            mode: "cors",
+            // credentials: "include",
+          },
+        );
+        break;
+      default:
+        throw new Error(`Unsupported subcontroller model: ${model}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching esp32 partitions: ${response.status} ${response.statusText}`,
+      );
+    }
+  } catch (e) {
+    console.error(`Error fetching esp32 partitions:`, e);
+    throw e;
+  }
+
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+export async function getSubControllerApplicationAsync(model: string) {
+  let response: Response;
+  try {
+    switch (model.toLowerCase()) {
+      case "esp32":
+        response = await fetch(
+          `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/application`,
+          {
+            method: "GET",
+            headers: {},
+            mode: "cors",
+            // credentials: "include",
+          },
+        );
+        break;
+      default:
+        throw new Error(`Unsupported subcontroller model: ${model}`);
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching esp32 application: ${response.status} ${response.statusText}`,
+      );
+    }
+  } catch (e) {
+    console.error(`Error fetching esp32 application:`, e);
+    throw e;
+  }
+
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 function queryBuilder(

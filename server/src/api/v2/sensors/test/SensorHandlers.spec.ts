@@ -130,6 +130,7 @@ describe("SensorHandlers.ts tests", () => {
         model: Models.DS18B20,
         address: "28-00002",
         color: "#000000",
+        subcontrollerId: null,
       } as SDBSensor;
 
       const mockRequest = {

@@ -1,24 +1,29 @@
-import { Table, ActionIcon, Switch, Group } from "@mantine/core";
+import { Table, ActionIcon, Group } from "@mantine/core";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ISubcontroller } from "@sproot/system/ISubcontroller";
 import { IconEdit } from "@tabler/icons-react";
 
 interface EditablesTableProps {
-  editables: ISensorBase[] | IOutputBase[] | IAutomation[];
-  onEditClick: (item: ISensorBase | IOutputBase | IAutomation) => void;
-  onNameClick?: (item: ISensorBase | IOutputBase | IAutomation) => void;
-  onSwitchClick?: (
-    item: { id: number; enabled: boolean },
-    enabled: boolean,
+  editables: ISensorBase[] | IOutputBase[] | IAutomation[] | ISubcontroller[];
+  onEditClick: (
+    item: ISensorBase | IOutputBase | IAutomation | ISubcontroller,
   ) => void;
+  onNameClick?: (
+    item: ISensorBase | IOutputBase | IAutomation | ISubcontroller,
+  ) => void;
+  tableLeftComponent?: {
+    label: string;
+    Component: (editable: unknown) => JSX.Element;
+  };
 }
 
 export default function EditablesTable({
   editables,
   onEditClick,
   onNameClick = undefined,
-  onSwitchClick = undefined,
+  tableLeftComponent = undefined,
 }: EditablesTableProps) {
   return (
     <Table
@@ -30,8 +35,10 @@ export default function EditablesTable({
     >
       <Table.Thead>
         <Table.Tr>
-          {onSwitchClick && (
-            <Table.Th style={{ textAlign: "center" }}>Enabled</Table.Th>
+          {tableLeftComponent && (
+            <Table.Th style={{ textAlign: "center" }}>
+              {tableLeftComponent.label}
+            </Table.Th>
           )}
           <Table.Th style={{ textAlign: "center" }}>Name</Table.Th>
           <Table.Th style={{ textAlign: "center" }}>Edit</Table.Th>
@@ -46,20 +53,10 @@ export default function EditablesTable({
           )
           .map((editable) => (
             <Table.Tr key={editable.id}>
-              {onSwitchClick && (
+              {tableLeftComponent && (
                 <Table.Td pl="" style={{ width: "25%" }} align="left">
                   <Group justify="center">
-                    <Switch
-                      checked={
-                        (editable as { id: number; enabled: boolean }).enabled
-                      }
-                      onChange={(event) => {
-                        onSwitchClick(
-                          editable as { id: number; enabled: boolean },
-                          event.currentTarget.checked,
-                        );
-                      }}
-                    />
+                    {tableLeftComponent.Component(editable)}
                   </Group>
                 </Table.Td>
               )}

@@ -54,7 +54,7 @@ export default function DateRangeCondition({
       endDate: undefined as string | undefined,
     },
     validate: {
-      startMonth: (value) => {
+      startMonth: (value: string | undefined) => {
         if (value == null) {
           return "Start month is required";
         } else if (
@@ -66,7 +66,15 @@ export default function DateRangeCondition({
         }
         return null;
       },
-      startDate: (value, formValues) => {
+      startDate: (
+        value: string | undefined,
+        formValues: {
+          startMonth: string | undefined;
+          startDate: string | undefined;
+          endMonth: string | undefined;
+          endDate: string | undefined;
+        },
+      ) => {
         if (value == null) {
           return "Start date is required";
         }
@@ -80,7 +88,7 @@ export default function DateRangeCondition({
         }
         return null;
       },
-      endMonth: (value) => {
+      endMonth: (value: string | undefined) => {
         if (value == null) {
           return "Start month is required";
         } else if (
@@ -92,7 +100,15 @@ export default function DateRangeCondition({
         }
         return null;
       },
-      endDate: (value, formValues) => {
+      endDate: (
+        value: string | undefined,
+        formValues: {
+          startMonth: string | undefined;
+          startDate: string | undefined;
+          endMonth: string | undefined;
+          endDate: string | undefined;
+        },
+      ) => {
         if (value == null) {
           return "Start date is required";
         }

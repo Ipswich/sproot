@@ -8,7 +8,7 @@ import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
-describe("CameraSettingsHandlers", () => {
+describe("CameraSettingsHandlers.ts tests", () => {
   let sandbox: SinonSandbox;
   let mockRequest: Request;
   let mockResponse: Response;

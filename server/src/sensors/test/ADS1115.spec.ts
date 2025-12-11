@@ -112,7 +112,10 @@ describe("ADS1115.ts tests", function () {
     await ads1115Sensor!.takeReadingAsync();
 
     assert.isTrue(openStub.calledOnce);
-    assert.equal(ads1115Sensor!.lastReading[ReadingType.voltage], String(mockReading / 10000));
+    assert.equal(
+      ads1115Sensor!.lastReading[ReadingType.voltage],
+      Ads1115Device.computeVoltage(mockReading, "2/3").toString(),
+    );
 
     // GetReading throws an errror
     await using ads1115Sensor2 = await new ADS1115(

@@ -55,14 +55,23 @@ class PCA9685 extends MultiOutputBase {
       this.logger,
     );
     await this.outputs[output.id]?.initializeAsync();
-    this.usedPins[output.address]?.push(output.pin);
+    if (Array.isArray(this.usedPins[output.address])) {
+      (this.usedPins[output.address] as string[]).push(output.pin);
+    }
     return this.outputs[output.id];
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   override getAvailableDevices(_address?: string): AvailableDevice[] {
     return [];
     // const childIds = Array.from({ length: 16 }, (_, i) => i.toString());
     // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    for (const output of Object.values(this.outputs)) {
+      await output[Symbol.asyncDispose]();
+    }
   }
 }
 
@@ -98,7 +107,7 @@ class PCA9685Output extends OutputBase {
     }, forceExecution);
   }
 
-  override [Symbol.dispose](): void {
+  override async [Symbol.asyncDispose](): Promise<void> {
     this.pca9685.setDutyCycle(parseInt(this.pin), 0);
   }
 }

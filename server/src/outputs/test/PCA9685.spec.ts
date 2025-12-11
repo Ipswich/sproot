@@ -28,7 +28,7 @@ describe("PCA9685.ts tests", function () {
 
     const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
     // disposing with nothing shouldn't cause issues
-    pca9685.disposeOutput({} as OutputBase);
+    await pca9685.disposeOutputAsync({} as OutputBase);
 
     const output1 = await pca9685.createOutputAsync({
       id: 1,
@@ -72,18 +72,18 @@ describe("PCA9685.ts tests", function () {
     assert.exists(pca9685.boardRecord["0x40"]);
 
     // Dispose 1 output
-    pca9685.disposeOutput(output4!);
+    await pca9685.disposeOutputAsync(output4!);
     assert.equal(Object.keys(pca9685.outputs).length, 3);
     assert.equal(pca9685.usedPins["0x40"]!.length, 3);
     assert.isUndefined(pca9685.outputs["4"]);
 
     // disposing with a non existent pin should also not cause issues
-    pca9685.disposeOutput({ pin: "3", address: "0x40" } as OutputBase);
+    await pca9685.disposeOutputAsync({ pin: "3", address: "0x40" } as OutputBase);
 
     // Dispose the rest
-    pca9685.disposeOutput(output1!);
-    pca9685.disposeOutput(output2!);
-    pca9685.disposeOutput(output3!);
+    await pca9685.disposeOutputAsync(output1!);
+    await pca9685.disposeOutputAsync(output2!);
+    await pca9685.disposeOutputAsync(output3!);
     assert.equal(Object.keys(pca9685.outputs).length, 0);
     assert.isUndefined(pca9685.usedPins["0x40"]);
     assert.isUndefined(pca9685.boardRecord["0x40"]);
@@ -163,7 +163,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(1).args[1], 0);
 
     //Swap to Manual (+0 execution call, manual is also low)
-    pca9685.updateControlModeAsync("1", ControlMode.manual);
+    await pca9685.updateControlModeAsync("1", ControlMode.manual);
     assert.equal(setDutyCycleStub.callCount, 2);
 
     //Manual High
@@ -177,13 +177,14 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.getCall(2).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(2).args[1], 1);
 
-    //Automatic Low (+1 execution call, switching back to automatic mode (low -> high))
-    pca9685.updateControlModeAsync("1", ControlMode.automatic);
+    //Automatic Low (+1 execution call, switching back to automatic mode (high -> low)
+    await pca9685.updateControlModeAsync("1", ControlMode.automatic);
     assert.equal(setDutyCycleStub.callCount, 4);
     assert.equal(setDutyCycleStub.getCall(3).args[0], 0);
+    assert.equal(setDutyCycleStub.getCall(3).args[1], 0);
 
     //Automatic Low (+0 execution call, switching back to automatic mode (low -> low))
-    pca9685.updateControlModeAsync("1", ControlMode.automatic);
+    await pca9685.updateControlModeAsync("1", ControlMode.automatic);
     assert.equal(setDutyCycleStub.callCount, 4);
 
     //Inverted PWM Execution

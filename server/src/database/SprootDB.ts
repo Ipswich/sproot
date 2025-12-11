@@ -26,6 +26,8 @@ import { ITimeCondition } from "@sproot/automation/ITimeCondition";
 import { IWeekdayCondition } from "@sproot/automation/IWeekdayCondition";
 import { IMonthCondition } from "@sproot/automation/IMonthCondition";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
+import { encrypt, decrypt } from "@sproot/sproot-common/dist/utility/Crypto";
 import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 
@@ -37,27 +39,44 @@ export class SprootDB implements ISprootDB {
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors").select("*");
+    return this.#connection("sensors").select("*", "subcontroller_id as subcontrollerId");
   }
   async getSensorAsync(id: number): Promise<SDBSensor[]> {
-    return this.#connection("sensors").where("id", id).select("*");
+    return this.#connection("sensors")
+      .select("*", "subcontroller_id as subcontrollerId")
+      .where("id", id);
   }
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors").where("model", "DS18B20").select("address");
+    return this.#connection("sensors as s")
+      .leftJoin("subcontrollers as ed", "s.subcontroller_id", "ed.id")
+      .select("s.*", "subcontroller_id as subcontrollerId", "ed.hostName")
+      .whereIn("s.model", ["DS18B20", "ESP32_DS18B20"]);
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
-    return this.#connection("sensors").insert(sensor);
-  }
-  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
-    return this.#connection("sensors").where("id", sensor.id).update({
+    return this.#connection("sensors").insert({
       name: sensor.name,
       model: sensor.model,
+      subcontroller_id: sensor.subcontrollerId ?? null,
       address: sensor.address,
       color: sensor.color,
       pin: sensor.pin,
       lowCalibrationPoint: sensor.lowCalibrationPoint,
       highCalibrationPoint: sensor.highCalibrationPoint,
     });
+  }
+  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
+    return this.#connection("sensors")
+      .where("id", sensor.id)
+      .update({
+        name: sensor.name,
+        model: sensor.model,
+        subcontroller_id: sensor.subcontrollerId ?? null,
+        address: sensor.address,
+        color: sensor.color,
+        pin: sensor.pin,
+        lowCalibrationPoint: sensor.lowCalibrationPoint,
+        highCalibrationPoint: sensor.highCalibrationPoint,
+      });
   }
 
   async updateSensorCalibrationAsync(
@@ -73,6 +92,35 @@ export class SprootDB implements ISprootDB {
 
   async deleteSensorAsync(id: number): Promise<void> {
     return this.#connection("sensors").where("id", id).delete();
+  }
+
+  async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
+    const result = await this.#connection("subcontrollers").select("*");
+    result.forEach((device) => {
+      device.secureToken =
+        device.secureToken == null ? null : decrypt(device.secureToken, process.env["JWT_SECRET"]!);
+    });
+    return result;
+  }
+
+  async addSubcontrollerAsync(subcontroller: SDBSubcontroller): Promise<number> {
+    const copy = { ...subcontroller };
+    copy.secureToken =
+      copy.secureToken == null ? null : encrypt(copy.secureToken, process.env["JWT_SECRET"]!);
+    return (await this.#connection("subcontrollers").insert(copy))[0] ?? -1;
+  }
+
+  async deleteSubcontrollersAsync(id: number): Promise<number> {
+    return await this.#connection("subcontrollers").where("id", id).delete();
+  }
+
+  async updateSubcontrollerAsync(subcontroller: SDBSubcontroller): Promise<number> {
+    // Only name can be updated for now
+    return await this.#connection("subcontrollers").where("id", subcontroller.id).update({
+      name: subcontroller.name,
+      type: subcontroller.type,
+      hostName: subcontroller.hostName,
+    });
   }
 
   async addSensorReadingAsync(sensor: ISensorBase): Promise<void> {
@@ -115,18 +163,18 @@ export class SprootDB implements ISprootDB {
     return readings;
   }
   async getOutputsAsync(): Promise<SDBOutput[]> {
-    return this.#connection("outputs").select("*");
+    return this.#connection("outputs").select("*", "subcontroller_id as subcontrollerId");
   }
   async getOutputAsync(id: number): Promise<SDBOutput[]> {
-    return this.#connection("outputs").where("id", id).select("*");
+    return this.#connection("outputs")
+      .select("*", "subcontroller_id as subcontrollerId")
+      .where("id", id);
   }
   async addOutputAsync(output: SDBOutput): Promise<void> {
-    return this.#connection("outputs").insert(output);
-  }
-  async updateOutputAsync(output: SDBOutput): Promise<void> {
-    return this.#connection("outputs").where("id", output.id).update({
+    return this.#connection("outputs").insert({
       name: output.name,
       model: output.model,
+      subcontroller_id: output.subcontrollerId ?? null,
       address: output.address,
       color: output.color,
       pin: output.pin,
@@ -134,6 +182,21 @@ export class SprootDB implements ISprootDB {
       isInvertedPwm: output.isInvertedPwm,
       automationTimeout: output.automationTimeout,
     });
+  }
+  async updateOutputAsync(output: SDBOutput): Promise<void> {
+    return this.#connection("outputs")
+      .where("id", output.id)
+      .update({
+        name: output.name,
+        model: output.model,
+        subcontroller_id: output.subcontrollerId ?? null,
+        address: output.address,
+        color: output.color,
+        pin: output.pin,
+        isPwm: output.isPwm,
+        isInvertedPwm: output.isInvertedPwm,
+        automationTimeout: output.automationTimeout,
+      });
   }
   async deleteOutputAsync(id: number): Promise<void> {
     return this.#connection("outputs").where("id", id).delete();
