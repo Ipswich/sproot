@@ -152,7 +152,7 @@ export function createBackupCronJob(sprootDB: ISprootDB, logger: winston.Logger)
     true,
     null,
     null,
-    true,
+    null,
     null,
     null,
     true,

@@ -4,7 +4,7 @@ import { systemStatusMonitorHandlerAsync } from "./StatusMonitorHandlers";
 import {
   systemBackupCreateHandlerAsync,
   systemBackupCreateStatusHandlerAsync,
-  systemBackupHandlerDownloadHandlerAsync,
+  systemBackupDownloadHandlerAsync,
   systemBackupListHandlerAsync,
   systemBackupRestoreHandlerAsync,
 } from "./BackupHandlers";
@@ -33,7 +33,7 @@ router.get("/backups/list", async (_req: Request, res: Response) => {
 });
 
 router.get("/backups/download/:fileName", async (req: Request, res: Response) => {
-  await systemBackupHandlerDownloadHandlerAsync(req, res);
+  await systemBackupDownloadHandlerAsync(req, res);
   return;
 });
 

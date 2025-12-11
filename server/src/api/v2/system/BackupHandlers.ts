@@ -19,7 +19,7 @@ export async function systemBackupListHandlerAsync(response: Response): Promise<
   };
 }
 
-export async function systemBackupHandlerDownloadHandlerAsync(
+export async function systemBackupDownloadHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<void> {
