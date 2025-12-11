@@ -3,8 +3,8 @@ import mainAsync, { gracefulHaltAsync } from "./program";
 
 mainAsync().then((app) => {
   const server = app.listen(3000, () => {
-    app.set("gracefulHaltAsync", async () => {
-      await gracefulHaltAsync(server, app);
+    app.set("gracefulHaltAsync", async (after: () => Promise<void>) => {
+      await gracefulHaltAsync(server, app, after);
     });
     app.get("logger").info("Sproot server listening on port 3000!");
     // Graceful shutdown on signals

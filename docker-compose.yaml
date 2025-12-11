@@ -22,12 +22,14 @@ services:
       - DATABASE_USER=${DATABASE_USER}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - INTERSERVICE_AUTHENTICATION_KEY=${INTERSERVICE_AUTHENTICATION_KEY}
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS}
     volumes:
       - /run/udev:/run/udev:ro
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
       - ./docker_volumes/sproot/server/images:/sproot/server/images
       - ./docker_volumes/sproot/server/certs:/sproot/server/certs
+      - ./docker_volumes/sproot/server/backups:/sproot/server/backups
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
     group_add:

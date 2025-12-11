@@ -20,11 +20,14 @@ services:
       DATABASE_USER: root
       DATABASE_PASSWORD: root
       INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
+      BACKUP_RETENTION_DAYS: 30
     volumes:
       - /run/udev:/run/udev:ro
       - /sys:/sys
       - ./docker_volumes/sproot/server/logs:/sproot/server/logs
       - ./docker_volumes/sproot/server/images:/sproot/server/images
+      - ./docker_volumes/sproot/server/certs:/sproot/server/certs
+      - ./docker_volumes/sproot/server/backups:/sproot/server/backups
     network_mode: "host"
     privileged: true
     expose:

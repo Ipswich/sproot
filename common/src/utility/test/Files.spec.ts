@@ -2,7 +2,12 @@ import assert from "assert";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { getDirectorySizeAsync, getSortedFileAsync, getOldestFilePathAsync } from "../Files";
+import {
+  getDirectorySizeAsync,
+  getSortedFileAsync,
+  getOldestFilePathAsync,
+  createTimeStampSuffix,
+} from "../Files";
 
 describe("Files Utility", () => {
   // Base temp directory for all tests
@@ -37,8 +42,8 @@ describe("Files Utility", () => {
       const file1 = path.join(testDir, "file1.txt");
       const file2 = path.join(testDir, "file2.txt");
 
-      await fs.promises.writeFile(file1, Buffer.alloc(100));
-      await fs.promises.writeFile(file2, Buffer.alloc(200));
+      await fs.promises.writeFile(file1, "x".repeat(100));
+      await fs.promises.writeFile(file2, "x".repeat(200));
 
       const size = await getDirectorySizeAsync(testDir);
 
@@ -53,8 +58,8 @@ describe("Files Utility", () => {
       const file1 = path.join(testDir, "file1.txt");
       const file2 = path.join(subdir, "file2.txt");
 
-      await fs.promises.writeFile(file1, Buffer.alloc(100));
-      await fs.promises.writeFile(file2, Buffer.alloc(200));
+      await fs.promises.writeFile(file1, "x".repeat(100));
+      await fs.promises.writeFile(file2, "x".repeat(200));
 
       const size = await getDirectorySizeAsync(testDir);
 
@@ -115,9 +120,9 @@ describe("Files Utility", () => {
       const file2 = path.join(testDir, "file2.txt");
       const file3 = path.join(testDir, "file3.txt");
 
-      await fs.promises.writeFile(file1, Buffer.alloc(300));
-      await fs.promises.writeFile(file2, Buffer.alloc(100));
-      await fs.promises.writeFile(file3, Buffer.alloc(200));
+      await fs.promises.writeFile(file1, "x".repeat(300));
+      await fs.promises.writeFile(file2, "x".repeat(100));
+      await fs.promises.writeFile(file3, "x".repeat(200));
 
       // Sort by size (ascending)
       const sortFunction = (a: { stats: fs.Stats }, b: { stats: fs.Stats }) =>
@@ -171,6 +176,16 @@ describe("Files Utility", () => {
       const result = await getOldestFilePathAsync(nonExistentDir);
 
       assert.strictEqual(result, null);
+    });
+  });
+
+  describe("createTimeStampSuffix", () => {
+    it("should create a timestamp suffix in the correct format", () => {
+      const date = new Date(2024, 5, 15, 13, 45, 30);
+      const expectedSuffix = "2024-06-1-13-45";
+
+      const result = createTimeStampSuffix(date);
+      assert.strictEqual(result, expectedSuffix);
     });
   });
 });

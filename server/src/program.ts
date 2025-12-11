@@ -22,6 +22,7 @@ import {
   createDatabaseUpdateCronJob,
   createRunAutomationsCronJob,
   createUpdateDevicesCronJob,
+  createBackupCronJob,
 } from "./system/CronJobs";
 import { MdnsService } from "./system/MdnsService";
 
@@ -100,6 +101,9 @@ export default async function setupAsync(): Promise<Express> {
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
   app.set("updateDatabaseCronJob", updateDatabaseCronJob);
 
+  const backupCronJob = createBackupCronJob(sprootDB, logger);
+  app.set("backupCronJob", backupCronJob);
+
   app.use(cors());
   app.use(cookieParser());
   app.use(express.json());
@@ -115,7 +119,11 @@ export default async function setupAsync(): Promise<Express> {
   return app;
 }
 
-export async function gracefulHaltAsync(server: import("http").Server, app: Express) {
+export async function gracefulHaltAsync(
+  server: import("http").Server,
+  app: Express,
+  afterHalt?: () => Promise<void>,
+) {
   const logger = app.get("logger");
   logger.info("Shutting down...");
   server.closeAllConnections();
@@ -125,6 +133,7 @@ export async function gracefulHaltAsync(server: import("http").Server, app: Expr
     await app.get("updateDatabaseCronJob").stop();
     await app.get("automationsCronJuob").stop();
     await app.get("updateDevicesCronJob").stop();
+    await app.get("backupCronJob").stop();
     try {
       // Cleanup Cameras
       await app.get("cameraManager")[Symbol.asyncDispose]();
@@ -142,6 +151,9 @@ export async function gracefulHaltAsync(server: import("http").Server, app: Expr
       //Dgaf, swallow anything, we're shutting down anyway.
       logger.error(err);
     } finally {
+      if (afterHalt) {
+        await afterHalt();
+      }
       // Give everything a hot sec to finish whatever it's up to - call backs really mess with just calling process.exit.
       setTimeout(() => {
         logger.info("Done! See you next time!");

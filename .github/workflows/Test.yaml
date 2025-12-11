@@ -1,4 +1,3 @@
-
 name: "Verify and Test"
 
 on:
@@ -7,12 +6,12 @@ on:
 
 env:
   NODE_VERSION: 22.5.1
-  
+
   # Server configuration
   TZ: America/Los_Angeles
   NODE_ENV: test
   DEFAULT_USER: dev-test
-  DEFAULT_USER_EMAIL: dev-test@example.com 
+  DEFAULT_USER_EMAIL: dev-test@example.com
   DEFAULT_USER_PASSWORD: password
   AUTHENTICATION_ENABLED: false
   JWT_SECRET: Default
@@ -22,6 +21,7 @@ env:
   DATABASE_USER: root
   DATABASE_PASSWORD: root
   INTERSERVICE_AUTHENTICATION_KEY: test
+  BACKUP_RETENTION_DAYS: 30
 
 jobs:
   prettier:

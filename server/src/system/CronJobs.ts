@@ -4,6 +4,8 @@ import { CameraManager } from "../camera/CameraManager";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import { Backups } from "./Backups";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 export function createUpdateDevicesCronJob(
   cameraManager: CameraManager,
@@ -120,5 +122,40 @@ export function createDatabaseUpdateCronJob(
     null,
     null,
     (err) => logger.error(`State update cron error: ${err}`),
+  );
+}
+
+export function createBackupCronJob(sprootDB: ISprootDB, logger: winston.Logger) {
+  let running = false;
+  return new CronJob(
+    Constants.CRON.DAILY_AT_MIDNIGHT,
+    async function () {
+      if (running) {
+        logger.warn("Backup cron skipped: previous job still running.");
+        return;
+      }
+      running = true;
+      const profiler = logger.startTimer();
+      try {
+        logger.info("Starting scheduled backup...");
+        await Backups.createAsync(sprootDB, logger);
+      } catch (e) {
+        logger.error(`Exception in backup loop: ${e}`);
+      } finally {
+        profiler.done({ message: "Backup loop time", level: "debug" });
+        running = false;
+      }
+    },
+    () => {
+      logger.warn("Backup cron stopped.");
+    },
+    true,
+    null,
+    null,
+    true,
+    null,
+    null,
+    true,
+    (err) => logger.error(`Backup cron error: ${err}`),
   );
 }

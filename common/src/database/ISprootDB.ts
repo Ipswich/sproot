@@ -171,6 +171,21 @@ interface ISprootDB {
   addUserAsync(user: SDBUser): Promise<void>;
 
   getDatabaseSizeAsync(): Promise<number>;
+  backupDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    outputFile: string,
+  ): Promise<void>;
+
+  restoreDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    inputFile: string,
+  ): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -502,6 +517,26 @@ class MockSprootDB implements ISprootDB {
 
   async getDatabaseSizeAsync(): Promise<number> {
     return 0;
+  }
+
+  async backupDatabaseAsync(
+    _host: string,
+    _port: number,
+    _user: string,
+    _password: string,
+    _outputFile: string,
+  ): Promise<void> {
+    return;
+  }
+
+  async restoreDatabaseAsync(
+    _host: string,
+    _port: number,
+    _user: string,
+    _password: string,
+    _inputFile: string,
+  ): Promise<void> {
+    return Promise.resolve();
   }
 }
 
