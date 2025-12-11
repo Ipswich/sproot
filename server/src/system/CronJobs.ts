@@ -139,6 +139,11 @@ export function createBackupCronJob(sprootDB: ISprootDB, logger: winston.Logger)
       try {
         logger.info("Starting scheduled backup...");
         await Backups.createAsync(sprootDB, logger);
+        await Backups.runRetentionPolicyAsync(
+          logger,
+          Constants.BACKUP_DIRECTORY,
+          process.env["BACKUP_RETENTION_DAYS"]!,
+        );
       } catch (e) {
         logger.error(`Exception in backup loop: ${e}`);
       } finally {
