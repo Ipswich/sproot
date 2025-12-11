@@ -55,8 +55,9 @@ export class Backups {
   static async getByFileNameAsync(
     fileName: string,
     logger: winston.Logger,
+    directory: string = BACKUP_DIRECTORY,
   ): Promise<{ stream: ReadStream; size: number; name: string } | null> {
-    const path = `${BACKUP_DIRECTORY}/${fileName}.sproot.gz`;
+    const path = `${directory}/${fileName}.sproot.gz`;
     try {
       await fsPromises.access(path);
       return {
@@ -70,10 +71,10 @@ export class Backups {
     }
   }
 
-  static async getFileNamesAsync(): Promise<string[]> {
+  static async getFileNamesAsync(directory: string = BACKUP_DIRECTORY): Promise<string[]> {
     try {
       const files = await sortDirectoryByStatsAsync(
-        BACKUP_DIRECTORY,
+        directory,
         (a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime(),
       );
 
@@ -93,15 +94,19 @@ export class Backups {
     }
   }
 
-  static async runRetentionPolicyAsync(logger: winston.Logger): Promise<void> {
+  static async runRetentionPolicyAsync(
+    logger: winston.Logger,
+    retentionDirectory: string,
+    retentionDays: string,
+  ): Promise<void> {
     try {
-      const files = await fsPromises.readdir(BACKUP_DIRECTORY);
+      const files = await fsPromises.readdir(retentionDirectory);
 
-      const retentionCount = parseInt(process.env["BACKUP_RETENTION_DAYS"] || "30", 10);
+      const retentionCount = parseInt(retentionDays || "30", 10);
       const now = new Date();
 
       for (const file of files) {
-        const filePath = path.join(BACKUP_DIRECTORY, file);
+        const filePath = path.join(retentionDirectory, file);
         const stats = await fsPromises.stat(filePath);
         const ageInDays = (now.getTime() - stats.mtime.getTime()) / (1000 * 60 * 60 * 24);
 
