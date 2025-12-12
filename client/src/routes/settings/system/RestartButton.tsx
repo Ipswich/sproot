@@ -40,9 +40,11 @@ export default function RestartButton() {
         title="Restart System?"
       >
         <Group justify="space-between">
-          <Button onClick={closeConfirmModal}>Cancel</Button>
+          <Button onClick={closeConfirmModal} color="red">
+            Cancel
+          </Button>
           <Button
-            color="red"
+            color="grape"
             loading={powerOffQuery.isPending}
             onClick={() => {
               closeConfirmModal();

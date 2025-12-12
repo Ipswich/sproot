@@ -906,6 +906,98 @@ export async function getSubcontrollerAsync(): Promise<{
   return deserializedResponse.content?.data;
 }
 
+export async function getBackupsListAsync(): Promise<string[]> {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/backups`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching backups list: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function downloadBackupAsync(
+  fileName: string,
+): Promise<{ success: boolean }> {
+  const downloadUrl = `${SERVER_URL}/api/v2/system/backups/download/${fileName}`;
+  try {
+    // Open in a hidden iframe to prevent opening a new tab
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    // Set the source to the download URL
+    iframe.src = downloadUrl;
+
+    // Clean up after a short delay to ensure download starts
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 5000);
+
+    return { success: true };
+  } catch (e) {
+    console.error(`Error downloading timelapse archive:`, e);
+    throw e;
+  }
+}
+
+export async function uploadAndRestoreBackupAsync(
+  file: File,
+): Promise<SuccessResponse | ErrorResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/backups/restore`, {
+    method: "POST",
+    body: file,
+    headers: {
+      "Content-Type": "application/octet-stream",
+    },
+    mode: "cors",
+    // credentials: "include",
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    console.error(`Error uploading and restoring backup: ${response}`);
+    return json as ErrorResponse;
+  }
+  return json as SuccessResponse;
+}
+
+export async function createBackupAsync(): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/system/backups/create`, {
+    method: "POST",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error creating backup: ${response}`);
+  }
+  const result = (await response.json()) as SuccessResponse;
+  return result.content?.data;
+}
+
+export async function getBackupCreationStatusAsync(): Promise<{
+  isGeneratingBackup: boolean;
+}> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/system/backups/create/status`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching backup creation status: ${response}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
 export async function getSubcontrollerConnectionStatusAsync(
   id: number,
 ): Promise<{ online: boolean; version?: string }> {
