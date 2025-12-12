@@ -5,6 +5,7 @@ import { pingAsync } from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import RestartButton from "./RestartButton";
 import SystemStatus from "./Status";
+import Backups from "./Backups";
 
 export default function SystemSettings() {
   const [serverIsOnline, setServerIsOnline] = useState(true);
@@ -31,7 +32,7 @@ export default function SystemSettings() {
 
   return (
     <Fragment>
-      <Stack h="600" align="center">
+      <Stack align="center">
         {!serverIsOnline ? (
           <Modal
             overlayProps={{
@@ -58,6 +59,7 @@ export default function SystemSettings() {
         ) : (
           <Fragment>
             <SystemStatus />
+            <Backups />
             <RestartButton />
           </Fragment>
         )}

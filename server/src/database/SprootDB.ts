@@ -30,6 +30,8 @@ import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 import { encrypt, decrypt } from "@sproot/sproot-common/dist/utility/Crypto";
 import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
+import { spawn } from "node:child_process";
+import fs from "node:fs";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -653,6 +655,84 @@ export class SprootDB implements ISprootDB {
       [this.#connection.client.database()],
     );
     return parseFloat(result[0][0].size);
+  }
+
+  async backupDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    outputFile: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const dump = spawn("mysqldump", [
+        `--host=${host}`,
+        `--port=${port}`,
+        `--user=${user}`,
+        `--password=${password}`,
+        "--single-transaction",
+        "--quick",
+        this.#connection.client.database(),
+      ]);
+
+      const gzip = spawn("gzip", ["-c"]); // -c = write compressed to stdout
+
+      const out = fs.createWriteStream(outputFile, { flags: "w" });
+
+      dump.stdout.pipe(gzip.stdin);
+      gzip.stdout.pipe(out);
+
+      dump.stderr.on("data", (d) => console.error("mysqldump:", d.toString()));
+      gzip.stderr.on("data", (d) => console.error("gzip:", d.toString()));
+
+      dump.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`mysqldump exited with ${code}`));
+      });
+
+      gzip.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`gzip exited with ${code}`));
+      });
+
+      out.on("close", () => resolve());
+    });
+  }
+
+  async restoreDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    inputFile: string,
+  ): Promise<void> {
+    const dbName = this.#connection.client.database();
+
+    await new Promise<void>((resolve, reject) => {
+      const gunzip = spawn("gunzip", ["-c", inputFile]); // write decompressed SQL to stdout
+      const mysql = spawn("mysql", [
+        `--host=${host}`,
+        `--port=${port}`,
+        `--user=${user}`,
+        `--password=${password}`,
+        dbName,
+      ]);
+
+      gunzip.stdout.pipe(mysql.stdin);
+
+      gunzip.stderr.on("data", (d) => console.error("gunzip:", d.toString()));
+      mysql.stderr.on("data", (d) => console.error("mysql:", d.toString()));
+
+      gunzip.on("error", (err) => reject(err));
+      mysql.on("error", (err) => reject(err));
+
+      gunzip.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`gunzip exited with ${code}`));
+      });
+
+      mysql.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`mysql exited with ${code}`));
+        resolve();
+      });
+    });
   }
 
   async [Symbol.asyncDispose](): Promise<void> {

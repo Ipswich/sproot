@@ -5,6 +5,7 @@ export const MDNS_SERVICE_TYPE = "sproot-device";
 export const CRON = {
   EVERY_SECOND: "* * * * * *",
   EVERY_MINUTE: "0 * * * * *",
+  DAILY_AT_MIDNIGHT: "0 0 0 * * *",
 };
 
 // Cache Constants
@@ -33,7 +34,10 @@ export const ESP32_BOOTAPP0_PATH = `${FIRMWARE_DIRECTORY}/esp32/boot_app0.bin`;
 export const ESP32_FIRMWARE_PATH = `${FIRMWARE_DIRECTORY}/esp32/firmware.bin`;
 
 // Certificates Constants
-export const CERTS_DIRECTORY = "./certs";
-export const CA_DIR = `${CERTS_DIRECTORY}/ca`;
-export const CA_KEY_PATH = `${CA_DIR}/ca.key.pem`;
-export const CA_CERT_PATH = `${CA_DIR}/ca.crt.pem`;
+// export const CERTS_DIRECTORY = "./certs";
+// export const CA_DIR = `${CERTS_DIRECTORY}/ca`;
+// export const CA_KEY_PATH = `${CA_DIR}/ca.key.pem`;
+// export const CA_CERT_PATH = `${CA_DIR}/ca.crt.pem`;
+
+// Backup Constants
+export const BACKUP_DIRECTORY = "./backups";

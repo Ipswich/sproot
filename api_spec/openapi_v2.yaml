@@ -352,6 +352,293 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve system status."
+  /api/v2/system/backups:
+    get:
+      tags:
+        - "System"
+      summary: List system backups.
+      description: >
+        Returns a list of available system backups.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              type: string
+                              example: "sproot-backup-2023-10-01-12-00-00.sproot.gz"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/backups"
+                          details:
+                            items:
+                              example: "Failed to retrieve system backups."
+  /api/v2/system/backups/download/{fileName}:
+    get:
+      tags:
+        - "System"
+      summary: Download a system backup.
+      description: >
+        Downloads a system backup file by its filename.
+      parameters:
+        - in: path
+          name: fileName
+          required: true
+          description: "The name of the backup file to download."
+          schema:
+            type: string
+          example: "sproot-backup-2023-10-01-12-00-00.sproot.gz"
+      responses:
+        200:
+          description: "Success"
+          headers:
+            Content-Length:
+              description: "The size of the content in bytes."
+              schema:
+                type: string
+                example: "12345678"
+            Content-Disposition:
+              description: "Indicates that the content is a file attachment."
+              schema:
+                type: string
+                example: "attachment; filename=\"sproot-backup-2023-10-01-12-00-00.sproot.gz\""
+          content:
+            application/gzip:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
+                          details:
+                            items:
+                              example: "Invalid backup file name."
+        404:
+          description: "Backup not found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
+                          details:
+                            items:
+                              example: "Backup file sproot-backup-2023-10-01-12-00-00.sproot.gz not found."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
+                          details:
+                            items:
+                              example: "Failed to download backup."
+  /api/v2/system/backups/restore:
+    post:
+      tags:
+        - "System"
+      summary: Restore a system backup.
+      description: >
+        Restores a system backup from an uploaded gzip-compressed SQL dump file.
+      requestBody:
+        required: true
+        content: 
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        202:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 202
+                      content:
+                        properties:
+                          data:
+                            example: "Backup restored queued."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/system/backup/restore"
+                          details:
+                            items:
+                              example: "Invalid backup file."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/backup/restore"
+                          details:
+                            items:
+                              example: "Failed to restore backup."
+  /api/v2/system/backups/create:
+    post:
+      tags:
+        - "System"
+      summary: Create a system backup.
+      description: >
+        Creates a new system backup and stores it as a gzip-compressed SQL dump file.
+      responses:
+        202:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 202
+                      content:
+                        properties:
+                          data:
+                            example: "Backup creation queued."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/backup/create"
+                          details:
+                            items:
+                              example: "Failed to create backup."
+  /api/v2/system/backups/create/status:
+    get:
+      tags:
+        - "System"
+      summary: Get the status of the current backup creation.
+      description: >
+        Returns the status of the most recent system backup creation process.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            properties:
+                              inProgress:
+                                type: boolean
+                                example: false
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/system/backups/create-status"
+                          details:
+                            items:
+                              example: "Failed to retrieve backup status."
   /api/v2/subcontrollers:
     get:
       tags:
@@ -5367,9 +5654,11 @@ components:
               type: number
               example: 5000
             directorySize:
+              nullable: true
               type: number
               example: 2500
             lastArchiveGenerationDuration:
+              nullable: true
               type: number
               example: 120
     

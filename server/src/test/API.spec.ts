@@ -1158,6 +1158,64 @@ describe("API Tests", async function () {
         });
       });
     });
+    describe("Backups", async () => {
+      describe("list", async () => {
+        describe("GET", async () => {
+          it("should return 200 and a list of backups", async () => {
+            const response = await request(server).get("/api/v2/system/backups").expect(200);
+            const data = response.body["content"].data;
+            validateMiddlewareValues(response);
+
+            assert.isArray(data);
+          });
+        });
+      });
+      describe("create", async () => {
+        describe("POST", async () => {
+          it("should return 202 and queue a backup creation", async () => {
+            const response = await request(server)
+              .post("/api/v2/system/backups/create")
+              .expect(202);
+            const data = response.body["content"].data;
+            validateMiddlewareValues(response);
+
+            assert.equal(data, "Backup creation queued.");
+          });
+        });
+      });
+      describe("status", async () => {
+        describe("GET", async () => {
+          it("should return 200 and the backup status", async () => {
+            const response = await request(server)
+              .get("/api/v2/system/backups/create/status")
+              .expect(200);
+            const data = response.body["content"].data;
+            validateMiddlewareValues(response);
+
+            assert.isBoolean(data.isGeneratingBackup);
+          });
+        });
+      });
+      describe("download", async () => {
+        describe("GET", async () => {
+          it("should return 200 and the backup file", async () => {
+            let response = await request(server).get("/api/v2/system/backups").expect(200);
+            let data = response.body["content"].data;
+            validateMiddlewareValues(response);
+            assert.isNotEmpty(data);
+
+            response = await request(server)
+              .get(`/api/v2/system/backups/download/${data[0]}`)
+              .expect(200);
+            validateMiddlewareValues(response);
+
+            assert.equal(response.headers["content-type"], "application/octet-stream");
+            assert.isString(response.headers["content-length"]);
+            assert.isNotNull(response.body);
+          });
+        });
+      });
+    });
   });
 
   describe("Subcontroller Routes", async () => {

@@ -28,7 +28,7 @@ export async function getDirectorySizeAsync(directoryPath: string): Promise<numb
   return totalSize;
 }
 
-export async function getSortedFileAsync(
+export async function sortDirectoryByStatsAsync(
   directoryPath: string,
   sort: (
     a: {
@@ -64,13 +64,29 @@ export async function getSortedFileAsync(
     );
     fileStats = fileStats.filter((file) => file.stats.isFile()).sort(sort);
 
-    // Load file
-    const imagePath = path.join(directoryPath, fileStats[0]!.file);
-
-    return imagePath;
+    return fileStats.map((f) => {
+      return { name: path.join(directoryPath, f.file), stats: f.stats };
+    });
   } catch (error) {
     return null;
   }
+}
+
+export async function getSortedFileAsync(
+  directoryPath: string,
+  sort: (
+    a: {
+      file: string;
+      stats: fs.Stats;
+    },
+    b: {
+      file: string;
+      stats: fs.Stats;
+    },
+  ) => number,
+) {
+  const sortedFiles = (await sortDirectoryByStatsAsync(directoryPath, sort))?.map((f) => f.name);
+  return sortedFiles && sortedFiles[0] ? sortedFiles[0] : null;
 }
 
 export async function getOldestFilePathAsync(directoryPath: string): Promise<string | null> {
@@ -78,4 +94,14 @@ export async function getOldestFilePathAsync(directoryPath: string): Promise<str
     directoryPath,
     (a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime(),
   );
+}
+
+export function createTimeStampSuffix(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}-${hours}-${minutes}`;
 }

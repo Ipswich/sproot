@@ -35,7 +35,7 @@ before(async function () {
 });
 
 after(async () => {
-  await gracefulHaltAsync(server, app);
+  await gracefulHaltAsync(server, app, async () => {});
   console.log("Server closed!");
 });
 

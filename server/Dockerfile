@@ -41,7 +41,7 @@ COPY --from=build /sproot/server/python /sproot/server/python
 COPY --from=build /sproot/server/static /sproot/server/static
 COPY --from=build /sproot/api_spec /sproot/api_spec
 
-# Install camera dependencies
+# Install mysql and camera dependencies
 ENV PYTHONDONTWRITEBYTECODE=1
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
   && echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
   && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
 RUN apt-get update && apt-get -y upgrade \
-  && apt-get install -y --no-install-recommends udev python3-pip python3-picamera2\
+  && apt-get install -y --no-install-recommends default-mysql-client udev python3-pip python3-picamera2\
   && apt-get clean \
   && apt-get autoremove \
   && rm -rf /var/cache/apt/archives/* \

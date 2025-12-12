@@ -10,6 +10,7 @@ import { isBetweenTimeStamp } from "@sproot/sproot-common/dist/utility/TimeMetho
 import path from "path";
 import { PassThrough, pipeline } from "stream";
 import { spawn } from "child_process";
+import { createTimeStampSuffix } from "@sproot/sproot-common/dist/utility/Files";
 
 type AddImageToTimelapseFunction = (file: string, directory: string) => Promise<void>;
 
@@ -317,13 +318,7 @@ class Timelapse implements Disposable {
     try {
       // Create timestamp for unique filenames
       const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-
-      const fileName = `${this.#cameraName}_${year}-${month}-${day}-${hours}-${minutes}.jpg`;
+      const fileName = `${this.#cameraName}_${createTimeStampSuffix(now)}.jpg`;
 
       await fs.promises.mkdir(TIMELAPSE_DIRECTORY, { recursive: true });
 
