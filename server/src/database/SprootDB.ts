@@ -705,7 +705,6 @@ export class SprootDB implements ISprootDB {
     inputFile: string,
   ): Promise<void> {
     const dbName = this.#connection.client.database();
-    console.log(`Restoring database ${dbName} from backup file ${inputFile}...`);
 
     await new Promise<void>((resolve, reject) => {
       const gunzip = spawn("gunzip", ["-c", inputFile]); // write decompressed SQL to stdout

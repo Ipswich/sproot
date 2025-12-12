@@ -352,7 +352,7 @@ paths:
                           details:
                             items:
                               example: "Failed to retrieve system status."
-  /api/v2/system/backups/list:
+  /api/v2/system/backups:
     get:
       tags:
         - "System"
@@ -392,7 +392,7 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/backups/list"
+                            example: "/api/v2/system/backups"
                           details:
                             items:
                               example: "Failed to retrieve system backups."

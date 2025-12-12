@@ -16,6 +16,7 @@ export class Backups {
     const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(new Date())}.sproot.gz`;
     try {
       if (!this.isGeneratingBackup) {
+        logger.info(`Creating backup at ${backupFilePath}...`);
         this.isGeneratingBackup = true;
         await sprootDB.backupDatabaseAsync(
           process.env["DATABASE_HOST"]!,

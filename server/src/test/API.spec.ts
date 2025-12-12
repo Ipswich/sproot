@@ -1162,7 +1162,7 @@ describe("API Tests", async function () {
       describe("list", async () => {
         describe("GET", async () => {
           it("should return 200 and a list of backups", async () => {
-            const response = await request(server).get("/api/v2/system/backups/list").expect(200);
+            const response = await request(server).get("/api/v2/system/backups").expect(200);
             const data = response.body["content"].data;
             validateMiddlewareValues(response);
 
@@ -1199,7 +1199,7 @@ describe("API Tests", async function () {
       describe("download", async () => {
         describe("GET", async () => {
           it("should return 200 and the backup file", async () => {
-            let response = await request(server).get("/api/v2/system/backups/list").expect(200);
+            let response = await request(server).get("/api/v2/system/backups").expect(200);
             let data = response.body["content"].data;
             validateMiddlewareValues(response);
             assert.isNotEmpty(data);

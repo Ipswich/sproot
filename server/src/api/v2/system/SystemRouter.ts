@@ -25,7 +25,7 @@ router.get("/status", async (req: Request, res: Response) => {
   return;
 });
 
-router.get("/backups/list", async (_req: Request, res: Response) => {
+router.get("/backups", async (_req: Request, res: Response) => {
   const response = await systemBackupListHandlerAsync(res);
 
   res.status(response.statusCode).json(response);
