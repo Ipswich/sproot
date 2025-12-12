@@ -15,6 +15,7 @@ export class Backups {
   static async createAsync(sprootDB: ISprootDB, logger: winston.Logger): Promise<void> {
     const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(new Date())}.sproot.gz`;
     try {
+      await fsPromises.mkdir(BACKUP_DIRECTORY, { recursive: true });
       if (!this.isGeneratingBackup) {
         logger.info(`Creating backup at ${backupFilePath}...`);
         this.isGeneratingBackup = true;
