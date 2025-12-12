@@ -7,6 +7,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
+import { finished } from "stream/promises";
 
 export async function systemBackupListHandlerAsync(response: Response): Promise<SuccessResponse> {
   const backupFileNames = await Backups.getFileNamesAsync();
@@ -62,7 +63,7 @@ export async function systemBackupDownloadHandlerAsync(
 export async function systemBackupRestoreHandlerAsync(
   request: Request,
   response: Response,
-): Promise<void> {
+): Promise<SuccessResponse | ErrorResponse> {
   // Generate a temp file path
   const tempFile =
     (await fs.promises.mkdtemp(path.join(tmpdir(), "sproot-backup-"))) +
@@ -76,63 +77,60 @@ export async function systemBackupRestoreHandlerAsync(
   request.on("error", (err) => (uploadError = err.toString()));
   writeStream.on("error", (err) => (uploadError = err.toString()));
 
-  // Once file has been fully written
-  writeStream.on("finish", async () => {
+  try {
+    await finished(writeStream);
     if (uploadError) {
-      return {
-        statusCode: 500,
-        error: {
-          name: "Internal Server Error",
-          url: request.originalUrl,
-          details: [`Failed to upload backup file: ${uploadError}`],
-        },
-        ...response.locals["defaultProperties"],
-      };
+      throw new Error(uploadError);
+    }
+  } catch (err) {
+    const uploadMsg = uploadError ?? (err instanceof Error ? err.message : String(err));
+    return {
+      statusCode: 500,
+      error: {
+        name: "Internal Server Error",
+        url: request.originalUrl,
+        details: [`Failed to upload backup file: ${uploadMsg}`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+  }
+
+  try {
+    // Check gzip header (first 2 bytes: 0x1f, 0x8b)
+    const fd = fs.openSync(tempFile, "r");
+    const buffer = new Uint8Array(2);
+    fs.readSync(fd, buffer, 0, 2, 0);
+    fs.closeSync(fd);
+    if (buffer[0] !== 0x1f || buffer[1] !== 0x8b) {
+      throw new Error("Uploaded file is not valid gzip");
     }
 
-    // Basic validation
-    try {
-      // 1. Check file extension
-      if (!tempFile.endsWith(".gz")) {
-        throw new Error("Uploaded file must be a .gz backup");
-      }
+    request.app.get("gracefulHaltAsync")(async (): Promise<void> => {
+      request.app.get("logger").info(`Restoring from backup file ${tempFile}`);
+      await Backups.restoreAsync(
+        tempFile,
+        request.app.get("sprootDB") as ISprootDB,
+        request.app.get("logger") as winston.Logger,
+      );
+      request.app.get("logger").info(`Restore complete! System exiting now!`);
+    });
 
-      // 2. Check gzip header (first 2 bytes: 0x1f, 0x8b)
-      const fd = fs.openSync(tempFile, "r");
-      const buffer = new Uint8Array(2);
-      fs.readSync(fd, buffer, 0, 2, 0);
-      fs.closeSync(fd);
-      if (buffer[0] !== 0x1f || buffer[1] !== 0x8b) {
-        throw new Error("Uploaded file is not valid gzip");
-      }
-
-      request.app.get("gracefulHaltAsync")(async (): Promise<void> => {
-        request.app.get("logger").info(`Restoring from backup file ${tempFile}`);
-        await Backups.restoreAsync(
-          tempFile,
-          request.app.get("sprootDB") as ISprootDB,
-          request.app.get("logger") as winston.Logger,
-        );
-        request.app.get("logger").info(`Restore complete! System exiting now!`);
-      });
-
-      return {
-        statusCode: 202,
-        content: { data: "Backup restore queued." },
-        ...response.locals["defaultProperties"],
-      };
-    } catch (err: any) {
-      return {
-        statusCode: 400,
-        error: {
-          name: "Bad Request",
-          url: request.originalUrl,
-          details: [`Invalid backup file: ${(err as Error).message}`],
-        },
-        ...response.locals["defaultProperties"],
-      };
-    }
-  });
+    return {
+      statusCode: 202,
+      content: { data: "Backup restore queued." },
+      ...response.locals["defaultProperties"],
+    };
+  } catch (err: any) {
+    return {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: [`Invalid backup file: ${(err as Error).message}`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+  }
 }
 
 export async function systemBackupCreateHandlerAsync(

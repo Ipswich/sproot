@@ -24,11 +24,12 @@ export class Backups {
           process.env["DATABASE_PASSWORD"]!,
           backupFilePath,
         );
+        this.isGeneratingBackup = false;
       }
     } catch (error) {
-      logger.error(`Failed to create backup: ${(error as Error).message}`);
-    } finally {
       this.isGeneratingBackup = false;
+      logger.error(`Failed to create backup: ${(error as Error).message}`);
+      throw error;
     }
   }
 

@@ -182,7 +182,7 @@ describe("Files Utility", () => {
   describe("createTimeStampSuffix", () => {
     it("should create a timestamp suffix in the correct format", () => {
       const date = new Date(2024, 5, 15, 13, 45, 30);
-      const expectedSuffix = "2024-06-1-13-45";
+      const expectedSuffix = "2024-06-15-13-45";
 
       const result = createTimeStampSuffix(date);
       assert.strictEqual(result, expectedSuffix);
