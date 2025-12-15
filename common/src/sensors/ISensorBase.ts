@@ -9,6 +9,7 @@ interface ISensorBase {
   address: string | null;
   color: string;
   pin: string | null;
+  deviceGroupId: number | null;
   lowCalibrationPoint: number | null;
   highCalibrationPoint: number | null;
   lastReading: Partial<Record<ReadingType, string | undefined>>;

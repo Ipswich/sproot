@@ -162,9 +162,9 @@ paths:
       responses:
         200:
           description: "Success"
-          headers: 
+          headers:
             Set-Cookie:
-              schema: 
+              schema:
                 type: string
                 example: jwt_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRldi10ZXN0IiwiY3NyZiI6ImQ4N2MyZGZiLTkyMTUtNGM3Yy04Mzg2LWM4NGU3ODk0ZjRkZSIsImlhdCI6MTcyMDIzOTE1MywiZXhwIjoxOTc5NDM5MTUzfQ.Kp4jyZoBXdrw6dVnk8DPw4hmfWEtFfz0sZoWxBcGjUw; Max-Age=259200; Path=/; Expires=Mon, 01 Jan 2024 00:00:00 GMT; HttpOnly; SameSite=Strict
           content:
@@ -264,7 +264,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/system/power-off:
     post:
-      tags: 
+      tags:
         - "System"
       summary: "Power off the system."
       description: >
@@ -332,7 +332,7 @@ paths:
                           data:
                             allOf:
                               - $ref: "#/components/schemas/SystemStatus"
-                          
+
         500:
           description: "Internal server error"
           content:
@@ -424,7 +424,7 @@ paths:
               description: "Indicates that the content is a file attachment."
               schema:
                 type: string
-                example: "attachment; filename=\"sproot-backup-2023-10-01-12-00-00.sproot.gz\""
+                example: 'attachment; filename="sproot-backup-2023-10-01-12-00-00.sproot.gz"'
           content:
             application/gzip:
               schema:
@@ -496,7 +496,7 @@ paths:
         Restores a system backup from an uploaded gzip-compressed SQL dump file.
       requestBody:
         required: true
-        content: 
+        content:
           application/octet-stream:
             schema:
               type: string
@@ -1037,7 +1037,7 @@ paths:
               description: "Indicates that the content is a file attachment."
               schema:
                 type: string
-                example: "attachment; filename=\"firmware.bin\""
+                example: 'attachment; filename="firmware.bin"'
           content:
             application/octet-stream:
               schema:
@@ -1082,7 +1082,7 @@ paths:
               description: "Indicates that the content is a file attachment."
               schema:
                 type: string
-                example: "attachment; filename=\"bootloader.bin\""
+                example: 'attachment; filename="bootloader.bin"'
           content:
             application/octet-stream:
               schema:
@@ -1127,7 +1127,7 @@ paths:
               description: "Indicates that the content is a file attachment."
               schema:
                 type: string
-                example: "attachment; filename=\"partitions.bin\""
+                example: 'attachment; filename="partitions.bin"'
           content:
             application/octet-stream:
               schema:
@@ -1172,7 +1172,7 @@ paths:
               description: "Indicates that the content is a file attachment."
               schema:
                 type: string
-                example: "attachment; filename=\"boot_app0.bin\""
+                example: 'attachment; filename="boot_app0.bin"'
           content:
             application/octet-stream:
               schema:
@@ -2399,7 +2399,7 @@ paths:
                               example:
                                 - "Failed to add automation to database."
                                 - "Database connection failed."
-    
+
   /api/v2/automations/{automationId}:
     get:
       security:
@@ -2491,7 +2491,7 @@ paths:
                               example:
                                 - "Failed to retrieve automation from database."
                                 - "Database connection failed."
-    delete: 
+    delete:
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2556,7 +2556,7 @@ paths:
                         properties:
                           name:
                             example: "Unauthorized"
-                          url: 
+                          url:
                             example: "/api/v2/automations/1"
                           details:
                             example: "Invalid or Missing JWT."
@@ -2696,7 +2696,7 @@ paths:
                               example: "Automation with Id -1 not found."
         503:
           description: "Service unavailable"
-          content: 
+          content:
             application/json:
               schema:
                 allOf:
@@ -3443,7 +3443,7 @@ paths:
           description: "Not Found"
           content:
             application/json:
-              schema: 
+              schema:
                 allOf:
                   - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
@@ -3754,7 +3754,7 @@ paths:
                               example:
                                 - "Failed to get output action from database."
                                 - "Database connection failed."
-   
+
     delete:
       security:
         - bearerAuth: []
@@ -3864,8 +3864,6 @@ paths:
                               example:
                                 - "Failed to delete output action from database."
                                 - "Database connection failed."
-
-  
 
   /api/v2/sensors:
     get:
@@ -4466,7 +4464,7 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-  
+
   /api/v2/sensors/reading-types:
     get:
       security:
@@ -4496,7 +4494,7 @@ paths:
                             allOf:
                               - $ref: "#/components/schemas/ReadingTypes"
                             properties:
-                              temperature: 
+                              temperature:
                                 type: string
                               humidity:
                                 type: string
@@ -4519,6 +4517,383 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
+  /api/v2/device-groups:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Device Groups"
+      summary: Get all device groups.
+      description: >
+        Returns a list of all device groups. This includes basic information about each device group, such as
+        name and id.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/SDBDeviceGroup"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/device-groups"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/device-groups"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get device groups from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Device Groups"
+      summary: Add a new device group.
+      description: >
+        Adds a new device group to the service. Returns the information
+        used to create the device group.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBDeviceGroup"
+      responses:
+        201:
+          description: "Device group created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBDeviceGroup"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/device-groups"
+                          details:
+                            example:
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/device-groups"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/device-groups"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add device group to database."
+                                - "Database connection failed."
+  /api/v2/device-groups/{deviceGroupId}:
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Device Groups"
+      summary: Update a device group.
+      description: >
+        Updates a device group. This operation changes only the fields provided.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBDeviceGroup"
+      responses:
+        200:
+          description: "Device group updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBDeviceGroup"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/device-groups/1"
+                          details:
+                            example:
+                              - "Missing required field: id"
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/device-groups/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/device-groups/-1"
+                          details:
+                            items:
+                              example: "Device group with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/device-groups/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update device group in database."
+                                - "Database connection failed."
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Device Groups"
+      summary: Delete a device group.
+      description: >
+        Deletes a device group. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: deviceGroupId
+          required: true
+          description: "device group Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Device group deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Device group with ID 1 successfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/device-groups/1"
+                          details:
+                            example:
+                              - "Invalid or missing device group Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/device-groups/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/device-groups/-1"
+                          details:
+                            items:
+                              example: "Device group with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/device-groups"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete device group from database."
+                                - "Database connection failed."
   /api/v2/camera/settings:
     get:
       security:
@@ -4610,7 +4985,7 @@ paths:
                             example: "/api/v2/camera/settings"
                           details:
                             items:
-                              example: 
+                              example:
                                 - "Missing timelapse enabled"
                                 - "Missing timelapse image retention days"
                                 - "Missing timelapse image retention size"
@@ -4791,7 +5166,7 @@ paths:
               description: "Indicates that the content is a file attachment."
               schema:
                 type: string
-                example: "attachment; filename=\"timelapse.tar\""
+                example: 'attachment; filename="timelapse.tar"'
           content:
             application/x-tar:
               schema:
@@ -4860,7 +5235,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: "Timelapse archive regeneration queued."        
+                            example: "Timelapse archive regeneration queued."
   /api/v2/camera/timelapse/archive/status:
     get:
       security:
@@ -4892,7 +5267,7 @@ paths:
                                 example: "true"
                               archiveProgress:
                                 type: number
-                                example: 75 
+                                example: 75
 
 components:
   schemas:
@@ -5099,7 +5474,7 @@ components:
         value:
           type: number
           example: 50
-    
+
     AutomationConditions:
       description: >
         These conditions define when an automation will run.
@@ -5195,10 +5570,10 @@ components:
                   - $ref: "#/components/schemas/WeekdayCondition"
                   - $ref: "#/components/schemas/MonthCondition"
                   - $ref: "#/components/schemas/DateRangeCondition"
-      
+
     SensorCondition:
       description: >
-        Defines a condition based on a sensor value. 
+        Defines a condition based on a sensor value.
       allOf:
         - type: object
           required:
@@ -5211,7 +5586,7 @@ components:
               type: number
               readOnly: true
               example: 1
-            groupType: 
+            groupType:
               type: string
               enum:
                 - allOf
@@ -5242,139 +5617,139 @@ components:
       description: >
         Defines a condition based on an output value.
       allOf:
-      - type: object
-        required:
-          - operator
-          - comparisonValue
-          - outputId
-      - properties:
-          id:
-            type: number
-            readOnly: true
-            example: 1
-          groupType: 
-            type: string
-            enum:
-              - allOf
-              - anyOf
-              - oneOf
-          operator:
-            type: string
-            example: "greaterOrEqual"
-          comparisonValue:
-            type: number
-            example: 50
-          comparisonLookback:
-            nullable: true
-            type: number
-            example: 3
-          outputId:
-            type: number
-            example: 1
-          outputName:
-            readOnly: true
-            type: string
-            example: "Relay #1"
-      
+        - type: object
+          required:
+            - operator
+            - comparisonValue
+            - outputId
+        - properties:
+            id:
+              type: number
+              readOnly: true
+              example: 1
+            groupType:
+              type: string
+              enum:
+                - allOf
+                - anyOf
+                - oneOf
+            operator:
+              type: string
+              example: "greaterOrEqual"
+            comparisonValue:
+              type: number
+              example: 50
+            comparisonLookback:
+              nullable: true
+              type: number
+              example: 3
+            outputId:
+              type: number
+              example: 1
+            outputName:
+              readOnly: true
+              type: string
+              example: "Relay #1"
+
     TimeCondition:
       description: >
         Defines a condition based on time.
       allOf:
-      - type: object
-      - properties:
-          id:
-            type: number
-            readOnly: true
-            example: 1
-          groupType: 
-            type: string
-            enum:
-              - allOf
-              - anyOf
-              - oneOf
-          startTime:
-            nullable: true
-            type: string
-            example: "12:00"
-          endTime:
-            nullable: true
-            type: string
-            example: "18:00"
+        - type: object
+        - properties:
+            id:
+              type: number
+              readOnly: true
+              example: 1
+            groupType:
+              type: string
+              enum:
+                - allOf
+                - anyOf
+                - oneOf
+            startTime:
+              nullable: true
+              type: string
+              example: "12:00"
+            endTime:
+              nullable: true
+              type: string
+              example: "18:00"
 
     WeekdayCondition:
       description: >
         Defines a condition based on the days of the week.
       allOf:
-      - type: object
-      - properties:
-          id:
-            type: number
-            readOnly: true
-            example: 1
-          groupType: 
-            type: string
-            enum:
-              - allOf
-              - anyOf
-              - oneOf
-          weekdays:
-            description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
-            type: number
-            example: 127
+        - type: object
+        - properties:
+            id:
+              type: number
+              readOnly: true
+              example: 1
+            groupType:
+              type: string
+              enum:
+                - allOf
+                - anyOf
+                - oneOf
+            weekdays:
+              description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
+              type: number
+              example: 127
 
     MonthCondition:
       description: >
         Defines a condition based on the months of the year.
       allOf:
-      - type: object
-      - properties:
-          id:
-            type: number
-            readOnly: true
-            example: 1
-          groupType: 
-            type: string
-            enum:
-              - allOf
-              - anyOf
-              - oneOf
-          months:
-            description: "A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc."
-            type: number
-            example: 4095
-    
+        - type: object
+        - properties:
+            id:
+              type: number
+              readOnly: true
+              example: 1
+            groupType:
+              type: string
+              enum:
+                - allOf
+                - anyOf
+                - oneOf
+            months:
+              description: "A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc."
+              type: number
+              example: 4095
+
     DateRangeCondition:
       description: >
         Defines a condition for an interval of dates of the year.
       allOf:
-      - type: object
-      - properties:
-          id:
-            type: number
-            readOnly: true
-            example: 1
-          groupType: 
-            type: string
-            enum:
-              - allOf
-              - anyOf
-              - oneOf
-          startMonth:
-            description: "The month the date range starts on, as a number from 1 to 12."
-            type: number
-            example: 1
-          startDay:
-            description: "The day the date range starts on, with the first day of the month as 1 and the last day as 28-31."
-            type: number
-            example: 1
-          endMonth:
-            description: "The month the date range ends on, as a number from 1 to 12."
-            type: number
-            example: 12
-          endDay:
-            description: "The day the date range ends on, with the first day of the month as 1 and the last day as 28-31."
-            type: number
-            example: 31
+        - type: object
+        - properties:
+            id:
+              type: number
+              readOnly: true
+              example: 1
+            groupType:
+              type: string
+              enum:
+                - allOf
+                - anyOf
+                - oneOf
+            startMonth:
+              description: "The month the date range starts on, as a number from 1 to 12."
+              type: number
+              example: 1
+            startDay:
+              description: "The day the date range starts on, with the first day of the month as 1 and the last day as 28-31."
+              type: number
+              example: 1
+            endMonth:
+              description: "The month the date range ends on, as a number from 1 to 12."
+              type: number
+              example: 12
+            endDay:
+              description: "The day the date range ends on, with the first day of the month as 1 and the last day as 28-31."
+              type: number
+              example: 31
 
     SDBSensor:
       description: >
@@ -5499,6 +5874,22 @@ components:
             type: string
             example: 192.168.2.138
 
+    SDBDeviceGroup:
+      description: >
+        A device group object that is stored in the database. Contains all the information needed to 
+        create a device group, including name and a list of device IDs.
+      type: object
+      required:
+        - "name"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: "Living Room"
+
     ReadingTypes:
       description: >
         An obejct of active sensor reading types and their units.
@@ -5598,7 +5989,7 @@ components:
           nullable: true
           type: string
           example: "23:59"
-    
+
     SystemStatus:
       description: >
         An object containing the current system status, including uptime, memory usage, CPU usage,
@@ -5610,7 +6001,7 @@ components:
           properties:
             totalDiskSize:
               type: number
-              example: 64000 
+              example: 64000
             freeDiskSize:
               type: number
               example: 32000
@@ -5661,7 +6052,7 @@ components:
               nullable: true
               type: number
               example: 120
-    
+
     FirmwareManifest:
       description: >
         An object containing the firmware manifest information.
@@ -5680,7 +6071,7 @@ components:
         sha256:
           type: string
           example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    
+
     UnrecognizedSubcontrollers:
       description: >
         An object representing a subcontroller discovered on the network.
@@ -5698,11 +6089,11 @@ components:
           example: "sproot-esp32-1C78.local"
         address:
           oneOf:
-          - type: string
-            example: "192.168.1.1"
-          - type: array
-            items:
-              type: string
+            - type: string
+              example: "192.168.1.1"
+            - type: array
+              items:
+                type: string
 
   securitySchemes:
     bearerAuth:
