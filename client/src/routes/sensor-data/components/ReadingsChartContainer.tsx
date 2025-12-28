@@ -9,7 +9,7 @@ import {
   Units,
 } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { Fragment, useEffect, useState } from "react";
-import { getSensorChartDataAsync } from "../../../requests/requests_v2";
+import { getSensorsAsync, getSensorChartDataAsync } from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import ReadingsChart from "./ReadingsChart";
 import {
@@ -21,6 +21,7 @@ export interface ReadingsChartContainerProps {
   readingType: string;
   chartInterval: string;
   toggledSensors: string[];
+  toggledDeviceGroups: string[];
   chartRendering: boolean;
   setChartRendering: (value: boolean) => void;
   useAlternateUnits: boolean;
@@ -30,6 +31,7 @@ export default function ReadingsChartContainer({
   readingType,
   chartInterval,
   toggledSensors,
+  toggledDeviceGroups,
   chartRendering,
   setChartRendering,
   useAlternateUnits,
@@ -50,6 +52,12 @@ export default function ReadingsChartContainer({
     queryKey: ["sensor-data-chart"],
     queryFn: () => getSensorChartDataAsync(readingType),
     refetchInterval: 300000,
+  });
+
+  const sensorsQuery = useQuery({
+    queryKey: ["sensor-data-sensors"],
+    queryFn: () => getSensorsAsync(),
+    refetchInterval: 60000,
   });
 
   const updateDataAsync = async () => {
@@ -120,14 +128,15 @@ export default function ReadingsChartContainer({
   if (readingType == ReadingType.temperature) {
     updateUnits(timeSpans[parseInt(chartInterval)]!);
   }
-
+  const hiddenSensors = toggledSensors.concat((Object.values(sensorsQuery.data ?? {}) ?? [])
+    .filter((sensor) => {
+      return toggledDeviceGroups.includes((sensor.deviceGroupId ?? -1).toString()) || !Object.keys(sensor.lastReading).includes(readingType);
+    })
+    .map((sensor) => sensor.name));
   return (
     <Fragment>
       <ReadingsChart
-        dataSeries={ChartData.filterChartData(
-          timeSpans[parseInt(chartInterval)]!,
-          toggledSensors,
-        )}
+        dataSeries={ChartData.filterChartData(timeSpans[parseInt(chartInterval)]!, hiddenSensors)}
         chartSeries={chartSeries}
         readingType={readingType}
         chartRendering={chartDataQuery.isPending || chartRendering}

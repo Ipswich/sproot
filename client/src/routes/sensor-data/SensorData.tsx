@@ -12,7 +12,8 @@ import {
 } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useLoaderData } from "react-router-dom";
 import ReadingsChartContainer from "./components/ReadingsChartContainer";
-import SensorTable from "./components/SensorTable";
+import SensorTableAccordion from "./components/SensorTableAccordion";
+import { sensorsToggledKey, sensorToggledDeviceGroupsKey } from "../utility/LocalStorageKeys";
 
 export default function SensorData() {
   const readingTypeString = useLoaderData() as string;
@@ -27,7 +28,8 @@ export default function SensorData() {
   );
   const [chartRendering, setChartRendering] = useState(true);
 
-  const [sensorToggleStates, setSensorToggleStates] = useState([] as string[]);
+  const [sensorToggleStates, setSensorToggleStates] = useState(JSON.parse(localStorage.getItem(sensorsToggledKey(readingTypeString)) ?? "[]") as string[]);
+  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(JSON.parse(localStorage.getItem(sensorToggledDeviceGroupsKey(readingTypeString)) ?? "[]") as string[]);
 
   useEffect(() => {
     setChartRendering(false);
@@ -75,6 +77,7 @@ export default function SensorData() {
           readingType={readingTypeString}
           chartInterval={chartInterval}
           toggledSensors={sensorToggleStates}
+          toggledDeviceGroups={deviceGroupToggleStates}
           chartRendering={chartRendering}
           setChartRendering={setChartRendering}
           useAlternateUnits={useAlternateUnits}
@@ -104,12 +107,14 @@ export default function SensorData() {
             ]}
           ></SegmentedControl>
         </div>
-        <SensorTable
+        <SensorTableAccordion
           readingType={readingTypeString as ReadingType}
-          toggleStates={sensorToggleStates}
-          setToggleState={(newToggleState: SetStateAction<string[]>) => {
-            setSensorToggleStates(newToggleState);
+          sensorToggleStates={sensorToggleStates}
+          setSensorToggleStates={(newSensorToggleState: SetStateAction<string[]>) => {
+            setSensorToggleStates(newSensorToggleState);
           }}
+          deviceGroupToggleStates={deviceGroupToggleStates}
+          setDeviceGroupToggleStates={setDeviceGroupToggleStates}
           useAlternateUnits={useAlternateUnits}
         />
       </Card>

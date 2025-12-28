@@ -6,21 +6,22 @@ import { convertCelsiusToFahrenheit } from "@sproot/sproot-common/src/utility/Di
 import { CSS } from "@dnd-kit/utilities";
 import { IconGripVertical } from "@tabler/icons-react";
 import { useTransition } from "react";
+import { sensorsToggledKey } from "../../utility/LocalStorageKeys";
 
 interface SortableTableRowProps {
   sensor: ISensorBase;
   readingType: ReadingType;
   useAlternateUnits: boolean;
-  toggleStates: string[];
-  setToggleState: (sensorNames: string[]) => void;
+  sensorToggleStates: string[];
+  setSensorToggleState: (sensorNames: string[]) => void;
 }
 
 export default function SortableTableRow({
   sensor,
   readingType,
   useAlternateUnits,
-  toggleStates,
-  setToggleState,
+  sensorToggleStates,
+  setSensorToggleState,
 }: SortableTableRowProps) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, startTransition] = useTransition();
@@ -45,16 +46,20 @@ export default function SortableTableRow({
       <Table.Td style={{ verticalAlign: "middle" }}>
         <Flex style={{ alignContent: "center" }}>
           <Switch
-            defaultChecked
+            checked={!sensorToggleStates.includes(sensor.name)}
             color={sensor.color}
             onChange={() => {
               startTransition(() => {
-                if (toggleStates.includes(sensor.name)) {
-                  toggleStates.splice(toggleStates.indexOf(sensor.name), 1);
+                if (sensorToggleStates.includes(sensor.name)) {
+                  sensorToggleStates.splice(sensorToggleStates.indexOf(sensor.name), 1);
                 } else {
-                  toggleStates.push(sensor.name);
+                  sensorToggleStates.push(sensor.name);
                 }
-                setToggleState([...toggleStates]);
+                setSensorToggleState([...sensorToggleStates]);
+                localStorage.setItem(
+                  sensorsToggledKey(readingType),
+                  JSON.stringify([...sensorToggleStates]),
+                );
               });
             }}
           />
