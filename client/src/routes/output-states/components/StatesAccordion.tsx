@@ -16,72 +16,46 @@ import {
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { Accordion } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { getOutputsAsync } from "@sproot/sproot-client/src/requests/requests_v2";
-import { useQuery } from "@tanstack/react-query";
-import SortableAccordionItem from "./SortableAccordionItem";
+import StateAccordionItem from "./StateAccordionItem";
+import { outputStateOrderKey } from "../../utility/LocalStorageKeys";
 
-export default function OutputAccordion() {
+interface StatesAccordionProps {
+  outputs: IOutputBase[];
+  updateOutputsAsync: () => Promise<void>;
+  deviceGroupId: number
+}
+
+export default function StatesAccordion({
+  outputs,
+  updateOutputsAsync,
+  deviceGroupId,
+}: StatesAccordionProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-  const [outputs, setOutputs] = useState([] as IOutputBase[]);
-  const getOutputsQuery = useQuery({
-    queryKey: ["output-states-accordion"],
-    queryFn: () => getOutputsAsync(),
-  });
-
-  const updateOutputsAsync = async () => {
-    const lastOutputStateOrder = (
-      JSON.parse(
-        localStorage.getItem(`outputStateOrder`) ?? "[]",
-      ) as IOutputBase[]
-    ).map((s) => s.id);
-    const retrievedOutputs = Object.values(
-      (await getOutputsQuery.refetch()).data!,
-    );
-    const orderedOutputs: IOutputBase[] = [];
-
-    //Get outputs that don't exist in last list
-    const newOutputs = retrievedOutputs.filter(
-      (output) => !lastOutputStateOrder.includes(output.id),
-    );
-
-    //Add the outputs that do exist in the last list
-    lastOutputStateOrder.forEach((outputId) => {
-      const outputIndex = retrievedOutputs.findIndex(
-        (o) => o.id == Number(outputId),
-      );
-      if (outputIndex != -1) {
-        orderedOutputs.push(retrievedOutputs[outputIndex]!);
-      }
-    });
-
-    //Add the new ones to the end of the order
-    setOutputs(orderedOutputs.concat(newOutputs));
-  };
+  const [orderedOutputs, setOutputOrder] = useState([] as IOutputBase[]);
 
   useEffect(() => {
-    updateOutputsAsync();
+    updateOutputOrderAsync();
 
     const interval = setInterval(() => {
-      updateOutputsAsync();
+      updateOutputOrderAsync();
     }, 60000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sortableItems = outputs.map((output) => (
-    <SortableAccordionItem
+  const sortableItems = orderedOutputs.map((output) => (
+    <StateAccordionItem
       output={output}
       updateOutputsAsync={updateOutputsAsync}
     />
   ));
-  return getOutputsQuery.isPending ? (
-    <p>Loading...</p>
-  ) : (
+  
+  return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
@@ -102,14 +76,43 @@ export default function OutputAccordion() {
     }
 
     if (active.id !== over?.id) {
-      setOutputs((items: IOutputBase[]) => {
+      setOutputOrder((items: IOutputBase[]) => {
         const oldIndex = items.findIndex((output) => output.id == active.id);
         const newIndex = items.findIndex((output) => output.id == over!.id);
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
-        localStorage.setItem("outputStateOrder", JSON.stringify(updatedArray));
+        localStorage.setItem(outputStateOrderKey(deviceGroupId), JSON.stringify(updatedArray));
         return updatedArray;
       });
     }
+  }
+  
+  function updateOutputOrderAsync() {
+    const existingOrder = (
+      JSON.parse(
+        localStorage.getItem(outputStateOrderKey(deviceGroupId)) ?? "[]",
+      ) as IOutputBase[]
+    ).map((o) => o.id);
+    const retrievedOutputs = Object.values(outputs);
+    const orderedOutputs: IOutputBase[] = [];
+  
+    //Get outputs that don't exist in last list
+    const newOutputs = retrievedOutputs.filter(
+      (output) => !existingOrder.includes(output.id),
+    );
+  
+    //Add the outputs that do exist in the last list
+    existingOrder.forEach((outputId) => {
+      const outputIndex = retrievedOutputs.findIndex(
+        (o) => o.id == Number(outputId),
+      );
+      if (outputIndex != -1) {
+        orderedOutputs.push(retrievedOutputs[outputIndex]!);
+      }
+    });
+  
+    //Add the new ones to the end of the order
+    const newOrder = orderedOutputs.concat(newOutputs);
+    setOutputOrder(newOrder);
   }
 }

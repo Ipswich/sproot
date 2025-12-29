@@ -5,15 +5,15 @@ import StateCard from "./StateCard";
 import { CSS } from "@dnd-kit/utilities";
 import { IconGripVertical } from "@tabler/icons-react";
 
-interface SortableAccordionItemProps {
+interface StateAccordionItemProps {
   output: IOutputBase;
   updateOutputsAsync: () => Promise<void>;
 }
 
-export default function SortableAccordionItem({
+export default function StateAccordionItem({
   output,
   updateOutputsAsync,
-}: SortableAccordionItemProps) {
+}: StateAccordionItemProps) {
   const {
     attributes,
     listeners,
@@ -22,6 +22,7 @@ export default function SortableAccordionItem({
     transform,
     transition,
   } = useSortable({ id: output.id });
+  
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,

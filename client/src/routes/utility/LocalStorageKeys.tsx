@@ -14,3 +14,15 @@ export function sensorDataOrderKey(readingType: string, deviceGroup: number): st
 export function sensorsToggledKey(readingType: string): string {
   return `${readingType}-toggledSensors`;
 }
+
+export function outputGroupOrderKey(): string {
+  return `outputGroupOrder`;
+}
+
+export function outputStateOrderKey(deviceGroup: number): string {
+  return `${deviceGroup}-outputStateOrder`;
+}
+
+export function outputStateToggledGroupsKey(): string {
+  return `outputs-toggledDeviceGroups`;
+}
