@@ -22,6 +22,7 @@ import { getSensorsAsync, getDeviceGroupsAsync } from "../../../requests/request
 import { SDBDeviceGroup } from "@sproot/database/SDBDeviceGroup";
 import SortableAccordionItem from "./SortableAccordionItem";
 import { sensorAccordionOrderKey, sensorToggledDeviceGroupsKey } from "../../utility/LocalStorageKeys";
+import SensorTable from "./SensorTable";
 
 interface SensorTableAccordionProps {
   readingType: ReadingType;
@@ -148,7 +149,7 @@ export default function SensorTableAccordion({
         useAlternateUnits={useAlternateUnits}
       />
     );
-  });
+  }).filter((item) => item != null);
 
   const openedDeviceGroupIds = deviceGroups.map((g) => g.id.toString()).filter((id) => !deviceGroupToggleStates.includes(id));
   return (
@@ -163,7 +164,15 @@ export default function SensorTableAccordion({
         <Center>
           <h3>Loading...</h3>
         </Center>
-      ) :
+      ) : sortableItems.length === 1 ? (
+        <SensorTable
+          readingType={readingType}
+          deviceGroup={sortableItems[0]!.props.deviceGroupId}
+          sensors={sortableItems[0]!.props.sensors ?? []}
+          sensorToggleStates={sensorToggleStates}
+          setSensorToggleStates={setSensorToggleStates}
+          useAlternateUnits={useAlternateUnits}
+        />) : (
         <DndContext
           sensors={dragSensors}
           collisionDetection={closestCenter}
@@ -195,7 +204,7 @@ export default function SensorTableAccordion({
             </SortableContext>
           </Accordion>
         </DndContext>
-      }
+      )}
     </Fragment>
   );
 
