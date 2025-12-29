@@ -32,8 +32,19 @@ export default function SortableAccordionItem({
   };
 
   return (
-    <Accordion.Item ref={setNodeRef} style={style} key={deviceGroupId} value={deviceGroupId.toString()}>
-      <Accordion.Control icon={<span ref={setActivatorNodeRef} {...attributes} {...listeners}><IconGripVertical color={"lightgray"} /></span>}>
+    <Accordion.Item
+      ref={setNodeRef}
+      style={style}
+      key={deviceGroupId}
+      value={deviceGroupId.toString()}
+    >
+      <Accordion.Control
+        icon={
+          <span ref={setActivatorNodeRef} {...attributes} {...listeners}>
+            <IconGripVertical color={"lightgray"} />
+          </span>
+        }
+      >
         {deviceGroupName}
       </Accordion.Control>
       <Accordion.Panel>
@@ -43,5 +54,6 @@ export default function SortableAccordionItem({
           deviceGroupId={deviceGroupId}
         />
       </Accordion.Panel>
-    </Accordion.Item>)
+    </Accordion.Item>
+  );
 }

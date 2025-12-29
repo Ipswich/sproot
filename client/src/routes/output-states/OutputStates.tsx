@@ -5,7 +5,11 @@ import { outputStateToggledGroupsKey } from "../utility/LocalStorageKeys";
 import GroupAccordion from "./components/GroupAccordion";
 
 export default function OutputStates() {
-  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(JSON.parse(localStorage.getItem(outputStateToggledGroupsKey()) ?? "[]") as string[]);
+  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(
+    JSON.parse(
+      localStorage.getItem(outputStateToggledGroupsKey()) ?? "[]",
+    ) as string[],
+  );
   const [chartInterval, setChartInterval] = useState(
     localStorage.getItem("outputChartInterval") ?? "24",
   );

@@ -16,9 +16,15 @@ import {
 import { Accordion, Center } from "@mantine/core";
 import { Fragment, startTransition, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getOutputsAsync, getDeviceGroupsAsync } from "../../../requests/requests_v2";
+import {
+  getOutputsAsync,
+  getDeviceGroupsAsync,
+} from "../../../requests/requests_v2";
 import { SDBDeviceGroup } from "@sproot/database/SDBDeviceGroup";
-import { outputGroupOrderKey, outputStateToggledGroupsKey } from "../../utility/LocalStorageKeys";
+import {
+  outputGroupOrderKey,
+  outputStateToggledGroupsKey,
+} from "../../utility/LocalStorageKeys";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import GroupAccordionItem from "./GroupAccordionItem";
 import StatesAccordion from "./StatesAccordion";
@@ -76,12 +82,17 @@ export default function GroupAccordion({
       }
     });
 
-    if ((outputsByDeviceGroup[-1] ?? []).length > 0 && !deviceGroups.find((g) => g.id === -1)) {
+    if (
+      (outputsByDeviceGroup[-1] ?? []).length > 0 &&
+      !deviceGroups.find((g) => g.id === -1)
+    ) {
       deviceGroups.unshift({ id: -1, name: "Default" } as SDBDeviceGroup);
     }
     try {
       const existingOrder = (
-        JSON.parse(localStorage.getItem(outputGroupOrderKey()) ?? "[]") as SDBDeviceGroup[]
+        JSON.parse(
+          localStorage.getItem(outputGroupOrderKey()) ?? "[]",
+        ) as SDBDeviceGroup[]
       ).map((dg) => dg.id ?? -1);
 
       if (existingOrder.length > 0) {
@@ -121,67 +132,73 @@ export default function GroupAccordion({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(deviceGroupToggleStates)]);
 
-  const sortableItems = deviceGroups.map((group) => {
-    if (outputs[group.id] == null || outputs[group.id]!.length == 0) {
-      return null;
-    }
-    return (
-      <GroupAccordionItem
-        key={group.id}
-        deviceGroupId={group.id}
-        deviceGroupName={group.name ?? (group.id == -1 ? "Default" : "Unknown Group")}
-        outputs={outputs[group.id] ?? []}
-        updateOutputsAsync={updateDataAsync}
-      />
-    );
-  }).filter((item) => item != null);
+  const sortableItems = deviceGroups
+    .map((group) => {
+      if (outputs[group.id] == null || outputs[group.id]!.length == 0) {
+        return null;
+      }
+      return (
+        <GroupAccordionItem
+          key={group.id}
+          deviceGroupId={group.id}
+          deviceGroupName={
+            group.name ?? (group.id == -1 ? "Default" : "Unknown Group")
+          }
+          outputs={outputs[group.id] ?? []}
+          updateOutputsAsync={updateDataAsync}
+        />
+      );
+    })
+    .filter((item) => item != null);
 
-  const openedDeviceGroupIds = deviceGroups.map((g) => g.id.toString()).filter((id) => !deviceGroupToggleStates.includes(id));
+  const openedDeviceGroupIds = deviceGroups
+    .map((g) => g.id.toString())
+    .filter((id) => !deviceGroupToggleStates.includes(id));
   return (
     <Fragment>
       {getDeviceGroupsQuery.isLoading || getOutputsQuery.isLoading ? (
         <Center>
           <h3>Loading...</h3>
         </Center>
-      ) :
-        sortableItems.length === 1 ? (
-          <StatesAccordion
-            outputs={sortableItems[0]!.props.outputs ?? []}
-            updateOutputsAsync={sortableItems[0]!.props.updateOutputsAsync}
-            deviceGroupId={sortableItems[0]!.props.deviceGroupId}
-          />) : (
-          <DndContext
-            sensors={dragSensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+      ) : sortableItems.length === 1 ? (
+        <StatesAccordion
+          outputs={sortableItems[0]!.props.outputs ?? []}
+          updateOutputsAsync={sortableItems[0]!.props.updateOutputsAsync}
+          deviceGroupId={sortableItems[0]!.props.deviceGroupId}
+        />
+      ) : (
+        <DndContext
+          sensors={dragSensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <Accordion
+            key={"output-states-accordion"}
+            multiple={true}
+            radius="md"
+            value={openedDeviceGroupIds}
+            onChange={(values) => {
+              startTransition(() => {
+                const arr = Array.isArray(values) ? values : [values];
+                const all = deviceGroups.map((g) => g.id.toString());
+                const closed = all.filter((id) => !arr.includes(id));
+                setDeviceGroupToggleStates(closed);
+                localStorage.setItem(
+                  outputStateToggledGroupsKey(),
+                  JSON.stringify(closed),
+                );
+              });
+            }}
           >
-            <Accordion
-              key={"output-states-accordion"}
-              multiple={true}
-              radius="md"
-              value={openedDeviceGroupIds}
-              onChange={(values) => {
-                startTransition(() => {
-                  const arr = Array.isArray(values) ? values : [values];
-                  const all = deviceGroups.map((g) => g.id.toString());
-                  const closed = all.filter((id) => !arr.includes(id));
-                  setDeviceGroupToggleStates(closed);
-                  localStorage.setItem(
-                    outputStateToggledGroupsKey(),
-                    JSON.stringify(closed),
-                  );
-                });
-              }}
+            <SortableContext
+              items={deviceGroups.map((g) => g.id)}
+              strategy={verticalListSortingStrategy}
             >
-              <SortableContext
-                items={deviceGroups.map((g) => g.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {sortableItems}
-              </SortableContext>
-            </Accordion>
-          </DndContext>
-        )}
+              {sortableItems}
+            </SortableContext>
+          </Accordion>
+        </DndContext>
+      )}
     </Fragment>
   );
 

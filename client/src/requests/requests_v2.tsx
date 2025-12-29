@@ -184,12 +184,11 @@ export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
 }
 
 export async function getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
-
   return [
-    {id: 1, name: "Greenhouse"},
-    {id: 2, name: "Grow Shelf"},
-    {id: 3, name: "Garden"},
-  ]
+    { id: 1, name: "Greenhouse" },
+    { id: 2, name: "Grow Shelf" },
+    { id: 3, name: "Garden" },
+  ];
 
   const response = await fetch(`${SERVER_URL}/api/v2/device-groups`, {
     method: "GET",

@@ -51,7 +51,10 @@ export default function SortableTableRow({
             onChange={() => {
               startTransition(() => {
                 if (sensorToggleStates.includes(sensor.name)) {
-                  sensorToggleStates.splice(sensorToggleStates.indexOf(sensor.name), 1);
+                  sensorToggleStates.splice(
+                    sensorToggleStates.indexOf(sensor.name),
+                    1,
+                  );
                 } else {
                   sensorToggleStates.push(sensor.name);
                 }

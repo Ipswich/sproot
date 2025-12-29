@@ -22,7 +22,7 @@ import { outputStateOrderKey } from "../../utility/LocalStorageKeys";
 interface StatesAccordionProps {
   outputs: IOutputBase[];
   updateOutputsAsync: () => Promise<void>;
-  deviceGroupId: number
+  deviceGroupId: number;
 }
 
 export default function StatesAccordion({
@@ -54,7 +54,7 @@ export default function StatesAccordion({
       updateOutputsAsync={updateOutputsAsync}
     />
   ));
-  
+
   return (
     <DndContext
       sensors={sensors}
@@ -81,12 +81,15 @@ export default function StatesAccordion({
         const newIndex = items.findIndex((output) => output.id == over!.id);
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
-        localStorage.setItem(outputStateOrderKey(deviceGroupId), JSON.stringify(updatedArray));
+        localStorage.setItem(
+          outputStateOrderKey(deviceGroupId),
+          JSON.stringify(updatedArray),
+        );
         return updatedArray;
       });
     }
   }
-  
+
   function updateOutputOrderAsync() {
     const existingOrder = (
       JSON.parse(
@@ -95,12 +98,12 @@ export default function StatesAccordion({
     ).map((o) => o.id);
     const retrievedOutputs = Object.values(outputs);
     const orderedOutputs: IOutputBase[] = [];
-  
+
     //Get outputs that don't exist in last list
     const newOutputs = retrievedOutputs.filter(
       (output) => !existingOrder.includes(output.id),
     );
-  
+
     //Add the outputs that do exist in the last list
     existingOrder.forEach((outputId) => {
       const outputIndex = retrievedOutputs.findIndex(
@@ -110,7 +113,7 @@ export default function StatesAccordion({
         orderedOutputs.push(retrievedOutputs[outputIndex]!);
       }
     });
-  
+
     //Add the new ones to the end of the order
     const newOrder = orderedOutputs.concat(newOutputs);
     setOutputOrder(newOrder);

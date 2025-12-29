@@ -26,9 +26,14 @@ interface StateProps {
 
 export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const [controlMode, setControlMode] = useState(output.state.controlMode);
-  const [manualValue, setManualValue] = useState<number>(output.state.manual.value ?? 0);
-  const [pwmValue, setPwmValue] = useState<number>(output.state.manual.value ?? 0);
-  const [isSegmentedControlDisabled, setSegmentedControlDisabled] = useState(false);
+  const [manualValue, setManualValue] = useState<number>(
+    output.state.manual.value ?? 0,
+  );
+  const [pwmValue, setPwmValue] = useState<number>(
+    output.state.manual.value ?? 0,
+  );
+  const [isSegmentedControlDisabled, setSegmentedControlDisabled] =
+    useState(false);
 
   useEffect(() => {
     setControlMode(output.state.controlMode);
@@ -66,7 +71,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
         <Group justify="space-around">
           <Paper shadow="xs" radius="md" withBorder my="4" p="sm" w={rem(360)}>
             <Group justify="space-between" h="80">
-                <SegmentedControl
+              <SegmentedControl
                 w={"96px"}
                 styles={
                   controlMode === ControlMode.manual
@@ -133,7 +138,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                   </Fragment>
                 ) : (
                   <Group justify="space-around">
-                      {controlMode === ControlMode.manual ? (
+                    {controlMode === ControlMode.manual ? (
                       <Switch
                         size="xl"
                         onLabel="On"

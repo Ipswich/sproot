@@ -9,7 +9,10 @@ import {
   Units,
 } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { Fragment, useEffect, useState } from "react";
-import { getSensorsAsync, getSensorChartDataAsync } from "../../../requests/requests_v2";
+import {
+  getSensorsAsync,
+  getSensorChartDataAsync,
+} from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import ReadingsChart from "./ReadingsChart";
 import {
@@ -128,15 +131,24 @@ export default function ReadingsChartContainer({
   if (readingType == ReadingType.temperature) {
     updateUnits(timeSpans[parseInt(chartInterval)]!);
   }
-  const hiddenSensors = toggledSensors.concat((Object.values(sensorsQuery.data ?? {}) ?? [])
-    .filter((sensor) => {
-      return toggledDeviceGroups.includes((sensor.deviceGroupId ?? -1).toString()) || !Object.keys(sensor.lastReading).includes(readingType);
-    })
-    .map((sensor) => sensor.name));
+  const hiddenSensors = toggledSensors.concat(
+    (Object.values(sensorsQuery.data ?? {}) ?? [])
+      .filter((sensor) => {
+        return (
+          toggledDeviceGroups.includes(
+            (sensor.deviceGroupId ?? -1).toString(),
+          ) || !Object.keys(sensor.lastReading).includes(readingType)
+        );
+      })
+      .map((sensor) => sensor.name),
+  );
   return (
     <Fragment>
       <ReadingsChart
-        dataSeries={ChartData.filterChartData(timeSpans[parseInt(chartInterval)]!, hiddenSensors)}
+        dataSeries={ChartData.filterChartData(
+          timeSpans[parseInt(chartInterval)]!,
+          hiddenSensors,
+        )}
         chartSeries={chartSeries}
         readingType={readingType}
         chartRendering={chartDataQuery.isPending || chartRendering}

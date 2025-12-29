@@ -55,17 +55,16 @@ export default function SensorTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readingType, _sensorToggleKey, deviceGroup, _sensorsIdKey]);
 
-  const sortableItems = orderedSensors
-    .map((sensor) => (
-      <SortableTableRow
-        key={sensor.id}
-        sensor={sensor}
-        readingType={readingType}
-        useAlternateUnits={useAlternateUnits}
-        sensorToggleStates={sensorToggleStates}
-        setSensorToggleState={setSensorToggleStates}
-      />
-    ));
+  const sortableItems = orderedSensors.map((sensor) => (
+    <SortableTableRow
+      key={sensor.id}
+      sensor={sensor}
+      readingType={readingType}
+      useAlternateUnits={useAlternateUnits}
+      sensorToggleStates={sensorToggleStates}
+      setSensorToggleState={setSensorToggleStates}
+    />
+  ));
 
   return (
     <Table
@@ -130,28 +129,28 @@ export default function SensorTable({
     // Data from local storage
     const existingOrder = (
       JSON.parse(
-        localStorage.getItem(
-          sensorDataOrderKey(readingType, deviceGroup)) ?? "[]",
+        localStorage.getItem(sensorDataOrderKey(readingType, deviceGroup)) ??
+          "[]",
       ) as ISensorBase[]
     ).map((s) => s.id);
-    const retrievedSensors = Object.values(sensors)
-      .filter((sensor) => Object.keys(sensor.lastReading).includes(readingType));
+    const retrievedSensors = Object.values(sensors).filter((sensor) =>
+      Object.keys(sensor.lastReading).includes(readingType),
+    );
 
     //Get sensors that don't exist in the last list
     const newSensors = retrievedSensors.filter(
-      (sensor) => !existingOrder.includes(sensor.id)
+      (sensor) => !existingOrder.includes(sensor.id),
     );
 
     //Add the sensors that do exist in the last list
-    existingOrder
-      .forEach((sensorId) => {
-        const sensorIndex = retrievedSensors.findIndex(
-          (o) => o.id == Number(sensorId),
-        );
-        if (sensorIndex != -1) {
-          updatedOrder.push(retrievedSensors[sensorIndex]!);
-        }
-      });
+    existingOrder.forEach((sensorId) => {
+      const sensorIndex = retrievedSensors.findIndex(
+        (o) => o.id == Number(sensorId),
+      );
+      if (sensorIndex != -1) {
+        updatedOrder.push(retrievedSensors[sensorIndex]!);
+      }
+    });
 
     const newOrder = updatedOrder.concat(newSensors);
     setSensorOrder(newOrder);

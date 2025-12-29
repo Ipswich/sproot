@@ -13,7 +13,10 @@ import {
 import { useLoaderData } from "react-router-dom";
 import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import SensorTableAccordion from "./components/SensorTableAccordion";
-import { sensorsToggledKey, sensorToggledDeviceGroupsKey } from "../utility/LocalStorageKeys";
+import {
+  sensorsToggledKey,
+  sensorToggledDeviceGroupsKey,
+} from "../utility/LocalStorageKeys";
 
 export default function SensorData() {
   const readingTypeString = useLoaderData() as string;
@@ -28,8 +31,17 @@ export default function SensorData() {
   );
   const [chartRendering, setChartRendering] = useState(true);
 
-  const [sensorToggleStates, setSensorToggleStates] = useState(JSON.parse(localStorage.getItem(sensorsToggledKey(readingTypeString)) ?? "[]") as string[]);
-  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(JSON.parse(localStorage.getItem(sensorToggledDeviceGroupsKey(readingTypeString)) ?? "[]") as string[]);
+  const [sensorToggleStates, setSensorToggleStates] = useState(
+    JSON.parse(
+      localStorage.getItem(sensorsToggledKey(readingTypeString)) ?? "[]",
+    ) as string[],
+  );
+  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(
+    JSON.parse(
+      localStorage.getItem(sensorToggledDeviceGroupsKey(readingTypeString)) ??
+        "[]",
+    ) as string[],
+  );
 
   useEffect(() => {
     setChartRendering(false);
@@ -110,7 +122,9 @@ export default function SensorData() {
         <SensorTableAccordion
           readingType={readingTypeString as ReadingType}
           sensorToggleStates={sensorToggleStates}
-          setSensorToggleStates={(newSensorToggleState: SetStateAction<string[]>) => {
+          setSensorToggleStates={(
+            newSensorToggleState: SetStateAction<string[]>,
+          ) => {
             setSensorToggleStates(newSensorToggleState);
           }}
           deviceGroupToggleStates={deviceGroupToggleStates}

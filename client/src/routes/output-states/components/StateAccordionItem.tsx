@@ -22,7 +22,7 @@ export default function StateAccordionItem({
     transform,
     transition,
   } = useSortable({ id: output.id });
-  
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,

@@ -18,10 +18,16 @@ import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, startTransition, useEffect, useState } from "react";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useQuery } from "@tanstack/react-query";
-import { getSensorsAsync, getDeviceGroupsAsync } from "../../../requests/requests_v2";
+import {
+  getSensorsAsync,
+  getDeviceGroupsAsync,
+} from "../../../requests/requests_v2";
 import { SDBDeviceGroup } from "@sproot/database/SDBDeviceGroup";
 import SortableAccordionItem from "./SortableAccordionItem";
-import { sensorAccordionOrderKey, sensorToggledDeviceGroupsKey } from "../../utility/LocalStorageKeys";
+import {
+  sensorAccordionOrderKey,
+  sensorToggledDeviceGroupsKey,
+} from "../../utility/LocalStorageKeys";
 import SensorTable from "./SensorTable";
 
 interface SensorTableAccordionProps {
@@ -88,12 +94,17 @@ export default function SensorTableAccordion({
       }
     });
 
-    if ((sensorsByDeviceGroup[-1] ?? []).length > 0 && !deviceGroups.find((g) => g.id === -1)) {
+    if (
+      (sensorsByDeviceGroup[-1] ?? []).length > 0 &&
+      !deviceGroups.find((g) => g.id === -1)
+    ) {
       deviceGroups.unshift({ id: -1, name: "Default" } as SDBDeviceGroup);
     }
     try {
       const existingOrder = (
-        JSON.parse(localStorage.getItem(sensorAccordionOrderKey(readingType)) ?? "[]") as SDBDeviceGroup[]
+        JSON.parse(
+          localStorage.getItem(sensorAccordionOrderKey(readingType)) ?? "[]",
+        ) as SDBDeviceGroup[]
       ).map((dg) => dg.id ?? -1);
 
       if (existingOrder.length > 0) {
@@ -131,27 +142,37 @@ export default function SensorTableAccordion({
     }, 60000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType, JSON.stringify(sensorToggleStates), JSON.stringify(deviceGroupToggleStates)]);
+  }, [
+    readingType,
+    JSON.stringify(sensorToggleStates),
+    JSON.stringify(deviceGroupToggleStates),
+  ]);
 
-  const sortableItems = deviceGroups.map((group) => {
-    if (sensors[group.id] == null || sensors[group.id]!.length == 0) {
-      return null;
-    }
-    return (
-      <SortableAccordionItem
-        key={group.id}
-        readingType={readingType}
-        deviceGroupId={group.id}
-        deviceGroupName={group.name ?? (group.id == -1 ? "Default" : "Unknown Group")}
-        sensors={sensors[group.id] ?? []}
-        sensorToggleStates={sensorToggleStates}
-        setSensorToggleStates={setSensorToggleStates}
-        useAlternateUnits={useAlternateUnits}
-      />
-    );
-  }).filter((item) => item != null);
+  const sortableItems = deviceGroups
+    .map((group) => {
+      if (sensors[group.id] == null || sensors[group.id]!.length == 0) {
+        return null;
+      }
+      return (
+        <SortableAccordionItem
+          key={group.id}
+          readingType={readingType}
+          deviceGroupId={group.id}
+          deviceGroupName={
+            group.name ?? (group.id == -1 ? "Default" : "Unknown Group")
+          }
+          sensors={sensors[group.id] ?? []}
+          sensorToggleStates={sensorToggleStates}
+          setSensorToggleStates={setSensorToggleStates}
+          useAlternateUnits={useAlternateUnits}
+        />
+      );
+    })
+    .filter((item) => item != null);
 
-  const openedDeviceGroupIds = deviceGroups.map((g) => g.id.toString()).filter((id) => !deviceGroupToggleStates.includes(id));
+  const openedDeviceGroupIds = deviceGroups
+    .map((g) => g.id.toString())
+    .filter((id) => !deviceGroupToggleStates.includes(id));
   return (
     <Fragment>
       <Center>
@@ -172,7 +193,8 @@ export default function SensorTableAccordion({
           sensorToggleStates={sensorToggleStates}
           setSensorToggleStates={setSensorToggleStates}
           useAlternateUnits={useAlternateUnits}
-        />) : (
+        />
+      ) : (
         <DndContext
           sensors={dragSensors}
           collisionDetection={closestCenter}

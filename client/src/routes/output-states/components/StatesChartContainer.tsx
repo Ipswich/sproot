@@ -4,7 +4,10 @@ import {
   ChartSeries,
 } from "@sproot/sproot-common/src/utility/ChartData";
 import { useQuery } from "@tanstack/react-query";
-import { getOutputChartDataAsync, getOutputsAsync } from "../../../requests/requests_v2";
+import {
+  getOutputChartDataAsync,
+  getOutputsAsync,
+} from "../../../requests/requests_v2";
 import { Fragment, useEffect, useState } from "react";
 import { Flex } from "@mantine/core";
 import StatesChart from "./StatesChart";
@@ -75,7 +78,9 @@ export default function StatesChartContainer({
 
   const hiddenOutputs = (Object.values(outputsQuery.data ?? {}) ?? [])
     .filter((output) => {
-      return toggledDeviceGroups.includes((output.deviceGroupId ?? -1).toString());
+      return toggledDeviceGroups.includes(
+        (output.deviceGroupId ?? -1).toString(),
+      );
     })
     .map((output) => output.name ?? "");
   return (
@@ -85,7 +90,10 @@ export default function StatesChartContainer({
         <h5>{"%"}</h5>
       </Flex>
       <StatesChart
-        dataSeries={ChartData.filterChartData(timeSpans[parseInt(chartInterval)]!, hiddenOutputs)}
+        dataSeries={ChartData.filterChartData(
+          timeSpans[parseInt(chartInterval)]!,
+          hiddenOutputs,
+        )}
         chartSeries={chartSeries}
         chartRendering={chartDataQuery.isPending || chartRendering}
       />
