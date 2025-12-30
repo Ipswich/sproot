@@ -12,6 +12,7 @@ import {
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import {
   addOutputAsync,
+  getDeviceGroupsAsync,
   getSubcontrollerAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
@@ -65,6 +66,13 @@ export default function NewOutputModal({
     refetchInterval: 60000,
   });
 
+  const groupQuery = useQuery({
+    queryKey: ["device-groups"],
+    queryFn: () => getDeviceGroupsAsync(),
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
+  });
+
   const newOutputForm = useForm({
     // Note - `mode: "uncontrolled"` prevents the form from rerendering every time a value in the form changes.
     // If and when we get around to adding other output types (besides PCA9685), we'll probably want to set this
@@ -78,6 +86,7 @@ export default function NewOutputModal({
       model: supportedModels[0] ?? "",
       subcontrollerId: subcontrollersQuery.data?.recognized?.[0]?.id,
       address: "",
+      // deviceGroupId: undefined,
       pin: "0",
       isPwm: false,
       isInvertedPwm: false,
@@ -111,6 +120,10 @@ export default function NewOutputModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
+      deviceGroupId: (value: number | undefined) =>
+        value == undefined || value > 0
+          ? null
+          : "Group must be a positive integer",
       pin: (value: string) =>
         value != null && value != undefined ? null : "Must have a value",
       isPwm: (value: boolean) =>
@@ -193,6 +206,21 @@ export default function NewOutputModal({
             stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
             required
             {...newOutputForm.getInputProps("automationTimeout")}
+          />
+          <Select
+            label="Group"
+            placeholder="Default"
+            data={Object.keys(groupQuery.data ?? {}).map((key) => {
+              const group = groupQuery.data?.[parseInt(key)];
+              return {
+                value: String(group?.id) ?? "",
+                label: group?.name ?? "",
+              };
+            })}
+            searchable
+            clearable
+            allowDeselect={true}
+            {...newOutputForm.getInputProps("deviceGroupId")}
           />
           {newOutputForm.values.model === Models.PCA9685 ? (
             <PCA9685Form form={newOutputForm} />

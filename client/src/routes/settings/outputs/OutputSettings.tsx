@@ -18,6 +18,7 @@ export interface OutputFormValues {
   model: keyof typeof Models;
   subcontrollerId?: number;
   address: string;
+  deviceGroupId?: number;
   pin: string;
   isPwm: boolean;
   isInvertedPwm: boolean;

@@ -134,6 +134,9 @@ export default function SensorTableAccordion({
     setSensors(sensorsByDeviceGroup);
   };
 
+  const sensorToggleStatesJSON = JSON.stringify(sensorToggleStates);
+  const deviceGroupToggleStatesJSON = JSON.stringify(deviceGroupToggleStates);
+
   useEffect(() => {
     updateDataAsync();
 
@@ -142,11 +145,7 @@ export default function SensorTableAccordion({
     }, 60000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    readingType,
-    JSON.stringify(sensorToggleStates),
-    JSON.stringify(deviceGroupToggleStates),
-  ]);
+  }, [readingType, sensorToggleStatesJSON, deviceGroupToggleStatesJSON]);
 
   const sortableItems = deviceGroups
     .map((group) => {
