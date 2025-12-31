@@ -80,8 +80,8 @@ describe("TimeMethods", function () {
   describe("isBetweenMonthDate", () => {
     it("should return true if now is on or between the start month/day and end month/day", () => {
       const now = new Date();
-      now.setMonth(1);
       now.setDate(28);
+      now.setMonth(1);
       assert.isFalse(isBetweenMonthDate(3, 1, 12, 31, now));
 
       // On start date
@@ -100,10 +100,10 @@ describe("TimeMethods", function () {
       assert.isTrue(isBetweenMonthDate(3, 1, 12, 31, now));
     });
 
-    it("should  handle leap years appropriately", () => {
+    it("should handle leap years appropriately", () => {
       const now = new Date();
-      now.setMonth(1);
       now.setDate(28);
+      now.setMonth(1);
       assert.isTrue(isBetweenMonthDate(2, 28, 3, 1, now));
 
       now.setDate(29);
