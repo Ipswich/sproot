@@ -9,6 +9,7 @@ before(async function () {
   this.timeout(0);
   await fs.promises.mkdir("images/timelapse", { recursive: true });
   await fs.promises.mkdir("images/archive", { recursive: true });
+  await fs.promises.mkdir("backups", { recursive: true });
 
   await fs.promises.writeFile(
     "images/latest.jpg",
@@ -28,6 +29,8 @@ before(async function () {
     "images/archive/timelapse.tar",
     "This is a test tar file for the timelapse archive endpoint.",
   );
+
+  await fs.promises.writeFile("backups/test-backup.sproot.gz", "This is a test backup file.");
 
   app = await mainAsync();
   server = app.listen(3000);
