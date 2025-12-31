@@ -83,7 +83,6 @@ export default function EditTable({
     refetchOnWindowFocus: false,
     refetchInterval: 60000,
   });
-
   const updateSensorForm = useForm({
     initialValues: {
       id: selectedSensor.id,
@@ -154,6 +153,10 @@ export default function EditTable({
     updateSensorForm.setFieldValue("address", sensor.address ?? "");
     updateSensorForm.setFieldValue("id", sensor.id);
     updateSensorForm.setFieldValue("pin", sensor.pin ?? null);
+    updateSensorForm.setFieldValue(
+      "deviceGroupId",
+      sensor.deviceGroupId ?? undefined,
+    );
     openModal();
   };
 
@@ -235,6 +238,17 @@ export default function EditTable({
             clearable
             allowDeselect={true}
             {...updateSensorForm.getInputProps("deviceGroupId")}
+            value={
+              updateSensorForm.values.deviceGroupId != null
+                ? String(updateSensorForm.values.deviceGroupId)
+                : null
+            }
+            onChange={(val) =>
+              updateSensorForm.setFieldValue(
+                "deviceGroupId",
+                val !== null ? parseInt(val, 10) : undefined,
+              )
+            }
           />
           {(updateSensorForm.values.model === Models.ESP32_ADS1115 ||
             updateSensorForm.values.model ===

@@ -263,7 +263,7 @@ export default function EditTable({
             searchable
             clearable
             allowDeselect={true}
-            {...updateOutputForm.getInputProps("group")}
+            {...updateOutputForm.getInputProps("deviceGroupId")}
           />
           {selectedOutput.model === Models.PCA9685 ? (
             <PCA9685Form

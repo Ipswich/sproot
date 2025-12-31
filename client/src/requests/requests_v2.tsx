@@ -184,24 +184,62 @@ export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
 }
 
 export async function getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
-  return [
-    { id: 1, name: "Greenhouse" },
-    { id: 2, name: "Grow Shelf" },
-    { id: 3, name: "Garden" },
-  ];
-
   const response = await fetch(`${SERVER_URL}/api/v2/device-groups`, {
     method: "GET",
     headers: {},
     mode: "cors",
     // credentials: "include",
   });
+
   if (!response.ok) {
     console.error(`Error fetching device groups: ${response}`);
     return [];
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
+}
+
+export async function addDeviceGroupAsync(name: string): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/device-groups`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding device group: ${response}`);
+  }
+}
+
+export async function updateDeviceGroupAsync(
+  group: SDBDeviceGroup,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/device-groups/${group.id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: group.name }),
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error updating device group: ${response}`);
+  }
+}
+
+export async function deleteDeviceGroupAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/device-groups/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting device group: ${response}`);
+  }
 }
 
 export async function getAutomationsAsync(): Promise<IAutomation[]> {

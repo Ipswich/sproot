@@ -10,6 +10,7 @@ import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/Ne
 import { useQuery } from "@tanstack/react-query";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Models } from "@sproot/outputs/Models";
+import DeviceGroupsModal from "../shared/DeviceGroupsModal";
 
 export interface OutputFormValues {
   id?: number;
@@ -33,6 +34,10 @@ export default function OutputSettings() {
   const [supportedModels, setSupportedModels] = useState(
     {} as Record<string, string>,
   );
+  const [
+    deviceGroupsModalOpened,
+    { open: deviceGroupsModalOpen, close: deviceGroupsModalClose },
+  ] = useDisclosure(false);
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [isStale, setIsStale] = useState(false);
 
@@ -68,6 +73,10 @@ export default function OutputSettings() {
   return (
     <Fragment>
       <Stack h="600" justify="center" align="center">
+        <DeviceGroupsModal
+          modalOpened={deviceGroupsModalOpened}
+          closeModal={deviceGroupsModalClose}
+        />
         <NewOutputModal
           supportedModels={supportedModels}
           modalOpened={newOutputModalOpened}
@@ -81,6 +90,9 @@ export default function OutputSettings() {
         />
         <Button size="xl" w={rem(300)} onClick={newOutputModalOpen}>
           Add New
+        </Button>
+        <Button size="sm" w={rem(200)} onClick={deviceGroupsModalOpen}>
+          Manage Device Groups
         </Button>
       </Stack>
     </Fragment>
