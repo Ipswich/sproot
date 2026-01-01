@@ -131,17 +131,22 @@ export default function ReadingsChartContainer({
   if (readingType == ReadingType.temperature) {
     updateUnits(timeSpans[parseInt(chartInterval)]!);
   }
-  const hiddenSensors = toggledSensors.concat(
-    (Object.values(sensorsQuery.data ?? {}) ?? [])
-      .filter((sensor) => {
-        return (
-          toggledDeviceGroups.includes(
-            (sensor.deviceGroupId ?? -1).toString(),
-          ) || !Object.keys(sensor.lastReading).includes(readingType)
-        );
-      })
-      .map((sensor) => sensor.name),
-  );
+
+  const hiddenSensorsFromDeviceGroups = (
+    Object.values(sensorsQuery.data ?? {}) ?? []
+  )
+    .filter((sensor) => {
+      return (
+        toggledDeviceGroups.includes((sensor.deviceGroupId ?? -1).toString()) ||
+        !Object.keys(sensor.lastReading).includes(readingType)
+      );
+    })
+    .map((sensor) => sensor.name);
+  const hiddenSensors =
+    hiddenSensorsFromDeviceGroups.length ==
+    Object.values(sensorsQuery.data ?? {}).length
+      ? []
+      : toggledSensors.concat(hiddenSensorsFromDeviceGroups);
   return (
     <Fragment>
       <ReadingsChart

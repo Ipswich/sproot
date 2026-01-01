@@ -76,13 +76,21 @@ export default function StatesChartContainer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hiddenOutputs = (Object.values(outputsQuery.data ?? {}) ?? [])
+  const hiddenOutputsFromDeviceGroups = (
+    Object.values(outputsQuery.data ?? {}) ?? []
+  )
     .filter((output) => {
       return toggledDeviceGroups.includes(
         (output.deviceGroupId ?? -1).toString(),
       );
     })
     .map((output) => output.name ?? "");
+
+  const hiddenOutputs =
+    hiddenOutputsFromDeviceGroups.length ==
+    Object.values(outputsQuery.data ?? {}).length
+      ? []
+      : hiddenOutputsFromDeviceGroups;
   return (
     <Fragment>
       <Flex my={-12}>
