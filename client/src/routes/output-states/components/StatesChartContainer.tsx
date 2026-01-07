@@ -4,7 +4,10 @@ import {
   ChartSeries,
 } from "@sproot/sproot-common/src/utility/ChartData";
 import { useQuery } from "@tanstack/react-query";
-import { getOutputChartDataAsync } from "../../../requests/requests_v2";
+import {
+  getOutputChartDataAsync,
+  getOutputsAsync,
+} from "../../../requests/requests_v2";
 import { Fragment, useEffect, useState } from "react";
 import { Flex } from "@mantine/core";
 import StatesChart from "./StatesChart";
@@ -13,12 +16,14 @@ interface StatesChartContainerProps {
   chartInterval: string;
   chartRendering: boolean;
   setChartRendering: (value: boolean) => void;
+  toggledDeviceGroups: string[];
 }
 
 export default function StatesChartContainer({
   chartInterval,
   chartRendering,
   setChartRendering,
+  toggledDeviceGroups,
 }: StatesChartContainerProps) {
   const baseChartData = new ChartData(
     Constants.MAX_CHART_DATA_POINTS,
@@ -36,6 +41,12 @@ export default function StatesChartContainer({
     queryKey: ["output-states-chart"],
     queryFn: () => getOutputChartDataAsync(),
     refetchInterval: 300000,
+  });
+
+  const outputsQuery = useQuery({
+    queryKey: ["outputs"],
+    queryFn: () => getOutputsAsync(),
+    refetchInterval: 60000,
   });
 
   const updateAsync = async () => {
@@ -65,6 +76,21 @@ export default function StatesChartContainer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const hiddenOutputsFromDeviceGroups = (
+    Object.values(outputsQuery.data ?? {}) ?? []
+  )
+    .filter((output) => {
+      return toggledDeviceGroups.includes(
+        (output.deviceGroupId ?? -1).toString(),
+      );
+    })
+    .map((output) => output.name ?? "");
+
+  const hiddenOutputs =
+    hiddenOutputsFromDeviceGroups.length ==
+    Object.values(outputsQuery.data ?? {}).length
+      ? []
+      : hiddenOutputsFromDeviceGroups;
   return (
     <Fragment>
       <Flex my={-12}>
@@ -72,7 +98,10 @@ export default function StatesChartContainer({
         <h5>{"%"}</h5>
       </Flex>
       <StatesChart
-        dataSeries={timeSpans[parseInt(chartInterval)]!}
+        dataSeries={ChartData.filterChartData(
+          timeSpans[parseInt(chartInterval)]!,
+          hiddenOutputs,
+        )}
         chartSeries={chartSeries}
         chartRendering={chartDataQuery.isPending || chartRendering}
       />

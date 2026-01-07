@@ -27,6 +27,7 @@ import { IWeekdayCondition } from "../automation/IWeekdayCondition";
 import { IMonthCondition } from "@sproot/automation/IMonthCondition";
 import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBCameraSettings } from "./SDBCameraSettings";
+import { SDBDeviceGroup } from "./SDBDeviceGroup";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -169,6 +170,11 @@ interface ISprootDB {
 
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
+
+  getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]>;
+  addDeviceGroupAsync(name: string): Promise<number>;
+  updateDeviceGroupAsync(deviceGroup: SDBDeviceGroup): Promise<void>;
+  deleteDeviceGroupAsync(id: number): Promise<void>;
 
   getDatabaseSizeAsync(): Promise<number>;
   backupDatabaseAsync(
@@ -504,6 +510,22 @@ class MockSprootDB implements ISprootDB {
   }
 
   async deleteCameraSettingsAsync(_cameraId: number): Promise<void> {
+    return;
+  }
+
+  async getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
+    return [];
+  }
+
+  async addDeviceGroupAsync(_name: string): Promise<number> {
+    return 0;
+  }
+
+  async updateDeviceGroupAsync(_deviceGroup: SDBDeviceGroup): Promise<void> {
+    return;
+  }
+
+  async deleteDeviceGroupAsync(_id: number): Promise<void> {
     return;
   }
 

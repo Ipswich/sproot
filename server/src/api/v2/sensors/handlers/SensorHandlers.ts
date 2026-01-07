@@ -192,6 +192,7 @@ export async function updateAsync(
     request.body["lowCalibrationPoint"] ?? sensorData.lowCalibrationPoint;
   sensorData.highCalibrationPoint =
     request.body["highCalibrationPoint"] ?? sensorData.highCalibrationPoint;
+  sensorData.deviceGroupId = request.body["deviceGroupId"] ?? sensorData.deviceGroupId;
 
   try {
     await sprootDB.updateSensorAsync(sensorData);

@@ -223,6 +223,11 @@ class OutputList implements AsyncDisposable {
             this.#outputs[key]!.automationTimeout = output.automationTimeout;
           }
 
+          if (this.#outputs[key]?.deviceGroupId != output.deviceGroupId) {
+            outputListChanges = true;
+            this.#outputs[key]!.deviceGroupId = output.deviceGroupId;
+          }
+
           if (outputListChanges) {
             this.#logger.info(
               `Updating output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,

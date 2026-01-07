@@ -6,7 +6,7 @@ import {
   setOutputControlModeAsync,
   setOutputManualStateAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Group,
   Paper,
@@ -26,6 +26,20 @@ interface StateProps {
 
 export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const [controlMode, setControlMode] = useState(output.state.controlMode);
+  const [manualValue, setManualValue] = useState<number>(
+    output.state.manual.value ?? 0,
+  );
+  const [pwmValue, setPwmValue] = useState<number>(
+    output.state.manual.value ?? 0,
+  );
+  const [isSegmentedControlDisabled, setSegmentedControlDisabled] =
+    useState(false);
+
+  useEffect(() => {
+    setControlMode(output.state.controlMode);
+    setManualValue(output.state.manual.value ?? 0);
+    setPwmValue(output.state.manual.value ?? 0);
+  }, [output.id, output.state.controlMode, output.state.manual?.value]);
 
   const updateOutputControlModeMutation = useMutation({
     mutationFn: async (newControlMode: { id: number; controlMode: string }) => {
@@ -49,10 +63,8 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   });
 
   function segmentedControlColor() {
-    return output.state.controlMode == ControlMode.manual ? "blue" : "teal";
+    return controlMode == ControlMode.manual ? "blue" : "teal";
   }
-
-  let isSegmentedControlDisabled = false;
   return (
     <Fragment>
       <Stack justify="space-around">
@@ -83,13 +95,13 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                 ]}
                 disabled={isSegmentedControlDisabled}
                 onChange={async (value) => {
-                  isSegmentedControlDisabled = true;
+                  setSegmentedControlDisabled(true);
                   setControlMode(value as ControlMode);
                   await updateOutputControlModeMutation.mutateAsync({
                     id: output.id,
                     controlMode: value,
                   });
-                  isSegmentedControlDisabled = false;
+                  setSegmentedControlDisabled(false);
                 }}
               />
               <Stack justify="space-around" flex={1}>
@@ -97,7 +109,8 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                   <Fragment>
                     {controlMode === ControlMode.manual ? (
                       <Slider
-                        defaultValue={output.state.manual.value!}
+                        value={pwmValue}
+                        onChange={(v) => setPwmValue(v)}
                         disabled={controlMode !== ControlMode.manual}
                         label={(value) => `${value}%`}
                         onChangeEnd={async (value) => {
@@ -131,11 +144,13 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
                         onLabel="On"
                         offLabel="Off"
                         disabled={controlMode !== ControlMode.manual}
-                        checked={output.state.manual.value === 100}
+                        checked={manualValue === 100}
                         onChange={async (event) => {
+                          const val = event.target.checked ? 100 : 0;
+                          setManualValue(val);
                           await updateOutputManualStateMutation.mutateAsync({
                             id: output.id,
-                            value: event.target.checked ? 100 : 0,
+                            value: val,
                           });
                         }}
                       />

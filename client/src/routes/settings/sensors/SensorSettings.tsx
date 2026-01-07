@@ -9,6 +9,7 @@ import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/routes/settings/sensors/EditTable";
 import NewSensorModal from "@sproot/sproot-client/src/routes/settings/sensors/NewSensorModal";
 import { useQuery } from "@tanstack/react-query";
+import DeviceGroupsModal from "../shared/DeviceGroupsModal";
 
 export default function SensorSettings() {
   const [
@@ -18,6 +19,10 @@ export default function SensorSettings() {
   const [supportedModels, setSupportedModels] = useState(
     {} as Record<string, string>,
   );
+  const [
+    deviceGroupsModalOpened,
+    { open: deviceGroupsModalOpen, close: deviceGroupsModalClose },
+  ] = useDisclosure(false);
   const [sensors, setSensors] = useState({} as Record<string, ISensorBase>);
   const [isStale, setIsStale] = useState(false);
 
@@ -51,6 +56,10 @@ export default function SensorSettings() {
   return (
     <Fragment>
       <Stack h="600" justify="center" align="center">
+        <DeviceGroupsModal
+          modalOpened={deviceGroupsModalOpened}
+          closeModal={deviceGroupsModalClose}
+        />
         <NewSensorModal
           supportedModels={supportedModels}
           modalOpened={newSensorModalOpened}
@@ -64,6 +73,9 @@ export default function SensorSettings() {
         />
         <Button size="xl" w={rem(300)} onClick={newSensorModalOpen}>
           Add New
+        </Button>
+        <Button size="sm" w={rem(200)} onClick={deviceGroupsModalOpen}>
+          Manage Device Groups
         </Button>
       </Stack>
     </Fragment>

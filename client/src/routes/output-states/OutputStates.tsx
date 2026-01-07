@@ -1,9 +1,15 @@
 import { Box, Paper, SegmentedControl } from "@mantine/core";
 import StatesChartContainer from "./components/StatesChartContainer";
-import StatesAccordion from "./components/StatesAccordion";
 import { startTransition, useEffect, useState } from "react";
+import { outputStateToggledGroupsKey } from "../utility/LocalStorageKeys";
+import GroupAccordion from "./components/GroupAccordion";
 
 export default function OutputStates() {
+  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(
+    JSON.parse(
+      localStorage.getItem(outputStateToggledGroupsKey()) ?? "[]",
+    ) as string[],
+  );
   const [chartInterval, setChartInterval] = useState(
     localStorage.getItem("outputChartInterval") ?? "24",
   );
@@ -23,6 +29,7 @@ export default function OutputStates() {
             chartInterval={chartInterval}
             chartRendering={chartRendering}
             setChartRendering={setChartRendering}
+            toggledDeviceGroups={deviceGroupToggleStates}
           />
           <div style={{ height: "40px", marginTop: "8px" }}>
             <SegmentedControl
@@ -49,7 +56,10 @@ export default function OutputStates() {
               ]}
             />
           </div>
-          <StatesAccordion />
+          <GroupAccordion
+            deviceGroupToggleStates={deviceGroupToggleStates}
+            setDeviceGroupToggleStates={setDeviceGroupToggleStates}
+          />
         </Paper>
       </Box>
     </>

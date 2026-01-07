@@ -59,6 +59,7 @@ describe("API Tests", async function () {
       "address",
       "name",
       "pin",
+      "deviceGroupId",
       "isPwm",
       "isInvertedPwm",
       "color",
@@ -788,6 +789,7 @@ describe("API Tests", async function () {
         "lastReadingTime",
         "units",
         "pin",
+        "deviceGroupId",
         "lowCalibrationPoint",
         "highCalibrationPoint",
       ];
@@ -958,6 +960,72 @@ describe("API Tests", async function () {
             ESP32_BME280: "ESP32 BME280",
             ESP32_CAPACITIVE_MOISTURE_SENSOR: "ESP32 Capacitive Moisture Sensor",
             ESP32_DS18B20: "ESP32 DS18B20",
+          });
+        });
+      });
+    });
+  });
+
+  describe("Device Group Routes", async () => {
+    describe("GET", async () => {
+      it("should return 200 and all device groups", async () => {
+        const response = await request(server).get("/api/v2/device-groups").expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.lengthOf(content.data, 2);
+        assert.containsAllKeys(content.data[0], ["id", "name"]);
+        assert.containsAllKeys(content.data[1], ["id", "name"]);
+      });
+    });
+
+    describe("Create, Update, Delete", async () => {
+      describe("POST", async () => {
+        it("should return 201", async () => {
+          assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 2);
+          const response = await request(server)
+            .post("/api/v2/device-groups")
+            .send({
+              name: "Test Device Group",
+            })
+            .expect(201);
+
+          validateMiddlewareValues(response);
+          const content = response.body["content"];
+
+          assert.equal(content.data.name, "Test Device Group");
+          assert.equal(content.data.id, 3);
+        });
+
+        describe("PATCH", async () => {
+          it("should return 200", async () => {
+            assert.equal(
+              (await app.get("sprootDB").getDeviceGroupsAsync())[2].name,
+              "Test Device Group",
+            );
+            const response = await request(server)
+              .patch("/api/v2/device-groups/3")
+              .send({
+                name: "Test1 Device Group",
+              })
+              .expect(200);
+
+            validateMiddlewareValues(response);
+            const content = response.body["content"];
+
+            assert.equal(
+              (await app.get("sprootDB").getDeviceGroupsAsync())[2].name,
+              "Test1 Device Group",
+            );
+            assert.containsAllKeys(content.data, ["id", "name"]);
+          });
+        });
+
+        describe("DELETE", async () => {
+          it("should return 200", async () => {
+            assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 3);
+            const response = await request(server).delete("/api/v2/device-groups/3").expect(200);
+            validateMiddlewareValues(response);
+            assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 2);
           });
         });
       });

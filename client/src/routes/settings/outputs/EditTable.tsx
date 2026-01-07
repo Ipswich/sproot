@@ -1,19 +1,20 @@
 import {
   Modal,
   TextInput,
-  NativeSelect,
   Group,
   Button,
   ColorInput,
   ColorPicker,
   ScrollArea,
   NumberInput,
+  Select,
 } from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
   deleteOutputAsync,
   getSubcontrollerAsync,
   updateOutputAsync,
+  getDeviceGroupsAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
@@ -48,6 +49,13 @@ export default function EditTable({
   const subcontrollersQuery = useQuery({
     queryKey: ["get-subcontrollers"],
     queryFn: () => getSubcontrollerAsync(),
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
+  });
+
+  const groupQuery = useQuery({
+    queryKey: ["get-device-groups"],
+    queryFn: () => getDeviceGroupsAsync(),
     refetchOnWindowFocus: false,
     refetchInterval: 60000,
   });
@@ -90,8 +98,8 @@ export default function EditTable({
       isPwm: selectedOutput.isPwm,
       isInvertedPwm: selectedOutput.isInvertedPwm,
       automationTimeout: selectedOutput.automationTimeout,
+      deviceGroupId: selectedOutput.deviceGroupId,
     } as OutputFormValues,
-
     validate: {
       id: (value: number | undefined) =>
         value || value != selectedOutput.id
@@ -134,6 +142,10 @@ export default function EditTable({
         value != null && value != undefined && value >= 0 && value <= 999999999
           ? null
           : "Must be between 0 and 99999999",
+      deviceGroupId: (value: number | undefined) =>
+        value == undefined || value > 0
+          ? null
+          : "Group must be a positive integer",
     },
   });
 
@@ -154,6 +166,10 @@ export default function EditTable({
     updateOutputForm.setFieldValue(
       "automationTimeout",
       output.automationTimeout,
+    );
+    updateOutputForm.setFieldValue(
+      "deviceGroupId",
+      output.deviceGroupId ?? undefined,
     );
     openModal();
   };
@@ -214,7 +230,7 @@ export default function EditTable({
             swatches={[...DefaultColors]}
             {...updateOutputForm.getInputProps("color")}
           />
-          <NativeSelect
+          <Select
             label="Model"
             data={Object.keys(supportedModels).map((key) => {
               return { value: key, label: supportedModels[key]! };
@@ -233,6 +249,21 @@ export default function EditTable({
             stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
             required
             {...updateOutputForm.getInputProps("automationTimeout")}
+          />
+          <Select
+            label="Group"
+            placeholder="Default"
+            data={Object.keys(groupQuery.data ?? {}).map((key) => {
+              const group = groupQuery.data?.[parseInt(key)];
+              return {
+                value: String(group?.id) ?? "",
+                label: group?.name ?? "",
+              };
+            })}
+            searchable
+            clearable
+            allowDeselect={true}
+            {...updateOutputForm.getInputProps("deviceGroupId")}
           />
           {selectedOutput.model === Models.PCA9685 ? (
             <PCA9685Form

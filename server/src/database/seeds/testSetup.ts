@@ -30,6 +30,14 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
+  await knex("device_groups").insert([
+    { id: 1, name: "Group 1" },
+    { id: 2, name: "Group 2" },
+  ]);
+
+  await knex("outputs").where("id", 1).update({ deviceGroupId: 1 });
+  await knex("sensors").where("id", 1).update({ deviceGroupId: 1 });
+
   await knex("outputs").insert([
     {
       id: "1",
@@ -38,6 +46,7 @@ export async function seed(knex: Knex): Promise<void> {
       name: "Relay #1",
       color: "#82c91e",
       pin: 0,
+      deviceGroupId: 1,
       isPwm: 0,
       isInvertedPwm: 0,
       automationTimeout: 1,
@@ -62,6 +71,7 @@ export async function seed(knex: Knex): Promise<void> {
       model: "BME280",
       address: "0x76",
       color: "#82c91e",
+      deviceGroupid: 1,
       lowCalibrationPoint: null,
       highCalibrationPoint: null,
     },

@@ -1,7 +1,6 @@
 import {
   Modal,
   TextInput,
-  NativeSelect,
   Group,
   Button,
   ColorInput,
@@ -14,6 +13,7 @@ import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
 import {
   deleteSensorAsync,
+  getDeviceGroupsAsync,
   getSubcontrollerAsync,
   updateSensorAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -77,6 +77,12 @@ export default function EditTable({
     refetchInterval: 60000,
   });
 
+  const groupQuery = useQuery({
+    queryKey: ["device-groups"],
+    queryFn: () => getDeviceGroupsAsync(),
+    refetchOnWindowFocus: false,
+    refetchInterval: 60000,
+  });
   const updateSensorForm = useForm({
     initialValues: {
       id: selectedSensor.id,
@@ -86,6 +92,7 @@ export default function EditTable({
       subcontrollerId: selectedSensor.subcontrollerId ?? undefined,
       address: selectedSensor.address,
       pin: selectedSensor.pin ?? null,
+      deviceGroupId: selectedSensor.deviceGroupId ?? undefined,
     },
     validate: {
       id: (value: number) =>
@@ -127,6 +134,10 @@ export default function EditTable({
           : "Address must be between 1 and 64 characters",
       pin: (value: string | null) =>
         !value || (value.length > 0 && value.length <= 64) ? null : null,
+      deviceGroupId: (value: number | undefined) =>
+        value == undefined || value > 0
+          ? null
+          : "Group must be a positive integer",
     },
   });
 
@@ -142,6 +153,10 @@ export default function EditTable({
     updateSensorForm.setFieldValue("address", sensor.address ?? "");
     updateSensorForm.setFieldValue("id", sensor.id);
     updateSensorForm.setFieldValue("pin", sensor.pin ?? null);
+    updateSensorForm.setFieldValue(
+      "deviceGroupId",
+      sensor.deviceGroupId ?? undefined,
+    );
     openModal();
   };
 
@@ -201,13 +216,39 @@ export default function EditTable({
             swatches={[...DefaultColors]}
             {...updateSensorForm.getInputProps("color")}
           />
-          <NativeSelect
+          <Select
             label="Model"
             data={Object.keys(supportedModels).map((key) => {
               return { value: key, label: supportedModels[key]! };
             })}
             required
             {...updateSensorForm.getInputProps("model")}
+          />
+          <Select
+            label="Group"
+            placeholder="Default"
+            data={Object.keys(groupQuery.data ?? {}).map((key) => {
+              const group = groupQuery.data?.[parseInt(key)];
+              return {
+                value: String(group?.id) ?? "",
+                label: group?.name ?? "",
+              };
+            })}
+            searchable
+            clearable
+            allowDeselect={true}
+            {...updateSensorForm.getInputProps("deviceGroupId")}
+            value={
+              updateSensorForm.values.deviceGroupId != null
+                ? String(updateSensorForm.values.deviceGroupId)
+                : null
+            }
+            onChange={(val) =>
+              updateSensorForm.setFieldValue(
+                "deviceGroupId",
+                val !== null ? parseInt(val, 10) : undefined,
+              )
+            }
           />
           {(updateSensorForm.values.model === Models.ESP32_ADS1115 ||
             updateSensorForm.values.model ===
