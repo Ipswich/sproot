@@ -27,7 +27,28 @@ class OutputList implements AsyncDisposable {
   maxChartDataSize: number;
   chartDataPointInterval: number;
 
-  constructor(
+  static createInstanceAsync(
+    sprootDB: ISprootDB,
+    mdnsService: MdnsService,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<OutputList> {
+    const outputList = new OutputList(
+      sprootDB,
+      mdnsService,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return outputList.regenerateAsync();
+  }
+
+  private constructor(
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -153,14 +174,16 @@ class OutputList implements AsyncDisposable {
     }
     this.#outputs = {};
     await this.#TPLinkSmartPlugs[Symbol.asyncDispose]();
+    await this.#ESP32_PCA9685[Symbol.asyncDispose]();
+    await this.#PCA9685[Symbol.asyncDispose]();
   }
 
-  async initializeOrRegenerateAsync(): Promise<void> {
+  async regenerateAsync(): Promise<this> {
     if (this.#isUpdating) {
       this.#logger.warn(
-        "OutputList is already updating, skipping initializeOrRegenerateAsync call.",
+        "OutputList is already updating, skipping regenerateAsync call.",
       );
-      return;
+      return this;
     }
     try {
       let outputListChanges = false;
@@ -278,12 +301,13 @@ class OutputList implements AsyncDisposable {
       }
 
       profiler.done({
-        message: "OutputList initializeOrRegenerate time",
+        message: "OutputList regenerate time",
         level: "debug",
       });
     } finally {
       this.#isUpdating = false;
     }
+    return this;
   }
 
   async updateDataStoresAsync(): Promise<void> {

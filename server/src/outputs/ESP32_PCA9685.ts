@@ -55,7 +55,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       (this.usedPins[output.subcontrollerId] as Record<string, string[]>)[output.address] = [];
     }
 
-    this.outputs[output.id] = new ESP32_PCA9685Output(
+    this.outputs[output.id] = await ESP32_PCA9685Output.createInstanceAsync(
       output,
       subcontroller,
       this.sprootDB,
@@ -66,7 +66,6 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.chartDataPointInterval,
       this.logger,
     );
-    await this.outputs[output.id]?.initializeAsync();
     (this.usedPins[output.subcontrollerId] as Record<string, string[]>)[output.address]?.push(
       output.pin,
     );
@@ -90,8 +89,33 @@ class ESP32_PCA9685 extends MultiOutputBase {
 class ESP32_PCA9685Output extends OutputBase {
   subcontroller: SDBSubcontroller;
   #mdnsService: MdnsService;
+  
+  static createInstanceAsync(
+    output: SDBOutput,
+    subcontroller: SDBSubcontroller,
+    sprootDB: ISprootDB,
+    mdnsService: MdnsService,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<ESP32_PCA9685Output> {
+    const esp32PCA9685Output = new ESP32_PCA9685Output(
+      output,
+      subcontroller,
+      sprootDB,
+      mdnsService,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return esp32PCA9685Output.initializeAsync();
+  }
 
-  constructor(
+  private constructor(
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
     sprootDB: ISprootDB,

@@ -1,5 +1,6 @@
 import {
   ESP32_ADS1115,
+  ESP32_Ads1115Device,
   ESP32_ADS1115Response,
 } from "@sproot/sproot-server/src/sensors/ESP32_ADS1115";
 
@@ -59,7 +60,7 @@ describe("ESP32_ADS1115.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    await using ads1115Sensor = await new ESP32_ADS1115(
+    await using ads1115Sensor = await ESP32_ADS1115.createInstanceAsync(
       mockADS1115Data,
       mockSubcontroller,
       ReadingType.voltage,
@@ -71,7 +72,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     assert.equal(ads1115Sensor!.getCachedReadings()[ReadingType.voltage]!.length, 2);
     assert.isTrue(ads1115Sensor instanceof ESP32_ADS1115);
@@ -119,7 +120,7 @@ describe("ESP32_ADS1115.ts tests", function () {
 
     const logger = winston.createLogger();
 
-    await using ads1115Sensor = await new ESP32_ADS1115(
+    await using ads1115Sensor = await ESP32_ADS1115.createInstanceAsync(
       mockADS1115Data,
       mockSubcontroller,
       ReadingType.voltage,
@@ -131,18 +132,18 @@ describe("ESP32_ADS1115.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     await ads1115Sensor!.takeReadingAsync();
 
     assert.equal(callCount, 1);
     assert.equal(
       ads1115Sensor!.lastReading[ReadingType.voltage],
-      String(ESP32_ADS1115.computeVoltage(mockReading, "2/3")),
+      String(ESP32_Ads1115Device.computeVoltage(mockReading, "2/3")),
     );
 
     // GetReading throws an errror
-    await using ads1115Sensor2 = await new ESP32_ADS1115(
+    await using ads1115Sensor2 = await ESP32_ADS1115.createInstanceAsync(
       mockADS1115Data,
       mockSubcontroller,
       ReadingType.voltage,
@@ -154,7 +155,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
     scope.get(new RegExp("^/api/sensors/ads1115/0x48/[0-3]")).reply(500, () => {
       return { error: "Internal Server Error" };
     });

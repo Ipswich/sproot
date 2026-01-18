@@ -27,7 +27,7 @@ export class OutputState implements IOutputState {
     this.#outputId = outputId;
   }
 
-  async initializeAsync() {
+  async loadAsync() {
     const lastState = await this.#sprootDB.getLastOutputStateAsync(this.#outputId);
     if (lastState[0]?.controlMode == ControlMode.manual) {
       this.controlMode = ControlMode.manual;

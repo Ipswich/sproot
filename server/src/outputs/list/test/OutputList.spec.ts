@@ -71,9 +71,8 @@ describe("OutputList.ts tests", function () {
       );
       const logger = winston.createLogger();
 
-      await using outputList = new OutputList(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
       // Create
-      await outputList.initializeOrRegenerateAsync();
+      await using outputList = await OutputList.createInstanceAsync(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
       assert.equal(Object.keys(outputList.outputs).length, 4);
       assert.equal("lime", outputList.outputs["2"]!.color);
       assert.equal("green", outputList.outputs["3"]!.color);
@@ -91,7 +90,7 @@ describe("OutputList.ts tests", function () {
           color: "pink",
         } as SDBOutput,
       ]);
-      await outputList.initializeOrRegenerateAsync();
+      await outputList.regenerateAsync();
 
       assert.equal(Object.keys(outputList.outputs).length, 1);
       assert.equal(outputList.outputs["1"]!.name, "1 tuptuo tset");
@@ -128,8 +127,8 @@ describe("OutputList.ts tests", function () {
       );
       const logger = winston.createLogger();
 
-      await using outputList = new OutputList(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
-      await outputList.initializeOrRegenerateAsync();
+      await using outputList = await OutputList.createInstanceAsync(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
+
       const outputData = outputList.outputData;
 
       assert.equal(outputData["1"]!["name"], "test output 1");
@@ -196,10 +195,9 @@ describe("OutputList.ts tests", function () {
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
-      await using outputList = new OutputList(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
+      await using outputList = await OutputList.createInstanceAsync(mockSprootDB, mockMdnsService, 5, 5, 5, 5, logger);
 
       // Create
-      await outputList.initializeOrRegenerateAsync();
       await outputList[Symbol.asyncDispose]();
       assert.isEmpty(outputList.outputs);
     });

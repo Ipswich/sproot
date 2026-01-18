@@ -276,8 +276,8 @@ export async function deleteSubcontrollerAsync(
     const sensorList = request.app.get("sensorList") as SensorList;
     const outputList = request.app.get("sensorList") as OutputList;
     Promise.all([
-      sensorList.initializeOrRegenerateAsync(),
-      outputList.initializeOrRegenerateAsync(),
+      sensorList.regenerateAsync(),
+      outputList.regenerateAsync(),
     ]);
 
     return {

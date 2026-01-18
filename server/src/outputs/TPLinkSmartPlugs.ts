@@ -128,7 +128,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
 
       const plug = this.availablePlugs[output.pin]!;
 
-      this.outputs[output.id] = new TPLinkPlug(
+      this.outputs[output.id] = await TPLinkPlug.createInstanceAsync(
         plug,
         output,
         this.sprootDB,
@@ -138,7 +138,6 @@ class TPLinkSmartPlugs extends MultiOutputBase {
         this.chartDataPointInterval,
         this.logger,
       );
-      await this.outputs[output.id]?.initializeAsync();
     } catch (error) {
       this.logger.error(
         `Error creating TPLink Smart Plug output {id: ${output.id}, name: ${output.name}}: ${error}`,
@@ -167,7 +166,30 @@ class TPLinkPlug extends OutputBase {
   tplinkPlug: Plug;
   #powerUpdateEventRunning = false;
 
-  constructor(
+  static createInstanceAsync(
+    tplinkPlug: Plug,
+    output: SDBOutput,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<TPLinkPlug> {
+    const tplinkSmartPlug = new TPLinkPlug(
+      tplinkPlug,
+      output,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return tplinkSmartPlug.initializeAsync();
+  }
+
+  private constructor(
     tplinkPlug: Plug,
     output: SDBOutput,
     sprootDB: ISprootDB,
@@ -213,7 +235,7 @@ class TPLinkPlug extends OutputBase {
     }, forceExecution);
   }
 
-  override async [Symbol.asyncDispose](): Promise<void> {
+  override [Symbol.asyncDispose](): Promise<void> {
     this.tplinkPlug.removeAllListeners("power-on");
     this.tplinkPlug.removeAllListeners("power-off");
 
@@ -223,6 +245,7 @@ class TPLinkPlug extends OutputBase {
         this.logger.error(`Disposal error turning off TPLink Smart Plug ${this.id}`);
       });
     }
+    return Promise.resolve();
   }
 
   async #powerUpdateFunctionAsync(value: boolean): Promise<void> {

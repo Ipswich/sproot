@@ -35,7 +35,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
         timelapseStartTime: "08:00",
         timelapseEndTime: "20:00",
       } as SDBCameraSettings,
-      initializeOrRegenerateAsync: sandbox.stub().resolves(),
+      regenerateAsync: sandbox.stub().resolves(),
     };
 
     mockSprootDB = {

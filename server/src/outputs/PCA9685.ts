@@ -44,7 +44,7 @@ class PCA9685 extends MultiOutputBase {
     }
 
     const pca9685Driver = this.boardRecord[output.address];
-    this.outputs[output.id] = new PCA9685Output(
+    this.outputs[output.id] = await PCA9685Output.createInstanceAsync(
       pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
       output,
       this.sprootDB,
@@ -54,7 +54,6 @@ class PCA9685 extends MultiOutputBase {
       this.chartDataPointInterval,
       this.logger,
     );
-    await this.outputs[output.id]?.initializeAsync();
     if (Array.isArray(this.usedPins[output.address])) {
       (this.usedPins[output.address] as string[]).push(output.pin);
     }
@@ -78,7 +77,30 @@ class PCA9685 extends MultiOutputBase {
 class PCA9685Output extends OutputBase {
   pca9685: Pca9685Driver;
 
-  constructor(
+  static createInstanceAsync(
+    pca9685: Pca9685Driver,
+    output: SDBOutput,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<PCA9685Output> {
+    const pca9685Output = new PCA9685Output(
+      pca9685,
+      output,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return pca9685Output.initializeAsync();
+  }
+
+  private constructor(
     pca9685: Pca9685Driver,
     output: SDBOutput,
     sprootDB: ISprootDB,
@@ -100,15 +122,16 @@ class PCA9685Output extends OutputBase {
     this.pca9685 = pca9685;
   }
 
-  async executeStateAsync(forceExecution: boolean = false): Promise<void> {
-    await this.executeStateHelperAsync(async (value) => {
+  executeStateAsync(forceExecution: boolean = false): Promise<void> {
+    return this.executeStateHelperAsync(async (value) => {
       // setDutyCycle takes a decimal value -> 50% == .5; 33% == .33;
       Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value / 100));
     }, forceExecution);
   }
 
-  override async [Symbol.asyncDispose](): Promise<void> {
+  override [Symbol.asyncDispose](): Promise<void> {
     this.pca9685.setDutyCycle(parseInt(this.pin), 0);
+    return Promise.resolve();
   }
 }
 

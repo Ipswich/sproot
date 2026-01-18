@@ -51,7 +51,7 @@ describe("ADS1115.ts tests", function () {
       .stub(Ads1115Device, "openAsync")
       .resolves({ measureAsync: async (_mux, _gain) => 1234 } as Ads1115Device);
 
-    await using ads1115Sensor = await new ADS1115(
+    await using ads1115Sensor = await ADS1115.createInstanceAsync(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
@@ -61,7 +61,7 @@ describe("ADS1115.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     assert.equal(ads1115Sensor!.getCachedReadings()[ReadingType.voltage]!.length, 2);
     assert.isTrue(ads1115Sensor instanceof ADS1115);
@@ -97,7 +97,7 @@ describe("ADS1115.ts tests", function () {
       measureAsync: async (_mux, _gain) => mockReading,
       [Symbol.asyncDispose]: async () => {},
     } as Ads1115Device);
-    await using ads1115Sensor = await new ADS1115(
+    await using ads1115Sensor = await ADS1115.createInstanceAsync(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
@@ -107,7 +107,7 @@ describe("ADS1115.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     await ads1115Sensor!.takeReadingAsync();
 
@@ -118,7 +118,7 @@ describe("ADS1115.ts tests", function () {
     );
 
     // GetReading throws an errror
-    await using ads1115Sensor2 = await new ADS1115(
+    await using ads1115Sensor2 = await ADS1115.createInstanceAsync(
       mockADS1115Data,
       ReadingType.voltage,
       "2/3",
@@ -128,7 +128,7 @@ describe("ADS1115.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     openStub.rejects(new Error("Failed to open sensor"));
     await ads1115Sensor2!.takeReadingAsync();
@@ -172,7 +172,7 @@ describe("ADS1115.ts tests", function () {
     sinon.stub(Ads1115Device.prototype, "writeConfigAsync").resolves();
     const readResultStub = sinon.stub(Ads1115Device.prototype, "readResultsAsync").resolves(1234);
 
-    const ads1115Sensor1 = new ADS1115(
+    await using ads1115Sensor1 = await ADS1115.createInstanceAsync(
       mockADS1115Data1,
       ReadingType.voltage,
       "2/3",
@@ -184,7 +184,7 @@ describe("ADS1115.ts tests", function () {
       logger,
     );
 
-    const ads1115Sensor2 = new ADS1115(
+    await using ads1115Sensor2 = await ADS1115.createInstanceAsync(
       mockADS1115Data2,
       ReadingType.voltage,
       "2/3",
@@ -196,7 +196,7 @@ describe("ADS1115.ts tests", function () {
       logger,
     );
 
-    const ads1115Sensor3 = new ADS1115(
+    await using ads1115Sensor3 = await ADS1115.createInstanceAsync(
       mockADS1115Data3,
       ReadingType.voltage,
       "2/3",
@@ -208,13 +208,13 @@ describe("ADS1115.ts tests", function () {
       logger,
     );
 
-    ads1115Sensor3.takeReadingAsync(); // different address than 1 and 2, should run in parallel
-    ads1115Sensor1.takeReadingAsync();
-    ads1115Sensor2.takeReadingAsync();
-    ads1115Sensor1.takeReadingAsync();
-    ads1115Sensor2.takeReadingAsync();
-    ads1115Sensor2.takeReadingAsync();
-    ads1115Sensor2.takeReadingAsync();
+    ads1115Sensor3!.takeReadingAsync(); // different address than 1 and 2, should run in parallel
+    ads1115Sensor1!.takeReadingAsync();
+    ads1115Sensor2!.takeReadingAsync();
+    ads1115Sensor1!.takeReadingAsync();
+    ads1115Sensor2!.takeReadingAsync();
+    ads1115Sensor2!.takeReadingAsync();
+    ads1115Sensor2!.takeReadingAsync();
 
     await clock.tickAsync(15);
     assert.equal(readResultStub.callCount, 2);

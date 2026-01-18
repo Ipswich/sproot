@@ -71,7 +71,7 @@ describe("BME280.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    await using bme280Sensor = await new BME280(
+    await using bme280Sensor = await BME280.createInstanceAsync(
       mockBME280Data,
       mockSprootDB,
       5,
@@ -79,7 +79,7 @@ describe("BME280.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     assert.equal(bme280Sensor!.getCachedReadings()[ReadingType.temperature]!.length, 2);
     assert.isTrue(bme280Sensor instanceof BME280);
@@ -121,7 +121,7 @@ describe("BME280.ts tests", function () {
       close: closeStub as Bme280["close"],
     } as Bme280); // Don't create a real sensor - needs I2C bus
 
-    await using bme280Sensor = await new BME280(
+    await using bme280Sensor = await BME280.createInstanceAsync(
       mockBME280Data,
       mockSprootDB,
       5,
@@ -129,7 +129,7 @@ describe("BME280.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     await bme280Sensor!.takeReadingAsync();
 
@@ -142,7 +142,7 @@ describe("BME280.ts tests", function () {
     assert.equal(bme280Sensor!.lastReading[ReadingType.pressure], String(mockReading.pressure));
 
     // GetReading throws an errror
-    await using bme280Sensor2 = await new BME280(
+    await using bme280Sensor2 = await BME280.createInstanceAsync(
       mockBME280Data,
       mockSprootDB,
       5,
@@ -150,7 +150,7 @@ describe("BME280.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     openStub.rejects(new Error("Failed to open sensor"));
     await bme280Sensor2!.takeReadingAsync();

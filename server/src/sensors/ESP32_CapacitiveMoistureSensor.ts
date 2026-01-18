@@ -1,12 +1,13 @@
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { ESP32_ADS1115 } from "./ESP32_ADS1115";
+import { ESP32_ADS1115, ESP32_Ads1115Device } from "./ESP32_ADS1115";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { MdnsService } from "../system/MdnsService";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 import winston from "winston";
+import { SensorBase } from "./base/SensorBase";
 
-export class ESP32_CapacitiveMoistureSensor extends ESP32_ADS1115 {
+export class ESP32_CapacitiveMoistureSensor extends SensorBase {
   static readonly GAIN = "1";
   // These values are based on 0 to 32767 - signed 16 bit range
   // Also worth calling out that these values are "inverted" for moisture - lower readings are
@@ -16,7 +17,35 @@ export class ESP32_CapacitiveMoistureSensor extends ESP32_ADS1115 {
   static readonly DEFAULT_LOW_CALIBRATION_VOLTAGE = 14000;
   static readonly DEFAULT_HIGH_CALIBRATION_VOLTAGE = 21000;
 
-  constructor(
+  #mdnsService: MdnsService;
+  subcontroller: SDBSubcontroller;
+
+  static createInstanceAsync(
+    sdbSensor: SDBSensor,
+    subcontroller: SDBSubcontroller,
+    sprootDB: ISprootDB,
+    mdnsService: MdnsService,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<ESP32_CapacitiveMoistureSensor | null> {
+    const sensor = new ESP32_CapacitiveMoistureSensor(
+      sdbSensor,
+      subcontroller,
+      sprootDB,
+      mdnsService,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return sensor.initializeAsync(ESP32_ADS1115.MAX_SENSOR_READ_TIME);
+  }
+
+  private constructor(
     sdbSensor: SDBSensor,
     subcontroller: SDBSubcontroller,
     sprootDB: ISprootDB,
@@ -29,29 +58,24 @@ export class ESP32_CapacitiveMoistureSensor extends ESP32_ADS1115 {
   ) {
     super(
       sdbSensor,
-      subcontroller,
-      ReadingType.moisture,
-      ESP32_CapacitiveMoistureSensor.GAIN,
       sprootDB,
-      mdnsService,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
+      [ReadingType.moisture],
       logger,
     );
 
+    this.#mdnsService = mdnsService;
+    this.subcontroller = subcontroller;
     this.lowCalibrationPoint = sdbSensor.lowCalibrationPoint;
     this.highCalibrationPoint = sdbSensor.highCalibrationPoint;
   }
 
-  override async initAsync(): Promise<ESP32_CapacitiveMoistureSensor | null> {
-    return await this.createSensorAsync(ESP32_ADS1115.MAX_SENSOR_READ_TIME);
-  }
-
   override async takeReadingAsync(): Promise<void> {
     try {
-      const rawReading = await this.getReadingFromDeviceAsync();
+      const rawReading = await ESP32_Ads1115Device.getReadingFromDeviceAsync(this.pin, this.address!, this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName)!, ESP32_CapacitiveMoistureSensor.GAIN);
       await this.#recalibrateAsync(rawReading);
 
       const normalizedReading = this.#normalizeRawReading(rawReading);
@@ -100,7 +124,7 @@ export class ESP32_CapacitiveMoistureSensor extends ESP32_ADS1115 {
   async #recalibrateAsync(rawReading: number) {
     // Set defaults if calibration points are not set.
     // This should give us a big ol range as a starting point, as opposed to a small one that needs to be built
-    var shouldUpdateCalibration = false;
+    let shouldUpdateCalibration = false;
     if (this.lowCalibrationPoint == null) {
       shouldUpdateCalibration = true;
       this.lowCalibrationPoint = ESP32_CapacitiveMoistureSensor.DEFAULT_LOW_CALIBRATION_VOLTAGE;

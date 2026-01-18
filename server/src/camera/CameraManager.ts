@@ -25,7 +25,16 @@ class CameraManager {
   #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
 
-  constructor(sprootDB: ISprootDB, interserviceAuthenticationKey: string, logger: winston.Logger) {
+  static createInstanceAsync(
+    sprootDB: ISprootDB,
+    interserviceAuthenticationKey: string,
+    logger: winston.Logger,
+  ): Promise<CameraManager> {
+    const cameraManager = new CameraManager(sprootDB, interserviceAuthenticationKey, logger);
+    return cameraManager.regenerateAsync();
+  }
+
+  private constructor(sprootDB: ISprootDB, interserviceAuthenticationKey: string, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
@@ -119,15 +128,15 @@ class CameraManager {
     return this.#livestream.reconnectLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
   }
 
-  async initializeOrRegenerateAsync(): Promise<void> {
+  async regenerateAsync(): Promise<this> {
     if (this.#isUpdating) {
       this.#logger.warn(
-        "CameraManager is already updating, skipping initializeOrRegenerateAsync call.",
+        "CameraManager is already updating, skipping regenerateAsync call.",
       );
-      return;
+      return this;
     }
     if (this.#disposed) {
-      return;
+      return this;
     }
     try {
       const settings = await this.#sprootDB.getCameraSettingsAsync();
@@ -153,7 +162,7 @@ class CameraManager {
 
           this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
 
-          return;
+          return this;
         }
       }
 
@@ -161,6 +170,7 @@ class CameraManager {
     } finally {
       this.#isUpdating = false;
     }
+    return this;
   }
 
   async [Symbol.asyncDispose](): Promise<void> {

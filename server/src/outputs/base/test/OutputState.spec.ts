@@ -18,7 +18,7 @@ describe("OutputState.ts tests", () => {
     });
   });
 
-  describe("initializeAsync", function () {
+  describe("loadAsync", function () {
     it("should set current state based on the last output state in the database", async () => {
       const sprootDB = sinon.createStubInstance(SprootDB);
       sprootDB.getLastOutputStateAsync = sinon
@@ -28,14 +28,14 @@ describe("OutputState.ts tests", () => {
 
       assert.equal(outputState.controlMode, ControlMode.automatic);
       assert.equal(outputState.value, 0);
-      await outputState.initializeAsync();
+      await outputState.loadAsync();
       assert.equal(outputState.controlMode, ControlMode.manual);
 
       outputState = new OutputState(1, sprootDB);
       sprootDB.getLastOutputStateAsync = sinon
         .stub<[number], Promise<SDBOutputState[]>>()
         .resolves([{ controlMode: ControlMode.automatic, value: 0 } as SDBOutputState]);
-      await outputState.initializeAsync();
+      await outputState.loadAsync();
       assert.equal(outputState.controlMode, ControlMode.automatic);
       assert.equal(outputState.value, 0);
     });

@@ -195,17 +195,17 @@ class AutomationDataManager {
   // Output actions
   async addOutputActionAsync(automationId: number, outputId: number, value: number) {
     const result = this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#outputList.regenerateAsync();
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
     await this.#sprootDB.deleteOutputActionAsync(outputActionId);
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#outputList.regenerateAsync();
   }
 
   async #postAutomationChangeFunctionAsync() {
-    await this.#outputList.initializeOrRegenerateAsync();
+    await this.#outputList.regenerateAsync();
   }
 }
 

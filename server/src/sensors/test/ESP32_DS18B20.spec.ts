@@ -41,7 +41,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    const ds18b20Sensor = new ESP32_DS18B20(
+    await using ds18b20Sensor = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
       mockSprootDB,
@@ -54,11 +54,11 @@ describe("ESP32_DS18B20.ts tests", function () {
     );
 
     assert.isTrue(ds18b20Sensor instanceof ESP32_DS18B20);
-    assert.equal(ds18b20Sensor.id, mockDS18B20Data.id);
-    assert.equal(ds18b20Sensor.name, mockDS18B20Data.name);
-    assert.equal(ds18b20Sensor.model, mockDS18B20Data.model);
-    assert.equal(ds18b20Sensor.address, mockDS18B20Data.address);
-    assert.equal(ds18b20Sensor.units[ReadingType.temperature], "°C");
+    assert.equal(ds18b20Sensor!.id, mockDS18B20Data.id);
+    assert.equal(ds18b20Sensor!.name, mockDS18B20Data.name);
+    assert.equal(ds18b20Sensor!.model, mockDS18B20Data.model);
+    assert.equal(ds18b20Sensor!.address, mockDS18B20Data.address);
+    assert.equal(ds18b20Sensor!.units[ReadingType.temperature], "°C");
   });
 
   it("should get a reading from a DS18B20 sensor, gracefully handling errors", async function () {
@@ -92,7 +92,7 @@ describe("ESP32_DS18B20.ts tests", function () {
       .get("/api/sensors/ds18b20/28-00000")
       .reply(200, { temperature: mockReading, address: "28-00000" });
 
-    await using ds18b20Sensor = new ESP32_DS18B20(
+    await using ds18b20Sensor = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
       mockSprootDB,
@@ -103,16 +103,16 @@ describe("ESP32_DS18B20.ts tests", function () {
       5,
       logger,
     );
-    await ds18b20Sensor.takeReadingAsync();
+    await ds18b20Sensor!.takeReadingAsync();
 
-    assert.equal(ds18b20Sensor.lastReading[ReadingType.temperature], String(20.437));
+    assert.equal(ds18b20Sensor!.lastReading[ReadingType.temperature], String(20.437));
 
     //Not a number reading
     mockReading = "lol";
     scope
       .get("/api/sensors/ds18b20/28-00000")
       .reply(200, { temperature: "lol", address: "28-00000" });
-    await using ds18b20Sensor2 = new ESP32_DS18B20(
+    await using ds18b20Sensor2 = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
       mockSprootDB,
@@ -124,14 +124,14 @@ describe("ESP32_DS18B20.ts tests", function () {
       logger,
     );
 
-    await ds18b20Sensor2.takeReadingAsync();
-    assert.isUndefined(ds18b20Sensor2.lastReading[ReadingType.temperature]);
+    await ds18b20Sensor2!.takeReadingAsync();
+    assert.isUndefined(ds18b20Sensor2!.lastReading[ReadingType.temperature]);
     assert.isTrue(loggerSpy.calledOnce);
     loggerSpy.resetHistory();
 
     //Error reading
     scope.get("/api/sensors/ds18b20/28-00000").reply(500, { error: "Device error" });
-    await using ds18b20Sensor4 = new ESP32_DS18B20(
+    await using ds18b20Sensor4 = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
       mockSprootDB,
@@ -143,8 +143,8 @@ describe("ESP32_DS18B20.ts tests", function () {
       logger,
     );
 
-    await ds18b20Sensor4.takeReadingAsync();
-    assert.isUndefined(ds18b20Sensor4.lastReading[ReadingType.temperature]);
+    await ds18b20Sensor4!.takeReadingAsync();
+    assert.isUndefined(ds18b20Sensor4!.lastReading[ReadingType.temperature]);
     assert.isTrue(loggerSpy.calledOnce);
     scope.done();
   });
@@ -204,7 +204,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    await using ds18b20Sensor = await new ESP32_DS18B20(
+    await using ds18b20Sensor = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
       mockSprootDB,
@@ -214,7 +214,7 @@ describe("ESP32_DS18B20.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     assert.equal(
       ds18b20Sensor!.getCachedReadings()[ReadingType.temperature]!.length,

@@ -44,7 +44,7 @@ export default async function setupAsync(): Promise<Express> {
   app.set("bonjourService", mdnsService);
 
   logger.info("Creating camera manager. . .");
-  const cameraManager = new CameraManager(
+  const cameraManager = await CameraManager.createInstanceAsync(
     sprootDB,
     process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
     logger,
@@ -52,7 +52,7 @@ export default async function setupAsync(): Promise<Express> {
   app.set("cameraManager", cameraManager);
 
   logger.info("Creating sensor and output lists. . .");
-  const sensorList = new SensorList(
+  const sensorList = await SensorList.createInstanceAsync(
     sprootDB,
     mdnsService,
     Constants.MAX_CACHE_SIZE,
@@ -62,7 +62,7 @@ export default async function setupAsync(): Promise<Express> {
     logger,
   );
   app.set("sensorList", sensorList);
-  const outputList = new OutputList(
+  const outputList = await OutputList.createInstanceAsync(
     sprootDB,
     mdnsService,
     Constants.MAX_CACHE_SIZE,
@@ -78,9 +78,9 @@ export default async function setupAsync(): Promise<Express> {
 
   logger.info("Initializing camera manager, and sensor and output lists. . .");
   await Promise.all([
-    cameraManager.initializeOrRegenerateAsync(),
-    sensorList.initializeOrRegenerateAsync(),
-    outputList.initializeOrRegenerateAsync(),
+    cameraManager.regenerateAsync(),
+    sensorList.regenerateAsync(),
+    outputList.regenerateAsync(),
   ]);
 
   const automationDataManager = new AutomationDataManager(sprootDB, outputList);

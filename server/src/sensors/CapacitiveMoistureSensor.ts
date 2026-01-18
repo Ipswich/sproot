@@ -1,10 +1,11 @@
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { ADS1115 } from "./ADS1115";
+import { ADS1115, Ads1115Device } from "./ADS1115";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import winston from "winston";
+import { SensorBase } from "./base/SensorBase";
 
-export class CapacitiveMoistureSensor extends ADS1115 {
+export class CapacitiveMoistureSensor extends SensorBase {
   static readonly GAIN = "1";
   // These values are based on 0 to 32767 - signed 16 bit range
   // Also worth calling out that these values are "inverted" for moisture - lower readings are
@@ -14,7 +15,28 @@ export class CapacitiveMoistureSensor extends ADS1115 {
   static readonly DEFAULT_LOW_CALIBRATION_VOLTAGE = 14000;
   static readonly DEFAULT_HIGH_CALIBRATION_VOLTAGE = 21000;
 
-  constructor(
+  static async createInstanceAsync(
+    sdbSensor: SDBSensor,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<CapacitiveMoistureSensor | null> {
+    const sensor = new CapacitiveMoistureSensor(
+      sdbSensor,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return sensor.initializeAsync(ADS1115.MAX_SENSOR_READ_TIME);
+  }
+
+  private constructor(
     sdbSensor: SDBSensor,
     sprootDB: ISprootDB,
     maxCacheSize: number,
@@ -25,13 +47,12 @@ export class CapacitiveMoistureSensor extends ADS1115 {
   ) {
     super(
       sdbSensor,
-      ReadingType.moisture,
-      CapacitiveMoistureSensor.GAIN,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
+      [ReadingType.moisture],
       logger,
     );
 
@@ -39,13 +60,9 @@ export class CapacitiveMoistureSensor extends ADS1115 {
     this.highCalibrationPoint = sdbSensor.highCalibrationPoint;
   }
 
-  override async initAsync(): Promise<CapacitiveMoistureSensor | null> {
-    return await this.createSensorAsync(ADS1115.MAX_SENSOR_READ_TIME);
-  }
-
   override async takeReadingAsync(): Promise<void> {
     try {
-      const rawReading = await this.getReadingFromDeviceAsync();
+      const rawReading = await Ads1115Device.getRawReadingAsync(this.pin, Number(this.address), CapacitiveMoistureSensor.GAIN);
       await this.#recalibrateAsync(rawReading);
 
       const normalizedReading = this.#normalizeRawReading(rawReading);
@@ -91,10 +108,10 @@ export class CapacitiveMoistureSensor extends ADS1115 {
     return averageReading;
   }
 
-  async #recalibrateAsync(rawReading: number) {
+  async #recalibrateAsync(voltage: number) {
     // Set defaults if calibration points are not set.
     // This should give us a big ol range as a starting point, as opposed to a small one that needs to be built
-    var shouldUpdateCalibration = false;
+    let shouldUpdateCalibration = false;
     if (this.lowCalibrationPoint == null) {
       shouldUpdateCalibration = true;
       this.lowCalibrationPoint = CapacitiveMoistureSensor.DEFAULT_LOW_CALIBRATION_VOLTAGE;
@@ -105,18 +122,18 @@ export class CapacitiveMoistureSensor extends ADS1115 {
     }
 
     // Update calibration points, maxing if necessary
-    if (rawReading < this.lowCalibrationPoint) {
+    if (voltage < this.lowCalibrationPoint) {
       shouldUpdateCalibration = true;
       this.lowCalibrationPoint =
-        rawReading < CapacitiveMoistureSensor.MIN_SENSOR_READING
+        voltage < CapacitiveMoistureSensor.MIN_SENSOR_READING
           ? CapacitiveMoistureSensor.MIN_SENSOR_READING
-          : rawReading;
-    } else if (rawReading > this.highCalibrationPoint) {
+          : voltage;
+    } else if (voltage > this.highCalibrationPoint) {
       shouldUpdateCalibration = true;
       this.highCalibrationPoint =
-        rawReading > CapacitiveMoistureSensor.MAX_SENSOR_READING
+        voltage > CapacitiveMoistureSensor.MAX_SENSOR_READING
           ? CapacitiveMoistureSensor.MAX_SENSOR_READING
-          : rawReading;
+          : voltage;
     }
 
     if (shouldUpdateCalibration) {
@@ -157,7 +174,7 @@ export class CapacitiveMoistureSensor extends ADS1115 {
       100 -
       ((rawReading - this.lowCalibrationPoint!) /
         (this.highCalibrationPoint! - this.lowCalibrationPoint!)) *
-        100
+      100
     );
   }
 }

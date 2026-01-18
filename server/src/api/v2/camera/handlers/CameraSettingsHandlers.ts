@@ -133,7 +133,7 @@ export async function updateCameraSettingsAsync(
   try {
     await sprootDB.updateCameraSettingsAsync(newSettings);
     const cameraManager = request.app.get("cameraManager") as CameraManager;
-    await cameraManager.initializeOrRegenerateAsync();
+    await cameraManager.regenerateAsync();
     return {
       statusCode: 200,
       content: {
