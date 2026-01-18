@@ -54,7 +54,15 @@ describe("SensorList.ts tests", function () {
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
     const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
 
-    await using sensorList = await SensorList.createInstanceAsync(mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger);
+    await using sensorList = await SensorList.createInstanceAsync(
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     assert.equal(addSensorSpy.callCount, 1);
     assert.equal(Object.keys(sensorList.sensors).length, 3);
@@ -109,8 +117,16 @@ describe("SensorList.ts tests", function () {
       .resolves([{ address: "28-00000" } as SDBSensor]);
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
 
-    await using sensorList = await SensorList.createInstanceAsync(mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger);
-      
+    await using sensorList = await SensorList.createInstanceAsync(
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
+
     const sensorData = sensorList.sensorData;
 
     assert.equal(sensorData["1"]!["name"], "test sensor 1");
@@ -157,7 +173,15 @@ describe("SensorList.ts tests", function () {
       .stub(MockSprootDB.prototype, "getSensorsAsync")
       .resolves([mockBME280Data]);
     const getAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
-    await using sensorList = await SensorList.createInstanceAsync(mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger);
+    await using sensorList = await SensorList.createInstanceAsync(
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     mockBME280Data["address"] = "0x76";
     getSensorsStub.resolves([mockBME280Data, mockDS18B20Data]);
@@ -240,7 +264,15 @@ describe("SensorList.ts tests", function () {
 
     const addSensorSpy = sinon.stub(mockSprootDB, "addSensorAsync");
     const ds18b20GetAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
-    await using sensorList = await SensorList.createInstanceAsync(mockSprootDB, mockMdnsService, 5, 5, 3, 5, logger);
+    await using sensorList = await SensorList.createInstanceAsync(
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     assert.equal(addSensorSpy.callCount, 2);
 

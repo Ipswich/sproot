@@ -99,7 +99,10 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
       .reply(200, () => {
         callCount++;
         return {
-          readings: { raw: mockReading, voltage: ESP32_Ads1115Device.computeVoltage(mockReading, "1") },
+          readings: {
+            raw: mockReading,
+            voltage: ESP32_Ads1115Device.computeVoltage(mockReading, "1"),
+          },
         } as ESP32_ADS1115Response;
       });
 
@@ -165,17 +168,18 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     }
 
     stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
-    await using capacitiveMoistureSensor2 = await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
-      mockADS1115Data,
-      mockSubcontroller,
-      stubbedMockDB,
-      mockMdnsService,
-      500,
-      500,
-      3,
-      5,
-      logger,
-    );
+    await using capacitiveMoistureSensor2 =
+      await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
+        mockADS1115Data,
+        mockSubcontroller,
+        stubbedMockDB,
+        mockMdnsService,
+        500,
+        500,
+        3,
+        5,
+        logger,
+      );
     await capacitiveMoistureSensor2!.takeReadingAsync();
     assert.equal(callCount, 2);
     assert.equal(
@@ -184,17 +188,18 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     );
 
     // GetReading throws an errror
-    await using capacitiveMoistureSensor3 = await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
-      mockADS1115Data,
-      mockSubcontroller,
-      stubbedMockDB,
-      mockMdnsService,
-      5,
-      5,
-      3,
-      5,
-      logger,
-    );
+    await using capacitiveMoistureSensor3 =
+      await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
+        mockADS1115Data,
+        mockSubcontroller,
+        stubbedMockDB,
+        mockMdnsService,
+        5,
+        5,
+        3,
+        5,
+        logger,
+      );
 
     scope.get("/api/sensors/ads1115/0x48/0?gain=1").reply(500, "{ error: 'Device error' }");
     await capacitiveMoistureSensor3!.takeReadingAsync();

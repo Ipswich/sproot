@@ -89,7 +89,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
 class ESP32_PCA9685Output extends OutputBase {
   subcontroller: SDBSubcontroller;
   #mdnsService: MdnsService;
-  
+
   static createInstanceAsync(
     output: SDBOutput,
     subcontroller: SDBSubcontroller,

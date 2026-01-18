@@ -33,7 +33,15 @@ describe("DS18B20.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    await using ds18b20Sensor = await DS18B20.createInstanceAsync(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor = await DS18B20.createInstanceAsync(
+      mockDS18B20Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     assert.isTrue(ds18b20Sensor instanceof DS18B20);
     assert.equal(ds18b20Sensor!.id, mockDS18B20Data.id);
@@ -63,7 +71,15 @@ describe("DS18B20.ts tests", function () {
     let mockReading = "47 01 55 05 7f a5 a5 66 eb : crc=eb YES\n47 01 55 05 7f a5 a5 66 eb t=20437";
     const readFileStub = sinon.stub(promises, "readFile").resolves(mockReading);
 
-    await using ds18b20Sensor = await DS18B20.createInstanceAsync(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor = await DS18B20.createInstanceAsync(
+      mockDS18B20Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
     await ds18b20Sensor!.takeReadingAsync();
 
     assert.equal(ds18b20Sensor!.lastReading[ReadingType.temperature], String(20.437));
@@ -71,7 +87,15 @@ describe("DS18B20.ts tests", function () {
     //Not a number reading
     mockReading = "47 01 55 05 7f a5 a5 66 eb : crc=eb YES\n47 01 55 05 7f a5 a5 66 eb t=test";
     readFileStub.resolves(mockReading);
-    await using ds18b20Sensor2 = await DS18B20.createInstanceAsync(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor2 = await DS18B20.createInstanceAsync(
+      mockDS18B20Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     await ds18b20Sensor2!.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor2!.lastReading[ReadingType.temperature]);
@@ -81,7 +105,15 @@ describe("DS18B20.ts tests", function () {
     //No reading whatsoever
     mockReading = "YES";
     readFileStub.resolves(mockReading);
-    await using ds18b20Sensor3 = await DS18B20.createInstanceAsync(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor3 = await DS18B20.createInstanceAsync(
+      mockDS18B20Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     await ds18b20Sensor3!.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor3!.lastReading[ReadingType.temperature]);
@@ -91,7 +123,15 @@ describe("DS18B20.ts tests", function () {
     //Error reading
     mockReading = "47 01 55 05 7f a5 a5 66 eb : crc=eb NO\n47 01 55 05 7f a5 a5 66 eb t=20437";
     readFileStub.resolves(mockReading);
-    await using ds18b20Sensor4 = await DS18B20.createInstanceAsync(mockDS18B20Data, mockSprootDB, 5, 5, 3, 5, logger);
+    await using ds18b20Sensor4 = await DS18B20.createInstanceAsync(
+      mockDS18B20Data,
+      mockSprootDB,
+      5,
+      5,
+      3,
+      5,
+      logger,
+    );
 
     await ds18b20Sensor4!.takeReadingAsync();
     assert.isUndefined(ds18b20Sensor4!.lastReading[ReadingType.temperature]);

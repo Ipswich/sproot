@@ -180,9 +180,7 @@ class OutputList implements AsyncDisposable {
 
   async regenerateAsync(): Promise<this> {
     if (this.#isUpdating) {
-      this.#logger.warn(
-        "OutputList is already updating, skipping regenerateAsync call.",
-      );
+      this.#logger.warn("OutputList is already updating, skipping regenerateAsync call.");
       return this;
     }
     try {

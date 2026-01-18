@@ -67,7 +67,9 @@ class ESP32_DS18B20 extends SensorBase {
     try {
       const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
       if (!ipAddress) {
-        throw new Error(`Could not resolve IP address for host name: ${this.subcontroller.hostName}`);
+        throw new Error(
+          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`,
+        );
       }
       const addr = this.address;
       if (!addr) throw new Error("Missing sensor address");

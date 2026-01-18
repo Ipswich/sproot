@@ -75,7 +75,12 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
 
   override async takeReadingAsync(): Promise<void> {
     try {
-      const rawReading = await ESP32_Ads1115Device.getReadingFromDeviceAsync(this.pin, this.address!, this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName)!, ESP32_CapacitiveMoistureSensor.GAIN);
+      const rawReading = await ESP32_Ads1115Device.getReadingFromDeviceAsync(
+        this.pin,
+        this.address!,
+        this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName)!,
+        ESP32_CapacitiveMoistureSensor.GAIN,
+      );
       await this.#recalibrateAsync(rawReading);
 
       const normalizedReading = this.#normalizeRawReading(rawReading);

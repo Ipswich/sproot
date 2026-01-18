@@ -34,7 +34,11 @@ class CameraManager {
     return cameraManager.regenerateAsync();
   }
 
-  private constructor(sprootDB: ISprootDB, interserviceAuthenticationKey: string, logger: winston.Logger) {
+  private constructor(
+    sprootDB: ISprootDB,
+    interserviceAuthenticationKey: string,
+    logger: winston.Logger,
+  ) {
     this.#sprootDB = sprootDB;
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
@@ -130,9 +134,7 @@ class CameraManager {
 
   async regenerateAsync(): Promise<this> {
     if (this.#isUpdating) {
-      this.#logger.warn(
-        "CameraManager is already updating, skipping regenerateAsync call.",
-      );
+      this.#logger.warn("CameraManager is already updating, skipping regenerateAsync call.");
       return this;
     }
     if (this.#disposed) {

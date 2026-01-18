@@ -62,7 +62,11 @@ export class CapacitiveMoistureSensor extends SensorBase {
 
   override async takeReadingAsync(): Promise<void> {
     try {
-      const rawReading = await Ads1115Device.getRawReadingAsync(this.pin, Number(this.address), CapacitiveMoistureSensor.GAIN);
+      const rawReading = await Ads1115Device.getRawReadingAsync(
+        this.pin,
+        Number(this.address),
+        CapacitiveMoistureSensor.GAIN,
+      );
       await this.#recalibrateAsync(rawReading);
 
       const normalizedReading = this.#normalizeRawReading(rawReading);
@@ -174,7 +178,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       100 -
       ((rawReading - this.lowCalibrationPoint!) /
         (this.highCalibrationPoint! - this.lowCalibrationPoint!)) *
-      100
+        100
     );
   }
 }

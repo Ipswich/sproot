@@ -247,5 +247,5 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       clearInterval(this.#updateInterval);
     }
     return Promise.resolve();
-  };
+  }
 }

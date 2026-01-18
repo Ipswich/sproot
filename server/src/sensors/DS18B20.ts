@@ -60,7 +60,9 @@ class DS18B20 extends SensorBase {
       this.lastReading[ReadingType.temperature] = String(result);
       this.lastReadingTime = new Date();
     } catch (err) {
-      this.logger.error(`Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`);
+      this.logger.error(
+        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
+      );
     } finally {
       profiler.done({
         message: `Reading time for sensor {DS18B20, id: ${this.id}, address: ${this.address}}`,
@@ -89,6 +91,5 @@ class DS18B20 extends SensorBase {
     return false;
   }
 }
-
 
 export { DS18B20 };

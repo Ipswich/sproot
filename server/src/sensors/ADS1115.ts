@@ -58,15 +58,17 @@ export class ADS1115 extends SensorBase {
     this.gain = gain;
   }
 
-
   override async takeReadingAsync(): Promise<void> {
     try {
-      const rawReading = await Ads1115Device.getRawReadingAsync(this.pin, Number(this.address), this.gain);
-      this.lastReading[ReadingType.voltage] =
-        Ads1115Device.computeVoltage(
-          rawReading,
-          this.gain,
-        ).toString();
+      const rawReading = await Ads1115Device.getRawReadingAsync(
+        this.pin,
+        Number(this.address),
+        this.gain,
+      );
+      this.lastReading[ReadingType.voltage] = Ads1115Device.computeVoltage(
+        rawReading,
+        this.gain,
+      ).toString();
       this.lastReadingTime = new Date();
     } catch (error) {
       this.logger.error(`Failed to read ADS1115 sensor ${this.id}. ${error}`);
@@ -86,15 +88,15 @@ export class Ads1115Device {
     "0+1" | "0+3" | "1+3" | "2+3" | "0+GND" | "1+GND" | "2+GND" | "3+GND",
     number
   > = {
-      "0+1": 0b0000000000000000,
-      "0+3": 0b0001000000000000,
-      "1+3": 0b0010000000000000,
-      "2+3": 0b0011000000000000,
-      "0+GND": 0b0100000000000000,
-      "1+GND": 0b0101000000000000,
-      "2+GND": 0b0110000000000000,
-      "3+GND": 0b0111000000000000,
-    };
+    "0+1": 0b0000000000000000,
+    "0+3": 0b0001000000000000,
+    "1+3": 0b0010000000000000,
+    "2+3": 0b0011000000000000,
+    "0+GND": 0b0100000000000000,
+    "1+GND": 0b0101000000000000,
+    "2+GND": 0b0110000000000000,
+    "3+GND": 0b0111000000000000,
+  };
 
   public static gains: Record<"2/3" | "1" | "2" | "4" | "8" | "16", number> = {
     "2/3": 0b0000000000000000, // +/- 6.144V
@@ -209,7 +211,7 @@ export class Ads1115Device {
     // Update the queue for this address
     Ads1115Device.addressQueues.set(
       this.#addr,
-      next.catch(() => { }),
+      next.catch(() => {}),
     );
     // Return the result of this measure
     return next;

@@ -71,12 +71,18 @@ export class ESP32_ADS1115 extends SensorBase {
 
   override async takeReadingAsync(): Promise<void> {
     try {
-
       const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
       if (ipAddress == null) {
-        throw new Error(`Could not resolve IP address for host name: ${this.subcontroller.hostName}`);
+        throw new Error(
+          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`,
+        );
       }
-      const reading = await ESP32_Ads1115Device.getReadingFromDeviceAsync(this.pin, this.address!, ipAddress, this.gain);
+      const reading = await ESP32_Ads1115Device.getReadingFromDeviceAsync(
+        this.pin,
+        this.address!,
+        ipAddress,
+        this.gain,
+      );
       this.lastReading[ReadingType.voltage] = ESP32_Ads1115Device.computeVoltage(
         reading,
         this.gain,
@@ -89,7 +95,12 @@ export class ESP32_ADS1115 extends SensorBase {
 }
 
 export class ESP32_Ads1115Device {
-  static async getReadingFromDeviceAsync(pin: string | null, deviceAddress: string, ipAddress: string, gain: string): Promise<number> {
+  static async getReadingFromDeviceAsync(
+    pin: string | null,
+    deviceAddress: string,
+    ipAddress: string,
+    gain: string,
+  ): Promise<number> {
     if (pin == null || !(pin in ["0", "1", "2", "3"])) {
       throw new Error(`Invalid pin: ${pin}. Must be one of '0', '1', '2', or '3'.`);
     }

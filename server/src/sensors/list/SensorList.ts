@@ -135,9 +135,7 @@ class SensorList {
     }
 
     if (this.#isUpdating) {
-      this.#logger.warn(
-        "SensorList is already updating, skipping regenerateAsync call.",
-      );
+      this.#logger.warn("SensorList is already updating, skipping regenerateAsync call.");
       return this;
     }
     this.#isUpdating = true;
