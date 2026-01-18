@@ -111,7 +111,7 @@ export async function addAsync(
 
   try {
     await sprootDB.addOutputAsync(newOutput);
-    await outputList.initializeOrRegenerateAsync();
+    await outputList.regenerateAsync();
     addOutputResponse = {
       statusCode: 201,
       content: {
@@ -191,7 +191,7 @@ export async function updateAsync(
 
   try {
     await sprootDB.updateOutputAsync(outputData);
-    await outputList.initializeOrRegenerateAsync();
+    await outputList.regenerateAsync();
   } catch (error: any) {
     updateOutputResponse = {
       statusCode: 503,
@@ -256,7 +256,7 @@ export async function deleteAsync(
 
   try {
     await sprootDB.deleteOutputAsync(outputId);
-    await outputList.initializeOrRegenerateAsync();
+    await outputList.regenerateAsync();
 
     deleteOutputResponse = {
       statusCode: 200,

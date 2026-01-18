@@ -6,8 +6,30 @@ import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 
 class BME280 extends SensorBase {
-  readonly MAX_SENSOR_READ_TIME = 3500;
-  constructor(
+  static readonly MAX_SENSOR_READ_TIME = 3500;
+
+  static createInstanceAsync(
+    sdbsensor: SDBSensor,
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<BME280 | null> {
+    const sensor = new BME280(
+      sdbsensor,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return sensor.initializeAsync(BME280.MAX_SENSOR_READ_TIME);
+  }
+
+  private constructor(
     sdbsensor: SDBSensor,
     sprootDB: ISprootDB,
     maxCacheSize: number,
@@ -26,10 +48,6 @@ class BME280 extends SensorBase {
       [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
       logger,
     );
-  }
-
-  override async initAsync(): Promise<BME280 | null> {
-    return this.createSensorAsync(this.MAX_SENSOR_READ_TIME);
   }
 
   override async takeReadingAsync(): Promise<void> {
@@ -56,11 +74,6 @@ class BME280 extends SensorBase {
       message: `Reading time for sensor {BME280, id: ${this.id}, address: ${this.address}`,
       level: "debug",
     });
-  }
-
-  override [Symbol.asyncDispose](): Promise<void> {
-    this.internalDispose();
-    return Promise.resolve();
   }
 }
 

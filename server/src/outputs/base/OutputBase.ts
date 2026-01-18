@@ -113,11 +113,12 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   abstract [Symbol.asyncDispose](): Promise<void>;
 
   /** Initializes all of the data for this output */
-  async initializeAsync() {
-    await this.state.initializeAsync();
+  protected async initializeAsync(): Promise<this> {
+    await this.state.loadAsync();
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
     await this.#automationManager.loadAsync(this.id);
+    return this;
   }
 
   updateName(name: string): void {

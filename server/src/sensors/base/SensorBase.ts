@@ -72,9 +72,39 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     );
   }
 
-  abstract initAsync(): Promise<SensorBase | null>;
-  abstract [Symbol.asyncDispose](): Promise<void>;
   abstract takeReadingAsync(): Promise<void>;
+
+  protected async initializeAsync(maxSensorReadTime: number): Promise<this | null> {
+    const profiler = this.logger.startTimer();
+    try {
+      await this.intitializeCacheAndChartDataAsync();
+      this.#updateInterval = setInterval(async () => {
+        // If we're already taking a reading, skip this interval
+        if (this.#isTakingReading) {
+          return null;
+        }
+        this.#isTakingReading = true;
+        try {
+          await this.takeReadingAsync();
+        } catch (err) {
+          this.logger.error(
+            `Error taking reading for sensor {${this.model}, id: ${this.id}, address: ${this.address}}. ${err}`,
+          );
+        } finally {
+          this.#isTakingReading = false;
+        }
+      }, maxSensorReadTime);
+    } catch (err) {
+      this.logger.error(`Failed to create ${this.model} sensor ${this.id}. ${err}`);
+      return null;
+    } finally {
+      profiler.done({
+        message: `Initialization time for sensor {${this.model}, id: ${this.id}, address: ${this.address}`,
+        level: "debug",
+      });
+    }
+    return this;
+  }
 
   updateName(name: string): void {
     this.name = name;
@@ -128,47 +158,9 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     await this.#addLastReadingToDatabaseAsync();
   }
 
-  protected async createSensorAsync(maxSensorReadTime: number): Promise<this | null> {
-    const profiler = this.logger.startTimer();
-    try {
-      await this.intitializeCacheAndChartDataAsync();
-      this.#updateInterval = setInterval(async () => {
-        // If we're already taking a reading, skip this interval
-        if (this.#isTakingReading) {
-          return null;
-        }
-        this.#isTakingReading = true;
-        try {
-          await this.takeReadingAsync();
-        } catch (err) {
-          this.logger.error(
-            `Error taking reading for sensor {${this.model}, id: ${this.id}, address: ${this.address}}. ${err}`,
-          );
-        } finally {
-          this.#isTakingReading = false;
-        }
-      }, maxSensorReadTime);
-    } catch (err) {
-      this.logger.error(`Failed to create ${this.model} sensor ${this.id}. ${err}`);
-      return null;
-    } finally {
-      profiler.done({
-        message: `Initialization time for sensor {${this.model}, id: ${this.id}, address: ${this.address}`,
-        level: "debug",
-      });
-    }
-    return this;
-  }
-
   protected async intitializeCacheAndChartDataAsync(): Promise<void> {
     await this.#loadCacheFromDatabaseAsync();
     this.#loadChartData();
-  }
-
-  protected internalDispose() {
-    if (this.#updateInterval) {
-      clearInterval(this.#updateInterval);
-    }
   }
 
   async #loadCacheFromDatabaseAsync(): Promise<void> {
@@ -248,5 +240,12 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
         `Updated chart data for sensor {id: ${this.id}, ${readingType}}. Chart data size - ${this.#chartData.get().data[readingType as ReadingType].length}`,
       );
     }
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    if (this.#updateInterval) {
+      clearInterval(this.#updateInterval);
+    }
+    return Promise.resolve();
   }
 }

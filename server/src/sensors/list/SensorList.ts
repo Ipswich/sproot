@@ -31,7 +31,28 @@ class SensorList {
   #isUpdating: boolean = false;
   #ds18b20UpdateSetInterval: NodeJS.Timeout | null = null;
 
-  constructor(
+  static createInstanceAsync(
+    sprootDB: ISprootDB,
+    mdnsService: MdnsService,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<SensorList> {
+    const sensorList = new SensorList(
+      sprootDB,
+      mdnsService,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return sensorList.regenerateAsync();
+  }
+
+  private constructor(
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -101,7 +122,7 @@ class SensorList {
     return cleanObject;
   }
 
-  async initializeOrRegenerateAsync(): Promise<void> {
+  async regenerateAsync(): Promise<this> {
     if (!this.#ds18b20UpdateSetInterval) {
       await this.addUnreconizedDS18B20sToSDBAsync().catch((err) => {
         this.#logger.error(`Failed to add unrecognized DS18B20's to database. ${err}`);
@@ -114,10 +135,8 @@ class SensorList {
     }
 
     if (this.#isUpdating) {
-      this.#logger.warn(
-        "SensorList is already updating, skipping initializeOrRegenerateAsync call.",
-      );
-      return;
+      this.#logger.warn("SensorList is already updating, skipping regenerateAsync call.");
+      return this;
     }
     this.#isUpdating = true;
 
@@ -226,12 +245,13 @@ class SensorList {
         this.loadChartSeries();
       }
       profiler.done({
-        message: "SensorList initializeOrRegenerate time",
+        message: "SensorList regenerate time",
         level: "debug",
       });
     } finally {
       this.#isUpdating = false;
     }
+    return this;
   }
 
   updateDataStoresAsync = async () => {
@@ -333,7 +353,7 @@ class SensorList {
         if (!sensor.address) {
           throw new SensorListError("BME280 sensor address cannot be null");
         }
-        newSensor = await new BME280(
+        newSensor = await BME280.createInstanceAsync(
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
@@ -341,7 +361,7 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
 
       case Models.ESP32_BME280.toLowerCase():
@@ -359,7 +379,7 @@ class SensorList {
             `ESP32 BME280 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
-        newSensor = await new ESP32_BME280(
+        newSensor = await ESP32_BME280.createInstanceAsync(
           sensor,
           subcontroller,
           this.#sprootDB,
@@ -369,14 +389,14 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
 
       case Models.DS18B20.toLowerCase():
         if (!sensor.address) {
           throw new SensorListError("DS18B20 sensor address cannot be null");
         }
-        newSensor = await new DS18B20(
+        newSensor = await DS18B20.createInstanceAsync(
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
@@ -384,7 +404,7 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
 
       case Models.ESP32_DS18B20.toLowerCase():
@@ -402,7 +422,7 @@ class SensorList {
             `ESP32 DS18B20 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
-        newSensor = await new ESP32_DS18B20(
+        newSensor = await ESP32_DS18B20.createInstanceAsync(
           sensor,
           subcontroller,
           this.#sprootDB,
@@ -412,7 +432,7 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
 
       case Models.ADS1115.toLowerCase():
@@ -422,7 +442,7 @@ class SensorList {
         if (!sensor.pin) {
           throw new SensorListError("ADS1115 sensor pin cannot be null");
         }
-        newSensor = await new ADS1115(
+        newSensor = await ADS1115.createInstanceAsync(
           sensor,
           ReadingType.voltage,
           "1",
@@ -432,7 +452,7 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
 
       case Models.ESP32_ADS1115.toLowerCase():
@@ -453,7 +473,7 @@ class SensorList {
             `ESP32 ADS1115 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
-        newSensor = await new ESP32_ADS1115(
+        newSensor = await ESP32_ADS1115.createInstanceAsync(
           sensor,
           subcontroller,
           ReadingType.voltage,
@@ -465,7 +485,7 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
 
       case Models.CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
@@ -475,7 +495,7 @@ class SensorList {
         if (!sensor.pin) {
           throw new SensorListError("Capacitive Moisture Sensor pin cannot be null");
         }
-        newSensor = await new CapacitiveMoistureSensor(
+        newSensor = await CapacitiveMoistureSensor.createInstanceAsync(
           sensor,
           this.#sprootDB,
           this.#maxCacheSize,
@@ -483,7 +503,7 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
 
       case Models.ESP32_CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
@@ -506,7 +526,7 @@ class SensorList {
             `ESP32 Capacitive Moisture Sensor references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
-        newSensor = await new ESP32_CapacitiveMoistureSensor(
+        newSensor = await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
           sensor,
           subcontroller,
           this.#sprootDB,
@@ -516,7 +536,7 @@ class SensorList {
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
           this.#logger,
-        ).initAsync();
+        );
         break;
       default:
         throw new SensorListError(`Unrecognized sensor model ${sensor.model}`);

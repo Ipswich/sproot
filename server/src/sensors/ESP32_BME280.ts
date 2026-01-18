@@ -7,10 +7,36 @@ import winston from "winston";
 import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 
 class ESP32_BME280 extends SensorBase {
-  readonly MAX_SENSOR_READ_TIME = 3500;
+  static readonly MAX_SENSOR_READ_TIME = 3500;
   #mdnsService: MdnsService;
   subcontroller: SDBSubcontroller;
-  constructor(
+
+  static createInstanceAsync(
+    sdbsensor: SDBSensor,
+    subcontroller: SDBSubcontroller,
+    sprootDB: ISprootDB,
+    mdnsService: MdnsService,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<ESP32_BME280 | null> {
+    const sensor = new ESP32_BME280(
+      sdbsensor,
+      subcontroller,
+      sprootDB,
+      mdnsService,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return sensor.initializeAsync(ESP32_BME280.MAX_SENSOR_READ_TIME);
+  }
+
+  private constructor(
     sdbsensor: SDBSensor,
     subcontroller: SDBSubcontroller,
     sprootDB: ISprootDB,
@@ -34,10 +60,6 @@ class ESP32_BME280 extends SensorBase {
 
     this.#mdnsService = mdnsService;
     this.subcontroller = subcontroller;
-  }
-
-  override async initAsync(): Promise<ESP32_BME280 | null> {
-    return this.createSensorAsync(this.MAX_SENSOR_READ_TIME);
   }
 
   override async takeReadingAsync(): Promise<void> {
@@ -71,11 +93,6 @@ class ESP32_BME280 extends SensorBase {
       message: `Reading time for sensor {ESP32_BME280, id: ${this.id}, address: ${this.address}`,
       level: "debug",
     });
-  }
-
-  override [Symbol.asyncDispose](): Promise<void> {
-    this.internalDispose();
-    return Promise.resolve();
   }
 }
 

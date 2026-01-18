@@ -78,7 +78,7 @@ describe("ESP32_BME280.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    await using bme280Sensor = await new ESP32_BME280(
+    await using bme280Sensor = await ESP32_BME280.createInstanceAsync(
       mockBME280Data,
       mockSubcontroller,
       mockSprootDB,
@@ -88,7 +88,7 @@ describe("ESP32_BME280.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     assert.equal(bme280Sensor!.getCachedReadings()[ReadingType.temperature]!.length, 2);
     assert.isTrue(bme280Sensor instanceof ESP32_BME280);
@@ -141,7 +141,7 @@ describe("ESP32_BME280.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    await using bme280Sensor = await new ESP32_BME280(
+    await using bme280Sensor = await ESP32_BME280.createInstanceAsync(
       mockBME280Data,
       mockSubcontroller,
       mockSprootDB,
@@ -151,7 +151,7 @@ describe("ESP32_BME280.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     await bme280Sensor!.takeReadingAsync();
 
@@ -170,7 +170,7 @@ describe("ESP32_BME280.ts tests", function () {
     );
 
     // GetReading throws an errror
-    await using bme280Sensor2 = await new ESP32_BME280(
+    await using bme280Sensor2 = await ESP32_BME280.createInstanceAsync(
       mockBME280Data,
       mockSubcontroller,
       mockSprootDB,
@@ -180,7 +180,7 @@ describe("ESP32_BME280.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     scope.get("/api/sensors/bme280/0x76").reply(500, () => {
       {

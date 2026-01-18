@@ -4,7 +4,7 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { ESP32_ADS1115, ESP32_ADS1115Response } from "../ESP32_ADS1115";
+import { ESP32_Ads1115Device, ESP32_ADS1115Response } from "../ESP32_ADS1115";
 
 import { assert } from "chai";
 import nock from "nock";
@@ -60,7 +60,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     );
     const logger = winston.createLogger();
 
-    await using sensor = await new ESP32_CapacitiveMoistureSensor(
+    await using sensor = await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
       mockSensorData,
       mockSubcontroller,
       mockSprootDB,
@@ -70,10 +70,9 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     assert.isNotNull(sensor);
-    assert.instanceOf(sensor, ESP32_CapacitiveMoistureSensor);
     assert.equal(sensor.id, mockSensorData.id);
     assert.equal(sensor.name, mockSensorData.name);
     assert.equal(sensor.model, mockSensorData.model);
@@ -100,7 +99,10 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
       .reply(200, () => {
         callCount++;
         return {
-          readings: { raw: mockReading, voltage: ESP32_ADS1115.computeVoltage(mockReading, "1") },
+          readings: {
+            raw: mockReading,
+            voltage: ESP32_Ads1115Device.computeVoltage(mockReading, "1"),
+          },
         } as ESP32_ADS1115Response;
       });
 
@@ -123,7 +125,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     );
 
     const logger = winston.createLogger();
-    await using capacitiveMoistureSensor = await new ESP32_CapacitiveMoistureSensor(
+    await using capacitiveMoistureSensor = await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
       mockADS1115Data,
       mockSubcontroller,
       stubbedMockDB,
@@ -133,7 +135,7 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     await capacitiveMoistureSensor!.takeReadingAsync();
 
@@ -166,17 +168,18 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     }
 
     stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
-    await using capacitiveMoistureSensor2 = await new ESP32_CapacitiveMoistureSensor(
-      mockADS1115Data,
-      mockSubcontroller,
-      stubbedMockDB,
-      mockMdnsService,
-      500,
-      500,
-      3,
-      5,
-      logger,
-    ).initAsync();
+    await using capacitiveMoistureSensor2 =
+      await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
+        mockADS1115Data,
+        mockSubcontroller,
+        stubbedMockDB,
+        mockMdnsService,
+        500,
+        500,
+        3,
+        5,
+        logger,
+      );
     await capacitiveMoistureSensor2!.takeReadingAsync();
     assert.equal(callCount, 2);
     assert.equal(
@@ -185,17 +188,18 @@ describe("ESP32_CapacitiveMoistureSensor.ts tests", function () {
     );
 
     // GetReading throws an errror
-    await using capacitiveMoistureSensor3 = await new ESP32_CapacitiveMoistureSensor(
-      mockADS1115Data,
-      mockSubcontroller,
-      stubbedMockDB,
-      mockMdnsService,
-      5,
-      5,
-      3,
-      5,
-      logger,
-    ).initAsync();
+    await using capacitiveMoistureSensor3 =
+      await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
+        mockADS1115Data,
+        mockSubcontroller,
+        stubbedMockDB,
+        mockMdnsService,
+        5,
+        5,
+        3,
+        5,
+        logger,
+      );
 
     scope.get("/api/sensors/ads1115/0x48/0?gain=1").reply(500, "{ error: 'Device error' }");
     await capacitiveMoistureSensor3!.takeReadingAsync();

@@ -115,7 +115,7 @@ export async function addAsync(
 
   try {
     await sprootDB.addSensorAsync(newSensor);
-    await sensorList.initializeOrRegenerateAsync();
+    await sensorList.regenerateAsync();
 
     addSensorResponse = {
       statusCode: 201,
@@ -196,7 +196,7 @@ export async function updateAsync(
 
   try {
     await sprootDB.updateSensorAsync(sensorData);
-    await sensorList.initializeOrRegenerateAsync();
+    await sensorList.regenerateAsync();
   } catch (error: any) {
     updateSensorResponse = {
       statusCode: 503,
@@ -264,7 +264,7 @@ export async function deleteAsync(
 
   try {
     await sprootDB.deleteSensorAsync(sensorId);
-    await sensorList.initializeOrRegenerateAsync();
+    await sensorList.regenerateAsync();
 
     deleteSensorResponse = {
       statusCode: 200,

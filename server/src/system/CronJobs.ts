@@ -25,9 +25,9 @@ export function createUpdateDevicesCronJob(
       const profiler = logger.startTimer();
       try {
         await Promise.all([
-          cameraManager.initializeOrRegenerateAsync(),
-          sensorList.initializeOrRegenerateAsync(),
-          outputList.initializeOrRegenerateAsync(),
+          cameraManager.regenerateAsync(),
+          sensorList.regenerateAsync(),
+          outputList.regenerateAsync(),
         ]);
       } catch (e) {
         logger.error(`Exception in device update loop: ${e}`);

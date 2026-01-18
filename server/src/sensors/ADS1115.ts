@@ -8,7 +8,33 @@ import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 export class ADS1115 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;
   readonly gain: "2/3" | "1" | "2" | "4" | "8" | "16";
-  constructor(
+
+  static createInstanceAsync(
+    sdbSensor: SDBSensor,
+    readingType: ReadingType,
+    gain: "2/3" | "1" | "2" | "4" | "8" | "16",
+    sprootDB: ISprootDB,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<ADS1115 | null> {
+    const sensor = new ADS1115(
+      sdbSensor,
+      readingType,
+      gain,
+      sprootDB,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return sensor.initializeAsync(ADS1115.MAX_SENSOR_READ_TIME);
+  }
+
+  private constructor(
     sdbSensor: SDBSensor,
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
@@ -32,43 +58,21 @@ export class ADS1115 extends SensorBase {
     this.gain = gain;
   }
 
-  override async initAsync(): Promise<ADS1115 | null> {
-    return this.createSensorAsync(ADS1115.MAX_SENSOR_READ_TIME);
-  }
-
-  override async [Symbol.asyncDispose](): Promise<void> {
-    return this.internalDispose();
-  }
-
   override async takeReadingAsync(): Promise<void> {
     try {
-      const reading = await this.getReadingFromDeviceAsync();
+      const rawReading = await Ads1115Device.getRawReadingAsync(
+        this.pin,
+        Number(this.address),
+        this.gain,
+      );
       this.lastReading[ReadingType.voltage] = Ads1115Device.computeVoltage(
-        reading,
+        rawReading,
         this.gain,
       ).toString();
       this.lastReadingTime = new Date();
     } catch (error) {
       this.logger.error(`Failed to read ADS1115 sensor ${this.id}. ${error}`);
     }
-  }
-
-  protected async getReadingFromDeviceAsync(): Promise<number> {
-    if (this.pin == null || !(this.pin in ["0", "1", "2", "3"])) {
-      throw new Error(`Invalid pin: ${this.pin}. Must be one of '0', '1', '2', or '3'.`);
-    }
-
-    const mux = `${this.pin}+GND` as
-      | "0+1"
-      | "0+3"
-      | "1+3"
-      | "2+3"
-      | "0+GND"
-      | "1+GND"
-      | "2+GND"
-      | "3+GND";
-    const calculatedGain = (this.gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
-    return Ads1115Device.getReadingAsync(Number(this.address), mux, calculatedGain);
   }
 }
 
@@ -107,13 +111,28 @@ export class Ads1115Device {
     return new Ads1115Device(await openPromisified(busNum), addr);
   }
 
-  public static async getReadingAsync(
+  public static async getRawReadingAsync(
+    pin: string | null,
     address: number,
-    mux: keyof typeof Ads1115Device.MUX,
     gain: keyof typeof Ads1115Device.gains,
   ) {
+    if (pin == null || !(pin in ["0", "1", "2", "3"])) {
+      throw new Error(`Invalid pin: .pin}. Must be one of '0', '1', '2', or '3'.`);
+    }
+
+    const mux = `${pin}+GND` as
+      | "0+1"
+      | "0+3"
+      | "1+3"
+      | "2+3"
+      | "0+GND"
+      | "1+GND"
+      | "2+GND"
+      | "3+GND";
+    const calculatedGain = (gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
+
     await using device = await Ads1115Device.openAsync(1, address);
-    return await device.measureAsync(mux, gain);
+    return await device.measureAsync(mux, calculatedGain);
   }
 
   private static addressQueues: Map<number, Promise<unknown>> = new Map();
@@ -131,7 +150,7 @@ export class Ads1115Device {
     this.#shift = shift;
   }
 
-  get gain(): Number {
+  get gain(): number {
     return this.#gain;
   }
   set gain(level: "2/3" | "1" | "2" | "4" | "8" | "16") {

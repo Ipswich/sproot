@@ -11,7 +11,37 @@ export class ESP32_ADS1115 extends SensorBase {
   readonly gain: "2/3" | "1" | "2" | "4" | "8" | "16";
   #mdnsService: MdnsService;
   subcontroller: SDBSubcontroller;
-  constructor(
+
+  static createInstanceAsync(
+    sdbSensor: SDBSensor,
+    subcontroller: SDBSubcontroller,
+    readingType: ReadingType,
+    gain: "2/3" | "1" | "2" | "4" | "8" | "16",
+    sprootDB: ISprootDB,
+    mdnsService: MdnsService,
+    maxCacheSize: number,
+    initialCacheLookback: number,
+    maxChartDataSize: number,
+    chartDataPointInterval: number,
+    logger: winston.Logger,
+  ): Promise<ESP32_ADS1115 | null> {
+    const sensor = new ESP32_ADS1115(
+      sdbSensor,
+      subcontroller,
+      readingType,
+      gain,
+      sprootDB,
+      mdnsService,
+      maxCacheSize,
+      initialCacheLookback,
+      maxChartDataSize,
+      chartDataPointInterval,
+      logger,
+    );
+    return sensor.initializeAsync(ESP32_ADS1115.MAX_SENSOR_READ_TIME);
+  }
+
+  private constructor(
     sdbSensor: SDBSensor,
     subcontroller: SDBSubcontroller,
     readingType: ReadingType,
@@ -39,18 +69,21 @@ export class ESP32_ADS1115 extends SensorBase {
     this.subcontroller = subcontroller;
   }
 
-  override async initAsync(): Promise<ESP32_ADS1115 | null> {
-    return this.createSensorAsync(ESP32_ADS1115.MAX_SENSOR_READ_TIME);
-  }
-
-  override async [Symbol.asyncDispose](): Promise<void> {
-    return this.internalDispose();
-  }
-
   override async takeReadingAsync(): Promise<void> {
     try {
-      const reading = await this.getReadingFromDeviceAsync();
-      this.lastReading[ReadingType.voltage] = ESP32_ADS1115.computeVoltage(
+      const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
+      if (ipAddress == null) {
+        throw new Error(
+          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`,
+        );
+      }
+      const reading = await ESP32_Ads1115Device.getReadingFromDeviceAsync(
+        this.pin,
+        this.address!,
+        ipAddress,
+        this.gain,
+      );
+      this.lastReading[ReadingType.voltage] = ESP32_Ads1115Device.computeVoltage(
         reading,
         this.gain,
       ).toString();
@@ -59,18 +92,21 @@ export class ESP32_ADS1115 extends SensorBase {
       this.logger.error(`Failed to read ESP32_ADS1115 sensor ${this.id}. ${error}`);
     }
   }
+}
 
-  protected async getReadingFromDeviceAsync(): Promise<number> {
-    if (this.pin == null || !(this.pin in ["0", "1", "2", "3"])) {
-      throw new Error(`Invalid pin: ${this.pin}. Must be one of '0', '1', '2', or '3'.`);
+export class ESP32_Ads1115Device {
+  static async getReadingFromDeviceAsync(
+    pin: string | null,
+    deviceAddress: string,
+    ipAddress: string,
+    gain: string,
+  ): Promise<number> {
+    if (pin == null || !(pin in ["0", "1", "2", "3"])) {
+      throw new Error(`Invalid pin: ${pin}. Must be one of '0', '1', '2', or '3'.`);
     }
-    const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
-    if (ipAddress == null) {
-      throw new Error(`Could not resolve IP address for host name: ${this.subcontroller.hostName}`);
-    }
-    const calculatedGain = (this.gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
+    const calculatedGain = (gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
     const response = await fetch(
-      `http://${ipAddress}/api/sensors/ads1115/${this.address}/${this.pin}?gain=${calculatedGain}`,
+      `http://${ipAddress}/api/sensors/ads1115/${deviceAddress}/${pin}?gain=${calculatedGain}`,
       {
         method: "GET",
       },

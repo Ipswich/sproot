@@ -26,14 +26,14 @@ describe("ServerStatsManager", () => {
   });
 
   it("should return stats with correct properties", async () => {
-    await using manager = new CameraManager(
+    await using manager = await CameraManager.createInstanceAsync(
       sprootDBMock,
       "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
     );
-    await manager.initializeOrRegenerateAsync();
+    await manager.regenerateAsync();
     using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
     const stats = await monitor.getStatusAsync();
 
@@ -54,14 +54,14 @@ describe("ServerStatsManager", () => {
   });
 
   it("should call getDatabaseSizeAsync", async () => {
-    await using manager = new CameraManager(
+    await using manager = await CameraManager.createInstanceAsync(
       sprootDBMock,
       "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
     );
-    await manager.initializeOrRegenerateAsync();
+    await manager.regenerateAsync();
     using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
     await monitor.getStatusAsync();
     assert.strictEqual(sprootDBMock.getDatabaseSizeAsync.calledOnce, true);

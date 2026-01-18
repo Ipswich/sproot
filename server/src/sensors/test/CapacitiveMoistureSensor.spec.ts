@@ -54,7 +54,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       .stub(Ads1115Device, "openAsync")
       .resolves({ measureAsync: async (_mux, _gain) => 15000 } as Ads1115Device);
 
-    await using sensor = await new CapacitiveMoistureSensor(
+    await using sensor = await CapacitiveMoistureSensor.createInstanceAsync(
       mockSensorData,
       mockSprootDB,
       5,
@@ -62,10 +62,9 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     assert.isNotNull(sensor);
-    assert.instanceOf(sensor, CapacitiveMoistureSensor);
     assert.equal(sensor.id, mockSensorData.id);
     assert.equal(sensor.name, mockSensorData.name);
     assert.equal(sensor.model, mockSensorData.model);
@@ -101,7 +100,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       measureAsync: async (_mux, _gain) => mockReading,
       [Symbol.asyncDispose]: async () => {},
     } as Ads1115Device);
-    await using capacitiveMoistureSensor = await new CapacitiveMoistureSensor(
+    await using capacitiveMoistureSensor = await CapacitiveMoistureSensor.createInstanceAsync(
       mockADS1115Data,
       stubbedMockDB,
       5,
@@ -109,7 +108,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     await capacitiveMoistureSensor!.takeReadingAsync();
 
@@ -143,7 +142,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     }
 
     stubbedMockDB.getSensorReadingsAsync.resolves(mockedReadings);
-    await using capacitiveMoistureSensor2 = await new CapacitiveMoistureSensor(
+    await using capacitiveMoistureSensor2 = await CapacitiveMoistureSensor.createInstanceAsync(
       mockADS1115Data,
       stubbedMockDB,
       500,
@@ -151,7 +150,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
     await capacitiveMoistureSensor2!.takeReadingAsync();
     assert.isTrue(openStub.calledOnce);
     assert.equal(
@@ -162,7 +161,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
     openStub.resetHistory();
 
     // GetReading throws an errror
-    await using capacitiveMoistureSensor3 = await new CapacitiveMoistureSensor(
+    await using capacitiveMoistureSensor3 = await CapacitiveMoistureSensor.createInstanceAsync(
       mockADS1115Data,
       stubbedMockDB,
       5,
@@ -170,7 +169,7 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       3,
       5,
       logger,
-    ).initAsync();
+    );
 
     openStub.rejects(new Error("Failed to open sensor"));
     await capacitiveMoistureSensor3!.takeReadingAsync();
