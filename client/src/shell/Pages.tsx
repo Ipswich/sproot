@@ -15,6 +15,7 @@ import {
   IconSettingsAutomation,
   IconTemperature,
   IconVideo,
+  IconHelpSquareRounded,
   TablerIconsProps,
 } from "@tabler/icons-react";
 
@@ -22,6 +23,8 @@ export interface Page {
   navLinkText: string;
   headerText: string;
   href?: string;
+  external?: boolean;
+  target?: string;
   icon: (props: TablerIconsProps | undefined) => JSX.Element;
   links?: Page[];
 }
@@ -106,6 +109,17 @@ export function getNavbarItems(
         href: "/settings/system",
       } as Page,
     ],
+  };
+
+  pages["docs"] = {
+    navLinkText: "Docs",
+    headerText: "Docs",
+    href: "/docs",
+    external: true,
+    target: "_self",
+    icon: (props: TablerIconsProps | undefined) => (
+      <IconHelpSquareRounded {...props} />
+    ),
   };
 
   return pages;

@@ -1,3 +1,44 @@
+# These values should be changed to secure your installation
+x-database-password: &db_password "root"
+x-jwt-secret: &jwt_secret "CHANGE ME"
+x-interservice-authentication-key: &interservice_authentication_key "CHANGE ME"
+
+# Update these variables to your desired defaults. The username stuff isn't exactly "implemented"
+# (authentication exists, but there's no UI for it yet), but they're here for future use. There 
+# might be issues down the line if you don't change them before running this for the first time.
+# Think of them as intelligent placeholders.
+x-default-user-name: &default_user_name "dev-test"
+x-default-user-email: &default_user_email "dev-test@example.com"
+x-default-user-password: &default_user_password "password"
+
+# The rest of these strings are environment variables for the containers. Modify as needed,
+# but keep in mind that some are used relevant when *building* the images (like the VITE_* vars
+# for the client), while others are used at runtime.
+x-base-environment: &base_env
+  TZ: "America/Los_Angeles"
+  NODE_ENV: "production"
+
+x-client-args: &client_env
+  VITE_VERSION: "0.2.0"
+  VITE_API_SERVER_URL: ""
+
+x-server-environment: &server_env
+  <<: 
+    - *base_env
+  LOG_DEBUG: "false"
+  DEFAULT_USER: *default_user_name
+  DEFAULT_USER_EMAIL: *default_user_email
+  DEFAULT_USER_PASSWORD: *default_user_password
+  AUTHENTICATION_ENABLED: "false"
+  JWT_SECRET: *jwt_secret
+  JWT_EXPIRATION: "259200000"
+  DATABASE_HOST: "127.0.0.1"
+  DATABASE_PORT: "3306"
+  DATABASE_USER: "root"
+  DATABASE_PASSWORD: *db_password
+  INTERSERVICE_AUTHENTICATION_KEY: *interservice_authentication_key
+  BACKUP_RETENTION_DAYS: "30"
+
 services:
   server:
     restart: unless-stopped
@@ -7,22 +48,7 @@ services:
     build:
       context: ./
       dockerfile: ./server/Dockerfile
-    environment:
-      - TZ=${TZ}
-      - NODE_ENV=${NODE_ENV}
-      - LOG_DEBUG=${LOG_DEBUG}
-      - DEFAULT_USER=${DEFAULT_USER}
-      - DEFAULT_USER_EMAIL=${DEFAULT_USER_EMAIL}
-      - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD}
-      - AUTHENTICATION_ENABLED=${AUTHENTICATION_ENABLED}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
-      - DATABASE_HOST=${DATABASE_HOST}
-      - DATABASE_PORT=${DATABASE_PORT}
-      - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
-      - INTERSERVICE_AUTHENTICATION_KEY=${INTERSERVICE_AUTHENTICATION_KEY}
-      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS}
+    environment: *server_env
     volumes:
       - /run/udev:/run/udev:ro
       - /sys:/sys
@@ -47,15 +73,11 @@ services:
     image: ghcr.io/ipswich/sproot-client:latest
     build:
       context: ./
-      dockerfile: ./client/Dockerfile
-      args:
-        - VITE_VERSION=${VERSION}
-        - VITE_API_SERVER_URL=${API_SERVER_URL}
-    environment:
-      - TZ=${TZ}
-      - NODE_ENV=${NODE_ENV}
+      dockerfile: ./gateway/Dockerfile
+      args: *client_env
+    environment: *base_env
     volumes:
-      - ./docker_volumes/sproot/client/logs:/sproot/logs
+      - ./docker_volumes/sproot/gateway/logs:/sproot/logs
     network_mode: "host"
     expose:
       - "80"
@@ -64,7 +86,7 @@ services:
     image: mariadb:11.5.2-noble
     restart: unless-stopped
     environment:
-      - MARIADB_ROOT_PASSWORD=${DATABASE_PASSWORD}
+      MARIADB_ROOT_PASSWORD: *db_password
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
     network_mode: "host"
@@ -78,7 +100,7 @@ services:
     expose:
       - "3001"
     environment:
-      - APACHE_PORT=3001
-      - PMA_HOST=127.0.0.1
-      - UPLOAD_LIMIT=500M
+      APACHE_PORT: 3001
+      PMA_HOST: 127.0.0.1
+      UPLOAD_LIMIT: 500M
       

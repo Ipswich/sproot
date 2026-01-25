@@ -6,12 +6,15 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc --build --verbose tsconfig.build.json",
+    "build:docs": "npm run build --workspace=docs",
     "build:client": "npm run build --workspace=common --workspace=client",
     "build:server": "npm run build --workspace=common --workspace=server",
     "clean": "npm run clean --workspaces --if-present",
     "coverage": "npm run coverage --workspaces --if-present",
     "install:common": "npm ci --workspace=common",
     "install:common:production": "npm ci --workspace=common --only=production",
+    "install:docs": "npm ci --workspace=docs",
+    "install:docs:production": "npm ci --workspace=docs --only=production",
     "install:client": "npm ci --workspace=common --workspace=client",
     "install:client:production": "npm ci --workspace=common --workspace=client --only=production",
     "install:server": "npm ci --workspace=common --workspace=server",
@@ -21,6 +24,7 @@
     "start:server": "npm run start --workspace=server",
     "start:dev:server": "npm run start:dev --workspace=server",
     "start:dev:client": "npm run start:dev --workspace=client",
+    "start:dev:docs": "npm run start --workspace=docs",
     "test": "npm run test --workspaces --if-present",
     "test:api": "npm run test:api --workspace=server",
     "check": "npm run check --workspaces --if-present"
@@ -75,6 +79,7 @@
   "workspaces": [
     "common",
     "server",
-    "client"
+    "client",
+    "docs"
   ]
 }
