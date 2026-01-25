@@ -1,0 +1,10 @@
+{
+  "label": "How-To",
+  "position": 3,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "Learn about leveraging Sproot's capabilities."
+  }
+}

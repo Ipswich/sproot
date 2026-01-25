@@ -136,3 +136,5 @@ docker_volumes/
 *.local
 client/.env.development
 *.sproot.gz
+
+build

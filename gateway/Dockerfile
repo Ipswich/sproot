@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM debian:12.11-slim AS build
+FROM --platform=$BUILDPLATFORM debian:12.13-slim AS build
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
     echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
@@ -25,12 +25,19 @@ RUN npm run install:common
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 ARG VITE_VERSION
 ARG VITE_API_SERVER_URL
+# Build client
 RUN npm run install:client
 RUN npm run build:client
 
-FROM nginx:1.27.5-alpine-slim
+# Build Docs
+RUN npm run install:docs
+RUN npm run build:docs
+
+FROM nginx:1.29.4-alpine-slim
 COPY --from=build ./sproot/client/dist /usr/share/nginx/html
-COPY --from=build ./sproot/client/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=build ./sproot/docs/build /usr/share/nginx/html/docs
+COPY --from=build ./sproot/gateway/config/default.conf /etc/nginx/conf.d/default.conf
+COPY --from=build ./sproot/gateway/config/nginx.conf /etc/nginx/nginx.conf
 
 # Expose app ports
 EXPOSE 80
