@@ -3,6 +3,7 @@ sidebar_position: 1
 title: Home
 slug: /
 ---
+
 # Welcome to Sproot Docs!
 
 Here you'll find all of the documentation for installing, configuring, and setting up Sproot to help you keep an eye on things.

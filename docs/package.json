@@ -13,7 +13,9 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
-    "clean": "rimraf build"
+    "clean": "rimraf build",
+    "prettier:write": "npx --yes prettier . --write",
+    "prettier:check": "npx --yes prettier . --check"
   },
   "dependencies": {
     "@docusaurus/core": "3.9.2",
