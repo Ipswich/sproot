@@ -18,8 +18,9 @@ x-base-environment: &base_env
   TZ: "America/Los_Angeles"
   NODE_ENV: "production"
 
+# Grabbed from env - the build step for the github action sets this variable
 x-client-args: &client_env
-  VITE_VERSION: "0.2.0"
+  VITE_VERSION: "${VITE_VERSION:-0.0.0}"
   VITE_API_SERVER_URL: ""
 
 x-server-environment: &server_env
