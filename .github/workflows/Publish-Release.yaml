@@ -2,7 +2,8 @@ name: Publish Release
 
 on:
   push:
-    branches: ['release']
+    # Trigger when a versioned git tag is pushed (e.g. v1.2.3)
+    tags: ['v*']
 
 env:
   REGISTRY: ghcr.io
@@ -10,43 +11,65 @@ env:
   NODE_VERSION: 22.5.1
 
 jobs:
+  verify-tag:
+    name: Verify tag and package.json version match
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag matches package.json and is on main
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+          PKG_VERSION=$(jq -r '.version' package.json)
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+          # expose version as a job output for downstream jobs
+          echo "version=${PKG_VERSION}" >> $GITHUB_OUTPUT
+          if [ "v${PKG_VERSION}" != "${TAG}" ]; then
+            echo "Tag (${TAG}) does not match package.json version v${PKG_VERSION}"
+            exit 1
+          fi
+          # Ensure the tag's commit is contained in origin/main
+          git fetch origin main
+          SHA=$(git rev-parse "${TAG}")
+          if git branch -r --contains "$SHA" | grep -q "origin/main"; then
+            echo "Tag points to commit on main"
+          else
+            echo "Tag ${TAG} does not point to a commit contained in origin/main"
+            exit 1
+          fi
+
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
+    needs: verify-tag
     permissions:
       contents: write
+    outputs:
+      VERSION: ${{ needs.verify-tag.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Add version to env from package.json
-        id: version
-        run: |
-          echo "VERSION=v$(jq -r '.version' package.json)" >> $GITHUB_ENV
-      - name: Create Tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo Tagging with ${{env.VERSION}}
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{env.VERSION}}
-          git push origin ${{env.VERSION}}
       - name: Create Release
         id: create_release
         uses: ncipollo/release-action@v1.14.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: ${{ env.VERSION }}
+          tag: ${{ github.ref_name }}
           generateReleaseNotes: true
-          
+
   build-and-push-images:
     needs: create-release
     name: Build and Push Container Image
+    env:
+      VERSION: ${{ needs.create-release.outputs.VERSION }}
     strategy:
       matrix:
         service: [server, client]
@@ -60,11 +83,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Add version to env from package.json
-        id: version
-        run: |
-          echo "VERSION=$(jq -r '.version' package.json)" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -103,7 +121,6 @@ jobs:
           context: ./
           build-args: |
             VITE_VERSION=${{ env.VERSION }}
-            VITE_API_SERVER_URL=
           file: ./${{ matrix.service }}/Dockerfile
           platforms: linux/arm64,linux/amd64
           push: true
