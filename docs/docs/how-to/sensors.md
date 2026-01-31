@@ -28,7 +28,7 @@ To add an I2C device, simply note the I2C device of the sensor and connect the r
 
 - DS18B20
 
-Since these are discoverable, you'll only need to wire the relevant pins between the devices and you should be set. Sproot will automatically detect and add these as they are discovered. You'll probably want to update the name, color, and maybe group.
+Since these are discoverable, you'll only need to wire the relevant pins between the devices and you should be set. Sproot will automatically detect and add these as they are discovered. You'll probably want to update the name, color, and maybe zone.
 
 ## Adding or Editing a Device
 
@@ -53,11 +53,11 @@ This determines the color of the sensor's line on charts, and its label's color.
 
 This determines some of the other settings of the sensor, but ultimately tells Sproot how it needs to communicate with this device.
 
-#### Group
+#### Zone
 
-This organizes grouped devices into a common display category. Think "Zone". If you've got two shelves with different conditions, you might want them grouped together to keep things organized.
+This organizes zoned devices into a common display category. Think "Zone". If you've got two shelves with different conditions, you might want them zoned together to keep things organized.
 
-- You can manage groups by clicking the big `Manage Device Groups` button under the `Add New` button. These groups are also shared with Outputs.
+- You can manage zones by clicking the big `Manage Device Zones` button under the `Add New` button. These zones are also shared with Outputs.
 
 #### Model Specific Settings
 
@@ -82,6 +82,6 @@ Temperature sensors can also be toggled to display in °C or °F
 
 This table contains each sensor you have configured, grouped according to their configurations.
 
-- Virtually everything in this table is reorderable. If there's a more significant group, or a more significant sensor, drag it to the top!
-- If you collapse or expand a group, it'll automatically hide or show its data on the chart. Display only the data you care about!
+- Virtually everything in this table is reorderable. If there's a more significant zone, or a more significant sensor, drag it to the top!
+- If you collapse or expand a zone, it'll automatically hide or show its data on the chart. Display only the data you care about!
 - You can also hide or show individual sensor data by adjusting the toggle switch in the same row as the sensor.

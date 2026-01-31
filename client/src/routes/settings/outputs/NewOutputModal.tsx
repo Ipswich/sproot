@@ -12,7 +12,7 @@ import {
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import {
   addOutputAsync,
-  getDeviceGroupsAsync,
+  getDeviceZonesAsync,
   getSubcontrollerAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
@@ -67,8 +67,8 @@ export default function NewOutputModal({
   });
 
   const groupQuery = useQuery({
-    queryKey: ["device-groups"],
-    queryFn: () => getDeviceGroupsAsync(),
+    queryKey: ["device-zones"],
+    queryFn: () => getDeviceZonesAsync(),
     refetchOnWindowFocus: false,
     refetchInterval: 60000,
   });
@@ -86,7 +86,7 @@ export default function NewOutputModal({
       model: supportedModels[0] ?? "",
       subcontrollerId: subcontrollersQuery.data?.recognized?.[0]?.id,
       address: "",
-      // deviceGroupId: undefined,
+      // deviceZoneId: undefined,
       pin: "0",
       isPwm: false,
       isInvertedPwm: false,
@@ -120,7 +120,7 @@ export default function NewOutputModal({
         !value || (value.length > 0 && value.length <= 64)
           ? null
           : "Address must be between 1 and 64 characters",
-      deviceGroupId: (value: number | undefined) =>
+      deviceZoneId: (value: number | undefined) =>
         value == undefined || value > 0
           ? null
           : "Group must be a positive integer",
@@ -220,7 +220,7 @@ export default function NewOutputModal({
             searchable
             clearable
             allowDeselect={true}
-            {...newOutputForm.getInputProps("deviceGroupId")}
+            {...newOutputForm.getInputProps("deviceZoneId")}
           />
           {newOutputForm.values.model === Models.PCA9685 ? (
             <PCA9685Form form={newOutputForm} />

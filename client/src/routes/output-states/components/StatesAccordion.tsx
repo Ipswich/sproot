@@ -22,13 +22,13 @@ import { outputStateOrderKey } from "../../utility/LocalStorageKeys";
 interface StatesAccordionProps {
   outputs: IOutputBase[];
   updateOutputsAsync: () => Promise<void>;
-  deviceGroupId: number;
+  deviceZoneId: number;
 }
 
 export default function StatesAccordion({
   outputs,
   updateOutputsAsync,
-  deviceGroupId,
+  deviceZoneId,
 }: StatesAccordionProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -82,7 +82,7 @@ export default function StatesAccordion({
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
-          outputStateOrderKey(deviceGroupId),
+          outputStateOrderKey(deviceZoneId),
           JSON.stringify(updatedArray),
         );
         return updatedArray;
@@ -93,7 +93,7 @@ export default function StatesAccordion({
   function updateOutputOrderAsync() {
     const existingOrder = (
       JSON.parse(
-        localStorage.getItem(outputStateOrderKey(deviceGroupId)) ?? "[]",
+        localStorage.getItem(outputStateOrderKey(deviceZoneId)) ?? "[]",
       ) as IOutputBase[]
     ).map((o) => o.id);
     const retrievedOutputs = Object.values(outputs);

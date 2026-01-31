@@ -13,7 +13,7 @@ import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, useState } from "react";
 import {
   deleteSensorAsync,
-  getDeviceGroupsAsync,
+  getDeviceZonesAsync,
   getSubcontrollerAsync,
   updateSensorAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -78,8 +78,8 @@ export default function EditTable({
   });
 
   const groupQuery = useQuery({
-    queryKey: ["device-groups"],
-    queryFn: () => getDeviceGroupsAsync(),
+    queryKey: ["device-zones"],
+    queryFn: () => getDeviceZonesAsync(),
     refetchOnWindowFocus: false,
     refetchInterval: 60000,
   });
@@ -92,7 +92,7 @@ export default function EditTable({
       subcontrollerId: selectedSensor.subcontrollerId ?? undefined,
       address: selectedSensor.address,
       pin: selectedSensor.pin ?? null,
-      deviceGroupId: selectedSensor.deviceGroupId ?? undefined,
+      deviceZoneId: selectedSensor.deviceZoneId ?? undefined,
     },
     validate: {
       id: (value: number) =>
@@ -134,7 +134,7 @@ export default function EditTable({
           : "Address must be between 1 and 64 characters",
       pin: (value: string | null) =>
         !value || (value.length > 0 && value.length <= 64) ? null : null,
-      deviceGroupId: (value: number | undefined) =>
+      deviceZoneId: (value: number | undefined) =>
         value == undefined || value > 0
           ? null
           : "Group must be a positive integer",
@@ -154,8 +154,8 @@ export default function EditTable({
     updateSensorForm.setFieldValue("id", sensor.id);
     updateSensorForm.setFieldValue("pin", sensor.pin ?? null);
     updateSensorForm.setFieldValue(
-      "deviceGroupId",
-      sensor.deviceGroupId ?? undefined,
+      "deviceZoneId",
+      sensor.deviceZoneId ?? undefined,
     );
     openModal();
   };
@@ -237,15 +237,15 @@ export default function EditTable({
             searchable
             clearable
             allowDeselect={true}
-            {...updateSensorForm.getInputProps("deviceGroupId")}
+            {...updateSensorForm.getInputProps("deviceZoneId")}
             value={
-              updateSensorForm.values.deviceGroupId != null
-                ? String(updateSensorForm.values.deviceGroupId)
+              updateSensorForm.values.deviceZoneId != null
+                ? String(updateSensorForm.values.deviceZoneId)
                 : null
             }
             onChange={(val) =>
               updateSensorForm.setFieldValue(
-                "deviceGroupId",
+                "deviceZoneId",
                 val !== null ? parseInt(val, 10) : undefined,
               )
             }

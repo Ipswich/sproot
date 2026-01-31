@@ -15,7 +15,7 @@ import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import SensorTableAccordion from "./components/SensorTableAccordion";
 import {
   sensorsToggledKey,
-  sensorToggledDeviceGroupsKey,
+  sensorToggledDeviceZonesKey,
 } from "../utility/LocalStorageKeys";
 
 export default function SensorData() {
@@ -36,9 +36,9 @@ export default function SensorData() {
       localStorage.getItem(sensorsToggledKey(readingTypeString)) ?? "[]",
     ) as string[],
   );
-  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(
+  const [deviceZoneToggleStates, setDeviceZoneToggleStates] = useState(
     JSON.parse(
-      localStorage.getItem(sensorToggledDeviceGroupsKey(readingTypeString)) ??
+      localStorage.getItem(sensorToggledDeviceZonesKey(readingTypeString)) ??
         "[]",
     ) as string[],
   );
@@ -89,7 +89,7 @@ export default function SensorData() {
           readingType={readingTypeString}
           chartInterval={chartInterval}
           toggledSensors={sensorToggleStates}
-          toggledDeviceGroups={deviceGroupToggleStates}
+          toggledDeviceZones={deviceZoneToggleStates}
           chartRendering={chartRendering}
           setChartRendering={setChartRendering}
           useAlternateUnits={useAlternateUnits}
@@ -127,8 +127,8 @@ export default function SensorData() {
           ) => {
             setSensorToggleStates(newSensorToggleState);
           }}
-          deviceGroupToggleStates={deviceGroupToggleStates}
-          setDeviceGroupToggleStates={setDeviceGroupToggleStates}
+          deviceZoneToggleStates={deviceZoneToggleStates}
+          setDeviceZoneToggleStates={setDeviceZoneToggleStates}
           useAlternateUnits={useAlternateUnits}
         />
       </Card>

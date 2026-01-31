@@ -11,7 +11,7 @@ import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBOutputAction } from "@sproot/database/SDBOutputAction";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { SDBDeviceGroup } from "@sproot/database/SDBDeviceGroup";
+import { SDBDeviceZone } from "@sproot/database/SDBDeviceZone";
 import { AvailableDevice } from "@sproot/outputs/AvailableDevice";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SystemStatus } from "@sproot/system/SystemStatus";
@@ -183,8 +183,8 @@ export async function getOutputsAsync(): Promise<Record<string, IOutputBase>> {
   return deserializedResponse.content?.data;
 }
 
-export async function getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
-  const response = await fetch(`${SERVER_URL}/api/v2/device-groups`, {
+export async function getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
+  const response = await fetch(`${SERVER_URL}/api/v2/device-zones`, {
     method: "GET",
     headers: {},
     mode: "cors",
@@ -192,15 +192,15 @@ export async function getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
   });
 
   if (!response.ok) {
-    console.error(`Error fetching device groups: ${response}`);
+    console.error(`Error fetching device zones: ${response}`);
     return [];
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
 }
 
-export async function addDeviceGroupAsync(name: string): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/device-groups`, {
+export async function addDeviceZoneAsync(name: string): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/device-zones`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
@@ -208,15 +208,15 @@ export async function addDeviceGroupAsync(name: string): Promise<void> {
     // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error adding device group: ${response}`);
+    console.error(`Error adding device zone: ${response}`);
   }
 }
 
-export async function updateDeviceGroupAsync(
-  group: SDBDeviceGroup,
+export async function updateDeviceZoneAsync(
+  group: SDBDeviceZone,
 ): Promise<void> {
   const response = await fetch(
-    `${SERVER_URL}/api/v2/device-groups/${group.id}`,
+    `${SERVER_URL}/api/v2/device-zones/${group.id}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -226,19 +226,19 @@ export async function updateDeviceGroupAsync(
     },
   );
   if (!response.ok) {
-    console.error(`Error updating device group: ${response}`);
+    console.error(`Error updating device zone: ${response}`);
   }
 }
 
-export async function deleteDeviceGroupAsync(id: number): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/device-groups/${id}`, {
+export async function deleteDeviceZoneAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/device-zones/${id}`, {
     method: "DELETE",
     headers: {},
     mode: "cors",
     // credentials: "include",
   });
   if (!response.ok) {
-    console.error(`Error deleting device group: ${response}`);
+    console.error(`Error deleting device zone: ${response}`);
   }
 }
 

@@ -10,7 +10,7 @@ import NewOutputModal from "@sproot/sproot-client/src/routes/settings/outputs/Ne
 import { useQuery } from "@tanstack/react-query";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { Models } from "@sproot/outputs/Models";
-import DeviceGroupsModal from "../shared/DeviceGroupsModal";
+import DeviceZonesModal from "../shared/DeviceZonesModal";
 
 export interface OutputFormValues {
   id?: number;
@@ -19,7 +19,7 @@ export interface OutputFormValues {
   model: keyof typeof Models;
   subcontrollerId?: number;
   address: string;
-  deviceGroupId?: number;
+  deviceZoneId?: number;
   pin: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
@@ -35,8 +35,8 @@ export default function OutputSettings() {
     {} as Record<string, string>,
   );
   const [
-    deviceGroupsModalOpened,
-    { open: deviceGroupsModalOpen, close: deviceGroupsModalClose },
+    deviceZonesModalOpened,
+    { open: deviceZonesModalOpen, close: deviceZonesModalClose },
   ] = useDisclosure(false);
   const [outputs, setOutputs] = useState({} as Record<string, IOutputBase>);
   const [isStale, setIsStale] = useState(false);
@@ -73,9 +73,9 @@ export default function OutputSettings() {
   return (
     <Fragment>
       <Stack h="600" justify="center" align="center">
-        <DeviceGroupsModal
-          modalOpened={deviceGroupsModalOpened}
-          closeModal={deviceGroupsModalClose}
+        <DeviceZonesModal
+          modalOpened={deviceZonesModalOpened}
+          closeModal={deviceZonesModalClose}
         />
         <NewOutputModal
           supportedModels={supportedModels}
@@ -91,8 +91,8 @@ export default function OutputSettings() {
         <Button size="xl" w={rem(300)} onClick={newOutputModalOpen}>
           Add New
         </Button>
-        <Button size="sm" w={rem(200)} onClick={deviceGroupsModalOpen}>
-          Manage Device Groups
+        <Button size="sm" w={rem(200)} onClick={deviceZonesModalOpen}>
+          Manage Device Zones
         </Button>
       </Stack>
     </Fragment>

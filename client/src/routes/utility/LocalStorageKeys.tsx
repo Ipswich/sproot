@@ -2,29 +2,29 @@ export function sensorAccordionOrderKey(readingType: string): string {
   return `${readingType}-sensorTableOrder`;
 }
 
-export function sensorToggledDeviceGroupsKey(readingType: string): string {
-  return `${readingType}-toggledDeviceGroups`;
+export function sensorToggledDeviceZonesKey(readingType: string): string {
+  return `${readingType}-toggledDeviceZones`;
 }
 
 export function sensorDataOrderKey(
   readingType: string,
-  deviceGroup: number,
+  deviceZone: number,
 ): string {
-  return `${readingType}-${deviceGroup}-sensorDataOrder`;
+  return `${readingType}-${deviceZone}-sensorDataOrder`;
 }
 
 export function sensorsToggledKey(readingType: string): string {
   return `${readingType}-toggledSensors`;
 }
 
-export function outputGroupOrderKey(): string {
-  return `outputGroupOrder`;
+export function outputZoneOrderKey(): string {
+  return `outputZoneOrder`;
 }
 
-export function outputStateOrderKey(deviceGroup: number): string {
-  return `${deviceGroup}-outputStateOrder`;
+export function outputStateOrderKey(deviceZone: number): string {
+  return `${deviceZone}-outputStateOrder`;
 }
 
-export function outputStateToggledGroupsKey(): string {
-  return `outputs-toggledDeviceGroups`;
+export function outputStateToggledZonesKey(): string {
+  return `outputs-toggledDeviceZones`;
 }

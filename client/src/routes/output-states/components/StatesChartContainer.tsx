@@ -16,14 +16,14 @@ interface StatesChartContainerProps {
   chartInterval: string;
   chartRendering: boolean;
   setChartRendering: (value: boolean) => void;
-  toggledDeviceGroups: string[];
+  toggledDeviceZones: string[];
 }
 
 export default function StatesChartContainer({
   chartInterval,
   chartRendering,
   setChartRendering,
-  toggledDeviceGroups,
+  toggledDeviceZones,
 }: StatesChartContainerProps) {
   const baseChartData = new ChartData(
     Constants.MAX_CHART_DATA_POINTS,
@@ -76,21 +76,21 @@ export default function StatesChartContainer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hiddenOutputsFromDeviceGroups = (
+  const hiddenOutputsFromDeviceZones = (
     Object.values(outputsQuery.data ?? {}) ?? []
   )
     .filter((output) => {
-      return toggledDeviceGroups.includes(
-        (output.deviceGroupId ?? -1).toString(),
+      return toggledDeviceZones.includes(
+        (output.deviceZoneId ?? -1).toString(),
       );
     })
     .map((output) => output.name ?? "");
 
   const hiddenOutputs =
-    hiddenOutputsFromDeviceGroups.length ==
+    hiddenOutputsFromDeviceZones.length ==
     Object.values(outputsQuery.data ?? {}).length
       ? []
-      : hiddenOutputsFromDeviceGroups;
+      : hiddenOutputsFromDeviceZones;
   return (
     <Fragment>
       <Flex my={-12}>

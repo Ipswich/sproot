@@ -23,7 +23,7 @@ import { sensorDataOrderKey } from "../../utility/LocalStorageKeys";
 
 interface SensorTableProps {
   readingType: ReadingType;
-  deviceGroup: number;
+  deviceZone: number;
   sensors: ISensorBase[];
   sensorToggleStates: string[];
   setSensorToggleStates: (sensorName: string[]) => void;
@@ -32,7 +32,7 @@ interface SensorTableProps {
 
 export default function SensorTable({
   readingType,
-  deviceGroup,
+  deviceZone,
   sensors,
   sensorToggleStates,
   setSensorToggleStates,
@@ -53,7 +53,7 @@ export default function SensorTable({
     updateSensorOrder();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType, _sensorToggleKey, deviceGroup, _sensorsIdKey]);
+  }, [readingType, _sensorToggleKey, deviceZone, _sensorsIdKey]);
 
   const sortableItems = orderedSensors.map((sensor) => (
     <SortableTableRow
@@ -116,7 +116,7 @@ export default function SensorTable({
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
-          sensorDataOrderKey(readingType, deviceGroup),
+          sensorDataOrderKey(readingType, deviceZone),
           JSON.stringify(updatedArray),
         );
         return updatedArray;
@@ -129,7 +129,7 @@ export default function SensorTable({
     // Data from local storage
     const existingOrder = (
       JSON.parse(
-        localStorage.getItem(sensorDataOrderKey(readingType, deviceGroup)) ??
+        localStorage.getItem(sensorDataOrderKey(readingType, deviceZone)) ??
           "[]",
       ) as ISensorBase[]
     ).map((s) => s.id);

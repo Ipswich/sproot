@@ -1,4 +1,4 @@
-import { SDBDeviceGroup } from "@sproot/sproot-common/dist/database/SDBDeviceGroup";
+import { SDBDeviceZone } from "@sproot/sproot-common/dist/database/SDBDeviceZone";
 import { Request, Response } from "express";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
@@ -10,7 +10,7 @@ export async function getAsync(
   const sprootDB: ISprootDB = req.app.get("sprootDB");
   let response: SuccessResponse | ErrorResponse;
   try {
-    const results = await sprootDB.getDeviceGroupsAsync();
+    const results = await sprootDB.getDeviceZonesAsync();
     response = {
       statusCode: 200,
       content: {
@@ -24,7 +24,7 @@ export async function getAsync(
       error: {
         name: "Internal Server Error",
         url: req.originalUrl,
-        details: [`Failed to retrieve device groups: ${(error as Error).message}`],
+        details: [`Failed to retrieve device zones: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -39,26 +39,26 @@ export async function addAsync(
   const sprootDB: ISprootDB = req.app.get("sprootDB");
   let response: SuccessResponse | ErrorResponse;
   try {
-    const deviceGroupData: Partial<SDBDeviceGroup> = req.body;
-    if (deviceGroupData.name == null || deviceGroupData.name === "") {
+    const deviceZoneData: Partial<SDBDeviceZone> = req.body;
+    if (deviceZoneData.name == null || deviceZoneData.name === "") {
       response = {
         statusCode: 400,
         error: {
           name: "Bad Request",
           url: req.originalUrl,
-          details: ["Device group name is required."],
+          details: ["Device zone name is required."],
         },
         ...res.locals["defaultProperties"],
       };
       return response;
     }
-    const newDeviceGroup = await sprootDB.addDeviceGroupAsync(deviceGroupData.name);
+    const newDeviceZone = await sprootDB.addDeviceZoneAsync(deviceZoneData.name);
     response = {
       statusCode: 201,
       content: {
         data: {
-          id: newDeviceGroup,
-          name: deviceGroupData.name,
+          id: newDeviceZone,
+          name: deviceZoneData.name,
         },
       },
       ...res.locals["defaultProperties"],
@@ -69,7 +69,7 @@ export async function addAsync(
       error: {
         name: "Internal Server Error",
         url: req.originalUrl,
-        details: [`Failed to add device group: ${(error as Error).message}`],
+        details: [`Failed to add device zone: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -84,30 +84,30 @@ export async function updateAsync(
   const sprootDB: ISprootDB = req.app.get("sprootDB");
   let response: SuccessResponse | ErrorResponse;
   try {
-    const { deviceGroupId } = req.params;
-    const deviceGroupData: Partial<SDBDeviceGroup> = req.body;
+    const { deviceZoneId } = req.params;
+    const deviceZoneData: Partial<SDBDeviceZone> = req.body;
     const errorMessages: string[] = [];
 
-    if (deviceGroupData.name == null || deviceGroupData.name === "") {
-      errorMessages.push("Device group name is required.");
+    if (deviceZoneData.name == null || deviceZoneData.name === "") {
+      errorMessages.push("Device zone name is required.");
     }
 
-    let existingDeviceGroup: SDBDeviceGroup | undefined;
-    const deviceGroupIdAsInt = parseInt(deviceGroupId ?? "", 10);
-    if (deviceGroupId == null || isNaN(deviceGroupIdAsInt)) {
-      errorMessages.push("Valid device group ID is required.");
+    let existingDeviceZone: SDBDeviceZone | undefined;
+    const deviceZoneIdAsInt = parseInt(deviceZoneId ?? "", 10);
+    if (deviceZoneId == null || isNaN(deviceZoneIdAsInt)) {
+      errorMessages.push("Valid device zone ID is required.");
     } else {
-      existingDeviceGroup = (await sprootDB.getDeviceGroupsAsync()).find(
-        (dg) => dg.id === deviceGroupIdAsInt,
+      existingDeviceZone = (await sprootDB.getDeviceZonesAsync()).find(
+        (dg) => dg.id === deviceZoneIdAsInt,
       );
     }
-    if (existingDeviceGroup == null) {
+    if (existingDeviceZone == null) {
       response = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: req.originalUrl,
-          details: [`Device group with ID ${deviceGroupId} not found.`],
+          details: [`Device zone with ID ${deviceZoneId} not found.`],
         },
         ...res.locals["defaultProperties"],
       };
@@ -128,12 +128,12 @@ export async function updateAsync(
     }
 
     // Null checked above
-    existingDeviceGroup!.name = deviceGroupData.name ?? existingDeviceGroup!.name;
-    await sprootDB.updateDeviceGroupAsync(existingDeviceGroup!);
+    existingDeviceZone!.name = deviceZoneData.name ?? existingDeviceZone!.name;
+    await sprootDB.updateDeviceZoneAsync(existingDeviceZone!);
     response = {
       statusCode: 200,
       content: {
-        data: existingDeviceGroup,
+        data: existingDeviceZone,
       },
       ...res.locals["defaultProperties"],
     };
@@ -143,7 +143,7 @@ export async function updateAsync(
       error: {
         name: "Internal Server Error",
         url: req.originalUrl,
-        details: [`Failed to update device group: ${(error as Error).message}`],
+        details: [`Failed to update device zone: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -158,25 +158,25 @@ export async function deleteAsync(
   const sprootDB: ISprootDB = req.app.get("sprootDB");
   let response: SuccessResponse | ErrorResponse;
   try {
-    const { deviceGroupId } = req.params;
-    if (deviceGroupId == null || isNaN(parseInt(deviceGroupId, 10))) {
+    const { deviceZoneId } = req.params;
+    if (deviceZoneId == null || isNaN(parseInt(deviceZoneId, 10))) {
       response = {
         statusCode: 400,
         error: {
           name: "Bad Request",
           url: req.originalUrl,
-          details: ["Valid device group ID is required."],
+          details: ["Valid device zone ID is required."],
         },
         ...res.locals["defaultProperties"],
       };
       return response;
     }
-    const id = parseInt(deviceGroupId, 10);
-    await sprootDB.deleteDeviceGroupAsync(id);
+    const id = parseInt(deviceZoneId, 10);
+    await sprootDB.deleteDeviceZoneAsync(id);
     response = {
       statusCode: 200,
       content: {
-        data: `Device group with ID ${id} successfully deleted.`,
+        data: `Device zone with ID ${id} successfully deleted.`,
       },
       ...res.locals["defaultProperties"],
     };
@@ -186,7 +186,7 @@ export async function deleteAsync(
       error: {
         name: "Internal Server Error",
         url: req.originalUrl,
-        details: [`Failed to delete device group: ${(error as Error).message}`],
+        details: [`Failed to delete device zone: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
