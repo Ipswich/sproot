@@ -187,7 +187,8 @@ export async function updateAsync(
   outputData.isInvertedPwm = request.body["isInvertedPwm"] ?? outputData.isInvertedPwm;
   outputData.color = request.body["color"] ?? outputData.color;
   outputData.automationTimeout = request.body["automationTimeout"] ?? outputData.automationTimeout;
-  outputData.deviceGroupId = request.body["deviceGroupId"] ?? outputData.deviceGroupId;
+  outputData.deviceZoneId =
+    request.body["deviceZoneId"] ?? request.body["deviceZoneId"] ?? outputData.deviceZoneId;
 
   try {
     await sprootDB.updateOutputAsync(outputData);

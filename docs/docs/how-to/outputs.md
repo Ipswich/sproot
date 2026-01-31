@@ -54,11 +54,11 @@ This determines some of the other settings of the output, but ultimately tells S
 
 This value determines how frequently automations should be triggered. Think of it as sort of a minimum time between evaluations. Something like an LED light might be totally fine being turned on and off with seconds in between. Other devices like a heater might not handle that so well. This tells Sproot "If an automation was triggered within the last `n seconds`, don't try to do anything to it until this timeout has passed."
 
-#### Group
+#### Zone
 
-This organizes grouped devices into a common display category. Think "Zone". If you've got two shelves with different conditions, you might want them grouped together to keep things organized.
+This organizes zoned devices into a common display category. Think "Zone". If you've got two shelves with different conditions, you might want them zoned together to keep things organized.
 
-- You can manage groups by clicking the big `Manage Device Groups` button under the `Add New` button. These groups are also shared with Sensors.
+- You can manage zones by clicking the big `Manage Device Zones` button under the `Add New` button. These zones are also shared with Sensors.
 
 #### Model Specific Settings
 
@@ -97,10 +97,10 @@ This chart displays the history of each output. You can change the time range by
 
 ### Output Table
 
-This table contains each output you have configured, grouped according to their configurations. It also lets you control the state of the output.
+This table contains each output you have configured, zoned according to their configurations. It also lets you control the state of the output.
 
-- Virtually everything in this table is reorderable. If there's a more significant group, or a more significant output, drag it to the top!
-- If you collapse or expand a group, it'll automatically hide or show its data on the chart. Display only the data you care about!
+- Virtually everything in this table is reorderable. If there's a more significant zone, or a more significant output, drag it to the top!
+- If you collapse or expand a zone, it'll automatically hide or show its data on the chart. Display only the data you care about!
 
 If you expand an output, you'll be greeted by a toggleable control for `Manual` and `Automatic` and some information about the current state of the output next to it.
 

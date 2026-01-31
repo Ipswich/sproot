@@ -8,8 +8,8 @@ import SensorTable from "./SensorTable";
 
 interface SortableAccordionItemProps {
   readingType: ReadingType;
-  deviceGroupId: number;
-  deviceGroupName: string;
+  deviceZoneId: number;
+  deviceZoneName: string;
   sensors: ISensorBase[];
   sensorToggleStates: string[];
   setSensorToggleStates: (sensorNames: string[]) => void;
@@ -18,8 +18,8 @@ interface SortableAccordionItemProps {
 
 export default function SortableAccordionItem({
   readingType,
-  deviceGroupId,
-  deviceGroupName,
+  deviceZoneId,
+  deviceZoneName,
   sensors,
   sensorToggleStates,
   setSensorToggleStates,
@@ -32,7 +32,7 @@ export default function SortableAccordionItem({
     setActivatorNodeRef,
     transform,
     transition,
-  } = useSortable({ id: deviceGroupId });
+  } = useSortable({ id: deviceZoneId });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -42,8 +42,8 @@ export default function SortableAccordionItem({
     <Accordion.Item
       ref={setNodeRef}
       style={style}
-      key={deviceGroupId}
-      value={deviceGroupId.toString()}
+      key={deviceZoneId}
+      value={deviceZoneId.toString()}
     >
       <Accordion.Control
         icon={
@@ -52,12 +52,12 @@ export default function SortableAccordionItem({
           </span>
         }
       >
-        {deviceGroupName}
+        {deviceZoneName}
       </Accordion.Control>
       <Accordion.Panel>
         <SensorTable
           readingType={readingType}
-          deviceGroup={deviceGroupId}
+          deviceZone={deviceZoneId}
           sensors={sensors ?? []}
           sensorToggleStates={sensorToggleStates}
           setSensorToggleStates={setSensorToggleStates}

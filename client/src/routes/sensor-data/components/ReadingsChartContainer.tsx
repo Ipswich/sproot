@@ -24,7 +24,7 @@ export interface ReadingsChartContainerProps {
   readingType: string;
   chartInterval: string;
   toggledSensors: string[];
-  toggledDeviceGroups: string[];
+  toggledDeviceZones: string[];
   chartRendering: boolean;
   setChartRendering: (value: boolean) => void;
   useAlternateUnits: boolean;
@@ -34,7 +34,7 @@ export default function ReadingsChartContainer({
   readingType,
   chartInterval,
   toggledSensors,
-  toggledDeviceGroups,
+  toggledDeviceZones,
   chartRendering,
   setChartRendering,
   useAlternateUnits,
@@ -132,21 +132,21 @@ export default function ReadingsChartContainer({
     updateUnits(timeSpans[parseInt(chartInterval)]!);
   }
 
-  const hiddenSensorsFromDeviceGroups = (
+  const hiddenSensorsFromDeviceZones = (
     Object.values(sensorsQuery.data ?? {}) ?? []
   )
     .filter((sensor) => {
       return (
-        toggledDeviceGroups.includes((sensor.deviceGroupId ?? -1).toString()) ||
+        toggledDeviceZones.includes((sensor.deviceZoneId ?? -1).toString()) ||
         !Object.keys(sensor.lastReading).includes(readingType)
       );
     })
     .map((sensor) => sensor.name);
   const hiddenSensors =
-    hiddenSensorsFromDeviceGroups.length ==
+    hiddenSensorsFromDeviceZones.length ==
     Object.values(sensorsQuery.data ?? {}).length
       ? []
-      : toggledSensors.concat(hiddenSensorsFromDeviceGroups);
+      : toggledSensors.concat(hiddenSensorsFromDeviceZones);
   return (
     <Fragment>
       <ReadingsChart

@@ -27,7 +27,7 @@ import { IWeekdayCondition } from "../automation/IWeekdayCondition";
 import { IMonthCondition } from "@sproot/automation/IMonthCondition";
 import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBCameraSettings } from "./SDBCameraSettings";
-import { SDBDeviceGroup } from "./SDBDeviceGroup";
+import { SDBDeviceZone } from "./SDBDeviceZone";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -171,10 +171,10 @@ interface ISprootDB {
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
 
-  getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]>;
-  addDeviceGroupAsync(name: string): Promise<number>;
-  updateDeviceGroupAsync(deviceGroup: SDBDeviceGroup): Promise<void>;
-  deleteDeviceGroupAsync(id: number): Promise<void>;
+  getDeviceZonesAsync(): Promise<SDBDeviceZone[]>;
+  addDeviceZoneAsync(name: string): Promise<number>;
+  updateDeviceZoneAsync(deviceZone: SDBDeviceZone): Promise<void>;
+  deleteDeviceZoneAsync(id: number): Promise<void>;
 
   getDatabaseSizeAsync(): Promise<number>;
   backupDatabaseAsync(
@@ -513,19 +513,19 @@ class MockSprootDB implements ISprootDB {
     return;
   }
 
-  async getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
+  async getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
     return [];
   }
 
-  async addDeviceGroupAsync(_name: string): Promise<number> {
+  async addDeviceZoneAsync(_name: string): Promise<number> {
     return 0;
   }
 
-  async updateDeviceGroupAsync(_deviceGroup: SDBDeviceGroup): Promise<void> {
+  async updateDeviceZoneAsync(_deviceZone: SDBDeviceZone): Promise<void> {
     return;
   }
 
-  async deleteDeviceGroupAsync(_id: number): Promise<void> {
+  async deleteDeviceZoneAsync(_id: number): Promise<void> {
     return;
   }
 

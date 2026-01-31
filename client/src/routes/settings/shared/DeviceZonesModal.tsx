@@ -1,12 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
-  addDeviceGroupAsync,
-  deleteDeviceGroupAsync,
-  getDeviceGroupsAsync,
-  updateDeviceGroupAsync,
+  addDeviceZoneAsync,
+  deleteDeviceZoneAsync,
+  getDeviceZonesAsync,
+  updateDeviceZoneAsync,
 } from "../../../requests/requests_v2";
-import { SDBDeviceGroup } from "@sproot/database/SDBDeviceGroup";
+import { SDBDeviceZone } from "@sproot/database/SDBDeviceZone";
 import {
   ActionIcon,
   Group,
@@ -17,55 +17,54 @@ import {
 } from "@mantine/core";
 import { IconDeviceFloppy, IconTrash, IconPlus } from "@tabler/icons-react";
 
-interface DeviceGroupsModal {
+interface DeviceZonesModal {
   modalOpened: boolean;
   closeModal: () => void;
 }
 
-export default function DeviceGroupsModal({
+export default function DeviceZonesModal({
   modalOpened,
   closeModal,
-}: DeviceGroupsModal) {
-  const deviceGroupsQuery = useQuery({
-    queryKey: ["device-groups"],
-    queryFn: () => getDeviceGroupsAsync(),
+}: DeviceZonesModal) {
+  const deviceZonesQuery = useQuery({
+    queryKey: ["device-zones"],
+    queryFn: () => getDeviceZonesAsync(),
     refetchInterval: 60000,
   });
 
-  const addDeviceGroupsMutation = useMutation({
-    mutationFn: async (newGroupName: string) => {
-      await addDeviceGroupAsync(newGroupName);
+  const addDeviceZonesMutation = useMutation({
+    mutationFn: async (newZoneName: string) => {
+      await addDeviceZoneAsync(newZoneName);
     },
     onSettled: () => {
-      deviceGroupsQuery.refetch();
+      deviceZonesQuery.refetch();
     },
   });
 
-  const updateDeviceGroupsMutation = useMutation({
-    mutationFn: async (group: SDBDeviceGroup) => {
-      await updateDeviceGroupAsync(group);
+  const updateDeviceZonesMutation = useMutation({
+    mutationFn: async (zone: SDBDeviceZone) => {
+      await updateDeviceZoneAsync(zone);
     },
     onSettled: () => {
-      deviceGroupsQuery.refetch();
+      deviceZonesQuery.refetch();
     },
   });
 
-  const deleteDeviceGroupsMutation = useMutation({
-    mutationFn: async (groupId: number) => {
-      await deleteDeviceGroupAsync(groupId);
+  const deleteDeviceZonesMutation = useMutation({
+    mutationFn: async (zoneId: number) => {
+      await deleteDeviceZoneAsync(zoneId);
     },
     onSettled: () => {
-      deviceGroupsQuery.refetch();
+      deviceZonesQuery.refetch();
     },
   });
 
-  const [localGroups, setLocalGroups] = useState<SDBDeviceGroup[]>([]);
-  const [newGroupName, setNewGroupName] = useState<string>("");
+  const [localZones, setLocalZones] = useState<SDBDeviceZone[]>([]);
+  const [newZoneName, setNewZoneName] = useState<string>("");
 
   useEffect(() => {
-    setLocalGroups((deviceGroupsQuery.data ?? []).map((g) => ({ ...g })));
-  }, [deviceGroupsQuery.data]);
-
+    setLocalZones((deviceZonesQuery.data ?? []).map((g) => ({ ...g })));
+  }, [deviceZonesQuery.data]);
   return (
     <Modal
       overlayProps={{
@@ -79,7 +78,7 @@ export default function DeviceGroupsModal({
       onClose={() => {
         closeModal();
       }}
-      title="Manage Device Groups"
+      title="Manage Device Zones"
     >
       <Table
         highlightOnHover
@@ -96,22 +95,22 @@ export default function DeviceGroupsModal({
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {[...(localGroups ?? [])]
+          {[...(localZones ?? [])]
             .sort((a, b) =>
               (a.name || "").localeCompare(b.name || "", undefined, {
                 sensitivity: "base",
               }),
             )
-            .map((group) => (
-              <Table.Tr key={group.id}>
+            .map((zone) => (
+              <Table.Tr key={zone.id}>
                 <Table.Td align="center">
                   <TextInput
-                    value={group.name ?? ""}
+                    value={zone.name ?? ""}
                     onChange={(event) => {
                       const value = event.currentTarget.value;
-                      setLocalGroups((prev) =>
+                      setLocalZones((prev) =>
                         prev.map((g) =>
-                          g.id === group.id ? { ...g, name: value } : g,
+                          g.id === zone.id ? { ...g, name: value } : g,
                         ),
                       );
                     }}
@@ -121,12 +120,12 @@ export default function DeviceGroupsModal({
                   <Group justify="center">
                     <ActionIcon
                       onClick={async () => {
-                        const updated = localGroups.find(
-                          (g) => g.id === group.id,
+                        const updated = localZones.find(
+                          (g) => g.id === zone.id,
                         );
                         if (updated) {
-                          await updateDeviceGroupsMutation.mutateAsync(updated);
-                          await deviceGroupsQuery.refetch();
+                          await updateDeviceZonesMutation.mutateAsync(updated);
+                          await deviceZonesQuery.refetch();
                         }
                       }}
                     >
@@ -139,8 +138,8 @@ export default function DeviceGroupsModal({
                     <ActionIcon
                       color="grey"
                       onClick={async () => {
-                        await deleteDeviceGroupsMutation.mutateAsync(group.id);
-                        await deviceGroupsQuery.refetch();
+                        await deleteDeviceZonesMutation.mutateAsync(zone.id);
+                        await deviceZonesQuery.refetch();
                       }}
                     >
                       <IconTrash />
@@ -152,9 +151,9 @@ export default function DeviceGroupsModal({
           <Table.Tr key={"new"}>
             <Table.Td align="center">
               <TextInput
-                placeholder="New Device Group"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.currentTarget.value)}
+                placeholder="New Device Zone"
+                value={newZoneName}
+                onChange={(e) => setNewZoneName(e.currentTarget.value)}
               />
             </Table.Td>
             <Table.Td style={{ width: "10%" }} align="center">
@@ -162,12 +161,12 @@ export default function DeviceGroupsModal({
                 <ActionIcon
                   color="green"
                   onClick={async () => {
-                    if (!newGroupName.trim()) return;
-                    await addDeviceGroupsMutation.mutateAsync(
-                      newGroupName.trim(),
+                    if (!newZoneName.trim()) return;
+                    await addDeviceZonesMutation.mutateAsync(
+                      newZoneName.trim(),
                     );
-                    setNewGroupName("");
-                    await deviceGroupsQuery.refetch();
+                    setNewZoneName("");
+                    await deviceZonesQuery.refetch();
                   }}
                 >
                   <IconPlus />

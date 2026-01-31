@@ -6,15 +6,15 @@ import StatesAccordion from "./StatesAccordion";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 
 interface SortableAccordionItemProps {
-  deviceGroupId: number;
-  deviceGroupName: string;
+  deviceZoneId: number;
+  deviceZoneName: string;
   outputs: IOutputBase[];
   updateOutputsAsync: () => Promise<void>;
 }
 
 export default function SortableAccordionItem({
-  deviceGroupId,
-  deviceGroupName,
+  deviceZoneId,
+  deviceZoneName,
   outputs,
   updateOutputsAsync,
 }: SortableAccordionItemProps) {
@@ -25,7 +25,7 @@ export default function SortableAccordionItem({
     setActivatorNodeRef,
     transform,
     transition,
-  } = useSortable({ id: deviceGroupId });
+  } = useSortable({ id: deviceZoneId });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -35,8 +35,8 @@ export default function SortableAccordionItem({
     <Accordion.Item
       ref={setNodeRef}
       style={style}
-      key={deviceGroupId}
-      value={deviceGroupId.toString()}
+      key={deviceZoneId}
+      value={deviceZoneId.toString()}
     >
       <Accordion.Control
         icon={
@@ -45,13 +45,13 @@ export default function SortableAccordionItem({
           </span>
         }
       >
-        {deviceGroupName}
+        {deviceZoneName}
       </Accordion.Control>
       <Accordion.Panel>
         <StatesAccordion
           outputs={outputs ?? []}
           updateOutputsAsync={updateOutputsAsync}
-          deviceGroupId={deviceGroupId}
+          deviceZoneId={deviceZoneId}
         />
       </Accordion.Panel>
     </Accordion.Item>

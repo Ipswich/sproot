@@ -19,7 +19,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   subcontrollerId: number | null = null;
   readonly address: string;
   readonly pin: string;
-  deviceGroupId: number | null = null;
+  deviceZoneId: number | null = null;
   name: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
@@ -50,7 +50,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.subcontrollerId = sdbOutput.subcontrollerId;
     this.address = sdbOutput.address;
     this.pin = sdbOutput.pin;
-    this.deviceGroupId = sdbOutput.deviceGroupId;
+    this.deviceZoneId = sdbOutput.deviceZoneId;
     this.name = sdbOutput.name;
     this.isPwm = sdbOutput.isPwm ? true : false;
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
@@ -82,7 +82,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       address,
       name,
       pin,
-      deviceGroupId,
+      deviceZoneId,
       isPwm,
       isInvertedPwm,
       color,
@@ -96,7 +96,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       address,
       name,
       pin,
-      deviceGroupId,
+      deviceZoneId,
       isPwm,
       isInvertedPwm,
       color,

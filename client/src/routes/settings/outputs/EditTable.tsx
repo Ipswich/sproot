@@ -14,7 +14,7 @@ import {
   deleteOutputAsync,
   getSubcontrollerAsync,
   updateOutputAsync,
-  getDeviceGroupsAsync,
+  getDeviceZonesAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
@@ -54,8 +54,8 @@ export default function EditTable({
   });
 
   const groupQuery = useQuery({
-    queryKey: ["get-device-groups"],
-    queryFn: () => getDeviceGroupsAsync(),
+    queryKey: ["get-device-zones"],
+    queryFn: () => getDeviceZonesAsync(),
     refetchOnWindowFocus: false,
     refetchInterval: 60000,
   });
@@ -98,7 +98,7 @@ export default function EditTable({
       isPwm: selectedOutput.isPwm,
       isInvertedPwm: selectedOutput.isInvertedPwm,
       automationTimeout: selectedOutput.automationTimeout,
-      deviceGroupId: selectedOutput.deviceGroupId,
+      deviceZoneId: selectedOutput.deviceZoneId,
     } as OutputFormValues,
     validate: {
       id: (value: number | undefined) =>
@@ -142,7 +142,7 @@ export default function EditTable({
         value != null && value != undefined && value >= 0 && value <= 999999999
           ? null
           : "Must be between 0 and 99999999",
-      deviceGroupId: (value: number | undefined) =>
+      deviceZoneId: (value: number | undefined) =>
         value == undefined || value > 0
           ? null
           : "Group must be a positive integer",
@@ -168,8 +168,8 @@ export default function EditTable({
       output.automationTimeout,
     );
     updateOutputForm.setFieldValue(
-      "deviceGroupId",
-      output.deviceGroupId ?? undefined,
+      "deviceZoneId",
+      output.deviceZoneId ?? undefined,
     );
     openModal();
   };
@@ -263,7 +263,7 @@ export default function EditTable({
             searchable
             clearable
             allowDeselect={true}
-            {...updateOutputForm.getInputProps("deviceGroupId")}
+            {...updateOutputForm.getInputProps("deviceZoneId")}
           />
           {selectedOutput.model === Models.PCA9685 ? (
             <PCA9685Form

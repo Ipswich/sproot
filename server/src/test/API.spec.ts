@@ -59,7 +59,7 @@ describe("API Tests", async function () {
       "address",
       "name",
       "pin",
-      "deviceGroupId",
+      "deviceZoneId",
       "isPwm",
       "isInvertedPwm",
       "color",
@@ -789,7 +789,7 @@ describe("API Tests", async function () {
         "lastReadingTime",
         "units",
         "pin",
-        "deviceGroupId",
+        "deviceZoneId",
         "lowCalibrationPoint",
         "highCalibrationPoint",
       ];
@@ -966,10 +966,10 @@ describe("API Tests", async function () {
     });
   });
 
-  describe("Device Group Routes", async () => {
+  describe("Device Zone Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 and all device groups", async () => {
-        const response = await request(server).get("/api/v2/device-groups").expect(200);
+      it("should return 200 and all device zones", async () => {
+        const response = await request(server).get("/api/v2/device-zones").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.lengthOf(content.data, 2);
@@ -981,9 +981,9 @@ describe("API Tests", async function () {
     describe("Create, Update, Delete", async () => {
       describe("POST", async () => {
         it("should return 201", async () => {
-          assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 2);
+          assert.lengthOf(await app.get("sprootDB").getDeviceZonesAsync(), 2);
           const response = await request(server)
-            .post("/api/v2/device-groups")
+            .post("/api/v2/device-zones")
             .send({
               name: "Test Device Group",
             })
@@ -999,11 +999,11 @@ describe("API Tests", async function () {
         describe("PATCH", async () => {
           it("should return 200", async () => {
             assert.equal(
-              (await app.get("sprootDB").getDeviceGroupsAsync())[2].name,
+              (await app.get("sprootDB").getDeviceZonesAsync())[2].name,
               "Test Device Group",
             );
             const response = await request(server)
-              .patch("/api/v2/device-groups/3")
+              .patch("/api/v2/device-zones/3")
               .send({
                 name: "Test1 Device Group",
               })
@@ -1013,7 +1013,7 @@ describe("API Tests", async function () {
             const content = response.body["content"];
 
             assert.equal(
-              (await app.get("sprootDB").getDeviceGroupsAsync())[2].name,
+              (await app.get("sprootDB").getDeviceZonesAsync())[2].name,
               "Test1 Device Group",
             );
             assert.containsAllKeys(content.data, ["id", "name"]);
@@ -1022,10 +1022,10 @@ describe("API Tests", async function () {
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 3);
-            const response = await request(server).delete("/api/v2/device-groups/3").expect(200);
+            assert.lengthOf(await app.get("sprootDB").getDeviceZonesAsync(), 3);
+            const response = await request(server).delete("/api/v2/device-zones/3").expect(200);
             validateMiddlewareValues(response);
-            assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 2);
+            assert.lengthOf(await app.get("sprootDB").getDeviceZonesAsync(), 2);
           });
         });
       });

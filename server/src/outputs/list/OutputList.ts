@@ -244,9 +244,9 @@ class OutputList implements AsyncDisposable {
             this.#outputs[key]!.automationTimeout = output.automationTimeout;
           }
 
-          if (this.#outputs[key]?.deviceGroupId != output.deviceGroupId) {
+          if (this.#outputs[key]?.deviceZoneId != output.deviceZoneId) {
             outputListChanges = true;
-            this.#outputs[key]!.deviceGroupId = output.deviceGroupId;
+            this.#outputs[key]!.deviceZoneId = output.deviceZoneId;
           }
 
           if (outputListChanges) {

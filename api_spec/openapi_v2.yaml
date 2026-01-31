@@ -4517,16 +4517,16 @@ paths:
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-  /api/v2/device-groups:
+  /api/v2/device-zones:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Device Groups"
-      summary: Get all device groups.
+        - "Device Zones"
+      summary: Get all device zones.
       description: >
-        Returns a list of all device groups. This includes basic information about each device group, such as
+        Returns a list of all device zones. This includes basic information about each device zone, such as
         name and id.
       responses:
         200:
@@ -4543,7 +4543,7 @@ paths:
                         properties:
                           data:
                             items:
-                              $ref: "#/components/schemas/SDBDeviceGroup"
+                              $ref: "#/components/schemas/SDBDeviceZone"
         401:
           description: "Unauthorized"
           content:
@@ -4559,7 +4559,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/device-groups"
+                            example: "/api/v2/device-zones"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -4578,31 +4578,31 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/device-groups"
+                            example: "/api/v2/device-zones"
                           details:
                             items:
                               example:
-                                - "Failed to get device groups from database."
+                                - "Failed to get device zonse from database."
                                 - "Database connection failed."
     post:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Device Groups"
-      summary: Add a new device group.
+        - "Device Zones"
+      summary: Add a new device zone.
       description: >
-        Adds a new device group to the service. Returns the information
-        used to create the device group.
+        Adds a new device zone to the service. Returns the information
+        used to create the device zone.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBDeviceGroup"
+              $ref: "#/components/schemas/SDBDeviceZone"
       responses:
         201:
-          description: "Device group created"
+          description: "Device zone created"
           content:
             application/json:
               schema:
@@ -4614,7 +4614,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBDeviceGroup"
+                            $ref: "#/components/schemas/SDBDeviceZone"
         400:
           description: "Bad request"
           content:
@@ -4630,7 +4630,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/device-groups"
+                            example: "/api/v2/device-zones"
                           details:
                             example:
                               - "Missing required field: name"
@@ -4649,7 +4649,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/device-groups"
+                            example: "/api/v2/device-zones"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -4668,27 +4668,27 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/device-groups"
+                            example: "/api/v2/device-zones"
                           details:
                             items:
                               example:
-                                - "Failed to add device group to database."
+                                - "Failed to add device zone to database."
                                 - "Database connection failed."
-  /api/v2/device-groups/{deviceGroupId}:
+  /api/v2/device-zones/{deviceZoneId}:
     patch:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Device Groups"
-      summary: Update a device group.
+        - "Device Zones"
+      summary: Update a device zone.
       description: >
-        Updates a device group. This operation changes only the fields provided.
+        Updates a device zone. This operation changes only the fields provided.
       parameters:
         - in: path
-          name: deviceGroupId
+          name: deviceZoneId
           required: true
-          description: "device group Id"
+          description: "device zone Id"
           schema:
             type: string
           example: "1"
@@ -4697,10 +4697,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBDeviceGroup"
+              $ref: "#/components/schemas/SDBDeviceZone"
       responses:
         200:
-          description: "Device group updated"
+          description: "Device zone updated"
           content:
             application/json:
               schema:
@@ -4712,7 +4712,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBDeviceGroup"
+                            $ref: "#/components/schemas/SDBDeviceZone"
         400:
           description: "Bad request"
           content:
@@ -4728,7 +4728,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/device-groups/1"
+                            example: "/api/v2/device-zones/1"
                           details:
                             example:
                               - "Missing required field: id"
@@ -4748,7 +4748,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/device-groups/1"
+                            example: "/api/v2/device-zones/1"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -4767,10 +4767,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/device-groups/-1"
+                            example: "/api/v2/device-zones/-1"
                           details:
                             items:
-                              example: "Device group with ID -1 not found."
+                              example: "Device zone with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -4786,32 +4786,32 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/device-groups/1"
+                            example: "/api/v2/device-zones/1"
                           details:
                             items:
                               example:
-                                - "Failed to update device group in database."
+                                - "Failed to update device zone in database."
                                 - "Database connection failed."
     delete:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Device Groups"
-      summary: Delete a device group.
+        - "Device Zones"
+      summary: Delete a device zone.
       description: >
-        Deletes a device group. This operation is permanent and cannot be undone.
+        Deletes a device zone. This operation is permanent and cannot be undone.
       parameters:
         - in: path
-          name: deviceGroupId
+          name: deviceZoneId
           required: true
-          description: "device group Id"
+          description: "device zone Id"
           schema:
             type: string
           example: "1"
       responses:
         200:
-          description: "Device group deleted"
+          description: "Device zone deleted"
           content:
             application/json:
               schema:
@@ -4823,7 +4823,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: "Device group with ID 1 successfully deleted."
+                            example: "Device zone with ID 1 successfully deleted."
         400:
           description: "Bad request"
           content:
@@ -4839,10 +4839,10 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/device-groups/1"
+                            example: "/api/v2/device-zones/1"
                           details:
                             example:
-                              - "Invalid or missing device group Id."
+                              - "Invalid or missing device zone Id."
         401:
           description: "Unauthorized"
           content:
@@ -4858,7 +4858,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/device-groups/1"
+                            example: "/api/v2/device-zones/1"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -4877,10 +4877,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/device-groups/-1"
+                            example: "/api/v2/device-zones/-1"
                           details:
                             items:
-                              example: "Device group with ID -1 not found."
+                              example: "Device zone with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -4896,11 +4896,11 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/device-groups"
+                            example: "/api/v2/device-zones"
                           details:
                             items:
                               example:
-                                - "Failed to delete device group from database."
+                                - "Failed to delete device zone from database."
                                 - "Database connection failed."
   /api/v2/camera/settings:
     get:
@@ -5882,10 +5882,10 @@ components:
             type: string
             example: 192.168.2.138
 
-    SDBDeviceGroup:
+    SDBDeviceZone:
       description: >
-        A device group object that is stored in the database. Contains all the information needed to 
-        create a device group, including name and a list of device IDs.
+        A device zone object that is stored in the database. Contains all the information needed to 
+        create a device zone, including name and a list of device IDs.
       type: object
       required:
         - "name"

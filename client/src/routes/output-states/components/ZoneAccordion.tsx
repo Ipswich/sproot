@@ -14,51 +14,42 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Accordion, Center } from "@mantine/core";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { Fragment, startTransition, useEffect, useState } from "react";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useQuery } from "@tanstack/react-query";
 import {
-  getSensorsAsync,
+  getOutputsAsync,
   getDeviceZonesAsync,
 } from "../../../requests/requests_v2";
 import { SDBDeviceZone } from "@sproot/database/SDBDeviceZone";
-import SortableAccordionItem from "./SortableAccordionItem";
 import {
-  sensorAccordionOrderKey,
-  sensorToggledDeviceZonesKey,
+  outputZoneOrderKey,
+  outputStateToggledZonesKey,
 } from "../../utility/LocalStorageKeys";
-import SensorTable from "./SensorTable";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
+import ZoneAccordionItem from "./ZoneAccordionItem";
+import StatesAccordion from "./StatesAccordion";
 
-interface SensorTableAccordionProps {
-  readingType: ReadingType;
-  sensorToggleStates: string[];
-  setSensorToggleStates: (sensorName: string[]) => void;
+interface ZoneAccordionProps {
   deviceZoneToggleStates: string[];
   setDeviceZoneToggleStates: (deviceZoneNames: string[]) => void;
-  useAlternateUnits: boolean;
 }
 
-export default function SensorTableAccordion({
-  readingType,
-  sensorToggleStates,
-  setSensorToggleStates,
+export default function ZoneAccordion({
   deviceZoneToggleStates,
   setDeviceZoneToggleStates,
-  useAlternateUnits,
-}: SensorTableAccordionProps) {
+}: ZoneAccordionProps) {
   const dragSensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-  const [sensors, setSensors] = useState({} as Record<number, ISensorBase[]>);
+  const [outputs, setOutputs] = useState({} as Record<number, IOutputBase[]>);
   const [deviceZones, setDeviceZones] = useState([] as SDBDeviceZone[]);
 
-  const getSensorsQuery = useQuery({
-    queryKey: ["sensor-data-sensors"],
-    queryFn: () => getSensorsAsync(),
+  const getOutputsQuery = useQuery({
+    queryKey: ["outputs"],
+    queryFn: () => getOutputsAsync(),
     refetchInterval: 60000,
   });
 
@@ -70,32 +61,31 @@ export default function SensorTableAccordion({
 
   const updateDataAsync = async () => {
     const deviceZones: SDBDeviceZone[] = [];
-    const sensorsByDeviceZone: Record<number, ISensorBase[]> = { [-1]: [] };
+    const outputsByDeviceZone: Record<number, IOutputBase[]> = { [-1]: [] };
 
     const deviceZonesData = (await getDeviceZonesQuery.refetch()).data;
-    const sensorsData = (await getSensorsQuery.refetch()).data;
+    const outputsData = (await getOutputsQuery.refetch()).data;
 
-    deviceZonesData?.forEach((zone) => {
+    deviceZonesData?.forEach((zone: SDBDeviceZone) => {
       deviceZones.push(zone);
-      sensorsByDeviceZone[zone.id] = [];
+      outputsByDeviceZone[zone.id] = [];
     });
 
-    Object.values(sensorsData ?? {}).forEach((sensor) => {
-      if (!Object.keys(sensor.lastReading).includes(readingType)) {
-        return;
-      }
-      if (sensor.deviceZoneId == null) {
-        sensorsByDeviceZone[-1]!.push(sensor);
-      } else {
-        if (sensorsByDeviceZone[sensor.deviceZoneId] == null) {
-          sensorsByDeviceZone[sensor.deviceZoneId] = [];
+    (Object.values(outputsData ?? {}) as IOutputBase[]).forEach(
+      (output: IOutputBase) => {
+        if (output.deviceZoneId == null) {
+          outputsByDeviceZone[-1]!.push(output);
+        } else {
+          if (outputsByDeviceZone[output.deviceZoneId] == null) {
+            outputsByDeviceZone[output.deviceZoneId] = [];
+          }
+          outputsByDeviceZone[output.deviceZoneId]!.push(output);
         }
-        sensorsByDeviceZone[sensor.deviceZoneId]!.push(sensor);
-      }
-    });
+      },
+    );
 
     if (
-      (sensorsByDeviceZone[-1] ?? []).length > 0 &&
+      (outputsByDeviceZone[-1] ?? []).length > 0 &&
       !deviceZones.find((g) => g.id === -1)
     ) {
       deviceZones.unshift({ id: -1, name: "Default" } as SDBDeviceZone);
@@ -103,7 +93,7 @@ export default function SensorTableAccordion({
     try {
       const existingOrder = (
         JSON.parse(
-          localStorage.getItem(sensorAccordionOrderKey(readingType)) ?? "[]",
+          localStorage.getItem(outputZoneOrderKey()) ?? "[]",
         ) as SDBDeviceZone[]
       ).map((dg) => dg.id ?? -1);
 
@@ -116,7 +106,7 @@ export default function SensorTableAccordion({
 
         existingOrder.forEach((deviceZoneId) => {
           const deviceZoneIndex = deviceZones.findIndex(
-            (dg) => dg.id == Number(deviceZoneId),
+            (dz) => dz.id == Number(deviceZoneId),
           );
           if (deviceZoneIndex != -1) {
             updatedOrder.push(deviceZones[deviceZoneIndex]!);
@@ -131,11 +121,8 @@ export default function SensorTableAccordion({
     } catch (e) {
       setDeviceZones(deviceZones);
     }
-    setSensors(sensorsByDeviceZone);
+    setOutputs(outputsByDeviceZone);
   };
-
-  const sensorToggleStatesJSON = JSON.stringify(sensorToggleStates);
-  const deviceZoneToggleStatesJSON = JSON.stringify(deviceZoneToggleStates);
 
   useEffect(() => {
     updateDataAsync();
@@ -145,25 +132,22 @@ export default function SensorTableAccordion({
     }, 60000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType, sensorToggleStatesJSON, deviceZoneToggleStatesJSON]);
+  }, [JSON.stringify(deviceZoneToggleStates)]);
 
   const sortableItems = deviceZones
     .map((zone) => {
-      if (sensors[zone.id] == null || sensors[zone.id]!.length == 0) {
+      if (outputs[zone.id] == null || outputs[zone.id]!.length == 0) {
         return null;
       }
       return (
-        <SortableAccordionItem
+        <ZoneAccordionItem
           key={zone.id}
-          readingType={readingType}
           deviceZoneId={zone.id}
           deviceZoneName={
             zone.name ?? (zone.id == -1 ? "Default" : "Unknown Zone")
           }
-          sensors={sensors[zone.id] ?? []}
-          sensorToggleStates={sensorToggleStates}
-          setSensorToggleStates={setSensorToggleStates}
-          useAlternateUnits={useAlternateUnits}
+          outputs={outputs[zone.id] ?? []}
+          updateOutputsAsync={updateDataAsync}
         />
       );
     })
@@ -174,24 +158,15 @@ export default function SensorTableAccordion({
     .filter((id) => !deviceZoneToggleStates.includes(id));
   return (
     <Fragment>
-      <Center>
-        <h5>
-          Last Updated:{" "}
-          {`${new Date().toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
-        </h5>
-      </Center>
-      {getDeviceZonesQuery.isLoading || getSensorsQuery.isLoading ? (
+      {getDeviceZonesQuery.isLoading || getOutputsQuery.isLoading ? (
         <Center>
           <h3>Loading...</h3>
         </Center>
       ) : sortableItems.length === 1 ? (
-        <SensorTable
-          readingType={readingType}
-          deviceZone={sortableItems[0]!.props.deviceZoneId}
-          sensors={sortableItems[0]!.props.sensors ?? []}
-          sensorToggleStates={sensorToggleStates}
-          setSensorToggleStates={setSensorToggleStates}
-          useAlternateUnits={useAlternateUnits}
+        <StatesAccordion
+          outputs={sortableItems[0]!.props.outputs ?? []}
+          updateOutputsAsync={sortableItems[0]!.props.updateOutputsAsync}
+          deviceZoneId={sortableItems[0]!.props.deviceZoneId}
         />
       ) : (
         <DndContext
@@ -200,18 +175,20 @@ export default function SensorTableAccordion({
           onDragEnd={handleDragEnd}
         >
           <Accordion
-            key={readingType}
+            key={"output-states-accordion"}
             multiple={true}
             radius="md"
             value={openedDeviceZoneIds}
             onChange={(values) => {
               startTransition(() => {
                 const arr = Array.isArray(values) ? values : [values];
-                const all = deviceZones.map((g) => g.id.toString());
+                const all = deviceZones.map((g: SDBDeviceZone) =>
+                  g.id.toString(),
+                );
                 const closed = all.filter((id) => !arr.includes(id));
                 setDeviceZoneToggleStates(closed);
                 localStorage.setItem(
-                  sensorToggledDeviceZonesKey(readingType),
+                  outputStateToggledZonesKey(),
                   JSON.stringify(closed),
                 );
               });
@@ -242,7 +219,7 @@ export default function SensorTableAccordion({
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
-          sensorAccordionOrderKey(readingType),
+          outputZoneOrderKey(),
           JSON.stringify(updatedArray),
         );
         return updatedArray;

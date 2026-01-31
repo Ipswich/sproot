@@ -12,7 +12,7 @@ import {
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import {
   addSensorAsync,
-  getDeviceGroupsAsync,
+  getDeviceZonesAsync,
   getSubcontrollerAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
@@ -73,8 +73,8 @@ export default function NewSensorModal({
   });
 
   const groupQuery = useQuery({
-    queryKey: ["device-groups"],
-    queryFn: () => getDeviceGroupsAsync(),
+    queryKey: ["device-zones"],
+    queryFn: () => getDeviceZonesAsync(),
     refetchOnWindowFocus: false,
     refetchInterval: 60000,
   });
@@ -87,7 +87,7 @@ export default function NewSensorModal({
       model: supportedModels[0] ?? "",
       address: "",
       pin: null,
-      deviceGroupId: null,
+      deviceZoneId: null,
     },
 
     validate: {
@@ -126,7 +126,7 @@ export default function NewSensorModal({
           : "Address must be between 1 and 64 characters",
       pin: (value: string | null) =>
         !value || (value.length > 0 && value.length <= 64) ? null : null,
-      deviceGroupId: (value: number | null) =>
+      deviceZoneId: (value: number | null) =>
         value == undefined || value > 0
           ? null
           : "Group must be a positive integer",
@@ -204,7 +204,7 @@ export default function NewSensorModal({
             searchable
             clearable
             allowDeselect={true}
-            {...newSensorForm.getInputProps("deviceGroupId")}
+            {...newSensorForm.getInputProps("deviceZoneId")}
           />
           {(newSensorForm.values.model === Models.ESP32_ADS1115 ||
             newSensorForm.values.model ===

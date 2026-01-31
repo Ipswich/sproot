@@ -32,7 +32,7 @@ import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
-import { SDBDeviceGroup } from "@sproot/database/SDBDeviceGroup";
+import { SDBDeviceZone } from "@sproot/database/SDBDeviceZone";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -63,7 +63,7 @@ export class SprootDB implements ISprootDB {
       address: sensor.address,
       color: sensor.color,
       pin: sensor.pin,
-      deviceGroupId: sensor.deviceGroupId ?? null,
+      deviceZoneId: (sensor as any).deviceZoneId ?? null,
       lowCalibrationPoint: sensor.lowCalibrationPoint,
       highCalibrationPoint: sensor.highCalibrationPoint,
     });
@@ -78,7 +78,7 @@ export class SprootDB implements ISprootDB {
         address: sensor.address,
         color: sensor.color,
         pin: sensor.pin,
-        deviceGroupId: sensor.deviceGroupId ?? null,
+        deviceZoneId: (sensor as any).deviceZoneId ?? null,
         lowCalibrationPoint: sensor.lowCalibrationPoint,
         highCalibrationPoint: sensor.highCalibrationPoint,
       });
@@ -183,7 +183,7 @@ export class SprootDB implements ISprootDB {
       address: output.address,
       color: output.color,
       pin: output.pin,
-      deviceGroupId: output.deviceGroupId ?? null,
+      deviceZoneId: (output as any).deviceZoneId ?? null,
       isPwm: output.isPwm,
       isInvertedPwm: output.isInvertedPwm,
       automationTimeout: output.automationTimeout,
@@ -199,7 +199,7 @@ export class SprootDB implements ISprootDB {
         address: output.address,
         color: output.color,
         pin: output.pin,
-        deviceGroupId: output.deviceGroupId ?? null,
+        deviceZoneId: (output as any).deviceZoneId ?? null,
         isPwm: output.isPwm,
         isInvertedPwm: output.isInvertedPwm,
         automationTimeout: output.automationTimeout,
@@ -208,19 +208,19 @@ export class SprootDB implements ISprootDB {
   async deleteOutputAsync(id: number): Promise<void> {
     return this.#connection("outputs").where("id", id).delete();
   }
-  async getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
-    return this.#connection("device_groups").select("*");
+  async getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
+    return this.#connection("device_zones").select("*");
   }
-  async addDeviceGroupAsync(name: string): Promise<number> {
-    return (await this.#connection("device_groups").insert({ name }))[0] ?? -1;
+  async addDeviceZoneAsync(name: string): Promise<number> {
+    return (await this.#connection("device_zones").insert({ name }))[0] ?? -1;
   }
-  async updateDeviceGroupAsync(deviceGroup: SDBDeviceGroup): Promise<void> {
-    return this.#connection("device_groups")
-      .where("id", deviceGroup.id)
-      .update({ name: deviceGroup.name });
+  async updateDeviceZoneAsync(deviceZone: SDBDeviceZone): Promise<void> {
+    return this.#connection("device_zones")
+      .where("id", deviceZone.id)
+      .update({ name: deviceZone.name });
   }
-  async deleteDeviceGroupAsync(id: number): Promise<void> {
-    return this.#connection("device_groups").where("id", id).delete();
+  async deleteDeviceZoneAsync(id: number): Promise<void> {
+    return this.#connection("device_zones").where("id", id).delete();
   }
   async addOutputStateAsync(output: {
     id: number;

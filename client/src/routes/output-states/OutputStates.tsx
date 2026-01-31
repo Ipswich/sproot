@@ -1,13 +1,13 @@
 import { Box, Paper, SegmentedControl } from "@mantine/core";
 import StatesChartContainer from "./components/StatesChartContainer";
 import { startTransition, useEffect, useState } from "react";
-import { outputStateToggledGroupsKey } from "../utility/LocalStorageKeys";
-import GroupAccordion from "./components/GroupAccordion";
+import { outputStateToggledZonesKey } from "../utility/LocalStorageKeys";
+import ZoneAccordion from "./components/ZoneAccordion";
 
 export default function OutputStates() {
-  const [deviceGroupToggleStates, setDeviceGroupToggleStates] = useState(
+  const [deviceZoneToggleStates, setDeviceZoneToggleStates] = useState(
     JSON.parse(
-      localStorage.getItem(outputStateToggledGroupsKey()) ?? "[]",
+      localStorage.getItem(outputStateToggledZonesKey()) ?? "[]",
     ) as string[],
   );
   const [chartInterval, setChartInterval] = useState(
@@ -29,7 +29,7 @@ export default function OutputStates() {
             chartInterval={chartInterval}
             chartRendering={chartRendering}
             setChartRendering={setChartRendering}
-            toggledDeviceGroups={deviceGroupToggleStates}
+            toggledDeviceZones={deviceZoneToggleStates}
           />
           <div style={{ height: "40px", marginTop: "8px" }}>
             <SegmentedControl
@@ -56,9 +56,9 @@ export default function OutputStates() {
               ]}
             />
           </div>
-          <GroupAccordion
-            deviceGroupToggleStates={deviceGroupToggleStates}
-            setDeviceGroupToggleStates={setDeviceGroupToggleStates}
+          <ZoneAccordion
+            deviceZoneToggleStates={deviceZoneToggleStates}
+            setDeviceZoneToggleStates={setDeviceZoneToggleStates}
           />
         </Paper>
       </Box>
