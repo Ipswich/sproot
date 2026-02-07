@@ -24,6 +24,7 @@ export interface OutputFormValues {
   isPwm: boolean;
   isInvertedPwm: boolean;
   automationTimeout?: number;
+  groupedOutputIds?: number[];
 }
 
 export default function OutputSettings() {

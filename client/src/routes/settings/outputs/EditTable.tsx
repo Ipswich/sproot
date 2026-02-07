@@ -8,6 +8,7 @@ import {
   ScrollArea,
   NumberInput,
   Select,
+  Input,
 } from "@mantine/core";
 import { Fragment, useState } from "react";
 import {
@@ -26,6 +27,7 @@ import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
+import GroupedOutputForm from "./forms/GroupedOutputForm";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
 
@@ -68,7 +70,39 @@ export default function EditTable({
         );
       }
       newOutputValues.pin = String(newOutputValues.pin);
-      await updateOutputAsync(newOutputValues);
+      const updated = await updateOutputAsync(newOutputValues);
+
+      if (newOutputValues.model === Models.OUTPUT_GROUP) {
+        const selectedChildIds =
+          (newOutputValues as unknown as OutputFormValues).groupedOutputIds ??
+          [];
+
+        const children = Object.values(outputs).filter(
+          (o) => o.model !== Models.OUTPUT_GROUP,
+        );
+
+        await Promise.all(
+          children.map(async (child) => {
+            const shouldBeChild = selectedChildIds.includes(child.id as number);
+            if (shouldBeChild && child.parentOutputId !== newOutputValues.id) {
+              await updateOutputAsync({
+                ...child,
+                parentOutputId: newOutputValues.id,
+              } as unknown as IOutputBase);
+            } else if (
+              !shouldBeChild &&
+              child.parentOutputId === newOutputValues.id
+            ) {
+              await updateOutputAsync({
+                ...child,
+                parentOutputId: null,
+              } as unknown as IOutputBase);
+            }
+          }),
+        );
+      }
+
+      return updated;
     },
     onSettled: () => {
       revalidator.revalidate();
@@ -99,6 +133,7 @@ export default function EditTable({
       isInvertedPwm: selectedOutput.isInvertedPwm,
       automationTimeout: selectedOutput.automationTimeout,
       deviceZoneId: selectedOutput.deviceZoneId,
+      groupedOutputIds: [],
     } as OutputFormValues,
     validate: {
       id: (value: number | undefined) =>
@@ -171,6 +206,15 @@ export default function EditTable({
       "deviceZoneId",
       output.deviceZoneId ?? undefined,
     );
+    // populate groupedOutputIds for group edits
+    if (output.model === Models.OUTPUT_GROUP) {
+      const childIds = Object.values(outputs)
+        .filter((o) => o.parentOutputId === output.id)
+        .map((o) => o.id as number);
+      updateOutputForm.setFieldValue("groupedOutputIds", childIds);
+    } else {
+      updateOutputForm.setFieldValue("groupedOutputIds", undefined);
+    }
     openModal();
   };
 
@@ -239,17 +283,25 @@ export default function EditTable({
             {...updateOutputForm.getInputProps("model")}
             disabled
           />
-          <NumberInput
-            min={0}
-            max={999999999}
-            step={1}
-            label="Automation Timeout"
-            suffix=" seconds"
-            stepHoldDelay={500}
-            stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-            required
-            {...updateOutputForm.getInputProps("automationTimeout")}
-          />
+          {updateOutputForm.values.model !== Models.OUTPUT_GROUP ? (
+            <NumberInput
+              min={0}
+              max={999999999}
+              step={1}
+              label="Automation Timeout"
+              suffix=" seconds"
+              placeholder="60 seconds"
+              stepHoldDelay={500}
+              stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+              required
+              {...updateOutputForm.getInputProps("automationTimeout")}
+            />
+          ) : (
+            <Input
+              type="hidden"
+              {...updateOutputForm.getInputProps("automationTimeout")}
+            />
+          )}
           <Select
             label="Group"
             placeholder="Default"
@@ -283,6 +335,11 @@ export default function EditTable({
                 form={updateOutputForm}
               />
             ) : null
+          ) : selectedOutput.model === Models.OUTPUT_GROUP ? (
+            <GroupedOutputForm
+              selectedOutput={selectedOutput}
+              form={updateOutputForm}
+            />
           ) : null}
           <Group justify="space-between" mt="md">
             <Button

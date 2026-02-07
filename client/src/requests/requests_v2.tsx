@@ -671,7 +671,9 @@ export async function getSupportedOutputModelsAsync(): Promise<
   return deserializedResponse.content?.data;
 }
 
-export async function addOutputAsync(output: IOutputBase): Promise<void> {
+export async function addOutputAsync(
+  output: IOutputBase,
+): Promise<IOutputBase | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/outputs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -681,10 +683,16 @@ export async function addOutputAsync(output: IOutputBase): Promise<void> {
   });
   if (!response.ok) {
     console.error(`Error adding output: ${response}`);
+    return;
   }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data as IOutputBase | undefined;
 }
 
-export async function updateOutputAsync(output: IOutputBase): Promise<void> {
+export async function updateOutputAsync(
+  output: IOutputBase,
+): Promise<IOutputBase | undefined> {
+  console.log(output);
   const response = await fetch(`${SERVER_URL}/api/v2/outputs/${output.id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -694,7 +702,10 @@ export async function updateOutputAsync(output: IOutputBase): Promise<void> {
   });
   if (!response.ok) {
     console.error(`Error updating output: ${response}`);
+    return;
   }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data as IOutputBase | undefined;
 }
 
 export async function deleteOutputAsync(id: number): Promise<void> {
