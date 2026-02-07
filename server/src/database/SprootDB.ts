@@ -175,19 +175,23 @@ export class SprootDB implements ISprootDB {
       .select("*", "subcontroller_id as subcontrollerId")
       .where("id", id);
   }
-  async addOutputAsync(output: SDBOutput): Promise<void> {
-    return this.#connection("outputs").insert({
-      name: output.name,
-      model: output.model,
-      subcontroller_id: output.subcontrollerId ?? null,
-      address: output.address,
-      color: output.color,
-      pin: output.pin,
-      deviceZoneId: (output as any).deviceZoneId ?? null,
-      isPwm: output.isPwm,
-      isInvertedPwm: output.isInvertedPwm,
-      automationTimeout: output.automationTimeout,
-    });
+  async addOutputAsync(output: SDBOutput): Promise<number> {
+    return (
+      (
+        await this.#connection("outputs").insert({
+          name: output.name,
+          model: output.model,
+          subcontroller_id: output.subcontrollerId ?? null,
+          address: output.address,
+          color: output.color,
+          pin: output.pin,
+          deviceZoneId: output.deviceZoneId ?? null,
+          isPwm: output.isPwm,
+          isInvertedPwm: output.isInvertedPwm,
+          automationTimeout: output.automationTimeout,
+        })
+      )[0] ?? -1
+    );
   }
   async updateOutputAsync(output: SDBOutput): Promise<void> {
     if (output.parentOutputId === output.id) {
@@ -203,7 +207,8 @@ export class SprootDB implements ISprootDB {
         address: output.address,
         color: output.color,
         pin: output.pin,
-        deviceZoneId: (output as any).deviceZoneId ?? null,
+        deviceZoneId: output.deviceZoneId ?? null,
+        parentOutputId: output.parentOutputId ?? null,
         isPwm: output.isPwm,
         isInvertedPwm: output.isInvertedPwm,
         automationTimeout: output.automationTimeout,

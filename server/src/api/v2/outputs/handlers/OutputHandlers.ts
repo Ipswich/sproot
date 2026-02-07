@@ -110,12 +110,12 @@ export async function addAsync(
   }
 
   try {
-    await sprootDB.addOutputAsync(newOutput);
+    const newOutputId = await sprootDB.addOutputAsync(newOutput);
     await outputList.regenerateAsync();
     addOutputResponse = {
       statusCode: 201,
       content: {
-        data: newOutput,
+        data: { ...newOutput, id: newOutputId },
       },
       ...response.locals["defaultProperties"],
     };
@@ -189,6 +189,8 @@ export async function updateAsync(
   outputData.automationTimeout = request.body["automationTimeout"] ?? outputData.automationTimeout;
   outputData.deviceZoneId =
     request.body["deviceZoneId"] ?? request.body["deviceZoneId"] ?? outputData.deviceZoneId;
+  outputData.parentOutputId =
+    request.body["parentOutputId"] ?? request.body["parentOutputId"] ?? outputData.parentOutputId;
 
   try {
     await sprootDB.updateOutputAsync(outputData);
