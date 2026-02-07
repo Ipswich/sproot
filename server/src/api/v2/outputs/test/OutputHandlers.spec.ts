@@ -119,7 +119,7 @@ describe("OutputHandlers.ts tests", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
       sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addOutputAsync.resolves();
+      sprootDB.addOutputAsync.resolves(1);
       outputList = sinon.createStubInstance(OutputList);
       outputList.regenerateAsync.resolves();
     });
@@ -139,6 +139,7 @@ describe("OutputHandlers.ts tests", () => {
 
     it("should return a 201 and add a new output", async () => {
       const newOutput = {
+        id: 1,
         model: Models.PCA9685,
         address: "0x40",
         name: "test output",

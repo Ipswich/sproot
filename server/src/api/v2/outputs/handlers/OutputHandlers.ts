@@ -188,9 +188,13 @@ export async function updateAsync(
   outputData.color = request.body["color"] ?? outputData.color;
   outputData.automationTimeout = request.body["automationTimeout"] ?? outputData.automationTimeout;
   outputData.deviceZoneId =
-    request.body["deviceZoneId"] ?? request.body["deviceZoneId"] ?? outputData.deviceZoneId;
+    request.body["deviceZoneId"] === null
+      ? null
+      : (request.body["deviceZoneId"] ?? outputData.deviceZoneId);
   outputData.parentOutputId =
-    request.body["parentOutputId"] ?? request.body["parentOutputId"] ?? outputData.parentOutputId;
+    request.body["parentOutputId"] === null
+      ? null
+      : (request.body["parentOutputId"] ?? outputData.parentOutputId);
 
   try {
     await sprootDB.updateOutputAsync(outputData);
