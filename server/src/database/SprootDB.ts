@@ -190,6 +190,10 @@ export class SprootDB implements ISprootDB {
     });
   }
   async updateOutputAsync(output: SDBOutput): Promise<void> {
+    if (output.parentOutputId === output.id) {
+      throw new Error("Output cannot be its own parent");
+    }
+
     return this.#connection("outputs")
       .where("id", output.id)
       .update({

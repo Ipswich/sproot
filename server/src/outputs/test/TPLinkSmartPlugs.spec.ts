@@ -335,12 +335,12 @@ describe("tplinkPlug.ts tests", async function () {
       isInvertedPwm: false,
     } as SDBOutput);
 
-    //Execute non-pwm output (not 0 or 100)
+    //Execute non-pwm output (not 0 or 100, but should get normalized to "100" since its not 0)
     await tplinkSmartPlugs.setAndExecuteStateAsync("2", <SDBOutputState>{
       value: 75,
       controlMode: ControlMode.automatic,
     });
-    assert.equal(setStatePowerStub.callCount, 7);
+    assert.equal(setStatePowerStub.callCount, 8);
   });
 
   it("should handle power-on and power-off events", async function () {

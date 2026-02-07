@@ -5,9 +5,7 @@ import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { Pca9685Driver } from "pca9685";
 
-import chai, { assert } from "chai";
-import chaiAsPromised from "chai-as-promised";
-chai.use(chaiAsPromised);
+import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
@@ -233,11 +231,11 @@ describe("PCA9685.ts tests", function () {
       isInvertedPwm: false,
     } as SDBOutput);
 
-    //Execute non-pwm output (not 0 or 100)
+    //Execute non-pwm output (not 0 or 100, but should get normalized to "100" since its not 0)
     await pca9685.setAndExecuteStateAsync("2", <SDBOutputState>{
       value: 75,
       controlMode: ControlMode.automatic,
     });
-    assert.equal(setDutyCycleStub.callCount, 7);
+    assert.equal(setDutyCycleStub.callCount, 8);
   });
 });

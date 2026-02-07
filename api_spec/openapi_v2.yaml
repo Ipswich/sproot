@@ -5378,6 +5378,14 @@ components:
         pin:
           type: string
           example: "0"
+        deviceZoneId:
+          nullable: true
+          type: number
+          example: 1
+        parentOutputId:
+          nullable: true
+          type: number
+          example: null
         isPwm:
           type: boolean
           example: true
