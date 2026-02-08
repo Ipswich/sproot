@@ -140,7 +140,7 @@ export async function addAsync(
 
   const automationId = parseInt(request.body["automationId"] ?? "");
   const outputId = parseInt(request.body["outputId"] ?? "");
-  const value = parseInt(request.body["value"] ?? "");
+  let value = parseInt(request.body["value"] ?? "");
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -167,7 +167,8 @@ export async function addAsync(
       invalidFields.push("Value must be between 0 and 100.");
     }
     if (!outputList.outputs[outputId]?.isPwm && value != 0 && value != 100) {
-      invalidFields.push("Value must be 0 or 100 for PWM outputs.");
+      // Value should be set to 100 if it's greater than 0 since non-PWM outputs only support on/off states
+      value = value > 0 ? 100 : 0;
     }
   }
   if (invalidFields.length > 0) {

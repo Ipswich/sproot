@@ -50,7 +50,7 @@ interface ISprootDB {
   ): Promise<SDBReading[]>;
   getOutputsAsync(): Promise<SDBOutput[]>;
   getOutputAsync(id: number): Promise<SDBOutput[]>;
-  addOutputAsync(output: SDBOutput): Promise<void>;
+  addOutputAsync(output: SDBOutput): Promise<number>;
   updateOutputAsync(output: SDBOutput): Promise<void>;
   deleteOutputAsync(id: number): Promise<void>;
   updateLastOutputStateAsync(output: {
@@ -462,8 +462,8 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async addOutputAsync(_output: SDBOutput): Promise<void> {
-    return;
+  async addOutputAsync(_output: SDBOutput): Promise<number> {
+    return 0;
   }
 
   async updateOutputAsync(_output: SDBOutput): Promise<void> {

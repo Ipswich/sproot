@@ -8,6 +8,7 @@ type SDBOutput = {
   name: string;
   pin: string;
   deviceZoneId: number | null;
+  parentOutputId: number | null;
   isPwm: boolean;
   isInvertedPwm: boolean;
   color: string;

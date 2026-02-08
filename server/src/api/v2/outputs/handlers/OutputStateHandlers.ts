@@ -5,7 +5,7 @@ import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 
 /**
- * Possible statusCodes: 200, 404
+ * Possible statusCodes: 200, 400, 404, 409
  * @param request
  * @param response
  * @returns
@@ -26,6 +26,21 @@ export async function setControlModeAsync(
         name: "Not Found",
         url: request.originalUrl,
         details: [`Output with ID ${outputId} not found.`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+    return controlModeResponse;
+  }
+
+  if (output.parentOutputId != null) {
+    controlModeResponse = {
+      statusCode: 409,
+      error: {
+        name: "Conflict",
+        url: request.originalUrl,
+        details: [
+          "Output is not a top-level output. Control mode can only be set on top-level outputs.",
+        ],
       },
       ...response.locals["defaultProperties"],
     };
@@ -63,7 +78,7 @@ export async function setControlModeAsync(
 }
 
 /**
- * Possible statusCodes: 200, 400, 404
+ * Possible statusCodes: 200, 400, 404, 409
  * @param request
  * @param response
  * @returns
@@ -102,14 +117,17 @@ export async function setManualStateAsync(request: Request, response: Response) 
     };
     return manualStateResponse;
   }
-  // Output is not a PWM output
-  if (value > 0 && value < 100 && !output.isPwm) {
+
+  // Output is found, but has a parent (not a top-level output)
+  if (output.parentOutputId) {
     manualStateResponse = {
-      statusCode: 400,
+      statusCode: 409,
       error: {
-        name: "Bad Request",
+        name: "Conflict",
         url: request.originalUrl,
-        details: ["Output is not a PWM output.", "Value must be 0 or 100."],
+        details: [
+          "Output is not a top-level output. Manual state can only be set on top-level outputs.",
+        ],
       },
       ...response.locals["defaultProperties"],
     };

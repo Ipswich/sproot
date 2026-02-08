@@ -82,6 +82,17 @@ Basically the same as the PCA9685s above, but with the added `Host` field. This 
 
 Sproot will automatically scan the network for TP-Link devices it can connect to. Discovered devices will show up under `Plug ID`, with whatever their name was configured as in the Kasa App as the display name here.
 
+#### Output Group
+
+This one is a sort of sugar around the rest of the output types. Sometimes you might have a bunch of outputs that you want to treat as one. Something like multiple lights on different plugs. This type lets you select _other outputs_ to group together under a single umbrella for control.
+Some things to draw attention to about how these groups work:
+
+- Selected outputs have their status (control mode, automations, etc.) set to the same values as the umbrella group.
+- Non PWM outputs treat any PWM value above 0 as "on."
+- Automation timeouts for the selected outputs will still be respected.
+- Automation actions that reference any selected outputs will be hidden since they won't be respected. You also won't be able to create actions to target any selected outputs.
+- Automation conditions can still _target_ selected outputs.
+
 ## Viewing and Controlling Your Outputs
 
 <p style={{ textAlign: 'center' }}>

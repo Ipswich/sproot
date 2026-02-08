@@ -180,6 +180,7 @@ describe("API Tests", async function () {
           validateMiddlewareValues(response);
           assert.deepEqual(content.data, {
             ESP32_PCA9685: "ESP32 PCA9685",
+            OUTPUT_GROUP: "Output Group",
             PCA9685: "PCA9685",
             TPLINK_SMART_PLUG: "TPLink Smart Plug",
           });

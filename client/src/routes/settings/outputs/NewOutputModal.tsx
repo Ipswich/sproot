@@ -8,10 +8,12 @@ import {
   ScrollArea,
   ColorPicker,
   NumberInput,
+  Input,
 } from "@mantine/core";
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import {
   addOutputAsync,
+  updateOutputAsync,
   getDeviceZonesAsync,
   getSubcontrollerAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -20,12 +22,13 @@ import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms
 import { OutputFormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
+import GroupedOutputForm from "./forms/OutputGroupForm";
 
 interface NewOutputModalProps {
   supportedModels: Record<string, string>;
@@ -52,7 +55,8 @@ export default function NewOutputModal({
         newOutputValues.subcontrollerId = null;
       }
       newOutputValues.pin = String(newOutputValues.pin);
-      await addOutputAsync(newOutputValues);
+      const created = await addOutputAsync(newOutputValues);
+      return created;
     },
     onSettled: () => {
       setIsStale(true);
@@ -66,7 +70,7 @@ export default function NewOutputModal({
     refetchInterval: 60000,
   });
 
-  const groupQuery = useQuery({
+  const zoneQuery = useQuery({
     queryKey: ["device-zones"],
     queryFn: () => getDeviceZonesAsync(),
     refetchOnWindowFocus: false,
@@ -90,6 +94,7 @@ export default function NewOutputModal({
       pin: "0",
       isPwm: false,
       isInvertedPwm: false,
+      groupedOutputIds: [],
     } as OutputFormValues,
 
     validate: {
@@ -123,7 +128,7 @@ export default function NewOutputModal({
       deviceZoneId: (value: number | undefined) =>
         value == undefined || value > 0
           ? null
-          : "Group must be a positive integer",
+          : "Zone must be a positive integer",
       pin: (value: string) =>
         value != null && value != undefined ? null : "Must have a value",
       isPwm: (value: boolean) =>
@@ -136,6 +141,15 @@ export default function NewOutputModal({
           : "Must be between 0 and 999999999",
     },
   });
+
+  useEffect(() => {
+    if (newOutputForm.values.model === Models.OUTPUT_GROUP) {
+      if (newOutputForm.values.automationTimeout !== 0) {
+        newOutputForm.setFieldValue("automationTimeout", 0);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newOutputForm.values.model]);
 
   return (
     <Fragment>
@@ -157,7 +171,25 @@ export default function NewOutputModal({
       >
         <form
           onSubmit={newOutputForm.onSubmit(async (values) => {
-            await addOutputMutation.mutateAsync(values as IOutputBase);
+            const created = await addOutputMutation.mutateAsync(
+              values as IOutputBase,
+            );
+            // If we created a group and the user selected children, update those outputs to point to the new group
+            if (
+              values.model === Models.OUTPUT_GROUP &&
+              values.groupedOutputIds &&
+              values.groupedOutputIds.length > 0 &&
+              created?.id
+            ) {
+              await Promise.all(
+                values.groupedOutputIds.map((childId) =>
+                  updateOutputAsync({
+                    id: childId,
+                    parentOutputId: created.id,
+                  } as unknown as IOutputBase),
+                ),
+              );
+            }
             closeModal();
             newOutputForm.reset();
           })}
@@ -195,26 +227,33 @@ export default function NewOutputModal({
             required
             {...newOutputForm.getInputProps("model")}
           />
-          <NumberInput
-            min={0}
-            max={999999999}
-            step={1}
-            label="Automation Timeout"
-            suffix=" seconds"
-            placeholder="60 seconds"
-            stepHoldDelay={500}
-            stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
-            required
-            {...newOutputForm.getInputProps("automationTimeout")}
-          />
+          {newOutputForm.values.model !== Models.OUTPUT_GROUP ? (
+            <NumberInput
+              min={0}
+              max={999999999}
+              step={1}
+              label="Automation Timeout"
+              suffix=" seconds"
+              placeholder="60 seconds"
+              stepHoldDelay={500}
+              stepHoldInterval={(t) => Math.max(1000 / t ** 2, 15)}
+              required
+              {...newOutputForm.getInputProps("automationTimeout")}
+            />
+          ) : (
+            <Input
+              type="hidden"
+              {...newOutputForm.getInputProps("automationTimeout")}
+            />
+          )}
           <Select
-            label="Group"
+            label="Zone"
             placeholder="Default"
-            data={Object.keys(groupQuery.data ?? {}).map((key) => {
-              const group = groupQuery.data?.[parseInt(key)];
+            data={Object.keys(zoneQuery.data ?? {}).map((key) => {
+              const zone = zoneQuery.data?.[parseInt(key)];
               return {
-                value: String(group?.id) ?? "",
-                label: group?.name ?? "",
+                value: String(zone?.id) ?? "",
+                label: zone?.name ?? "",
               };
             })}
             searchable
@@ -233,6 +272,8 @@ export default function NewOutputModal({
                 form={newOutputForm}
               />
             ) : null
+          ) : newOutputForm.values.model === Models.OUTPUT_GROUP ? (
+            <GroupedOutputForm form={newOutputForm} />
           ) : null}
           <Group justify="flex-end" mt="md">
             <Button type="submit">Add Output</Button>

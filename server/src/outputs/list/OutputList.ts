@@ -12,6 +12,7 @@ import { OutputListChartData } from "./OutputListChartData";
 import { SensorList } from "../../sensors/list/SensorList";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
+import { OutputGroup } from "../OutputGroup";
 
 class OutputList implements AsyncDisposable {
   #sprootDB: ISprootDB;
@@ -194,9 +195,10 @@ class OutputList implements AsyncDisposable {
         const key = Object.keys(this.#outputs).find((key) => key === output.id.toString());
         //Update if it exists
         if (key) {
+          const changeList = [];
           // Check for Subcontroller changes
           if (this.#outputs[key]?.subcontrollerId != output.subcontrollerId) {
-            outputListChanges = true;
+            changeList.push("Subcontroller");
             this.#outputs[key]!.subcontrollerId = output.subcontrollerId;
           }
 
@@ -210,7 +212,7 @@ class OutputList implements AsyncDisposable {
                 this.#outputs[key]?.subcontroller.name != subcontroller?.name ||
                 this.#outputs[key]?.subcontroller.hostName != subcontroller?.hostName
               ) {
-                outputListChanges = true;
+                changeList.push("Subcontroller Details");
                 this.#outputs[key].subcontroller = subcontroller;
               }
             }
@@ -218,41 +220,56 @@ class OutputList implements AsyncDisposable {
 
           // Check for actual output changes
           if (this.#outputs[key]?.name != output.name) {
-            outputListChanges = true;
+            changeList.push("Name");
             //Also updates chart data (and series)
             this.#outputs[key]!.updateName(output.name);
           }
 
           if (this.#outputs[key]?.isPwm != output.isPwm) {
-            outputListChanges = true;
+            changeList.push("Is Pwm");
             this.#outputs[key]!.isPwm = output.isPwm;
           }
 
           if (this.#outputs[key]?.isInvertedPwm != output.isInvertedPwm) {
-            outputListChanges = true;
+            changeList.push("Is Inverted Pwm");
             this.#outputs[key]!.isInvertedPwm = output.isInvertedPwm;
           }
 
           if (this.#outputs[key]?.color != output.color) {
-            outputListChanges = true;
+            changeList.push("Color");
             //Also updates chart data (and series)
             this.#outputs[key]!.updateColor(output.color);
           }
 
           if (this.#outputs[key]?.automationTimeout != output.automationTimeout) {
-            outputListChanges = true;
+            changeList.push("Automation Timeout");
             this.#outputs[key]!.automationTimeout = output.automationTimeout;
           }
 
           if (this.#outputs[key]?.deviceZoneId != output.deviceZoneId) {
-            outputListChanges = true;
+            changeList.push("Device Zone");
             this.#outputs[key]!.deviceZoneId = output.deviceZoneId;
           }
 
-          if (outputListChanges) {
+          if (this.#outputs[key]?.parentOutputId != output.parentOutputId) {
+            changeList.push("Parent Output");
+            // Remove it from the old parent group if it had one, and add it to the new one if it has one.
+            await (
+              this.#outputs[this.#outputs[key]!.parentOutputId!] as OutputGroup
+            )?.removeOutputAsync(this.#outputs[key]!.id);
+            this.#outputs[key]!.parentOutputId = output.parentOutputId;
+            if (output.parentOutputId) {
+              await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(
+                this.#outputs[key]!,
+              );
+            }
+          }
+
+          if (changeList.length > 0) {
             this.#logger.info(
-              `Updating output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
+              `Updating output { model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id} }. Changes: ${changeList.join(", ")}`,
             );
+            outputListChanges = true;
           }
         } else {
           //Create if it doesn't
@@ -277,6 +294,12 @@ class OutputList implements AsyncDisposable {
             this.#logger.info(
               `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
             );
+            // If this output is part of an output group, remove it from the group before deleting to avoid orphaned references
+            if (this.#outputs[key]?.parentOutputId) {
+              await (
+                this.#outputs[this.#outputs[key]?.parentOutputId] as OutputGroup
+              )?.removeOutputAsync(this.#outputs[key]?.id!);
+            }
             await this.#deleteOutputAsync(this.#outputs[key]!);
             delete this.#outputs[key];
             outputListChanges = true;
@@ -285,6 +308,13 @@ class OutputList implements AsyncDisposable {
               `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
             );
           }
+        }
+      }
+
+      // Assign outputs to their parent groups after all creations are done to ensure parent groups are created before we try to assign children to them
+      for (const output of Object.values(this.#outputs)) {
+        if (output.parentOutputId) {
+          await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(output);
         }
       }
 
@@ -352,6 +382,18 @@ class OutputList implements AsyncDisposable {
         newOutput = await this.#TPLinkSmartPlugs.createOutputAsync(output);
         break;
       }
+      case Models.OUTPUT_GROUP.toLowerCase(): {
+        newOutput = await OutputGroup.createInstanceAsync(
+          output,
+          this.#sprootDB,
+          this.maxCacheSize,
+          this.initialCacheLookback,
+          this.maxChartDataSize,
+          this.chartDataPointInterval,
+          this.#logger,
+        );
+        break;
+      }
       default:
         throw new OutputListError(`Unrecognized output model ${output.model}`);
     }
@@ -372,6 +414,10 @@ class OutputList implements AsyncDisposable {
       }
       case Models.TPLINK_SMART_PLUG.toLowerCase(): {
         await this.#TPLinkSmartPlugs.disposeOutputAsync(output);
+        break;
+      }
+      case Models.OUTPUT_GROUP.toLowerCase(): {
+        await output[Symbol.asyncDispose]();
         break;
       }
       default: {

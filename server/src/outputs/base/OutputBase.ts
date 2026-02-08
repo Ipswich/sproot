@@ -19,7 +19,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   subcontrollerId: number | null = null;
   readonly address: string;
   readonly pin: string;
-  deviceZoneId: number | null = null;
+  deviceZoneId: number | null;
+  parentOutputId: number | null;
   name: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
@@ -51,6 +52,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.address = sdbOutput.address;
     this.pin = sdbOutput.pin;
     this.deviceZoneId = sdbOutput.deviceZoneId;
+    this.parentOutputId = sdbOutput.parentOutputId;
     this.name = sdbOutput.name;
     this.isPwm = sdbOutput.isPwm ? true : false;
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
@@ -83,6 +85,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       name,
       pin,
       deviceZoneId,
+      parentOutputId,
       isPwm,
       isInvertedPwm,
       color,
@@ -97,6 +100,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       name,
       pin,
       deviceZoneId,
+      parentOutputId,
       isPwm,
       isInvertedPwm,
       color,
@@ -117,7 +121,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     await this.state.loadAsync();
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
-    await this.#automationManager.loadAsync(this.id);
+    await this.#automationManager.loadAsync(this.parentOutputId ?? this.id);
     return this;
   }
 
@@ -138,12 +142,19 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
    * @param targetControlMode The control mode to apply it to
    */
   async setAndExecuteStateAsync(newState: SDBOutputState): Promise<void> {
-    await this.state.setNewStateAsync(newState);
+    await this.setStateAsync(newState);
     await this.executeStateAsync();
   }
 
   async setStateAsync(newState: SDBOutputState): Promise<void> {
-    await this.state.setNewStateAsync(newState);
+    const tempState = { ...newState };
+    // Normalize non-PWM outputs to only allow 0 or 100
+    if (!this.isPwm) {
+      if (tempState.value > 0 && tempState.value < 100) {
+        tempState.value = 100;
+      }
+    }
+    await this.state.setNewStateAsync(tempState);
   }
 
   getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
@@ -199,7 +210,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     outputList: OutputList,
     now: Date,
   ): Promise<void> {
-    await this.#automationManager.loadAsync(this.id);
+    await this.#automationManager.loadAsync(this.parentOutputId ?? this.id);
     const result = this.#automationManager.evaluate(
       sensorList,
       outputList,

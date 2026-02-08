@@ -14,6 +14,7 @@ interface IOutputBase {
   name: string | null;
   pin: string;
   deviceZoneId: number | null;
+  parentOutputId: number | null;
   isPwm: boolean;
   isInvertedPwm: boolean;
   color: string;

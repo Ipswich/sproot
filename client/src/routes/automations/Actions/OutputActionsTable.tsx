@@ -37,6 +37,7 @@ export default function OutputActionsTable({
       outputActionsQueryFn.refetch();
     },
   });
+  console.log(outputs);
   return (
     <Fragment>
       {outputActionsQueryFn.isLoading ? (
@@ -47,19 +48,25 @@ export default function OutputActionsTable({
             readOnly && <div>None</div>}
           <DeletablesTable
             deletables={
-              Object.values(outputActionsQueryFn.data ?? {}).map(
-                (outputAction) => ({
-                  displayLabel: OutputActionRow(
-                    outputAction,
-                    outputs.find(
-                      (output) => output.id == outputAction.outputId,
-                    )!,
-                  ),
-                  id: outputAction.id,
-                  deleteFn: (id: number) =>
-                    deleteOutputActionMutation.mutateAsync(id),
-                }),
-              ) || []
+              Object.values(outputActionsQueryFn.data ?? {})
+                .filter(
+                  (outputAction) =>
+                    outputs.find((output) => output.id == outputAction.outputId)
+                      ?.parentOutputId === null,
+                )
+                .map((outputAction) => {
+                  return {
+                    displayLabel: OutputActionRow(
+                      outputAction,
+                      outputs.find(
+                        (output) => output.id == outputAction.outputId,
+                      )!,
+                    ),
+                    id: outputAction.id,
+                    deleteFn: (id: number) =>
+                      deleteOutputActionMutation.mutateAsync(id),
+                  };
+                }) || []
             }
             readOnly={readOnly}
           />
@@ -90,6 +97,7 @@ export default function OutputActionsTable({
                   outputs.map((output) => {
                     return {
                       id: output.id,
+                      parentOutputId: output.parentOutputId,
                       isPwm: output.isPwm,
                       name: output.name ?? "",
                     };

@@ -8,6 +8,7 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../../system/MdnsService";
+import { OutputGroup } from "../../OutputGroup";
 const mockSprootDB = new MockSprootDB();
 
 describe("OutputList.ts tests", function () {
@@ -59,6 +60,39 @@ describe("OutputList.ts tests", function () {
           isPwm: false,
           isInvertedPwm: true,
         } as SDBOutput,
+        {
+          id: 5,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output 5",
+          pin: "4",
+          parentOutputId: 6,
+          isPwm: true,
+          isInvertedPwm: true,
+        } as SDBOutput,
+        {
+          id: 6,
+          model: Models.OUTPUT_GROUP,
+          name: "Test Output Group",
+          color: "white",
+          automationTimeout: 30,
+          address: "",
+          pin: "",
+          isPwm: false,
+          isInvertedPwm: false,
+          deviceZoneId: null,
+          subcontrollerId: null,
+        } as SDBOutput,
+        {
+          id: 7,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output 6",
+          pin: "5",
+          parentOutputId: 6,
+          isPwm: false,
+          isInvertedPwm: true,
+        } as SDBOutput,
       ]);
       sinon.stub(winston, "createLogger").callsFake(
         () =>
@@ -81,9 +115,11 @@ describe("OutputList.ts tests", function () {
         5,
         logger,
       );
-      assert.equal(Object.keys(outputList.outputs).length, 4);
+      assert.equal(Object.keys(outputList.outputs).length, 7);
       assert.equal("lime", outputList.outputs["2"]!.color);
       assert.equal("green", outputList.outputs["3"]!.color);
+      assert.equal("white", outputList.outputs["6"]!.color);
+      assert.equal(Object.keys((outputList.outputs["6"]! as OutputGroup).outputs).length, 2);
 
       // Update and delete
       getOutputsAsyncStub.resolves([
@@ -97,14 +133,47 @@ describe("OutputList.ts tests", function () {
           isInvertedPwm: true,
           color: "pink",
         } as SDBOutput,
+        {
+          id: 5,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output 5",
+          pin: "4",
+          isPwm: true,
+          isInvertedPwm: true,
+        } as SDBOutput,
+        {
+          id: 6,
+          model: Models.OUTPUT_GROUP,
+          name: "Test Output Group",
+          color: "white",
+          automationTimeout: 30,
+          address: "",
+          pin: "",
+          isPwm: false,
+          isInvertedPwm: false,
+          deviceZoneId: null,
+          subcontrollerId: null,
+        } as SDBOutput,
+        {
+          id: 7,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output 6",
+          pin: "5",
+          parentOutputId: 6,
+          isPwm: false,
+          isInvertedPwm: true,
+        } as SDBOutput,
       ]);
       await outputList.regenerateAsync();
 
-      assert.equal(Object.keys(outputList.outputs).length, 1);
+      assert.equal(Object.keys(outputList.outputs).length, 4);
       assert.equal(outputList.outputs["1"]!.name, "1 tuptuo tset");
       assert.equal(outputList.outputs["1"]!.isPwm, false);
       assert.equal(outputList.outputs["1"]!.isInvertedPwm, true);
       assert.equal(outputList.outputs["1"]!.color, "pink");
+      assert.equal(Object.keys((outputList.outputs["6"]! as OutputGroup).outputs).length, 1);
     });
   });
 
