@@ -70,7 +70,7 @@ export default function NewOutputModal({
     refetchInterval: 60000,
   });
 
-  const groupQuery = useQuery({
+  const zoneQuery = useQuery({
     queryKey: ["device-zones"],
     queryFn: () => getDeviceZonesAsync(),
     refetchOnWindowFocus: false,
@@ -128,7 +128,7 @@ export default function NewOutputModal({
       deviceZoneId: (value: number | undefined) =>
         value == undefined || value > 0
           ? null
-          : "Group must be a positive integer",
+          : "Zone must be a positive integer",
       pin: (value: string) =>
         value != null && value != undefined ? null : "Must have a value",
       isPwm: (value: boolean) =>
@@ -247,13 +247,13 @@ export default function NewOutputModal({
             />
           )}
           <Select
-            label="Group"
+            label="Zone"
             placeholder="Default"
-            data={Object.keys(groupQuery.data ?? {}).map((key) => {
-              const group = groupQuery.data?.[parseInt(key)];
+            data={Object.keys(zoneQuery.data ?? {}).map((key) => {
+              const zone = zoneQuery.data?.[parseInt(key)];
               return {
-                value: String(group?.id) ?? "",
-                label: group?.name ?? "",
+                value: String(zone?.id) ?? "",
+                label: zone?.name ?? "",
               };
             })}
             searchable

@@ -55,7 +55,7 @@ export default function EditTable({
     refetchInterval: 60000,
   });
 
-  const groupQuery = useQuery({
+  const zoneQuery = useQuery({
     queryKey: ["get-device-zones"],
     queryFn: () => getDeviceZonesAsync(),
     refetchOnWindowFocus: false,
@@ -180,7 +180,7 @@ export default function EditTable({
       deviceZoneId: (value: number | undefined) =>
         value == undefined || value > 0
           ? null
-          : "Group must be a positive integer",
+          : "Zone must be a positive integer",
     },
   });
 
@@ -303,13 +303,13 @@ export default function EditTable({
             />
           )}
           <Select
-            label="Group"
+            label="Zone"
             placeholder="Default"
-            data={Object.keys(groupQuery.data ?? {}).map((key) => {
-              const group = groupQuery.data?.[parseInt(key)];
+            data={Object.keys(zoneQuery.data ?? {}).map((key) => {
+              const zone = zoneQuery.data?.[parseInt(key)];
               return {
-                value: String(group?.id) ?? "",
-                label: group?.name ?? "",
+                value: String(zone?.id) ?? "",
+                label: zone?.name ?? "",
               };
             })}
             searchable
