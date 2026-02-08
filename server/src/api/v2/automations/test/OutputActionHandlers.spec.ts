@@ -305,12 +305,10 @@ describe("OutputActionHandlers.ts tests", () => {
         { automationId: 1, name: "test", operator: "or" } as SDBAutomation,
       ]);
       const outputList = sinon.createStubInstance(OutputList);
-      sinon
-        .stub(outputList, "outputs")
-        .value({
-          1: { id: 1, name: "test", type: "test", isPwm: true },
-          2: { id: 2, name: "test2", type: "test", isPwm: false },
-        });
+      sinon.stub(outputList, "outputs").value({
+        1: { id: 1, name: "test", type: "test", isPwm: true },
+        2: { id: 2, name: "test2", type: "test", isPwm: false },
+      });
       const automationDataManager = new AutomationDataManager(sprootDB, outputList);
       sprootDB.addOutputActionAsync.resolves(1);
 

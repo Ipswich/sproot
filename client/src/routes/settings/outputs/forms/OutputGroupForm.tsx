@@ -7,15 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Checkbox, SimpleGrid, Paper, ScrollArea, Stack } from "@mantine/core";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
 
-interface GroupedOutputFormProps {
+interface OutputGroupFormProps {
   selectedOutput?: IOutputBase;
   form: UseFormReturnType<OutputFormValues>;
 }
 
-export default function GroupedOutputForm({
+export default function OutputGroupForm({
   selectedOutput,
   form,
-}: GroupedOutputFormProps) {
+}: OutputGroupFormProps) {
   const outputsQuery = useQuery({
     queryKey: ["outputs"],
     queryFn: () => getOutputsAsync(),
@@ -41,16 +41,9 @@ export default function GroupedOutputForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outputsQuery.data, selectedOutput]);
 
+  // show all outputs that can be children (not OUTPUT_GROUP)
   const availableOutputs = Object.values(outputsQuery.data ?? {}).filter(
-    (o) => {
-      if (o.model === Models.OUTPUT_GROUP) return false;
-      if (selectedOutput) {
-        return (
-          o.parentOutputId === selectedOutput.id || o.parentOutputId == null
-        );
-      }
-      return o.parentOutputId == null;
-    },
+    (o) => o.model !== Models.OUTPUT_GROUP,
   );
 
   const toggle = (id: number) => {
@@ -72,17 +65,25 @@ export default function GroupedOutputForm({
           <ScrollArea style={{ maxHeight: 260 }} type="always">
             {availableOutputs.length === 0 ? null : (
               <SimpleGrid cols={1} spacing="sm">
-                {availableOutputs.map((o) => (
-                  <Checkbox
-                    key={o.id}
-                    label={o.name ?? String(o.id)}
-                    checked={(form.values.groupedOutputIds ?? []).includes(
-                      o.id as number,
-                    )}
-                    onChange={() => toggle(o.id as number)}
-                    disabled={selectedOutput?.id === o.id}
-                  />
-                ))}
+                {availableOutputs.map((o) => {
+                  const isChecked = (
+                    form.values.groupedOutputIds ?? []
+                  ).includes(o.id as number);
+                  // disable if this output is already assigned to another group
+                  const disabled =
+                    o.parentOutputId != null &&
+                    o.parentOutputId !== selectedOutput?.id;
+
+                  return (
+                    <Checkbox
+                      key={o.id}
+                      label={o.name ?? String(o.id)}
+                      checked={isChecked}
+                      onChange={() => toggle(o.id as number)}
+                      disabled={disabled}
+                    />
+                  );
+                })}
               </SimpleGrid>
             )}
           </ScrollArea>

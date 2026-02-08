@@ -27,7 +27,7 @@ import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
-import GroupedOutputForm from "./forms/GroupedOutputForm";
+import GroupedOutputForm from "./forms/OutputGroupForm";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
 

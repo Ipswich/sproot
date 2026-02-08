@@ -692,7 +692,6 @@ export async function addOutputAsync(
 export async function updateOutputAsync(
   output: IOutputBase,
 ): Promise<IOutputBase | undefined> {
-  console.log(output);
   const response = await fetch(`${SERVER_URL}/api/v2/outputs/${output.id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

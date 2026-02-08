@@ -28,7 +28,7 @@ import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
-import GroupedOutputForm from "./forms/GroupedOutputForm";
+import GroupedOutputForm from "./forms/OutputGroupForm";
 
 interface NewOutputModalProps {
   supportedModels: Record<string, string>;

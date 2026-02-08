@@ -9,7 +9,12 @@ import {
 
 export interface NewOutputActionWidgetProps {
   automationId: number;
-  outputs: { id: number; name: string; isPwm: boolean }[];
+  outputs: {
+    id: number;
+    parentOutputId: number | null;
+    name: string;
+    isPwm: boolean;
+  }[];
   toggleAddNewOutputAction: () => void;
 }
 
@@ -62,9 +67,11 @@ export default function NewOutputActionWidget({
       >
         <Stack>
           <Select
-            data={outputs.map((output) => {
-              return { value: String(output.id), label: output.name };
-            })}
+            data={outputs
+              .filter((output) => output.parentOutputId === null)
+              .map((output) => {
+                return { value: String(output.id), label: output.name };
+              })}
             label="Output"
             value={outputActionForm.values.outputId}
             {...outputActionForm.getInputProps("outputId")}
