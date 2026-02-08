@@ -48,12 +48,14 @@ export default function StatesAccordion({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sortableItems = orderedOutputs.map((output) => (
-    <StateAccordionItem
-      output={output}
-      updateOutputsAsync={updateOutputsAsync}
-    />
-  ));
+  const sortableItems = orderedOutputs
+    .filter((output) => output.parentOutputId == null)
+    .map((output) => (
+      <StateAccordionItem
+        output={output}
+        updateOutputsAsync={updateOutputsAsync}
+      />
+    ));
 
   return (
     <DndContext
