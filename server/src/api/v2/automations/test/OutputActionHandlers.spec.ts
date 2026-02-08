@@ -305,11 +305,16 @@ describe("OutputActionHandlers.ts tests", () => {
         { automationId: 1, name: "test", operator: "or" } as SDBAutomation,
       ]);
       const outputList = sinon.createStubInstance(OutputList);
-      sinon.stub(outputList, "outputs").value({ 1: { id: 1, name: "test", type: "test" } });
+      sinon
+        .stub(outputList, "outputs")
+        .value({
+          1: { id: 1, name: "test", type: "test", isPwm: true },
+          2: { id: 2, name: "test2", type: "test", isPwm: false },
+        });
       const automationDataManager = new AutomationDataManager(sprootDB, outputList);
       sprootDB.addOutputActionAsync.resolves(1);
 
-      const mockRequest = {
+      let mockRequest = {
         app: {
           get: (key: string) => {
             switch (key) {
@@ -329,7 +334,7 @@ describe("OutputActionHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      let success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
@@ -337,6 +342,19 @@ describe("OutputActionHandlers.ts tests", () => {
         id: 1,
         automationId: 1,
         outputId: 1,
+        value: 100,
+      });
+
+      // Not PWM, value should get adjusted to 100 since it's greater than 0
+      mockRequest.body["outputId"] = 2;
+      success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        automationId: 1,
+        outputId: 2,
         value: 100,
       });
     });
@@ -393,7 +411,6 @@ describe("OutputActionHandlers.ts tests", () => {
         "Invalid or missing automation Id.",
         "Invalid or missing output Id.",
         "Value must be between 0 and 100.",
-        "Value must be 0 or 100 for PWM outputs.",
       ]);
     });
 

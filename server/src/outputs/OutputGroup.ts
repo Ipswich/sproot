@@ -27,7 +27,9 @@ export class OutputGroup extends OutputBase {
       logger,
     );
 
-    return outputGroup.initializeAsync();
+    await outputGroup.initializeAsync();
+    outputGroup.isPwm = outputGroup.#shouldPwmBeEnabled();
+    return outputGroup;
   }
 
   private constructor(

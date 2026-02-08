@@ -134,20 +134,6 @@ export async function setManualStateAsync(request: Request, response: Response) 
     return manualStateResponse;
   }
 
-  // Output is not a PWM output
-  if (value > 0 && value < 100 && !output.isPwm) {
-    manualStateResponse = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: ["Output is not a PWM output.", "Value must be 0 or 100."],
-      },
-      ...response.locals["defaultProperties"],
-    };
-    return manualStateResponse;
-  }
-
   await outputList.setStateAsync(outputId, {
     value: value,
     controlMode: ControlMode.manual,

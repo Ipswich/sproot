@@ -250,7 +250,15 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.deepEqual(success.content?.data, ["Manual state successfully updated."]);
 
-      assert.equal(outputList.executeOutputStateAsync.calledTwice, true);
+      mockRequest.params["id"] = "2";
+      mockRequest.body["value"] = 50;
+      success = await setManualStateAsync(mockRequest, mockResponse);
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.deepEqual(success.content?.data, ["Manual state successfully updated."]);
+
+      assert.isTrue(outputList.executeOutputStateAsync.calledThrice);
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -300,23 +308,6 @@ describe("OutputStateHandlers.ts tests", () => {
         "Invalid value.",
         "Value must be a number between 0 and 100.",
       ]);
-
-      mockRequest.params["outputId"] = "2";
-      mockRequest.originalUrl = "/outputs/2/manual-state";
-      mockRequest.body["value"] = 50;
-      error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/outputs/2/manual-state");
-      assert.deepEqual(error.error.details, [
-        "Output is not a PWM output.",
-        "Value must be 0 or 100.",
-      ]);
-
-      assert.isTrue(outputList.executeOutputStateAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
