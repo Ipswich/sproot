@@ -1,4 +1,4 @@
-FROM debian:12.11-slim AS build
+FROM debian:12.13-slim AS build
 
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
@@ -10,13 +10,12 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install curl -y
 
 # Install NVM (and Node, npm)
-ENV NODE_VERSION=22.5.1
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+ENV NODE_VERSION=24.13.0
+ENV NVM_VERSION=v0.40.4
 ENV NVM_DIR=/root/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION} --latest-npm
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh | bash \
+  && bash -lc "source $NVM_DIR/nvm.sh && nvm install ${NODE_VERSION} --latest-npm && nvm alias default v${NODE_VERSION}"
+ENV PATH="$NVM_DIR/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 
 # Copy project
 COPY .. ./sproot
@@ -30,7 +29,7 @@ RUN npm run build:server
 RUN rm -rf /sproot/node_modules
 RUN npm run install:server:production
 
-FROM node:22.5.1-bookworm-slim
+FROM node:24.13.0-bookworm-slim
 
 # Copy node production dependencies
 COPY --from=build /sproot/node_modules /sproot/node_modules
