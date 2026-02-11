@@ -152,7 +152,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     const logger = winston.createLogger();
 
     let callCount = 0;
-    let capturedBody: any = null;
+    let capturedBody: { value: number } | null = null;
     const scope = nock("http://127.0.0.2")
       .persist()
       .put(
@@ -180,43 +180,43 @@ describe("ESP32_PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Automatic High
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 100,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     assert.equal(callCount, 1);
-    assert.equal(capturedBody.value, 100);
+    assert.equal(capturedBody!.value, 100);
 
     //Automatic Low
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 0,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 0);
     assert.equal(callCount, 2);
-    assert.equal(capturedBody.value, 0);
+    assert.equal(capturedBody!.value, 0);
 
     //Swap to Manual (+0 execution call, manual is also low)
     await pca9685.updateControlModeAsync("1", ControlMode.manual);
     assert.equal(callCount, 2);
 
     //Manual High
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 100,
       controlMode: ControlMode.manual,
       logTime: new Date().toISOString(),
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.manual.value, 100);
     assert.equal(callCount, 3);
-    assert.equal(capturedBody.value, 100);
+    assert.equal(capturedBody!.value, 100);
 
     //Automatic Low (+1 execution call, switching back to automatic mode (high -> low))
     await pca9685.updateControlModeAsync("1", ControlMode.automatic);
     assert.equal(callCount, 4);
-    assert.equal(capturedBody.value, 0);
+    assert.equal(capturedBody!.value, 0);
 
     //Automatic Low (+0 execution call, switching back to automatic mode (low -> low))
     await pca9685.updateControlModeAsync("1", ControlMode.automatic);
@@ -234,26 +234,26 @@ describe("ESP32_PCA9685.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 100,
       controlMode: ControlMode.automatic,
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     assert.equal(callCount, 5);
-    assert.equal(capturedBody.value, 0);
+    assert.equal(capturedBody!.value, 0);
 
     //PWM error handling
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: -1,
       controlMode: ControlMode.automatic,
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 0);
     assert.equal(callCount, 6);
 
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 101,
       controlMode: ControlMode.automatic,
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     assert.equal(callCount, 7);
 
@@ -269,10 +269,10 @@ describe("ESP32_PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Execute non-pwm output (not 0 or 100)
-    await pca9685.setAndExecuteStateAsync("2", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("2", {
       value: 75,
       controlMode: ControlMode.automatic,
-    });
+    } as SDBOutputState);
     assert.equal(callCount, 7);
     scope.done();
   });
