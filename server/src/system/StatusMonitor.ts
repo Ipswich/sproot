@@ -43,8 +43,9 @@ export class SystemStatusMonitor implements Disposable {
       },
       timelapse: {
         imageCount: this.#cameraManager.getTimelapseImageCount(),
-        directorySize: await this.#cameraManager.getTimelapseArchiveSizeAsync(),
-        lastArchiveGenerationDuration: this.#cameraManager.getLastTimelapseGenerationDuration(),
+        directorySize: (await this.#cameraManager.getTimelapseArchiveSizeAsync()) ?? 0,
+        lastArchiveGenerationDuration:
+          this.#cameraManager.getLastTimelapseGenerationDuration() ?? 0,
       },
     };
   }
