@@ -5,7 +5,7 @@ on:
     branches: ["**"]
 
 env:
-  NODE_VERSION: 24.13.0
+  NODE_VERSION: 24.13.1
 
   # Server configuration
   TZ: America/Los_Angeles
@@ -47,7 +47,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 24.13.0
+          - node-version: 24.13.1
             experimental: false
           # - node-version: 22.x
           #   experimental: true

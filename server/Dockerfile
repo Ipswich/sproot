@@ -10,7 +10,7 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install curl -y
 
 # Install NVM (and Node, npm)
-ENV NODE_VERSION=24.13.0
+ENV NODE_VERSION=24.13.1
 ENV NVM_VERSION=v0.40.4
 ENV NVM_DIR=/root/.nvm
 RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh | bash \
@@ -29,7 +29,7 @@ RUN npm run build:server
 RUN rm -rf /sproot/node_modules
 RUN npm run install:server:production
 
-FROM node:24.13.0-bookworm-slim
+FROM node:24.13.1-bookworm-slim
 
 # Copy node production dependencies
 COPY --from=build /sproot/node_modules /sproot/node_modules
