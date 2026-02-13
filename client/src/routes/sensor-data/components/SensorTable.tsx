@@ -67,30 +67,30 @@ export default function SensorTable({
   ));
 
   return (
-    <Table
-      highlightOnHover
-      style={{
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
+    <DndContext
+      sensors={dragSensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
     >
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th />
-          <Table.Th style={{ display: "flex", paddingLeft: 10 }}>
-            <IconEyeOff />
-          </Table.Th>
-          <Table.Th>Sensor</Table.Th>
-          <Table.Th>
-            {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
-          </Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <DndContext
-        sensors={dragSensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+      <Table
+        highlightOnHover
+        style={{
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
       >
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th />
+            <Table.Th style={{ display: "flex", paddingLeft: 10 }}>
+              <IconEyeOff />
+            </Table.Th>
+            <Table.Th>Sensor</Table.Th>
+            <Table.Th>
+              {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
+            </Table.Th>
+          </Table.Tr>
+        </Table.Thead>
         <Table.Tbody>
           <SortableContext
             items={orderedSensors.map((s) => s.id)}
@@ -99,8 +99,8 @@ export default function SensorTable({
             {sortableItems}
           </SortableContext>
         </Table.Tbody>
-      </DndContext>
-    </Table>
+      </Table>
+    </DndContext>
   );
 
   function handleDragEnd(event: DragEndEvent) {

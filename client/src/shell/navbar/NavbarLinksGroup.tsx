@@ -1,11 +1,13 @@
 import { Group, Box, Collapse, ThemeIcon, rem } from "@mantine/core";
-import { IconChevronRight, TablerIconsProps } from "@tabler/icons-react";
+import type { IconProps } from "@tabler/icons-react";
+import { IconChevronRight } from "@tabler/icons-react";
 import classes from "./css/NavbarLinksGroup.module.css";
 import { Page } from "../Pages";
 import { Link } from "react-router-dom";
+import { JSX } from "react";
 
 interface LinksGroupProps {
-  icon: (props: TablerIconsProps | undefined) => JSX.Element;
+  icon: (props?: IconProps) => JSX.Element;
   navLinkText: string;
   page: Page;
   closeNavbar: () => void;

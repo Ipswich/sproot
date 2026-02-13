@@ -7,7 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   DOCKER_BUILD_RECORD_UPLOAD: false
-  NODE_VERSION: 22.5.1
+  NODE_VERSION: 24.13.1
 
 jobs:
   create-release:

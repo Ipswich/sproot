@@ -1,6 +1,8 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import { ReadingType } from "@sproot/sensors/ReadingType";
+import type { IconProps } from "@tabler/icons-react";
+import { JSX } from "react";
 import {
   IconAdjustments,
   IconBolt,
@@ -16,7 +18,6 @@ import {
   IconTemperature,
   IconVideo,
   IconHelpSquareRounded,
-  TablerIconsProps,
 } from "@tabler/icons-react";
 
 export interface Page {
@@ -25,7 +26,7 @@ export interface Page {
   href?: string;
   external?: boolean;
   target?: string;
-  icon: (props: TablerIconsProps | undefined) => JSX.Element;
+  icon: (props?: IconProps) => JSX.Element;
   links?: Page[];
 }
 
@@ -41,7 +42,7 @@ export function getNavbarItems(
       navLinkText: "Live View",
       headerText: "Live View",
       href: "/live-view",
-      icon: (props: TablerIconsProps | undefined) => <IconVideo {...props} />,
+      icon: (props?: IconProps) => <IconVideo {...props} />,
     };
   }
 
@@ -49,9 +50,7 @@ export function getNavbarItems(
     pages["sensorData"] = {
       navLinkText: "Sensor Data",
       headerText: "Sensor Data",
-      icon: (props: TablerIconsProps | undefined) => (
-        <IconChartLine {...props} />
-      ),
+      icon: (props?: IconProps) => <IconChartLine {...props} />,
       links: readingTypes.map((readingType) => {
         return sensorDataLinks[readingType];
       }),
@@ -63,7 +62,7 @@ export function getNavbarItems(
       navLinkText: "Output States",
       headerText: "Output States",
       href: "/output-states",
-      icon: (props: TablerIconsProps | undefined) => <IconBolt {...props} />,
+      icon: (props?: IconProps) => <IconBolt {...props} />,
     };
   }
 
@@ -71,17 +70,13 @@ export function getNavbarItems(
     navLinkText: "Automations",
     headerText: "Automations",
     href: "/automations",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconSettingsAutomation {...props} />
-    ),
+    icon: (props?: IconProps) => <IconSettingsAutomation {...props} />,
   };
 
   pages["settings"] = {
     navLinkText: "Settings",
     headerText: "Settings",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconAdjustments {...props} />
-    ),
+    icon: (props?: IconProps) => <IconAdjustments {...props} />,
     links: [
       {
         navLinkText: "Sensors",
@@ -117,9 +112,7 @@ export function getNavbarItems(
     href: "/docs",
     external: true,
     target: "_self",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconHelpSquareRounded {...props} />
-    ),
+    icon: (props?: IconProps) => <IconHelpSquareRounded {...props} />,
   };
 
   return pages;
@@ -130,38 +123,30 @@ const sensorDataLinks: Record<ReadingType, Page> = {
     navLinkText: "Temperature",
     headerText: "Sensor Data",
     href: "/sensor-data/temperature",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconTemperature {...props} />
-    ),
+    icon: (props?: IconProps) => <IconTemperature {...props} />,
   },
   humidity: {
     navLinkText: "Humidity",
     headerText: "Sensor Data",
     href: "/sensor-data/humidity",
-    icon: (props: TablerIconsProps | undefined) => <IconDroplet {...props} />,
+    icon: (props?: IconProps) => <IconDroplet {...props} />,
   },
   pressure: {
     navLinkText: "Pressure",
     headerText: "Sensor Data",
     href: "/sensor-data/pressure",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconChartBubble {...props} />
-    ),
+    icon: (props?: IconProps) => <IconChartBubble {...props} />,
   },
   moisture: {
     navLinkText: "Soil Moisture",
     headerText: "Sensor Data",
     href: "/sensor-data/moisture",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconBucketDroplet {...props} />
-    ),
+    icon: (props?: IconProps) => <IconBucketDroplet {...props} />,
   },
   voltage: {
     navLinkText: "Voltage",
     headerText: "Sensor Data",
     href: "/sensor-data/voltage",
-    icon: (props: TablerIconsProps | undefined) => (
-      <IconCircuitVoltmeter {...props} />
-    ),
+    icon: (props?: IconProps) => <IconCircuitVoltmeter {...props} />,
   },
 };
