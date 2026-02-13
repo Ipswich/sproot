@@ -1209,10 +1209,29 @@ describe("API Tests", async function () {
     describe("Status", async () => {
       describe("GET", async () => {
         it("should return 200 and system status", async () => {
+          // Sometimes this test will happen too quickly for the previously called timelape generation
+          // request to actuall generate a timelapse, causing this test to fail.
+          let retryCount = 0;
+          let timelapseCompletion = await request(server).get(
+            "/api/v2/camera/timelapse/archive/status",
+          );
+          while (timelapseCompletion.body["content"].data.isGenerating && retryCount < 5) {
+            try {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+              timelapseCompletion = await request(server).get(
+                "/api/v2/camera/timelapse/archive/status",
+              );
+            } catch (err) {
+              // If the request fails, log the error and break the loop to avoid an infinite retry
+              console.error("Error checking timelapse status:", err);
+              break;
+            }
+            retryCount++;
+          }
           const response = await request(server).get("/api/v2/system/status").expect(200);
-          const data = response.body["content"].data;
           validateMiddlewareValues(response);
 
+          const data = response.body["content"].data;
           assert.equal(countLeafProperties(data), 14);
 
           assert.isNumber(data.process.uptime);
