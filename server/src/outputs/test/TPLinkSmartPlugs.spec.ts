@@ -202,12 +202,7 @@ describe("tplinkPlug.ts tests", async function () {
   });
 
   it("should return output data (no functions)", async function () {
-    sinon
-      .stub(winston, "createLogger")
-      .callsFake(
-        () => ({ info: () => {}, error: () => {}, warn: () => {} }) as unknown as winston.Logger,
-      );
-    const logger = winston.createLogger();
+    const logger = winston.createLogger({ silent: true });
 
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
 
@@ -220,14 +215,21 @@ describe("tplinkPlug.ts tests", async function () {
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
-    const outputData = tplinkSmartPlugs.outputData;
+    let outputData = tplinkSmartPlugs.outputData;
 
     assert.equal(outputData["1"]!["name"], "test output 1");
     assert.equal(outputData["1"]!["pin"], simulatedHS300.children[0]?.sysinfo.id);
     assert.equal(outputData["1"]!["isPwm"], false);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
-    assert.exists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
+    assert.notExists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
     assert.exists(tplinkSmartPlugs.outputs["1"]!["sprootDB"]);
+
+    // This here verifies that we're handling events properly (since we've got a fancy registry to make these grab plugs
+    // and update their state on the fly). It takes a hot minute for the client to start lookin', so give it a few seconds
+    // to figure itself out and grab the plug when it comes online.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    outputData = tplinkSmartPlugs.outputData;
+    assert.exists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
   });
 
   it("should update and apply states with respect to control mode", async function () {
@@ -242,6 +244,11 @@ describe("tplinkPlug.ts tests", async function () {
       isPwm: false,
       isInvertedPwm: false,
     } as SDBOutput);
+
+    // The client created in the constructor takes a hot second to start lookin', so give it a few seconds to figure itself out.
+    // This here also verifies that we're handling events properly (since we've got a fancy registry to make these grab plugs
+    // and update their state on the fly).
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     //Automatic High
     await tplinkSmartPlugs.setAndExecuteStateAsync("1", {
@@ -367,6 +374,9 @@ describe("tplinkPlug.ts tests", async function () {
       isInvertedPwm: false,
     } as SDBOutput);
 
+    // The client created in the constructor takes a hot second to start lookin', so give it a few seconds to figure itself out.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
     // Some simple "If we're in manual, does it update the state to reflect this?"
     await plug!.updateControlModeAsync(ControlMode.manual);
 
@@ -374,13 +384,13 @@ describe("tplinkPlug.ts tests", async function () {
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 0);
 
-    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-on");
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-on");
     assert.equal(infoStub.callCount, 3);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 100);
 
     await new Promise((r) => setTimeout(r, 10)); // Wait for any debounced calls to finish
-    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-off");
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-off");
     assert.equal(infoStub.callCount, 4);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 0);
@@ -395,13 +405,13 @@ describe("tplinkPlug.ts tests", async function () {
     assert.equal(plug!.value, 100);
     assert.equal(setStatePowerStub.callCount, 1);
 
-    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-off");
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-off");
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 100);
     assert.equal(setStatePowerStub.callCount, 2);
 
     await new Promise((r) => setTimeout(r, 10)); // Wait for any debounced calls to finish
-    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-on");
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-on");
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 100);
     assert.equal(setStatePowerStub.callCount, 3);
@@ -422,7 +432,7 @@ describe("tplinkPlug.ts tests", async function () {
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 0);
 
-    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug.emit("power-on");
+    (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-on");
 
     assert.equal(setStatePowerStub.callCount, 5);
     assert.equal(plug!.controlMode, ControlMode.automatic);
