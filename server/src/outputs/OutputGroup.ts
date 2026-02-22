@@ -80,7 +80,12 @@ export class OutputGroup extends OutputBase {
 
   override setStateAsync(newState: SDBOutputState): Promise<void> {
     return this.#runFunctionOnAllOutputsAsync(
-      (output) => output.setStateAsync(newState),
+      (output) => {
+        // Child outputs control their own automatic state
+        return output.controlMode === ControlMode.automatic
+          ? Promise.resolve()
+          : output.setStateAsync(newState);
+      },
       () => super.setStateAsync(newState),
     );
   }
@@ -96,13 +101,10 @@ export class OutputGroup extends OutputBase {
     return this.executeStateHelperAsync(
       (_) =>
         this.#runFunctionOnAllOutputsAsync((output) => {
-          if (forceExecution || this.controlMode !== ControlMode.automatic) {
-            return output.executeStateAsync();
-          }
-          // When the group is running in automatic mode, do not force child outputs to execute
-          // their physical state here. Children should run their own automations and respect
-          // their individual automationTimeouts.
-          return Promise.resolve();
+          // Child outputs control their own automatic execution
+          return output.controlMode === ControlMode.automatic
+            ? Promise.resolve()
+            : output.executeStateAsync(forceExecution);
         }),
       forceExecution,
     );
