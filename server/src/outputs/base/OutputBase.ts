@@ -231,7 +231,10 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       } as SDBOutputState);
     }
 
-    if (this.controlMode === ControlMode.automatic) {
+    // For child outputs, since we're running the automations of the parent, we only want this to set state.
+    // The parent output will call executeStateAsync, which will update the physical state of all the children
+    // as well.
+    if (this.controlMode === ControlMode.automatic && this.parentOutputId == null) {
       await this.executeStateAsync();
     }
   }

@@ -319,8 +319,13 @@ class OutputList implements AsyncDisposable {
       }
 
       if (outputListChanges) {
-        const data = Object.values(this.outputs).map((output) => output.getChartData().data);
-        const series = Object.values(this.outputs).map((output) => output.getChartData().series);
+        // Chart data should only include data for outputs that don't have a parent
+        const data = Object.values(this.outputs)
+          .filter((output) => output.parentOutputId == null)
+          .map((output) => output.getChartData().data);
+        const series = Object.values(this.outputs)
+          .filter((output) => output.parentOutputId == null)
+          .map((output) => output.getChartData().series);
         this.#chartData.loadChartData(data, "output");
         this.#chartData.loadChartSeries(series);
         this.#logger.info(
