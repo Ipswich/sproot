@@ -68,14 +68,14 @@ export class OutputGroup extends OutputBase {
 
   removeOutputAsync(outputId: number) {
     if (!this.outputs[outputId]) {
-      return Promise.resolve();
+      return;
     }
     delete this.outputs[outputId];
     this.isPwm = this.#shouldPwmBeEnabled();
     // If we change from pwm to not, we want to update group output value (rounding).
     // Child outputs shouldn't need to have their state updated since this is only relevant
     // when going from pwm to non-pwm.
-    super.setStateAsync(this.state.get());
+    return super.setStateAsync(this.state.get());
   }
 
   override setStateAsync(newState: SDBOutputState): Promise<void> {
@@ -94,7 +94,8 @@ export class OutputGroup extends OutputBase {
 
   executeStateAsync(forceExecution: boolean = false): Promise<void> {
     return this.executeStateHelperAsync(
-      (_) => this.#runFunctionOnAllOutputsAsync((output) => output.executeStateAsync()),
+      (_) =>
+        this.#runFunctionOnAllOutputsAsync((output) => output.executeStateAsync(forceExecution)),
       forceExecution,
     );
   }
