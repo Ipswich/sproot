@@ -1,9 +1,9 @@
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import winston from "winston";
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { ControlMode } from "@sproot/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import winston from "winston";
 
 export class OutputGroup extends OutputBase {
   readonly outputs: { [outputId: number]: OutputBase } = {};
@@ -95,7 +95,15 @@ export class OutputGroup extends OutputBase {
   executeStateAsync(forceExecution: boolean = false): Promise<void> {
     return this.executeStateHelperAsync(
       (_) =>
-        this.#runFunctionOnAllOutputsAsync((output) => output.executeStateAsync(forceExecution)),
+        this.#runFunctionOnAllOutputsAsync((output) => {
+          if (forceExecution || this.controlMode !== ControlMode.automatic) {
+            return output.executeStateAsync();
+          }
+          // When the group is running in automatic mode, do not force child outputs to execute
+          // their physical state here. Children should run their own automations and respect
+          // their individual automationTimeouts.
+          return Promise.resolve();
+        }),
       forceExecution,
     );
   }

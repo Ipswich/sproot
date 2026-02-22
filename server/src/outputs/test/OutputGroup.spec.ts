@@ -110,7 +110,7 @@ describe("OutputGroup.ts tests", function () {
     assert.equal(output1!.value, 100);
     assert.equal(output2!.value, 100);
 
-    outputGroup.removeOutputAsync(output1!.id);
+    await outputGroup.removeOutputAsync(output1!.id);
     // Removing a PWM output should set isPwm to false since the only remaining output is non-PWM
     assert.isFalse(outputGroup.isPwm);
     assert.lengthOf(Object.keys(outputGroup.outputs), 1);

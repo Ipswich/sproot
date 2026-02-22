@@ -113,7 +113,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
    * Executes the current state of the output, setting the physical state of the output to the recorded state
    * (respecting the current ControlMode).
    */
-  abstract executeStateAsync(forceExecution?: boolean): Promise<void>;
+  abstract executeStateAsync(): Promise<void>;
   abstract [Symbol.asyncDispose](): Promise<void>;
 
   /** Initializes all of the data for this output */
