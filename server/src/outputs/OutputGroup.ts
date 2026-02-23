@@ -78,6 +78,10 @@ export class OutputGroup extends OutputBase {
     return super.setStateAsync(this.state.get());
   }
 
+  updateShouldBePwmAsync(): void {
+    this.isPwm = this.#shouldPwmBeEnabled();
+  }
+
   getChildren(): OutputBase[] {
     return Object.values(this.outputs);
   }

@@ -326,6 +326,11 @@ class OutputList implements AsyncDisposable {
       }
 
       if (outputListChanges) {
+        for (const output of Object.values(this.#outputs)) {
+          if (output.model === Models.OUTPUT_GROUP) {
+            (output as OutputGroup)?.updateShouldBePwmAsync();
+          }
+        }
         // Chart data should only include data for outputs that don't have a parent
         const data = Object.values(this.outputs)
           .filter((output) => output.parentOutputId == null)
