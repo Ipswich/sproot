@@ -283,6 +283,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.logger.verbose(
         `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
       );
+      this.state.updateLastState();
       await executionFnAsync(validatedValue);
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);

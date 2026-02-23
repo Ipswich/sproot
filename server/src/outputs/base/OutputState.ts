@@ -67,9 +67,16 @@ export class OutputState implements IOutputState {
    * @param controlMode Mode to give system control to.
    */
   updateControlMode(controlMode: ControlMode) {
-    this.lastValue = this.value;
-    // this.logger.info(`Output ${this.id} control mode changed to ${controlMode}`);
     this.controlMode = controlMode;
+  }
+
+  /**
+   * Updates the lastValue property to the current value. This should be called before state is executed. It's here
+   * to ensure that the lastValue is always in sync with the actual last executed state, even if setNewStateAsync
+   * is not used to update the state (such as when automations are running and directly updating the state property).
+   */
+  updateLastState() {
+    this.lastValue = this.value;
   }
 
   /**
@@ -81,7 +88,6 @@ export class OutputState implements IOutputState {
    * @param targetControlMode Determines which state will be overwritten
    */
   async setNewStateAsync(newState: SDBOutputState) {
-    this.lastValue = this.value;
     newState.value = Math.min(100, Math.max(0, newState.value));
     switch (newState.controlMode) {
       case ControlMode.manual:

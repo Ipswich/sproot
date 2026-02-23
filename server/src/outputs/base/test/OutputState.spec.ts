@@ -12,8 +12,10 @@ describe("OutputState.ts tests", () => {
     const outputState = new OutputState(1, sprootDB);
     it("should update control mode", () => {
       outputState.updateControlMode(ControlMode.automatic);
+      assert.equal(0, outputState.lastValue);
       assert.equal(ControlMode.automatic, outputState.controlMode);
       outputState.updateControlMode(ControlMode.manual);
+      assert.equal(0, outputState.lastValue);
       assert.equal(ControlMode.manual, outputState.controlMode);
     });
   });
@@ -57,15 +59,18 @@ describe("OutputState.ts tests", () => {
       } as SDBOutputState;
       await outputState.setNewStateAsync(automaticState);
       await outputState.setNewStateAsync(manualState);
+      assert.equal(outputState.lastValue, 0);
       assert.deepEqual(outputState.automatic, automaticState);
       assert.deepEqual(outputState.manual, manualState);
 
       manualState.value = -1;
       await outputState.setNewStateAsync(manualState);
+      assert.equal(outputState.lastValue, 0);
       assert.equal(outputState.manual.value, 0);
 
       manualState.value = 101;
       await outputState.setNewStateAsync(manualState);
+      assert.equal(outputState.lastValue, 0);
       assert.equal(outputState.manual.value, 100);
     });
   });
