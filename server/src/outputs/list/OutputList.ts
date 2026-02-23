@@ -312,8 +312,15 @@ class OutputList implements AsyncDisposable {
       }
 
       // Assign outputs to their parent groups after all creations are done to ensure parent groups are created before we try to assign children to them
+      // Also only add new outputs here - we don't want to add them all every time. Updates are handled above, but here we need to make sure we're adding
+      // the new children.
       for (const output of Object.values(this.#outputs)) {
-        if (output.parentOutputId) {
+        if (
+          output.parentOutputId &&
+          (this.#outputs[output.parentOutputId] as OutputGroup)
+            .getChildren()
+            .find((child) => child.id === output.id) == null
+        ) {
           await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(output);
         }
       }

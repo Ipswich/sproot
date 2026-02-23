@@ -217,19 +217,12 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.automationTimeout,
       now,
     );
-    if (result.value != null) {
-      await this.state.setNewStateAsync({
-        value: result.value,
-        controlMode: ControlMode.automatic,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      } as SDBOutputState);
-    } else {
-      await this.state.setNewStateAsync({
-        value: 0,
-        controlMode: ControlMode.automatic,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      } as SDBOutputState);
-    }
+
+    await this.setStateAsync({
+      value: result.value ?? 0,
+      controlMode: ControlMode.automatic,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    } as SDBOutputState);
 
     if (this.controlMode === ControlMode.automatic) {
       await this.executeStateAsync();

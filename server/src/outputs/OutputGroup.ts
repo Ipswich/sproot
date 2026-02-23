@@ -78,6 +78,10 @@ export class OutputGroup extends OutputBase {
     return super.setStateAsync(this.state.get());
   }
 
+  getChildren(): OutputBase[] {
+    return Object.values(this.outputs);
+  }
+
   override setStateAsync(newState: SDBOutputState): Promise<void> {
     return this.#runFunctionOnAllOutputsAsync(
       (output) => {

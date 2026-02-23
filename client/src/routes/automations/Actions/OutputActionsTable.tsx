@@ -37,7 +37,6 @@ export default function OutputActionsTable({
       outputActionsQueryFn.refetch();
     },
   });
-  console.log(outputs);
   return (
     <Fragment>
       {outputActionsQueryFn.isLoading ? (
