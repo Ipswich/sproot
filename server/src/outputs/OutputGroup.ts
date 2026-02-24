@@ -1,9 +1,9 @@
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import winston from "winston";
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { ControlMode } from "@sproot/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import winston from "winston";
 
 export class OutputGroup extends OutputBase {
   readonly outputs: { [outputId: number]: OutputBase } = {};
@@ -68,19 +68,32 @@ export class OutputGroup extends OutputBase {
 
   removeOutputAsync(outputId: number) {
     if (!this.outputs[outputId]) {
-      return Promise.resolve();
+      return;
     }
     delete this.outputs[outputId];
     this.isPwm = this.#shouldPwmBeEnabled();
     // If we change from pwm to not, we want to update group output value (rounding).
     // Child outputs shouldn't need to have their state updated since this is only relevant
     // when going from pwm to non-pwm.
-    super.setStateAsync(this.state.get());
+    return super.setStateAsync(this.state.get());
+  }
+
+  updateShouldBePwmAsync(): void {
+    this.isPwm = this.#shouldPwmBeEnabled();
+  }
+
+  getChildren(): OutputBase[] {
+    return Object.values(this.outputs);
   }
 
   override setStateAsync(newState: SDBOutputState): Promise<void> {
     return this.#runFunctionOnAllOutputsAsync(
-      (output) => output.setStateAsync(newState),
+      (output) => {
+        // Child outputs control their own automatic state
+        return output.controlMode === ControlMode.automatic
+          ? Promise.resolve()
+          : output.setStateAsync(newState);
+      },
       () => super.setStateAsync(newState),
     );
   }
@@ -94,7 +107,13 @@ export class OutputGroup extends OutputBase {
 
   executeStateAsync(forceExecution: boolean = false): Promise<void> {
     return this.executeStateHelperAsync(
-      (_) => this.#runFunctionOnAllOutputsAsync((output) => output.executeStateAsync()),
+      (_) =>
+        this.#runFunctionOnAllOutputsAsync((output) => {
+          // Child outputs control their own automatic execution
+          return output.controlMode === ControlMode.automatic
+            ? Promise.resolve()
+            : output.executeStateAsync(forceExecution);
+        }),
       forceExecution,
     );
   }

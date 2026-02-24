@@ -320,7 +320,7 @@ class PlugRegistry extends EventEmitter {
   private plugs = new Map<string, Plug>();
 
   register(plug: Plug) {
-    if (!plug.childId) {
+    if (!plug.childId || this.plugs.has(plug.childId)) {
       return;
     }
 
