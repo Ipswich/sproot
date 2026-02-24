@@ -312,15 +312,32 @@ class OutputList implements AsyncDisposable {
       }
 
       // Assign outputs to their parent groups after all creations are done to ensure parent groups are created before we try to assign children to them
+      // Also only add new outputs here - we don't want to add them all every time. Updates are handled above, but here we need to make sure we're adding
+      // the new children.
       for (const output of Object.values(this.#outputs)) {
-        if (output.parentOutputId) {
+        if (
+          output.parentOutputId &&
+          (this.#outputs[output.parentOutputId] as OutputGroup)
+            .getChildren()
+            .find((child) => child.id === output.id) == null
+        ) {
           await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(output);
         }
       }
 
       if (outputListChanges) {
-        const data = Object.values(this.outputs).map((output) => output.getChartData().data);
-        const series = Object.values(this.outputs).map((output) => output.getChartData().series);
+        for (const output of Object.values(this.#outputs)) {
+          if (output.model === Models.OUTPUT_GROUP) {
+            (output as OutputGroup)?.updateShouldBePwmAsync();
+          }
+        }
+        // Chart data should only include data for outputs that don't have a parent
+        const data = Object.values(this.outputs)
+          .filter((output) => output.parentOutputId == null)
+          .map((output) => output.getChartData().data);
+        const series = Object.values(this.outputs)
+          .filter((output) => output.parentOutputId == null)
+          .map((output) => output.getChartData().series);
         this.#chartData.loadChartData(data, "output");
         this.#chartData.loadChartSeries(series);
         this.#logger.info(

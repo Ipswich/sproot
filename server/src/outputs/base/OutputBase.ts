@@ -113,7 +113,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
    * Executes the current state of the output, setting the physical state of the output to the recorded state
    * (respecting the current ControlMode).
    */
-  abstract executeStateAsync(): Promise<void>;
+  abstract executeStateAsync(forceExecution?: boolean): Promise<void>;
   abstract [Symbol.asyncDispose](): Promise<void>;
 
   /** Initializes all of the data for this output */
@@ -217,19 +217,12 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.automationTimeout,
       now,
     );
-    if (result.value != null) {
-      await this.state.setNewStateAsync({
-        value: result.value,
-        controlMode: ControlMode.automatic,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      } as SDBOutputState);
-    } else {
-      await this.state.setNewStateAsync({
-        value: 0,
-        controlMode: ControlMode.automatic,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      } as SDBOutputState);
-    }
+
+    await this.setStateAsync({
+      value: result.value ?? 0,
+      controlMode: ControlMode.automatic,
+      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    } as SDBOutputState);
 
     if (this.controlMode === ControlMode.automatic) {
       await this.executeStateAsync();
@@ -290,6 +283,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.logger.verbose(
         `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
       );
+      this.state.updateLastState();
       await executionFnAsync(validatedValue);
     } catch (error) {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);

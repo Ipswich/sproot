@@ -110,7 +110,7 @@ describe("OutputGroup.ts tests", function () {
     assert.equal(output1!.value, 100);
     assert.equal(output2!.value, 100);
 
-    outputGroup.removeOutputAsync(output1!.id);
+    await outputGroup.removeOutputAsync(output1!.id);
     // Removing a PWM output should set isPwm to false since the only remaining output is non-PWM
     assert.isFalse(outputGroup.isPwm);
     assert.lengthOf(Object.keys(outputGroup.outputs), 1);
@@ -183,33 +183,85 @@ describe("OutputGroup.ts tests", function () {
     const setStateSpy2 = sinon.spy(output2!, "setStateAsync");
     const executeStateSpy1 = sinon.spy(output1!, "executeStateAsync");
     const executeStateSpy2 = sinon.spy(output2!, "executeStateAsync");
-    const newState = { controlMode: ControlMode.automatic, value: 70 } as SDBOutputState;
+    let newState = { controlMode: ControlMode.automatic, value: 70 } as SDBOutputState;
 
+    // In automatic, these should not do anything since the outputs control their own automatic state and execution
     await outputGroup.setAndExecuteStateAsync(newState);
-    assert.isTrue(setStateSpy1.calledOnce);
-    assert.isTrue(setStateSpy2.calledOnce);
+    assert.isTrue(
+      setStateSpy1.notCalled,
+      `setStateAsync was called ${setStateSpy1.callCount} times instead of 0`,
+    );
+    assert.isTrue(
+      setStateSpy2.notCalled,
+      `setStateAsync was called ${setStateSpy2.callCount} times instead of 0`,
+    );
     assert.equal(output1?.controlMode, ControlMode.automatic);
     assert.equal(output2?.controlMode, ControlMode.automatic);
+    assert.equal(output1?.value, 0);
+    assert.equal(output2?.value, 0);
+
+    assert.isTrue(
+      executeStateSpy1.notCalled,
+      `executeStateAsync was called ${executeStateSpy1.callCount} times instead of 0`,
+    );
+    assert.isTrue(
+      executeStateSpy2.notCalled,
+      `executeStateAsync was called ${executeStateSpy2.callCount} times instead of 0`,
+    );
+
+    newState = { controlMode: ControlMode.manual, value: 70 } as SDBOutputState;
+
+    await outputGroup.updateControlModeAsync(ControlMode.manual);
+    await outputGroup.setAndExecuteStateAsync(newState);
+    assert.isTrue(
+      setStateSpy1.calledOnce,
+      `setStateAsync was called ${setStateSpy1.callCount} times instead of 1`,
+    );
+    assert.isTrue(
+      setStateSpy2.calledOnce,
+      `setStateAsync was called ${setStateSpy2.callCount} times instead of 1`,
+    );
+    assert.equal(output1?.controlMode, ControlMode.manual);
+    assert.equal(output2?.controlMode, ControlMode.manual);
     assert.equal(output1?.value, 70);
     assert.equal(output2?.value, 100);
 
-    assert.isTrue(executeStateSpy1.calledOnce);
-    assert.isTrue(executeStateSpy2.calledOnce);
+    assert.isTrue(
+      executeStateSpy1.calledThrice,
+      `executeStateAsync was called ${executeStateSpy1.callCount} times instead of 3`,
+    );
+    assert.isTrue(
+      executeStateSpy2.calledThrice,
+      `executeStateAsync was called ${executeStateSpy2.callCount} times instead of 3`,
+    );
 
     await outputGroup.removeOutputAsync(output1!.id);
 
     await outputGroup.setAndExecuteStateAsync({
-      controlMode: ControlMode.automatic,
+      controlMode: ControlMode.manual,
       value: 0,
     } as SDBOutputState);
 
     // output1 should not have been called again
-    assert.isTrue(setStateSpy1.calledOnce);
-    assert.isTrue(executeStateSpy1.calledOnce);
+    assert.isTrue(
+      setStateSpy1.calledOnce,
+      `setStateAsync was called ${setStateSpy1.callCount} times instead of 1`,
+    );
+    assert.isTrue(
+      executeStateSpy1.calledThrice,
+      `executeStateAsync was called ${executeStateSpy1.callCount} times instead of 3`,
+    );
     assert.equal(output1?.value, 70);
     // output2 should have been called again
-    assert.isTrue(setStateSpy2.calledTwice);
-    assert.isTrue(executeStateSpy2.calledTwice);
+    assert.isTrue(
+      setStateSpy2.calledTwice,
+      `setStateAsync was called ${setStateSpy2.callCount} times instead of 2`,
+    );
+    assert.equal(
+      executeStateSpy2.callCount,
+      4,
+      `executeStateAsync was called ${executeStateSpy2.callCount} times instead of 4`,
+    );
     assert.equal(output2?.value, 0);
   });
 
