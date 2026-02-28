@@ -1,0 +1,64 @@
+import { SDBJournal } from "@sproot/sproot-common/dist/database/SDBJournal";
+import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
+import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalTagLookup";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+
+export default class JournalManager {
+  #sprootDB: ISprootDB;
+  constructor(sprootDB: ISprootDB) {
+    this.#sprootDB = sprootDB;
+  }
+
+  async createJournal(
+    name: string,
+    description: string | null = null,
+    icon: string | null = null,
+    color: string | null = null,
+    startDate: string | null = null,
+  ): Promise<number> {
+    return this.#sprootDB.addJournalAsync(name, description, icon, color, startDate);
+  }
+
+  async updateJournal(journal: SDBJournal): Promise<void> {
+    return this.#sprootDB.updateJournalAsync(journal);
+  }
+
+  async deleteJournal(id: number): Promise<void> {
+    return this.#sprootDB.deleteJournalAsync(id);
+  }
+
+  async createJournalTag(name: string, color: string | null = null): Promise<number> {
+    return this.#sprootDB.addJournalTagAsync(name, color);
+  }
+
+  async addTagToJournal(journalId: number, tagId: number): Promise<number> {
+    return this.#sprootDB.addJournalTagLookupAsync(journalId, tagId);
+  }
+
+  async getJournals(
+    journalId?: number,
+  ): Promise<Array<{ journal: SDBJournal; tags: SDBJournalTag[] }>> {
+    const journals = journalId
+      ? await this.#sprootDB.getJournalAsync(journalId)
+      : await this.#sprootDB.getJournalsAsync();
+
+    if (!journals || journals.length === 0) return [];
+
+    const [allTags, tagLookups] = await Promise.all([
+      this.#sprootDB.getJournalTagsAsync(),
+      this.#sprootDB.getJournalTagLookupsAsync(),
+    ]);
+
+    const results: Array<{ journal: SDBJournal; tags: SDBJournalTag[] }> = [];
+    for (const j of journals as SDBJournal[]) {
+      const tags: SDBJournalTag[] = (tagLookups as SDBJournalTagLookup[])
+        .filter((l) => l.journalId === j.id)
+        .map((l) => (allTags as SDBJournalTag[]).find((t) => t.id === l.tagId))
+        .filter(Boolean) as SDBJournalTag[];
+
+      results.push({ journal: j, tags });
+    }
+
+    return results;
+  }
+}

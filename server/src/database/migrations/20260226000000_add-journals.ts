@@ -48,7 +48,7 @@ export async function up(knex: Knex): Promise<void> {
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table.primary(["id"]);
-      table.unique(['journal_id', 'tag_id'])
+      table.unique(["journal_id", "tag_id"]);
       table.index(["journal_id"]);
       table.index(["tag_id"]);
       setTableDefaults(table);
@@ -107,7 +107,7 @@ export async function up(knex: Knex): Promise<void> {
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table.primary(["id"]);
-      table.unique(['journal_entry_id', 'tag_id']);
+      table.unique(["journal_entry_id", "tag_id"]);
       table.index(["journal_entry_id"]);
       table.index(["tag_id"]);
       setTableDefaults(table);
@@ -126,6 +126,9 @@ export async function up(knex: Knex): Promise<void> {
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table.string("deviceName", 64).notNullable();
+      table
+        .enum("deviceType", ["Sensor", "Output"], { useNative: true, enumName: "device_type" })
+        .notNullable();
       table.decimal("reading", 12, 7).notNullable();
       table.string("units", 16).defaultTo(null);
       table.dateTime("readingTime").notNullable();

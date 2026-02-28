@@ -240,17 +240,18 @@ interface ISprootDB {
 
   getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]>;
   addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number>;
-  deleteJournalEntryTagLookupAsync(id: number): Promise<void>;
+  deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
 
   getJournalEntryDeviceDataAsync(journalEntryId: number): Promise<SDBJournalEntryDeviceData[]>;
   addJournalEntryDeviceDataAsync(
     journalEntryId: number,
     deviceName: string,
-    reading: number,
+    deviceType: string,
+    reading: string,
     units: string | null,
     readingTime: string,
   ): Promise<number>;
-  deleteJournalEntryDeviceDataAsync(id: number): Promise<void>;
+  deleteJournalEntryDeviceDataAsync(entryId: number, name: string, type: string): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -682,23 +683,30 @@ class MockSprootDB implements ISprootDB {
   async addJournalEntryTagLookupAsync(_journalEntryId: number, _tagId: number): Promise<number> {
     return 0;
   }
-  async deleteJournalEntryTagLookupAsync(_id: number): Promise<void> {
+  async deleteJournalEntryTagLookupAsync(_journalEntryId: number, _tagId: number): Promise<void> {
     return;
   }
 
-  async getJournalEntryDeviceDataAsync(_journalEntryId: number): Promise<SDBJournalEntryDeviceData[]> {
+  async getJournalEntryDeviceDataAsync(
+    _journalEntryId: number,
+  ): Promise<SDBJournalEntryDeviceData[]> {
     return [];
   }
   async addJournalEntryDeviceDataAsync(
     _journalEntryId: number,
     _deviceName: string,
-    _reading: number,
+    _deviceType: string,
+    _reading: string,
     _units: string | null,
     _readingTime: string,
   ): Promise<number> {
     return 0;
   }
-  async deleteJournalEntryDeviceDataAsync(_id: number): Promise<void> {
+  async deleteJournalEntryDeviceDataAsync(
+    _entryId: number,
+    _name: string,
+    _type: string,
+  ): Promise<void> {
     return;
   }
 

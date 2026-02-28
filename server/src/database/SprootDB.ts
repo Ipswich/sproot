@@ -254,29 +254,33 @@ export class SprootDB implements ISprootDB {
     startDate?: string | null,
   ): Promise<number> {
     return (
-      (await this.#connection("journals").insert({
-        name,
-        description,
-        archived: 0,
-        icon,
-        color,
-        startDate: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-        editedDate: null,
-        archivedDate: null,
-      }))[0] ?? -1
+      (
+        await this.#connection("journals").insert({
+          name,
+          description,
+          archived: 0,
+          icon,
+          color,
+          startDate: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+          editedDate: null,
+          archivedDate: null,
+        })
+      )[0] ?? -1
     );
   }
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    return this.#connection("journals").where("id", journal.id).update({
-      name: journal.name,
-      description: journal.description,
-      archived: journal.archived ? 1 : 0,
-      icon: journal.icon,
-      color: journal.color,
-      startDate: journal.startDate,
-      editedDate: journal.editedDate,
-      archivedDate: journal.archivedDate,
-    });
+    return this.#connection("journals")
+      .where("id", journal.id)
+      .update({
+        name: journal.name,
+        description: journal.description,
+        archived: journal.archived ? 1 : 0,
+        icon: journal.icon,
+        color: journal.color,
+        startDate: journal.startDate,
+        editedDate: journal.editedDate,
+        archivedDate: journal.archivedDate,
+      });
   }
   async deleteJournalAsync(id: number): Promise<void> {
     return this.#connection("journals").where("id", id).delete();
@@ -286,44 +290,47 @@ export class SprootDB implements ISprootDB {
     return this.#connection("journal_tags").select("*");
   }
   async addJournalTagAsync(name: string, color: string | null): Promise<number> {
-    return ((await this.#connection("journal_tags").insert({ name, color }))[0] ?? -1);
+    return (await this.#connection("journal_tags").insert({ name, color }))[0] ?? -1;
   }
   async updateJournalTagAsync(tag: SDBJournalTag): Promise<void> {
-    return this.#connection("journal_tags").where("id", tag.id).update({ name: tag.name, color: tag.color });
+    return this.#connection("journal_tags")
+      .where("id", tag.id)
+      .update({ name: tag.name, color: tag.color });
   }
   async deleteJournalTagAsync(id: number): Promise<void> {
     return this.#connection("journal_tags").where("id", id).delete();
   }
 
   async getJournalTagLookupsAsync(): Promise<SDBJournalTagLookup[]> {
-    return this.#connection("journal_tag_lookup").select("id", "journal_id as journalId", "tag_id as tagId");
+    return this.#connection("journal_tag_lookup").select(
+      "id",
+      "journal_id as journalId",
+      "tag_id as tagId",
+    );
   }
   async addJournalTagLookupAsync(journalId: number, tagId: number): Promise<number> {
-    return ((await this.#connection("journal_tag_lookup").insert({ journal_id: journalId, tag_id: tagId }))[0] ?? -1);
+    return (
+      (
+        await this.#connection("journal_tag_lookup").insert({
+          journal_id: journalId,
+          tag_id: tagId,
+        })
+      )[0] ?? -1
+    );
   }
   async deleteJournalTagLookupAsync(id: number): Promise<void> {
     return this.#connection("journal_tag_lookup").where("id", id).delete();
   }
 
   async getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]> {
-    return this.#connection("journal_entry").where("journal_id", journalId).select(
-      "id",
-      "journal_id as journalId",
-      "name",
-      "text",
-      "createDate",
-      "editedDate",
-    );
+    return this.#connection("journal_entry")
+      .where("journal_id", journalId)
+      .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
   }
   async getJournalEntryAsync(id: number): Promise<SDBJournalEntry[]> {
-    return this.#connection("journal_entry").where("id", id).select(
-      "id",
-      "journal_id as journalId",
-      "name",
-      "text",
-      "createDate",
-      "editedDate",
-    );
+    return this.#connection("journal_entry")
+      .where("id", id)
+      .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
   }
   async addJournalEntryAsync(
     journalId: number,
@@ -332,13 +339,15 @@ export class SprootDB implements ISprootDB {
     createDate?: string | null,
   ): Promise<number> {
     return (
-      (await this.#connection("journal_entry").insert({
-        journal_id: journalId,
-        name,
-        text,
-        createDate: createDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-        editedDate: null,
-      }))[0] ?? -1
+      (
+        await this.#connection("journal_entry").insert({
+          journal_id: journalId,
+          name,
+          text,
+          createDate: createDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+          editedDate: null,
+        })
+      )[0] ?? -1
     );
   }
   async updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void> {
@@ -358,53 +367,86 @@ export class SprootDB implements ISprootDB {
     return this.#connection("journal_entry_tags").select("*");
   }
   async addJournalEntryTagAsync(name: string, color: string | null): Promise<number> {
-    return ((await this.#connection("journal_entry_tags").insert({ name, color }))[0] ?? -1);
+    return (await this.#connection("journal_entry_tags").insert({ name, color }))[0] ?? -1;
   }
   async updateJournalEntryTagAsync(tag: SDBJournalEntryTag): Promise<void> {
-    return this.#connection("journal_entry_tags").where("id", tag.id).update({ name: tag.name, color: tag.color });
+    return this.#connection("journal_entry_tags")
+      .where("id", tag.id)
+      .update({ name: tag.name, color: tag.color });
   }
   async deleteJournalEntryTagAsync(id: number): Promise<void> {
     return this.#connection("journal_entry_tags").where("id", id).delete();
   }
 
   async getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]> {
-    return this.#connection("journal_entry_tag_lookup").select("id", "journal_entry_id as journalEntryId", "tag_id as tagId");
+    return this.#connection("journal_entry_tag_lookup").select(
+      "id",
+      "journal_entry_id as journalEntryId",
+      "tag_id as tagId",
+    );
   }
   async addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number> {
-    return ((await this.#connection("journal_entry_tag_lookup").insert({ journal_entry_id: journalEntryId, tag_id: tagId }))[0] ?? -1);
+    return (
+      (
+        await this.#connection("journal_entry_tag_lookup").insert({
+          journal_entry_id: journalEntryId,
+          tag_id: tagId,
+        })
+      )[0] ?? -1
+    );
   }
-  async deleteJournalEntryTagLookupAsync(id: number): Promise<void> {
-    return this.#connection("journal_entry_tag_lookup").where("id", id).delete();
+  async deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void> {
+    return this.#connection("journal_entry_tag_lookup")
+      .where({ journal_entry_id: journalEntryId, tag_id: tagId })
+      .delete();
   }
 
-  async getJournalEntryDeviceDataAsync(journalEntryId: number): Promise<SDBJournalEntryDeviceData[]> {
-    return this.#connection("journal_entry_device_data as d").where("d.journal_entry_id", journalEntryId).select(
-      "d.id",
-      "d.journal_entry_id as journalEntryId",
-      "d.deviceName",
-      "d.reading",
-      "d.units",
-      "d.readingTime",
-    );
+  async getJournalEntryDeviceDataAsync(
+    journalEntryId: number,
+  ): Promise<SDBJournalEntryDeviceData[]> {
+    return this.#connection("journal_entry_device_data as d")
+      .where("d.journal_entry_id", journalEntryId)
+      .select(
+        "d.id",
+        "d.journal_entry_id as journalEntryId",
+        "d.deviceName",
+        "d.reading",
+        "d.units",
+        "d.readingTime",
+      );
   }
   async addJournalEntryDeviceDataAsync(
     journalEntryId: number,
     deviceName: string,
-    reading: number,
+    deviceType: string,
+    reading: string,
     units: string | null,
     readingTime: string,
   ): Promise<number> {
-    return ((await this.#connection("journal_entry_device_data").insert({
-      journal_entry_id: journalEntryId,
-      deviceName,
-      reading,
-      units,
-      readingTime,
-    }))[0] ?? -1);
+    return (
+      (
+        await this.#connection("journal_entry_device_data").insert({
+          journal_entry_id: journalEntryId,
+          deviceName,
+          deviceType,
+          reading,
+          units,
+          readingTime,
+        })
+      )[0] ?? -1
+    );
   }
-  async deleteJournalEntryDeviceDataAsync(id: number): Promise<void> {
-    return this.#connection("journal_entry_device_data").where("id", id).delete();
+
+  async deleteJournalEntryDeviceDataAsync(
+    entryId: number,
+    name: string,
+    type: string,
+  ): Promise<void> {
+    return this.#connection("journal_entry_device_data")
+      .where({ journal_entry_id: entryId, deviceName: name, deviceType: type })
+      .delete();
   }
+
   async addOutputStateAsync(output: {
     id: number;
     value: number;
