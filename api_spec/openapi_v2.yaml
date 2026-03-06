@@ -91,8 +91,8 @@ paths:
                           url:
                             example: "/api/v2/authenticate/token"
                           details:
-                            items:
-                              example: "Invalid username or password."
+                            example:
+                              - "Invalid username or password."
         501:
           description: "Not Implemented"
           content:
@@ -220,8 +220,8 @@ paths:
                           url:
                             example: "/api/v2/authenticate/login"
                           details:
-                            items:
-                              example: "Invalid username or password."
+                            example:
+                              - "Invalid username or password."
         501:
           description: "Not Implemented"
           content:
@@ -350,8 +350,8 @@ paths:
                           url:
                             example: "/api/v2/system/status"
                           details:
-                            items:
-                              example: "Failed to retrieve system status."
+                            example:
+                              - "Failed to retrieve system status."
   /api/v2/system/backups:
     get:
       tags:
@@ -394,8 +394,8 @@ paths:
                           url:
                             example: "/api/v2/system/backups"
                           details:
-                            items:
-                              example: "Failed to retrieve system backups."
+                            example:
+                              - "Failed to retrieve system backups."
   /api/v2/system/backups/download/{fileName}:
     get:
       tags:
@@ -447,8 +447,8 @@ paths:
                           url:
                             example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
                           details:
-                            items:
-                              example: "Invalid backup file name."
+                            example:
+                              - "Invalid backup file name."
         404:
           description: "Backup not found"
           content:
@@ -466,8 +466,8 @@ paths:
                           url:
                             example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
                           details:
-                            items:
-                              example: "Backup file sproot-backup-2023-10-01-12-00-00.sproot.gz not found."
+                            example:
+                              - "Backup file sproot-backup-2023-10-01-12-00-00.sproot.gz not found."
         500:
           description: "Internal server error"
           content:
@@ -485,8 +485,8 @@ paths:
                           url:
                             example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
                           details:
-                            items:
-                              example: "Failed to download backup."
+                            example:
+                              - "Failed to download backup."
   /api/v2/system/backups/restore:
     post:
       tags:
@@ -533,8 +533,8 @@ paths:
                           url:
                             example: "/api/v2/system/backup/restore"
                           details:
-                            items:
-                              example: "Invalid backup file."
+                            example:
+                              - "Invalid backup file."
         500:
           description: "Internal server error"
           content:
@@ -552,8 +552,8 @@ paths:
                           url:
                             example: "/api/v2/system/backup/restore"
                           details:
-                            items:
-                              example: "Failed to restore backup."
+                            example:
+                              - "Failed to restore backup."
   /api/v2/system/backups/create:
     post:
       tags:
@@ -593,8 +593,8 @@ paths:
                           url:
                             example: "/api/v2/system/backup/create"
                           details:
-                            items:
-                              example: "Failed to create backup."
+                            example:
+                              - "Failed to create backup."
   /api/v2/system/backups/create/status:
     get:
       tags:
@@ -637,8 +637,8 @@ paths:
                           url:
                             example: "/api/v2/system/backups/create-status"
                           details:
-                            items:
-                              example: "Failed to retrieve backup status."
+                            example:
+                              - "Failed to retrieve backup status."
   /api/v2/subcontrollers:
     get:
       tags:
@@ -689,8 +689,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers"
                           details:
-                            items:
-                              example: "Failed to retrieve subcontrollers."
+                            example:
+                              - "Failed to retrieve subcontrollers."
     post:
       tags:
         - "Subcontrollers"
@@ -755,8 +755,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers"
                           details:
-                            items:
-                              example: "Failed to add subcontroller."
+                            example:
+                              - "Failed to add subcontroller."
   /api/v2/subcontrollers/{deviceId}:
     patch:
       tags:
@@ -833,8 +833,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers"
                           details:
-                            items:
-                              example: "subcontroller with ID 1 not found."
+                            example:
+                              - "subcontroller with ID 1 not found."
         500:
           description: "Internal server error"
           content:
@@ -852,8 +852,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers"
                           details:
-                            items:
-                              example: "Failed to update subcontroller."
+                            example:
+                              - "Failed to update subcontroller."
     delete:
       tags:
         - "Subcontrollers"
@@ -900,8 +900,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers"
                           details:
-                            items:
-                              example: "subcontroller with ID 1 not found."
+                            example:
+                              - "subcontroller with ID 1 not found."
         500:
           description: "Internal server error"
           content:
@@ -919,8 +919,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers"
                           details:
-                            items:
-                              example: "Failed to delete subcontroller."
+                            example:
+                              - "Failed to delete subcontroller."
   /api/v2/subcontrollers/{deviceId}/connection-status:
     get:
       tags:
@@ -974,8 +974,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers/1/connection-status"
                           details:
-                            items:
-                              example: "subcontroller with ID 1 not found."
+                            example:
+                              - "subcontroller with ID 1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -993,8 +993,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers/1/connection-status"
                           details:
-                            items:
-                              example: "Database connection failed."
+                            example:
+                              - "Database connection failed."
   /api/v2/subcontrollers/firmware/esp32/manifest:
     get:
       tags:
@@ -1060,8 +1060,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers/firmware/esp32/binary"
                           details:
-                            items:
-                              example: "Error retrieving firmware binary."
+                            example:
+                              - "Error retrieving firmware binary."
   /api/v2/subcontrollers/firmware/esp32/bootloader:
     get:
       tags:
@@ -1105,8 +1105,8 @@ paths:
                           url:
                             example: "/api/v2/subcontrollers/firmware/esp32/bootloader"
                           details:
-                            items:
-                              example: "Error retrieving bootloader binary."
+                            example:
+                              - "Error retrieving bootloader binary."
   /api/v2/subcontrollers/firmware/esp32/partitions:
     get:
       tags:
@@ -5277,6 +5277,471 @@ paths:
                                 type: number
                                 example: 75
 
+  /api/v2/journals/tags:
+    get:
+      tags:
+        - "Journals"
+      summary: Get journal tags.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/SDBJournalTag"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example:
+                              - id: 1
+                                name: "garden"
+                                color: "#ff0000"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - "Journals"
+      summary: Create a journal tag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalTag"
+      responses:
+        201:
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalTag"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example:
+                              id: 1
+                              name: "garden"
+                              color: "#ff0000"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            example:
+                              id: 1
+                              name: "garden"
+                              color: "#ff0000"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/tags/{tagId}"
+                          details:
+                            example:
+                              - "Invalid tag id"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/tags"
+                          details:
+                            example:
+                              - "Invalid name"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/tags/{tagId}"
+                          details:
+                            example:
+                              - "Database connection failed"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/tags"
+                          details:
+                            example:
+                              - "Database connection failed"
+
+  /api/v2/journals/tags/{tagId}:
+    patch:
+      tags:
+        - "Journals"
+      summary: Update a journal tag.
+      parameters:
+        - in: path
+          name: tagId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalTag"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalTag"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - "Journals"
+      summary: Delete a journal tag.
+      parameters:
+        - in: path
+          name: tagId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v2/journals/entries/tags:
+    get:
+      tags:
+        - "Journals"
+      summary: Get journal entry tags.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/SDBJournalEntryTag"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example:
+                              - id: 1
+                                name: "watering"
+                                color: "#00ff00"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - "Journals"
+      summary: Create a journal entry tag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalEntryTag"
+      responses:
+        201:
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalEntryTag"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example:
+                              id: 1
+                              name: "watering"
+                              color: "#00ff00"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            example:
+                              id: 1
+                              name: "watering"
+                              color: "#00ff00"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/entries/tags/{tagId}"
+                          details:
+                            example:
+                              - "Invalid tag id"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/entries/tags"
+                          details:
+                            example:
+                              - "Invalid payload"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/entries/tags/{tagId}"
+                          details:
+                            example:
+                              - "Database connection failed"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/entries/tags"
+                          details:
+                            example:
+                              - "Database connection failed"
+
+    patch:
+      tags:
+        - "Journals"
+      summary: Update a journal entry tag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalEntryTag"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalEntryTag"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - "Journals"
+      summary: Delete a journal entry tag.
+      parameters:
+        - in: path
+          name: tagId
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     ApiResponse:
@@ -6110,6 +6575,43 @@ components:
             - type: array
               items:
                 type: string
+
+    SDBJournalTag:
+      description: A journal tag stored in the database.
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          readOnly: true
+          type: number
+          example: 1
+        name:
+          type: string
+          example: "garden"
+        color:
+          nullable: true
+          type: string
+          example: "#ff0000"
+
+    SDBJournalEntryTag:
+      description: A journal entry tag stored in the database.
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          readOnly: true
+          type: number
+          example: 1
+        name:
+          type: string
+          example: "watering"
+        color:
+          nullable: true
+          type: string
+          example: "#00ff00"
 
   securitySchemes:
     bearerAuth:

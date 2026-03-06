@@ -55,8 +55,8 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!(await knex.schema.hasTable("journal_entry"))) {
-    await knex.schema.createTable("journal_entry", (table) => {
+  if (!(await knex.schema.hasTable("journal_entries"))) {
+    await knex.schema.createTable("journal_entries", (table) => {
       table.increments("id").notNullable();
       table
         .integer("journal_id", 10)
@@ -95,7 +95,7 @@ export async function up(knex: Knex): Promise<void> {
         .unsigned()
         .notNullable()
         .references("id")
-        .inTable("journal_entry")
+        .inTable("journal_entries")
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table
@@ -122,7 +122,7 @@ export async function up(knex: Knex): Promise<void> {
         .unsigned()
         .notNullable()
         .references("id")
-        .inTable("journal_entry")
+        .inTable("journal_entries")
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table.string("deviceName", 64).notNullable();
@@ -151,8 +151,8 @@ export async function down(knex: Knex): Promise<void> {
   if (await knex.schema.hasTable("journal_entry_tags")) {
     await knex.schema.dropTable("journal_entry_tags");
   }
-  if (await knex.schema.hasTable("journal_entry")) {
-    await knex.schema.dropTable("journal_entry");
+  if (await knex.schema.hasTable("journal_entries")) {
+    await knex.schema.dropTable("journal_entries");
   }
   if (await knex.schema.hasTable("journal_tag_lookup")) {
     await knex.schema.dropTable("journal_tag_lookup");

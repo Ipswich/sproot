@@ -327,9 +327,10 @@ export class SprootDB implements ISprootDB {
       .where("journal_id", journalId)
       .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
   }
-  async getJournalEntryAsync(id: number): Promise<SDBJournalEntry[]> {
+  async getJournalEntryAsync(journalId: number, entryId: number): Promise<SDBJournalEntry[]> {
     return this.#connection("journal_entry")
-      .where("id", id)
+      .where("id", entryId)
+      .andWhere("journal_id", journalId)
       .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
   }
   async addJournalEntryAsync(

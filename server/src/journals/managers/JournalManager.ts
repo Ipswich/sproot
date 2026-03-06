@@ -35,13 +35,15 @@ export default class JournalManager {
     return this.#sprootDB.addJournalTagLookupAsync(journalId, tagId);
   }
 
-  async getJournals(
+  async getJournalsAsync(
     journalId?: number,
   ): Promise<Array<{ journal: SDBJournal; tags: SDBJournalTag[] }>> {
-    const journals = journalId
-      ? await this.#sprootDB.getJournalAsync(journalId)
-      : await this.#sprootDB.getJournalsAsync();
-
+    let journals: SDBJournal[] = [];
+    if (journalId != null) {
+      journals = await this.#sprootDB.getJournalAsync(journalId);
+    } else {
+      journals = await this.#sprootDB.getJournalsAsync();
+    }
     if (!journals || journals.length === 0) return [];
 
     const [allTags, tagLookups] = await Promise.all([
