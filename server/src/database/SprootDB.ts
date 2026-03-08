@@ -70,7 +70,7 @@ export class SprootDB implements ISprootDB {
       address: sensor.address,
       color: sensor.color,
       pin: sensor.pin,
-      deviceZoneId: (sensor as any).deviceZoneId ?? null,
+      deviceZoneId: sensor.deviceZoneId ?? null,
       lowCalibrationPoint: sensor.lowCalibrationPoint,
       highCalibrationPoint: sensor.highCalibrationPoint,
     });
@@ -85,7 +85,7 @@ export class SprootDB implements ISprootDB {
         address: sensor.address,
         color: sensor.color,
         pin: sensor.pin,
-        deviceZoneId: (sensor as any).deviceZoneId ?? null,
+        deviceZoneId: sensor.deviceZoneId ?? null,
         lowCalibrationPoint: sensor.lowCalibrationPoint,
         highCalibrationPoint: sensor.highCalibrationPoint,
       });
@@ -323,12 +323,12 @@ export class SprootDB implements ISprootDB {
   }
 
   async getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]> {
-    return this.#connection("journal_entry")
+    return this.#connection("journal_entries")
       .where("journal_id", journalId)
       .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
   }
   async getJournalEntryAsync(journalId: number, entryId: number): Promise<SDBJournalEntry[]> {
-    return this.#connection("journal_entry")
+    return this.#connection("journal_entries")
       .where("id", entryId)
       .andWhere("journal_id", journalId)
       .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
@@ -341,7 +341,7 @@ export class SprootDB implements ISprootDB {
   ): Promise<number> {
     return (
       (
-        await this.#connection("journal_entry").insert({
+        await this.#connection("journal_entries").insert({
           journal_id: journalId,
           name,
           text,
@@ -352,7 +352,7 @@ export class SprootDB implements ISprootDB {
     );
   }
   async updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void> {
-    return this.#connection("journal_entry").where("id", entry.id).update({
+    return this.#connection("journal_entries").where("id", entry.id).update({
       journal_id: entry.journalId,
       name: entry.name,
       text: entry.text,
@@ -361,7 +361,7 @@ export class SprootDB implements ISprootDB {
     });
   }
   async deleteJournalEntryAsync(id: number): Promise<void> {
-    return this.#connection("journal_entry").where("id", id).delete();
+    return this.#connection("journal_entries").where("id", id).delete();
   }
 
   async getJournalEntryTagsAsync(): Promise<SDBJournalEntryTag[]> {

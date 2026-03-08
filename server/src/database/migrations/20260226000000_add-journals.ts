@@ -21,7 +21,7 @@ export async function up(knex: Knex): Promise<void> {
   if (!(await knex.schema.hasTable("journal_tags"))) {
     await knex.schema.createTable("journal_tags", (table) => {
       table.increments("id").notNullable();
-      table.string("name", 32).notNullable();
+      table.string("name", 32).notNullable().unique();
       table.string("color", 32).defaultTo(null);
       table.primary(["id"]);
       setTableDefaults(table);
@@ -80,7 +80,7 @@ export async function up(knex: Knex): Promise<void> {
   if (!(await knex.schema.hasTable("journal_entry_tags"))) {
     await knex.schema.createTable("journal_entry_tags", (table) => {
       table.increments("id").notNullable();
-      table.string("name", 32).notNullable();
+      table.string("name", 32).notNullable().unique();
       table.string("color", 32).defaultTo(null);
       table.primary(["id"]);
       setTableDefaults(table);
