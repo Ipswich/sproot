@@ -58,7 +58,7 @@ describe("EntryManager.ts tests", () => {
       (sprootDB.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
       (sprootDB.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
 
-      const res = await entryManager.getEntriesAsync(10);
+      const res = await entryManager.getAsync(10);
       assert.strictEqual(res.length, 2);
       const entryResult1 = res[0];
       assert.isDefined(entryResult1);
@@ -103,7 +103,7 @@ describe("EntryManager.ts tests", () => {
       (sprootDB.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
       (sprootDB.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
 
-      const res = await entryManager.getEntriesAsync(10, 1);
+      const res = await entryManager.getAsync(10, 1);
       assert.strictEqual(res.length, 1);
       const entryResult = res[0];
       assert.isDefined(entryResult);
@@ -118,14 +118,14 @@ describe("EntryManager.ts tests", () => {
 
     it("should return empty array if no entries found", async () => {
       (sprootDB.getJournalEntriesAsync as sinon.SinonStub).resolves([]);
-      const res = await entryManager.getEntriesAsync(10);
+      const res = await entryManager.getAsync(10);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);
     });
 
     it("should return empty array if no entry found for id", async () => {
       (sprootDB.getJournalEntryAsync as sinon.SinonStub).resolves([]);
-      const res = await entryManager.getEntriesAsync(10, 999);
+      const res = await entryManager.getAsync(10, 999);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);
     });

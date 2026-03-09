@@ -11,7 +11,7 @@ export async function up(knex: Knex): Promise<void> {
       table.string("icon", 64).defaultTo(null);
       table.string("color", 32).defaultTo(null);
       table.dateTime("startDate").notNullable().defaultTo(knex.fn.now());
-      table.dateTime("editedDate").defaultTo(null);
+      table.dateTime("editedDate").notNullable().defaultTo(knex.fn.now());
       table.dateTime("archivedDate").defaultTo(null);
       table.primary(["id"]);
       setTableDefaults(table);
@@ -66,7 +66,7 @@ export async function up(knex: Knex): Promise<void> {
         .inTable("journals")
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
-      table.string("name", 64).defaultTo(null); // Do journal entries need names?
+      table.string("title", 64).defaultTo(null); // Do journal entries need titles?
       table.text("text").notNullable();
       table.dateTime("createDate").notNullable().defaultTo(knex.fn.now());
       table.dateTime("editedDate").defaultTo(null);

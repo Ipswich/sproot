@@ -89,7 +89,8 @@ export async function updateAsync(
   let response: SuccessResponse | ErrorResponse;
   try {
     const tagId = parseInt(req.params["tagId"] ?? "", 10);
-    if (isNaN(tagId)) {
+    const tag = req.body as Partial<SDBJournalTag>;
+    if (tag == null || isNaN(tagId) || tagId <= 0) {
       response = {
         statusCode: 400,
         error: {
@@ -116,17 +117,13 @@ export async function updateAsync(
       return response;
     }
 
-    const bodyName = req.body["name"] as string | undefined;
-    const bodyColor = req.body["color"] as string | null | undefined;
-
     const updated: SDBJournalTag = {
       id: tagId,
-      name: bodyName ?? existing.name,
-      color: bodyColor === undefined ? existing.color : bodyColor,
+      name: tag.name ?? existing.name,
+      color: tag.color === undefined ? existing.color : tag.color,
     };
 
     await journalService.journalTagManager.updateTag(updated);
-
     response = {
       statusCode: 200,
       content: { data: updated },

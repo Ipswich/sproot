@@ -80,7 +80,6 @@ export async function addAsync(
 
 /**
  * Possible statusCodes: 200, 400, 404, 503
- * NOTE: this endpoint expects the updated tag object in the request body.
  */
 export async function updateAsync(
   req: Request,
@@ -89,9 +88,9 @@ export async function updateAsync(
   const journalService = req.app.get("journalService") as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    // Accept either id in body or full tag object
+    const tagId = parseInt(req.params["tagId"] ?? "", 10);
     const tag = req.body as Partial<SDBJournalEntryTag>;
-    if (tag == null || typeof tag.id !== "number" || tag.id <= 0) {
+    if (tag == null || isNaN(tagId) || tagId <= 0) {
       response = {
         statusCode: 400,
         error: {
@@ -104,14 +103,14 @@ export async function updateAsync(
       return response;
     }
 
-    const existing = (await journalService.entryTagManager.getTags()).find((t) => t.id === tag.id);
+    const existing = (await journalService.entryTagManager.getTags()).find((t) => t.id === tagId);
     if (!existing) {
       response = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: req.originalUrl,
-          details: [`Journal entry tag with ID ${tag.id} not found.`],
+          details: [`Journal entry tag with ID ${tagId} not found.`],
         },
         ...res.locals["defaultProperties"],
       };
@@ -119,7 +118,7 @@ export async function updateAsync(
     }
 
     const updated: SDBJournalEntryTag = {
-      id: tag.id,
+      id: tagId,
       name: tag.name ?? existing.name,
       color: tag.color === undefined ? existing.color : tag.color,
     };
@@ -146,7 +145,6 @@ export async function updateAsync(
 
 /**
  * Possible statusCodes: 200, 400, 404, 503
- * NOTE: this endpoint expects a JSON body like { id: number }
  */
 export async function deleteAsync(
   req: Request,
@@ -155,8 +153,8 @@ export async function deleteAsync(
   const journalService = req.app.get("journalService") as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const id = req.body?.id as number | undefined;
-    if (typeof id !== "number" || isNaN(id) || id <= 0) {
+    const tagId = parseInt(req.params["tagId"] ?? "", 10);
+    if (isNaN(tagId) || tagId <= 0) {
       response = {
         statusCode: 400,
         error: {
@@ -169,24 +167,24 @@ export async function deleteAsync(
       return response;
     }
 
-    const existing = (await journalService.entryTagManager.getTags()).find((t) => t.id === id);
+    const existing = (await journalService.entryTagManager.getTags()).find((t) => t.id === tagId);
     if (!existing) {
       response = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: req.originalUrl,
-          details: [`Journal entry tag with ID ${id} not found.`],
+          details: [`Journal entry tag with ID ${tagId} not found.`],
         },
         ...res.locals["defaultProperties"],
       };
       return response;
     }
 
-    await journalService.entryTagManager.deleteTag(id);
+    await journalService.entryTagManager.deleteTag(tagId);
     response = {
       statusCode: 200,
-      content: { data: `Journal entry tag with ID ${id} deleted.` },
+      content: { data: `Journal entry tag with ID ${tagId} deleted.` },
       ...res.locals["defaultProperties"],
     };
   } catch (error: any) {

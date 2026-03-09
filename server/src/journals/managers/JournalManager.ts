@@ -9,29 +9,36 @@ export default class JournalManager {
     this.#sprootDB = sprootDB;
   }
 
-  async createJournal(
+  async createJournalAsync(
     name: string,
     description: string | null = null,
     icon: string | null = null,
     color: string | null = null,
-    startDate: string | null = null,
+    startDate: Date | null = null,
   ): Promise<number> {
-    return this.#sprootDB.addJournalAsync(name, description, icon, color, startDate);
+    return this.#sprootDB.addJournalAsync(
+      name,
+      description,
+      icon,
+      color,
+      startDate?.toISOString().slice(0, 19).replace("T", " ") ??
+        new Date().toISOString().slice(0, 19).replace("T", " "),
+    );
   }
 
-  async updateJournal(journal: SDBJournal): Promise<void> {
+  async updateJournalAsync(journal: SDBJournal): Promise<void> {
     return this.#sprootDB.updateJournalAsync(journal);
   }
 
-  async deleteJournal(id: number): Promise<void> {
+  async deleteJournalAsync(id: number): Promise<void> {
     return this.#sprootDB.deleteJournalAsync(id);
   }
 
-  async createJournalTag(name: string, color: string | null = null): Promise<number> {
+  async createJournalTagAsync(name: string, color: string | null = null): Promise<number> {
     return this.#sprootDB.addJournalTagAsync(name, color);
   }
 
-  async addTagToJournal(journalId: number, tagId: number): Promise<number> {
+  async addTagToJournalAsync(journalId: number, tagId: number): Promise<number> {
     return this.#sprootDB.addJournalTagLookupAsync(journalId, tagId);
   }
 

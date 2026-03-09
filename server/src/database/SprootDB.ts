@@ -243,9 +243,11 @@ export class SprootDB implements ISprootDB {
   async getJournalsAsync(): Promise<SDBJournal[]> {
     return this.#connection("journals").select("*");
   }
+
   async getJournalAsync(id: number): Promise<SDBJournal[]> {
     return this.#connection("journals").where("id", id).select("*");
   }
+
   async addJournalAsync(
     name: string,
     description: string | null,
@@ -262,12 +264,13 @@ export class SprootDB implements ISprootDB {
           icon,
           color,
           startDate: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          editedDate: null,
+          editedDate: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
           archivedDate: null,
         })
       )[0] ?? -1
     );
   }
+
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
     return this.#connection("journals")
       .where("id", journal.id)
@@ -282,6 +285,7 @@ export class SprootDB implements ISprootDB {
         archivedDate: journal.archivedDate,
       });
   }
+
   async deleteJournalAsync(id: number): Promise<void> {
     return this.#connection("journals").where("id", id).delete();
   }
@@ -289,14 +293,17 @@ export class SprootDB implements ISprootDB {
   async getJournalTagsAsync(): Promise<SDBJournalTag[]> {
     return this.#connection("journal_tags").select("*");
   }
+
   async addJournalTagAsync(name: string, color: string | null): Promise<number> {
     return (await this.#connection("journal_tags").insert({ name, color }))[0] ?? -1;
   }
+
   async updateJournalTagAsync(tag: SDBJournalTag): Promise<void> {
     return this.#connection("journal_tags")
       .where("id", tag.id)
       .update({ name: tag.name, color: tag.color });
   }
+
   async deleteJournalTagAsync(id: number): Promise<void> {
     return this.#connection("journal_tags").where("id", id).delete();
   }
@@ -318,6 +325,7 @@ export class SprootDB implements ISprootDB {
       )[0] ?? -1
     );
   }
+
   async deleteJournalTagLookupAsync(id: number): Promise<void> {
     return this.#connection("journal_tag_lookup").where("id", id).delete();
   }
@@ -327,12 +335,14 @@ export class SprootDB implements ISprootDB {
       .where("journal_id", journalId)
       .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
   }
+
   async getJournalEntryAsync(journalId: number, entryId: number): Promise<SDBJournalEntry[]> {
     return this.#connection("journal_entries")
       .where("id", entryId)
       .andWhere("journal_id", journalId)
       .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
   }
+
   async addJournalEntryAsync(
     journalId: number,
     name: string | null,
@@ -351,15 +361,17 @@ export class SprootDB implements ISprootDB {
       )[0] ?? -1
     );
   }
+
   async updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void> {
     return this.#connection("journal_entries").where("id", entry.id).update({
       journal_id: entry.journalId,
-      name: entry.name,
+      title: entry.title,
       text: entry.text,
       createDate: entry.createDate,
       editedDate: entry.editedDate,
     });
   }
+
   async deleteJournalEntryAsync(id: number): Promise<void> {
     return this.#connection("journal_entries").where("id", id).delete();
   }
@@ -367,14 +379,17 @@ export class SprootDB implements ISprootDB {
   async getJournalEntryTagsAsync(): Promise<SDBJournalEntryTag[]> {
     return this.#connection("journal_entry_tags").select("*");
   }
+
   async addJournalEntryTagAsync(name: string, color: string | null): Promise<number> {
     return (await this.#connection("journal_entry_tags").insert({ name, color }))[0] ?? -1;
   }
+
   async updateJournalEntryTagAsync(tag: SDBJournalEntryTag): Promise<void> {
     return this.#connection("journal_entry_tags")
       .where("id", tag.id)
       .update({ name: tag.name, color: tag.color });
   }
+
   async deleteJournalEntryTagAsync(id: number): Promise<void> {
     return this.#connection("journal_entry_tags").where("id", id).delete();
   }
@@ -386,6 +401,7 @@ export class SprootDB implements ISprootDB {
       "tag_id as tagId",
     );
   }
+
   async addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number> {
     return (
       (
@@ -396,6 +412,7 @@ export class SprootDB implements ISprootDB {
       )[0] ?? -1
     );
   }
+
   async deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void> {
     return this.#connection("journal_entry_tag_lookup")
       .where({ journal_entry_id: journalEntryId, tag_id: tagId })
@@ -404,9 +421,15 @@ export class SprootDB implements ISprootDB {
 
   async getJournalEntryDeviceDataAsync(
     journalEntryId: number,
+    type?: "Sensor" | "Output",
   ): Promise<SDBJournalEntryDeviceData[]> {
     return this.#connection("journal_entry_device_data as d")
       .where("d.journal_entry_id", journalEntryId)
+      .modify((queryBuilder) => {
+        if (type) {
+          queryBuilder.andWhere("d.deviceType", type);
+        }
+      })
       .select(
         "d.id",
         "d.journal_entry_id as journalEntryId",

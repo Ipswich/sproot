@@ -1,90 +1,112 @@
+import * as JournalsHandlers from "./handlers/JournalsHandlers";
+import * as JournalEntriesHandlers from "./handlers/JournalEntriesHandlers";
+import * as JournalEntriesDataHandlers from "./handlers/JournalEntriesDataHandlers";
 import express, { Request, Response } from "express";
-import * as JournalTagHandlers from "./handlers/JournalTagHandlers";
-import * as JournalEntryTagHandlers from "./handlers/JournalEntryTagHandlers";
-
 const router = express.Router();
 
 // Journal Endpoints
 router.get("/", async (req: Request, res: Response) => {
+  const result = await JournalsHandlers.getAsync(req, res);
+  res.status(result.statusCode).json(result);
+  return;
+});
+
+router.get("/:journalId", async (req: Request, res: Response) => {
+  const result = await JournalsHandlers.getAsync(req, res);
+  res.status(result.statusCode).json(result);
   return;
 });
 
 router.post("/", async (req: Request, res: Response) => {
+  const result = await JournalsHandlers.addAsync(req, res);
+  res.status(result.statusCode).json(result);
   return;
 });
 
 router.patch("/:journalId", async (req: Request, res: Response) => {
+  const result = await JournalsHandlers.updateAsync(req, res);
+  res.status(result.statusCode).json(result);
   return;
 });
 
 router.delete("/:journalId", async (req: Request, res: Response) => {
-  return;
-});
-
-// Journal Tag Endpoints
-router.get("/tags", async (req: Request, res: Response) => {
-  const result = await JournalTagHandlers.getAsync(req, res);
-  res.status(result.statusCode).json(result);
-  return;
-});
-
-router.post("/tags", async (req: Request, res: Response) => {
-  const result = await JournalTagHandlers.addAsync(req, res);
-  res.status(result.statusCode).json(result);
-  return;
-});
-
-router.patch("/tags/:tagId", async (req: Request, res: Response) => {
-  const result = await JournalTagHandlers.updateAsync(req, res);
-  res.status(result.statusCode).json(result);
-  return;
-});
-
-router.delete("/tags/:tagId", async (req: Request, res: Response) => {
-  const result = await JournalTagHandlers.deleteAsync(req, res);
+  const result = await JournalsHandlers.deleteAsync(req, res);
   res.status(result.statusCode).json(result);
   return;
 });
 
 // Journal Entry Endpoints
 router.get("/:journalId/entries", async (req: Request, res: Response) => {
+  const result = await JournalEntriesHandlers.getAsync(req, res);
+  res.status(result.statusCode).json(result);
+  return;
+});
+
+router.get("/:journalId/entries/:entryId", async (req: Request, res: Response) => {
+  const result = await JournalEntriesHandlers.getAsync(req, res);
+  res.status(result.statusCode).json(result);
   return;
 });
 
 router.post("/:journalId/entries", async (req: Request, res: Response) => {
+  const result = await JournalEntriesHandlers.addAsync(req, res);
+  res.status(result.statusCode).json(result);
   return;
 });
 
 router.patch("/:journalId/entries/:entryId", async (req: Request, res: Response) => {
+  const result = await JournalEntriesHandlers.updateAsync(req, res);
+  res.status(result.statusCode).json(result);
   return;
 });
 
 router.delete("/:journalId/entries/:entryId", async (req: Request, res: Response) => {
-  return;
-});
-
-// Journal Entry Tag Endpoints
-router.get("/entry-tags", async (req: Request, res: Response) => {
-  const result = await JournalEntryTagHandlers.getAsync(req, res);
+  const result = await JournalEntriesHandlers.deleteAsync(req, res);
   res.status(result.statusCode).json(result);
   return;
 });
 
-router.post("/entry-tags", async (req: Request, res: Response) => {
-  const result = await JournalEntryTagHandlers.addAsync(req, res);
-  res.status(result.statusCode).json(result);
-});
-
-router.patch("/entry-tags/:tagId", async (req: Request, res: Response) => {
-  const result = await JournalEntryTagHandlers.updateAsync(req, res);
+// Journal Entry Device Data Endpoints
+router.get("/:journalId/entries/:entryId/sensor-data", async (req: Request, res: Response) => {
+  const result = await JournalEntriesDataHandlers.getSensorDataAsync(req, res);
   res.status(result.statusCode).json(result);
   return;
 });
 
-router.delete("/entry-tags/:tagId", async (req: Request, res: Response) => {
-  const result = await JournalEntryTagHandlers.deleteAsync(req, res);
+router.get("/:journalId/entries/:entryId/output-data", async (req: Request, res: Response) => {
+  const result = await JournalEntriesDataHandlers.getOutputDataAsync(req, res);
   res.status(result.statusCode).json(result);
   return;
 });
+
+router.put("/:journalId/entries/:entryId/sensor-data", async (req: Request, res: Response) => {
+  const result = await JournalEntriesDataHandlers.putSensorDataAsync(req, res);
+  res.status(result.statusCode).json(result);
+  return;
+});
+
+router.put("/:journalId/entries/:entryId/output-data", async (req: Request, res: Response) => {
+  const result = await JournalEntriesDataHandlers.putOutputDataAsync(req, res);
+  res.status(result.statusCode).json(result);
+  return;
+});
+
+router.delete(
+  "/:journalId/entries/:entryId/sensor-data/:sensorId",
+  async (req: Request, res: Response) => {
+    const result = await JournalEntriesDataHandlers.deleteSensorDataAsync(req, res);
+    res.status(result.statusCode).json(result);
+    return;
+  },
+);
+
+router.delete(
+  "/:journalId/entries/:entryId/output-data/:outputId",
+  async (req: Request, res: Response) => {
+    const result = await JournalEntriesDataHandlers.deleteOutputDataAsync(req, res);
+    res.status(result.statusCode).json(result);
+    return;
+  },
+);
 
 export default router;

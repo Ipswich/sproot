@@ -3,6 +3,8 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalEntryTagHandlers";
+import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 
 describe("JournalEntryTagHandlers.ts tests", () => {
   describe("getAsync", () => {
@@ -22,7 +24,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const success = (await getAsync(mockRequest, mockResponse)) as any;
+      const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.deepEqual(success.content?.data, [{ id: 1, name: "et", color: null }]);
     });
@@ -44,7 +46,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const error = (await getAsync(mockRequest, mockResponse)) as any;
+      const error = (await getAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.error.name, "Internal Server Error");
       assert.include((error.error.details as string[])[0], "boom2");
@@ -74,7 +76,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: { name: "etag", color: null },
       } as unknown as Request;
 
-      const success = (await addAsync(mockRequest, mockResponse)) as any;
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
       assert.deepEqual(success.content?.data, { id: 7, name: "etag", color: null });
     });
@@ -88,7 +90,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: {},
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as any;
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
     });
 
@@ -115,7 +117,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: { name: "n" },
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as any;
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.error.name, "Internal Server Error");
       assert.include((error.error.details as string[])[0], "addFail2");
@@ -132,7 +134,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: {},
       } as unknown as Request;
 
-      const error = (await updateAsync(mockRequest, mockResponse)) as any;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
     });
 
@@ -154,7 +156,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         originalUrl: "/api/v2/journal/entries/tags",
       } as unknown as Request;
 
-      const error = (await updateAsync(mockRequest, mockResponse)) as any;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
     });
 
@@ -173,7 +175,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               ? {
                   entryTagManager: {
                     getTags: () => sprootDB.getJournalEntryTagsAsync(),
-                    updateTag: (t: any) => sprootDB.updateJournalEntryTagAsync(t),
+                    updateTag: (t: SDBJournalEntryTag) => sprootDB.updateJournalEntryTagAsync(t),
                   },
                 }
               : undefined,
@@ -181,7 +183,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: { id: 3, name: "n", color: "#111" },
       } as unknown as Request;
 
-      const success = (await updateAsync(mockRequest, mockResponse)) as any;
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.deepEqual(success.content?.data, { id: 3, name: "n", color: "#111" });
     });
@@ -201,7 +203,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               ? {
                   entryTagManager: {
                     getTags: () => sprootDB.getJournalEntryTagsAsync(),
-                    updateTag: (t: any) => sprootDB.updateJournalEntryTagAsync(t),
+                    updateTag: (t: SDBJournalEntryTag) => sprootDB.updateJournalEntryTagAsync(t),
                   },
                 }
               : undefined,
@@ -210,7 +212,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: { id: 4, name: "b" },
       } as unknown as Request;
 
-      const error = (await updateAsync(mockRequest, mockResponse)) as any;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.error.name, "Internal Server Error");
       assert.include((error.error.details as string[])[0], "updFail");
@@ -227,7 +229,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: {},
       } as unknown as Request;
 
-      const error = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
     });
 
@@ -249,7 +251,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         originalUrl: "/api/v2/journal/entries/tags",
       } as unknown as Request;
 
-      const error = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
     });
 
@@ -276,7 +278,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: { id: 10 },
       } as unknown as Request;
 
-      const success = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
     });
 
@@ -304,7 +306,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         body: { id: 11 },
       } as unknown as Request;
 
-      const error = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
       assert.equal(error.error.name, "Internal Server Error");
       assert.include((error.error.details as string[])[0], "delFail2");

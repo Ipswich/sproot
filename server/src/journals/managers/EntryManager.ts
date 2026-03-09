@@ -9,7 +9,7 @@ export default class EntryManager {
     this.#sprootDB = sprootDB;
   }
 
-  async getEntriesAsync(
+  async getAsync(
     journalId: number,
     entryId?: number,
   ): Promise<Array<SDBJournalEntry & { tags?: SDBJournalEntryTag[] }>> {
@@ -39,19 +39,26 @@ export default class EntryManager {
     return results;
   }
 
-  async getJournalEntryDeviceData(entryId: number): Promise<SDBJournalEntryDeviceData[]> {
-    return this.#sprootDB.getJournalEntryDeviceDataAsync(entryId) as Promise<
-      SDBJournalEntryDeviceData[]
-    >;
-  }
-
   createAsync(
     journalId: number,
     text: string,
     name?: string | null,
-    createDate?: string | null,
+    createDate?: Date | null,
   ): Promise<number> {
-    return this.#sprootDB.addJournalEntryAsync(journalId, name ?? null, text, createDate ?? null);
+    return this.#sprootDB.addJournalEntryAsync(
+      journalId,
+      name ?? null,
+      text,
+      createDate?.toISOString().slice(0, 19).replace("T", " ") ?? null,
+    );
+  }
+
+  updateAsync(entry: SDBJournalEntry): Promise<void> {
+    return this.#sprootDB.updateJournalEntryAsync(entry);
+  }
+
+  deleteAsync(entryId: number) {
+    return this.#sprootDB.deleteJournalEntryAsync(entryId);
   }
 
   addTagAsync(entryId: number, tagId: number): Promise<number> {
@@ -60,6 +67,13 @@ export default class EntryManager {
 
   removeTagAsync(entryId: number, tagId: number): Promise<void> {
     return this.#sprootDB.deleteJournalEntryTagLookupAsync(entryId, tagId);
+  }
+
+  getDeviceDataAsync(
+    entryId: number,
+    type?: "Sensor" | "Output",
+  ): Promise<SDBJournalEntryDeviceData[]> {
+    return this.#sprootDB.getJournalEntryDeviceDataAsync(entryId, type);
   }
 
   async attachSensorDataAsync(entryId: number, sensorId: number, start: Date, end: Date) {
@@ -125,13 +139,5 @@ export default class EntryManager {
       throw new Error(`Output ${outputId} not found`);
     }
     return this.#sprootDB.deleteJournalEntryDeviceDataAsync(entryId, output[0]!.name, "Output");
-  }
-
-  updateAsync(entry: SDBJournalEntry): Promise<void> {
-    return this.#sprootDB.updateJournalEntryAsync(entry);
-  }
-
-  deleteAsync(entryId: number) {
-    return this.#sprootDB.deleteJournalEntryAsync(entryId);
   }
 }
