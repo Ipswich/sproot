@@ -54,7 +54,7 @@ export async function getAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to retrieve journals: ${(error as Error).message}`],
       },
@@ -119,7 +119,7 @@ export async function addAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to create Journal: ${(error as Error).message}`],
       },
@@ -252,7 +252,7 @@ export async function updateAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to update Journal: ${(error as Error).message}`],
       },
@@ -311,9 +311,177 @@ export async function deleteAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to delete Journal with ID ${journalId}: ${(error as Error).message}`],
+      },
+      ...res.locals["defaultProperties"],
+    };
+  }
+  return response;
+}
+
+/** Possible statusCodes: 200, 400, 404, 503 */
+export async function addTagAsync(
+  req: Request,
+  res: Response,
+): Promise<SuccessResponse | ErrorResponse> {
+  let response: SuccessResponse | ErrorResponse;
+  const journalService = req.app.get("journalService") as JournalService;
+  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const tagId = parseInt(req.body["tagId"] ?? "", 10);
+
+  const badRequests: string[] = [];
+  if (isNaN(journalId)) {
+    badRequests.push("Valid Journal ID is required.");
+  }
+  if (isNaN(tagId)) {
+    badRequests.push("Valid tag ID is required.");
+  }
+  if (badRequests.length > 0) {
+    response = {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: req.originalUrl,
+        details: badRequests,
+      },
+      ...res.locals["defaultProperties"],
+    };
+    return response;
+  }
+
+  try {
+    const existingJournal = await journalService.journalManager.getJournalsAsync(journalId);
+    if (!existingJournal || existingJournal.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal with ID ${journalId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    if (existingJournal[0]!.tags.some((t) => t.id === tagId)) {
+      response = {
+        statusCode: 200,
+        content: {
+          data: `Journal with ID ${journalId} already has tag with ID ${tagId}.`,
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    await journalService.journalManager.addTagAsync(journalId, tagId);
+    response = {
+      statusCode: 200,
+      content: {
+        data: `Tag with ID ${tagId} added to journal with ID ${journalId}.`,
+      },
+      ...res.locals["defaultProperties"],
+    };
+  } catch (error) {
+    response = {
+      statusCode: 503,
+      error: {
+        name: "Service Unavailable",
+        url: req.originalUrl,
+        details: [
+          `Failed to add tag with ID ${tagId} to journal with ID ${journalId}: ${
+            (error as Error).message
+          }`,
+        ],
+      },
+      ...res.locals["defaultProperties"],
+    };
+  }
+  return response;
+}
+
+/** Possible statusCodes: 200, 400, 404, 503 */
+export async function removeTagAsync(
+  req: Request,
+  res: Response,
+): Promise<SuccessResponse | ErrorResponse> {
+  let response: SuccessResponse | ErrorResponse;
+  const journalService = req.app.get("journalService") as JournalService;
+  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const tagId = parseInt(req.params["tagId"] ?? "", 10);
+
+  const badRequests: string[] = [];
+  if (isNaN(journalId)) {
+    badRequests.push("Valid Journal ID is required.");
+  }
+  if (isNaN(tagId)) {
+    badRequests.push("Valid tag ID is required.");
+  }
+  if (badRequests.length > 0) {
+    response = {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: req.originalUrl,
+        details: badRequests,
+      },
+      ...res.locals["defaultProperties"],
+    };
+    return response;
+  }
+
+  try {
+    const existingJournal = await journalService.journalManager.getJournalsAsync(journalId);
+    if (!existingJournal || existingJournal.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal with ID ${journalId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    if (!existingJournal[0]!.tags.some((t) => t.id === tagId)) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [
+            `Journal with ID ${journalId} does not have tag with ID ${tagId} and cannot be removed.`,
+          ],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    await journalService.journalManager.removeTagAsync(journalId, tagId);
+    response = {
+      statusCode: 200,
+      content: {
+        data: `Tag with ID ${tagId} removed from journal with ID ${journalId}.`,
+      },
+      ...res.locals["defaultProperties"],
+    };
+  } catch (error) {
+    response = {
+      statusCode: 503,
+      error: {
+        name: "Service Unavailable",
+        url: req.originalUrl,
+        details: [
+          `Failed to remove tag with ID ${tagId} from journal with ID ${journalId}: ${
+            (error as Error).message
+          }`,
+        ],
       },
       ...res.locals["defaultProperties"],
     };

@@ -120,7 +120,7 @@ export async function systemBackupRestoreHandlerAsync(
       content: { data: "Backup restore queued." },
       ...response.locals["defaultProperties"],
     };
-  } catch (err: any) {
+  } catch (err) {
     return {
       statusCode: 400,
       error: {
@@ -147,13 +147,13 @@ export async function systemBackupCreateHandlerAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       statusCode: 500,
       error: {
         name: "Internal Server Error",
         url: request.originalUrl,
-        details: [`Failed to create backup: ${error.message}`],
+        details: [`Failed to create backup: ${(error as Error).message}`],
       },
       ...response.locals["defaultProperties"],
     };

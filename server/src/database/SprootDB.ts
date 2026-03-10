@@ -326,8 +326,10 @@ export class SprootDB implements ISprootDB {
     );
   }
 
-  async deleteJournalTagLookupAsync(id: number): Promise<void> {
-    return this.#connection("journal_tag_lookup").where("id", id).delete();
+  async deleteJournalTagLookupAsync(journalId: number, tagId: number): Promise<void> {
+    return this.#connection("journal_tag_lookup")
+      .where({ journal_id: journalId, tag_id: tagId })
+      .delete();
   }
 
   async getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]> {

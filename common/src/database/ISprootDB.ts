@@ -220,7 +220,7 @@ interface ISprootDB {
 
   getJournalTagLookupsAsync(): Promise<SDBJournalTagLookup[]>;
   addJournalTagLookupAsync(journalId: number, tagId: number): Promise<number>;
-  deleteJournalTagLookupAsync(id: number): Promise<void>;
+  deleteJournalTagLookupAsync(journalId: number, tagId: number): Promise<void>;
 
   getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]>;
   getJournalEntryAsync(journalId: number, entryId: number): Promise<SDBJournalEntry[]>;
@@ -639,7 +639,7 @@ class MockSprootDB implements ISprootDB {
   async addJournalTagLookupAsync(_journalId: number, _tagId: number): Promise<number> {
     return 0;
   }
-  async deleteJournalTagLookupAsync(_id: number): Promise<void> {
+  async deleteJournalTagLookupAsync(_journalId: number, _tagId: number): Promise<void> {
     return;
   }
 

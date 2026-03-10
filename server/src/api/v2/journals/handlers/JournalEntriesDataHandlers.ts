@@ -60,7 +60,7 @@ export async function getSensorDataAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [
           `Failed to retrieve sensor data for journal entry ${entryId}: ${(error as Error).message}`,
@@ -131,7 +131,7 @@ export async function getOutputDataAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [
           `Failed to retrieve output data for journal entry ${entryId}: ${(error as Error).message}`,
@@ -196,7 +196,7 @@ export async function putSensorDataAsync(
     response = {
       statusCode: 200,
       content: {
-        message: `Sensor data from sensor ${sensorId} attached to journal entry ${entryId} successfully.`,
+        data: `Sensor data from sensor ${sensorId} attached to journal entry ${entryId} successfully.`,
       },
       ...res.locals["defaultProperties"],
     };
@@ -204,7 +204,7 @@ export async function putSensorDataAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [
           `Failed to attach sensor data to journal entry ${entryId}: ${(error as Error).message}`,
@@ -217,6 +217,7 @@ export async function putSensorDataAsync(
   return response;
 }
 
+/** Possible statusCodes: 200, 400, 404, 503 */
 export async function putOutputDataAsync(
   req: Request,
   res: Response,
@@ -269,7 +270,7 @@ export async function putOutputDataAsync(
     response = {
       statusCode: 200,
       content: {
-        message: `Output data from output ${outputId} attached to journal entry ${entryId} successfully.`,
+        data: `Output data from output ${outputId} attached to journal entry ${entryId} successfully.`,
       },
       ...res.locals["defaultProperties"],
     };
@@ -277,7 +278,7 @@ export async function putOutputDataAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [
           `Failed to attach output data to journal entry ${entryId}: ${(error as Error).message}`,
@@ -290,6 +291,7 @@ export async function putOutputDataAsync(
   return response;
 }
 
+/** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteSensorDataAsync(
   req: Request,
   res: Response,
@@ -328,7 +330,7 @@ export async function deleteSensorDataAsync(
     response = {
       statusCode: 200,
       content: {
-        message: `Sensor data from sensor ${sensorId} detached from journal entry ${entryId} successfully.`,
+        data: `Sensor data from sensor ${sensorId} detached from journal entry ${entryId} successfully.`,
       },
       ...res.locals["defaultProperties"],
     };
@@ -336,7 +338,7 @@ export async function deleteSensorDataAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [
           `Failed to detach sensor data from journal entry ${entryId}: ${(error as Error).message}`,
@@ -349,6 +351,7 @@ export async function deleteSensorDataAsync(
   return response;
 }
 
+/** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteOutputDataAsync(
   req: Request,
   res: Response,
@@ -386,7 +389,7 @@ export async function deleteOutputDataAsync(
     response = {
       statusCode: 200,
       content: {
-        message: `Output data from output ${outputId} detached from journal entry ${entryId} successfully.`,
+        data: `Output data from output ${outputId} detached from journal entry ${entryId} successfully.`,
       },
       ...res.locals["defaultProperties"],
     };
@@ -394,7 +397,7 @@ export async function deleteOutputDataAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [
           `Failed to detach output data from journal entry ${entryId}: ${(error as Error).message}`,

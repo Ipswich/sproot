@@ -3,7 +3,7 @@ type SDBJournalEntryDeviceData = {
   journalEntryId: number;
   deviceName: string;
   reading: number;
-  units: string | null;
+  units: string;
   readingTime: string;
 };
 

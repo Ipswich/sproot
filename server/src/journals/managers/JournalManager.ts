@@ -38,8 +38,12 @@ export default class JournalManager {
     return this.#sprootDB.addJournalTagAsync(name, color);
   }
 
-  async addTagToJournalAsync(journalId: number, tagId: number): Promise<number> {
+  async addTagAsync(journalId: number, tagId: number): Promise<number> {
     return this.#sprootDB.addJournalTagLookupAsync(journalId, tagId);
+  }
+
+  async removeTagAsync(journalId: number, tagId: number): Promise<void> {
+    return this.#sprootDB.deleteJournalTagLookupAsync(journalId, tagId);
   }
 
   async getJournalsAsync(

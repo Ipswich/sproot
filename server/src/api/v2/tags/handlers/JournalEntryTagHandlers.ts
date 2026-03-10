@@ -19,13 +19,13 @@ export async function getAsync(
       content: { data: results },
       ...res.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
-        details: [`Failed to retrieve journal entry tags: ${error.message}`],
+        details: [`Failed to retrieve journal entry tags: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -64,13 +64,13 @@ export async function addAsync(
       content: { data: { id: newId, name, color: color ?? null } },
       ...res.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
-        details: [`Failed to create journal entry tag: ${error.message}`],
+        details: [`Failed to create journal entry tag: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -129,13 +129,13 @@ export async function updateAsync(
       content: { data: updated },
       ...res.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
-        details: [`Failed to update journal entry tag: ${error.message}`],
+        details: [`Failed to update journal entry tag: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -187,13 +187,13 @@ export async function deleteAsync(
       content: { data: `Journal entry tag with ID ${tagId} deleted.` },
       ...res.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
-        details: [`Failed to delete journal entry tag: ${error.message}`],
+        details: [`Failed to delete journal entry tag: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
