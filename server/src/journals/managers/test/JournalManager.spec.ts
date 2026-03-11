@@ -47,7 +47,7 @@ describe("JournalManager.ts tests", () => {
       const journalResult1 = res[0];
       assert.isDefined(journalResult1);
       assert.strictEqual(journalResult1!.journal.id, 1);
-      assert.strictEqual(journalResult1!.journal.name, "J1");
+      assert.strictEqual(journalResult1!.journal.title, "J1");
 
       const journalTags1 = journalResult1!.tags;
       assert.isDefined(journalTags1);

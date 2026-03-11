@@ -5,14 +5,14 @@ export async function up(knex: Knex): Promise<void> {
   if (!(await knex.schema.hasTable("journals"))) {
     await knex.schema.createTable("journals", (table) => {
       table.increments("id").notNullable();
-      table.string("name", 64).notNullable();
+      table.string("title", 64).notNullable();
       table.text("description").defaultTo(null);
       table.boolean("archived").notNullable().defaultTo(false);
       table.string("icon", 64).defaultTo(null);
       table.string("color", 32).defaultTo(null);
-      table.dateTime("startDate").notNullable().defaultTo(knex.fn.now());
+      table.dateTime("createdAt").notNullable().defaultTo(knex.fn.now());
       table.dateTime("editedAt").notNullable().defaultTo(knex.fn.now());
-      table.dateTime("archivedDate").defaultTo(null);
+      table.dateTime("archivedAt").defaultTo(null);
       table.primary(["id"]);
       setTableDefaults(table);
     });

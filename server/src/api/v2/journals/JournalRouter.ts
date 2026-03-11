@@ -41,7 +41,7 @@ router.put("/:journalId/tags", async (req: Request, res: Response) => {
 });
 
 router.delete("/:journalId/tags/:tagId", async (req: Request, res: Response) => {
-  const result = await JournalsHandlers.addTagAsync(req, res);
+  const result = await JournalsHandlers.removeTagAsync(req, res);
   res.status(result.statusCode).json(result);
   return;
 });

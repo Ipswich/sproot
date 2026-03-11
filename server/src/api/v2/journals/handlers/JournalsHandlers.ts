@@ -70,12 +70,12 @@ export async function addAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
-  const name = req.body["name"] as string | undefined;
+  const title = req.body["title"] as string | undefined;
   const description = req.body["description"] as string | undefined;
   const icon = req.body["icon"] as string | undefined;
   const color = req.body["color"] as string | undefined;
 
-  if (name == null || name === "") {
+  if (title == null || title === "") {
     response = {
       statusCode: 400,
       error: {
@@ -91,7 +91,7 @@ export async function addAsync(
   const startDate = new Date();
   try {
     const newId = await journalService.journalManager.createJournalAsync(
-      name!,
+      title!,
       description ?? null,
       icon ?? null,
       color ?? null,
@@ -103,13 +103,13 @@ export async function addAsync(
       content: {
         data: {
           id: newId,
-          name,
+          title,
           description: description ?? null,
           icon: icon ?? null,
           color: color ?? null,
           archived: false,
-          archivedDate: null,
-          startDate: startDate.toISOString(),
+          archivedAt: null,
+          createdAt: startDate.toISOString(),
           editedAt: startDate.toISOString(),
         } as SDBJournal,
       },
@@ -185,8 +185,8 @@ export async function updateAsync(
     return response;
   }
 
-  const name: string =
-    req.body["name"] === undefined ? existingJournal[0]!.journal.name : String(req.body["name"]);
+  const title: string =
+    req.body["title"] === undefined ? existingJournal[0]!.journal.title : String(req.body["title"]);
 
   const description: string | null =
     req.body["description"] === undefined
@@ -209,26 +209,26 @@ export async function updateAsync(
         ? null
         : String(req.body["color"]);
 
-  const startDate = existingJournal[0]!.journal.startDate;
+  const createdAt = existingJournal[0]!.journal.createdAt;
   const editedAt = new Date().toISOString();
-  const archivedDate =
+  const archivedAt =
     archived === true && !existingJournal[0]!.journal.archived
       ? new Date().toISOString()
       : archived === false && existingJournal[0]!.journal.archived
         ? null
-        : existingJournal[0]!.journal.archivedDate;
+        : existingJournal[0]!.journal.archivedAt;
 
   try {
     await journalService.journalManager.updateJournalAsync({
       id: journalId,
-      name,
+      title,
       description,
       icon,
       color,
       archived,
-      startDate,
+      createdAt: createdAt,
       editedAt,
-      archivedDate,
+      archivedAt: archivedAt,
     });
 
     response = {
@@ -236,14 +236,14 @@ export async function updateAsync(
       content: {
         data: {
           id: journalId,
-          name,
+          title,
           description,
           icon,
           color,
           archived,
-          startDate,
+          createdAt,
           editedAt,
-          archivedDate,
+          archivedAt,
         },
       },
       ...res.locals["defaultProperties"],

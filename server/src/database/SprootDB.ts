@@ -241,7 +241,17 @@ export class SprootDB implements ISprootDB {
 
   /* Journals */
   async getJournalsAsync(): Promise<SDBJournal[]> {
-    return this.#connection("journals").select("*");
+    return (await this.#connection("journals").select("*")).map((j: SDBJournal) => ({
+      id: j.id,
+      title: j.title,
+      description: j.description,
+      archived: j.archived,
+      icon: j.icon,
+      color: j.color,
+      createdAt: j.createdAt.replace(" ", "T") + "Z",
+      editedAt: j.editedAt.replace(" ", "T") + "Z",
+      archivedAt: j.archivedAt ? j.archivedAt.replace(" ", "T") + "Z" : null,
+    }));
   }
 
   async getJournalAsync(id: number): Promise<SDBJournal[]> {
@@ -249,23 +259,23 @@ export class SprootDB implements ISprootDB {
   }
 
   async addJournalAsync(
-    name: string,
+    title: string,
     description: string | null,
     icon: string | null,
     color: string | null,
-    startDate?: string | null,
+    createdAt?: string | null,
   ): Promise<number> {
     return (
       (
         await this.#connection("journals").insert({
-          name,
+          title,
           description,
           archived: 0,
           icon,
           color,
-          startDate: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          editedAt: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          archivedDate: null,
+          createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+          editedAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+          archivedAt: null,
         })
       )[0] ?? -1
     );
@@ -275,14 +285,14 @@ export class SprootDB implements ISprootDB {
     return this.#connection("journals")
       .where("id", journal.id)
       .update({
-        name: journal.name,
+        title: journal.title,
         description: journal.description,
         archived: journal.archived ? 1 : 0,
         icon: journal.icon,
         color: journal.color,
-        startDate: journal.startDate,
+        createdAt: journal.createdAt,
         editedAt: journal.editedAt,
-        archivedDate: journal.archivedDate,
+        archivedAt: journal.archivedAt,
       });
   }
 
@@ -347,7 +357,7 @@ export class SprootDB implements ISprootDB {
 
   async addJournalEntryAsync(
     journalId: number,
-    name: string | null,
+    title: string | null,
     text: string,
     createdAt?: string | null,
   ): Promise<number> {
@@ -355,7 +365,7 @@ export class SprootDB implements ISprootDB {
       (
         await this.#connection("journal_entries").insert({
           journal_id: journalId,
-          name,
+          title,
           text,
           createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
           editedAt: null,

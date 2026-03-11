@@ -1,13 +1,13 @@
 type SDBJournal = {
   id: number;
-  name: string;
+  title: string;
   description: string | null;
   archived: boolean;
   icon: string | null;
   color: string | null;
-  startDate: string;
-  editedAt: string | null;
-  archivedDate: string | null;
+  createdAt: string;
+  editedAt: string;
+  archivedAt: string | null;
 };
 
 export type { SDBJournal };

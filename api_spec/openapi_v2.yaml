@@ -6072,9 +6072,14 @@ paths:
                         properties:
                           data:
                             items:
-                              allOf:
-                                - $ref: "#/components/schemas/SDBJournal"
-                                - $ref: "#/components/schemas/SDBJournalTag"
+                              type: object
+                              properties:
+                                journal:
+                                  $ref: "#/components/schemas/SDBJournal"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalTag"
         401:
           description: "Unauthorized"
           content:
@@ -6239,8 +6244,15 @@ paths:
                       content:
                         properties:
                           data:
-                            allOf:
-                              - $ref: "#/components/schemas/SDBJournal"
+                            items:
+                              type: object
+                              properties:
+                                journal:
+                                  $ref: "#/components/schemas/SDBJournal"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalTag"
         401:
           description: "Unauthorized"
           content:
@@ -8950,12 +8962,12 @@ components:
       description: >
         A journal object that is stored in the database. Contains all the information needed to 
         create a journal, including name, archival state, start date, and some optional details
-        like desrciption, icon, color, etc.
+        like description, icon, color, etc.
       type: object
       required:
         - "title"
         - "archived"
-        - "startDate"
+        - "createdAt"
       properties:
         id:
           type: number
@@ -8979,7 +8991,7 @@ components:
         archived:
           type: boolean
           example: false
-        startDate:
+        createdAt:
           readOnly: true
           type: string
           format: date-time
@@ -8990,7 +9002,7 @@ components:
           type: string
           format: date-time
           example: "2021-06-01T12:00:00.000Z"
-        archivedDate:
+        archivedAt:
           readOnly: true
           nullable: true
           type: string
