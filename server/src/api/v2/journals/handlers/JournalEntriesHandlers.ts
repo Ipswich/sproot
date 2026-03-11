@@ -7,61 +7,30 @@ import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJourn
 /**
  * Possible statusCodes 200, 400, 404, 503
  */
-export async function getAsync(
+export async function getByJournalIdAsync(
   req: Request,
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
   let journalId: number | undefined = undefined;
-  let entryId: number | undefined = undefined;
   journalId = parseInt(req.params["journalId"] ?? "", 10);
-  const badRequests: string[] = [];
   if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
-
-  if (req.params["entryId"]) {
-    entryId = parseInt(req.params["entryId"] ?? "", 10);
-    if (isNaN(entryId)) {
-      badRequests.push("Valid Journal Entry ID is required.");
-    }
-  }
-
-  if (badRequests.length > 0) {
     response = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: req.originalUrl,
-        details: badRequests,
+        details: ["Valid Journal ID is required."],
       },
       ...res.locals["defaultProperties"],
     };
-    return response;
   }
 
   try {
     let results: (SDBJournalEntry & {
       tags?: SDBJournalEntryTag[];
     })[] = [];
-    if (req.params["entryId"]) {
-      results = await journalService.entryManager.getAsync(journalId, entryId);
-      if (results.length == 0) {
-        response = {
-          statusCode: 404,
-          error: {
-            name: "Not Found",
-            url: req.originalUrl,
-            details: [
-              `Journal Entry with ID ${entryId} in Journal with ID ${journalId} not found.`,
-            ],
-          },
-          ...res.locals["defaultProperties"],
-        };
-        return response;
-      }
-    }
     const doesJournalExist = await journalService.journalManager.getJournalsAsync(journalId);
     if (!doesJournalExist || doesJournalExist.length === 0) {
       response = {
@@ -84,6 +53,73 @@ export async function getAsync(
       };
     }
     return response;
+  } catch (error) {
+    response = {
+      statusCode: 503,
+      error: {
+        name: "Service Unavailable",
+        url: req.originalUrl,
+        details: [`Failed to retrieve journal entries: ${(error as Error).message}`],
+      },
+      ...res.locals["defaultProperties"],
+    };
+  }
+  return response;
+}
+
+/**
+ * Possible statusCodes 200, 400, 404, 503
+ */
+export async function getByEntryIdAsync(
+  req: Request,
+  res: Response,
+): Promise<SuccessResponse | ErrorResponse> {
+  let response: SuccessResponse | ErrorResponse;
+  const journalService = req.app.get("journalService") as JournalService;
+  let entryId: number | undefined = undefined;
+
+  if (req.params["entryId"]) {
+    entryId = parseInt(req.params["entryId"] ?? "", 10);
+    if (isNaN(entryId)) {
+      response = {
+        statusCode: 400,
+        error: {
+          name: "Bad Request",
+          url: req.originalUrl,
+          details: ["Valid Journal Entry ID is required."],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+  }
+
+  try {
+    let results: (SDBJournalEntry & {
+      tags?: SDBJournalEntryTag[];
+    })[] = [];
+    results = await journalService.entryManager.getAsync(undefined, entryId);
+    if (results.length == 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [
+            `Journal Entry with ID ${entryId} not found.`,
+          ],
+        },
+        ...res.locals["defaultProperties"],
+      };
+    } else {
+      response = {
+        statusCode: 200,
+        content: {
+          data: results,
+        },
+        ...res.locals["defaultProperties"],
+      };
+    }
   } catch (error) {
     response = {
       statusCode: 503,
@@ -189,13 +225,9 @@ export async function updateAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
 
   const badRequests: string[] = [];
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
   if (isNaN(entryId)) {
     badRequests.push("Valid Journal Entry ID is required.");
   }
@@ -216,7 +248,7 @@ export async function updateAsync(
     return response;
   }
 
-  const existingEntry = await journalService.entryManager.getAsync(journalId, entryId);
+  const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
   if (!existingEntry || existingEntry.length === 0) {
     response = {
       statusCode: 404,
@@ -245,11 +277,11 @@ export async function updateAsync(
   try {
     await journalService.entryManager.updateAsync({
       id: entryId,
-      journalId,
+      journalId: existingEntry[0]!.journalId,
       content,
       title,
-      createdAt: existingEntry[0]!.createdAt,
-      editedAt: editedAt.toISOString(),
+      createdAt: existingEntry[0]!.createdAt.slice(0, 19).replace("T", " "),
+      editedAt: editedAt.toISOString().slice(0, 19).replace("T", " "),
     } as SDBJournalEntry);
 
     response = {
@@ -257,11 +289,11 @@ export async function updateAsync(
       content: {
         data: {
           id: entryId,
-          journalId,
+          journalId: existingEntry[0]!.journalId,
           content,
           title,
           createdAt: existingEntry[0]!.createdAt,
-          editedAt: editedAt.toISOString(),
+          editedAt: editedAt.toISOString()
         },
       },
       ...res.locals["defaultProperties"],
@@ -288,30 +320,22 @@ export async function deleteAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
 
-  const badRequests: string[] = [];
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
   if (isNaN(entryId)) {
-    badRequests.push("Valid Journal Entry ID is required.");
-  }
-  if (badRequests.length > 0) {
     response = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: req.originalUrl,
-        details: badRequests,
+        details: ["Valid Journal Entry ID is required."],
       },
       ...res.locals["defaultProperties"],
     };
     return response;
   }
 
-  const existingEntry = await journalService.entryManager.getAsync(journalId, entryId);
+  const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
   if (!existingEntry || existingEntry.length === 0) {
     response = {
       statusCode: 404,
@@ -356,14 +380,10 @@ export async function addTagAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
   const tagId = parseInt(req.body["tagId"] ?? "", 10);
 
   const badRequests: string[] = [];
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
   if (isNaN(entryId)) {
     badRequests.push("Valid Journal Entry ID is required.");
   }
@@ -385,7 +405,7 @@ export async function addTagAsync(
   }
 
   try {
-    const existingEntry = await journalService.entryManager.getAsync(journalId, entryId);
+    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
     if (!existingEntry || existingEntry.length === 0) {
       response = {
         statusCode: 404,
@@ -457,14 +477,10 @@ export async function removeTagAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
   const tagId = parseInt(req.params["tagId"] ?? "", 10);
 
   const badRequests: string[] = [];
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
   if (isNaN(entryId)) {
     badRequests.push("Valid Journal Entry ID is required.");
   }
@@ -486,7 +502,7 @@ export async function removeTagAsync(
   }
 
   try {
-    const existingEntry = await journalService.entryManager.getAsync(journalId, entryId);
+    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
     if (!existingEntry || existingEntry.length === 0) {
       response = {
         statusCode: 404,

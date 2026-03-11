@@ -36,7 +36,7 @@ router.delete("/:journalId", async (req: Request, res: Response) => {
 
 // Journal Entry Endpoints
 router.get("/:journalId/entries", async (req: Request, res: Response) => {
-  const result = await JournalEntriesHandlers.getAsync(req, res);
+  const result = await JournalEntriesHandlers.getByJournalIdAsync(req, res);
   res.status(result.statusCode).json(result);
   return;
 });

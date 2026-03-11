@@ -6998,7 +6998,7 @@ paths:
         - "Journal Entries"
       summary: Get a journal entry by ID.
       description: >
-        Returns a journal entry based on the provided journal ID and entry ID. This includes all information about the entry, such as
+        Returns a journal entry based on the provided entry ID. This includes all information about the entry, such as
         title, id, associated tags, and content.
       parameters:
         - in: path
@@ -7022,8 +7022,15 @@ paths:
                       content:
                         properties:
                           data:
-                            allOf:
-                              - $ref: "#/components/schemas/SDBJournalEntry"
+                            items:
+                              type: object
+                              properties:
+                                entry:
+                                  $ref: "#/components/schemas/SDBJournalEntry"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalEntryTag"
         400:
           description: "Bad request"
           content:
@@ -7039,7 +7046,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             example:
                               - "Invalid or missing journal entry Id."
@@ -7077,10 +7084,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/journals/1/entries/-1"
+                            example: "/api/v2/entries/-1"
                           details:
                             items:
-                              example: "Journal entry with ID -1 not found in journal with ID 1."
+                              example: "Journal entry with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -7096,7 +7103,7 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             items:
                               example:
@@ -7112,13 +7119,6 @@ paths:
       description: >
         Updates a journal entry. This operation changes only the fields provided.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -7162,7 +7162,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             example:
                               - "Missing required field: id"
@@ -7182,7 +7182,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -7201,10 +7201,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/journals/1/entries/-1"
+                            example: "/api/v2/entries/1"
                           details:
                             items:
-                              example: "Journal entry with ID -1 not found in journal with ID 1."
+                              example: "Journal entry with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -7220,7 +7220,7 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             items:
                               example:
@@ -7236,13 +7236,6 @@ paths:
       description: >
         Deletes a journal entry. This operation is permanent and cannot be undone.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -7280,7 +7273,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             example:
                               - "Invalid or missing journal entry Id."
@@ -7299,7 +7292,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -7318,10 +7311,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/journals/1/entries/-1"
+                            example: "/api/v2/entries/-1"
                           details:
                             items:
-                              example: "Journal entry with ID -1 not found in journal with ID 1."
+                              example: "Journal entry with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -7337,7 +7330,7 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/journals/1/entries/1"
+                            example: "/api/v2/entries/1"
                           details:
                             items:
                               example:
@@ -7352,16 +7345,9 @@ paths:
         - "Journal Entries"
       summary: Add a tag to a journal entry.
       description: >
-        Adds a tag to a journal entry based on the provided journal ID, entry ID, and tag ID. Returns the information
+        Adds a tag to a journal entry based on the provided entry ID, and tag ID. Returns the information
         used to add the tag to the journal entry.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -7410,10 +7396,9 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/journals/1/entries/1/tags"
+                            example: "/api/v2/entries/1/tags"
                           details:
                             example:
-                              - "Invalid or missing journal Id."
                               - "Invalid or missing journal entry Id."
                               - "Invalid or missing tag Id."
         401:
@@ -7431,7 +7416,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/journals/1/entries/1/tags"
+                            example: "/api/v2/entries/1/tags"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -7450,10 +7435,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/journals/1/entries/-1/tags"
+                            example: "/api/v2/entries/-1/tags"
                           details:
                             items:
-                              example: "Journal entry with ID -1 not found in journal with ID 1."
+                              example: "Journal entry with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -7469,7 +7454,7 @@ paths:
                           name:
                             example: "Service Unavailable"
                           url:
-                            example: "/api/v2/journals/1/entries/1/tags"
+                            example: "/api/v2/entries/1/tags"
                           details:
                             items:
                               example:
@@ -7485,16 +7470,9 @@ paths:
         - "Journal Entries"
       summary: Remove a tag from a journal entry.
       description: >
-        Removes a tag from a journal entry based on the provided journal ID, entry ID, and tag ID. Returns the information
+        Removes a tag from a journal entry based on the provided entry ID, and tag ID. Returns the information
         used to remove the tag from the journal entry.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -7539,10 +7517,9 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/journals/1/entries/1/tags/1"
+                            example: "/api/v2/entries/1/tags/1"
                           details:
                             example:
-                              - "Invalid or missing journal Id."
                               - "Invalid or missing journal entry Id."
                               - "Invalid or missing tag Id."
         401:
@@ -7560,7 +7537,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/journals/1/entries/1/tags/1"
+                            example: "/api/v2/entries/1/tags/1"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -7579,10 +7556,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/journals/1/entries/-1/tags/1"
+                            example: "/api/v2/entries/-1/tags/1"
                           details:
                             items:
-                              example: "Journal entry with ID -1 not found in journal with ID 1."
+                              example: "Journal entry tag with ID -1 not found in journal entry with ID 1."
 
   /api/v2/entries/{entryId}/sensor-data:
     get:
@@ -7593,16 +7570,9 @@ paths:
         - "Journal Entries"
       summary: Get all sensor data for a journal entry.
       description: >
-        Returns a list of all sensor data associated with a journal entry based on the provided journal ID and entry ID. This includes all information about each piece of sensor data, such as
+        Returns a list of all sensor data associated with a journal entry based on the provided entry ID. This includes all information about each piece of sensor data, such as
         name, and id.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -7627,6 +7597,25 @@ paths:
                             items:
                               allOf:
                                 - $ref: "#/components/schemas/SDBJournalEntryDeviceData"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1/entries/1/sensor-data"
+                          details:
+                            example:
+                              - "Invalid or missing journal entry Id."
         401:
           description: "Unauthorized"
           content:
@@ -7696,13 +7685,6 @@ paths:
       description: >
         Updates the sensor data associated with a journal entry. This operation replaces all existing sensor data for the entry with the provided sensor data.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -7832,13 +7814,6 @@ paths:
         Deletes all sensor data associated with a journal entry. This operation is permanent and cannot be undone.
       parameters:
         - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
-        - in: path
           name: entryId
           required: true
           description: "Journal entry Id"
@@ -7955,16 +7930,9 @@ paths:
         - "Journal Entries"
       summary: Get all output data for a journal entry.
       description: >
-        Returns a list of all output data associated with a journal entry based on the provided journal ID and entry ID. This includes all information about each piece
+        Returns a list of all output data associated with a journal entry based on the provided entry ID. This includes all information about each piece
          of output data, such as device name, and id.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -7989,6 +7957,25 @@ paths:
                             items:
                               allOf:
                                 - $ref: "#/components/schemas/SDBJournalEntryDeviceData"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1/entries/1/output-data"
+                          details:
+                            items:
+                              example: "Invalid journal entry Id."
         401:
           description: "Unauthorized"
           content:
@@ -8058,13 +8045,6 @@ paths:
       description: >
         Updates the output data associated with a journal entry. This operation replaces all existing output data for the entry with the provided output data.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -8193,13 +8173,6 @@ paths:
       description: >
         Deletes all output data associated with a journal entry. This operation is permanent and cannot be undone.
       parameters:
-        - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
         - in: path
           name: entryId
           required: true
@@ -9039,10 +9012,11 @@ components:
         - "createdAt"
       properties:
         id:
-          type: number
           readOnly: true
+          type: number
           example: 1
         journalId:
+          readOnly: true
           type: number
           example: 1
         title:

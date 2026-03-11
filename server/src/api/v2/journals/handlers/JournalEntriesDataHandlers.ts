@@ -9,26 +9,16 @@ export async function getSensorDataAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
-  let journalId: number | undefined = undefined;
   let entryId: number | undefined = undefined;
-  journalId = parseInt(req.params["journalId"] ?? "", 10);
   entryId = parseInt(req.params["entryId"] ?? "", 10);
-  const badRequests: string[] = [];
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
 
   if (isNaN(entryId)) {
-    badRequests.push("Valid Journal Entry ID is required.");
-  }
-
-  if (badRequests.length > 0) {
     response = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: req.originalUrl,
-        details: badRequests,
+        details: ["Valid Journal Entry ID is required."],
       },
       ...res.locals["defaultProperties"],
     };
@@ -80,26 +70,16 @@ export async function getOutputDataAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
-  let journalId: number | undefined = undefined;
   let entryId: number | undefined = undefined;
-  journalId = parseInt(req.params["journalId"] ?? "", 10);
   entryId = parseInt(req.params["entryId"] ?? "", 10);
-  const badRequests: string[] = [];
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
 
   if (isNaN(entryId)) {
-    badRequests.push("Valid Journal Entry ID is required.");
-  }
-
-  if (badRequests.length > 0) {
     response = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: req.originalUrl,
-        details: badRequests,
+        details: ["Valid Journal Entry ID is required."],
       },
       ...res.locals["defaultProperties"],
     };
@@ -150,16 +130,12 @@ export async function putSensorDataAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
   const sensorId = parseInt(req.body["sensorId"] ?? "", 10);
   const start = new Date(req.body["start"] as string);
   const end = new Date(req.body["end"] as string);
   const badRequests: string[] = [];
 
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
   if (isNaN(entryId)) {
     badRequests.push("Valid Journal Entry ID is required.");
   }
@@ -224,16 +200,12 @@ export async function putOutputDataAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
   const outputId = parseInt(req.body["outputId"] ?? "", 10);
   const start = new Date(req.body["start"] as string);
   const end = new Date(req.body["end"] as string);
   const badRequests: string[] = [];
 
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
   if (isNaN(entryId)) {
     badRequests.push("Valid Journal Entry ID is required.");
   }
