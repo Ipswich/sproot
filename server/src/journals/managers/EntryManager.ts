@@ -10,14 +10,16 @@ export default class EntryManager {
   }
 
   async getAsync(
-    journalId: number,
+    journalId?: number,
     entryId?: number,
   ): Promise<Array<SDBJournalEntry & { tags: SDBJournalEntryTag[] }>> {
     let entries: SDBJournalEntry[] = [];
-    if (entryId != null) {
-      entries = await this.#sprootDB.getJournalEntryAsync(journalId, entryId);
-    } else {
+    if (journalId != null) {
       entries = await this.#sprootDB.getJournalEntriesAsync(journalId);
+    } else if (entryId != null) {
+      entries = await this.#sprootDB.getJournalEntryAsync(entryId);
+    } else {
+      return [];
     }
 
     const entryTagLookups = await this.#sprootDB.getJournalEntryTagLookupsAsync();

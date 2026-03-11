@@ -4,14 +4,14 @@ import express, { Request, Response } from "express";
 const router = express.Router();
 
 // Journal Entry Endpoints
-router.get("/", async (req: Request, res: Response) => {
-  const result = await JournalEntriesHandlers.getAsync(req, res);
-  res.status(result.statusCode).json(result);
-  return;
-});
+// router.get("/", async (req: Request, res: Response) => {
+//   const result = await JournalEntriesHandlers.getByJournalIdAsync(req, res);
+//   res.status(result.statusCode).json(result);
+//   return;
+// });
 
 router.get("/:entryId", async (req: Request, res: Response) => {
-  const result = await JournalEntriesHandlers.getAsync(req, res);
+  const result = await JournalEntriesHandlers.getByEntryIdAsync(req, res);
   res.status(result.statusCode).json(result);
   return;
 });
