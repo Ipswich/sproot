@@ -33,7 +33,7 @@ describe("EntryManager.ts tests", () => {
           title: null,
           content: "entry",
           createdAt: "2020-01-01",
-          editedAt: null,
+          editedAt: "2020-01-01",
         },
         {
           id: 2,
@@ -41,7 +41,7 @@ describe("EntryManager.ts tests", () => {
           title: null,
           content: "entry2",
           createdAt: "2020-01-01",
-          editedAt: null,
+          editedAt: "2020-01-01",
         },
       ];
       const lookups: SDBJournalEntryTagLookup[] = [
@@ -93,7 +93,7 @@ describe("EntryManager.ts tests", () => {
           title: null,
           content: "entry",
           createdAt: "2020-01-01",
-          editedAt: null,
+          editedAt: "2020-01-01",
         },
       ];
       const lookups: SDBJournalEntryTagLookup[] = [{ id: 1, journalEntryId: 1, tagId: 5 }];

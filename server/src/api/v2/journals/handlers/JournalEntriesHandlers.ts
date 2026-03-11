@@ -61,28 +61,29 @@ export async function getAsync(
         };
         return response;
       }
+    }
+    const doesJournalExist = await journalService.journalManager.getJournalsAsync(journalId);
+    if (!doesJournalExist || doesJournalExist.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal with ID ${journalId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
     } else {
       results = await journalService.entryManager.getAsync(journalId);
-      if (results.length == 0) {
-        response = {
-          statusCode: 404,
-          error: {
-            name: "Not Found",
-            url: req.originalUrl,
-            details: [`Journal Entries in Journal with ID ${journalId} not found.`],
-          },
-          ...res.locals["defaultProperties"],
-        };
-        return response;
-      }
+      response = {
+        statusCode: 200,
+        content: {
+          data: results,
+        },
+        ...res.locals["defaultProperties"],
+      };
     }
-    response = {
-      statusCode: 200,
-      content: {
-        data: results,
-      },
-      ...res.locals["defaultProperties"],
-    };
+    return response;
   } catch (error) {
     response = {
       statusCode: 503,
@@ -425,8 +426,7 @@ export async function addTagAsync(
         name: "Service Unavailable",
         url: req.originalUrl,
         details: [
-          `Failed to add tag with ID ${tagId} to Journal Entry with ID ${entryId}: ${
-            (error as Error).message
+          `Failed to add tag with ID ${tagId} to Journal Entry with ID ${entryId}: ${(error as Error).message
           }`,
         ],
       },
@@ -517,8 +517,7 @@ export async function removeTagAsync(
         name: "Service Unavailable",
         url: req.originalUrl,
         details: [
-          `Failed to remove tag with ID ${tagId} from Journal Entry with ID ${entryId}: ${
-            (error as Error).message
+          `Failed to remove tag with ID ${tagId} from Journal Entry with ID ${entryId}: ${(error as Error).message
           }`,
         ],
       },

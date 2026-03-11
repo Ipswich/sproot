@@ -345,20 +345,20 @@ export class SprootDB implements ISprootDB {
   async getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]> {
     return this.#connection("journal_entries")
       .where("journal_id", journalId)
-      .select("id", "journal_id as journalId", "name", "text", "createdAt", "editedAt");
+      .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
   }
 
   async getJournalEntryAsync(journalId: number, entryId: number): Promise<SDBJournalEntry[]> {
     return this.#connection("journal_entries")
       .where("id", entryId)
       .andWhere("journal_id", journalId)
-      .select("id", "journal_id as journalId", "name", "text", "createdAt", "editedAt");
+      .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
   }
 
   async addJournalEntryAsync(
     journalId: number,
     title: string | null,
-    text: string,
+    content: string,
     createdAt?: string | null,
   ): Promise<number> {
     return (
@@ -366,9 +366,9 @@ export class SprootDB implements ISprootDB {
         await this.#connection("journal_entries").insert({
           journal_id: journalId,
           title,
-          text,
+          content,
           createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          editedAt: null,
+          editedAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
         })
       )[0] ?? -1
     );
@@ -379,7 +379,7 @@ export class SprootDB implements ISprootDB {
       journal_id: entry.journalId,
       title: entry.title,
       content: entry.content,
-      createdAt: entry.createdAt,
+      createdAt: entry.createdAt, 
       editedAt: entry.editedAt,
     });
   }

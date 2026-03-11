@@ -4,7 +4,7 @@ type SDBJournalEntry = {
   title: string | null;
   content: string;
   createdAt: string;
-  editedAt: string | null;
+  editedAt: string;
 };
 
 export type { SDBJournalEntry };
