@@ -30,18 +30,18 @@ describe("EntryManager.ts tests", () => {
         {
           id: 1,
           journalId: 10,
-          name: null,
-          text: "entry",
-          createDate: "2020-01-01",
-          editedDate: null,
+          title: null,
+          content: "entry",
+          createdAt: "2020-01-01",
+          editedAt: null,
         },
         {
           id: 2,
           journalId: 10,
-          name: null,
-          text: "entry2",
-          createDate: "2020-01-01",
-          editedDate: null,
+          title: null,
+          content: "entry2",
+          createdAt: "2020-01-01",
+          editedAt: null,
         },
       ];
       const lookups: SDBJournalEntryTagLookup[] = [
@@ -63,7 +63,7 @@ describe("EntryManager.ts tests", () => {
       const entryResult1 = res[0];
       assert.isDefined(entryResult1);
       assert.strictEqual(entryResult1!.id, 1);
-      assert.strictEqual(entryResult1!.text, "entry");
+      assert.strictEqual(entryResult1!.content, "entry");
       const entryTags1 = entryResult1!.tags;
       assert.isDefined(entryTags1);
       assert.strictEqual(entryTags1.length, 1);
@@ -74,7 +74,7 @@ describe("EntryManager.ts tests", () => {
       const entryResult2 = res[1];
       assert.isDefined(entryResult2);
       assert.strictEqual(entryResult2!.id, 2);
-      assert.strictEqual(entryResult2!.text, "entry2");
+      assert.strictEqual(entryResult2!.content, "entry2");
       const entryTags2 = entryResult2!.tags;
       assert.isDefined(entryTags2);
       assert.strictEqual(entryTags2.length, 2);
@@ -90,10 +90,10 @@ describe("EntryManager.ts tests", () => {
         {
           id: 1,
           journalId: 10,
-          name: null,
-          text: "entry",
-          createDate: "2020-01-01",
-          editedDate: null,
+          title: null,
+          content: "entry",
+          createdAt: "2020-01-01",
+          editedAt: null,
         },
       ];
       const lookups: SDBJournalEntryTagLookup[] = [{ id: 1, journalEntryId: 1, tagId: 5 }];
@@ -108,7 +108,7 @@ describe("EntryManager.ts tests", () => {
       const entryResult = res[0];
       assert.isDefined(entryResult);
       assert.strictEqual(entryResult!.id, 1);
-      assert.strictEqual(entryResult!.text, "entry");
+      assert.strictEqual(entryResult!.content, "entry");
       const entryTags = entryResult!.tags;
       assert.isDefined(entryTags);
       assert.strictEqual(entryTags.length, 1);

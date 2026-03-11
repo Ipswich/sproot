@@ -11,7 +11,7 @@ export async function up(knex: Knex): Promise<void> {
       table.string("icon", 64).defaultTo(null);
       table.string("color", 32).defaultTo(null);
       table.dateTime("startDate").notNullable().defaultTo(knex.fn.now());
-      table.dateTime("editedDate").notNullable().defaultTo(knex.fn.now());
+      table.dateTime("editedAt").notNullable().defaultTo(knex.fn.now());
       table.dateTime("archivedDate").defaultTo(null);
       table.primary(["id"]);
       setTableDefaults(table);
@@ -32,7 +32,7 @@ export async function up(knex: Knex): Promise<void> {
     await knex.schema.createTable("journal_tag_lookup", (table) => {
       table.increments("id").notNullable();
       table
-        .integer("journal_id", 10)
+        .integer("journal_id")
         .unsigned()
         .notNullable()
         .references("id")
@@ -40,7 +40,7 @@ export async function up(knex: Knex): Promise<void> {
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table
-        .integer("tag_id", 10)
+        .integer("tag_id")
         .unsigned()
         .notNullable()
         .references("id")
@@ -59,20 +59,19 @@ export async function up(knex: Knex): Promise<void> {
     await knex.schema.createTable("journal_entries", (table) => {
       table.increments("id").notNullable();
       table
-        .integer("journal_id", 10)
+        .integer("journal_id")
         .unsigned()
         .notNullable()
         .references("id")
         .inTable("journals")
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
-      table.string("title", 64).defaultTo(null); // Do journal entries need titles?
-      table.text("text").notNullable();
-      table.dateTime("createDate").notNullable().defaultTo(knex.fn.now());
-      table.dateTime("editedDate").defaultTo(null);
+      table.string("title", 64).defaultTo(null);
+      table.text("content").notNullable();
+      table.dateTime("createdAt").notNullable().defaultTo(knex.fn.now());
+      table.dateTime("editedAt").defaultTo(null);
       table.primary(["id"]);
-      table.index(["journal_id"]);
-      table.index(["createDate"]);
+      table.index(["journal_id", "createdAt"]);
       setTableDefaults(table);
     });
   }
@@ -91,7 +90,7 @@ export async function up(knex: Knex): Promise<void> {
     await knex.schema.createTable("journal_entry_tag_lookup", (table) => {
       table.increments("id").notNullable();
       table
-        .integer("journal_entry_id", 10)
+        .integer("journal_entry_id")
         .unsigned()
         .notNullable()
         .references("id")
@@ -99,7 +98,7 @@ export async function up(knex: Knex): Promise<void> {
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
       table
-        .integer("tag_id", 10)
+        .integer("tag_id")
         .unsigned()
         .notNullable()
         .references("id")
@@ -118,7 +117,7 @@ export async function up(knex: Knex): Promise<void> {
     await knex.schema.createTable("journal_entry_device_data", (table) => {
       table.increments("id").notNullable();
       table
-        .integer("journal_entry_id", 10)
+        .integer("journal_entry_id")
         .unsigned()
         .notNullable()
         .references("id")
@@ -144,6 +143,15 @@ export async function down(knex: Knex): Promise<void> {
   // drop in reverse order to satisfy FKs
   if (await knex.schema.hasTable("journal_entry_device_data")) {
     await knex.schema.dropTable("journal_entry_device_data");
+  }
+  // Cleanup DB-level enum type for Postgres (best-effort)
+  try {
+    const client = knex?.client?.config?.client ?? "";
+    if (typeof client === "string" && client.startsWith("pg")) {
+      await knex.raw("DROP TYPE IF EXISTS device_type");
+    }
+  } catch (e) {
+    // ignore errors during cleanup
   }
   if (await knex.schema.hasTable("journal_entry_tag_lookup")) {
     await knex.schema.dropTable("journal_entry_tag_lookup");

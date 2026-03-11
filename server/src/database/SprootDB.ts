@@ -264,7 +264,7 @@ export class SprootDB implements ISprootDB {
           icon,
           color,
           startDate: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          editedDate: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+          editedAt: startDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
           archivedDate: null,
         })
       )[0] ?? -1
@@ -281,7 +281,7 @@ export class SprootDB implements ISprootDB {
         icon: journal.icon,
         color: journal.color,
         startDate: journal.startDate,
-        editedDate: journal.editedDate,
+        editedAt: journal.editedAt,
         archivedDate: journal.archivedDate,
       });
   }
@@ -335,21 +335,21 @@ export class SprootDB implements ISprootDB {
   async getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]> {
     return this.#connection("journal_entries")
       .where("journal_id", journalId)
-      .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
+      .select("id", "journal_id as journalId", "name", "text", "createdAt", "editedAt");
   }
 
   async getJournalEntryAsync(journalId: number, entryId: number): Promise<SDBJournalEntry[]> {
     return this.#connection("journal_entries")
       .where("id", entryId)
       .andWhere("journal_id", journalId)
-      .select("id", "journal_id as journalId", "name", "text", "createDate", "editedDate");
+      .select("id", "journal_id as journalId", "name", "text", "createdAt", "editedAt");
   }
 
   async addJournalEntryAsync(
     journalId: number,
     name: string | null,
     text: string,
-    createDate?: string | null,
+    createdAt?: string | null,
   ): Promise<number> {
     return (
       (
@@ -357,8 +357,8 @@ export class SprootDB implements ISprootDB {
           journal_id: journalId,
           name,
           text,
-          createDate: createDate ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          editedDate: null,
+          createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+          editedAt: null,
         })
       )[0] ?? -1
     );
@@ -368,9 +368,9 @@ export class SprootDB implements ISprootDB {
     return this.#connection("journal_entries").where("id", entry.id).update({
       journal_id: entry.journalId,
       title: entry.title,
-      text: entry.text,
-      createDate: entry.createDate,
-      editedDate: entry.editedDate,
+      content: entry.content,
+      createdAt: entry.createdAt,
+      editedAt: entry.editedAt,
     });
   }
 

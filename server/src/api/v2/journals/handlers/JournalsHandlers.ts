@@ -110,7 +110,7 @@ export async function addAsync(
           archived: false,
           archivedDate: null,
           startDate: startDate.toISOString(),
-          editedDate: startDate.toISOString(),
+          editedAt: startDate.toISOString(),
         } as SDBJournal,
       },
       ...res.locals["defaultProperties"],
@@ -210,7 +210,7 @@ export async function updateAsync(
         : String(req.body["color"]);
 
   const startDate = existingJournal[0]!.journal.startDate;
-  const editedDate = new Date().toISOString();
+  const editedAt = new Date().toISOString();
   const archivedDate =
     archived === true && !existingJournal[0]!.journal.archived
       ? new Date().toISOString()
@@ -227,7 +227,7 @@ export async function updateAsync(
       color,
       archived,
       startDate,
-      editedDate,
+      editedAt,
       archivedDate,
     });
 
@@ -242,7 +242,7 @@ export async function updateAsync(
           color,
           archived,
           startDate,
-          editedDate,
+          editedAt,
           archivedDate,
         },
       },

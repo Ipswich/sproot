@@ -5433,6 +5433,8 @@ paths:
                               example:
                                 - "Failed to add journal tag to database."
                                 - "Database connection failed."
+
+  /api/v2/tags/journals/{tagId}:
     patch:
       security:
         - bearerAuth: []
@@ -5660,7 +5662,7 @@ paths:
                               example:
                                 - "Failed to delete journal tag from database."
                                 - "Database connection failed."
-  /api/v2/tags/journal-entries:
+  /api/v2/tags/entries:
     get:
       security:
         - bearerAuth: []
@@ -5817,6 +5819,8 @@ paths:
                               example:
                                 - "Failed to add journal entry tag to database."
                                 - "Database connection failed."
+  
+  /api/v2/tags/entries/{tagId}:
     patch:
       security:
         - bearerAuth: []
@@ -6049,9 +6053,9 @@ paths:
         - cookieAuth: []
       tags:
         - "Journals"
-      summary: Get all journal entries.
+      summary: Get all journals.
       description: >
-        Returns a list of all journal entries. This includes basic information about each entry, such as
+        Returns a list of all journals. This includes basic information about each journal, such as
         name, id, and associated tags.
       responses:
         200:
@@ -6109,7 +6113,7 @@ paths:
                           details:
                             items:
                               example:
-                                - "Failed to get journal entries from database."
+                                - "Failed to get journals from database."
                                 - "Database connection failed."
     post:
       security:
@@ -6117,10 +6121,10 @@ paths:
         - cookieAuth: []
       tags:
         - "Journals"
-      summary: Add a new journal entry.
+      summary: Add a new journal.
       description: >
-        Adds a new journal entry to the service. Returns the information
-        used to create the journal entry.
+        Adds a new journal to the service. Returns the information
+        used to create the journal.
       requestBody:
         required: true
         content:
@@ -6129,7 +6133,7 @@ paths:
               $ref: "#/components/schemas/SDBJournal"
       responses:
         201:
-          description: "Journal entry created"
+          description: "Journal created"
           content:
             application/json:
               schema:
@@ -6199,14 +6203,15 @@ paths:
                           details:
                             items:
                               example:
-                                - "Failed to add journal entry to database."
+                                - "Failed to add journal to database."
                                 - "Database connection failed."
+  
   /api/v2/journals/{journalId}:
     parameters:
       - in: path
         name: journalId
         required: true
-        description: "Journal entry Id"
+        description: "Journal Id"
         schema:
           type: string
         example: "1"
@@ -6216,9 +6221,9 @@ paths:
         - cookieAuth: []
       tags:
         - "Journals"
-      summary: Get a journal entry by ID.
+      summary: Get a journal by ID.
       description: >
-        Returns a journal entry based on the provided ID. This includes all information about the entry, such as
+        Returns a journal based on the provided ID. This includes all information about the journal, such as
         name, id, associated tags, and content.
       responses:
         200:
@@ -6293,7 +6298,7 @@ paths:
                           details:
                             items:
                               example:
-                                - "Failed to get journal entry from database."
+                                - "Failed to get journal from database."
                                 - "Database connection failed."
     patch:
       security:
@@ -6301,9 +6306,9 @@ paths:
         - cookieAuth: []
       tags:
         - "Journals"
-      summary: Update a journal entry.
+      summary: Update a journal.
       description: >
-        Updates a journal entry. This operation changes only the fields provided.
+        Updates a journal. This operation changes only the fields provided.
       requestBody:
         required: true
         content:
@@ -6312,7 +6317,7 @@ paths:
               $ref: "#/components/schemas/SDBJournal"
       responses:
         200:
-          description: "Journal entry updated"
+          description: "Journal updated"
           content:
             application/json:
               schema:
@@ -6382,7 +6387,7 @@ paths:
                             example: "/api/v2/journals/-1"
                           details:
                             items:
-                              example: "Journal entry with ID -1 not found."
+                              example: "Journal with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -6402,7 +6407,7 @@ paths:
                           details:
                             items:
                               example:
-                                - "Failed to update journal entry in database."
+                                - "Failed to update journal in database."
                                 - "Database connection failed."
     delete:
       security:
@@ -6410,12 +6415,12 @@ paths:
         - cookieAuth: []
       tags:
         - "Journals"
-      summary: Delete a journal entry.
+      summary: Delete a journal.
       description: >
-        Deletes a journal entry. This operation is permanent and cannot be undone.
+        Deletes a journal. This operation is permanent and cannot be undone.
       responses:
         200:
-          description: "Journal entry deleted"
+          description: "Journal deleted"
           content:
             application/json:
               schema:
@@ -6427,7 +6432,7 @@ paths:
                       content:
                         properties:
                           data:
-                            example: "Journal entry with ID 1 successfully deleted."
+                            example: "Journal with ID 1 successfully deleted."
         400:
           description: "Bad request"
           content:
@@ -6446,7 +6451,7 @@ paths:
                             example: "/api/v2/journals/1"
                           details:
                             example:
-                              - "Invalid or missing journal entry Id."
+                              - "Invalid or missing journal Id."
         401:
           description: "Unauthorized"
           content:
@@ -6484,7 +6489,7 @@ paths:
                             example: "/api/v2/journals/-1"
                           details:
                             items:
-                              example: "Journal entry with ID -1 not found."
+                              example: "Journal with ID -1 not found."
         503:
           description: "Service unavailable"
           content:
@@ -6504,7 +6509,7 @@ paths:
                           details:
                             items:
                               example:
-                                - "Failed to delete journal entry."
+                                - "Failed to delete journal."
                                 - "Database connection failed."
   /api/v2/journals/{journalId}/tags:
     put:
@@ -6966,17 +6971,17 @@ paths:
                                 - "Failed to add journal entry to database."
                                 - "Database connection failed."
   
-  /api/v2/journals/{journalId}/entries/{entryId}:
+  /api/v2/entries/{entryId}:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Get a journal entry by ID.
       description: >
         Returns a journal entry based on the provided journal ID and entry ID. This includes all information about the entry, such as
-        name, id, associated tags, and content.
+        title, id, associated tags, and content.
       parameters:
         - in: path
           name: journalId
@@ -7072,7 +7077,7 @@ paths:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Update a journal entry.
       description: >
         Updates a journal entry. This operation changes only the fields provided.
@@ -7196,7 +7201,7 @@ paths:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Delete a journal entry.
       description: >
         Deletes a journal entry. This operation is permanent and cannot be undone.
@@ -7308,13 +7313,13 @@ paths:
                               example:
                                 - "Failed to delete journal entry."
                                 - "Database connection failed."
-  /api/v2/journals/{journalId}/entries/{entryId}/tags:
+  /api/v2/entries/{entryId}/tags:
     put:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Add a tag to a journal entry.
       description: >
         Adds a tag to a journal entry based on the provided journal ID, entry ID, and tag ID. Returns the information
@@ -7440,13 +7445,14 @@ paths:
                               example:
                                 - "Failed to add tag to journal entry in database."
                                 - "Database connection failed."
-  /api/v2/journals/{journalId}/entries/{entryId}/tags/{tagId}:
+
+  /api/v2/entries/{entryId}/tags/{tagId}:
     delete:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Remove a tag from a journal entry.
       description: >
         Removes a tag from a journal entry based on the provided journal ID, entry ID, and tag ID. Returns the information
@@ -7548,17 +7554,17 @@ paths:
                             items:
                               example: "Journal entry with ID -1 not found in journal with ID 1."
 
-  /api/v2/journals/{journalId}/entries/{entryId}/sensor-data:
+  /api/v2/entries/{entryId}/sensor-data:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Get all sensor data for a journal entry.
       description: >
         Returns a list of all sensor data associated with a journal entry based on the provided journal ID and entry ID. This includes all information about each piece of sensor data, such as
-        name, id, associated tags, and content.
+        name, and id.
       parameters:
         - in: path
           name: journalId
@@ -7655,7 +7661,7 @@ paths:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Update sensor data for a journal entry.
       description: >
         Updates the sensor data associated with a journal entry. This operation replaces all existing sensor data for the entry with the provided sensor data.
@@ -7784,13 +7790,13 @@ paths:
                                 - "Failed to update journal entry sensor data in database."
                                 - "Database connection failed."
 
-  /api/v2/journals/{journalId}/entries/{entryId}/sensor-data/{sensorId}:
+  /api/v2/entries/{entryId}/sensor-data/{sensorId}:
     delete: 
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Delete sensor data for a journal entry.
       description: >
         Deletes all sensor data associated with a journal entry. This operation is permanent and cannot be undone.
@@ -7910,17 +7916,17 @@ paths:
                                 - "Failed to delete journal entry sensor data from database."
                                 - "Database connection failed."
   
-  /api/v2/journals/{journalId}/entries/{entryId}/output-data:
+  /api/v2/entries/{entryId}/output-data:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Get all output data for a journal entry.
       description: >
-        Returns a list of all output data associated with a journal entry based on the provided journal ID and entry ID. This includes all information about each piece of output data, such as
-        name, id, associated tags, and content.
+        Returns a list of all output data associated with a journal entry based on the provided journal ID and entry ID. This includes all information about each piece
+         of output data, such as device name, and id.
       parameters:
         - in: path
           name: journalId
@@ -8017,7 +8023,7 @@ paths:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Update output data for a journal entry.
       description: >
         Updates the output data associated with a journal entry. This operation replaces all existing output data for the entry with the provided output data.
@@ -8146,13 +8152,13 @@ paths:
                                 - "Failed to update journal entry output data in database."
                                 - "Database connection failed."
   
-  /api/v2/journals/{journalId}/entries/{entryId}/output-data/{outputId}:
+  /api/v2/entries/{entryId}/output-data/{outputId}:
     delete:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
-        - "Journals"
+        - "Journal Entries"
       summary: Delete output data for a journal entry.
       description: >
         Deletes all output data associated with a journal entry. This operation is permanent and cannot be undone.
@@ -8947,7 +8953,7 @@ components:
         like desrciption, icon, color, etc.
       type: object
       required:
-        - "name"
+        - "title"
         - "archived"
         - "startDate"
       properties:
@@ -8955,7 +8961,7 @@ components:
           type: number
           readOnly: true
           example: 1
-        name:
+        title:
           type: string
           example: "My Journal"
         description:
@@ -8974,15 +8980,18 @@ components:
           type: boolean
           example: false
         startDate:
+          readOnly: true
           type: string
           format: date-time
           example: "2021-01-01T00:00:00.000Z"
-        editedDate:
+        editedAt:
+          readOnly: true
           nullable: true
           type: string
           format: date-time
           example: "2021-06-01T12:00:00.000Z"
         archivedDate:
+          readOnly: true
           nullable: true
           type: string
           format: date-time
@@ -8996,8 +9005,8 @@ components:
       type: object
       required:
         - "journalId"
-        - "text"
-        - "createdDate"
+        - "content"
+        - "createdAt"
       properties:
         id:
           type: number
@@ -9010,15 +9019,16 @@ components:
           nullable: true
           type: string
           example: "Watered my fern"
-        text:
+        content:
           type: string
           example: "Gave my fern 500ml of water. The soil was pretty dry."
-        createdDate:
+        createdAt:
           readOnly: true
           type: string
           format: date-time
           example: "2021-01-01T00:00:00.000Z"
-        editedDate:
+        editedAt:
+          readOnly: true
           nullable: true
           type: string
           format: date-time

@@ -6,7 +6,7 @@ type SDBJournal = {
   icon: string | null;
   color: string | null;
   startDate: string;
-  editedDate: string | null;
+  editedAt: string | null;
   archivedDate: string | null;
 };
 

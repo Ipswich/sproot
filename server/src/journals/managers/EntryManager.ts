@@ -43,13 +43,13 @@ export default class EntryManager {
     journalId: number,
     text: string,
     name?: string | null,
-    createDate?: Date | null,
+    createdAt?: Date | null,
   ): Promise<number> {
     return this.#sprootDB.addJournalEntryAsync(
       journalId,
       name ?? null,
       text,
-      createDate?.toISOString().slice(0, 19).replace("T", " ") ?? null,
+      createdAt?.toISOString().slice(0, 19).replace("T", " ") ?? null,
     );
   }
 

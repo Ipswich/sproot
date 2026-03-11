@@ -228,7 +228,7 @@ interface ISprootDB {
     journalId: number,
     name: string | null,
     text: string,
-    createDate?: string | null,
+    createdAt?: string | null,
   ): Promise<number>;
   updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void>;
   deleteJournalEntryAsync(id: number): Promise<void>;
@@ -653,7 +653,7 @@ class MockSprootDB implements ISprootDB {
     _journalId: number,
     _name: string | null,
     _text: string,
-    _createDate?: string | null,
+    _createdAt?: string | null,
   ): Promise<number> {
     return 0;
   }

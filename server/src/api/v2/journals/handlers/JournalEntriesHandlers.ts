@@ -104,7 +104,7 @@ export async function addAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
-  const text = req.body["text"] as string | undefined;
+  const content = req.body["content"] as string | undefined;
   const title = req.body["title"] as string | undefined;
 
   const badRequests: string[] = [];
@@ -113,8 +113,8 @@ export async function addAsync(
     badRequests.push("Valid Journal ID is required.");
   }
 
-  if (text == null || text === "") {
-    badRequests.push("Journal Entry text is required.");
+  if (content == null || content === "") {
+    badRequests.push("Journal Entry content is required.");
   }
 
   if (badRequests.length > 0) {
@@ -130,13 +130,13 @@ export async function addAsync(
     return response;
   }
 
-  const createDate = new Date();
+  const createdAt = new Date();
   try {
     const newId = await journalService.entryManager.createAsync(
       journalId!,
-      text!,
+      content!,
       title,
-      createDate,
+      createdAt,
     );
 
     response = {
@@ -146,9 +146,9 @@ export async function addAsync(
           id: newId,
           journalId: journalId!,
           title,
-          text,
-          createDate: createDate.toISOString(),
-          editedDate: createDate.toISOString(),
+          content,
+          createdAt: createdAt.toISOString(),
+          editedAt: createdAt.toISOString(),
         } as SDBJournalEntry,
       },
       ...res.locals["defaultProperties"],
@@ -216,8 +216,8 @@ export async function updateAsync(
     return response;
   }
 
-  const text: string =
-    req.body["text"] == undefined ? existingEntry[0]!.text : String(req.body["text"]);
+  const content: string =
+    req.body["text"] == undefined ? existingEntry[0]!.content : String(req.body["content"]);
 
   const title: string | null =
     req.body["title"] === undefined
@@ -226,16 +226,16 @@ export async function updateAsync(
         ? null
         : String(req.body["title"]);
 
-  const editedDate = new Date();
+  const editedAt = new Date();
 
   try {
     await journalService.entryManager.updateAsync({
       id: entryId,
       journalId,
-      text,
+      content,
       title,
-      createDate: existingEntry[0]!.createDate,
-      editedDate: editedDate.toISOString(),
+      createdAt: existingEntry[0]!.createdAt,
+      editedAt: editedAt.toISOString(),
     } as SDBJournalEntry);
 
     response = {
@@ -244,10 +244,10 @@ export async function updateAsync(
         data: {
           id: entryId,
           journalId,
-          text,
+          content,
           title,
-          createDate: existingEntry[0]!.createDate,
-          editedDate: editedDate.toISOString(),
+          createdAt: existingEntry[0]!.createdAt,
+          editedAt: editedAt.toISOString(),
         },
       },
       ...res.locals["defaultProperties"],
