@@ -6803,9 +6803,15 @@ paths:
                         properties:
                           data:
                             items:
-                              allOf:
-                                - $ref: "#/components/schemas/SDBJournalEntry"
-                                - $ref: "#/components/schemas/SDBJournalEntryTag"
+                              type: object
+                              properties:
+                                journal:
+                                  $ref: "#/components/schemas/SDBJournalEntry"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalEntryTag"
+        
         401:
           description: "Unauthorized"
           content:
@@ -6996,13 +7002,6 @@ paths:
         title, id, associated tags, and content.
       parameters:
         - in: path
-          name: journalId
-          required: true
-          description: "Journal Id"
-          schema:
-            type: string
-          example: "1"
-        - in: path
           name: entryId
           required: true
           description: "Journal entry Id"
@@ -7025,6 +7024,25 @@ paths:
                           data:
                             allOf:
                               - $ref: "#/components/schemas/SDBJournalEntry"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1/entries/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal entry Id."
         401:
           description: "Unauthorized"
           content:

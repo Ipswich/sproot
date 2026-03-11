@@ -343,16 +343,26 @@ export class SprootDB implements ISprootDB {
   }
 
   async getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]> {
-    return this.#connection("journal_entries")
+    const results = await this.#connection("journal_entries")
       .where("journal_id", journalId)
       .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
+
+    return results.map((entry: SDBJournalEntry) => ({
+      ...entry,
+      createdAt: entry.createdAt.replace(" ", "T") + "Z",
+      editedAt: entry.editedAt.replace(" ", "T") + "Z",
+    }));
   }
 
-  async getJournalEntryAsync(journalId: number, entryId: number): Promise<SDBJournalEntry[]> {
-    return this.#connection("journal_entries")
+  async getJournalEntryAsync(entryId: number): Promise<SDBJournalEntry[]> {
+    const results = await this.#connection("journal_entries")
       .where("id", entryId)
-      .andWhere("journal_id", journalId)
       .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
+    return results.map((entry: SDBJournalEntry) => ({
+      ...entry,
+      createdAt: entry.createdAt.replace(" ", "T") + "Z",
+      editedAt: entry.editedAt.replace(" ", "T") + "Z",
+    }));
   }
 
   async addJournalEntryAsync(

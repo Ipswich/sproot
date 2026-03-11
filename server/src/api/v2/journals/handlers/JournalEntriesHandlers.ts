@@ -108,31 +108,44 @@ export async function addAsync(
   const content = req.body["content"] as string | undefined;
   const title = req.body["title"] as string | undefined;
 
-  const badRequests: string[] = [];
-
-  if (isNaN(journalId)) {
-    badRequests.push("Valid Journal ID is required.");
-  }
-
-  if (content == null || content === "") {
-    badRequests.push("Journal Entry content is required.");
-  }
-
-  if (badRequests.length > 0) {
-    response = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: req.originalUrl,
-        details: badRequests,
-      },
-      ...res.locals["defaultProperties"],
-    };
-    return response;
-  }
-
-  const createdAt = new Date();
   try {
+    const badRequests: string[] = [];
+
+    if (isNaN(journalId)) {
+      badRequests.push("Valid Journal ID is required.");
+    }
+    const doesJournalExist = await journalService.journalManager.getJournalsAsync(journalId);
+    if (!doesJournalExist || doesJournalExist.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal with ID ${journalId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    if (content == null || content === "") {
+      badRequests.push("Journal Entry content is required.");
+    }
+
+    if (badRequests.length > 0) {
+      response = {
+        statusCode: 400,
+        error: {
+          name: "Bad Request",
+          url: req.originalUrl,
+          details: badRequests,
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    const createdAt = new Date();
     const newId = await journalService.entryManager.createAsync(
       journalId!,
       content!,
