@@ -242,7 +242,10 @@ interface ISprootDB {
   addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number>;
   deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
 
-  getJournalEntryDeviceDataAsync(journalEntryId: number, type?: "Sensor" | "Output"): Promise<SDBJournalEntryDeviceData[]>;
+  getJournalEntryDeviceDataAsync(
+    journalEntryId: number,
+    type?: "Sensor" | "Output",
+  ): Promise<SDBJournalEntryDeviceData[]>;
   addJournalEntryDeviceDataAsync(
     journalEntryId: number,
     deviceName: string,

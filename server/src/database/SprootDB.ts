@@ -389,7 +389,7 @@ export class SprootDB implements ISprootDB {
       journal_id: entry.journalId,
       title: entry.title,
       content: entry.content,
-      createdAt: entry.createdAt, 
+      createdAt: entry.createdAt,
       editedAt: entry.editedAt,
     });
   }

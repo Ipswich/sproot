@@ -105,9 +105,7 @@ export async function getByEntryIdAsync(
         error: {
           name: "Not Found",
           url: req.originalUrl,
-          details: [
-            `Journal Entry with ID ${entryId} not found.`,
-          ],
+          details: [`Journal Entry with ID ${entryId} not found.`],
         },
         ...res.locals["defaultProperties"],
       };
@@ -293,7 +291,7 @@ export async function updateAsync(
           content,
           title,
           createdAt: existingEntry[0]!.createdAt,
-          editedAt: editedAt.toISOString()
+          editedAt: editedAt.toISOString(),
         },
       },
       ...res.locals["defaultProperties"],
@@ -459,7 +457,8 @@ export async function addTagAsync(
         name: "Service Unavailable",
         url: req.originalUrl,
         details: [
-          `Failed to add tag with ID ${tagId} to Journal Entry with ID ${entryId}: ${(error as Error).message
+          `Failed to add tag with ID ${tagId} to Journal Entry with ID ${entryId}: ${
+            (error as Error).message
           }`,
         ],
       },
@@ -546,7 +545,8 @@ export async function removeTagAsync(
         name: "Service Unavailable",
         url: req.originalUrl,
         details: [
-          `Failed to remove tag with ID ${tagId} from Journal Entry with ID ${entryId}: ${(error as Error).message
+          `Failed to remove tag with ID ${tagId} from Journal Entry with ID ${entryId}: ${
+            (error as Error).message
           }`,
         ],
       },
