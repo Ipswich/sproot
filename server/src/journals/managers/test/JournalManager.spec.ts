@@ -24,8 +24,8 @@ describe("JournalManager.ts tests", () => {
   describe("getJournalsAsync", () => {
     it("should map tags for all journals", async () => {
       const journals = [
-        { id: 1, name: "J1" },
-        { id: 2, name: "J2" },
+        { id: 1, title: "J1" },
+        { id: 2, title: "J2" },
       ];
       const tags = [
         { id: 10, name: "T1", color: null },
@@ -71,7 +71,7 @@ describe("JournalManager.ts tests", () => {
     });
 
     it("should map tags for single journal", async () => {
-      const journals = [{ id: 1, name: "J1" }];
+      const journals = [{ id: 1, title: "J1" }];
       const tags = [{ id: 10, name: "T1" }];
       const lookups = [{ journalId: 1, tagId: 10 }];
 

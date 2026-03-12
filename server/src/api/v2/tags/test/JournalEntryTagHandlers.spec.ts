@@ -48,7 +48,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const error = (await getAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "boom2");
     });
   });
@@ -81,7 +81,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, { id: 7, name: "etag", color: null });
     });
 
-    it("returns 400 when name missing", async () => {
+    it("returns 400 when title missing", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er2" } },
       } as unknown as Response;
@@ -119,7 +119,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "addFail2");
     });
   });
@@ -131,7 +131,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       } as unknown as Response;
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? {} : undefined) },
-        body: {},
+        params: { tagId: "x" },
       } as unknown as Request;
 
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
@@ -152,7 +152,8 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               ? { entryTagManager: { getTags: () => sprootDB.getJournalEntryTagsAsync() } }
               : undefined,
         },
-        body: { id: 2 },
+        params: { tagId: "2" },
+        body: {},
         originalUrl: "/api/v2/journal/entries/tags",
       } as unknown as Request;
 
@@ -180,7 +181,8 @@ describe("JournalEntryTagHandlers.ts tests", () => {
                 }
               : undefined,
         },
-        body: { id: 3, name: "n", color: "#111" },
+        params: { tagId: "3" },
+        body: { name: "n", color: "#111" },
       } as unknown as Request;
 
       const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
@@ -209,12 +211,13 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               : undefined,
           originalUrl: "/api/v2/journal/entries/tags",
         },
-        body: { id: 4, name: "b" },
+        params: { tagId: "4" },
+        body: { name: "b" },
       } as unknown as Request;
 
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "updFail");
     });
   });
@@ -226,7 +229,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       } as unknown as Response;
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? {} : undefined) },
-        body: {},
+        params: { tagId: "x" },
       } as unknown as Request;
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
@@ -247,7 +250,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               ? { entryTagManager: { getTags: () => sprootDB.getJournalEntryTagsAsync() } }
               : undefined,
         },
-        body: { id: 9 },
+        params: { tagId: "9" },
         originalUrl: "/api/v2/journal/entries/tags",
       } as unknown as Request;
 
@@ -275,7 +278,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
                 }
               : undefined,
         },
-        body: { id: 10 },
+        params: { tagId: "10" },
       } as unknown as Request;
 
       const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
@@ -303,12 +306,12 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               : undefined,
           originalUrl: "/api/v2/journal/entries/tags",
         },
-        body: { id: 11 },
+        params: { tagId: "11" },
       } as unknown as Request;
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "delFail2");
     });
   });

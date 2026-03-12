@@ -46,7 +46,7 @@ describe("JournalTagHandlers.ts tests", () => {
 
       const error = (await getAsync(mockRequest, mockResponse)) as any;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "boom");
     });
   });
@@ -116,7 +116,7 @@ describe("JournalTagHandlers.ts tests", () => {
 
       const error = (await addAsync(mockRequest, mockResponse)) as any;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "add fail");
     });
   });
@@ -152,6 +152,7 @@ describe("JournalTagHandlers.ts tests", () => {
               : undefined,
         },
         params: { tagId: "2" },
+        body: {},
         originalUrl: "/api/v2/journal/tags/2",
       } as unknown as Request;
 
@@ -216,7 +217,7 @@ describe("JournalTagHandlers.ts tests", () => {
 
       const error = (await updateAsync(mockRequest, mockResponse)) as any;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "update fail");
     });
   });
@@ -310,7 +311,7 @@ describe("JournalTagHandlers.ts tests", () => {
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as any;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Internal Server Error");
+      assert.equal(error.error.name, "Service Unavailable");
       assert.include((error.error.details as string[])[0], "del fail");
     });
   });
