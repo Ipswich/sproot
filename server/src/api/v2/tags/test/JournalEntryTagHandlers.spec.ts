@@ -8,7 +8,7 @@ import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJourn
 
 describe("JournalEntryTagHandlers.ts tests", () => {
   describe("getAsync", () => {
-    it("returns 200 with entry tags", async () => {
+    it("should return 200 and entry tags", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er1" } },
       } as unknown as Response;
@@ -26,10 +26,12 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
-      assert.deepEqual(success.content?.data, [{ id: 1, name: "et", color: null }]);
+      assert.exists(success.content);
+      assert.isArray(success.content.data);
+      assert.deepEqual(success.content.data, [{ id: 1, name: "et", color: null }]);
     });
 
-    it("returns 503 when DB fails", async () => {
+    it("should return 503 when DB fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er1" } },
       } as unknown as Response;
@@ -48,13 +50,15 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const error = (await getAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "boom2");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "boom2");
     });
   });
 
   describe("addAsync", () => {
-    it("creates entry tag and returns 201", async () => {
+    it("should return 201 and the created entry tag", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er2" } },
       } as unknown as Response;
@@ -78,10 +82,12 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
-      assert.deepEqual(success.content?.data, { id: 7, name: "etag", color: null });
+      assert.exists(success.content);
+      assert.isObject(success.content.data);
+      assert.deepEqual(success.content.data, { id: 7, name: "etag", color: null });
     });
 
-    it("returns 400 when title missing", async () => {
+    it("should return 400 when name missing", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er2" } },
       } as unknown as Response;
@@ -94,7 +100,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.equal(error.statusCode, 400);
     });
 
-    it("returns 503 when DB fails", async () => {
+    it("should return 503 when DB fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er3" } },
       } as unknown as Response;
@@ -119,13 +125,15 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "addFail2");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "addFail2");
     });
   });
 
   describe("updateAsync", () => {
-    it("returns 400 when body missing id", async () => {
+    it("should return 400 when body missing id", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er4" } },
       } as unknown as Response;
@@ -138,7 +146,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.equal(error.statusCode, 400);
     });
 
-    it("returns 404 when not found", async () => {
+    it("should return 404 when tag not found", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er4" } },
       } as unknown as Response;
@@ -161,7 +169,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.equal(error.statusCode, 404);
     });
 
-    it("updates and returns 200", async () => {
+    it("should return 200 and the updated entry tag", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er5" } },
       } as unknown as Response;
@@ -187,10 +195,12 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
-      assert.deepEqual(success.content?.data, { id: 3, name: "n", color: "#111" });
+      assert.exists(success.content);
+      assert.isObject(success.content.data);
+      assert.deepEqual(success.content.data, { id: 3, name: "n", color: "#111" });
     });
 
-    it("returns 503 when update fails", async () => {
+    it("should return 503 when update fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er6" } },
       } as unknown as Response;
@@ -217,13 +227,15 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "updFail");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "updFail");
     });
   });
 
   describe("deleteAsync", () => {
-    it("returns 400 when body.id missing", async () => {
+    it("should return 400 when body.id missing", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er7" } },
       } as unknown as Response;
@@ -236,7 +248,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.equal(error.statusCode, 400);
     });
 
-    it("returns 404 when not found", async () => {
+    it("should return 404 when tag not found", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er7" } },
       } as unknown as Response;
@@ -258,7 +270,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.equal(error.statusCode, 404);
     });
 
-    it("deletes and returns 200", async () => {
+    it("should return 200 and delete the entry tag", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er8" } },
       } as unknown as Response;
@@ -285,7 +297,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.equal(success.statusCode, 200);
     });
 
-    it("returns 503 when delete fails", async () => {
+    it("should return 503 when delete fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er9" } },
       } as unknown as Response;
@@ -311,8 +323,10 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "delFail2");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "delFail2");
     });
   });
 });

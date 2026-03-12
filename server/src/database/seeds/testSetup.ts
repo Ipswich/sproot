@@ -211,5 +211,27 @@ export async function seed(knex: Knex): Promise<void> {
     timelapseEndTime: null,
   });
 
+  // Add recent sensor and output readings so journal entry device-data attaches find data
+  const nowSql = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+  await knex("sensor_data").insert([
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 22.5,
+      units: "°C",
+      logTime: nowSql,
+    },
+  ]);
+
+  await knex("output_data").insert([
+    {
+      output_id: 1,
+      value: 1,
+      controlMode: "manual",
+      logTime: nowSql,
+    },
+  ]);
+
   console.log("Seeding complete.");
 }

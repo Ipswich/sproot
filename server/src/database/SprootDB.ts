@@ -255,7 +255,18 @@ export class SprootDB implements ISprootDB {
   }
 
   async getJournalAsync(id: number): Promise<SDBJournal[]> {
-    return this.#connection("journals").where("id", id).select("*");
+    const results = await this.#connection("journals").where("id", id).select("*");
+    return (results as SDBJournal[]).map((j: SDBJournal) => ({
+      id: j.id,
+      title: j.title,
+      description: j.description,
+      archived: j.archived,
+      icon: j.icon,
+      color: j.color,
+      createdAt: j.createdAt.replace(" ", "T") + "Z",
+      editedAt: j.editedAt.replace(" ", "T") + "Z",
+      archivedAt: j.archivedAt ? j.archivedAt.replace(" ", "T") + "Z" : null,
+    }));
   }
 
   async addJournalAsync(
@@ -445,7 +456,7 @@ export class SprootDB implements ISprootDB {
     journalEntryId: number,
     type?: "Sensor" | "Output",
   ): Promise<SDBJournalEntryDeviceData[]> {
-    return this.#connection("journal_entry_device_data as d")
+    const result = this.#connection("journal_entry_device_data as d")
       .where("d.journal_entry_id", journalEntryId)
       .modify((queryBuilder) => {
         if (type) {
@@ -460,7 +471,12 @@ export class SprootDB implements ISprootDB {
         "d.units",
         "d.readingTime",
       );
+    return (await result).map((data: SDBJournalEntryDeviceData) => ({
+      ...data,
+      readingTime: data.readingTime.replace(" ", "T") + "Z",
+    }));
   }
+
   async addJournalEntryDeviceDataAsync(
     journalEntryId: number,
     deviceName: string,

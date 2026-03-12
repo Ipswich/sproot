@@ -8958,7 +8958,6 @@ components:
       required:
         - "title"
         - "archived"
-        - "createdAt"
       properties:
         id:
           type: number
@@ -9009,7 +9008,6 @@ components:
       required:
         - "journalId"
         - "content"
-        - "createdAt"
       properties:
         id:
           readOnly: true
@@ -9062,8 +9060,8 @@ components:
           type: string
           example: "Windowsill Thermometer"
         reading:
-          type: string
-          example: "23.5"
+          type: number
+          example: 23.5
         units:
           type: string
           example: "C"

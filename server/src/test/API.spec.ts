@@ -1310,6 +1310,663 @@ describe("API Tests", async function () {
     });
   });
 
+  describe("Journal Tag Routes", () => {
+    let createdId: number;
+
+    describe("POST", () => {
+      it("should return 201 and create a journal tag", async () => {
+        const response = await request(server)
+          .post("/api/v2/tags/journals")
+          .send({ name: "APITest Journal Tag", color: "#ff0000" })
+          .expect(201);
+
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.isNumber(content.data.id);
+        assert.equal(content.data.name, "APITest Journal Tag");
+        assert.equal(content.data.color, "#ff0000");
+        createdId = content.data.id;
+      });
+    });
+
+    describe("GET", () => {
+      it("should return 200 and list journal tags", async () => {
+        const response = await request(server).get("/api/v2/tags/journals").expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 3);
+        assert.deepInclude(found, {
+          id: createdId,
+          name: "APITest Journal Tag",
+          color: "#ff0000",
+        });
+      });
+    });
+
+    describe("PATCH", () => {
+      it("should return 200 and update a journal tag", async () => {
+        const response = await request(server)
+          .patch(`/api/v2/tags/journals/${createdId}`)
+          .send({ name: "APITest Journal Tag Updated", color: "#00ff00" })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.equal(content.data.id, createdId);
+        assert.equal(content.data.name, "APITest Journal Tag Updated");
+        assert.equal(content.data.color, "#00ff00");
+      });
+    });
+
+    describe("DELETE", () => {
+      it("should return 200 and delete a journal tag", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/tags/journals/${createdId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(deleteResponse.body.content.data, `Journal tag with ID ${createdId} deleted.`);
+
+        const list = await request(server).get("/api/v2/tags/journals").expect(200);
+        validateMiddlewareValues(list);
+        const content = list.body["content"];
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isUndefined(found);
+      });
+    });
+  });
+
+  describe("Entry Tag Routes", () => {
+    let createdId: number;
+
+    describe("POST", () => {
+      it("should return 201 and create an entry tag", async () => {
+        const response = await request(server)
+          .post("/api/v2/tags/entries")
+          .send({ name: "APITest Entry Tag", color: "#abcdef" })
+          .expect(201);
+
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.isNumber(content.data.id);
+        assert.equal(content.data.name, "APITest Entry Tag");
+        assert.equal(content.data.color, "#abcdef");
+        createdId = content.data.id;
+      });
+    });
+
+    describe("GET", () => {
+      it("should return 200 and list entry tags", async () => {
+        const response = await request(server).get("/api/v2/tags/entries").expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 3);
+        assert.deepInclude(found, {
+          id: createdId,
+          name: "APITest Entry Tag",
+          color: "#abcdef",
+        });
+      });
+    });
+
+    describe("PATCH", () => {
+      it("should return 200 and update an entry tag", async () => {
+        const response = await request(server)
+          .patch(`/api/v2/tags/entries/${createdId}`)
+          .send({ name: "APITest Entry Tag Updated", color: "#123456" })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.equal(content.data.id, createdId);
+        assert.equal(content.data.name, "APITest Entry Tag Updated");
+        assert.equal(content.data.color, "#123456");
+      });
+    });
+
+    describe("DELETE", () => {
+      it("should return 200 and delete an entry tag", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/tags/entries/${createdId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Journal entry tag with ID ${createdId} deleted.`,
+        );
+
+        const list = await request(server).get("/api/v2/tags/entries").expect(200);
+        validateMiddlewareValues(list);
+        const content = list.body["content"];
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isUndefined(found);
+      });
+    });
+  });
+
+  describe("Journal Routes", () => {
+    let journalId: number;
+
+    describe("POST", () => {
+      it("should return 201 and create a journal", async () => {
+        const response = await request(server)
+          .post("/api/v2/journals")
+          .send({ title: "API Test Journal", description: "desc", archived: false })
+          .expect(201);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 9);
+        assert.containsAllKeys(content.data, [
+          "id",
+          "title",
+          "description",
+          "icon",
+          "color",
+          "archived",
+          "archivedAt",
+          "createdAt",
+          "editedAt",
+        ]);
+        assert.isNumber(content.data.id);
+        assert.equal(content.data.title, "API Test Journal");
+        assert.equal(content.data.description, "desc");
+        assert.isFalse(content.data.archived);
+        assert.isNull(content.data.icon);
+        assert.isNull(content.data.color);
+        assert.isNull(content.data.archivedAt);
+        assert.match(content.data.createdAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        assert.match(content.data.editedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        journalId = content.data.id;
+      });
+    });
+
+    describe("GET", () => {
+      it("should return 200 and list journals", async () => {
+        const response = await request(server).get("/api/v2/journals").expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find(
+          (j: any) => (j.journal ? j.journal.id : j.id) === journalId,
+        );
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 2);
+
+        const journal = found.journal ?? found;
+        assert.lengthOf(Object.keys(journal), 9);
+        assert.equal(journal.id, journalId);
+        assert.equal(journal.title, "API Test Journal");
+        assert.equal(journal.description, "desc");
+        assert.isFalse(journal.archived);
+      });
+
+      it("should return 200 and a single journal by id", async () => {
+        const response = await request(server).get(`/api/v2/journals/${journalId}`).expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const first = content.data[0];
+        assert.lengthOf(Object.keys(first), 2);
+        const journal = first.journal ?? first;
+        assert.lengthOf(Object.keys(journal), 9);
+        assert.equal(journal.id, journalId);
+        assert.equal(journal.title, "API Test Journal");
+        assert.equal(journal.description, "desc");
+        assert.isFalse(journal.archived);
+      });
+    });
+
+    describe("PATCH", () => {
+      it("should return 200 and update the journal", async () => {
+        // include required fields per OpenAPI schema
+        const getResp = await request(server).get(`/api/v2/journals/${journalId}`).expect(200);
+        const existing = getResp.body.content.data[0].journal || getResp.body.content.data[0];
+        const response = await request(server)
+          .patch(`/api/v2/journals/${journalId}`)
+          .send({ title: "API Test Journal Updated", archived: existing.archived })
+          .expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 9);
+        assert.equal(content.data.id, journalId);
+        assert.equal(content.data.title, "API Test Journal Updated");
+        assert.equal(content.data.description, "desc");
+        assert.isFalse(content.data.archived);
+      });
+    });
+
+    describe("DELETE", () => {
+      it("should return 200 and delete the journal", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/journals/${journalId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Journal with ID ${journalId} successfully deleted.`,
+        );
+
+        const list = await request(server).get("/api/v2/journals").expect(200);
+        validateMiddlewareValues(list);
+        const content = list.body["content"];
+        const found = content.data.find(
+          (j: any) => (j.journal ? j.journal.id : j.id) === journalId,
+        );
+        assert.isUndefined(found);
+      });
+    });
+
+    describe("Tags", () => {
+      let tagId: number;
+      let localJournalId: number;
+
+      it("should create a journal tag and apply it to a journal", async () => {
+        const tagResp = await request(server)
+          .post("/api/v2/tags/journals")
+          .send({ name: "API Journal Tag", color: "#123456" })
+          .expect(201);
+        validateMiddlewareValues(tagResp);
+        assert.lengthOf(Object.keys(tagResp.body.content.data), 3);
+        tagId = tagResp.body.content.data.id;
+        assert.deepInclude(tagResp.body.content.data, {
+          id: tagId,
+          name: "API Journal Tag",
+          color: "#123456",
+        });
+
+        const jResp = await request(server)
+          .post("/api/v2/journals")
+          .send({ title: "Journal To Tag", archived: false })
+          .expect(201);
+        validateMiddlewareValues(jResp);
+        assert.lengthOf(Object.keys(jResp.body.content.data), 9);
+        localJournalId = jResp.body.content.data.id;
+        assert.equal(jResp.body.content.data.title, "Journal To Tag");
+
+        const tagAddResponse = await request(server)
+          .put(`/api/v2/journals/${localJournalId}/tags`)
+          .send({ tagId: String(tagId) })
+          .expect(200);
+        validateMiddlewareValues(tagAddResponse);
+        assert.equal(
+          tagAddResponse.body.content.data,
+          `Tag with ID ${tagId} added to journal with ID ${localJournalId}.`,
+        );
+
+        const getResp = await request(server).get(`/api/v2/journals/${localJournalId}`).expect(200);
+        validateMiddlewareValues(getResp);
+        const journalRow = getResp.body.content.data[0];
+        assert.lengthOf(Object.keys(journalRow), 2);
+        assert.lengthOf(Object.keys(journalRow.journal), 9);
+        assert.isArray(journalRow.tags);
+        const found = journalRow.tags.find((t: any) => t.id === tagId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 3);
+        assert.deepInclude(found, {
+          id: tagId,
+          name: "API Journal Tag",
+          color: "#123456",
+        });
+      });
+
+      it("should remove the tag from the journal", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/journals/${localJournalId}/tags/${tagId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Tag with ID ${tagId} removed from journal with ID ${localJournalId}.`,
+        );
+
+        const getResp = await request(server).get(`/api/v2/journals/${localJournalId}`).expect(200);
+        validateMiddlewareValues(getResp);
+        const journalRow = getResp.body.content.data[0];
+        assert.lengthOf(Object.keys(journalRow), 2);
+        assert.lengthOf(Object.keys(journalRow.journal), 9);
+        assert.isArray(journalRow.tags);
+        const found = journalRow.tags.find((t: any) => t.id === tagId);
+        assert.isUndefined(found);
+      });
+    });
+
+    describe("Entries", () => {
+      let localJournalId: number;
+      let localEntryId: number;
+
+      before(async () => {
+        const resp = await request(server)
+          .post("/api/v2/journals")
+          .send({ title: "Journal Router Entries Journal", archived: false })
+          .expect(201);
+        localJournalId = resp.body.content.data.id;
+      });
+
+      describe("POST", () => {
+        it("should return 201 and create an entry via journal router", async () => {
+          const response = await request(server)
+            .post(`/api/v2/journals/${localJournalId}/entries`)
+            .send({ content: "Journal Router Entry content", title: "JR Entry" })
+            .expect(201);
+          validateMiddlewareValues(response);
+          const content = response.body.content;
+          assert.lengthOf(Object.keys(content.data), 6);
+          assert.containsAllKeys(content.data, ["id", "journalId", "content", "createdAt"]);
+          assert.equal(content.data.title, "JR Entry");
+          assert.equal(content.data.journalId, localJournalId);
+          assert.equal(content.data.content, "Journal Router Entry content");
+          assert.match(content.data.createdAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+          assert.match(content.data.editedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+          localEntryId = content.data.id;
+        });
+      });
+
+      describe("GET", () => {
+        it("should return 200 and list entries for the journal via journal router", async () => {
+          const response = await request(server)
+            .get(`/api/v2/journals/${localJournalId}/entries`)
+            .expect(200);
+          validateMiddlewareValues(response);
+          const content = response.body.content;
+          assert.isArray(content.data);
+          const found = content.data.find((e: any) => e.id === localEntryId);
+          assert.isObject(found);
+          assert.lengthOf(Object.keys(found), 7);
+          assert.equal(found.journalId, localJournalId);
+          assert.equal(found.title, "JR Entry");
+          assert.equal(found.content, "Journal Router Entry content");
+        });
+      });
+    });
+  });
+
+  describe("Entry Routes", () => {
+    let journalId: number;
+    let entryId: number;
+
+    before(async () => {
+      // create a journal to hold entries (satisfy OpenAPI schema)
+      const resp = await request(server)
+        .post("/api/v2/journals")
+        .send({ title: "Entries Journal", archived: false })
+        .expect(201);
+      journalId = resp.body.content.data.id;
+    });
+
+    describe("POST", () => {
+      it("should return 201 and create an entry", async () => {
+        const response = await request(server)
+          .post(`/api/v2/journals/${journalId}/entries`)
+          .send({ content: "Entry content", title: "Entry Title" })
+          .expect(201);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 6);
+        assert.containsAllKeys(content.data, ["id", "journalId", "content", "createdAt"]);
+        assert.equal(content.data.journalId, journalId);
+        assert.equal(content.data.title, "Entry Title");
+        assert.equal(content.data.content, "Entry content");
+        assert.match(content.data.createdAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        assert.match(content.data.editedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        entryId = content.data.id;
+      });
+    });
+
+    describe("GET", () => {
+      it("should return 200 and list entries for a journal", async () => {
+        const response = await request(server)
+          .get(`/api/v2/journals/${journalId}/entries`)
+          .expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find((e: any) => e.id === entryId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 7);
+        assert.equal(found.journalId, journalId);
+        assert.equal(found.title, "Entry Title");
+        assert.equal(found.content, "Entry content");
+      });
+
+      it("should return 200 and a single entry by id", async () => {
+        const response = await request(server).get(`/api/v2/entries/${entryId}`).expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        assert.lengthOf(Object.keys(content.data[0]), 7);
+        assert.equal(content.data[0].id, entryId);
+        assert.equal(content.data[0].journalId, journalId);
+        assert.equal(content.data[0].title, "Entry Title");
+        assert.equal(content.data[0].content, "Entry content");
+      });
+    });
+
+    describe("PATCH", () => {
+      it("should return 200 and update the entry", async () => {
+        const response = await request(server)
+          .patch(`/api/v2/entries/${entryId}`)
+          .send({ text: true, content: "Updated content", title: "Updated Title" })
+          .expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 6);
+        assert.equal(content.data.id, entryId);
+        assert.equal(content.data.journalId, journalId);
+        assert.equal(content.data.title, "Updated Title");
+        assert.equal(content.data.content, "Updated content");
+      });
+    });
+
+    describe("DELETE", () => {
+      it("should return 200 and delete the entry", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/entries/${entryId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Journal Entry with ID ${entryId} successfully deleted.`,
+        );
+
+        const resp = await request(server).get(`/api/v2/journals/${journalId}/entries`).expect(200);
+        validateMiddlewareValues(resp);
+        const content = resp.body["content"];
+        const found = content.data.find((e: any) => e.id === entryId);
+        assert.isUndefined(found);
+      });
+    });
+
+    describe("Tags", () => {
+      let localEntryId: number;
+      let entryTagId: number;
+
+      it("should create an entry tag and apply it to an entry", async () => {
+        // create a tag for entries
+        const tagResp = await request(server)
+          .post("/api/v2/tags/entries")
+          .send({ name: "API Entry Tag", color: "#654321" })
+          .expect(201);
+        validateMiddlewareValues(tagResp);
+        assert.lengthOf(Object.keys(tagResp.body.content.data), 3);
+        entryTagId = tagResp.body.content.data.id;
+        assert.deepInclude(tagResp.body.content.data, {
+          id: entryTagId,
+          name: "API Entry Tag",
+          color: "#654321",
+        });
+
+        // create an entry to tag
+        const eResp = await request(server)
+          .post(`/api/v2/journals/${journalId}/entries`)
+          .send({ content: "Entry to Tag", title: "Tagged Entry" })
+          .expect(201);
+        validateMiddlewareValues(eResp);
+        assert.lengthOf(Object.keys(eResp.body.content.data), 6);
+        localEntryId = eResp.body.content.data.id;
+        assert.equal(eResp.body.content.data.title, "Tagged Entry");
+        assert.equal(eResp.body.content.data.content, "Entry to Tag");
+
+        // add the tag to the entry
+        const tagAddResponse = await request(server)
+          .put(`/api/v2/entries/${localEntryId}/tags`)
+          .send({ tagId: String(entryTagId) })
+          .expect(200);
+        validateMiddlewareValues(tagAddResponse);
+        assert.equal(
+          tagAddResponse.body.content.data,
+          `Tag with ID ${entryTagId} successfully added to Journal Entry with ID ${localEntryId}.`,
+        );
+
+        // verify tag present on entry
+        const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);
+        validateMiddlewareValues(getResp);
+        const row = getResp.body.content.data[0];
+        assert.lengthOf(Object.keys(row), 7);
+        assert.isArray(row.tags);
+        const found = row.tags.find((t: any) => t.id === entryTagId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 3);
+        assert.deepInclude(found, {
+          id: entryTagId,
+          name: "API Entry Tag",
+          color: "#654321",
+        });
+      });
+
+      it("should remove the tag from the entry", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/entries/${localEntryId}/tags/${entryTagId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Tag with ID ${entryTagId} successfully removed from Journal Entry with ID ${localEntryId}.`,
+        );
+
+        const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);
+        validateMiddlewareValues(getResp);
+        const row = getResp.body.content.data[0];
+        assert.lengthOf(Object.keys(row), 7);
+        assert.isArray(row.tags);
+        const found = row.tags.find((t: any) => t.id === entryTagId);
+        assert.isUndefined(found);
+      });
+    });
+
+    describe("Device Data", () => {
+      let dataEntryId: number;
+
+      before(async () => {
+        const resp = await request(server)
+          .post(`/api/v2/journals/${journalId}/entries`)
+          .send({ content: "Entry for data", title: "Data Entry" })
+          .expect(201);
+        dataEntryId = resp.body.content.data.id;
+      });
+
+      describe("Sensor Data", () => {
+        it("should attach sensor data and return 200", async () => {
+          const start = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+          const end = new Date().toISOString();
+          const response = await request(server)
+            .put(`/api/v2/entries/${dataEntryId}/sensor-data`)
+            .send({ sensorId: 1, start, end })
+            .expect(200);
+          validateMiddlewareValues(response);
+          assert.equal(
+            response.body.content.data,
+            `Sensor data from sensor 1 attached to journal entry ${dataEntryId} successfully.`,
+          );
+        });
+
+        it("should return 200 and sensor data", async () => {
+          const response = await request(server)
+            .get(`/api/v2/entries/${dataEntryId}/sensor-data`)
+            .expect(200);
+          validateMiddlewareValues(response);
+          const content = response.body.content;
+          assert.isArray(content.data);
+          assert.containsAllKeys(content.data[0], [
+            "id",
+            "journalEntryId",
+            "deviceName",
+            "reading",
+            "units",
+            "readingTime",
+          ]);
+        });
+
+        it("should detach sensor data and return 200", async () => {
+          const response = await request(server)
+            .delete(`/api/v2/entries/${dataEntryId}/sensor-data/1`)
+            .expect(200);
+          validateMiddlewareValues(response);
+          assert.equal(
+            response.body.content.data,
+            `Sensor data from sensor 1 detached from journal entry ${dataEntryId} successfully.`,
+          );
+        });
+      });
+
+      describe("Output Data", () => {
+        it("should attach output data and return 200", async () => {
+          const start = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+          const end = new Date().toISOString();
+          const response = await request(server)
+            .put(`/api/v2/entries/${dataEntryId}/output-data`)
+            .send({ outputId: 1, start, end })
+            .expect(200);
+          validateMiddlewareValues(response);
+          assert.equal(
+            response.body.content.data,
+            `Output data from output 1 attached to journal entry ${dataEntryId} successfully.`,
+          );
+        });
+
+        it("should return 200 and output data", async () => {
+          const response = await request(server)
+            .get(`/api/v2/entries/${dataEntryId}/output-data`)
+            .expect(200);
+          validateMiddlewareValues(response);
+          const content = response.body.content;
+          assert.isArray(content.data);
+          assert.containsAllKeys(content.data[0], [
+            "id",
+            "journalEntryId",
+            "deviceName",
+            "reading",
+            "units",
+            "readingTime",
+          ]);
+        });
+
+        it("should detach output data and return 200", async () => {
+          const response = await request(server)
+            .delete(`/api/v2/entries/${dataEntryId}/output-data/1`)
+            .expect(200);
+          validateMiddlewareValues(response);
+          assert.equal(
+            response.body.content.data,
+            `Output data from output 1 detached from journal entry ${dataEntryId} successfully.`,
+          );
+        });
+      });
+    });
+  });
+
   describe("Subcontroller Routes", async () => {
     describe("GET", async () => {
       it("should return 200 and a record of subcontrollers", async () => {

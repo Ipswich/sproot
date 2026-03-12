@@ -30,7 +30,7 @@ export async function getAsync(
   }
 
   try {
-    const results = await journalService.journalManager.getJournalsAsync();
+    const results = await journalService.journalManager.getJournalsAsync(journalId);
     if (journalId && results.length == 0) {
       response = {
         statusCode: 404,
@@ -209,8 +209,12 @@ export async function updateAsync(
         ? null
         : String(req.body["color"]);
 
-  const createdAt = existingJournal[0]!.journal.createdAt;
-  const editedAt = new Date().toISOString();
+  // existingJournal contains ISO formatted timestamps for responses
+  const createdAtIso = existingJournal[0]!.journal.createdAt;
+  // convert ISO formatted createdAt back to DB datetime format (YYYY-MM-DD HH:MM:SS)
+  const createdAt = createdAtIso.replace("T", " ").replace("Z", "");
+  const editedAtIso = new Date().toISOString();
+  const editedAt = editedAtIso.slice(0, 19).replace("T", " ");
   const archivedAt =
     archived === true && !existingJournal[0]!.journal.archived
       ? new Date().toISOString()
@@ -241,8 +245,8 @@ export async function updateAsync(
           icon,
           color,
           archived,
-          createdAt,
-          editedAt,
+          createdAt: createdAtIso,
+          editedAt: editedAtIso,
           archivedAt,
         },
       },

@@ -8,7 +8,7 @@ import sinon from "sinon";
 
 describe("DeviceZoneHandlers.ts", function () {
   describe("getAsync", function () {
-    it("it should return a 200 and a list of device zones", async function () {
+    it("should return a 200 and a list of device zones", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       mockSprootDb.getDeviceZonesAsync.resolves([
         { id: 1, name: "Zone 1" },
@@ -39,7 +39,7 @@ describe("DeviceZoneHandlers.ts", function () {
       assert.equal((success.content!.data as SDBDeviceZone[])[1]!.name, "Zone 2");
     });
 
-    it("it should return a 503 and an error message", async function () {
+    it("should return a 503 and an error message", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       mockSprootDb.getDeviceZonesAsync.rejects(new Error("Database error"));
       const mockRequest = {

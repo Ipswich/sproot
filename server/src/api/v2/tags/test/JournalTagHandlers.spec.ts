@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
 import { assert } from "chai";
 import sinon from "sinon";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -6,7 +7,7 @@ import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/Journa
 
 describe("JournalTagHandlers.ts tests", () => {
   describe("getAsync", () => {
-    it("returns 200 with tags", async () => {
+    it("should return 200 and tags", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r1" } },
       } as unknown as Response;
@@ -22,12 +23,14 @@ describe("JournalTagHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const success = (await getAsync(mockRequest, mockResponse)) as any;
+      const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
-      assert.deepEqual(success.content?.data, [{ id: 1, name: "t", color: null }]);
+      assert.exists(success.content);
+      assert.isArray(success.content.data);
+      assert.deepEqual(success.content.data, [{ id: 1, name: "t", color: null }]);
     });
 
-    it("returns 503 when DB fails", async () => {
+    it("should return 503 when DB fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r1" } },
       } as unknown as Response;
@@ -44,15 +47,17 @@ describe("JournalTagHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const error = (await getAsync(mockRequest, mockResponse)) as any;
+      const error = (await getAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "boom");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "boom");
     });
   });
 
   describe("addAsync", () => {
-    it("creates tag and returns 201", async () => {
+    it("should return 201 and the created tag", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r2" } },
       } as unknown as Response;
@@ -73,12 +78,14 @@ describe("JournalTagHandlers.ts tests", () => {
         body: { name: "tag1", color: "#fff" },
       } as unknown as Request;
 
-      const success = (await addAsync(mockRequest, mockResponse)) as any;
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
-      assert.deepEqual(success.content?.data, { id: 5, name: "tag1", color: "#fff" });
+      assert.exists(success.content);
+      assert.isObject(success.content.data);
+      assert.deepEqual(success.content.data, { id: 5, name: "tag1", color: "#fff" });
     });
 
-    it("returns 400 when name missing", async () => {
+    it("should return 400 when name missing", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r2" } },
       } as unknown as Response;
@@ -87,12 +94,12 @@ describe("JournalTagHandlers.ts tests", () => {
         body: {},
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as any;
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.error.name, "Bad Request");
     });
 
-    it("returns 503 when DB fails", async () => {
+    it("should return 503 when DB fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r3" } },
       } as unknown as Response;
@@ -114,15 +121,17 @@ describe("JournalTagHandlers.ts tests", () => {
         body: { name: "x" },
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as any;
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "add fail");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "add fail");
     });
   });
 
   describe("updateAsync", () => {
-    it("returns 400 for invalid id param", async () => {
+    it("should return 400 for invalid id param", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r4" } },
       } as unknown as Response;
@@ -132,12 +141,12 @@ describe("JournalTagHandlers.ts tests", () => {
         originalUrl: "/api/v2/journal/tags/a",
       } as unknown as Request;
 
-      const error = (await updateAsync(mockRequest, mockResponse)) as any;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.error.name, "Bad Request");
     });
 
-    it("returns 404 when tag not found", async () => {
+    it("should return 404 when tag not found", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r4" } },
       } as unknown as Response;
@@ -156,12 +165,12 @@ describe("JournalTagHandlers.ts tests", () => {
         originalUrl: "/api/v2/journal/tags/2",
       } as unknown as Request;
 
-      const error = (await updateAsync(mockRequest, mockResponse)) as any;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
       assert.equal(error.error.name, "Not Found");
     });
 
-    it("updates and returns 200", async () => {
+    it("should return 200 and the updated tag", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r5" } },
       } as unknown as Response;
@@ -185,12 +194,14 @@ describe("JournalTagHandlers.ts tests", () => {
         body: { name: "new", color: "#000" },
       } as unknown as Request;
 
-      const success = (await updateAsync(mockRequest, mockResponse)) as any;
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
-      assert.deepEqual(success.content?.data, { id: 3, name: "new", color: "#000" });
+      assert.exists(success.content);
+      assert.isObject(success.content.data);
+      assert.deepEqual(success.content.data, { id: 3, name: "new", color: "#000" });
     });
 
-    it("returns 503 when DB update fails", async () => {
+    it("should return 503 when DB update fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r6" } },
       } as unknown as Response;
@@ -215,15 +226,17 @@ describe("JournalTagHandlers.ts tests", () => {
         body: { name: "y" },
       } as unknown as Request;
 
-      const error = (await updateAsync(mockRequest, mockResponse)) as any;
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "update fail");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "update fail");
     });
   });
 
   describe("deleteAsync", () => {
-    it("returns 400 for invalid id param", async () => {
+    it("should return 400 for invalid id param", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r7" } },
       } as unknown as Response;
@@ -232,11 +245,11 @@ describe("JournalTagHandlers.ts tests", () => {
         params: { tagId: "x" },
       } as unknown as Request;
 
-      const error = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
     });
 
-    it("returns 404 when not found", async () => {
+    it("should return 404 when tag not found", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r7" } },
       } as unknown as Response;
@@ -254,11 +267,11 @@ describe("JournalTagHandlers.ts tests", () => {
         originalUrl: "/api/v2/journal/tags/9",
       } as unknown as Request;
 
-      const error = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
     });
 
-    it("deletes and returns 200", async () => {
+    it("should return 200 and delete the tag", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r8" } },
       } as unknown as Response;
@@ -281,11 +294,11 @@ describe("JournalTagHandlers.ts tests", () => {
         params: { tagId: "10" },
       } as unknown as Request;
 
-      const success = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
     });
 
-    it("returns 503 when delete fails", async () => {
+    it("should return 503 when delete fails", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r9" } },
       } as unknown as Response;
@@ -309,10 +322,12 @@ describe("JournalTagHandlers.ts tests", () => {
         params: { tagId: "11" },
       } as unknown as Request;
 
-      const error = (await deleteAsync(mockRequest, mockResponse)) as any;
+      const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error.name, "Service Unavailable");
-      assert.include((error.error.details as string[])[0], "del fail");
+      const err = error.error;
+      assert.equal(err.name, "Service Unavailable");
+      assert.isArray(err.details);
+      assert.include(err.details[0], "del fail");
     });
   });
 });
