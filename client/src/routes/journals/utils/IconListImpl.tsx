@@ -92,21 +92,36 @@ function friendlyName(iconExportName: string) {
   // remove leading "Icon" if present
   const trimmed = iconExportName.replace(/^Icon/, "");
   // split camel case / numbers into words
-  const words = trimmed.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/([A-Z])([A-Z][a-z])/g, "$1 $2");
+  const words = trimmed
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2");
   // add spaces for digits
   return words.replace(/([a-zA-Z])([0-9])/g, "$1 $2").trim();
 }
 
-const SELECT_DATA = ICON_NAMES.map((name) => ({ value: name, label: friendlyName(name) }));
+const SELECT_DATA = ICON_NAMES.map((name) => ({
+  value: name,
+  label: friendlyName(name),
+}));
 
-export interface IconSelectProps extends Omit<SelectProps, 'data' | 'itemComponent' | 'icon'> {
+export interface IconSelectProps extends Omit<
+  SelectProps,
+  "data" | "itemComponent" | "icon"
+> {
   iconSize?: number;
   iconColor?: string;
 }
 
-export function IconSelect({ iconSize = 18, iconColor, value, rightSection, ...props }: IconSelectProps) {
+export function IconSelect({
+  iconSize = 18,
+  iconColor,
+  value,
+  rightSection,
+  ...props
+}: IconSelectProps) {
   // treat empty/null/undefined as NullIcon so "None" is shown by default
-  const selectedValue = (typeof value === 'string' && value.length > 0) ? value : 'NullIcon';
+  const selectedValue =
+    typeof value === "string" && value.length > 0 ? value : "NullIcon";
   const SelectedIcon = getIcon(selectedValue) as React.ElementType | null;
 
   const bg = iconColor ?? "#f1f3f5";
@@ -122,23 +137,44 @@ export function IconSelect({ iconSize = 18, iconColor, value, rightSection, ...p
         const IconComp = getIcon(it.value) as React.ElementType | null;
         return (
           <Group align="center">
-
-            {IconComp ?
-              <div style={{ width: iconSize * 2, height: iconSize * 2, display: "grid", placeItems: "center", borderRadius: 4, background: bg }}>
+            {IconComp ? (
+              <div
+                style={{
+                  width: iconSize * 2,
+                  height: iconSize * 2,
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: 4,
+                  background: bg,
+                }}
+              >
                 <IconComp size={"50%"} color={readableIconColor} />
-              </div> : null}
+              </div>
+            ) : null}
             <Text size="sm">{it.label}</Text>
           </Group>
         );
       }}
-      rightSection={rightSection ?? (SelectedIcon ?
-        <div style={{ width: iconSize * 1.5, height: iconSize * 1.5, display: "grid", placeItems: "center", borderRadius: 4, background: bg }}>
-          <SelectedIcon size={"50%"} color={readableIconColor} />
-        </div>  : null)}
+      rightSection={
+        rightSection ??
+        (SelectedIcon ? (
+          <div
+            style={{
+              width: iconSize * 1.5,
+              height: iconSize * 1.5,
+              display: "grid",
+              placeItems: "center",
+              borderRadius: 4,
+              background: bg,
+            }}
+          >
+            <SelectedIcon size={"50%"} color={readableIconColor} />
+          </div>
+        ) : null)
+      }
     />
   );
 }
-
 
 function readableTextColor(bg: string) {
   const s = String(bg || "").trim();
@@ -147,7 +183,11 @@ function readableTextColor(bg: string) {
     const hexRaw = hexMatch[1];
     if (!hexRaw) return "#000";
     let hex = hexRaw;
-    if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+    if (hex.length === 3)
+      hex = hex
+        .split("")
+        .map((c) => c + c)
+        .join("");
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);

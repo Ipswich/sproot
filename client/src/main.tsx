@@ -115,7 +115,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/settings/subcontrollers",
-        element: <SubcontrollerSettings />
+        element: <SubcontrollerSettings />,
       },
       {
         path: "/settings/system",

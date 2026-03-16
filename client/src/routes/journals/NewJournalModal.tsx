@@ -21,7 +21,11 @@ interface NewJournalModalProps {
   onCreated?: (journal: SDBJournal) => void;
 }
 
-export default function NewJournalModal({ modalOpened, closeModal, onCreated }: NewJournalModalProps) {
+export default function NewJournalModal({
+  modalOpened,
+  closeModal,
+  onCreated,
+}: NewJournalModalProps) {
   const addJournalMutation = useMutation({
     mutationFn: async (values: Partial<SDBJournal>) => {
       return await addJournalAsync(values);
@@ -33,21 +37,30 @@ export default function NewJournalModal({ modalOpened, closeModal, onCreated }: 
       title: "",
       description: "",
       icon: "",
-      color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ?? DefaultColors[0] ?? "#000000",
+      color:
+        DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
+        DefaultColors[0] ??
+        "#000000",
       archived: false,
     },
     validate: {
-      title: (v: string) => (v && v.length > 0 && v.length <= 128 ? null : "Title is required (1-128 chars)"),
+      title: (v: string) =>
+        v && v.length > 0 && v.length <= 128
+          ? null
+          : "Title is required (1-128 chars)",
       color: (v: string) => (!v || v.length <= 7 ? null : "Invalid color"),
     },
   });
 
   useEffect(() => {
     if (modalOpened) {
-      const rc = DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ?? DefaultColors[0] ?? "#000000";
+      const rc =
+        DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
+        DefaultColors[0] ??
+        "#000000";
       form.setFieldValue("color", rc);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalOpened]);
 
   return (
@@ -73,8 +86,18 @@ export default function NewJournalModal({ modalOpened, closeModal, onCreated }: 
             closeModal();
           })}
         >
-          <TextInput required label="Title" placeholder="My Journal" maxLength={128} {...form.getInputProps("title")} />
-          <Textarea label="Description" placeholder="Notes about this journal" {...form.getInputProps("description")} />
+          <TextInput
+            required
+            label="Title"
+            placeholder="My Journal"
+            maxLength={128}
+            {...form.getInputProps("title")}
+          />
+          <Textarea
+            label="Description"
+            placeholder="Notes about this journal"
+            {...form.getInputProps("description")}
+          />
           <IconSelect
             required
             label="Icon"
@@ -82,9 +105,14 @@ export default function NewJournalModal({ modalOpened, closeModal, onCreated }: 
             iconSize={18}
             iconColor={form.values.color}
             value={form.values.icon}
-            onChange={(val) => form.setFieldValue('icon', val ?? '')}
+            onChange={(val) => form.setFieldValue("icon", val ?? "")}
           />
-          <ColorInput required label="Color" swatches={[...DefaultColors]} {...form.getInputProps("color")} />
+          <ColorInput
+            required
+            label="Color"
+            swatches={[...DefaultColors]}
+            {...form.getInputProps("color")}
+          />
           <Group justify="right" mt="md">
             <Button type="submit">Add Journal</Button>
           </Group>

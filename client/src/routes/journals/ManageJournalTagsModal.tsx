@@ -57,12 +57,20 @@ export default function ManageJournalTagsModal({
 
   const [localTags, setLocalTags] = useState<SDBJournalTag[]>([]);
   const [newTagName, setNewTagName] = useState("");
-  const initialRandomColor = DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ?? DefaultColors[0] ?? "#000000";
-  const [newTagColor, setNewTagColor] = useState<string | null>(initialRandomColor);
+  const initialRandomColor =
+    DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
+    DefaultColors[0] ??
+    "#000000";
+  const [newTagColor, setNewTagColor] = useState<string | null>(
+    initialRandomColor,
+  );
 
   useEffect(() => {
     if (modalOpened) {
-      const rc = DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ?? DefaultColors[0] ?? "#000000";
+      const rc =
+        DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
+        DefaultColors[0] ??
+        "#000000";
       setNewTagColor(rc);
       setNewTagName("");
     }
@@ -84,21 +92,34 @@ export default function ManageJournalTagsModal({
       }}
       title="Manage Journal Tags"
     >
-      <Table highlightOnHover style={{ marginLeft: "auto", marginRight: "auto" }}>
+      <Table
+        highlightOnHover
+        style={{ marginLeft: "auto", marginRight: "auto" }}
+      >
         <Table.Thead>
           <Table.Tr>
             <Table.Th style={{ textAlign: "center" }}>Name & Color</Table.Th>
-            <Table.Th style={{ textAlign: "center", width: "10%" }}>Save</Table.Th>
-            <Table.Th style={{ textAlign: "center", width: "10%" }}>Delete</Table.Th>
+            <Table.Th style={{ textAlign: "center", width: "10%" }}>
+              Save
+            </Table.Th>
+            <Table.Th style={{ textAlign: "center", width: "10%" }}>
+              Delete
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {[...(localTags ?? [])]
-            .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
+            .sort((a, b) =>
+              (a.name || "").localeCompare(b.name || "", undefined, {
+                sensitivity: "base",
+              }),
+            )
             .map((tag) => (
               <Table.Tr key={tag.id}>
                 <Table.Td align="center">
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                  >
                     <TextInput
                       required
                       value={tag.name ?? ""}
@@ -106,7 +127,11 @@ export default function ManageJournalTagsModal({
                       styles={{ input: { fontSize: 16 } }}
                       onChange={(event) => {
                         const value = event.currentTarget.value;
-                        setLocalTags((prev) => prev.map((g) => (g.id === tag.id ? { ...g, name: value } : g)));
+                        setLocalTags((prev) =>
+                          prev.map((g) =>
+                            g.id === tag.id ? { ...g, name: value } : g,
+                          ),
+                        );
                       }}
                     />
                     <ColorInput
@@ -118,7 +143,11 @@ export default function ManageJournalTagsModal({
                       styles={{ input: { fontSize: 16 } }}
                       onChange={(value) => {
                         const color = value || null;
-                        setLocalTags((prev) => prev.map((g) => (g.id === tag.id ? { ...g, color } : g)));
+                        setLocalTags((prev) =>
+                          prev.map((g) =>
+                            g.id === tag.id ? { ...g, color } : g,
+                          ),
+                        );
                       }}
                     />
                   </div>
@@ -155,10 +184,24 @@ export default function ManageJournalTagsModal({
             ))}
 
           <Table.Tr key={"new"}>
-                <Table.Td align="center">
+            <Table.Td align="center">
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <TextInput placeholder="New Tag" style={{ width: "100%" }} styles={{ input: { fontSize: 16 } }} value={newTagName} onChange={(e) => setNewTagName(e.currentTarget.value)} />
-                <ColorInput placeholder="#RRGGBB" swatches={[...DefaultColors]} value={newTagColor ?? ""} format="hex" popoverProps={{ withinPortal: true }} styles={{ input: { fontSize: 16 } }} onChange={(v) => setNewTagColor(v || null)} />
+                <TextInput
+                  placeholder="New Tag"
+                  style={{ width: "100%" }}
+                  styles={{ input: { fontSize: 16 } }}
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.currentTarget.value)}
+                />
+                <ColorInput
+                  placeholder="#RRGGBB"
+                  swatches={[...DefaultColors]}
+                  value={newTagColor ?? ""}
+                  format="hex"
+                  popoverProps={{ withinPortal: true }}
+                  styles={{ input: { fontSize: 16 } }}
+                  onChange={(v) => setNewTagColor(v || null)}
+                />
               </div>
             </Table.Td>
             <Table.Td style={{ width: "10%" }} align="center">
@@ -167,9 +210,18 @@ export default function ManageJournalTagsModal({
                   color="green"
                   onClick={async () => {
                     if (!newTagName.trim()) return;
-                    await addTagMutation.mutateAsync({ name: newTagName.trim(), color: newTagColor });
+                    await addTagMutation.mutateAsync({
+                      name: newTagName.trim(),
+                      color: newTagColor,
+                    });
                     setNewTagName("");
-                    setNewTagColor(DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ?? DefaultColors[0] ?? "#000000");
+                    setNewTagColor(
+                      DefaultColors[
+                        Math.floor(Math.random() * DefaultColors.length)
+                      ] ??
+                        DefaultColors[0] ??
+                        "#000000",
+                    );
                     await tagsQuery.refetch();
                   }}
                 >

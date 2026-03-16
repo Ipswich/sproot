@@ -759,10 +759,12 @@ export async function setOutputManualStateAsync(
   }
 }
 
-export async function getJournalsAsync(): Promise<{
-  journal: SDBJournal;
-  tags: SDBJournalTag[];
-}[]> {
+export async function getJournalsAsync(): Promise<
+  {
+    journal: SDBJournal;
+    tags: SDBJournalTag[];
+  }[]
+> {
   const response = await fetch(`${SERVER_URL}/api/v2/journals`, {
     method: "GET",
     headers: {},
@@ -841,7 +843,9 @@ export async function deleteJournalTagAsync(id: number): Promise<void> {
   }
 }
 
-export async function addJournalAsync(journal: Partial<SDBJournal>): Promise<SDBJournal | undefined> {
+export async function addJournalAsync(
+  journal: Partial<SDBJournal>,
+): Promise<SDBJournal | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/journals`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -857,7 +861,9 @@ export async function addJournalAsync(journal: Partial<SDBJournal>): Promise<SDB
   return deserializedResponse.content?.data as SDBJournal;
 }
 
-export async function updateJournalAsync(journal: SDBJournal): Promise<SDBJournal | undefined> {
+export async function updateJournalAsync(
+  journal: SDBJournal,
+): Promise<SDBJournal | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/journals/${journal.id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
