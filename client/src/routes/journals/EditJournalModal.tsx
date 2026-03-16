@@ -88,10 +88,10 @@ export default function EditJournalModal({ modalOpened, closeModal, journal, onS
       onClose={() => { closeModal(); form.reset(); }}
       title={`Edit`}>
       <form onSubmit={form.onSubmit(async () => { await save(); })}>
-        <TextInput required label="Title" {...form.getInputProps("title")} disabled={form.values.archived} />
-        <Textarea label="Description" {...form.getInputProps("description")} minRows={3} disabled={form.values.archived} />
-        <IconSelect required label="Icon" iconColor={form.values.color ?? DefaultColors[Math.floor(Math.random() * DefaultColors.length)]!} value={form.values.icon} onChange={(v) => form.setFieldValue('icon', String(v ?? 'NullIcon'))} disabled={form.values.archived} />
-        <ColorInput required label="Color" swatches={[...DefaultColors]} {...form.getInputProps("color")} disabled={form.values.archived} />
+        <TextInput required label="Title" {...form.getInputProps("title")} disabled={journal.archived && form.values.archived} />
+        <Textarea label="Description" {...form.getInputProps("description")} minRows={3} disabled={journal.archived && form.values.archived} />
+        <IconSelect required label="Icon" iconColor={form.values.color ?? DefaultColors[Math.floor(Math.random() * DefaultColors.length)]!} value={form.values.icon} onChange={(v) => form.setFieldValue('icon', String(v ?? 'NullIcon'))} disabled={journal.archived && form.values.archived} />
+        <ColorInput required label="Color" swatches={[...DefaultColors]} {...form.getInputProps("color")} disabled={journal.archived && form.values.archived} />
 
         <Group py="md" justify="space-between" align="center">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -116,14 +116,14 @@ export default function EditJournalModal({ modalOpened, closeModal, journal, onS
           </div>
 
         </Group>
-        {form.values.archived ? (
+        {(journal.archived && form.values.archived) ? (
           <Text size="sm" color="red">This journal is archived — unarchive it to make changes.</Text>
         ) : null}
         <Group justify="space-between" mt="md">
           <Button disabled={isUpdating} color="red" onClick={async () => { await doDelete(); }}>
             Delete
           </Button>
-          <Button type="submit" disabled={isUpdating || form.values.archived}>
+          <Button type="submit" disabled={isUpdating || (journal.archived && form.values.archived)}>
             Update Journal
           </Button>
         </Group>
