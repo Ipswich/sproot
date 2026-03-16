@@ -1,19 +1,26 @@
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Modal,
   TextInput,
   Group,
   Button,
   Textarea,
+  Text,
   ColorInput,
   ScrollArea,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import IconSelect from "./utils/IconListImpl";
-import { addJournalAsync } from "@sproot/sproot-client/src/requests/requests_v2";
+import {
+  addJournalAsync,
+  getJournalTagsAsync,
+  addTagToJournalAsync,
+  getJournalsAsync,
+} from "@sproot/sproot-client/src/requests/requests_v2";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import TagsPillsCombo from "./TagsPillsCombo";
 
 interface NewJournalModalProps {
   modalOpened: boolean;
@@ -31,6 +38,13 @@ export default function NewJournalModal({
       return await addJournalAsync(values);
     },
   });
+
+  const queryClient = useQueryClient();
+
+  const [availableTags, setAvailableTags] = useState<
+    { id: number; name?: string | null; color?: string | null }[]
+  >([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const form = useForm({
     initialValues: {
@@ -63,6 +77,20 @@ export default function NewJournalModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalOpened]);
 
+  useEffect(() => {
+    if (modalOpened) {
+      (async () => {
+        try {
+          const all = await getJournalTagsAsync();
+          setAvailableTags(all || []);
+          setSelectedTags([]);
+        } catch (e) {
+          // ignore
+        }
+      })();
+    }
+  }, [modalOpened]);
+
   return (
     <Fragment>
       <meta name="viewport" content="width=device-width, user-scalable=no" />
@@ -80,11 +108,28 @@ export default function NewJournalModal({
       >
         <form
           onSubmit={form.onSubmit(async (values) => {
-            const created = await addJournalMutation.mutateAsync(values);
-            if (created && onCreated) onCreated(created);
-            form.reset();
-            closeModal();
-          })}
+                const created = await addJournalMutation.mutateAsync(values);
+                if (created) {
+                  try {
+                    const tagIds = selectedTags.map((s) => Number(String(s).replace(/^tag:/, "")));
+                    const addPromises = tagIds.map((tid) => addTagToJournalAsync(created.id, tid));
+                    await Promise.allSettled(addPromises);
+                    // ensure journals list is fresh before notifying parent
+                    try {
+                      await queryClient.fetchQuery({ queryKey: ["journals"], queryFn: () => getJournalsAsync() });
+                    } catch (err) {
+                      // ignore
+                    }
+                  } catch (e) {
+                    // eslint-disable-next-line no-console
+                    console.error("Error applying tags after creation", e);
+                  }
+                }
+                if (created && onCreated) onCreated(created);
+                form.reset();
+                setSelectedTags([]);
+                closeModal();
+              })}
         >
           <TextInput
             required
@@ -113,6 +158,17 @@ export default function NewJournalModal({
             swatches={[...DefaultColors]}
             {...form.getInputProps("color")}
           />
+          <div style={{ marginTop: 12 }}>
+            <Text size="sm" style={{ marginBottom: 6 }}>
+              Tags
+            </Text>
+            <TagsPillsCombo
+              allTags={availableTags}
+              value={selectedTags}
+              onChange={setSelectedTags}
+              placeholder="Select tags"
+            />
+          </div>
           <Group justify="right" mt="md">
             <Button type="submit">Add Journal</Button>
           </Group>

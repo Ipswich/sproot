@@ -196,6 +196,7 @@ export default function JournalCard({
         modalOpened={editOpened}
         closeModal={() => setEditOpened(false)}
         journal={journal}
+        tags={tags}
         onSaved={async (updated) => {
           // update local simple fields so modal and card show new values without full refetch
           // note: tags managed separately

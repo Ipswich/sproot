@@ -9,16 +9,23 @@ import {
   ActionIcon,
   Text,
   ScrollArea,
+  
 } from "@mantine/core";
+import TagsPillsCombo from "./TagsPillsCombo";
 import IconSelect from "./utils/IconListImpl";
 import { SDBJournal } from "@sproot/database/SDBJournal";
+import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import {
   updateJournalAsync,
   deleteJournalAsync,
+  getJournalTagsAsync,
+  getJournalsAsync,
+  addTagToJournalAsync,
+  removeTagFromJournalAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { IconArchive, IconInbox } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 
 export interface EditJournalModalProps {
@@ -27,6 +34,7 @@ export interface EditJournalModalProps {
   journal: SDBJournal;
   onSaved?: (updated: SDBJournal) => void;
   onDeleted?: (id: number) => void;
+  tags?: SDBJournalTag[];
 }
 
 export default function EditJournalModal({
@@ -35,6 +43,7 @@ export default function EditJournalModal({
   journal,
   onSaved,
   onDeleted,
+  tags,
 }: EditJournalModalProps) {
   type JournalForm = {
     title: string;
@@ -89,18 +98,104 @@ export default function EditJournalModal({
   });
 
   const [isUpdating, setIsUpdating] = useState(false);
+  const queryClient = useQueryClient();
+
+  const [availableTags, setAvailableTags] = useState<SDBJournalTag[]>([]);
+  const [localTags, setLocalTags] = useState<SDBJournalTag[]>(tags ?? []);
+  const [tagAdds, setTagAdds] = useState<number[]>([]);
+  const [tagRemoves, setTagRemoves] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (modalOpened) {
+      setLocalTags(tags ?? []);
+      (async () => {
+        try {
+          const all = await getJournalTagsAsync();
+          setAvailableTags(all || []);
+        } catch (e) {
+          // ignore
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalOpened]);
+
+  // Stage tag add/remove operations handled by Pills combo change handler.
+
+  
+
+  // When the PillsCombo selection changes, compute diffs and stage add/removes
+  const handlePillsChange = (vals: string[]) => {
+    const newIds = vals.map((v) => Number(String(v).replace(/^tag:/, "")));
+    const prevIds = localTags.map((t) => t.id);
+
+    const added = newIds.filter((id) => !prevIds.includes(id));
+    const removed = prevIds.filter((id) => !newIds.includes(id));
+
+    // process additions
+    added.forEach((id) => {
+      // if it was staged for removal, undo that
+      if (tagRemoves.includes(id)) {
+        setTagRemoves((prev) => prev.filter((x) => x !== id));
+      } else {
+        // only stage add if it wasn't originally present on server
+        const existedOnServer = (tags ?? []).some((t) => t.id === id);
+        if (!existedOnServer) setTagAdds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        const addedTag = availableTags.find((t) => t.id === id);
+        if (addedTag) setLocalTags((prev) => (prev.some((p) => p.id === addedTag.id) ? prev : [...prev, addedTag]));
+      }
+    });
+
+    // process removals
+    removed.forEach((id) => {
+      // if it was staged to be added, unstage it
+      if (tagAdds.includes(id)) {
+        setTagAdds((prev) => prev.filter((x) => x !== id));
+      } else {
+        if (!tagRemoves.includes(id)) setTagRemoves((prev) => [...prev, id]);
+      }
+      setLocalTags((prev) => prev.filter((t) => t.id !== id));
+    });
+  };
 
   const save = async () => {
     setIsUpdating(true);
     const updated = await updateMutation.mutateAsync(
       form.values as unknown as JournalForm,
     );
-    setIsUpdating(false);
-    if (updated) {
-      onSaved?.(updated);
-      form.reset();
-      closeModal();
+    // after journal update, apply staged tag changes
+    try {
+      const addPromises = tagAdds.map((tid) => addTagToJournalAsync(journal.id, tid));
+      const removePromises = tagRemoves.map((tid) => removeTagFromJournalAsync(journal.id, tid));
+      await Promise.allSettled([...addPromises, ...removePromises]);
+      // ensure journals list is refreshed so parent and cards show latest tags
+      try {
+        // fetch fresh journals data and update the cache before closing/modal notify
+        await queryClient.fetchQuery({ queryKey: ["journals"], queryFn: () => getJournalsAsync() });
+      } catch (err) {
+        // ignore
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("Error applying tag changes", e);
     }
+    setIsUpdating(false);
+    // reset staged changes
+    setTagAdds([]);
+    setTagRemoves([]);
+    // Notify parent that something changed so list can refetch tags/journals.
+    // Some APIs return no body for PATCH; pass a fallback (merged journal values).
+    const fallback: SDBJournal = {
+      ...journal,
+      title: form.values.title,
+      description: form.values.description,
+      icon: form.values.icon,
+      color: form.values.color ?? journal.color,
+      archived: form.values.archived,
+    } as SDBJournal;
+    onSaved?.(updated ?? fallback);
+    form.reset();
+    closeModal();
   };
 
   const doDelete = async () => {
@@ -165,6 +260,31 @@ export default function EditJournalModal({
           disabled={journal.archived && form.values.archived}
         />
 
+        <div style={{ marginTop: 12 }}>
+          <Text fw={600} style={{ marginBottom: 8 }}>
+            Tags
+          </Text>
+          <div style={{ marginBottom: 8 }}>
+            <TagsPillsCombo
+              allTags={
+                // ensure availableTags includes any currently selected localTags
+                Array.from(
+                  new Map(
+                    [...availableTags, ...(localTags ?? [])].map((t) => [t.id, t]),
+                  ).values(),
+                )
+              }
+              value={(localTags ?? []).map((t) => `tag:${t.id}`)}
+              onChange={handlePillsChange}
+              placeholder="Filter tags"
+            />
+
+            
+
+            
+          </div>
+        </div>
+
         <Group py="md" justify="space-between" align="center">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <ActionIcon
@@ -208,6 +328,7 @@ export default function EditJournalModal({
             This journal is archived — unarchive it to make changes.
           </Text>
         ) : null}
+
         <Group justify="space-between" mt="md">
           <Button
             disabled={isUpdating}

@@ -150,6 +150,14 @@ export default function Journals() {
   const sorted = [...filtered].sort(cmp);
   const staggerMs = 40;
 
+  // key to detect changes in order or tags so we can recompute visibleRows
+  const visibleRowsKey = JSON.stringify(
+    sorted.map((s) => ({
+      id: s.journal.id,
+      tagIds: (s.tags ?? []).map((t) => (t as { id?: number }).id).sort(),
+    })),
+  );
+
   // Manage visible rows to animate enter / leave transitions when sorted changes
   useEffect(() => {
     setVisibleRows((prev) => {
@@ -161,7 +169,13 @@ export default function Journals() {
         const k = String(s.journal.id);
         const existing = currentMap.get(k);
         if (existing) {
-          next.push({ ...existing, leaving: false });
+          next.push({
+            ...existing,
+            leaving: false,
+            // update content with latest journal/tags so cards receive fresh props
+            journal: s.journal,
+            tags: s.tags ?? null,
+          });
         } else {
           next.push({
             key: k,
@@ -196,7 +210,7 @@ export default function Journals() {
       clearTimeout(removeT);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(sorted.map((s) => s.journal.id))]);
+  }, [visibleRowsKey]);
 
   // initialize visibleRows on first load
   useEffect(() => {

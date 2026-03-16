@@ -891,6 +891,29 @@ export async function deleteJournalAsync(id: number): Promise<void> {
   }
 }
 
+export async function addTagToJournalAsync(journalId: number, tagId: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/journals/${journalId}/tags`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tagId: String(tagId) }),
+    mode: "cors",
+  });
+  if (!response.ok) {
+    console.error(`Error adding tag to journal: ${response}`);
+  }
+}
+
+export async function removeTagFromJournalAsync(journalId: number, tagId: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/journals/${journalId}/tags/${tagId}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+  });
+  if (!response.ok) {
+    console.error(`Error removing tag from journal: ${response}`);
+  }
+}
+
 export async function powerOffAsync(): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/system/power-off`, {
     method: "POST",
