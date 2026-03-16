@@ -293,7 +293,7 @@ export class SprootDB implements ISprootDB {
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    const archivedAt = journal.archived ? journal.archivedAt ?? new Date().toISOString().slice(0, 19).replace("T", " ") : null;
+    const archivedAt = journal.archived ? journal.archivedAt?.slice(0, 19).replace("T", " ") ?? new Date().toISOString().slice(0, 19).replace("T", " ") : null;
     return this.#connection("journals")
       .where("id", journal.id)
       .update({
