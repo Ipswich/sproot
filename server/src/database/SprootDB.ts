@@ -303,7 +303,7 @@ export class SprootDB implements ISprootDB {
         color: journal.color,
         createdAt: journal.createdAt,
         editedAt: journal.editedAt,
-        archivedAt: journal.archivedAt,
+        archivedAt: journal.archivedAt ? journal.archivedAt.slice(0, 19).replace("T", " ") : new Date().toISOString().slice(0, 19).replace("T", " "),
       });
   }
 
