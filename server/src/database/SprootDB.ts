@@ -293,7 +293,10 @@ export class SprootDB implements ISprootDB {
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    const archivedAt = journal.archived ? journal.archivedAt?.slice(0, 19).replace("T", " ") ?? new Date().toISOString().slice(0, 19).replace("T", " ") : null;
+    const archivedAt = journal.archived
+      ? (journal.archivedAt?.slice(0, 19).replace("T", " ") ??
+        new Date().toISOString().slice(0, 19).replace("T", " "))
+      : null;
     return this.#connection("journals")
       .where("id", journal.id)
       .update({
@@ -383,31 +386,53 @@ export class SprootDB implements ISprootDB {
     content: string,
     createdAt?: string | null,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("journal_entries").insert({
-          journal_id: journalId,
-          title,
-          content,
-          createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          editedAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-        })
-      )[0] ?? -1
-    );
+    //TODO prevent updates if Journal is archived??
+    const result = await Promise.all([
+      this.#connection("journal_entries").insert({
+        journal_id: journalId,
+        title,
+        content,
+        createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+        editedAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+      }),
+      this.#connection("journals")
+        .where("id", journalId)
+        .update({
+          editedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+        }),
+    ]);
+
+    return result[0][0] ?? -1;
   }
 
   async updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void> {
-    return this.#connection("journal_entries").where("id", entry.id).update({
-      journal_id: entry.journalId,
-      title: entry.title,
-      content: entry.content,
-      createdAt: entry.createdAt,
-      editedAt: entry.editedAt,
-    });
+    //TODO prevent updates if Journal is archived??
+    await Promise.all([
+      this.#connection("journal_entries").where("id", entry.id).update({
+        journal_id: entry.journalId,
+        title: entry.title,
+        content: entry.content,
+        createdAt: entry.createdAt,
+        editedAt: entry.editedAt,
+      }),
+      this.#connection("journals")
+        .where("id", entry.journalId)
+        .update({
+          editedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+        }),
+    ]);
   }
 
   async deleteJournalEntryAsync(id: number): Promise<void> {
-    return this.#connection("journal_entries").where("id", id).delete();
+    //TODO prevent updates if Journal is archived??
+    await Promise.all([
+      this.#connection("journal_entries").where("id", id).delete(),
+      this.#connection("journals")
+        .where("id", id)
+        .update({
+          editedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+        }),
+    ]);
   }
 
   async getJournalEntryTagsAsync(): Promise<SDBJournalEntryTag[]> {

@@ -29,7 +29,7 @@ export async function getByJournalIdAsync(
   }
 
   try {
-    let results: {entry: SDBJournalEntry, tags: SDBJournalEntryTag[] }[] = [];
+    let results: { entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }[] = [];
     const doesJournalExist = await journalService.journalManager.getJournalsAsync(journalId);
     if (!doesJournalExist || doesJournalExist.length === 0) {
       response = {
@@ -94,7 +94,7 @@ export async function getByEntryIdAsync(
   }
 
   try {
-    let results: {entry: SDBJournalEntry, tags: SDBJournalEntryTag[] }[] = [];
+    let results: { entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }[] = [];
     results = await journalService.entryManager.getAsync(undefined, entryId);
     if (results.length == 0) {
       response = {
