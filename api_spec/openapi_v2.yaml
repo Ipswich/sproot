@@ -6805,7 +6805,7 @@ paths:
                             items:
                               type: object
                               properties:
-                                journal:
+                                entry:
                                   $ref: "#/components/schemas/SDBJournalEntry"
                                 tags:
                                   type: array

@@ -1682,12 +1682,12 @@ describe("API Tests", async function () {
           validateMiddlewareValues(response);
           const content = response.body.content;
           assert.isArray(content.data);
-          const found = content.data.find((e: any) => e.id === localEntryId);
+          const found = content.data.find((e: any) => e.entry.id === localEntryId);
           assert.isObject(found);
-          assert.lengthOf(Object.keys(found), 7);
-          assert.equal(found.journalId, localJournalId);
-          assert.equal(found.title, "JR Entry");
-          assert.equal(found.content, "Journal Router Entry content");
+          assert.lengthOf(Object.keys(found.entry), 6);
+          assert.equal(found.entry.journalId, localJournalId);
+          assert.equal(found.entry.title, "JR Entry");
+          assert.equal(found.entry.content, "Journal Router Entry content");
         });
       });
     });
@@ -1733,12 +1733,12 @@ describe("API Tests", async function () {
         validateMiddlewareValues(response);
         const content = response.body["content"];
         assert.isArray(content.data);
-        const found = content.data.find((e: any) => e.id === entryId);
+        const found = content.data.find((e: any) => e.entry.id === entryId);
         assert.isObject(found);
-        assert.lengthOf(Object.keys(found), 7);
-        assert.equal(found.journalId, journalId);
-        assert.equal(found.title, "Entry Title");
-        assert.equal(found.content, "Entry content");
+        assert.lengthOf(Object.keys(found.entry), 6);
+        assert.equal(found.entry.journalId, journalId);
+        assert.equal(found.entry.title, "Entry Title");
+        assert.equal(found.entry.content, "Entry content");
       });
 
       it("should return 200 and a single entry by id", async () => {
@@ -1746,11 +1746,11 @@ describe("API Tests", async function () {
         validateMiddlewareValues(response);
         const content = response.body["content"];
         assert.isArray(content.data);
-        assert.lengthOf(Object.keys(content.data[0]), 7);
-        assert.equal(content.data[0].id, entryId);
-        assert.equal(content.data[0].journalId, journalId);
-        assert.equal(content.data[0].title, "Entry Title");
-        assert.equal(content.data[0].content, "Entry content");
+        assert.lengthOf(Object.keys(content.data[0].entry), 6);
+        assert.equal(content.data[0].entry.id, entryId);
+        assert.equal(content.data[0].entry.journalId, journalId);
+        assert.equal(content.data[0].entry.title, "Entry Title");
+        assert.equal(content.data[0].entry.content, "Entry content");
       });
     });
 
@@ -1834,7 +1834,7 @@ describe("API Tests", async function () {
         const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);
         validateMiddlewareValues(getResp);
         const row = getResp.body.content.data[0];
-        assert.lengthOf(Object.keys(row), 7);
+        assert.lengthOf(Object.keys(row.entry), 6);
         assert.isArray(row.tags);
         const found = row.tags.find((t: any) => t.id === entryTagId);
         assert.isObject(found);
@@ -1859,7 +1859,7 @@ describe("API Tests", async function () {
         const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);
         validateMiddlewareValues(getResp);
         const row = getResp.body.content.data[0];
-        assert.lengthOf(Object.keys(row), 7);
+        assert.lengthOf(Object.keys(row.entry), 6);
         assert.isArray(row.tags);
         const found = row.tags.find((t: any) => t.id === entryTagId);
         assert.isUndefined(found);

@@ -128,7 +128,7 @@ describe("JournalEntriesHandlers", () => {
       assert.equal(result.statusCode, 200);
       assert.exists(result.content);
       assert.isArray(result.content.data);
-      assert.equal(result.content.data[0].id, sampleEntry.id);
+      assert.equal(result.content.data[0].entry.id, sampleEntry.id);
     });
 
     it("should return 503 when underlying DB throws", async () => {
@@ -211,7 +211,7 @@ describe("JournalEntriesHandlers", () => {
       assert.equal(result.statusCode, 200);
       assert.exists(result.content);
       assert.isArray(result.content.data);
-      assert.equal(result.content.data[0].id, sampleEntry.id);
+      assert.equal(result.content.data[0].entry.id, sampleEntry.id);
     });
 
     it("should return 503 when DB throws", async () => {

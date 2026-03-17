@@ -29,9 +29,7 @@ export async function getByJournalIdAsync(
   }
 
   try {
-    let results: (SDBJournalEntry & {
-      tags?: SDBJournalEntryTag[];
-    })[] = [];
+    let results: {entry: SDBJournalEntry, tags: SDBJournalEntryTag[] }[] = [];
     const doesJournalExist = await journalService.journalManager.getJournalsAsync(journalId);
     if (!doesJournalExist || doesJournalExist.length === 0) {
       response = {
@@ -96,9 +94,7 @@ export async function getByEntryIdAsync(
   }
 
   try {
-    let results: (SDBJournalEntry & {
-      tags?: SDBJournalEntryTag[];
-    })[] = [];
+    let results: {entry: SDBJournalEntry, tags: SDBJournalEntryTag[] }[] = [];
     results = await journalService.entryManager.getAsync(undefined, entryId);
     if (results.length == 0) {
       response = {
@@ -263,11 +259,11 @@ export async function updateAsync(
   }
 
   const content: string =
-    req.body["text"] == undefined ? existingEntry[0]!.content : String(req.body["content"]);
+    req.body["text"] == undefined ? existingEntry[0]!.entry.content : String(req.body["content"]);
 
   const title: string | null =
     req.body["title"] === undefined
-      ? existingEntry[0]!.title
+      ? existingEntry[0]!.entry.title
       : req.body["title"] === null
         ? null
         : String(req.body["title"]);
@@ -277,10 +273,10 @@ export async function updateAsync(
   try {
     await journalService.entryManager.updateAsync({
       id: entryId,
-      journalId: existingEntry[0]!.journalId,
+      journalId: existingEntry[0]!.entry.journalId,
       content,
       title,
-      createdAt: existingEntry[0]!.createdAt.slice(0, 19).replace("T", " "),
+      createdAt: existingEntry[0]!.entry.createdAt.slice(0, 19).replace("T", " "),
       editedAt: editedAt.toISOString().slice(0, 19).replace("T", " "),
     } as SDBJournalEntry);
 
@@ -289,10 +285,10 @@ export async function updateAsync(
       content: {
         data: {
           id: entryId,
-          journalId: existingEntry[0]!.journalId,
+          journalId: existingEntry[0]!.entry.journalId,
           content,
           title,
-          createdAt: existingEntry[0]!.createdAt,
+          createdAt: existingEntry[0]!.entry.createdAt,
           editedAt: editedAt.toISOString(),
         },
       },
