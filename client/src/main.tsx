@@ -21,6 +21,7 @@ import SensorData from "./routes/sensor-data/SensorData";
 import OutputStates from "./routes/output-states/OutputStates";
 import Automations from "./routes/automations/Automations";
 import Journals from "./routes/journals/Journals";
+import JournalEntries from "./routes/journals/JournalEntries";
 import OutputSettings from "./routes/settings/outputs/OutputSettings";
 import SensorSettings from "./routes/settings/sensors/SensorSettings";
 import SystemSettings from "./routes/settings/system/SystemSettings";
@@ -100,6 +101,10 @@ const router = createBrowserRouter([
       {
         path: "/journals",
         element: <Journals />,
+      },
+      {
+        path: "/journals/:journalId",
+        element: <JournalEntries />,
       },
       {
         path: "/settings/outputs",

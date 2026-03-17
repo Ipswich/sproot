@@ -32,3 +32,7 @@ export function outputStateToggledZonesKey(): string {
 export function journalsFiltersKey(): string {
   return `journals-filters`;
 }
+
+export function journalEntriesFiltersKey(): string {
+  return `journal-entries-filters`;
+}

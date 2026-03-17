@@ -1,45 +1,27 @@
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import { Fragment, useState, useEffect, type ElementType } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   Badge,
   Group,
   Text,
-  Modal,
-  ScrollArea,
   Stack,
-  ActionIcon,
-  TextInput,
-  Button,
 } from "@mantine/core";
 import { getIcon } from "./utils/getIcon";
-import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
-import EditJournalModal from "./EditJournalModal";
 
 export interface JournalCardProps {
   journal: SDBJournal;
   tags: SDBJournalTag[];
-  onAddTag?: (journalId: number, name: string) => Promise<void>;
-  onEditTag?: (journalId: number, tag: SDBJournalTag) => Promise<void>;
-  onRemoveTag?: (journalId: number, tagId: number) => Promise<void>;
   onSaved?: (updated: SDBJournal) => void;
   onDeleted?: (id: number) => void;
 }
 
-export default function JournalCard({
-  journal,
-  tags,
-  onAddTag,
-  onEditTag,
-  onRemoveTag,
-  onSaved,
-  onDeleted,
-}: JournalCardProps) {
-  const [opened, setOpened] = useState(false);
-  const [editOpened, setEditOpened] = useState(false);
+export default function JournalCard({ journal, tags }: JournalCardProps) {
   const [localTags, setLocalTags] = useState<SDBJournalTag[]>([]);
-  const [newTagName, setNewTagName] = useState("");
+  
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLocalTags((tags ?? []).map((t) => ({ ...t })));
@@ -75,14 +57,17 @@ export default function JournalCard({
   return (
     <Fragment>
       <Card
-        shadow="sm"
+        withBorder
+        shadow="md"
         padding="lg"
         radius="md"
         style={{
           cursor: "pointer",
           transition: "transform 150ms, box-shadow 150ms",
+          background: "var(--mantine-color-white, #fff)",
+          borderColor: "rgba(15, 23, 42, 0.06)",
         }}
-        onClick={() => setOpened(true)}
+        onClick={() => navigate(`/journals/${journal.id}`)}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = "translateY(-6px)";
           e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.08)";
@@ -101,22 +86,35 @@ export default function JournalCard({
               gap: 12,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 10,
-                  background: bg,
-                }}
-              >
-                {IconComp ? <IconComp size={22} color={iconColor} /> : null}
-              </div>
-              <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+              {journal.icon ? (
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    display: "grid",
+                    placeItems: "center",
+                    borderRadius: 10,
+                    background: bg,
+                    minWidth: 44,
+                  }}
+                >
+                  {IconComp ? <IconComp size={22} color={iconColor} /> : null}
+                </div>
+              ) : null}
+              <div style={{ minWidth: 0 }}>
                 <Text fw={700}>{journal.title}</Text>
-                <Text fz="sm" c="dimmed">
+                <Text
+                  fz="sm"
+                  c="dimmed"
+                  style={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    display: "block",
+                    width: "100%",
+                  }}
+                >
                   {journal.description ?? ""}
                 </Text>
               </div>
@@ -151,17 +149,6 @@ export default function JournalCard({
                   Archived
                 </Badge>
               ) : null}
-
-              <ActionIcon
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditOpened(true);
-                }}
-                title="Edit journal"
-              >
-                <IconEdit />
-              </ActionIcon>
             </div>
           </div>
 
@@ -192,126 +179,7 @@ export default function JournalCard({
         </Stack>
       </Card>
 
-      <EditJournalModal
-        modalOpened={editOpened}
-        closeModal={() => setEditOpened(false)}
-        journal={journal}
-        tags={tags}
-        onSaved={async (updated) => {
-          // update local simple fields so modal and card show new values without full refetch
-          // note: tags managed separately
-          try {
-            journal.title = updated.title ?? journal.title;
-            journal.description = updated.description ?? journal.description;
-            journal.icon = updated.icon ?? journal.icon;
-            journal.color = updated.color ?? journal.color;
-            journal.archived = updated.archived ?? journal.archived;
-            journal.archivedAt = updated.archivedAt ?? journal.archivedAt;
-            setEditOpened(false);
-            onSaved?.(updated);
-          } catch (err) {
-            // ignore errors updating local copy
-            // eslint-disable-next-line no-console
-            console.warn("Failed to apply updated journal locally", err);
-          }
-        }}
-        onDeleted={(id) => {
-          setEditOpened(false);
-          onDeleted?.(id);
-        }}
-      />
-
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title={journal.title ?? "Journal Details"}
-        size="lg"
-        scrollAreaComponent={ScrollArea.Autosize}
-      >
-        <Stack>
-          <Text fz="sm" c="dimmed">
-            {journal.description ?? "No description available."}
-          </Text>
-
-          <div>
-            <Text fw={600} style={{ marginBottom: 8 }}>
-              Tags
-            </Text>
-            <Group align="center" style={{ marginBottom: 8 }}>
-              {(localTags ?? []).map((t) => (
-                <Group key={t.id} align="center">
-                  <Badge color={t.color ?? "gray"} variant="light">
-                    {t.name}
-                  </Badge>
-                  <ActionIcon
-                    size="sm"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      const updated = {
-                        ...t,
-                        name: `${t.name}`,
-                      } as SDBJournalTag;
-                      if (onEditTag) await onEditTag(journal.id, updated);
-                    }}
-                  >
-                    <IconEdit size={14} />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="sm"
-                    color="red"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (onRemoveTag) await onRemoveTag(journal.id, t.id);
-                      setLocalTags((prev) => prev.filter((x) => x.id !== t.id));
-                    }}
-                  >
-                    <IconTrash size={14} />
-                  </ActionIcon>
-                </Group>
-              ))}
-            </Group>
-
-            <Group style={{ marginTop: 8 }}>
-              <TextInput
-                placeholder="New tag"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.currentTarget.value)}
-              />
-              <Button
-                onClick={async () => {
-                  if (!newTagName.trim()) return;
-                  if (onAddTag) await onAddTag(journal.id, newTagName.trim());
-                  const created = {
-                    id: Date.now(),
-                    journalId: journal.id,
-                    name: newTagName.trim(),
-                  } as unknown as SDBJournalTag;
-                  setLocalTags((prev) => [...prev, created]);
-                  setNewTagName("");
-                }}
-              >
-                <IconPlus style={{ marginRight: 8 }} />
-                Add Tag
-              </Button>
-            </Group>
-          </div>
-
-          <div>
-            <Text fw={600} style={{ marginBottom: 8 }}>
-              Entries
-            </Text>
-            <Text fz="sm" c="dimmed">
-              Entries view and editing will go here. Click an entry to edit or
-              create a new one.
-            </Text>
-            <Group style={{ marginTop: 8 }}>
-              <Button onClick={() => console.log("Open Add Entry Modal")}>
-                Create Entry
-              </Button>
-            </Group>
-          </div>
-        </Stack>
-      </Modal>
+      
     </Fragment>
   );
 }

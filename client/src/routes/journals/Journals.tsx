@@ -1,6 +1,6 @@
 import { Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from "react";
-import { Button, Group, rem, Stack, Menu } from "@mantine/core";
+import { Button, Group, rem, Stack, Menu, ScrollArea } from "@mantine/core";
 
 // forwardRef no longer required
 import TagsPillsCombo from "./TagsPillsCombo";
@@ -336,28 +336,36 @@ export default function Journals() {
             </div>
           </div>
 
-          <div>
-            {visibleRows.map((r, idx) => {
-              const delay = idx * staggerMs;
-              const isHidden = r.leaving || r.appearing || isSorting;
-              const cardStyle = {
-                transition: `transform 300ms cubic-bezier(.2,.8,.2,1) ${delay}ms, opacity 300ms ease ${delay}ms`,
-                opacity: isHidden ? 0 : 1,
-                transform: isHidden ? "translateY(-8px)" : "translateY(0)",
-              };
+          <ScrollArea
+            h="calc(80vh - 176px)"
+            style={{ width: 'calc(100% + 24px)', marginLeft: -12 }}
+            scrollbarSize={8}
+            offsetScrollbars
+          >
+            <div style={{ width: '100%', paddingRight: 20, paddingLeft: 12 }}>
+              {visibleRows.map((r, idx) => {
+                const delay = idx * staggerMs;
+                const isHidden = r.leaving || r.appearing || isSorting;
+                const cardStyle = {
+                  transition: `transform 300ms cubic-bezier(.2,.8,.2,1) ${delay}ms, opacity 300ms ease ${delay}ms`,
+                  opacity: isHidden ? 0 : 1,
+                  transform: isHidden ? "translateY(-8px)" : "translateY(0)",
+                  marginBottom: 12,
+                } as React.CSSProperties;
 
-              return (
-                <div key={r.key} style={cardStyle}>
-                  <JournalCard
-                    journal={r.journal}
-                    tags={r.tags ?? []}
-                    onSaved={() => getJournalsQuery.refetch()}
-                    onDeleted={() => getJournalsQuery.refetch()}
-                  />
-                </div>
-              );
-            })}
-          </div>
+                return (
+                  <div key={r.key} style={cardStyle}>
+                    <JournalCard
+                      journal={r.journal}
+                      tags={r.tags ?? []}
+                      onSaved={() => getJournalsQuery.refetch()}
+                      onDeleted={() => getJournalsQuery.refetch()}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
           <Group justify="center" mt="md">
             <Button size="xl" w={rem(300)} onClick={() => openNewJournal()}>
               Add New
