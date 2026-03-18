@@ -68,7 +68,9 @@ export default function ManageTagsModal({
     DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
     DefaultColors[0] ??
     "#000000";
-  const [newTagColor, setNewTagColor] = useState<string | null>(initialRandomColor);
+  const [newTagColor, setNewTagColor] = useState<string | null>(
+    initialRandomColor,
+  );
 
   useEffect(() => {
     if (modalOpened) {
@@ -97,14 +99,21 @@ export default function ManageTagsModal({
       }}
       title={title}
     >
-      <Table highlightOnHover style={{ marginLeft: "auto", marginRight: "auto" }}>
+      <Table
+        highlightOnHover
+        style={{ marginLeft: "auto", marginRight: "auto" }}
+      >
         <Table.Thead>
           <Table.Tr>
             <Table.Th style={{ textAlign: "center" }}>Name & Color</Table.Th>
             {updateFn ? (
-              <Table.Th style={{ textAlign: "center", width: "10%" }}>Save</Table.Th>
+              <Table.Th style={{ textAlign: "center", width: "10%" }}>
+                Save
+              </Table.Th>
             ) : null}
-            <Table.Th style={{ textAlign: "center", width: "10%" }}>Delete</Table.Th>
+            <Table.Th style={{ textAlign: "center", width: "10%" }}>
+              Delete
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -117,7 +126,9 @@ export default function ManageTagsModal({
             .map((tag) => (
               <Table.Tr key={tag.id}>
                 <Table.Td align="center">
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                  >
                     <TextInput
                       required
                       value={tag.name ?? ""}
@@ -125,7 +136,11 @@ export default function ManageTagsModal({
                       styles={{ input: { fontSize: 16 } }}
                       onChange={(event) => {
                         const value = event.currentTarget.value;
-                        setLocalTags((prev) => prev.map((g) => (g.id === tag.id ? { ...g, name: value } : g)));
+                        setLocalTags((prev) =>
+                          prev.map((g) =>
+                            g.id === tag.id ? { ...g, name: value } : g,
+                          ),
+                        );
                       }}
                     />
                     <ColorInput
@@ -137,7 +152,11 @@ export default function ManageTagsModal({
                       styles={{ input: { fontSize: 16 } }}
                       onChange={(value) => {
                         const color = value || null;
-                        setLocalTags((prev) => prev.map((g) => (g.id === tag.id ? { ...g, color } : g)));
+                        setLocalTags((prev) =>
+                          prev.map((g) =>
+                            g.id === tag.id ? { ...g, color } : g,
+                          ),
+                        );
                       }}
                     />
                   </div>
@@ -147,7 +166,9 @@ export default function ManageTagsModal({
                     <Group justify="center">
                       <ActionIcon
                         onClick={async () => {
-                          const updated = localTags.find((g) => g.id === tag.id);
+                          const updated = localTags.find(
+                            (g) => g.id === tag.id,
+                          );
                           if (updated) {
                             await updateTagMutation.mutateAsync(updated);
                             await tagsQuery.refetch();
@@ -203,9 +224,18 @@ export default function ManageTagsModal({
                     color="green"
                     onClick={async () => {
                       if (!newTagName.trim()) return;
-                      await addTagMutation.mutateAsync({ name: newTagName.trim(), color: newTagColor });
+                      await addTagMutation.mutateAsync({
+                        name: newTagName.trim(),
+                        color: newTagColor,
+                      });
                       setNewTagName("");
-                      setNewTagColor(DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ?? DefaultColors[0] ?? "#000000");
+                      setNewTagColor(
+                        DefaultColors[
+                          Math.floor(Math.random() * DefaultColors.length)
+                        ] ??
+                          DefaultColors[0] ??
+                          "#000000",
+                      );
                       await tagsQuery.refetch();
                     }}
                   >
@@ -220,9 +250,18 @@ export default function ManageTagsModal({
                     color="green"
                     onClick={async () => {
                       if (!newTagName.trim()) return;
-                      await addTagMutation.mutateAsync({ name: newTagName.trim(), color: newTagColor });
+                      await addTagMutation.mutateAsync({
+                        name: newTagName.trim(),
+                        color: newTagColor,
+                      });
                       setNewTagName("");
-                      setNewTagColor(DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ?? DefaultColors[0] ?? "#000000");
+                      setNewTagColor(
+                        DefaultColors[
+                          Math.floor(Math.random() * DefaultColors.length)
+                        ] ??
+                          DefaultColors[0] ??
+                          "#000000",
+                      );
                       await tagsQuery.refetch();
                     }}
                   >

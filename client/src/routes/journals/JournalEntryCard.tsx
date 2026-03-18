@@ -9,13 +9,17 @@ export interface JournalEntryCardProps {
   onClick?: () => void;
 }
 
-export default function JournalEntryCard({ entry, tags, onClick }: JournalEntryCardProps) {
+export default function JournalEntryCard({
+  entry,
+  tags,
+  onClick,
+}: JournalEntryCardProps) {
   return (
     <Fragment>
       <Card
         withBorder
-        shadow="md"
-        padding="lg"
+        shadow="sm"
+        padding="sm"
         radius="md"
         style={{
           cursor: onClick ? "pointer" : "default",
@@ -33,10 +37,19 @@ export default function JournalEntryCard({ entry, tags, onClick }: JournalEntryC
           e.currentTarget.style.boxShadow = "";
         }}
       >
-        <Stack>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+        <Stack style={{ gap: 6 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              minWidth: 0,
+            }}
+          >
             <div style={{ minWidth: 0, width: "100%" }}>
-              <Text fw={700}>{entry.title ?? "Untitled"}</Text>
+              <Text fw={700} style={{ lineHeight: 1 }}>
+                {entry.title ?? "Untitled"}
+              </Text>
               <Text
                 fz="sm"
                 c="dimmed"
@@ -46,6 +59,7 @@ export default function JournalEntryCard({ entry, tags, onClick }: JournalEntryC
                   whiteSpace: "nowrap",
                   display: "block",
                   width: "100%",
+                  marginTop: 4,
                 }}
               >
                 {entry.content ?? ""}
@@ -54,9 +68,15 @@ export default function JournalEntryCard({ entry, tags, onClick }: JournalEntryC
           </div>
 
           {tags && tags.length > 0 ? (
-            <Group wrap="wrap">
+            <Group wrap="wrap" style={{ gap: 6 }}>
               {tags.map((t) => (
-                <Badge key={t.id} color={t.color ?? "gray"} radius="sm">
+                <Badge
+                  key={t.id}
+                  color={t.color ?? "gray"}
+                  radius="sm"
+                  size="sm"
+                  style={{ padding: "3px 6px" }}
+                >
                   {t.name}
                 </Badge>
               ))}

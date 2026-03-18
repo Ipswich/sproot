@@ -36,3 +36,11 @@ export function journalsFiltersKey(): string {
 export function journalEntriesFiltersKey(): string {
   return `journal-entries-filters`;
 }
+
+export function journalsSortKey(): string {
+  return `journals-sort`;
+}
+
+export function journalEntriesSortKey(): string {
+  return `journal-entries-sort`;
+}

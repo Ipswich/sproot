@@ -12,7 +12,10 @@ interface ManageJournalEntryTagsModalProps {
   closeModal: () => void;
 }
 
-export default function ManageJournalEntryTagsModal({ modalOpened, closeModal }: ManageJournalEntryTagsModalProps) {
+export default function ManageJournalEntryTagsModal({
+  modalOpened,
+  closeModal,
+}: ManageJournalEntryTagsModalProps) {
   return (
     <ManageTagsModal
       modalOpened={modalOpened}
@@ -20,8 +23,12 @@ export default function ManageJournalEntryTagsModal({ modalOpened, closeModal }:
       title="Manage Entry Tags"
       queryKey={["journal-entry-tags"]}
       fetchFn={getJournalEntryTagsAsync}
-      addFn={async (name: string, color?: string | null) => addJournalEntryTagAsync(name, color)}
-      updateFn={async (tag: SDBJournalEntryTag) => updateJournalEntryTagAsync(tag)}
+      addFn={async (name: string, color?: string | null) =>
+        addJournalEntryTagAsync(name, color)
+      }
+      updateFn={async (tag: SDBJournalEntryTag) =>
+        updateJournalEntryTagAsync(tag)
+      }
       deleteFn={async (id: number) => deleteJournalEntryTagAsync(id)}
     />
   );

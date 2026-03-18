@@ -12,7 +12,10 @@ interface ManageJournalTagsModalProps {
   closeModal: () => void;
 }
 
-export default function ManageJournalTagsModal({ modalOpened, closeModal }: ManageJournalTagsModalProps) {
+export default function ManageJournalTagsModal({
+  modalOpened,
+  closeModal,
+}: ManageJournalTagsModalProps) {
   return (
     <ManageTagsModal
       modalOpened={modalOpened}
@@ -20,7 +23,9 @@ export default function ManageJournalTagsModal({ modalOpened, closeModal }: Mana
       title="Manage Journal Tags"
       queryKey={["journal-tags"]}
       fetchFn={getJournalTagsAsync}
-      addFn={async (name: string, color?: string | null) => addJournalTagAsync(name, color)}
+      addFn={async (name: string, color?: string | null) =>
+        addJournalTagAsync(name, color)
+      }
       updateFn={async (tag: SDBJournalTag) => updateJournalTagAsync(tag)}
       deleteFn={async (id: number) => deleteJournalTagAsync(id)}
     />

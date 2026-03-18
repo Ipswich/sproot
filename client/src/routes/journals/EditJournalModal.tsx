@@ -9,7 +9,6 @@ import {
   ActionIcon,
   Text,
   ScrollArea,
-  
 } from "@mantine/core";
 import TagsPillsCombo from "./TagsPillsCombo";
 import IconSelect from "./utils/IconListImpl";
@@ -122,8 +121,6 @@ export default function EditJournalModal({
 
   // Stage tag add/remove operations handled by Pills combo change handler.
 
-  
-
   // When the PillsCombo selection changes, compute diffs and stage add/removes
   const handlePillsChange = (vals: string[]) => {
     const newIds = vals.map((v) => Number(String(v).replace(/^tag:/, "")));
@@ -140,9 +137,13 @@ export default function EditJournalModal({
       } else {
         // only stage add if it wasn't originally present on server
         const existedOnServer = (tags ?? []).some((t) => t.id === id);
-        if (!existedOnServer) setTagAdds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        if (!existedOnServer)
+          setTagAdds((prev) => (prev.includes(id) ? prev : [...prev, id]));
         const addedTag = availableTags.find((t) => t.id === id);
-        if (addedTag) setLocalTags((prev) => (prev.some((p) => p.id === addedTag.id) ? prev : [...prev, addedTag]));
+        if (addedTag)
+          setLocalTags((prev) =>
+            prev.some((p) => p.id === addedTag.id) ? prev : [...prev, addedTag],
+          );
       }
     });
 
@@ -165,13 +166,20 @@ export default function EditJournalModal({
     );
     // after journal update, apply staged tag changes
     try {
-      const addPromises = tagAdds.map((tid) => addTagToJournalAsync(journal.id, tid));
-      const removePromises = tagRemoves.map((tid) => removeTagFromJournalAsync(journal.id, tid));
+      const addPromises = tagAdds.map((tid) =>
+        addTagToJournalAsync(journal.id, tid),
+      );
+      const removePromises = tagRemoves.map((tid) =>
+        removeTagFromJournalAsync(journal.id, tid),
+      );
       await Promise.allSettled([...addPromises, ...removePromises]);
       // ensure journals list is refreshed so parent and cards show latest tags
       try {
         // fetch fresh journals data and update the cache before closing/modal notify
-        await queryClient.fetchQuery({ queryKey: ["journals"], queryFn: () => getJournalsAsync() });
+        await queryClient.fetchQuery({
+          queryKey: ["journals"],
+          queryFn: () => getJournalsAsync(),
+        });
       } catch (err) {
         // ignore
       }
@@ -270,7 +278,10 @@ export default function EditJournalModal({
                 // ensure availableTags includes any currently selected localTags
                 Array.from(
                   new Map(
-                    [...availableTags, ...(localTags ?? [])].map((t) => [t.id, t]),
+                    [...availableTags, ...(localTags ?? [])].map((t) => [
+                      t.id,
+                      t,
+                    ]),
                   ).values(),
                 )
               }
@@ -278,10 +289,6 @@ export default function EditJournalModal({
               onChange={handlePillsChange}
               placeholder="Filter tags"
             />
-
-            
-
-            
           </div>
         </div>
 

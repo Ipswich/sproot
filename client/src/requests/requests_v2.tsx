@@ -833,7 +833,9 @@ export async function updateJournalTagAsync(
   return deserializedResponse.content?.data as SDBJournalTag;
 }
 
-export async function getJournalEntryTagsAsync(): Promise<SDBJournalEntryTag[]> {
+export async function getJournalEntryTagsAsync(): Promise<
+  SDBJournalEntryTag[]
+> {
   const response = await fetch(`${SERVER_URL}/api/v2/tags/entries`, {
     method: "GET",
     headers: {},
@@ -957,8 +959,10 @@ export async function deleteJournalAsync(id: number): Promise<void> {
   }
 }
 
-
-export async function addTagToJournalEntryAsync(entryId: number, tagId: number): Promise<void> {
+export async function addTagToJournalEntryAsync(
+  entryId: number,
+  tagId: number,
+): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/entries/${entryId}/tags`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -970,24 +974,36 @@ export async function addTagToJournalEntryAsync(entryId: number, tagId: number):
   }
 }
 
-export async function addTagToJournalAsync(journalId: number, tagId: number): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/journals/${journalId}/tags`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tagId: String(tagId) }),
-    mode: "cors",
-  });
+export async function addTagToJournalAsync(
+  journalId: number,
+  tagId: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/journals/${journalId}/tags`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tagId: String(tagId) }),
+      mode: "cors",
+    },
+  );
   if (!response.ok) {
     console.error(`Error adding tag to journal: ${response}`);
   }
 }
 
-export async function removeTagFromJournalAsync(journalId: number, tagId: number): Promise<void> {
-  const response = await fetch(`${SERVER_URL}/api/v2/journals/${journalId}/tags/${tagId}`, {
-    method: "DELETE",
-    headers: {},
-    mode: "cors",
-  });
+export async function removeTagFromJournalAsync(
+  journalId: number,
+  tagId: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/journals/${journalId}/tags/${tagId}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+    },
+  );
   if (!response.ok) {
     console.error(`Error removing tag from journal: ${response}`);
   }
@@ -997,12 +1013,15 @@ export async function addJournalEntryAsync(
   journalId: number,
   entry: Partial<SDBJournalEntry>,
 ): Promise<unknown | undefined> {
-  const response = await fetch(`${SERVER_URL}/api/v2/journals/${journalId}/entries`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({...entry}),
-    mode: "cors",
-  });
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/journals/${journalId}/entries`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...entry }),
+      mode: "cors",
+    },
+  );
   if (!response.ok) {
     console.error(`Error adding journal entry: ${response}`);
     return undefined;
@@ -1014,17 +1033,65 @@ export async function addJournalEntryAsync(
 export async function getJournalEntriesAsync(
   journalId: number,
 ): Promise<{ entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }[]> {
-  const response = await fetch(`${SERVER_URL}/api/v2/journals/${journalId}/entries`, {
-    method: "GET",
-    headers: {},
-    mode: "cors",
-  });
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/journals/${journalId}/entries`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+    },
+  );
   if (!response.ok) {
     console.error(`Error fetching journal entries: ${response}`);
     return [];
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
+}
+
+export async function updateJournalEntryAsync(
+  entry: Partial<SDBJournalEntry>,
+): Promise<SDBJournalEntry | undefined> {
+  const response = await fetch(`${SERVER_URL}/api/v2/entries/${entry.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...entry, id: undefined }),
+    mode: "cors",
+  });
+  if (!response.ok) {
+    console.error(`Error updating journal entry: ${response}`);
+    return undefined;
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data as SDBJournalEntry;
+}
+
+export async function deleteJournalEntryAsync(id: number): Promise<void> {
+  const response = await fetch(`${SERVER_URL}/api/v2/entries/${id}`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+  });
+  if (!response.ok) {
+    console.error(`Error deleting journal entry: ${response}`);
+  }
+}
+
+export async function removeTagFromJournalEntryAsync(
+  entryId: number,
+  tagId: number,
+): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/entries/${entryId}/tags/${tagId}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error removing tag from journal entry: ${response}`);
+  }
 }
 
 export async function powerOffAsync(): Promise<void> {

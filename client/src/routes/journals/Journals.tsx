@@ -1,8 +1,16 @@
 import { Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from "react";
-import { Button, Group, rem, Stack, Menu, ScrollArea } from "@mantine/core";
+import {
+  Button,
+  Group,
+  rem,
+  Stack,
+  Menu,
+  ScrollArea,
+  LoadingOverlay,
+  Box,
+} from "@mantine/core";
 
-// forwardRef no longer required
 import TagsPillsCombo from "./TagsPillsCombo";
 import { useQuery } from "@tanstack/react-query";
 import { getJournalsAsync } from "@sproot/sproot-client/src/requests/requests_v2";
@@ -12,7 +20,10 @@ import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import ManageJournalTagsModal from "./ManageJournalTagsModal";
 import NewJournalModal from "./NewJournalModal";
 import { useDisclosure } from "@mantine/hooks";
-import { journalsFiltersKey } from "../utility/LocalStorageKeys";
+import {
+  journalsFiltersKey,
+  journalsSortKey,
+} from "../utility/LocalStorageKeys";
 
 export default function Journals() {
   const getJournalsQuery = useQuery({
@@ -27,8 +38,41 @@ export default function Journals() {
     { open: openNewJournal, close: closeNewJournal },
   ] = useDisclosure(false);
   const [filters, setFilters] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>("name");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<string>(() => {
+    try {
+      const s = localStorage.getItem(journalsSortKey());
+      if (s) {
+        const o = JSON.parse(s);
+        return o?.sortBy ?? "editedAt";
+      }
+    } catch {
+      /* ignore */
+    }
+    return "editedAt";
+  });
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => {
+    try {
+      const s = localStorage.getItem(journalsSortKey());
+      if (s) {
+        const o = JSON.parse(s);
+        return o?.sortDir ?? "desc";
+      }
+    } catch {
+      /* ignore */
+    }
+    return "desc";
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        journalsSortKey(),
+        JSON.stringify({ sortBy, sortDir }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [sortBy, sortDir]);
   const [isSorting, setIsSorting] = useState(false);
   const firstRenderRef = useRef(true);
 
@@ -228,165 +272,172 @@ export default function Journals() {
 
   return (
     <Fragment>
-      {getJournalsQuery.isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <Stack>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-            }}
-          >
+      <div style={{ position: "relative" }}>
+        <LoadingOverlay
+          visible={getJournalsQuery.isLoading}
+          zIndex={1000}
+          loaderProps={{ color: "teal", type: "bars", size: "lg" }}
+        />
+        {getJournalsQuery.isLoading ? (
+          <Box style={{ height: 260 }} />
+        ) : (
+          <Stack>
             <div
               style={{
-                flex: 1,
-                minWidth: 280,
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
                 gap: 12,
+                flexWrap: "wrap",
               }}
             >
-              <TagsPillsCombo
-                allTags={[
-                  { id: -1, name: "Archived", color: "#868e96" },
-                  ...allTags,
-                ]}
-                value={filters}
-                onChange={(newFilters) => {
-                  setFilters(newFilters);
-                  localStorage.setItem(
-                    journalsFiltersKey(),
-                    JSON.stringify(newFilters),
-                  );
+              <div
+                style={{
+                  flex: 1,
+                  minWidth: 280,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
                 }}
-                placeholder="Filter journals"
-              />
+              >
+                <TagsPillsCombo
+                  allTags={[
+                    { id: -1, name: "Archived", color: "#868e96" },
+                    ...allTags,
+                  ]}
+                  value={filters}
+                  onChange={(newFilters) => {
+                    setFilters(newFilters);
+                    localStorage.setItem(
+                      journalsFiltersKey(),
+                      JSON.stringify(newFilters),
+                    );
+                  }}
+                  placeholder="Filter to"
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <Menu withinPortal={false} position="bottom-end">
+                  <Menu.Target>
+                    <Button variant="outline" size="sm">
+                      {sortBy === "name"
+                        ? "Name"
+                        : sortBy === "editedAt"
+                          ? "Edited"
+                          : "Archived"}{" "}
+                      {sortDir === "asc" ? "↑" : "↓"}
+                    </Button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      onClick={() => {
+                        if (sortBy === "name")
+                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                        else {
+                          setSortBy("name");
+                          setSortDir("asc");
+                        }
+                      }}
+                    >
+                      Name{" "}
+                      {sortBy === "name"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => {
+                        if (sortBy === "editedAt")
+                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                        else {
+                          setSortBy("editedAt");
+                          setSortDir("asc");
+                        }
+                      }}
+                    >
+                      Edited{" "}
+                      {sortBy === "editedAt"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
+                    </Menu.Item>
+                    <Menu.Item
+                      onClick={() => {
+                        if (sortBy === "archivedAt")
+                          setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                        else {
+                          setSortBy("archivedAt");
+                          setSortDir("asc");
+                        }
+                      }}
+                    >
+                      Archived{" "}
+                      {sortBy === "archivedAt"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </div>
             </div>
 
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <Menu withinPortal={false} position="bottom-end">
-                <Menu.Target>
-                  <Button variant="outline" size="sm">
-                    {sortBy === "name"
-                      ? "Name"
-                      : sortBy === "editedAt"
-                        ? "Edited"
-                        : "Archived"}{" "}
-                    {sortDir === "asc" ? "↑" : "↓"}
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    onClick={() => {
-                      if (sortBy === "name")
-                        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                      else {
-                        setSortBy("name");
-                        setSortDir("asc");
-                      }
-                    }}
-                  >
-                    Name{" "}
-                    {sortBy === "name"
-                      ? sortDir === "asc"
-                        ? " ↑"
-                        : " ↓"
-                      : null}
-                  </Menu.Item>
-                  <Menu.Item
-                    onClick={() => {
-                      if (sortBy === "editedAt")
-                        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                      else {
-                        setSortBy("editedAt");
-                        setSortDir("asc");
-                      }
-                    }}
-                  >
-                    Edited{" "}
-                    {sortBy === "editedAt"
-                      ? sortDir === "asc"
-                        ? " ↑"
-                        : " ↓"
-                      : null}
-                  </Menu.Item>
-                  <Menu.Item
-                    onClick={() => {
-                      if (sortBy === "archivedAt")
-                        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                      else {
-                        setSortBy("archivedAt");
-                        setSortDir("asc");
-                      }
-                    }}
-                  >
-                    Archived{" "}
-                    {sortBy === "archivedAt"
-                      ? sortDir === "asc"
-                        ? " ↑"
-                        : " ↓"
-                      : null}
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </div>
-          </div>
+            <ScrollArea
+              mah="calc(80vh - 176px)"
+              style={{ width: "100%" }}
+              scrollbarSize={8}
+              offsetScrollbars
+            >
+              <div style={{ width: "100%", paddingRight: 12, paddingLeft: 12 }}>
+                {visibleRows.map((r, idx) => {
+                  const delay = idx * staggerMs;
+                  const isHidden = r.leaving || r.appearing || isSorting;
+                  const cardStyle = {
+                    transition: `transform 300ms cubic-bezier(.2,.8,.2,1) ${delay}ms, opacity 300ms ease ${delay}ms`,
+                    opacity: isHidden ? 0 : 1,
+                    transform: isHidden ? "translateY(-8px)" : "translateY(0)",
+                    marginBottom: 12,
+                  } as React.CSSProperties;
 
-          <ScrollArea
-            h="calc(80vh - 176px)"
-            style={{ width: 'calc(100% + 24px)', marginLeft: -12 }}
-            scrollbarSize={8}
-            offsetScrollbars
-          >
-            <div style={{ width: '100%', paddingRight: 20, paddingLeft: 12 }}>
-              {visibleRows.map((r, idx) => {
-                const delay = idx * staggerMs;
-                const isHidden = r.leaving || r.appearing || isSorting;
-                const cardStyle = {
-                  transition: `transform 300ms cubic-bezier(.2,.8,.2,1) ${delay}ms, opacity 300ms ease ${delay}ms`,
-                  opacity: isHidden ? 0 : 1,
-                  transform: isHidden ? "translateY(-8px)" : "translateY(0)",
-                  marginBottom: 12,
-                } as React.CSSProperties;
-
-                return (
-                  <div key={r.key} style={cardStyle}>
-                    <JournalCard
-                      journal={r.journal}
-                      tags={r.tags ?? []}
-                      onSaved={() => getJournalsQuery.refetch()}
-                      onDeleted={() => getJournalsQuery.refetch()}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-          <Group justify="center" mt="md">
-            <Button size="xl" w={rem(300)} onClick={() => openNewJournal()}>
-              Add New
-            </Button>
-          </Group>
-          <Group justify="center" mt="md">
-            <Button size="sm" w={rem(200)} onClick={() => openTagsModal()}>
-              Manage Journal Tags
-            </Button>
-          </Group>
-          <ManageJournalTagsModal
-            modalOpened={tagsModalOpened}
-            closeModal={closeTagsModal}
-          />
-          <NewJournalModal
-            modalOpened={newJournalModalOpened}
-            closeModal={closeNewJournal}
-            onCreated={() => getJournalsQuery.refetch()}
-          />
-        </Stack>
-      )}
+                  return (
+                    <div key={r.key} style={cardStyle}>
+                      <JournalCard
+                        journal={r.journal}
+                        tags={r.tags ?? []}
+                        onSaved={() => getJournalsQuery.refetch()}
+                        onDeleted={() => getJournalsQuery.refetch()}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+            <Group justify="center" mt="md">
+              <Button size="xl" w={rem(300)} onClick={() => openNewJournal()}>
+                Add New
+              </Button>
+            </Group>
+            <Group justify="center" mt="sm">
+              <Button size="sm" w={rem(200)} onClick={() => openTagsModal()}>
+                Manage Journal Tags
+              </Button>
+            </Group>
+            <ManageJournalTagsModal
+              modalOpened={tagsModalOpened}
+              closeModal={closeTagsModal}
+            />
+            <NewJournalModal
+              modalOpened={newJournalModalOpened}
+              closeModal={closeNewJournal}
+              onCreated={() => getJournalsQuery.refetch()}
+            />
+          </Stack>
+        )}
+      </div>
     </Fragment>
   );
 }

@@ -4,8 +4,6 @@ import { useEffect, useState, useTransition } from "react";
 import { useLocation } from "react-router-dom";
 import { Page } from "../Pages";
 import { useQueryClient } from "@tanstack/react-query";
-import { getJournalsAsync } from "@sproot/sproot-client/src/requests/requests_v2";
-import { SDBJournal } from "@sproot/database/SDBJournal";
 
 interface HeaderContentsProps {
   navbarToggle: () => void;
@@ -43,31 +41,7 @@ export default function HeaderContents({
 
     // journals detail route: /journals/:journalId
     if (path.startsWith("/journals/")) {
-      const parts = path.split("/").filter(Boolean);
-      const id = parts[1];
-      if (id) {
-        const journalsData = queryClient.getQueryData<Array<{ journal: SDBJournal }>>(["journals"]);
-        if (journalsData && journalsData.length > 0) {
-          const found = journalsData.find((j) => String(j.journal.id) === String(id));
-          if (found) {
-            setHeaderText(found.journal.title ?? "Journal");
-            return;
-          }
-        }
-
-        // If no cache available, fetch journals once and resolve title
-        (async () => {
-          try {
-            const fetched = (await queryClient.fetchQuery({ queryKey: ["journals"], queryFn: getJournalsAsync })) as Array<{ journal: SDBJournal }>;
-            const found = (fetched ?? []).find((j) => String(j.journal.id) === String(id));
-            if (found) {
-              setHeaderText(found.journal.title ?? "Journal");
-            }
-          } catch (err) {
-            // ignore fetch errors and leave header empty
-          }
-        })();
-      }
+      setHeaderText("Journals");
     }
   }, [location, headerText, queryClient]);
 

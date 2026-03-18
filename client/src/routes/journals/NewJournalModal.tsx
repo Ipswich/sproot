@@ -108,28 +108,35 @@ export default function NewJournalModal({
       >
         <form
           onSubmit={form.onSubmit(async (values) => {
-                const created = await addJournalMutation.mutateAsync(values);
-                if (created) {
-                  try {
-                    const tagIds = selectedTags.map((s) => Number(String(s).replace(/^tag:/, "")));
-                    const addPromises = tagIds.map((tid) => addTagToJournalAsync(created.id, tid));
-                    await Promise.allSettled(addPromises);
-                    // ensure journals list is fresh before notifying parent
-                    try {
-                      await queryClient.fetchQuery({ queryKey: ["journals"], queryFn: () => getJournalsAsync() });
-                    } catch (err) {
-                      // ignore
-                    }
-                  } catch (e) {
-                    // eslint-disable-next-line no-console
-                    console.error("Error applying tags after creation", e);
-                  }
+            const created = await addJournalMutation.mutateAsync(values);
+            if (created) {
+              try {
+                const tagIds = selectedTags.map((s) =>
+                  Number(String(s).replace(/^tag:/, "")),
+                );
+                const addPromises = tagIds.map((tid) =>
+                  addTagToJournalAsync(created.id, tid),
+                );
+                await Promise.allSettled(addPromises);
+                // ensure journals list is fresh before notifying parent
+                try {
+                  await queryClient.fetchQuery({
+                    queryKey: ["journals"],
+                    queryFn: () => getJournalsAsync(),
+                  });
+                } catch (err) {
+                  // ignore
                 }
-                if (created && onCreated) onCreated(created);
-                form.reset();
-                setSelectedTags([]);
-                closeModal();
-              })}
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error("Error applying tags after creation", e);
+              }
+            }
+            if (created && onCreated) onCreated(created);
+            form.reset();
+            setSelectedTags([]);
+            closeModal();
+          })}
         >
           <TextInput
             required

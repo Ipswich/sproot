@@ -2,13 +2,7 @@ import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import { Fragment, useState, useEffect, type ElementType } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  Badge,
-  Group,
-  Text,
-  Stack,
-} from "@mantine/core";
+import { Card, Badge, Group, Text, Stack } from "@mantine/core";
 import { getIcon } from "./utils/getIcon";
 
 export interface JournalCardProps {
@@ -20,7 +14,7 @@ export interface JournalCardProps {
 
 export default function JournalCard({ journal, tags }: JournalCardProps) {
   const [localTags, setLocalTags] = useState<SDBJournalTag[]>([]);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,8 +52,8 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
     <Fragment>
       <Card
         withBorder
-        shadow="md"
-        padding="lg"
+        shadow="sm"
+        padding="sm"
         radius="md"
         style={{
           cursor: "pointer",
@@ -69,55 +63,70 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
         }}
         onClick={() => navigate(`/journals/${journal.id}`)}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-6px)";
-          e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.08)";
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.06)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = "translateY(0)";
           e.currentTarget.style.boxShadow = "";
         }}
       >
-        <Stack>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              gap: 12,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-              {journal.icon ? (
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    display: "grid",
-                    placeItems: "center",
-                    borderRadius: 10,
-                    background: bg,
-                    minWidth: 44,
-                  }}
-                >
-                  {IconComp ? <IconComp size={22} color={iconColor} /> : null}
-                </div>
-              ) : null}
-              <div style={{ minWidth: 0 }}>
-                <Text fw={700}>{journal.title}</Text>
-                <Text
-                  fz="sm"
-                  c="dimmed"
-                  style={{
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    display: "block",
-                    width: "100%",
-                  }}
-                >
-                  {journal.description ?? ""}
-                </Text>
+        <Stack style={{ gap: 6 }}>
+          <Group style={{ alignItems: "center", gap: 10, minWidth: 0 }}>
+            {journal.icon ? (
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: 8,
+                  background: bg,
+                  minWidth: 40,
+                  flexShrink: 0,
+                }}
+              >
+                {IconComp ? <IconComp size={20} color={iconColor} /> : null}
               </div>
+            ) : null}
+
+            <div
+              style={{
+                minWidth: 0,
+                width: "100%",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+              }}
+            >
+              <Text
+                fw={700}
+                style={{
+                  lineHeight: 1.15,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                  width: "100%",
+                }}
+              >
+                {journal.title}
+              </Text>
+              <Text
+                fz="sm"
+                c="dimmed"
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: "block",
+                  width: "100%",
+                  marginTop: 0,
+                }}
+              >
+                {journal.description ?? ""}
+              </Text>
             </div>
 
             <div
@@ -125,15 +134,15 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
                 marginLeft: "auto",
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 6,
+                flexShrink: 0,
               }}
             >
               {journal.archived ? (
                 <Badge
                   variant="dot"
                   color="gray"
-                  size="sm"
-                  style={{ borderRadius: 6 }}
+                  style={{ borderRadius: 6, padding: "4px 8px" }}
                   title={
                     journal.archivedAt
                       ? (() => {
@@ -150,12 +159,18 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
                 </Badge>
               ) : null}
             </div>
-          </div>
+          </Group>
 
           {localTags && localTags.length > 0 ? (
             <Group wrap="wrap">
               {localTags.map((t) => (
-                <Badge key={t.id} color={t.color ?? "gray"} radius="sm">
+                <Badge
+                  key={t.id}
+                  color={t.color ?? "gray"}
+                  radius="sm"
+                  size="sm"
+                  style={{ padding: "3px 6px" }}
+                >
                   {t.name}
                 </Badge>
               ))}
@@ -178,8 +193,6 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
           </div>
         </Stack>
       </Card>
-
-      
     </Fragment>
   );
 }
