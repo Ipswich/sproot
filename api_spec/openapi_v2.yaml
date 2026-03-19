@@ -7698,6 +7698,9 @@ paths:
           application/json:
             schema:
               properties:
+                sensorId:
+                  type: string
+                  example: "1"
                 start:
                   type: string
                   format: date-time
@@ -8058,6 +8061,9 @@ paths:
           application/json:
             schema:
               properties:
+                outputId:
+                  type: string
+                  example: "1"
                 start:
                   type: string
                   format: date-time
