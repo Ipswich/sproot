@@ -21,11 +21,19 @@ export async function getByJournalIdAsync(
   if (isNaN(journalId)) {
     badRequests.push("Valid Journal ID is required.");
   }
-  if (req.query["withContent"] !== undefined && typeof req.query["withContent"] === "boolean") {
-    if (Boolean(req.query["withContent"]) === true) {
-      withContent = true;
-    } else if (Boolean(req.query["withContent"]) === false) {
-      withContent = false;
+  if (req.query["withContent"] !== undefined) {
+    const raw = req.query["withContent"];
+    if (typeof raw === "boolean") {
+      withContent = raw;
+    } else if (typeof raw === "string") {
+      const valueAsString = raw.toLowerCase();
+      if (valueAsString === "true") {
+        withContent = true;
+      } else if (valueAsString === "false") {
+        withContent = false;
+      } else {
+        badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
+      }
     } else {
       badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
     }
@@ -101,11 +109,19 @@ export async function getByEntryIdAsync(
     }
   }
 
-  if (req.query["withContent"] !== undefined && typeof req.query["withContent"] === "boolean") {
-    if (Boolean(req.query["withContent"]) === true) {
-      withContent = true;
-    } else if (Boolean(req.query["withContent"]) === false) {
-      withContent = false;
+  if (req.query["withContent"] !== undefined) {
+    const raw = req.query["withContent"];
+    if (typeof raw === "boolean") {
+      withContent = raw;
+    } else if (typeof raw === "string") {
+      const valueAsString = raw.toLowerCase();
+      if (valueAsString === "true") {
+        withContent = true;
+      } else if (valueAsString === "false") {
+        withContent = false;
+      } else {
+        badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
+      }
     } else {
       badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
     }
@@ -458,14 +474,14 @@ export async function addTagAsync(
       return response;
     }
 
-    const existingTag = await journalService.journalTagManager.getTags();
+    const existingTag = await journalService.entryTagManager.getTags();
     if (!existingTag.find((t) => t.id === tagId)) {
       response = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: req.originalUrl,
-          details: [`Journal Tag with ID ${tagId} not found.`],
+          details: [`Journal Entry Tag with ID ${tagId} not found.`],
         },
         ...res.locals["defaultProperties"],
       };

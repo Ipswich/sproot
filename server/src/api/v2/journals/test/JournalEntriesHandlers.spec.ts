@@ -740,7 +740,7 @@ describe("JournalEntriesHandlers", () => {
       const err = result.error;
       assert.exists(err);
       assert.isArray(err.details);
-      assert.includeMembers(err.details, [`Journal Tag with ID 11 not found.`]);
+      assert.includeMembers(err.details, [`Journal Entry Tag with ID 11 not found.`]);
     });
 
     it("should return 200 when tag added successfully", async () => {
@@ -751,7 +751,7 @@ describe("JournalEntriesHandlers", () => {
       sprootDB.getJournalEntryAsync.resolves([entryNoTags]);
       sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
       sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
+      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
       sprootDB.addJournalEntryTagLookupAsync.resolves(77);
       const journalService = new JournalService(sprootDB as ISprootDB);
 
@@ -775,7 +775,7 @@ describe("JournalEntriesHandlers", () => {
       sprootDB.getJournalEntryAsync.resolves([entryNoTags]);
       sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
       sprootDB.getJournalEntryTagsAsync.resolves([]);
-      sprootDB.getJournalTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
+      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
       sprootDB.addJournalEntryTagLookupAsync.rejects(new Error("boom"));
       const journalService = new JournalService(sprootDB as ISprootDB);
 

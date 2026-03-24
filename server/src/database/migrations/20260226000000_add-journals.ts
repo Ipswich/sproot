@@ -69,7 +69,7 @@ export async function up(knex: Knex): Promise<void> {
       table.string("title", 64).defaultTo(null);
       table.text("content").notNullable();
       table.dateTime("createdAt").notNullable().defaultTo(knex.fn.now());
-      table.dateTime("editedAt").defaultTo(null);
+      table.dateTime("editedAt").notNullable().defaultTo(knex.fn.now());
       table.primary(["id"]);
       table.index(["journal_id", "createdAt"]);
       setTableDefaults(table);

@@ -439,11 +439,14 @@ export class SprootDB implements ISprootDB {
   }
 
   async deleteJournalEntryAsync(id: number): Promise<void> {
-    //TODO prevent updates if Journal is archived??
+    const entry = await this.#connection("journal_entries")
+      .where("id", id)
+      .select("journal_id as journalId")
+      .first();
     await Promise.all([
       this.#connection("journal_entries").where("id", id).delete(),
       this.#connection("journals")
-        .where("id", id)
+        .where("id", entry?.journalId)
         .update({
           editedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
         }),
