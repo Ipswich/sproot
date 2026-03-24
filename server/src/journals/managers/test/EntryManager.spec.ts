@@ -16,7 +16,6 @@ describe("EntryManager.ts tests", () => {
       getJournalEntriesAsync: sinon.stub(),
       getJournalEntryTagLookupsAsync: sinon.stub(),
       getJournalEntryTagsAsync: sinon.stub(),
-      getJournalEntryDeviceDataAsync: sinon.stub(),
     };
 
     entryManager = new EntryManager(sprootDB as ISprootDB);

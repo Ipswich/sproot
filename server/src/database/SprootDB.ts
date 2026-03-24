@@ -39,7 +39,6 @@ import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJour
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
-import { SDBJournalEntryDeviceData } from "@sproot/sproot-common/dist/database/SDBJournalEntryDeviceData";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -475,63 +474,6 @@ export class SprootDB implements ISprootDB {
   async deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void> {
     return this.#connection("journal_entry_tag_lookup")
       .where({ journal_entry_id: journalEntryId, tag_id: tagId })
-      .delete();
-  }
-
-  async getJournalEntryDeviceDataAsync(
-    journalEntryId: number,
-    type?: "Sensor" | "Output",
-  ): Promise<SDBJournalEntryDeviceData[]> {
-    const result = this.#connection("journal_entry_device_data as d")
-      .where("d.journal_entry_id", journalEntryId)
-      .modify((queryBuilder) => {
-        if (type) {
-          queryBuilder.andWhere("d.deviceType", type);
-        }
-      })
-      .select(
-        "d.id",
-        "d.journal_entry_id as journalEntryId",
-        "d.deviceName",
-        "d.reading",
-        "d.units",
-        "d.readingTime",
-      );
-    return (await result).map((data: SDBJournalEntryDeviceData) => ({
-      ...data,
-      readingTime: data.readingTime.replace(" ", "T") + "Z",
-    }));
-  }
-
-  async addJournalEntryDeviceDataAsync(
-    journalEntryId: number,
-    deviceName: string,
-    deviceType: string,
-    reading: string,
-    units: string | null,
-    readingTime: string,
-  ): Promise<number> {
-    return (
-      (
-        await this.#connection("journal_entry_device_data").insert({
-          journal_entry_id: journalEntryId,
-          deviceName,
-          deviceType,
-          reading,
-          units,
-          readingTime,
-        })
-      )[0] ?? -1
-    );
-  }
-
-  async deleteJournalEntryDeviceDataAsync(
-    entryId: number,
-    name: string,
-    type: string,
-  ): Promise<void> {
-    return this.#connection("journal_entry_device_data")
-      .where({ journal_entry_id: entryId, deviceName: name, deviceType: type })
       .delete();
   }
 

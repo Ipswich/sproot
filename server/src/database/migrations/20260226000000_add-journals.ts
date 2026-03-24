@@ -113,33 +113,60 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  if (!(await knex.schema.hasTable("journal_entry_device_data"))) {
-    await knex.schema.createTable("journal_entry_device_data", (table) => {
-      table.increments("id").notNullable();
-      table
-        .integer("journal_entry_id")
-        .unsigned()
-        .notNullable()
-        .references("id")
-        .inTable("journal_entries")
-        .onDelete("CASCADE")
-        .onUpdate("CASCADE");
-      table.string("deviceName", 64).notNullable();
-      table
-        .enum("deviceType", ["Sensor", "Output"], { useNative: true, enumName: "device_type" })
-        .notNullable();
-      table.decimal("reading", 12, 7).notNullable();
-      table.string("units", 16).defaultTo(null);
-      table.dateTime("readingTime").notNullable();
-      table.primary(["id"]);
-      table.index(["journal_entry_id"]);
-      table.index(["readingTime"]);
-      setTableDefaults(table);
-    });
-  }
+  // if (!(await knex.schema.hasTable("journal_entry_device_data"))) {
+  //   await knex.schema.createTable("journal_entry_device_data", (table) => {
+  //     table.increments("id").notNullable();
+  //     table
+  //       .integer("journal_entry_id")
+  //       .unsigned()
+  //       .notNullable()
+  //       .references("id")
+  //       .inTable("journal_entries")
+  //       .onDelete("CASCADE")
+  //       .onUpdate("CASCADE");
+  //     table.string("deviceName", 64).notNullable();
+  //     table.string("color", 32).defaultTo(null);
+  //     table
+  //       .enum("deviceType", ["Sensor", "Output"], { useNative: true, enumName: "device_type" })
+  //       .notNullable();
+  //     table.string("metric", 32).defaultTo(null);
+  //     table.decimal("reading", 12, 7).notNullable();
+  //     table.string("units", 16).defaultTo(null);
+  //     table.dateTime("readingTime").notNullable();
+  //     table.primary(["id"]);
+  //     table.index(["journal_entry_id"]);
+  //     table.index(["readingTime"]);
+  //     setTableDefaults(table);
+  //   });
+  // }
+
+    // Add indexes on logTime to speed up range scans and bucketing queries
+    try {
+      await knex.raw(`CREATE INDEX idx_output_logtime ON output_data (output_id, logTime)`);
+    } catch (e) {
+      // ignore if index already exists or not supported
+    }
+
+    try {
+      await knex.raw(`CREATE INDEX idx_sensor_logtime ON sensor_data (sensor_id, logTime)`);
+    } catch (e) {
+      // ignore
+    }
 }
 
 export async function down(knex: Knex): Promise<void> {
+  // Remove added logTime indexes if present
+  try {
+    await knex.raw(`DROP INDEX idx_output_logtime ON output_data`);
+  } catch (e) {
+    // ignore
+  }
+  try {
+    await knex.raw(`DROP INDEX idx_sensor_logtime ON sensor_data`);
+  } catch (e) {
+    // ignore
+  }
+
   // drop in reverse order to satisfy FKs
   if (await knex.schema.hasTable("journal_entry_device_data")) {
     await knex.schema.dropTable("journal_entry_device_data");

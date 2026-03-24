@@ -15,10 +15,11 @@ import {
   Box,
   rem,
   LoadingOverlay,
+  Switch,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import EditJournalModal from "./EditJournalModal";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconSortAscending, IconSortDescending } from "@tabler/icons-react";
 import { getIcon } from "./utils/getIcon";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
@@ -32,6 +33,7 @@ import {
   journalEntriesSortKey,
 } from "../utility/LocalStorageKeys";
 import ManageJournalEntryTagsModal from "./ManageJournalEntryTagsModal";
+import PopoverDatePickerInput from "../../components/PopoverDatePickerInput";
 
 export default function JournalEntries() {
   const { journalId } = useParams();
@@ -165,7 +167,7 @@ export default function JournalEntries() {
           ) : null}
           <div>
             {journal?.journal.description &&
-            String(journal.journal.description).trim() ? (
+              String(journal.journal.description).trim() ? (
               <>
                 <Text size="sm" color="dimmed" style={{ margin: 0 }}>
                   {journal?.journal.description}
@@ -270,6 +272,11 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
   });
 
   const [filters, setFilters] = useState<string[]>([]);
+  const [dateRangeExact, setDateRangeExact] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ]);
+  const [ignoreYear, setIgnoreYear] = useState(false);
   const [sortBy, setSortBy] = useState<string>(() => {
     try {
       const s = localStorage.getItem(journalEntriesSortKey());
@@ -347,12 +354,68 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
   const selectedTagIds = filters
     .filter((f) => f.startsWith("tag:"))
     .map((f) => Number(f.replace(/^tag:/, "")));
-
   const filtered = (entriesQuery.data ?? []).filter((r) => {
-    if (!filters || filters.length === 0) return true;
     const entryTagIds = (r.tags ?? []).map((t) => t.id);
-    if (selectedTagIds.length === 0) return true;
-    return entryTagIds.some((id) => selectedTagIds.includes(id));
+    const tagActive = selectedTagIds && selectedTagIds.length > 0;
+    const tagMatch = tagActive ? entryTagIds.some((id) => selectedTagIds.includes(id)) : false;
+
+    // date-range presence
+    const hasRange = Boolean(dateRangeExact && (dateRangeExact[0] || dateRangeExact[1]));
+    const created = r.entry.createdAt ? new Date(r.entry.createdAt) : null;
+    const dateActive = hasRange && !!created;
+
+    // compute dateMatch if needed
+    let dateMatch = true;
+    if (dateActive && created) {
+      const start = dateRangeExact[0];
+      const end = dateRangeExact[1];
+      if (!ignoreYear) {
+        if (start && end) {
+          const s = new Date(start);
+          s.setHours(0, 0, 0, 0);
+          const e = new Date(end);
+          e.setHours(23, 59, 59, 999);
+          dateMatch = created >= s && created <= e;
+        } else if (start && !end) {
+          const s = new Date(start);
+          s.setHours(0, 0, 0, 0);
+          const e = new Date(start);
+          e.setHours(23, 59, 59, 999);
+          dateMatch = created >= s && created <= e;
+        } else if (!start && end) {
+          const s = new Date(end);
+          s.setHours(0, 0, 0, 0);
+          const e = new Date(end);
+          e.setHours(23, 59, 59, 999);
+          dateMatch = created >= s && created <= e;
+        }
+      } else {
+        const toOrd = (d: Date) => d.getMonth() * 100 + d.getDate();
+        const cOrd = toOrd(created);
+        if (start && end) {
+          const sOrd = toOrd(start);
+          const eOrd = toOrd(end);
+          if (sOrd <= eOrd) dateMatch = cOrd >= sOrd && cOrd <= eOrd;
+          else dateMatch = cOrd >= sOrd || cOrd <= eOrd;
+        } else if (start && !end) {
+          const sOrd = toOrd(start);
+          dateMatch = cOrd === sOrd;
+        } else if (!start && end) {
+          const eOrd = toOrd(end);
+          dateMatch = cOrd === eOrd;
+        }
+      }
+    }
+
+    // Four-case logic:
+    // - no tags && no date -> show all
+    // - tags only -> require tagMatch
+    // - date only -> require dateMatch
+    // - tags + date -> require both
+    if (!tagActive && !dateActive) return true;
+    if (tagActive && !dateActive) return tagMatch;
+    if (!tagActive && dateActive) return dateMatch;
+    return tagMatch && dateMatch;
   });
 
   const cmp = (a: (typeof filtered)[number], b: (typeof filtered)[number]) => {
@@ -499,60 +562,94 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
         }}
       >
         <div style={{ flex: 1 }}>
-          <TagsPillsCombo
-            allTags={[...allTags]}
-            value={filters}
-            onChange={(newFilters) => {
-              setFilters(newFilters);
-              localStorage.setItem(
-                journalEntriesFiltersKey(),
-                JSON.stringify(newFilters),
-              );
-            }}
-            placeholder="Filter to"
-          />
+          <Stack>
+            <Group>
+              <div style={{ flex: 1 }}>
+                <TagsPillsCombo
+                  allTags={[...allTags]}
+                  value={filters}
+                  onChange={(newFilters) => {
+                    setFilters(newFilters);
+                    localStorage.setItem(
+                      journalEntriesFiltersKey(),
+                      JSON.stringify(newFilters),
+                    );
+                  }}
+                  placeholder="Filter by tags"
+                />
+              </div>
+              <Menu withinPortal={false} position="bottom-end">
+                <Menu.Target>
+                  <ActionIcon size="lg">
+                    {sortDir === "asc" ? (
+                      <IconSortAscending size={16} />
+                    ) : (
+                      <IconSortDescending size={16} />
+                    )}
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "name")
+                        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                      else {
+                        setSortBy("name");
+                        setSortDir("asc");
+                      }
+                    }}
+                  >
+                    Name{" "}
+                    {sortBy === "name" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                  </Menu.Item>
+                  <Menu.Item
+                    onClick={() => {
+                      if (sortBy === "createdAt")
+                        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                      else {
+                        setSortBy("createdAt");
+                        setSortDir("desc");
+                      }
+                    }}
+                  >
+                    Created{" "}
+                    {sortBy === "createdAt"
+                      ? sortDir === "asc"
+                        ? " ↑"
+                        : " ↓"
+                      : null}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
+
+            <Group>
+              <div style={{ flex: 1 }}>
+                <PopoverDatePickerInput
+                  size="sm"
+                  type="range"
+                  allowSingleDateInRange
+                  value={dateRangeExact}
+                  ignoreYear={ignoreYear}
+                  onChange={(v) => setDateRangeExact(v ?? [null, null])}
+                  placeholder="Filter by date range"
+                  clearable
+                  dropdownContent={
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Switch
+                        label="Ignore Year"
+                        checked={ignoreYear}
+                        onChange={(e) => setIgnoreYear(e.currentTarget.checked)}
+                        size="sm"
+                      />
+                    </div>
+                  }
+                />
+              </div>
+            </Group>
+          </Stack>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Menu withinPortal={false} position="bottom-end">
-            <Menu.Target>
-              <Button variant="outline" size="sm">
-                {sortBy === "name" ? "Name" : "Created"}{" "}
-                {sortDir === "asc" ? "↑" : "↓"}
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                onClick={() => {
-                  if (sortBy === "name")
-                    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                  else {
-                    setSortBy("name");
-                    setSortDir("asc");
-                  }
-                }}
-              >
-                Name{" "}
-                {sortBy === "name" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
-              </Menu.Item>
-              <Menu.Item
-                onClick={() => {
-                  if (sortBy === "createdAt")
-                    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-                  else {
-                    setSortBy("createdAt");
-                    setSortDir("desc");
-                  }
-                }}
-              >
-                Created{" "}
-                {sortBy === "createdAt"
-                  ? sortDir === "asc"
-                    ? " ↑"
-                    : " ↓"
-                  : null}
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
         </div>
       </div>
 
@@ -574,6 +671,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
 
             return (
               <div key={r.key} style={{ ...cardStyle, marginBottom: 12 }}>
+
                 <JournalEntryCard
                   key={String(r.entry.id)}
                   entry={r.entry}

@@ -9,7 +9,9 @@ import {
   ScrollArea,
   LoadingOverlay,
   Box,
+  ActionIcon,
 } from "@mantine/core";
+import { IconSortAscending, IconSortDescending } from "@tabler/icons-react";
 
 import TagsPillsCombo from "./TagsPillsCombo";
 import { useQuery } from "@tanstack/react-query";
@@ -313,21 +315,20 @@ export default function Journals() {
                       JSON.stringify(newFilters),
                     );
                   }}
-                  placeholder="Filter to"
+                  placeholder="Filter by tags"
                 />
               </div>
 
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <Menu withinPortal={false} position="bottom-end">
                   <Menu.Target>
-                    <Button variant="outline" size="sm">
-                      {sortBy === "name"
-                        ? "Name"
-                        : sortBy === "editedAt"
-                          ? "Edited"
-                          : "Archived"}{" "}
-                      {sortDir === "asc" ? "↑" : "↓"}
-                    </Button>
+                    <ActionIcon size="lg">
+                      {sortDir === "asc" ? (
+                        <IconSortAscending size={16} />
+                      ) : (
+                        <IconSortDescending size={16} />
+                      )}
+                    </ActionIcon>
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
@@ -340,12 +341,7 @@ export default function Journals() {
                         }
                       }}
                     >
-                      Name{" "}
-                      {sortBy === "name"
-                        ? sortDir === "asc"
-                          ? " ↑"
-                          : " ↓"
-                        : null}
+                      Name {sortBy === "name" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
                     </Menu.Item>
                     <Menu.Item
                       onClick={() => {
@@ -357,12 +353,7 @@ export default function Journals() {
                         }
                       }}
                     >
-                      Edited{" "}
-                      {sortBy === "editedAt"
-                        ? sortDir === "asc"
-                          ? " ↑"
-                          : " ↓"
-                        : null}
+                      Edited {sortBy === "editedAt" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
                     </Menu.Item>
                     <Menu.Item
                       onClick={() => {
@@ -374,12 +365,7 @@ export default function Journals() {
                         }
                       }}
                     >
-                      Archived{" "}
-                      {sortBy === "archivedAt"
-                        ? sortDir === "asc"
-                          ? " ↑"
-                          : " ↓"
-                        : null}
+                      Archived {sortBy === "archivedAt" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
