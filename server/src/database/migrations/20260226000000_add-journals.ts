@@ -113,6 +113,10 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
+  // #####
+  // I'm leaving bits here as notes to future me for picking this stuff back up.
+  // #####
+
   // if (!(await knex.schema.hasTable("journal_entry_device_data"))) {
   //   await knex.schema.createTable("journal_entry_device_data", (table) => {
   //     table.increments("id").notNullable();
@@ -168,15 +172,15 @@ export async function down(knex: Knex): Promise<void> {
   }
 
   // drop in reverse order to satisfy FKs
-  if (await knex.schema.hasTable("journal_entry_device_data")) {
-    await knex.schema.dropTable("journal_entry_device_data");
-  }
+  // if (await knex.schema.hasTable("journal_entry_device_data")) {
+  //   await knex.schema.dropTable("journal_entry_device_data");
+  // }
   // Cleanup DB-level enum type for Postgres (best-effort)
   try {
-    const client = knex?.client?.config?.client ?? "";
-    if (typeof client === "string" && client.startsWith("pg")) {
-      await knex.raw("DROP TYPE IF EXISTS device_type");
-    }
+    // const client = knex?.client?.config?.client ?? "";
+    // if (typeof client === "string" && client.startsWith("pg")) {
+    //   await knex.raw("DROP TYPE IF EXISTS device_type");
+    // }
   } catch (e) {
     // ignore errors during cleanup
   }
