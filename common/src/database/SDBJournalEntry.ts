@@ -2,7 +2,7 @@ type SDBJournalEntry = {
   id: number;
   journalId: number;
   title: string | null;
-  content: string;
+  content: string | undefined;
   createdAt: string;
   editedAt: string;
 };

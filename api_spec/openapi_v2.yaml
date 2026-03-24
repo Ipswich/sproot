@@ -6229,7 +6229,7 @@ paths:
       summary: Get a journal by ID.
       description: >
         Returns a journal based on the provided ID. This includes all information about the journal, such as
-        name, id, associated tags, and content.
+        name, id, associated tags, and description.
       responses:
         200:
           description: "Success"
@@ -6778,7 +6778,7 @@ paths:
         - "Journals"
       summary: Get all entries for a journal.
       description: >
-        Returns a list of all entries for a journal based on the provided journal ID. This includes all information about each entry, such as
+        Returns a list of all entries for a journal based on the provided journal ID. This includes information about each entry, such as
         name, id, associated tags, and content.
       parameters:
         - in: path
@@ -6788,6 +6788,13 @@ paths:
           schema:
             type: string
           example: "1"
+        - in: query
+          name: withContent
+          required: false
+          description: "Whether to include journal entry content in the response. Defaults to true."
+          schema:
+            type: boolean
+          example: true
       responses:
         200:
           description: "Success"
@@ -6806,7 +6813,7 @@ paths:
                               type: object
                               properties:
                                 entry:
-                                  $ref: "#/components/schemas/SDBJournalEntry"
+                                  $ref: "#/components/schemas/SDBJournalEntryRead"
                                 tags:
                                   type: array
                                   items:
@@ -6894,7 +6901,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalEntry"
+              $ref: "#/components/schemas/SDBJournalEntryWrite"
       responses:
         201:
           description: "Journal entry created"
@@ -6909,7 +6916,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBJournalEntry"
+                            $ref: "#/components/schemas/SDBJournalEntryRead"
         400:
           description: "Bad request"
           content:
@@ -6998,7 +7005,7 @@ paths:
         - "Journal Entries"
       summary: Get a journal entry by ID.
       description: >
-        Returns a journal entry based on the provided entry ID. This includes all information about the entry, such as
+        Returns a journal entry based on the provided entry ID. This includes information about the entry, such as
         title, id, associated tags, and content.
       parameters:
         - in: path
@@ -7008,6 +7015,13 @@ paths:
           schema:
             type: string
           example: "1"
+        - in: query
+          name: withContent
+          required: false
+          description: "Whether to include entry content in the response. Defaults to true."
+          schema:
+            type: boolean
+          example: true
       responses:
         200:
           description: "Success"
@@ -7026,7 +7040,7 @@ paths:
                               type: object
                               properties:
                                 entry:
-                                  $ref: "#/components/schemas/SDBJournalEntry"
+                                  $ref: "#/components/schemas/SDBJournalEntryRead"
                                 tags:
                                   type: array
                                   items:
@@ -7131,7 +7145,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalEntry"
+              $ref: "#/components/schemas/SDBJournalEntryWrite"
       responses:
         200:
           description: "Journal entry updated"
@@ -7146,7 +7160,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBJournalEntry"
+                            $ref: "#/components/schemas/SDBJournalEntryRead"
         400:
           description: "Bad request"
           content:
@@ -8281,12 +8295,11 @@ components:
     SDBJournalEntry:
       description: >
         A journal entry object that is stored in the database. Contains all the information needed to 
-        create a journal entry, including the journal it belongs to, the time of the entry, and some 
-        optional details like title.
+        create and represent a journal entry. The `content` property is required for write operations
+        but may be omitted from responses when the server chooses not to include it (e.g. `withContent=false`).
       type: object
       required:
         - "journalId"
-        - "content"
       properties:
         id:
           readOnly: true
@@ -8314,6 +8327,15 @@ components:
           type: string
           format: date-time
           example: "2021-06-01T12:30:00.000Z"
+    SDBJournalEntryRead:
+      allOf:
+        - $ref: "#/components/schemas/SDBJournalEntry"
+
+    SDBJournalEntryWrite:
+      allOf:
+        - $ref: "#/components/schemas/SDBJournalEntry"
+      required:
+        - "content"
       
     ReadingTypes:
       description: >

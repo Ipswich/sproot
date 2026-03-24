@@ -14,14 +14,29 @@ export async function getByJournalIdAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
   let journalId: number | undefined = undefined;
+  let withContent = true;
+
   journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const badRequests: string[] = [];
   if (isNaN(journalId)) {
+    badRequests.push("Valid Journal ID is required.");
+  }
+  if (req.query["withContent"] !== undefined && typeof req.query["withContent"] === "boolean") {
+    if (Boolean(req.query["withContent"]) === true) {
+      withContent = true;
+    } else if (Boolean(req.query["withContent"]) === false) {
+      withContent = false;
+    } else {
+      badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
+    }
+  }
+  if (badRequests.length > 0) {
     response = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: req.originalUrl,
-        details: ["Valid Journal ID is required."],
+        details: badRequests,
       },
       ...res.locals["defaultProperties"],
     };
@@ -42,7 +57,7 @@ export async function getByJournalIdAsync(
         ...res.locals["defaultProperties"],
       };
     } else {
-      results = await journalService.entryManager.getAsync(journalId);
+      results = await journalService.entryManager.getAsync(journalId, undefined, withContent);
       response = {
         statusCode: 200,
         content: {
@@ -76,26 +91,41 @@ export async function getByEntryIdAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get("journalService") as JournalService;
   let entryId: number | undefined = undefined;
+  let withContent = true;
+  const badRequests: string[] = [];
 
   if (req.params["entryId"]) {
     entryId = parseInt(req.params["entryId"] ?? "", 10);
     if (isNaN(entryId)) {
-      response = {
-        statusCode: 400,
-        error: {
-          name: "Bad Request",
-          url: req.originalUrl,
-          details: ["Valid Journal Entry ID is required."],
-        },
-        ...res.locals["defaultProperties"],
-      };
-      return response;
+      badRequests.push("Valid Journal Entry ID is required.");
     }
+  }
+
+  if (req.query["withContent"] !== undefined && typeof req.query["withContent"] === "boolean") {
+    if (Boolean(req.query["withContent"]) === true) {
+      withContent = true;
+    } else if (Boolean(req.query["withContent"]) === false) {
+      withContent = false;
+    } else {
+      badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
+    }
+  }
+  if (badRequests.length > 0) {
+    response = {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: req.originalUrl,
+        details: badRequests,
+      },
+      ...res.locals["defaultProperties"],
+    };
+    return response;
   }
 
   try {
     let results: { entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }[] = [];
-    results = await journalService.entryManager.getAsync(undefined, entryId);
+    results = await journalService.entryManager.getAsync(undefined, entryId, withContent);
     if (results.length == 0) {
       response = {
         statusCode: 404,
@@ -227,8 +257,8 @@ export async function updateAsync(
   if (isNaN(entryId)) {
     badRequests.push("Valid Journal Entry ID is required.");
   }
-  if (req.body["text"] === null) {
-    badRequests.push("Journal Entry text cannot be null.");
+  if (req.body["content"] === null) {
+    badRequests.push("Journal Entry content cannot be null.");
   }
 
   if (badRequests.length > 0) {
@@ -259,7 +289,9 @@ export async function updateAsync(
   }
 
   const content: string =
-    req.body["text"] == undefined ? existingEntry[0]!.entry.content : String(req.body["content"]);
+    req.body["content"] == undefined
+      ? existingEntry[0]!.entry.content!
+      : String(req.body["content"]);
 
   const title: string | null =
     req.body["title"] === undefined
@@ -331,7 +363,7 @@ export async function deleteAsync(
     return response;
   }
 
-  const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
+  const existingEntry = await journalService.entryManager.getAsync(undefined, entryId, false);
   if (!existingEntry || existingEntry.length === 0) {
     response = {
       statusCode: 404,
@@ -401,7 +433,7 @@ export async function addTagAsync(
   }
 
   try {
-    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
+    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId, false);
     if (!existingEntry || existingEntry.length === 0) {
       response = {
         statusCode: 404,
@@ -499,7 +531,7 @@ export async function removeTagAsync(
   }
 
   try {
-    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
+    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId, false);
     if (!existingEntry || existingEntry.length === 0) {
       response = {
         statusCode: 404,

@@ -341,7 +341,12 @@ export default function Journals() {
                         }
                       }}
                     >
-                      Name {sortBy === "name" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                      Name{" "}
+                      {sortBy === "name"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
                     </Menu.Item>
                     <Menu.Item
                       onClick={() => {
@@ -353,7 +358,12 @@ export default function Journals() {
                         }
                       }}
                     >
-                      Edited {sortBy === "editedAt" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                      Edited{" "}
+                      {sortBy === "editedAt"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
                     </Menu.Item>
                     <Menu.Item
                       onClick={() => {
@@ -365,7 +375,12 @@ export default function Journals() {
                         }
                       }}
                     >
-                      Archived {sortBy === "archivedAt" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                      Archived{" "}
+                      {sortBy === "archivedAt"
+                        ? sortDir === "asc"
+                          ? " ↑"
+                          : " ↓"
+                        : null}
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>

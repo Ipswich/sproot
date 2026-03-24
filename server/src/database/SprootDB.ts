@@ -356,11 +356,20 @@ export class SprootDB implements ISprootDB {
       .delete();
   }
 
-  async getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]> {
-    const results = await this.#connection("journal_entries")
-      .where("journal_id", journalId)
-      .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
-
+  async getJournalEntriesAsync(
+    journalId: number,
+    withContent?: boolean,
+  ): Promise<SDBJournalEntry[]> {
+    let results: SDBJournalEntry[] = [];
+    if (!withContent) {
+      results = await this.#connection("journal_entries")
+        .where("journal_id", journalId)
+        .select("id", "journal_id as journalId", "title", "createdAt", "editedAt");
+    } else {
+      results = await this.#connection("journal_entries")
+        .where("journal_id", journalId)
+        .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
+    }
     return results.map((entry: SDBJournalEntry) => ({
       ...entry,
       createdAt: entry.createdAt.replace(" ", "T") + "Z",
@@ -368,10 +377,17 @@ export class SprootDB implements ISprootDB {
     }));
   }
 
-  async getJournalEntryAsync(entryId: number): Promise<SDBJournalEntry[]> {
-    const results = await this.#connection("journal_entries")
-      .where("id", entryId)
-      .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
+  async getJournalEntryAsync(entryId: number, withContent?: boolean): Promise<SDBJournalEntry[]> {
+    let results: SDBJournalEntry[] = [];
+    if (!withContent) {
+      results = await this.#connection("journal_entries")
+        .where("id", entryId)
+        .select("id", "journal_id as journalId", "title", "createdAt", "editedAt");
+    } else {
+      results = await this.#connection("journal_entries")
+        .where("id", entryId)
+        .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
+    }
     return results.map((entry: SDBJournalEntry) => ({
       ...entry,
       createdAt: entry.createdAt.replace(" ", "T") + "Z",

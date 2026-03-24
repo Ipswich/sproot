@@ -1032,13 +1032,19 @@ export async function addJournalEntryAsync(
 
 export async function getJournalEntryAsync(
   entryId: number,
-  withContent = true): Promise<{ entry: Partial<SDBJournalEntry>; tags: SDBJournalEntryTag[] } | undefined> {
+  withContent = true,
+): Promise<
+  { entry: Partial<SDBJournalEntry>; tags: SDBJournalEntryTag[] } | undefined
+> {
   const queryString = queryBuilder({ withContent });
-  const response = await fetch(`${SERVER_URL}/api/v2/entries/${entryId}?${queryString}`, {
-    method: "GET",
-    headers: {},
-    mode: "cors",
-  });
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/entries/${entryId}?${queryString}`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+    },
+  );
   if (!response.ok) {
     console.error(`Error fetching journal entry: ${response}`);
     return undefined;

@@ -60,6 +60,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { journalId: "not-a-number" },
+        query: {},
         originalUrl: "/api/journals/xyz/entries",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -81,6 +82,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { journalId: "2" },
+        query: {},
         originalUrl: "/api/journals/2/entries",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -119,6 +121,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { journalId: "2" },
+        query: {},
         originalUrl: "/api/journals/2/entries",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -138,6 +141,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { journalId: "2" },
+        query: {},
         originalUrl: "/api/journals/2/entries",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -150,6 +154,44 @@ describe("JournalEntriesHandlers", () => {
       assert.isArray(err.details);
       assert.includeMembers(err.details, [`Failed to retrieve journal entries: boom`]);
     });
+
+    it("should omit content when withContent=false", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getJournalAsync.resolves([
+        {
+          id: 2,
+          title: "j",
+          description: null,
+          archived: false,
+          icon: null,
+          color: null,
+          createdAt: new Date().toISOString(),
+          editedAt: new Date().toISOString(),
+          archivedAt: null,
+        },
+      ]);
+      sprootDB.getJournalTagsAsync.resolves([]);
+      sprootDB.getJournalTagLookupsAsync.resolves([]);
+      sprootDB.getJournalEntriesAsync.resolves([{ ...sampleEntry, content: undefined }]);
+      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 100, journalEntryId: 5, tagId: 11 }]);
+      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
+
+      const journalService = new JournalService(sprootDB as ISprootDB);
+
+      const req = {
+        params: { journalId: "2" },
+        query: { withContent: false },
+        originalUrl: "/api/journals/2/entries?withContent=false",
+        app: { get: () => journalService },
+      } as unknown as Request;
+
+      const res = makeRes();
+      const result = (await getByJournalIdAsync(req, res)) as SuccessResponse;
+      assert.equal(result.statusCode, 200);
+      assert.exists(result.content);
+      assert.isArray(result.content.data);
+      assert.isUndefined(result.content.data[0].entry.content);
+    });
   });
 
   describe("getByEntryIdAsync", () => {
@@ -159,6 +201,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "bad" },
+        query: {},
         originalUrl: "/api/journals/entries/bad",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -180,6 +223,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "5" },
+        query: {},
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -202,6 +246,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "5" },
+        query: {},
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -214,6 +259,30 @@ describe("JournalEntriesHandlers", () => {
       assert.equal(result.content.data[0].entry.id, sampleEntry.id);
     });
 
+    it("should return 200 and entry with undefined content when withContent=false", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sampleNoContent = { ...sampleEntry } as SDBJournalEntry;
+      (sampleNoContent as any).content = undefined;
+      sprootDB.getJournalEntryAsync.resolves([sampleNoContent]);
+      sprootDB.getJournalEntryTagLookupsAsync.resolves([{ id: 101, journalEntryId: 5, tagId: 11 }]);
+      sprootDB.getJournalEntryTagsAsync.resolves([sampleTag]);
+      const journalService = new JournalService(sprootDB as ISprootDB);
+
+      const req = {
+        params: { entryId: "5" },
+        query: { withContent: false },
+        originalUrl: "/api/journals/entries/5?withContent=false",
+        app: { get: () => journalService },
+      } as unknown as Request;
+
+      const res = makeRes();
+      const result = (await getByEntryIdAsync(req, res)) as SuccessResponse;
+      assert.equal(result.statusCode, 200);
+      assert.exists(result.content);
+      assert.isArray(result.content.data);
+      assert.isUndefined(result.content.data[0].entry.content);
+    });
+
     it("should return 503 when DB throws", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getJournalEntryAsync.rejects(new Error("boom"));
@@ -221,6 +290,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "5" },
+        query: {},
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -397,7 +467,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "x" },
-        body: { text: "ok" },
+        body: { content: "ok" },
         originalUrl: "/api/journals/entries/x",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -410,13 +480,13 @@ describe("JournalEntriesHandlers", () => {
       assert.includeMembers(err.details, ["Valid Journal Entry ID is required."]);
     });
 
-    it("should return 400 when text is explicitly null", async () => {
+    it("should return 400 when content is explicitly null", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       const journalService = new JournalService(sprootDB as ISprootDB);
 
       const req = {
         params: { entryId: "5" },
-        body: { text: null },
+        body: { content: null },
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -426,7 +496,7 @@ describe("JournalEntriesHandlers", () => {
       assert.equal(result.statusCode, 400);
       const err = result.error;
       assert.isArray(err.details);
-      assert.includeMembers(err.details, ["Journal Entry text cannot be null."]);
+      assert.includeMembers(err.details, ["Journal Entry content cannot be null."]);
     });
 
     it("should return 404 when entry not found", async () => {
@@ -436,7 +506,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "5" },
-        body: { text: "ok" },
+        body: { content: "ok" },
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -461,7 +531,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "5" },
-        body: { text: "new text" },
+        body: { content: "new content" },
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;
@@ -481,7 +551,7 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { entryId: "5" },
-        body: { text: "new text" },
+        body: { content: "new content" },
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;

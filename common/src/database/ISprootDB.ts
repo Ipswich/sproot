@@ -221,8 +221,8 @@ interface ISprootDB {
   addJournalTagLookupAsync(journalId: number, tagId: number): Promise<number>;
   deleteJournalTagLookupAsync(journalId: number, tagId: number): Promise<void>;
 
-  getJournalEntriesAsync(journalId: number): Promise<SDBJournalEntry[]>;
-  getJournalEntryAsync(entryId: number): Promise<SDBJournalEntry[]>;
+  getJournalEntriesAsync(journalId: number, withContent?: boolean): Promise<SDBJournalEntry[]>;
+  getJournalEntryAsync(entryId: number, withContent?: boolean): Promise<SDBJournalEntry[]>;
   addJournalEntryAsync(
     journalId: number,
     name: string | null,
@@ -631,10 +631,13 @@ class MockSprootDB implements ISprootDB {
     return;
   }
 
-  async getJournalEntriesAsync(_journalId: number): Promise<SDBJournalEntry[]> {
+  async getJournalEntriesAsync(
+    _journalId: number,
+    _withContent?: boolean,
+  ): Promise<SDBJournalEntry[]> {
     return [];
   }
-  async getJournalEntryAsync(_entryId: number): Promise<SDBJournalEntry[]> {
+  async getJournalEntryAsync(_entryId: number, _withContent?: boolean): Promise<SDBJournalEntry[]> {
     return [];
   }
   async addJournalEntryAsync(
@@ -674,7 +677,7 @@ class MockSprootDB implements ISprootDB {
   async deleteJournalEntryTagLookupAsync(_journalEntryId: number, _tagId: number): Promise<void> {
     return;
   }
-  
+
   async getDatabaseSizeAsync(): Promise<number> {
     return 0;
   }

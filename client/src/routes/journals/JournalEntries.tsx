@@ -19,7 +19,11 @@ import {
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import EditJournalModal from "./EditJournalModal";
-import { IconArrowLeft, IconSortAscending, IconSortDescending } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconSortAscending,
+  IconSortDescending,
+} from "@tabler/icons-react";
 import { getIcon } from "./utils/getIcon";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
@@ -167,7 +171,7 @@ export default function JournalEntries() {
           ) : null}
           <div>
             {journal?.journal.description &&
-              String(journal.journal.description).trim() ? (
+            String(journal.journal.description).trim() ? (
               <>
                 <Text size="sm" style={{ margin: 0 }}>
                   {journal?.journal.description}
@@ -272,10 +276,9 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
   });
 
   const [filters, setFilters] = useState<string[]>([]);
-  const [dateRangeExact, setDateRangeExact] = useState<[Date | null, Date | null]>([
-    null,
-    null,
-  ]);
+  const [dateRangeExact, setDateRangeExact] = useState<
+    [Date | null, Date | null]
+  >([null, null]);
   const [ignoreYear, setIgnoreYear] = useState(false);
   const [sortBy, setSortBy] = useState<string>(() => {
     try {
@@ -357,10 +360,14 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
   const filtered = (entriesQuery.data ?? []).filter((r) => {
     const entryTagIds = (r.tags ?? []).map((t) => t.id);
     const tagActive = selectedTagIds && selectedTagIds.length > 0;
-    const tagMatch = tagActive ? entryTagIds.some((id) => selectedTagIds.includes(id)) : false;
+    const tagMatch = tagActive
+      ? entryTagIds.some((id) => selectedTagIds.includes(id))
+      : false;
 
     // date-range presence
-    const hasRange = Boolean(dateRangeExact && (dateRangeExact[0] || dateRangeExact[1]));
+    const hasRange = Boolean(
+      dateRangeExact && (dateRangeExact[0] || dateRangeExact[1]),
+    );
     const created = r.entry.createdAt ? new Date(r.entry.createdAt) : null;
     const dateActive = hasRange && !!created;
 
@@ -600,7 +607,11 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
                     }}
                   >
                     Name{" "}
-                    {sortBy === "name" ? (sortDir === "asc" ? " ↑" : " ↓") : null}
+                    {sortBy === "name"
+                      ? sortDir === "asc"
+                        ? " ↑"
+                        : " ↓"
+                      : null}
                   </Menu.Item>
                   <Menu.Item
                     onClick={() => {
@@ -635,7 +646,13 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
                   placeholder="Filter by date range"
                   clearable
                   dropdownContent={
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                      }}
+                    >
                       <Switch
                         label="Ignore Year"
                         checked={ignoreYear}
@@ -649,8 +666,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
             </Group>
           </Stack>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-        </div>
+        <div style={{ display: "flex", gap: 8 }}></div>
       </div>
 
       <ScrollArea
@@ -671,7 +687,6 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
 
             return (
               <div key={r.key} style={{ ...cardStyle, marginBottom: 12 }}>
-
                 <JournalEntryCard
                   key={String(r.entry.id)}
                   entry={r.entry}

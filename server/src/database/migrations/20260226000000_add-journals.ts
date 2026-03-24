@@ -140,18 +140,18 @@ export async function up(knex: Knex): Promise<void> {
   //   });
   // }
 
-    // Add indexes on logTime to speed up range scans and bucketing queries
-    try {
-      await knex.raw(`CREATE INDEX idx_output_logtime ON output_data (output_id, logTime)`);
-    } catch (e) {
-      // ignore if index already exists or not supported
-    }
+  // Add indexes on logTime to speed up range scans and bucketing queries
+  try {
+    await knex.raw(`CREATE INDEX idx_output_logtime ON output_data (output_id, logTime)`);
+  } catch (e) {
+    // ignore if index already exists or not supported
+  }
 
-    try {
-      await knex.raw(`CREATE INDEX idx_sensor_logtime ON sensor_data (sensor_id, logTime)`);
-    } catch (e) {
-      // ignore
-    }
+  try {
+    await knex.raw(`CREATE INDEX idx_sensor_logtime ON sensor_data (sensor_id, logTime)`);
+  } catch (e) {
+    // ignore
+  }
 }
 
 export async function down(knex: Knex): Promise<void> {
