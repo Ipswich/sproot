@@ -27,7 +27,7 @@ export interface EditJournalEntryModalProps {
   modalOpened: boolean;
   closeModal: () => void;
   journalId: number;
-  entry: SDBJournalEntry;
+  entry: Partial<SDBJournalEntry>;
   tags?: SDBJournalEntryTag[];
   onSaved?: (updated: SDBJournalEntry) => void;
   onDeleted?: (id: number) => void;
@@ -61,9 +61,9 @@ export default function EditJournalEntryModal({
   const updateMutation = useMutation({
     mutationFn: async (values: Partial<SDBJournalEntry>) => {
       const toSend: Partial<SDBJournalEntry> = {
-        id: entry.id,
-        title: values.title ?? entry.title,
-        content: values.content ?? entry.content,
+        id: entry.id!,
+        title: values.title ?? entry.title!,
+        content: values.content ?? entry.content!,
       };
       return await updateJournalEntryAsync(toSend);
     },
@@ -71,6 +71,7 @@ export default function EditJournalEntryModal({
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      if (!entry.id) throw new Error("No entry id");
       return await deleteJournalEntryAsync(entry.id);
     },
   });
@@ -134,13 +135,16 @@ export default function EditJournalEntryModal({
       form.values as Partial<SDBJournalEntry>,
     );
     try {
-      const addPromises = tagAdds.map((tid) =>
-        addTagToJournalEntryAsync(entry.id, tid),
-      );
-      const removePromises = tagRemoves.map((tid) =>
-        removeTagFromJournalEntryAsync(entry.id, tid),
-      );
-      await Promise.allSettled([...addPromises, ...removePromises]);
+      const entryId = entry.id;
+      if (entryId) {
+        const addPromises = tagAdds.map((tid) =>
+          addTagToJournalEntryAsync(entryId, tid),
+        );
+        const removePromises = tagRemoves.map((tid) =>
+          removeTagFromJournalEntryAsync(entryId, tid),
+        );
+        await Promise.allSettled([...addPromises, ...removePromises]);
+      }
       try {
         await queryClient.fetchQuery({
           queryKey: ["journal-entries", journalId],
@@ -170,6 +174,7 @@ export default function EditJournalEntryModal({
 
   const doDelete = async () => {
     if (!window.confirm("Delete this entry? This cannot be undone.")) return;
+    if (!entry.id) return;
     await deleteMutation.mutateAsync();
     try {
       await queryClient.fetchQuery({
@@ -179,7 +184,7 @@ export default function EditJournalEntryModal({
     } catch (e) {
       // ignore
     }
-    onDeleted?.(entry.id);
+    if (entry.id) onDeleted?.(entry.id);
     form.reset();
     closeModal();
   };

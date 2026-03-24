@@ -1030,11 +1030,30 @@ export async function addJournalEntryAsync(
   return deserializedResponse.content?.data;
 }
 
+export async function getJournalEntryAsync(
+  entryId: number,
+  withContent = true): Promise<{ entry: Partial<SDBJournalEntry>; tags: SDBJournalEntryTag[] } | undefined> {
+  const queryString = queryBuilder({ withContent });
+  const response = await fetch(`${SERVER_URL}/api/v2/entries/${entryId}?${queryString}`, {
+    method: "GET",
+    headers: {},
+    mode: "cors",
+  });
+  if (!response.ok) {
+    console.error(`Error fetching journal entry: ${response}`);
+    return undefined;
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data[0];
+}
+
 export async function getJournalEntriesAsync(
   journalId: number,
-): Promise<{ entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }[]> {
+  withContent = false,
+): Promise<{ entry: Partial<SDBJournalEntry>; tags: SDBJournalEntryTag[] }[]> {
+  const queryString = queryBuilder({ withContent });
   const response = await fetch(
-    `${SERVER_URL}/api/v2/journals/${journalId}/entries`,
+    `${SERVER_URL}/api/v2/journals/${journalId}/entries?${queryString}`,
     {
       method: "GET",
       headers: {},

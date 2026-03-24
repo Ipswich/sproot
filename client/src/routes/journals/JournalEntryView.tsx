@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  getJournalEntriesAsync,
+  getJournalEntryAsync,
   getJournalsAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import {
@@ -26,9 +26,10 @@ export default function JournalEntryView() {
   const [editOpen, setEditOpen] = useState(false);
   const navigate = useNavigate();
 
-  const entriesQuery = useQuery({
-    queryKey: ["journal-entries", Number(journalId ?? 0)],
-    queryFn: () => getJournalEntriesAsync(Number(journalId ?? 0)),
+  const entryQuery = useQuery({
+    queryKey: ["journal-entry", Number(entryId ?? 0)],
+    queryFn: () => getJournalEntryAsync(Number(entryId ?? 0)),
+    enabled: Boolean(entryId),
   });
 
   const journalsQuery = useQuery({
@@ -36,7 +37,7 @@ export default function JournalEntryView() {
     queryFn: () => getJournalsAsync(),
   });
 
-  if (entriesQuery.isLoading)
+  if (entryQuery.isLoading)
     return (
       <Box pt={20} px={20} style={{ position: "relative" }}>
         <LoadingOverlay
@@ -48,13 +49,11 @@ export default function JournalEntryView() {
       </Box>
     );
 
-  const row = (entriesQuery.data ?? []).find(
-    (r) => String(r.entry.id) === String(entryId),
-  );
+  const row = entryQuery.data;
 
   if (!row) return <div>Entry not found</div>;
 
-  const entry: SDBJournalEntry = row.entry;
+  const entry: Partial<SDBJournalEntry> = row.entry;
   const tags: SDBJournalEntryTag[] = row.tags ?? [];
 
   const journalRow = (journalsQuery.data ?? []).find(
@@ -147,7 +146,7 @@ export default function JournalEntryView() {
         <div style={{ marginTop: 8 }}>
           <Text
             size="sm"
-            color="dimmed"
+            // color="dimmed"
             style={{ whiteSpace: "pre-wrap", marginBottom: 12 }}
           >
             {entry.content ?? ""}
@@ -186,14 +185,14 @@ export default function JournalEntryView() {
         tags={tags}
         onSaved={async () => {
           try {
-            await entriesQuery.refetch();
+            await entryQuery.refetch();
           } catch {
             // ignore
           }
         }}
         onDeleted={async () => {
           try {
-            await entriesQuery.refetch();
+            await entryQuery.refetch();
           } catch {
             // ignore
           }

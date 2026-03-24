@@ -4,7 +4,7 @@ import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/database/SDBJournalEntryTag";
 
 export interface JournalEntryCardProps {
-  entry: SDBJournalEntry;
+  entry: Partial<SDBJournalEntry>;
   tags?: SDBJournalEntryTag[];
   onClick?: () => void;
 }

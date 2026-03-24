@@ -169,7 +169,7 @@ export default function JournalEntries() {
             {journal?.journal.description &&
               String(journal.journal.description).trim() ? (
               <>
-                <Text size="sm" color="dimmed" style={{ margin: 0 }}>
+                <Text size="sm" style={{ margin: 0 }}>
                   {journal?.journal.description}
                 </Text>
               </>
@@ -268,7 +268,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
   const navigate = useNavigate();
   const entriesQuery = useQuery({
     queryKey: ["journal-entries", journalId],
-    queryFn: () => getJournalEntriesAsync(journalId),
+    queryFn: () => getJournalEntriesAsync(journalId, false),
   });
 
   const [filters, setFilters] = useState<string[]>([]);
