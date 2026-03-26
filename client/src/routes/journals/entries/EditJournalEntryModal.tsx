@@ -8,7 +8,7 @@ import {
   Text,
   ScrollArea,
 } from "@mantine/core";
-import TagsPillsCombo from "./TagsPillsCombo";
+import TagsPillsCombo from "../utils/tags/TagsPillsCombo";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/database/SDBJournalEntryTag";
 import { useForm } from "@mantine/form";
@@ -22,6 +22,8 @@ import {
   getJournalEntriesAsync,
   getJournalsAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
+
+import { computeTagPillDiffs } from "../utils/tags/tagPillHelpers";
 
 export interface EditJournalEntryModalProps {
   modalOpened: boolean;
@@ -97,37 +99,18 @@ export default function EditJournalEntryModal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalOpened]);
-
   const handlePillsChange = (vals: string[]) => {
-    const newIds = vals.map((v) => Number(String(v).replace(/^tag:/, "")));
-    const prevIds = localTags.map((t) => t.id);
-
-    const added = newIds.filter((id) => !prevIds.includes(id));
-    const removed = prevIds.filter((id) => !newIds.includes(id));
-
-    added.forEach((id) => {
-      if (tagRemoves.includes(id)) {
-        setTagRemoves((prev) => prev.filter((x) => x !== id));
-      } else {
-        const existedOnServer = (tags ?? []).some((t) => t.id === id);
-        if (!existedOnServer)
-          setTagAdds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-        const addedTag = availableTags.find((t) => t.id === id);
-        if (addedTag)
-          setLocalTags((prev) =>
-            prev.some((p) => p.id === addedTag.id) ? prev : [...prev, addedTag],
-          );
-      }
-    });
-
-    removed.forEach((id) => {
-      if (tagAdds.includes(id)) {
-        setTagAdds((prev) => prev.filter((x) => x !== id));
-      } else {
-        if (!tagRemoves.includes(id)) setTagRemoves((prev) => [...prev, id]);
-      }
-      setLocalTags((prev) => prev.filter((t) => t.id !== id));
-    });
+    const { newLocalTags, newTagAdds, newTagRemoves } = computeTagPillDiffs(
+      vals,
+      localTags,
+      availableTags,
+      tags ?? [],
+      tagAdds,
+      tagRemoves,
+    );
+    setLocalTags(newLocalTags);
+    setTagAdds(newTagAdds);
+    setTagRemoves(newTagRemoves);
   };
 
   const save = async () => {

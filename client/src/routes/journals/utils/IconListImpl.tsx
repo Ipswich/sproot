@@ -1,5 +1,6 @@
 import { Select, Group, Text } from "@mantine/core";
 import { getIcon } from "./getIcon";
+import { readableTextColor } from "./readableTextColor";
 import type { SelectProps } from "@mantine/core";
 
 // list of icon export names from @tabler/icons-react used in the app
@@ -84,8 +85,6 @@ const ICON_NAMES = [
   "IconThermometer",
 ];
 
-// getIcon is provided by ./getIcon
-
 function friendlyName(iconExportName: string) {
   if (!iconExportName) return "";
   if (iconExportName === "NullIcon") return "None";
@@ -133,7 +132,7 @@ export function IconSelect({
       value={selectedValue}
       data={SELECT_DATA}
       renderOption={({ option }) => {
-        const it = option as unknown as { value: string; label: string };
+        const it = option as { value: string; label: string };
         const IconComp = getIcon(it.value) as React.ElementType | null;
         return (
           <Group align="center">
@@ -174,27 +173,6 @@ export function IconSelect({
       }
     />
   );
-}
-
-function readableTextColor(bg: string) {
-  const s = String(bg || "").trim();
-  const hexMatch = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-  if (hexMatch) {
-    const hexRaw = hexMatch[1];
-    if (!hexRaw) return "#000";
-    let hex = hexRaw;
-    if (hex.length === 3)
-      hex = hex
-        .split("")
-        .map((c) => c + c)
-        .join("");
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    return lum > 160 ? "#000" : "#fff";
-  }
-  return "#000";
 }
 
 export default IconSelect;

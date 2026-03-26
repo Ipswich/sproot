@@ -8,23 +8,24 @@ import {
   Table,
   TextInput,
   ColorInput,
-  Button,
 } from "@mantine/core";
 import { IconDeviceFloppy, IconTrash, IconPlus } from "@tabler/icons-react";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 
-interface ManageTagsModalProps {
+type TagLike = { id: number; name?: string | null; color?: string | null };
+
+interface ManageTagsModalProps<T extends TagLike> {
   modalOpened: boolean;
   closeModal: () => void;
   title?: string;
   queryKey: string[];
-  fetchFn: () => Promise<any[]>;
-  addFn: (name: string, color?: string | null) => Promise<any | undefined>;
-  updateFn?: (tag: any) => Promise<any | undefined>;
+  fetchFn: () => Promise<T[]>;
+  addFn: (name: string, color?: string | null) => Promise<T | undefined>;
+  updateFn?: (tag: T) => Promise<T | undefined>;
   deleteFn: (id: number) => Promise<void>;
 }
 
-export default function ManageTagsModal({
+export default function ManageTagsModal<T extends TagLike>({
   modalOpened,
   closeModal,
   title = "Manage Tags",
@@ -33,7 +34,7 @@ export default function ManageTagsModal({
   addFn,
   updateFn,
   deleteFn,
-}: ManageTagsModalProps) {
+}: ManageTagsModalProps<T>) {
   const tagsQuery = useQuery({
     queryKey,
     queryFn: fetchFn,
@@ -48,7 +49,7 @@ export default function ManageTagsModal({
   });
 
   const updateTagMutation = useMutation({
-    mutationFn: async (tag: any) => {
+    mutationFn: async (tag: T) => {
       if (!updateFn) return;
       return await updateFn(tag);
     },
@@ -62,7 +63,7 @@ export default function ManageTagsModal({
     onSettled: () => tagsQuery.refetch(),
   });
 
-  const [localTags, setLocalTags] = useState<any[]>([]);
+  const [localTags, setLocalTags] = useState<T[]>([]);
   const [newTagName, setNewTagName] = useState("");
   const initialRandomColor =
     DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
@@ -84,7 +85,7 @@ export default function ManageTagsModal({
   }, [modalOpened]);
 
   useEffect(() => {
-    setLocalTags((tagsQuery.data ?? []).map((t) => ({ ...t })));
+    setLocalTags(((tagsQuery.data ?? []) as T[]).map((t) => ({ ...t })));
   }, [tagsQuery.data]);
 
   return (

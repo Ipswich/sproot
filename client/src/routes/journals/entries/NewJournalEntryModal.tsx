@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import TagsPillsCombo from "./TagsPillsCombo";
+import TagsPillsCombo from "../utils/tags/TagsPillsCombo";
 import {
   getJournalEntryTagsAsync,
   addTagToJournalEntryAsync,

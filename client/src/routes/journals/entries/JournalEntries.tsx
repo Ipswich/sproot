@@ -18,26 +18,27 @@ import {
   Switch,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
-import EditJournalModal from "./EditJournalModal";
+import EditJournalModal from "../EditJournalModal";
 import {
   IconArrowLeft,
   IconSortAscending,
   IconSortDescending,
 } from "@tabler/icons-react";
-import { getIcon } from "./utils/getIcon";
+import { getIcon } from "../utils/getIcon";
+import { readableTextColor } from "../utils/readableTextColor";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import { useDisclosure } from "@mantine/hooks";
 import NewJournalEntryModal from "./NewJournalEntryModal";
 import JournalEntryCard from "./JournalEntryCard";
 import { getJournalEntriesAsync } from "@sproot/sproot-client/src/requests/requests_v2";
-import TagsPillsCombo from "./TagsPillsCombo";
+import TagsPillsCombo from "../utils/tags/TagsPillsCombo";
 import {
   journalEntriesFiltersKey,
   journalEntriesSortKey,
-} from "../utility/LocalStorageKeys";
+} from "../../utility/LocalStorageKeys";
 import ManageJournalEntryTagsModal from "./ManageJournalEntryTagsModal";
-import PopoverDatePickerInput from "../../components/PopoverDatePickerInput";
+import PopoverDatePickerInput from "../../../components/PopoverDatePickerInput";
 
 export default function JournalEntries() {
   const { journalId } = useParams();
@@ -69,27 +70,6 @@ export default function JournalEntries() {
   const IconComp = getIcon(
     journal?.journal.icon ?? "NullIcon",
   ) as ElementType | null;
-
-  function readableTextColor(bg: string) {
-    const s = String(bg || "").trim();
-    const hexMatch = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-    if (hexMatch) {
-      const hexRaw = hexMatch[1];
-      if (!hexRaw) return "#000";
-      let hex = hexRaw;
-      if (hex.length === 3)
-        hex = hex
-          .split("")
-          .map((c) => c + c)
-          .join("");
-      const r = parseInt(hex.substring(0, 2), 16);
-      const g = parseInt(hex.substring(2, 4), 16);
-      const b = parseInt(hex.substring(4, 6), 16);
-      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      return lum > 160 ? "#000" : "#fff";
-    }
-    return "#000";
-  }
 
   return (
     <Box p={20}>
@@ -575,7 +555,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
                 <TagsPillsCombo
                   allTags={[...allTags]}
                   value={filters}
-                  onChange={(newFilters) => {
+                  onChange={(newFilters: string[]) => {
                     setFilters(newFilters);
                     localStorage.setItem(
                       journalEntriesFiltersKey(),
@@ -642,7 +622,9 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
                   allowSingleDateInRange
                   value={dateRangeExact}
                   ignoreYear={ignoreYear}
-                  onChange={(v) => setDateRangeExact(v ?? [null, null])}
+                  onChange={(v: [Date | null, Date | null]) =>
+                    setDateRangeExact(v ?? [null, null])
+                  }
                   placeholder="Filter by date range"
                   clearable
                   dropdownContent={

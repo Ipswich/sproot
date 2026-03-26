@@ -1,4 +1,4 @@
-import ManageTagsModal from "./ManageTagsModal";
+import ManageTagsModal from "../ManageTagsModal";
 import {
   getJournalEntryTagsAsync,
   addJournalEntryTagAsync,

@@ -10,7 +10,7 @@ import {
   Text,
   ScrollArea,
 } from "@mantine/core";
-import TagsPillsCombo from "./TagsPillsCombo";
+import TagsPillsCombo from "./utils/tags/TagsPillsCombo";
 import IconSelect from "./utils/IconListImpl";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
@@ -26,6 +26,7 @@ import { IconArchive, IconInbox } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import { computeTagPillDiffs } from "./utils/tags/tagPillHelpers";
 
 export interface EditJournalModalProps {
   modalOpened: boolean;
@@ -92,7 +93,7 @@ export default function EditJournalModal({
         archived: values.archived,
       };
       // API expects a full SDBJournal type for typing reasons; cast here as server accepts partial PATCH
-      return await updateJournalAsync(toSend as unknown as SDBJournal);
+      return await updateJournalAsync(toSend as SDBJournal);
     },
   });
 
@@ -123,46 +124,23 @@ export default function EditJournalModal({
 
   // When the PillsCombo selection changes, compute diffs and stage add/removes
   const handlePillsChange = (vals: string[]) => {
-    const newIds = vals.map((v) => Number(String(v).replace(/^tag:/, "")));
-    const prevIds = localTags.map((t) => t.id);
-
-    const added = newIds.filter((id) => !prevIds.includes(id));
-    const removed = prevIds.filter((id) => !newIds.includes(id));
-
-    // process additions
-    added.forEach((id) => {
-      // if it was staged for removal, undo that
-      if (tagRemoves.includes(id)) {
-        setTagRemoves((prev) => prev.filter((x) => x !== id));
-      } else {
-        // only stage add if it wasn't originally present on server
-        const existedOnServer = (tags ?? []).some((t) => t.id === id);
-        if (!existedOnServer)
-          setTagAdds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-        const addedTag = availableTags.find((t) => t.id === id);
-        if (addedTag)
-          setLocalTags((prev) =>
-            prev.some((p) => p.id === addedTag.id) ? prev : [...prev, addedTag],
-          );
-      }
-    });
-
-    // process removals
-    removed.forEach((id) => {
-      // if it was staged to be added, unstage it
-      if (tagAdds.includes(id)) {
-        setTagAdds((prev) => prev.filter((x) => x !== id));
-      } else {
-        if (!tagRemoves.includes(id)) setTagRemoves((prev) => [...prev, id]);
-      }
-      setLocalTags((prev) => prev.filter((t) => t.id !== id));
-    });
+    const { newLocalTags, newTagAdds, newTagRemoves } = computeTagPillDiffs(
+      vals,
+      localTags,
+      availableTags,
+      tags ?? [],
+      tagAdds,
+      tagRemoves,
+    );
+    setLocalTags(newLocalTags);
+    setTagAdds(newTagAdds);
+    setTagRemoves(newTagRemoves);
   };
 
   const save = async () => {
     setIsUpdating(true);
     const updated = await updateMutation.mutateAsync(
-      form.values as unknown as JournalForm,
+      form.values as JournalForm,
     );
     // after journal update, apply staged tag changes
     try {

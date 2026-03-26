@@ -1,4 +1,4 @@
-import { Fragment } from "react/jsx-runtime";
+import { Fragment } from "react";
 import { useState, useEffect, useRef } from "react";
 import {
   Button,
@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { IconSortAscending, IconSortDescending } from "@tabler/icons-react";
 
-import TagsPillsCombo from "./TagsPillsCombo";
+import TagsPillsCombo from "./utils/tags/TagsPillsCombo";
 import { useQuery } from "@tanstack/react-query";
 import { getJournalsAsync } from "@sproot/sproot-client/src/requests/requests_v2";
 import JournalCard from "./JournalCard";
@@ -112,7 +112,7 @@ export default function Journals() {
   >();
   (getJournalsQuery.data ?? []).forEach((j) => {
     (j.tags ?? []).forEach((t) => {
-      const tt = t as unknown as {
+      const tt = t as {
         id?: number;
         name?: string | null;
         color?: string | null;
@@ -153,7 +153,7 @@ export default function Journals() {
 
     const journalTagIds = (j.tags ?? [])
       .map((t) => {
-        const tt = t as unknown as { id?: number };
+        const tt = t as { id?: number };
         return tt && typeof tt.id === "number" ? tt.id : null;
       })
       .filter(Boolean) as number[];

@@ -1,5 +1,8 @@
 import { Fragment } from "react";
+import { applyHoverElevate } from "../utils/cards/hoverElevate";
 import { Card, Text, Stack, Group, Badge } from "@mantine/core";
+import CardWrapper from "../utils/cards/CardWrapper";
+import TagBadge from "../utils/tags/TagBadge";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/database/SDBJournalEntryTag";
 
@@ -16,27 +19,7 @@ export default function JournalEntryCard({
 }: JournalEntryCardProps) {
   return (
     <Fragment>
-      <Card
-        withBorder
-        shadow="sm"
-        padding="sm"
-        radius="md"
-        style={{
-          cursor: onClick ? "pointer" : "default",
-          transition: "transform 150ms, box-shadow 150ms",
-          background: "var(--mantine-color-white, #fff)",
-          borderColor: "rgba(15, 23, 42, 0.06)",
-        }}
-        onClick={() => onClick?.()}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-6px)";
-          e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.08)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "";
-        }}
-      >
+      <CardWrapper onClick={() => onClick?.()}>
         <Stack style={{ gap: 6 }}>
           <div
             style={{
@@ -70,15 +53,7 @@ export default function JournalEntryCard({
           {tags && tags.length > 0 ? (
             <Group wrap="wrap" style={{ gap: 6 }}>
               {tags.map((t) => (
-                <Badge
-                  key={t.id}
-                  color={t.color ?? "gray"}
-                  radius="sm"
-                  size="sm"
-                  style={{ padding: "3px 6px" }}
-                >
-                  {t.name}
-                </Badge>
+                <TagBadge key={t.id} tag={t} />
               ))}
             </Group>
           ) : null}
@@ -98,7 +73,7 @@ export default function JournalEntryCard({
             ) : null}
           </div>
         </Stack>
-      </Card>
+      </CardWrapper>
     </Fragment>
   );
 }

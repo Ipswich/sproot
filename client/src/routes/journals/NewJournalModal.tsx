@@ -20,7 +20,7 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
-import TagsPillsCombo from "./TagsPillsCombo";
+import TagsPillsCombo from "./utils/tags/TagsPillsCombo";
 
 interface NewJournalModalProps {
   modalOpened: boolean;

@@ -3,7 +3,6 @@ import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.modul
 import { useEffect, useState, useTransition } from "react";
 import { useLocation } from "react-router-dom";
 import { Page } from "../Pages";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface HeaderContentsProps {
   navbarToggle: () => void;
@@ -19,7 +18,6 @@ export default function HeaderContents({
   const [headerText, setHeaderText] = useState("");
   const [, startTransition] = useTransition();
   const location = useLocation();
-  const queryClient = useQueryClient();
   function toggleNavbar() {
     startTransition(() => {
       navbarToggle();
@@ -43,7 +41,7 @@ export default function HeaderContents({
     if (path.startsWith("/journals/")) {
       setHeaderText("Journals");
     }
-  }, [location, headerText, queryClient]);
+  }, [location, headerText]);
 
   return (
     <header className={classes["header"]}>
