@@ -2,6 +2,7 @@ import { SDBJournal } from "@sproot/sproot-common/dist/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
 import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalTagLookup";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { toDbDate } from "../../utils/dateUtils";
 
 export default class JournalManager {
   #sprootDB: ISprootDB;
@@ -16,14 +17,7 @@ export default class JournalManager {
     color: string | null = null,
     startDate: Date | null = null,
   ): Promise<number> {
-    return this.#sprootDB.addJournalAsync(
-      name,
-      description,
-      icon,
-      color,
-      startDate?.toISOString().slice(0, 19).replace("T", " ") ??
-        new Date().toISOString().slice(0, 19).replace("T", " "),
-    );
+    return this.#sprootDB.addJournalAsync(name, description, icon, color, toDbDate(startDate));
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {

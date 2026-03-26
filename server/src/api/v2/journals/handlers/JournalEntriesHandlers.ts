@@ -3,6 +3,7 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import JournalService from "../../../../journals/JournalService";
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import { toDbDate, isoToDb } from "../../../../utils/dateUtils";
 
 /**
  * Possible statusCodes 200, 400, 404, 503
@@ -324,8 +325,8 @@ export async function updateAsync(
       journalId: existingEntry[0]!.entry.journalId,
       content,
       title,
-      createdAt: existingEntry[0]!.entry.createdAt.slice(0, 19).replace("T", " "),
-      editedAt: editedAt.toISOString().slice(0, 19).replace("T", " "),
+      createdAt: isoToDb(existingEntry[0]!.entry.createdAt)!,
+      editedAt: toDbDate(editedAt),
     } as SDBJournalEntry);
 
     response = {

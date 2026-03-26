@@ -3,6 +3,7 @@ import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { toDbDate } from "../../../../utils/dateUtils";
 
 /**
  * Possible statusCodes: 200, 400, 404, 409
@@ -137,7 +138,7 @@ export async function setManualStateAsync(request: Request, response: Response) 
   await outputList.setStateAsync(outputId, {
     value: value,
     controlMode: ControlMode.manual,
-    logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    logTime: toDbDate(),
   } as SDBOutputState);
 
   if (output.state.controlMode == ControlMode.manual) {

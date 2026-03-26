@@ -32,6 +32,7 @@ import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import { toDbDate, dbToIso, isoToDb } from "../utils/dateUtils";
 import { SDBDeviceZone } from "@sproot/database/SDBDeviceZone";
 import { SDBJournal } from "@sproot/sproot-common/dist/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
@@ -143,7 +144,7 @@ export class SprootDB implements ISprootDB {
           metric: readingType,
           data: sensor.lastReading[readingType as ReadingType],
           units: sensor.units[readingType as ReadingType],
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+          logTime: toDbDate(),
         }),
       );
     }
@@ -168,7 +169,7 @@ export class SprootDB implements ISprootDB {
 
     if (toIsoString) {
       for (const reading of readings) {
-        reading.logTime = reading.logTime.replace(" ", "T") + "Z";
+        reading.logTime = dbToIso(reading.logTime)!;
       }
     }
     return readings;
@@ -247,9 +248,9 @@ export class SprootDB implements ISprootDB {
       archived: j.archived,
       icon: j.icon,
       color: j.color,
-      createdAt: j.createdAt.replace(" ", "T") + "Z",
-      editedAt: j.editedAt.replace(" ", "T") + "Z",
-      archivedAt: j.archivedAt ? j.archivedAt.replace(" ", "T") + "Z" : null,
+      createdAt: dbToIso(j.createdAt)!,
+      editedAt: dbToIso(j.editedAt)!,
+      archivedAt: dbToIso(j.archivedAt),
     }));
   }
 
@@ -262,9 +263,9 @@ export class SprootDB implements ISprootDB {
       archived: j.archived,
       icon: j.icon,
       color: j.color,
-      createdAt: j.createdAt.replace(" ", "T") + "Z",
-      editedAt: j.editedAt.replace(" ", "T") + "Z",
-      archivedAt: j.archivedAt ? j.archivedAt.replace(" ", "T") + "Z" : null,
+      createdAt: dbToIso(j.createdAt)!,
+      editedAt: dbToIso(j.editedAt)!,
+      archivedAt: dbToIso(j.archivedAt),
     }));
   }
 
@@ -283,8 +284,8 @@ export class SprootDB implements ISprootDB {
           archived: 0,
           icon,
           color,
-          createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-          editedAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+          createdAt: createdAt ?? toDbDate(),
+          editedAt: createdAt ?? toDbDate(),
           archivedAt: null,
         })
       )[0] ?? -1
@@ -292,10 +293,7 @@ export class SprootDB implements ISprootDB {
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    const archivedAt = journal.archived
-      ? (journal.archivedAt?.slice(0, 19).replace("T", " ") ??
-        new Date().toISOString().slice(0, 19).replace("T", " "))
-      : null;
+    const archivedAt = journal.archived ? (isoToDb(journal.archivedAt) ?? toDbDate()) : null;
     return this.#connection("journals")
       .where("id", journal.id)
       .update({
@@ -306,7 +304,7 @@ export class SprootDB implements ISprootDB {
         color: journal.color,
         createdAt: journal.createdAt,
         editedAt: journal.editedAt,
-        archivedAt: archivedAt,
+        archivedAt: isoToDb(archivedAt) ?? toDbDate(),
       });
   }
 
@@ -372,8 +370,8 @@ export class SprootDB implements ISprootDB {
     }
     return results.map((entry: SDBJournalEntry) => ({
       ...entry,
-      createdAt: entry.createdAt.replace(" ", "T") + "Z",
-      editedAt: entry.editedAt.replace(" ", "T") + "Z",
+      createdAt: dbToIso(entry.createdAt)!,
+      editedAt: dbToIso(entry.editedAt)!,
     }));
   }
 
@@ -390,8 +388,8 @@ export class SprootDB implements ISprootDB {
     }
     return results.map((entry: SDBJournalEntry) => ({
       ...entry,
-      createdAt: entry.createdAt.replace(" ", "T") + "Z",
-      editedAt: entry.editedAt.replace(" ", "T") + "Z",
+      createdAt: dbToIso(entry.createdAt)!,
+      editedAt: dbToIso(entry.editedAt)!,
     }));
   }
 
@@ -407,14 +405,12 @@ export class SprootDB implements ISprootDB {
         journal_id: journalId,
         title,
         content,
-        createdAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
-        editedAt: createdAt ?? new Date().toISOString().slice(0, 19).replace("T", " "),
+        createdAt: createdAt ?? toDbDate(),
+        editedAt: createdAt ?? toDbDate(),
       }),
-      this.#connection("journals")
-        .where("id", journalId)
-        .update({
-          editedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
-        }),
+      this.#connection("journals").where("id", journalId).update({
+        editedAt: toDbDate(),
+      }),
     ]);
 
     return result[0][0] ?? -1;
@@ -428,13 +424,11 @@ export class SprootDB implements ISprootDB {
         title: entry.title,
         content: entry.content,
         createdAt: entry.createdAt,
-        editedAt: entry.editedAt,
+        editedAt: toDbDate(),
       }),
-      this.#connection("journals")
-        .where("id", entry.journalId)
-        .update({
-          editedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
-        }),
+      this.#connection("journals").where("id", entry.journalId).update({
+        editedAt: toDbDate(),
+      }),
     ]);
   }
 
@@ -445,11 +439,9 @@ export class SprootDB implements ISprootDB {
       .first();
     await Promise.all([
       this.#connection("journal_entries").where("id", id).delete(),
-      this.#connection("journals")
-        .where("id", entry?.journalId)
-        .update({
-          editedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
-        }),
+      this.#connection("journals").where("id", entry?.journalId).update({
+        editedAt: toDbDate(),
+      }),
     ]);
   }
 
@@ -505,7 +497,7 @@ export class SprootDB implements ISprootDB {
       output_id: output.id,
       value: output.value,
       controlMode: output.controlMode,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      logTime: toDbDate(),
     });
   }
   async updateLastOutputStateAsync(output: {
@@ -513,13 +505,11 @@ export class SprootDB implements ISprootDB {
     value: number;
     controlMode: ControlMode;
   }): Promise<void> {
-    return this.#connection("outputs")
-      .where("id", output.id)
-      .update({
-        lastValue: output.value,
-        lastControlMode: output.controlMode,
-        lastStateUpdate: new Date().toISOString().slice(0, 19).replace("T", " "),
-      });
+    return this.#connection("outputs").where("id", output.id).update({
+      lastValue: output.value,
+      lastControlMode: output.controlMode,
+      lastStateUpdate: toDbDate(),
+    });
   }
   async getLastOutputStateAsync(outputId: number): Promise<SDBOutputState[]> {
     return this.#connection("outputs")
@@ -545,7 +535,7 @@ export class SprootDB implements ISprootDB {
 
     if (toIsoString) {
       for (const state of states) {
-        state.logTime = state.logTime.replace(" ", "T") + "Z";
+        state.logTime = dbToIso(state.logTime)!;
       }
     }
     return states;

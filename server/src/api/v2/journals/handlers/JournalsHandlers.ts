@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import JournalService from "../../../../journals/JournalService";
 import { SDBJournal } from "@sproot/database/SDBJournal";
+import { toDbDate, isoToDb } from "../../../../utils/dateUtils";
 
 /**
  * Possible statusCodes 200, 400, 404, 503
@@ -212,12 +213,12 @@ export async function updateAsync(
   // existingJournal contains ISO formatted timestamps for responses
   const createdAtIso = existingJournal[0]!.journal.createdAt;
   // convert ISO formatted createdAt back to DB datetime format (YYYY-MM-DD HH:MM:SS)
-  const createdAt = createdAtIso.replace("T", " ").replace("Z", "");
+  const createdAt = isoToDb(createdAtIso)!;
   const editedAtIso = new Date().toISOString();
-  const editedAt = editedAtIso.slice(0, 19).replace("T", " ");
+  const editedAt = toDbDate();
   const archivedAt =
     archived === true && !existingJournal[0]!.journal.archived
-      ? new Date().toISOString()
+      ? editedAtIso
       : archived === false && existingJournal[0]!.journal.archived
         ? null
         : existingJournal[0]!.journal.archivedAt;

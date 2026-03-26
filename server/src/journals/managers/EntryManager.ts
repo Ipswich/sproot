@@ -1,6 +1,7 @@
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { toDbDate } from "../../utils/dateUtils";
 
 export default class EntryManager {
   #sprootDB: ISprootDB;
@@ -51,7 +52,7 @@ export default class EntryManager {
       journalId,
       name ?? null,
       text,
-      createdAt?.toISOString().slice(0, 19).replace("T", " ") ?? null,
+      createdAt ? toDbDate(createdAt) : null,
     );
   }
 

@@ -12,6 +12,7 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../list/OutputList";
 import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { toDbDate } from "../../utils/dateUtils";
 
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
@@ -221,7 +222,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     await this.setStateAsync({
       value: result.value ?? 0,
       controlMode: ControlMode.automatic,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      logTime: toDbDate(),
     } as SDBOutputState);
 
     if (this.controlMode === ControlMode.automatic) {
