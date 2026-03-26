@@ -99,7 +99,7 @@ describe("JournalManager.ts tests", () => {
     });
 
     it("should return empty array if no journal found for id", async () => {
-      (sprootDB.getJournalsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.getJournalAsync as sinon.SinonStub).resolves([]);
       const res = await journalManager.getJournalsAsync(999);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);
