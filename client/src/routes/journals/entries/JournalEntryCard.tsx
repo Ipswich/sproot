@@ -1,6 +1,5 @@
 import { Fragment } from "react";
-import { applyHoverElevate } from "../utils/cards/hoverElevate";
-import { Card, Text, Stack, Group, Badge } from "@mantine/core";
+import { Text, Stack, Group } from "@mantine/core";
 import CardWrapper from "../utils/cards/CardWrapper";
 import TagBadge from "../utils/tags/TagBadge";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
