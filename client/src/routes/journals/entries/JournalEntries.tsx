@@ -300,18 +300,36 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
 
   useEffect(() => {
     if ((entriesQuery.data ?? []).length > 0 && filters.length === 0) {
-      if (localStorage.getItem(journalEntriesFiltersKey())) {
-        setFilters(
-          JSON.parse(localStorage.getItem(journalEntriesFiltersKey()) || "[]"),
-        );
+      const stored = localStorage.getItem(journalEntriesFiltersKey());
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as string[];
+          // Build allowed tag strings from current entries (only real tags)
+          const allTagIds = (entriesQuery.data ?? [])
+            .flatMap((r) => r.tags ?? [])
+            .map((t) => t.id)
+            .filter((v, i, a) => a.indexOf(v) === i);
+          const allowed = new Set(allTagIds.map((id) => `tag:${id}`));
+          const sanitized = parsed.filter((f) => {
+            if (!f.startsWith("tag:")) return false;
+            return allowed.has(f);
+          });
+          if (sanitized.length !== parsed.length) {
+            try {
+              localStorage.setItem(
+                journalEntriesFiltersKey(),
+                JSON.stringify(sanitized),
+              );
+            } catch {
+              // ignore localStorage errors
+            }
+          }
+          setFilters(sanitized);
+        } catch {
+          setFilters([]);
+        }
       } else {
-        // default to all tags selected
-        const allTagIds = (entriesQuery.data ?? [])
-          .flatMap((r) => r.tags ?? [])
-          .map((t) => ({ id: t.id, name: t.name }))
-          .filter((v, i, a) => a.findIndex((x) => x.id === v.id) === i)
-          .map((t) => `tag:${t.id}`);
-        setFilters([...allTagIds]);
+        setFilters([]);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -333,6 +351,28 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
       sensitivity: "base",
     }),
   );
+
+  // Keep filters in sync when tags are removed elsewhere (e.g. deleted)
+  useEffect(() => {
+    if (filters.length === 0) return;
+    const allowed = new Set(allTags.map((t) => `tag:${t.id}`));
+    const sanitized = filters.filter((f) => {
+      if (!f.startsWith("tag:")) return false;
+      return allowed.has(f);
+    });
+    if (sanitized.length !== filters.length) {
+      setFilters(sanitized);
+      try {
+        localStorage.setItem(
+          journalEntriesFiltersKey(),
+          JSON.stringify(sanitized),
+        );
+      } catch {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allTags]);
 
   const selectedTagIds = filters
     .filter((f) => f.startsWith("tag:"))

@@ -91,7 +91,6 @@ export default function ManageTagsModal<T extends TagLike>({
   return (
     <Modal
       overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
-      scrollAreaComponent={ScrollArea.Autosize}
       centered
       size="xs"
       opened={modalOpened}
@@ -100,183 +99,198 @@ export default function ManageTagsModal<T extends TagLike>({
       }}
       title={title}
     >
-      <Table
-        highlightOnHover
-        style={{ marginLeft: "auto", marginRight: "auto" }}
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th style={{ textAlign: "center" }}>Name & Color</Table.Th>
-            {updateFn ? (
+      <ScrollArea mah="50vh">
+        <Table
+          highlightOnHover
+          style={{ marginLeft: "auto", marginRight: "auto" }}
+        >
+          <Table.Thead
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 20,
+              background: "white",
+            }}
+          >
+            <Table.Tr>
+              <Table.Th style={{ textAlign: "center" }}>Name & Color</Table.Th>
+              {updateFn ? (
+                <Table.Th style={{ textAlign: "center", width: "10%" }}>
+                  Save
+                </Table.Th>
+              ) : null}
               <Table.Th style={{ textAlign: "center", width: "10%" }}>
-                Save
+                Delete
               </Table.Th>
-            ) : null}
-            <Table.Th style={{ textAlign: "center", width: "10%" }}>
-              Delete
-            </Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {[...(localTags ?? [])]
-            .sort((a, b) =>
-              (a.name || "").localeCompare(b.name || "", undefined, {
-                sensitivity: "base",
-              }),
-            )
-            .map((tag) => (
-              <Table.Tr key={tag.id}>
-                <Table.Td align="center">
-                  <div
-                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                  >
-                    <TextInput
-                      required
-                      value={tag.name ?? ""}
-                      style={{ width: "100%" }}
-                      styles={{ input: { fontSize: 16 } }}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setLocalTags((prev) =>
-                          prev.map((g) =>
-                            g.id === tag.id ? { ...g, name: value } : g,
-                          ),
-                        );
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {[...(localTags ?? [])]
+              .sort((a, b) =>
+                (a.name || "").localeCompare(b.name || "", undefined, {
+                  sensitivity: "base",
+                }),
+              )
+              .map((tag) => (
+                <Table.Tr key={tag.id}>
+                  <Table.Td align="center">
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
                       }}
-                    />
-                    <ColorInput
-                      required
-                      swatches={[...DefaultColors]}
-                      value={tag.color ?? ""}
-                      format="hex"
-                      popoverProps={{ withinPortal: true }}
-                      styles={{ input: { fontSize: 16 } }}
-                      onChange={(value) => {
-                        const color = value || null;
-                        setLocalTags((prev) =>
-                          prev.map((g) =>
-                            g.id === tag.id ? { ...g, color } : g,
-                          ),
-                        );
-                      }}
-                    />
-                  </div>
-                </Table.Td>
-                {updateFn ? (
+                    >
+                      <TextInput
+                        required
+                        value={tag.name ?? ""}
+                        style={{ width: "100%" }}
+                        styles={{ input: { fontSize: 16 } }}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value;
+                          setLocalTags((prev) =>
+                            prev.map((g) =>
+                              g.id === tag.id ? { ...g, name: value } : g,
+                            ),
+                          );
+                        }}
+                      />
+                      <ColorInput
+                        required
+                        swatches={[...DefaultColors]}
+                        value={tag.color ?? ""}
+                        format="hex"
+                        popoverProps={{ withinPortal: true }}
+                        styles={{ input: { fontSize: 16 } }}
+                        onChange={(value) => {
+                          const color = value || null;
+                          setLocalTags((prev) =>
+                            prev.map((g) =>
+                              g.id === tag.id ? { ...g, color } : g,
+                            ),
+                          );
+                        }}
+                      />
+                    </div>
+                  </Table.Td>
+                  {updateFn ? (
+                    <Table.Td style={{ width: "10%" }} align="center">
+                      <Group justify="center">
+                        <ActionIcon
+                          onClick={async () => {
+                            const updated = localTags.find(
+                              (g) => g.id === tag.id,
+                            );
+                            if (updated) {
+                              await updateTagMutation.mutateAsync(updated);
+                              await tagsQuery.refetch();
+                            }
+                          }}
+                        >
+                          <IconDeviceFloppy />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  ) : null}
                   <Table.Td style={{ width: "10%" }} align="center">
                     <Group justify="center">
                       <ActionIcon
+                        color="grey"
                         onClick={async () => {
-                          const updated = localTags.find(
-                            (g) => g.id === tag.id,
-                          );
-                          if (updated) {
-                            await updateTagMutation.mutateAsync(updated);
-                            await tagsQuery.refetch();
-                          }
+                          await deleteTagMutation.mutateAsync(tag.id);
+                          await tagsQuery.refetch();
                         }}
                       >
-                        <IconDeviceFloppy />
+                        <IconTrash />
                       </ActionIcon>
                     </Group>
                   </Table.Td>
-                ) : null}
+                </Table.Tr>
+              ))}
+
+            <Table.Tr key={"new"}>
+              <Table.Td align="center">
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                >
+                  <TextInput
+                    placeholder="New Tag"
+                    style={{ width: "100%" }}
+                    styles={{ input: { fontSize: 16 } }}
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.currentTarget.value)}
+                  />
+                  <ColorInput
+                    placeholder="#RRGGBB"
+                    swatches={[...DefaultColors]}
+                    value={newTagColor ?? ""}
+                    format="hex"
+                    popoverProps={{ withinPortal: true }}
+                    styles={{ input: { fontSize: 16 } }}
+                    onChange={(v) => setNewTagColor(v || null)}
+                  />
+                </div>
+              </Table.Td>
+              {updateFn ? (
                 <Table.Td style={{ width: "10%" }} align="center">
                   <Group justify="center">
                     <ActionIcon
-                      color="grey"
+                      color="green"
                       onClick={async () => {
-                        await deleteTagMutation.mutateAsync(tag.id);
+                        if (!newTagName.trim()) return;
+                        await addTagMutation.mutateAsync({
+                          name: newTagName.trim(),
+                          color: newTagColor,
+                        });
+                        setNewTagName("");
+                        setNewTagColor(
+                          DefaultColors[
+                            Math.floor(Math.random() * DefaultColors.length)
+                          ] ??
+                            DefaultColors[0] ??
+                            "#000000",
+                        );
                         await tagsQuery.refetch();
                       }}
                     >
-                      <IconTrash />
+                      <IconPlus />
                     </ActionIcon>
                   </Group>
                 </Table.Td>
-              </Table.Tr>
-            ))}
-
-          <Table.Tr key={"new"}>
-            <Table.Td align="center">
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <TextInput
-                  placeholder="New Tag"
-                  style={{ width: "100%" }}
-                  styles={{ input: { fontSize: 16 } }}
-                  value={newTagName}
-                  onChange={(e) => setNewTagName(e.currentTarget.value)}
-                />
-                <ColorInput
-                  placeholder="#RRGGBB"
-                  swatches={[...DefaultColors]}
-                  value={newTagColor ?? ""}
-                  format="hex"
-                  popoverProps={{ withinPortal: true }}
-                  styles={{ input: { fontSize: 16 } }}
-                  onChange={(v) => setNewTagColor(v || null)}
-                />
-              </div>
-            </Table.Td>
-            {updateFn ? (
+              ) : (
+                <Table.Td style={{ width: "10%" }} align="center">
+                  <Group justify="center">
+                    <ActionIcon
+                      color="green"
+                      onClick={async () => {
+                        if (!newTagName.trim()) return;
+                        await addTagMutation.mutateAsync({
+                          name: newTagName.trim(),
+                          color: newTagColor,
+                        });
+                        setNewTagName("");
+                        setNewTagColor(
+                          DefaultColors[
+                            Math.floor(Math.random() * DefaultColors.length)
+                          ] ??
+                            DefaultColors[0] ??
+                            "#000000",
+                        );
+                        await tagsQuery.refetch();
+                      }}
+                    >
+                      <IconPlus />
+                    </ActionIcon>
+                  </Group>
+                </Table.Td>
+              )}
               <Table.Td style={{ width: "10%" }} align="center">
-                <Group justify="center">
-                  <ActionIcon
-                    color="green"
-                    onClick={async () => {
-                      if (!newTagName.trim()) return;
-                      await addTagMutation.mutateAsync({
-                        name: newTagName.trim(),
-                        color: newTagColor,
-                      });
-                      setNewTagName("");
-                      setNewTagColor(
-                        DefaultColors[
-                          Math.floor(Math.random() * DefaultColors.length)
-                        ] ??
-                          DefaultColors[0] ??
-                          "#000000",
-                      );
-                      await tagsQuery.refetch();
-                    }}
-                  >
-                    <IconPlus />
-                  </ActionIcon>
-                </Group>
+                {/* empty cell to align with Delete column */}
               </Table.Td>
-            ) : (
-              <Table.Td style={{ width: "10%" }} align="center">
-                <Group justify="center">
-                  <ActionIcon
-                    color="green"
-                    onClick={async () => {
-                      if (!newTagName.trim()) return;
-                      await addTagMutation.mutateAsync({
-                        name: newTagName.trim(),
-                        color: newTagColor,
-                      });
-                      setNewTagName("");
-                      setNewTagColor(
-                        DefaultColors[
-                          Math.floor(Math.random() * DefaultColors.length)
-                        ] ??
-                          DefaultColors[0] ??
-                          "#000000",
-                      );
-                      await tagsQuery.refetch();
-                    }}
-                  >
-                    <IconPlus />
-                  </ActionIcon>
-                </Group>
-              </Table.Td>
-            )}
-            <Table.Td style={{ width: "10%" }} align="center">
-              {/* empty cell to align with Delete column */}
-            </Table.Td>
-          </Table.Tr>
-        </Table.Tbody>
-      </Table>
+            </Table.Tr>
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
     </Modal>
   );
 }

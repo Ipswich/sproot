@@ -129,16 +129,57 @@ export default function Journals() {
 
   useEffect(() => {
     if ((getJournalsQuery.data ?? []).length > 0 && filters.length === 0) {
-      if (localStorage.getItem(journalsFiltersKey())) {
-        setFilters(
-          JSON.parse(localStorage.getItem(journalsFiltersKey()) || "[]"),
-        );
+      const stored = localStorage.getItem(journalsFiltersKey());
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as string[];
+          const allowedIds = new Set(allTags.map((t) => `tag:${t.id}`));
+          // allow the special Archived pseudo-tag
+          allowedIds.add("tag:-1");
+          const sanitized = parsed.filter((f) => {
+            if (!f.startsWith("tag:")) return false;
+            return allowedIds.has(f);
+          });
+          if (sanitized.length !== parsed.length) {
+            try {
+              localStorage.setItem(
+                journalsFiltersKey(),
+                JSON.stringify(sanitized),
+              );
+            } catch {
+              // ignore
+            }
+          }
+          setFilters(sanitized);
+        } catch {
+          setFilters(allTags.map((t) => `tag:${t.id}`));
+        }
       } else {
-        setFilters(["archived", ...allTags.map((t) => `tag:${t.id}`)]);
+        setFilters(allTags.map((t) => `tag:${t.id}`));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getJournalsQuery.data]);
+
+  // Keep filters in sync when tags are removed elsewhere (e.g. deleted)
+  useEffect(() => {
+    if (filters.length === 0) return;
+    const allowed = new Set(allTags.map((t) => `tag:${t.id}`));
+    allowed.add("tag:-1");
+    const sanitized = filters.filter((f) => {
+      if (!f.startsWith("tag:")) return false;
+      return allowed.has(f);
+    });
+    if (sanitized.length !== filters.length) {
+      setFilters(sanitized);
+      try {
+        localStorage.setItem(journalsFiltersKey(), JSON.stringify(sanitized));
+      } catch {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allTags]);
 
   // compute filtered and sorted lists for rendering and animation effects
   const filtered = (getJournalsQuery.data ?? []).filter((j) => {
