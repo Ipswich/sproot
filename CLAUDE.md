@@ -108,7 +108,7 @@ When using `docker-compose.yaml.development`:
 
 **Server (`server/.env.development`):**
 
-The server loads env via `dotenv/config`, which reads `server/.env` by default. Copy `server/.env.development` to `server/.env` (or set `DOTENV_CONFIG_PATH=.env.development`) before running locally.
+The server loads env via `dotenv/config`, which reads `server/.env` by default. Copy `server/.env.development` to `server/.env` (or set `DOTENV_CONFIG_PATH=.env.development`) before running locally. **Do not commit any `.env` files to version control; ensure `server/.env` (and other `.env*` files) are listed in `.gitignore`.**
 
 ```
 NODE_ENV=development
