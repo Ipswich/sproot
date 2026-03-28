@@ -98,7 +98,7 @@ The `common/` module contains shared TypeScript code:
 
 ## Docker Dev Mode
 
-When using `docker-compose.yml.development`:
+When using `docker-compose.yaml.development`:
 - Server builds and runs from root project
 - Server must be manually started (Docker file does not have an entrypoint)
 - Runs full stack including MariaDB, PHPMyAdmin
