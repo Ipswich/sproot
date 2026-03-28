@@ -82,7 +82,7 @@ sproot/
 
 **Sensors:** Digital (DS18B20, BME280, ADS1115) and analog (capacitive moisture sensors) through ADS1115 digital sensor.
 
-**Subcontrollers:** ESP32 devices that can manage their own relays, pwm interfaces, and sensors (firmware flashing via `POST /api/v2/subcontrollers/:id/flash-firmware`).
+**Subcontrollers:** ESP32 devices that can manage their own relays, pwm interfaces, and sensors (firmware flashing via `POST /api/v2/subcontrollers/firmware/esp32/ota-update/:deviceId`).
 
 **Camera:** Picamera livestreams (configured in camera settings).
 
