@@ -265,7 +265,7 @@ export default function EditJournalModal({
               }
               value={(localTags ?? []).map((t) => `tag:${t.id}`)}
               onChange={handlePillsChange}
-              placeholder="Filter by tags"
+              placeholder="Search tags"
             />
           </div>
         </div>
