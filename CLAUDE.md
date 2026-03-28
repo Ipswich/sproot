@@ -107,8 +107,11 @@ When using `docker-compose.yaml.development`:
 ## Environment Variables
 
 **Server (`server/.env.development`):**
+
+The server loads env via `dotenv/config`, which reads `server/.env` by default. Copy `server/.env.development` to `server/.env` (or set `DOTENV_CONFIG_PATH=.env.development`) before running locally.
+
 ```
-NODE_ENV=test
+NODE_ENV=development
 JWT_SECRET=<random string>
 JWT_EXPIRATION=259200000
 DEFAULT_USER=<dev username>
