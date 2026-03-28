@@ -19,20 +19,21 @@ sproot/
 ## Development Commands
 
 ### Build
-- Server: `cd server && npm run build` (compiles TypeScript, runs tests)
-- Client: `cd client && npm run build` (builds Vite frontend, includes docs build)
+- Server: `cd server && npm run build` (compiles TypeScript; tests via `cd server && npm run test`)
+- Client: `cd client && npm run build` (compiles TypeScript and builds Vite frontend)
 - Common: `cd common && npm run build` (compiles shared libraries)
+- Docs: `npm run build --workspace=docs` (builds Docusaurus documentation site)
 
 ### Run
 - Development: `cd server && npm run start:dev` (nodemon, auto-reload)
 - Client dev: `cd client && npm run start:dev` (Vite dev server on port 5173)
-- Docker: `sudo docker compose -f docker-compose.yml.development up -d` (full dev stack, used for developing with linux-only libraries)
+- Docker: `sudo docker compose -f docker-compose.yaml.development up -d` (full dev stack, used for developing with linux-only libraries)
 
 ### Test
 - Common tests: `cd common && npm run test` (mocha + ts-node)
 - Server unit tests: `cd server && npm run test` (mocha + ts-node)
 - Server API tests: `cd server && npm run test:api` (inter-service API tests with mocks)
-- Client tests: Run via Vite dev server with React DevTools
+- Client tests: No automated test suite currently. Use the Vite dev server with React DevTools for manual/exploratory testing.
 
 ### Lint/Format
 - Server Check: `cd server && npm run prettier:check`
@@ -93,7 +94,7 @@ The `common/` module contains shared TypeScript code:
 - Lists of things (sensors, outputs, conditions, etc.) that need to be in-sync between client and server
 - Cross-service auth utilities (`InterserviceAuthentication`)
 
-**Build Order:** Common must be built first (`npm run install:common`), then server (`npm run install:server`), since server imports from common's `dist/` folder.
+**Build Order:** The `common` workspace must be built before `server`, since the server imports from `@sproot/sproot-common/dist/...`. For example, run `npm run build:server` or `npm run build --workspace=common --workspace=server` to build both in the correct order.
 
 ## Docker Dev Mode
 
