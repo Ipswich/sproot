@@ -151,75 +151,77 @@ export async function updateAsync(
     return response;
   }
 
-  const existingJournal = await journalService.journalManager.getJournalsAsync(journalId);
-  if (!existingJournal || existingJournal.length === 0) {
-    response = {
-      statusCode: 404,
-      error: {
-        name: "Not Found",
-        url: req.originalUrl,
-        details: [`Journal with ID ${journalId} not found.`],
-      },
-      ...res.locals["defaultProperties"],
-    };
-    return response;
-  }
-
-  const archived: boolean =
-    req.body["archived"] === undefined
-      ? existingJournal[0]!.journal.archived
-      : Boolean(req.body["archived"]);
-
-  // If trying to make changes to an already archived journal,
-  // or trying to archive a journal that is already archived, return an error
-  if (archived === true && existingJournal[0]!.journal.archived) {
-    response = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: req.originalUrl,
-        details: ["Journal is archived; archive must be false to make changes."],
-      },
-      ...res.locals["defaultProperties"],
-    };
-    return response;
-  }
-
-  const title: string =
-    req.body["title"] === undefined ? existingJournal[0]!.journal.title : String(req.body["title"]);
-
-  const description: string | null =
-    req.body["description"] === undefined
-      ? existingJournal[0]!.journal.description
-      : req.body["description"] === null
-        ? null
-        : String(req.body["description"]);
-
-  const icon: string | null =
-    req.body["icon"] === undefined
-      ? existingJournal[0]!.journal.icon
-      : req.body["icon"] === null
-        ? null
-        : String(req.body["icon"]);
-
-  const color: string | null =
-    req.body["color"] === undefined
-      ? existingJournal[0]!.journal.color
-      : req.body["color"] === null
-        ? null
-        : String(req.body["color"]);
-
-  // existingJournal contains ISO formatted timestamps for responses
-  const createdAtIso = existingJournal[0]!.journal.createdAt;
-  const editedAtIso = new Date().toISOString();
-  const archivedAt =
-    archived === true && !existingJournal[0]!.journal.archived
-      ? editedAtIso
-      : archived === false && existingJournal[0]!.journal.archived
-        ? null
-        : existingJournal[0]!.journal.archivedAt;
-
   try {
+    const existingJournal = await journalService.journalManager.getJournalsAsync(journalId);
+    if (!existingJournal || existingJournal.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal with ID ${journalId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    const archived: boolean =
+      req.body["archived"] === undefined
+        ? existingJournal[0]!.journal.archived
+        : Boolean(req.body["archived"]);
+
+    // If trying to make changes to an already archived journal,
+    // or trying to archive a journal that is already archived, return an error
+    if (archived === true && existingJournal[0]!.journal.archived) {
+      response = {
+        statusCode: 400,
+        error: {
+          name: "Bad Request",
+          url: req.originalUrl,
+          details: ["Journal is archived; archive must be false to make changes."],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    const title: string =
+      req.body["title"] === undefined
+        ? existingJournal[0]!.journal.title
+        : String(req.body["title"]);
+
+    const description: string | null =
+      req.body["description"] === undefined
+        ? existingJournal[0]!.journal.description
+        : req.body["description"] === null
+          ? null
+          : String(req.body["description"]);
+
+    const icon: string | null =
+      req.body["icon"] === undefined
+        ? existingJournal[0]!.journal.icon
+        : req.body["icon"] === null
+          ? null
+          : String(req.body["icon"]);
+
+    const color: string | null =
+      req.body["color"] === undefined
+        ? existingJournal[0]!.journal.color
+        : req.body["color"] === null
+          ? null
+          : String(req.body["color"]);
+
+    // existingJournal contains ISO formatted timestamps for responses
+    const createdAtIso = existingJournal[0]!.journal.createdAt;
+    const editedAtIso = new Date().toISOString();
+    const archivedAt =
+      archived === true && !existingJournal[0]!.journal.archived
+        ? editedAtIso
+        : archived === false && existingJournal[0]!.journal.archived
+          ? null
+          : existingJournal[0]!.journal.archivedAt;
+
     await journalService.journalManager.updateJournalAsync({
       id: journalId,
       title,
@@ -285,21 +287,21 @@ export async function deleteAsync(
     return response;
   }
 
-  const existingJournal = await journalService.journalManager.getJournalsAsync(journalId);
-  if (!existingJournal || existingJournal.length === 0) {
-    response = {
-      statusCode: 404,
-      error: {
-        name: "Not Found",
-        url: req.originalUrl,
-        details: [`Journal with ID ${journalId} not found.`],
-      },
-      ...res.locals["defaultProperties"],
-    };
-    return response;
-  }
-
   try {
+    const existingJournal = await journalService.journalManager.getJournalsAsync(journalId);
+    if (!existingJournal || existingJournal.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal with ID ${journalId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
     await journalService.journalManager.deleteJournalAsync(journalId);
     response = {
       statusCode: 200,
