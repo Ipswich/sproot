@@ -50,7 +50,7 @@ export default function NewJournalModal({
     initialValues: {
       title: "",
       description: "",
-      icon: "",
+      icon: null,
       color:
         DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
         DefaultColors[0] ??
