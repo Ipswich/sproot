@@ -146,13 +146,17 @@ export async function up(knex: Knex): Promise<void> {
 
   // Add indexes on logTime to speed up range scans and bucketing queries
   try {
-    await knex.raw(`CREATE INDEX idx_output_logtime ON output_data (output_id, logTime)`);
+    await knex.schema.table("output_data", (table) => {
+      table.index(["output_id", "logTime"], "idx_output_logtime");
+    });
   } catch (e) {
     // ignore if index already exists or not supported
   }
 
   try {
-    await knex.raw(`CREATE INDEX idx_sensor_logtime ON sensor_data (sensor_id, logTime)`);
+    await knex.schema.table("sensor_data", (table) => {
+      table.index(["sensor_id", "logTime"], "idx_sensor_logtime");
+    });
   } catch (e) {
     // ignore
   }
@@ -161,12 +165,16 @@ export async function up(knex: Knex): Promise<void> {
 export async function down(knex: Knex): Promise<void> {
   // Remove added logTime indexes if present
   try {
-    await knex.raw(`DROP INDEX idx_output_logtime ON output_data`);
+    await knex.schema.table("output_data", (table) => {
+      table.dropIndex(["output_id", "logTime"], "idx_output_logtime");
+    });
   } catch (e) {
     // ignore
   }
   try {
-    await knex.raw(`DROP INDEX idx_sensor_logtime ON sensor_data`);
+    await knex.schema.table("sensor_data", (table) => {
+      table.dropIndex(["sensor_id", "logTime"], "idx_sensor_logtime");
+    });
   } catch (e) {
     // ignore
   }
