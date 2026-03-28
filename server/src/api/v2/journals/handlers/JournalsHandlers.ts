@@ -14,7 +14,7 @@ export async function getAsync(
   const journalService = req.app.get("journalService") as JournalService;
   let journalId: number | undefined = undefined;
   if (req.params["journalId"]) {
-    journalId = parseInt(req.params["journalId"]);
+    journalId = parseInt(req.params["journalId"], 10);
     if (isNaN(journalId)) {
       response = {
         statusCode: 400,

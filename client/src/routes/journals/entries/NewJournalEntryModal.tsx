@@ -56,6 +56,8 @@ export default function NewJournalEntryModal({
       content: "",
     },
     validate: {
+      title: (v: string) =>
+        !v || v.length <= 64 ? null : "Title must be 64 characters or fewer",
       content: (v: string) =>
         v && v.trim().length > 0 ? null : "Content is required",
     },
@@ -151,6 +153,7 @@ export default function NewJournalEntryModal({
           <TextInput
             label="Title"
             placeholder="Title"
+            maxLength={64}
             {...form.getInputProps("title")}
           />
 

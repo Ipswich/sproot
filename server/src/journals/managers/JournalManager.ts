@@ -56,11 +56,20 @@ export default class JournalManager {
       this.#sprootDB.getJournalTagLookupsAsync(),
     ]);
 
+    const tagById = new Map<number, SDBJournalTag>(
+      (allTags as SDBJournalTag[]).map((t) => [t.id, t]),
+    );
+    const lookupsByJournalId = new Map<number, SDBJournalTagLookup[]>();
+    for (const l of tagLookups as SDBJournalTagLookup[]) {
+      const arr = lookupsByJournalId.get(l.journalId) ?? [];
+      arr.push(l);
+      lookupsByJournalId.set(l.journalId, arr);
+    }
+
     const results: Array<{ journal: SDBJournal; tags: SDBJournalTag[] }> = [];
     for (const j of journals as SDBJournal[]) {
-      const tags: SDBJournalTag[] = (tagLookups as SDBJournalTagLookup[])
-        .filter((l) => l.journalId === j.id)
-        .map((l) => (allTags as SDBJournalTag[]).find((t) => t.id === l.tagId))
+      const tags: SDBJournalTag[] = (lookupsByJournalId.get(j.id) ?? [])
+        .map((l) => tagById.get(l.tagId))
         .filter(Boolean) as SDBJournalTag[];
 
       results.push({ journal: j, tags });

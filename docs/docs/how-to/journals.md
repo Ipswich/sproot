@@ -5,7 +5,7 @@ title: Journals
 
 # Journals
 
-While there's often no replacement for a pen and a clipboard, sometimes its convenient to have the ability to make notes right in front of you. Journals allow you to do just that. Within Journals, you can create groups of entries for whatever you're currently working on, tagged and filterable to keep things organized.
+While there's often no replacement for a pen and a clipboard, sometimes it's convenient to have the ability to make notes right in front of you. Journals allow you to do just that. Within Journals, you can create groups of entries for whatever you're currently working on, tagged and filterable to keep things organized.
 
 ## The Journal
 
@@ -13,7 +13,7 @@ At a top level, a journal exists as a title and a description. You can also give
 
 ## Entries
 
-Underneath Journals, you have a series of entries. This is the real meat and potatoes of a Journal - after all, what is a book without content? Each entry consists of a title and content. Like Journals, you can also tag them for organization. To add an entry, click into your journal and scroll down to the bottom, where you'll see a famliar looking button labeled "Add New". Click on this, fill out your entry and add any tags, and click save. Like Journals, you can edit these after the fact.
+Underneath Journals, you have a series of entries. This is the real meat and potatoes of a Journal - after all, what is a book without content? Each entry consists of a title and content. Like Journals, you can also tag them for organization. To add an entry, click into your journal and scroll down to the bottom, where you'll see a familiar looking button labeled "Add New". Click on this, fill out your entry and add any tags, and click save. Like Journals, you can edit these after the fact.
 
 ## Tags (Journal and Entry)
 
