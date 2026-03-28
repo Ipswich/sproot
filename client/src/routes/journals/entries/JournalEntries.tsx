@@ -597,10 +597,14 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
                   value={filters}
                   onChange={(newFilters: string[]) => {
                     setFilters(newFilters);
-                    localStorage.setItem(
-                      journalEntriesFiltersKey(),
-                      JSON.stringify(newFilters),
-                    );
+                    try {
+                      localStorage.setItem(
+                        journalEntriesFiltersKey(),
+                        JSON.stringify(newFilters),
+                      );
+                    } catch {
+                      // Ignore storage errors (e.g., disabled storage, quota exceeded)
+                    }
                   }}
                   placeholder="Filter by tags"
                 />
