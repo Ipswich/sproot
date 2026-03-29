@@ -75,13 +75,23 @@ export async function addAsync(
   const icon = req.body["icon"] as string | undefined;
   const color = req.body["color"] as string | undefined;
 
+  const badRequests: string[] = [];
   if (title == null || title === "" || title.length > 64) {
+    badRequests.push("Journal name is required and cannot exceed 64 characters.");
+  }
+  if (icon !== undefined && icon.length > 64) {
+    badRequests.push("Journal icon cannot exceed 64 characters.");
+  }
+  if (color !== undefined && color.length > 64) {
+    badRequests.push("Journal color cannot exceed 64 characters.");
+  }
+  if (badRequests.length > 0) {
     response = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: req.originalUrl,
-        details: ["Journal name is required and cannot exceed 64 characters."],
+        details: badRequests,
       },
       ...res.locals["defaultProperties"],
     };

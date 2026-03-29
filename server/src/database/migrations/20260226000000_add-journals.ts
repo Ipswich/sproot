@@ -113,44 +113,12 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  // #####
-  // I'm leaving bits here as notes to future me for picking this stuff back up.
-  // #####
-
-  // if (!(await knex.schema.hasTable("journal_entry_device_data"))) {
-  //   await knex.schema.createTable("journal_entry_device_data", (table) => {
-  //     table.increments("id").notNullable();
-  //     table
-  //       .integer("journal_entry_id")
-  //       .unsigned()
-  //       .notNullable()
-  //       .references("id")
-  //       .inTable("journal_entries")
-  //       .onDelete("CASCADE")
-  //       .onUpdate("CASCADE");
-  //     table.string("deviceName", 64).notNullable();
-  //     table.string("color", 32).defaultTo(null);
-  //     table
-  //       .enum("deviceType", ["Sensor", "Output"], { useNative: true, enumName: "device_type" })
-  //       .notNullable();
-  //     table.string("metric", 32).defaultTo(null);
-  //     table.decimal("reading", 12, 7).notNullable();
-  //     table.string("units", 16).defaultTo(null);
-  //     table.dateTime("readingTime").notNullable();
-  //     table.primary(["id"]);
-  //     table.index(["journal_entry_id"]);
-  //     table.index(["readingTime"]);
-  //     setTableDefaults(table);
-  //   });
-  // }
-
-  // Add indexes on logTime to speed up range scans and bucketing queries
   try {
     await knex.schema.table("output_data", (table) => {
       table.index(["output_id", "logTime"], "idx_output_logtime");
     });
   } catch (e) {
-    // ignore if index already exists or not supported
+    // ignore
   }
 
   try {
@@ -163,7 +131,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  // Remove added logTime indexes if present
   try {
     await knex.schema.table("output_data", (table) => {
       table.dropIndex(["output_id", "logTime"], "idx_output_logtime");
@@ -179,19 +146,6 @@ export async function down(knex: Knex): Promise<void> {
     // ignore
   }
 
-  // drop in reverse order to satisfy FKs
-  // if (await knex.schema.hasTable("journal_entry_device_data")) {
-  //   await knex.schema.dropTable("journal_entry_device_data");
-  // }
-  // Cleanup DB-level enum type for Postgres (best-effort)
-  try {
-    // const client = knex?.client?.config?.client ?? "";
-    // if (typeof client === "string" && client.startsWith("pg")) {
-    //   await knex.raw("DROP TYPE IF EXISTS device_type");
-    // }
-  } catch (e) {
-    // ignore errors during cleanup
-  }
   if (await knex.schema.hasTable("journal_entry_tag_lookup")) {
     await knex.schema.dropTable("journal_entry_tag_lookup");
   }

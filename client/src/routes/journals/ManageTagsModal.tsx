@@ -39,6 +39,7 @@ export default function ManageTagsModal<T extends TagLike>({
     queryKey,
     queryFn: fetchFn,
     refetchInterval: 60000,
+    enabled: modalOpened,
   });
 
   const addTagMutation = useMutation({

@@ -778,7 +778,7 @@ export async function getJournalsAsync(): Promise<
     return [];
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data;
+  return deserializedResponse.content?.data || [];
 }
 
 export async function getJournalTagsAsync(): Promise<SDBJournalTag[]> {

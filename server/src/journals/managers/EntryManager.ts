@@ -26,17 +26,23 @@ export default class EntryManager {
     const entryTagLookups = await this.#sprootDB.getJournalEntryTagLookupsAsync();
     const allEntryTags = await this.#sprootDB.getJournalEntryTagsAsync();
 
+    const tagById = new Map<number, SDBJournalEntryTag>(
+      (allEntryTags as SDBJournalEntryTag[]).map((t) => [t.id, t]),
+    );
+    const lookupsByEntryId = new Map<number, { journalEntryId: number; tagId: number }[]>();
+    for (const l of entryTagLookups as { journalEntryId: number; tagId: number }[]) {
+      const arr = lookupsByEntryId.get(l.journalEntryId) ?? [];
+      arr.push(l);
+      lookupsByEntryId.set(l.journalEntryId, arr);
+    }
+
     const results: Array<{ entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }> = [];
     for (const e of entries) {
-      const entryTags = entryTagLookups
-        .filter((l) => l.journalEntryId === e.id)
-        .map((l) => allEntryTags.find((t) => t.id === l.tagId))
+      const tags: SDBJournalEntryTag[] = (lookupsByEntryId.get(e.id) ?? [])
+        .map((l) => tagById.get(l.tagId))
         .filter(Boolean) as SDBJournalEntryTag[];
 
-      results.push({
-        entry: e,
-        tags: entryTags,
-      });
+      results.push({ entry: e, tags });
     }
 
     return results;
