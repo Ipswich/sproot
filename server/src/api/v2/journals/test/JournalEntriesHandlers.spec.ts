@@ -456,7 +456,7 @@ describe("JournalEntriesHandlers", () => {
       const err = result.error;
       assert.exists(err);
       assert.isArray(err.details);
-      assert.include(err.details[0], "Failed to create Journal: boom");
+      assert.include(err.details[0], "Failed to create Journal Entry: boom");
     });
   });
 

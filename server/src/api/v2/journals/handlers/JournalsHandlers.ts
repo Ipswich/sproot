@@ -169,23 +169,10 @@ export async function updateAsync(
     const archived: boolean =
       req.body["archived"] === undefined
         ? existingJournal[0]!.journal.archived
-        : Boolean(req.body["archived"]);
+        : Boolean(req.body["archived"] === true || req.body["archived"] === "true");
 
     // If trying to make changes to an already archived journal,
     // or trying to archive a journal that is already archived, return an error
-    if (archived === true && existingJournal[0]!.journal.archived) {
-      response = {
-        statusCode: 400,
-        error: {
-          name: "Bad Request",
-          url: req.originalUrl,
-          details: ["Journal is archived; archive must be false to make changes."],
-        },
-        ...res.locals["defaultProperties"],
-      };
-      return response;
-    }
-
     const title: string =
       req.body["title"] === undefined
         ? existingJournal[0]!.journal.title
@@ -197,6 +184,28 @@ export async function updateAsync(
         : req.body["description"] === null
           ? null
           : String(req.body["description"]);
+    const badRequests: string[] = [];
+    if (title === "" || title.length > 64) {
+      badRequests.push("Journal title cannot be empty or exceed 64 characters.");
+    }
+    if (description !== null && description.length > 65535) {
+      badRequests.push("Journal description cannot exceed 65535 characters.");
+    }
+    if (archived === true && existingJournal[0]!.journal.archived) {
+      badRequests.push("Journal is archived; archive must be false to make changes.");
+    }
+    if (badRequests.length > 0) {
+      response = {
+        statusCode: 400,
+        error: {
+          name: "Bad Request",
+          url: req.originalUrl,
+          details: badRequests,
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
 
     const icon: string | null =
       req.body["icon"] === undefined

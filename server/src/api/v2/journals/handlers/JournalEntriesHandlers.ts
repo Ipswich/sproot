@@ -252,7 +252,7 @@ export async function addAsync(
       error: {
         name: "Service Unavailable",
         url: req.originalUrl,
-        details: [`Failed to create Journal: ${(error as Error).message}`],
+        details: [`Failed to create Journal Entry: ${(error as Error).message}`],
       },
       ...res.locals["defaultProperties"],
     };
@@ -291,35 +291,34 @@ export async function updateAsync(
     return response;
   }
 
-  const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
-  if (!existingEntry || existingEntry.length === 0) {
-    response = {
-      statusCode: 404,
-      error: {
-        name: "Not Found",
-        url: req.originalUrl,
-        details: [`Journal Entry with ID ${entryId} not found.`],
-      },
-      ...res.locals["defaultProperties"],
-    };
-    return response;
-  }
-
-  const content: string =
-    req.body["content"] == undefined
-      ? existingEntry[0]!.entry.content!
-      : String(req.body["content"]);
-
-  const title: string | null =
-    req.body["title"] === undefined
-      ? existingEntry[0]!.entry.title
-      : req.body["title"] === null
-        ? null
-        : String(req.body["title"]);
-
-  const editedAt = new Date();
-
   try {
+    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId);
+    if (!existingEntry || existingEntry.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal Entry with ID ${entryId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    const content: string =
+      req.body["content"] == undefined
+        ? existingEntry[0]!.entry.content!
+        : String(req.body["content"]);
+
+    const title: string | null =
+      req.body["title"] === undefined
+        ? existingEntry[0]!.entry.title
+        : req.body["title"] === null
+          ? null
+          : String(req.body["title"]);
+
+    const editedAt = new Date();
     await journalService.entryManager.updateAsync({
       id: entryId,
       journalId: existingEntry[0]!.entry.journalId,
@@ -357,7 +356,7 @@ export async function updateAsync(
   return response;
 }
 
-/** Possible statusCodes: 204, 400, 404, 503 */
+/** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteAsync(
   req: Request,
   res: Response,
@@ -380,21 +379,20 @@ export async function deleteAsync(
     return response;
   }
 
-  const existingEntry = await journalService.entryManager.getAsync(undefined, entryId, false);
-  if (!existingEntry || existingEntry.length === 0) {
-    response = {
-      statusCode: 404,
-      error: {
-        name: "Not Found",
-        url: req.originalUrl,
-        details: [`Journal Entry with ID ${entryId} not found.`],
-      },
-      ...res.locals["defaultProperties"],
-    };
-    return response;
-  }
-
   try {
+    const existingEntry = await journalService.entryManager.getAsync(undefined, entryId, false);
+    if (!existingEntry || existingEntry.length === 0) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Journal Entry with ID ${entryId} not found.`],
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
     await journalService.entryManager.deleteAsync(entryId);
     response = {
       statusCode: 200,

@@ -154,7 +154,7 @@ export async function deleteAsync(
   let response: SuccessResponse | ErrorResponse;
   try {
     const tagId = parseInt(req.params["tagId"] ?? "", 10);
-    if (isNaN(tagId)) {
+    if (isNaN(tagId) || tagId <= 0) {
       response = {
         statusCode: 400,
         error: {
