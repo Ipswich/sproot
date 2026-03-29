@@ -15,7 +15,7 @@ export async function getAsync(
   let journalId: number | undefined = undefined;
   if (req.params["journalId"]) {
     journalId = parseInt(req.params["journalId"], 10);
-    if (isNaN(journalId)) {
+    if (isNaN(journalId) || journalId <= 0) {
       response = {
         statusCode: 400,
         error: {
@@ -79,10 +79,10 @@ export async function addAsync(
   if (title == null || title === "" || title.length > 64) {
     badRequests.push("Journal name is required and cannot exceed 64 characters.");
   }
-  if (icon !== undefined && icon.length > 64) {
+  if (icon !== undefined && icon !== null && icon.length > 64) {
     badRequests.push("Journal icon cannot exceed 64 characters.");
   }
-  if (color !== undefined && color.length > 64) {
+  if (color !== undefined && color !== null && color.length > 64) {
     badRequests.push("Journal color cannot exceed 64 characters.");
   }
   if (badRequests.length > 0) {
@@ -191,7 +191,7 @@ export async function updateAsync(
     const description: string | null =
       req.body["description"] === undefined
         ? existingJournal[0]!.journal.description
-        : req.body["description"] === null
+        : req.body["description"] === null || req.body["description"] === ""
           ? null
           : String(req.body["description"]);
     const badRequests: string[] = [];
@@ -220,14 +220,14 @@ export async function updateAsync(
     const icon: string | null =
       req.body["icon"] === undefined
         ? existingJournal[0]!.journal.icon
-        : req.body["icon"] === null
+        : req.body["icon"] === null || req.body["icon"] === ""
           ? null
           : String(req.body["icon"]);
 
     const color: string | null =
       req.body["color"] === undefined
         ? existingJournal[0]!.journal.color
-        : req.body["color"] === null
+        : req.body["color"] === null || req.body["color"] === ""
           ? null
           : String(req.body["color"]);
 

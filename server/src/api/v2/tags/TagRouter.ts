@@ -39,6 +39,7 @@ router.get("/entries", async (req: Request, res: Response) => {
 router.post("/entries", async (req: Request, res: Response) => {
   const result = await JournalEntryTagHandlers.addAsync(req, res);
   res.status(result.statusCode).json(result);
+  return;
 });
 
 router.patch("/entries/:tagId", async (req: Request, res: Response) => {

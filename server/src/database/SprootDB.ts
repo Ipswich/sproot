@@ -302,7 +302,6 @@ export class SprootDB implements ISprootDB {
         archived: journal.archived ? 1 : 0,
         icon: journal.icon,
         color: journal.color,
-        createdAt: isoToDb(journal.createdAt),
         editedAt: isoToDb(journal.editedAt),
         archivedAt: archivedAt,
       });
@@ -423,7 +422,6 @@ export class SprootDB implements ISprootDB {
         journal_id: entry.journalId,
         title: entry.title,
         content: entry.content,
-        createdAt: entry.createdAt,
         editedAt: toDbDate(),
       }),
       this.#connection("journals").where("id", entry.journalId).update({

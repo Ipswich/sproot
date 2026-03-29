@@ -29,7 +29,7 @@ export default function JournalEntryView() {
   const entryQuery = useQuery({
     queryKey: ["journal-entry", Number(entryId ?? 0)],
     queryFn: () => getJournalEntryAsync(Number(entryId ?? 0)),
-    enabled: Boolean(entryId),
+    enabled: Boolean(entryId) && !isNaN(Number(entryId)),
   });
 
   const journalsQuery = useQuery({

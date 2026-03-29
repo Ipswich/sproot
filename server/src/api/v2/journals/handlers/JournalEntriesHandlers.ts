@@ -19,7 +19,7 @@ export async function getByJournalIdAsync(
 
   journalId = parseInt(req.params["journalId"] ?? "", 10);
   const badRequests: string[] = [];
-  if (isNaN(journalId)) {
+  if (isNaN(journalId) || journalId <= 0) {
     badRequests.push("Valid Journal ID is required.");
   }
   if (req.query["withContent"] !== undefined) {
@@ -105,7 +105,7 @@ export async function getByEntryIdAsync(
 
   if (req.params["entryId"]) {
     entryId = parseInt(req.params["entryId"] ?? "", 10);
-    if (isNaN(entryId)) {
+    if (isNaN(entryId) || entryId <= 0) {
       badRequests.push("Valid Journal Entry ID is required.");
     }
   }
@@ -188,7 +188,7 @@ export async function addAsync(
 
   const badRequests: string[] = [];
 
-  if (isNaN(journalId)) {
+  if (isNaN(journalId) || journalId <= 0) {
     badRequests.push("Valid Journal ID is required.");
   }
 

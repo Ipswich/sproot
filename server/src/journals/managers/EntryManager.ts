@@ -23,6 +23,10 @@ export default class EntryManager {
       return [];
     }
 
+    if (!entries.length) {
+      return [];
+    }
+
     const entryTagLookups = await this.#sprootDB.getJournalEntryTagLookupsAsync();
     const allEntryTags = await this.#sprootDB.getJournalEntryTagsAsync();
 
