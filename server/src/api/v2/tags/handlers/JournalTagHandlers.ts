@@ -45,20 +45,28 @@ export async function addAsync(
   try {
     const name = req.body["name"] as string | undefined;
     const color = req.body["color"] as string | null | undefined;
-    if (name == null || name === "") {
+
+    const badRequestDetails: string[] = [];
+    if (name == null || name === "" || typeof name !== "string" || name.length > 32) {
+      badRequestDetails.push("Valid tag name is required.");
+    }
+    if (color != null && (typeof color !== "string" || color.length > 32)) {
+      badRequestDetails.push("Valid tag color is required.");
+    }
+    if (badRequestDetails.length > 0) {
       response = {
         statusCode: 400,
         error: {
           name: "Bad Request",
           url: req.originalUrl,
-          details: ["Tag name is required."],
+          details: badRequestDetails,
         },
         ...res.locals["defaultProperties"],
       };
       return response;
     }
 
-    const newId = await journalService.journalTagManager.createTagAsync(name, color ?? null);
+    const newId = await journalService.journalTagManager.createTagAsync(name!, color ?? null);
     response = {
       statusCode: 201,
       content: { data: { id: newId, name, color: color ?? null } },
