@@ -13,7 +13,7 @@ export async function getAsync(
   const journalService = req.app.get("journalService") as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const results = await journalService.journalTagManager.getTags();
+    const results = await journalService.journalTagManager.getTagsAsync();
     response = {
       statusCode: 200,
       content: { data: results },
@@ -58,7 +58,7 @@ export async function addAsync(
       return response;
     }
 
-    const newId = await journalService.journalTagManager.createTag(name, color ?? null);
+    const newId = await journalService.journalTagManager.createTagAsync(name, color ?? null);
     response = {
       statusCode: 201,
       content: { data: { id: newId, name, color: color ?? null } },
@@ -103,7 +103,9 @@ export async function updateAsync(
       return response;
     }
 
-    const existing = (await journalService.journalTagManager.getTags()).find((t) => t.id === tagId);
+    const existing = (await journalService.journalTagManager.getTagsAsync()).find(
+      (t) => t.id === tagId,
+    );
     if (!existing) {
       response = {
         statusCode: 404,
@@ -123,7 +125,7 @@ export async function updateAsync(
       color: tag.color === undefined ? existing.color : tag.color,
     };
 
-    await journalService.journalTagManager.updateTag(updated);
+    await journalService.journalTagManager.updateTagAsync(updated);
     response = {
       statusCode: 200,
       content: { data: updated },
@@ -167,7 +169,9 @@ export async function deleteAsync(
       return response;
     }
 
-    const existing = (await journalService.journalTagManager.getTags()).find((t) => t.id === tagId);
+    const existing = (await journalService.journalTagManager.getTagsAsync()).find(
+      (t) => t.id === tagId,
+    );
     if (!existing) {
       response = {
         statusCode: 404,
@@ -181,7 +185,7 @@ export async function deleteAsync(
       return response;
     }
 
-    await journalService.journalTagManager.deleteTag(tagId);
+    await journalService.journalTagManager.deleteTagAsync(tagId);
     response = {
       statusCode: 200,
       content: { data: `Journal tag with ID ${tagId} deleted.` },

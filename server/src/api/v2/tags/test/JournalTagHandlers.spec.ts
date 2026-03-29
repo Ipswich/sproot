@@ -18,7 +18,7 @@ describe("JournalTagHandlers.ts tests", () => {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { journalTagManager: { getTags: () => sprootDB.getJournalTagsAsync() } }
+              ? { journalTagManager: { getTagsAsync: () => sprootDB.getJournalTagsAsync() } }
               : undefined,
         },
       } as unknown as Request;
@@ -41,7 +41,7 @@ describe("JournalTagHandlers.ts tests", () => {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { journalTagManager: { getTags: () => sprootDB.getJournalTagsAsync() } }
+              ? { journalTagManager: { getTagsAsync: () => sprootDB.getJournalTagsAsync() } }
               : undefined,
           originalUrl: "/api/v2/journal/tags",
         },
@@ -70,7 +70,8 @@ describe("JournalTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   journalTagManager: {
-                    createTag: (n: string, c: string | null) => sprootDB.addJournalTagAsync(n, c),
+                    createTagAsync: (n: string, c: string | null) =>
+                      sprootDB.addJournalTagAsync(n, c),
                   },
                 }
               : undefined,
@@ -112,7 +113,8 @@ describe("JournalTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   journalTagManager: {
-                    createTag: (n: string, c: string | null) => sprootDB.addJournalTagAsync(n, c),
+                    createTagAsync: (n: string, c: string | null) =>
+                      sprootDB.addJournalTagAsync(n, c),
                   },
                 }
               : undefined,
@@ -157,7 +159,7 @@ describe("JournalTagHandlers.ts tests", () => {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { journalTagManager: { getTags: () => sprootDB.getJournalTagsAsync() } }
+              ? { journalTagManager: { getTagsAsync: () => sprootDB.getJournalTagsAsync() } }
               : undefined,
         },
         params: { tagId: "2" },
@@ -184,8 +186,8 @@ describe("JournalTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   journalTagManager: {
-                    getTags: () => sprootDB.getJournalTagsAsync(),
-                    updateTag: (t: any) => sprootDB.updateJournalTagAsync(t),
+                    getTagsAsync: () => sprootDB.getJournalTagsAsync(),
+                    updateTagAsync: (t: any) => sprootDB.updateJournalTagAsync(t),
                   },
                 }
               : undefined,
@@ -215,8 +217,8 @@ describe("JournalTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   journalTagManager: {
-                    getTags: () => sprootDB.getJournalTagsAsync(),
-                    updateTag: (t: any) => sprootDB.updateJournalTagAsync(t),
+                    getTagsAsync: () => sprootDB.getJournalTagsAsync(),
+                    updateTagAsync: (t: any) => sprootDB.updateJournalTagAsync(t),
                   },
                 }
               : undefined,
@@ -260,7 +262,7 @@ describe("JournalTagHandlers.ts tests", () => {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { journalTagManager: { getTags: () => sprootDB.getJournalTagsAsync() } }
+              ? { journalTagManager: { getTagsAsync: () => sprootDB.getJournalTagsAsync() } }
               : undefined,
         },
         params: { tagId: "9" },
@@ -285,8 +287,8 @@ describe("JournalTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   journalTagManager: {
-                    getTags: () => sprootDB.getJournalTagsAsync(),
-                    deleteTag: (id: number) => sprootDB.deleteJournalTagAsync(id),
+                    getTagsAsync: () => sprootDB.getJournalTagsAsync(),
+                    deleteTagAsync: (id: number) => sprootDB.deleteJournalTagAsync(id),
                   },
                 }
               : undefined,
@@ -312,8 +314,8 @@ describe("JournalTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   journalTagManager: {
-                    getTags: () => sprootDB.getJournalTagsAsync(),
-                    deleteTag: (id: number) => sprootDB.deleteJournalTagAsync(id),
+                    getTagsAsync: () => sprootDB.getJournalTagsAsync(),
+                    deleteTagAsync: (id: number) => sprootDB.deleteJournalTagAsync(id),
                   },
                 }
               : undefined,

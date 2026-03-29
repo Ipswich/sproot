@@ -7,19 +7,19 @@ export default class EntryTagManager {
     this.#sprootDB = sprootDB;
   }
 
-  getTags(): Promise<SDBJournalEntryTag[]> {
+  getTagsAsync(): Promise<SDBJournalEntryTag[]> {
     return this.#sprootDB.getJournalEntryTagsAsync();
   }
 
-  createTag(name: string, color: string | null = null): Promise<number> {
+  createTagAsync(name: string, color: string | null = null): Promise<number> {
     return this.#sprootDB.addJournalEntryTagAsync(name, color);
   }
 
-  updateTag(tag: SDBJournalEntryTag): Promise<void> {
+  updateTagAsync(tag: SDBJournalEntryTag): Promise<void> {
     return this.#sprootDB.updateJournalEntryTagAsync(tag);
   }
 
-  deleteTag(id: number): Promise<void> {
+  deleteTagAsync(id: number): Promise<void> {
     return this.#sprootDB.deleteJournalEntryTagAsync(id);
   }
 }

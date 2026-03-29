@@ -13,7 +13,7 @@ export async function getAsync(
   const journalService = req.app.get("journalService") as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const results = await journalService.entryTagManager.getTags();
+    const results = await journalService.entryTagManager.getTagsAsync();
     response = {
       statusCode: 200,
       content: { data: results },
@@ -58,7 +58,7 @@ export async function addAsync(
       return response;
     }
 
-    const newId = await journalService.entryTagManager.createTag(name, color ?? null);
+    const newId = await journalService.entryTagManager.createTagAsync(name, color ?? null);
     response = {
       statusCode: 201,
       content: { data: { id: newId, name, color: color ?? null } },
@@ -96,14 +96,16 @@ export async function updateAsync(
         error: {
           name: "Bad Request",
           url: req.originalUrl,
-          details: ["Tag object with valid numeric id is required in request body."],
+          details: ["Tag object with valid numeric id is required."],
         },
         ...res.locals["defaultProperties"],
       };
       return response;
     }
 
-    const existing = (await journalService.entryTagManager.getTags()).find((t) => t.id === tagId);
+    const existing = (await journalService.entryTagManager.getTagsAsync()).find(
+      (t) => t.id === tagId,
+    );
     if (!existing) {
       response = {
         statusCode: 404,
@@ -123,7 +125,7 @@ export async function updateAsync(
       color: tag.color === undefined ? existing.color : tag.color,
     };
 
-    await journalService.entryTagManager.updateTag(updated);
+    await journalService.entryTagManager.updateTagAsync(updated);
     response = {
       statusCode: 200,
       content: { data: updated },
@@ -160,14 +162,16 @@ export async function deleteAsync(
         error: {
           name: "Bad Request",
           url: req.originalUrl,
-          details: ["Request body must include numeric id of tag to delete."],
+          details: ["Missing or invalid tagId parameter."],
         },
         ...res.locals["defaultProperties"],
       };
       return response;
     }
 
-    const existing = (await journalService.entryTagManager.getTags()).find((t) => t.id === tagId);
+    const existing = (await journalService.entryTagManager.getTagsAsync()).find(
+      (t) => t.id === tagId,
+    );
     if (!existing) {
       response = {
         statusCode: 404,
@@ -181,7 +185,7 @@ export async function deleteAsync(
       return response;
     }
 
-    await journalService.entryTagManager.deleteTag(tagId);
+    await journalService.entryTagManager.deleteTagAsync(tagId);
     response = {
       statusCode: 200,
       content: { data: `Journal entry tag with ID ${tagId} deleted.` },

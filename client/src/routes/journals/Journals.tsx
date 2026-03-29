@@ -351,10 +351,14 @@ export default function Journals() {
                   value={filters}
                   onChange={(newFilters) => {
                     setFilters(newFilters);
-                    localStorage.setItem(
-                      journalsFiltersKey(),
-                      JSON.stringify(newFilters),
-                    );
+                    try {
+                      localStorage.setItem(
+                        journalsFiltersKey(),
+                        JSON.stringify(newFilters),
+                      );
+                    } catch (error) {
+                      console.error("Failed to save journal filters:", error);
+                    }
                   }}
                   placeholder="Filter by tags"
                 />

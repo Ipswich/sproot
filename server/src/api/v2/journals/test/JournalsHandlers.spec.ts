@@ -37,7 +37,9 @@ describe("JournalsHandlers.ts tests", () => {
         },
       ];
       (sprootDB.getJournalsAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([
+        { id: 3, name: "x", color: null },
+      ]);
       (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
 
       const journalManager = new JournalManager(sprootDB as ISprootDB);
@@ -74,7 +76,9 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       (sprootDB.getJournalAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([
+        { id: 9, name: "tag", color: null },
+      ]);
       (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
 
       const journalManager = new JournalManager(sprootDB as ISprootDB);
@@ -142,7 +146,9 @@ describe("JournalsHandlers.ts tests", () => {
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.error.name, "Bad Request");
-      assert.includeMembers(error.error.details, ["Journal name is required."]);
+      assert.includeMembers(error.error.details, [
+        "Journal name is required and cannot exceed 64 characters.",
+      ]);
     });
 
     it("should return 503 when DB fails", async () => {
@@ -518,7 +524,17 @@ describe("JournalsHandlers.ts tests", () => {
       (sprootDB.addJournalTagLookupAsync as sinon.SinonStub).resolves(1);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
-        app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
+        app: {
+          get: (k: string) =>
+            k === "journalService"
+              ? {
+                  journalManager,
+                  journalTagManager: {
+                    getTagsAsync: async () => [{ id: 3, name: "x", color: null }],
+                  },
+                }
+              : undefined,
+        },
         params: { journalId: "6" },
         body: { tagId: 3 },
       } as unknown as Request;
@@ -553,7 +569,15 @@ describe("JournalsHandlers.ts tests", () => {
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
-          get: (k: string) => (k === "journalService" ? { journalManager } : undefined),
+          get: (k: string) =>
+            k === "journalService"
+              ? {
+                  journalManager,
+                  journalTagManager: {
+                    getTagsAsync: async () => [{ id: 9, name: "tag", color: null }],
+                  },
+                }
+              : undefined,
           originalUrl: "/api/v2/journals/7/tags",
         },
         params: { journalId: "7" },

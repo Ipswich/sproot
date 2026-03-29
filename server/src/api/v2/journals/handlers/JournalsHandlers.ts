@@ -75,13 +75,13 @@ export async function addAsync(
   const icon = req.body["icon"] as string | undefined;
   const color = req.body["color"] as string | undefined;
 
-  if (title == null || title === "") {
+  if (title == null || title === "" || title.length > 64) {
     response = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: req.originalUrl,
-        details: ["Journal name is required."],
+        details: ["Journal name is required and cannot exceed 64 characters."],
       },
       ...res.locals["defaultProperties"],
     };
@@ -274,7 +274,7 @@ export async function updateAsync(
   return response;
 }
 
-/** Possible statusCodes: 204, 400, 404, 503 */
+/** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteAsync(
   req: Request,
   res: Response,
@@ -383,6 +383,22 @@ export async function addTagAsync(
         statusCode: 200,
         content: {
           data: `Journal with ID ${journalId} already has tag with ID ${tagId}.`,
+        },
+        ...res.locals["defaultProperties"],
+      };
+      return response;
+    }
+
+    const tagExists = await journalService.journalTagManager
+      .getTagsAsync()
+      .then((tags) => tags.some((t) => t.id === tagId));
+    if (!tagExists) {
+      response = {
+        statusCode: 404,
+        error: {
+          name: "Not Found",
+          url: req.originalUrl,
+          details: [`Tag with ID ${tagId} not found.`],
         },
         ...res.locals["defaultProperties"],
       };

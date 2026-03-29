@@ -196,6 +196,10 @@ export async function addAsync(
     badRequests.push("Journal Entry content is required.");
   }
 
+  if (title !== undefined && title.length > 64) {
+    badRequests.push("Journal Entry title cannot exceed 64 characters.");
+  }
+
   if (badRequests.length > 0) {
     response = {
       statusCode: 400,
@@ -276,6 +280,9 @@ export async function updateAsync(
   }
   if (req.body["content"] === null) {
     badRequests.push("Journal Entry content cannot be null.");
+  }
+  if (req.body["title"] && req.body["title"].length > 64) {
+    badRequests.push("Journal Entry title cannot exceed 64 characters.");
   }
 
   if (badRequests.length > 0) {
@@ -473,7 +480,7 @@ export async function addTagAsync(
       return response;
     }
 
-    const existingTag = await journalService.entryTagManager.getTags();
+    const existingTag = await journalService.entryTagManager.getTagsAsync();
     if (!existingTag.find((t) => t.id === tagId)) {
       response = {
         statusCode: 404,
