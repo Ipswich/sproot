@@ -190,7 +190,11 @@ export default function EditJournalEntryModal({
           await save();
         })}
       >
-        <TextInput label="Title" maxLength={64} {...form.getInputProps("title")} />
+        <TextInput
+          label="Title"
+          maxLength={64}
+          {...form.getInputProps("title")}
+        />
 
         <Textarea
           label="Content"

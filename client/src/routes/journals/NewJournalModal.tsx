@@ -50,7 +50,7 @@ export default function NewJournalModal({
     initialValues: {
       title: "",
       description: "",
-      icon: null,
+      icon: "",
       color:
         DefaultColors[Math.floor(Math.random() * DefaultColors.length)] ??
         DefaultColors[0] ??
@@ -141,7 +141,7 @@ export default function NewJournalModal({
             required
             label="Title"
             placeholder="My Journal"
-            maxLength={128}
+            maxLength={64}
             {...form.getInputProps("title")}
           />
           <Textarea

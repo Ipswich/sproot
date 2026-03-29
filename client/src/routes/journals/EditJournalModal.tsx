@@ -63,9 +63,9 @@ export default function EditJournalModal({
     },
     validate: {
       title: (v: string) =>
-        v && v.length > 0 && v.length <= 128
+        v && v.length > 0 && v.length <= 64
           ? null
-          : "Title is required (1-128 chars)",
+          : "Title is required (1-64 chars)",
       color: (v: string | null) =>
         !v || (typeof v === "string" && v.length <= 7) ? null : "Invalid color",
     },
