@@ -7,6 +7,7 @@ import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { EventEmitter } from "events";
+import { toDbDate } from "../utils/dateUtils";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
   readonly plugRegistry = new PlugRegistry();
@@ -292,7 +293,7 @@ class TPLinkPlug extends OutputBase {
           await this.state.setNewStateAsync({
             value: value ? 100 : 0,
             controlMode: ControlMode.manual,
-            logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+            logTime: toDbDate(),
           });
         } else {
           this.logger.info(

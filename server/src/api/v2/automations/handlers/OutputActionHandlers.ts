@@ -42,13 +42,13 @@ export async function getAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -109,13 +109,13 @@ export async function getByIdAsync(
       ...response.locals["defaultProperties"],
     };
     return automationResponse;
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -210,13 +210,13 @@ export async function addAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -278,13 +278,13 @@ export async function deleteAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };

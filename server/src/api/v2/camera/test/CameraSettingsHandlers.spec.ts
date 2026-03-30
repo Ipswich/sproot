@@ -259,7 +259,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
       const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(result.statusCode, 503);
-      assert.equal(result.error.name, "Internal Server Error");
+      assert.equal(result.error.name, "Service Unavailable");
       assert.include(result.error.details, "Failed to update camera settings: Database error");
     });
 

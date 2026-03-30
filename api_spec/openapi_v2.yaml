@@ -5098,7 +5098,7 @@ paths:
                           data:
                             example: "Livestream successfully reconnected"
         502:
-          description: "Internal server error"
+          description: "Bad Gateway"
           content:
             application/json:
               schema:
@@ -5110,7 +5110,7 @@ paths:
                       error:
                         properties:
                           name:
-                            example: "Internal Server Error"
+                            example: "Bad Gateway"
                           url:
                             example: "/api/v2/camera/reconnect"
                           details:
@@ -5276,6 +5276,2304 @@ paths:
                               archiveProgress:
                                 type: number
                                 example: 75
+  /api/v2/tags/journals:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Get all journal tags.
+      description: >
+        Returns a list of all journal tags. This includes basic information about each tag, such as
+        name and id.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/SDBJournalTag"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journals"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journals"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get journal tags from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Add a new journal tag.
+      description: >
+        Adds a new journal tag to the service. Returns the information
+        used to create the journal tag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalTag"
+      responses:
+        201:
+          description: "Journal tag created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalTag"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/tags/journals"
+                          details:
+                            example:
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journals"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journals"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add journal tag to database."
+                                - "Database connection failed."
+
+  /api/v2/tags/journals/{tagId}:
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Update a journal tag.
+      description: >
+        Updates a journal tag. This operation changes only the fields provided.
+      parameters:
+        - in: path
+          name: tagId
+          required: true
+          description: "Journal tag Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalTag"
+      responses:
+        200:
+          description: "Journal tag updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalTag"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/tags/journals/1"
+                          details:
+                            example:
+                              - "Missing required field: id"
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journals/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/tags/journals/-1"
+                          details:
+                            items:
+                              example: "Journal tag with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journals/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update journal tag in database."
+                                - "Database connection failed."
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Delete a journal tag.
+      description: >
+        Deletes a journal tag. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: tagId
+          required: true
+          description: "Journal tag Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Journal tag deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Journal tag with ID 1 successfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/tags/journals/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal tag Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journals/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/tags/journals/-1"
+                          details:
+                            items:
+                              example: "Journal tag with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journals/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete journal tag from database."
+                                - "Database connection failed."
+  /api/v2/tags/entries:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Get all journal entry tags.
+      description: >
+        Returns a list of all journal entry tags. This includes basic information about each tag, such as
+        name and id.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/SDBJournalEntryTag"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journal-entries"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journal-entries"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get journal entry tags from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Add a new journal entry tag.
+      description: >
+        Adds a new journal entry tag to the service. Returns the information
+        used to create the journal entry tag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalEntryTag"
+      responses:
+        201:
+          description: "Journal entry tag created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalEntryTag"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/tags/journal-entries"
+                          details:
+                            example:
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journal-entries"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journal-entries"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add journal entry tag to database."
+                                - "Database connection failed."
+  
+  /api/v2/tags/entries/{tagId}:
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Update a journal entry tag.
+      description: >
+        Updates a journal entry tag. This operation changes only the fields provided.
+      parameters:
+        - in: path
+          name: tagId
+          required: true
+          description: "Journal entry tag Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalEntryTag"
+      responses:
+        200:
+          description: "Journal entry tag updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalEntryTag"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/tags/journal-entries/1"
+                          details:
+                            example:
+                              - "Missing required field: id"
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journal-entries/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/tags/journal-entries/-1"
+                          details:
+                            items:
+                              example: "Journal entry tag with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journal-entries/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update journal entry tag in database."
+                                - "Database connection failed."
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Tags"
+      summary: Delete a journal entry tag.
+      description: >
+        Deletes a journal entry tag. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: tagId
+          required: true
+          description: "Journal entry tag Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Journal entry tag deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Journal entry tag with ID 1 successfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/tags/journal-entries/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal entry tag Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/tags/journal-entries/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/tags/journal-entries/-1"
+                          details:
+                            items:
+                              example: "Journal entry tag with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/tags/journal-entries/1"
+                          details:
+                            items:
+                              example: "Failed to delete journal entry tag: 1"
+  /api/v2/journals:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Get all journals.
+      description: >
+        Returns a list of all journals. This includes basic information about each journal, such as
+        name, id, and associated tags.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              type: object
+                              properties:
+                                journal:
+                                  $ref: "#/components/schemas/SDBJournal"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalTag"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get journals from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Add a new journal.
+      description: >
+        Adds a new journal to the service. Returns the information
+        used to create the journal.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournal"
+      responses:
+        201:
+          description: "Journal created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournal"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals"
+                          details:
+                            example:
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add journal to database."
+                                - "Database connection failed."
+  
+  /api/v2/journals/{journalId}:
+    parameters:
+      - in: path
+        name: journalId
+        required: true
+        description: "Journal Id"
+        schema:
+          type: string
+        example: "1"
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Get a journal by ID.
+      description: >
+        Returns a journal based on the provided ID. This includes all information about the journal, such as
+        name, id, associated tags, and description.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              type: object
+                              properties:
+                                journal:
+                                  $ref: "#/components/schemas/SDBJournal"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalTag"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/journals/-1"
+                          details:
+                            items:
+                              example: "Journal entry with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get journal from database."
+                                - "Database connection failed."
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Update a journal.
+      description: >
+        Updates a journal. This operation changes only the fields provided.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournal"
+      responses:
+        200:
+          description: "Journal updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournal"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            example:
+                              - "Missing required field: id"
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/journals/-1"
+                          details:
+                            items:
+                              example: "Journal with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update journal in database."
+                                - "Database connection failed."
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Delete a journal.
+      description: >
+        Deletes a journal. This operation is permanent and cannot be undone.
+      responses:
+        200:
+          description: "Journal deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Journal with ID 1 successfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/journals/-1"
+                          details:
+                            items:
+                              example: "Journal with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete journal."
+                                - "Database connection failed."
+  /api/v2/journals/{journalId}/tags:
+    put:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Add a tag to a journal.
+      description: >
+        Adds a tag to a journal based on the provided journal ID and tag ID. Returns the information
+        used to add the tag to the journal.
+      parameters:
+        - in: path
+          name: journalId
+          required: true
+          description: "Journal Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tagId:
+                  type: string
+                  description: "Tag Id"
+                  example: "1"
+      responses:
+        200:
+          description: "Tag added to journal"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Tag with ID 1 successfully added to journal with ID 1."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1/tags"
+                          details:
+                            example:
+                              - "Invalid or missing journal Id."
+                              - "Invalid or missing tag Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1/tags"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode: 
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/journals/-1/tags"
+                          details:
+                            items:
+                              example: "Journal with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/1/tags"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add tag to journal in database."
+                                - "Database connection failed."
+  /api/v2/journals/{journalId}/tags/{tagId}:
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Remove a tag from a journal.
+      description: >
+        Removes a tag from a journal based on the provided journal ID and tag ID. Returns the information
+        used to remove the tag from the journal.
+      parameters:
+        - in: path
+          name: journalId
+          required: true
+          description: "Journal Id"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: tagId
+          required: true
+          description: "Tag Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Tag removed from journal"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Tag with ID 1 successfully removed from journal with ID 1."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1/tags/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal Id."
+                              - "Invalid or missing tag Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1/tags/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/journals/-1/tags/1"
+                          details:
+                            items:
+                              example: "Journal with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/1/tags/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to remove tag from journal in database."
+                                - "Database connection failed."
+
+  
+  /api/v2/journals/{journalId}/entries:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Get all entries for a journal.
+      description: >
+        Returns a list of all entries for a journal based on the provided journal ID. This includes information about each entry, such as
+        name, id, associated tags, and content.
+      parameters:
+        - in: path
+          name: journalId
+          required: true
+          description: "Journal Id"
+          schema:
+            type: string
+          example: "1"
+        - in: query
+          name: withContent
+          required: false
+          description: "Whether to include journal entry content in the response. Defaults to true."
+          schema:
+            type: boolean
+          example: true
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              type: object
+                              properties:
+                                entry:
+                                  $ref: "#/components/schemas/SDBJournalEntryRead"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalEntryTag"
+        
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1/entries"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/journals/-1/entries"
+                          details:
+                            items:
+                              example: "Journal with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/1/entries"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get journal entries from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journals"
+      summary: Add a new entry to a journal.
+      description: >
+        Adds a new journal entry to a journal based on the provided journal ID. Returns the information
+        used to create the journal entry.
+      parameters:
+        - in: path
+          name: journalId
+          required: true
+          description: "Journal Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalEntryWrite"
+      responses:
+        201:
+          description: "Journal entry created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalEntryRead"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/journals/1/entries"
+                          details:
+                            example:
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1/entries"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/journals/-1/entries"
+                          details:
+                            items:
+                              example: "Journal with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/journals/1/entries"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add journal entry to database."
+                                - "Database connection failed."
+  
+  /api/v2/entries/{entryId}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journal Entries"
+      summary: Get a journal entry by ID.
+      description: >
+        Returns a journal entry based on the provided entry ID. This includes information about the entry, such as
+        title, id, associated tags, and content.
+      parameters:
+        - in: path
+          name: entryId
+          required: true
+          description: "Journal entry Id"
+          schema:
+            type: string
+          example: "1"
+        - in: query
+          name: withContent
+          required: false
+          description: "Whether to include entry content in the response. Defaults to true."
+          schema:
+            type: boolean
+          example: true
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              type: object
+                              properties:
+                                entry:
+                                  $ref: "#/components/schemas/SDBJournalEntryRead"
+                                tags:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/SDBJournalEntryTag"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal entry Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/journals/1/entries/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/entries/-1"
+                          details:
+                            items:
+                              example: "Journal entry with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get journal entry from database."
+                                - "Database connection failed."
+    patch:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journal Entries"
+      summary: Update a journal entry.
+      description: >
+        Updates a journal entry. This operation changes only the fields provided.
+      parameters:
+        - in: path
+          name: entryId
+          required: true
+          description: "Journal entry Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SDBJournalEntryWrite"
+      responses:
+        200:
+          description: "Journal entry updated"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/SDBJournalEntryRead"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            example:
+                              - "Missing required field: id"
+                              - "Missing required field: name"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            items:
+                              example: "Journal entry with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to update journal entry in database."
+                                - "Database connection failed."
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journal Entries"
+      summary: Delete a journal entry.
+      description: >
+        Deletes a journal entry. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: entryId
+          required: true
+          description: "Journal entry Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Journal entry deleted"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Journal entry with ID 1 successfully deleted."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal entry Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/entries/-1"
+                          details:
+                            items:
+                              example: "Journal entry with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/entries/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete journal entry."
+                                - "Database connection failed."
+  /api/v2/entries/{entryId}/tags:
+    put:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journal Entries"
+      summary: Add a tag to a journal entry.
+      description: >
+        Adds a tag to a journal entry based on the provided entry ID, and tag ID. Returns the information
+        used to add the tag to the journal entry.
+      parameters:
+        - in: path
+          name: entryId
+          required: true
+          description: "Journal entry Id"
+          schema:
+            type: string
+          example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tagId:
+                  type: string
+                  description: "Tag Id"
+                  example: "1"
+      responses:
+        200:
+          description: "Tag added to journal entry"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Tag with ID 1 successfully added to journal entry with ID 1."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/entries/1/tags"
+                          details:
+                            example:
+                              - "Invalid or missing journal entry Id."
+                              - "Invalid or missing tag Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/entries/1/tags"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/entries/-1/tags"
+                          details:
+                            items:
+                              example: "Journal entry with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/entries/1/tags"
+                          details:
+                            items:
+                              example:
+                                - "Failed to add tag to journal entry in database."
+                                - "Database connection failed."
+
+  /api/v2/entries/{entryId}/tags/{tagId}:
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Journal Entries"
+      summary: Remove a tag from a journal entry.
+      description: >
+        Removes a tag from a journal entry based on the provided entry ID, and tag ID. Returns the information
+        used to remove the tag from the journal entry.
+      parameters:
+        - in: path
+          name: entryId
+          required: true
+          description: "Journal entry Id"
+          schema:
+            type: string
+          example: "1"
+        - in: path
+          name: tagId
+          required: true
+          description: "Tag Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Tag removed from journal entry"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Tag with ID 1 successfully removed from journal entry with ID 1."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/entries/1/tags/1"
+                          details:
+                            example:
+                              - "Invalid or missing journal entry Id."
+                              - "Invalid or missing tag Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/entries/1/tags/1"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/entries/-1/tags/1"
+                          details:
+                            items:
+                              example: "Journal entry tag with ID -1 not found in journal entry with ID 1."
 
 components:
   schemas:
@@ -5905,7 +8203,140 @@ components:
         name:
           type: string
           example: "Living Room"
+    
+    SDBJournalTag:
+      description: >
+        A journal tag object that is stored in the database. Contains all the information needed to 
+        create a journal tag, including name and color of the tag.
+      type: object
+      required:
+        - "name"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: "Shelf #1"
+        color:
+          type: string
+          example: "#0000ff"
+    
+    SDBJournalEntryTag:
+      description: >
+        A journal entry tag object that is stored in the database. Contains all the information needed to 
+        tag a journal entry, including the name and color of the tag.
+      type: object
+      required:
+        - "name"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: "Watering"
+        color:
+          type: string
+          example: "#0000ff"
+    
+    SDBJournal:
+      description: >
+        A journal object that is stored in the database. Contains all the information needed to 
+        create a journal, including name, archival state, start date, and some optional details
+        like description, icon, color, etc.
+      type: object
+      required:
+        - "title"
+        - "archived"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        title:
+          type: string
+          example: "My Journal"
+        description:
+          nullable: true
+          type: string
+          example: "Tracks care for my fern."
+        icon:
+          nullable: true
+          type: string
+          example: "leaf"
+        color:
+          nullable: true
+          type: string
+          example: "#00ff00"
+        archived:
+          type: boolean
+          example: false
+        createdAt:
+          readOnly: true
+          type: string
+          format: date-time
+          example: "2021-01-01T00:00:00.000Z"
+        editedAt:
+          readOnly: true
+          nullable: true
+          type: string
+          format: date-time
+          example: "2021-06-01T12:00:00.000Z"
+        archivedAt:
+          readOnly: true
+          nullable: true
+          type: string
+          format: date-time
+          example: "2021-12-31T23:59:59.000Z"
+    
+    SDBJournalEntry:
+      description: >
+        A journal entry object that is stored in the database. Contains all the information needed to 
+        create and represent a journal entry. The `content` property is required for write operations
+        but may be omitted from responses when the server chooses not to include it (e.g. `withContent=false`).
+      type: object
+      required:
+        - "journalId"
+      properties:
+        id:
+          readOnly: true
+          type: number
+          example: 1
+        journalId:
+          readOnly: true
+          type: number
+          example: 1
+        title:
+          nullable: true
+          type: string
+          example: "Watered my fern"
+        content:
+          type: string
+          example: "Gave my fern 500ml of water. The soil was pretty dry."
+        createdAt:
+          readOnly: true
+          type: string
+          format: date-time
+          example: "2021-01-01T00:00:00.000Z"
+        editedAt:
+          readOnly: true
+          nullable: true
+          type: string
+          format: date-time
+          example: "2021-06-01T12:30:00.000Z"
+    SDBJournalEntryRead:
+      allOf:
+        - $ref: "#/components/schemas/SDBJournalEntry"
 
+    SDBJournalEntryWrite:
+      allOf:
+        - $ref: "#/components/schemas/SDBJournalEntry"
+      required:
+        - "content"
+      
     ReadingTypes:
       description: >
         An obejct of active sensor reading types and their units.

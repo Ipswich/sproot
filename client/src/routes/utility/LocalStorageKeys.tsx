@@ -28,3 +28,19 @@ export function outputStateOrderKey(deviceZone: number): string {
 export function outputStateToggledZonesKey(): string {
   return `outputs-toggledDeviceZones`;
 }
+
+export function journalsFiltersKey(): string {
+  return `journals-filters`;
+}
+
+export function journalEntriesFiltersKey(): string {
+  return `journal-entries-filters`;
+}
+
+export function journalsSortKey(): string {
+  return `journals-sort`;
+}
+
+export function journalEntriesSortKey(): string {
+  return `journal-entries-sort`;
+}

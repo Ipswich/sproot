@@ -31,6 +31,18 @@ export default function HeaderContents({
     );
   }, [location, navbarItems]);
 
+  // If headerText is empty, try resolving dynamic routes (e.g. /journals/:id)
+  useEffect(() => {
+    if (headerText) return;
+
+    const path = location.pathname;
+
+    // journals detail route: /journals/:journalId
+    if (path.startsWith("/journals/")) {
+      setHeaderText("Journals");
+    }
+  }, [location, headerText]);
+
   return (
     <header className={classes["header"]}>
       <Container
