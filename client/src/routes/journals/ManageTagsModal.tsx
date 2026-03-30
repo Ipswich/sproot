@@ -100,7 +100,10 @@ export default function ManageTagsModal<T extends TagLike>({
       }}
       title={title}
     >
-      <ScrollArea mah="50vh">
+      <ScrollArea
+        style={{ height: "50vh" }}
+        viewportProps={{ style: { maxHeight: "50vh" } }}
+      >
         <Table
           highlightOnHover
           style={{ marginLeft: "auto", marginRight: "auto" }}
