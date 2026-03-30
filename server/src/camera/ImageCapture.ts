@@ -111,17 +111,10 @@ class ImageCapture {
     if (this.#timelapse.isGeneratingTimelapseArchive) {
       return false;
     }
-    try {
-      await fs.promises.rm(directory, { recursive: true, force: true });
-      await fs.promises.mkdir(directory, { recursive: true });
-      this.#logger.info(`All images cleared from ${directory}`);
-      return true;
-    } catch (e) {
-      this.#logger.error(
-        `Failed to clear images from ${directory}: ${e instanceof Error ? e.message : String(e)}`,
-      );
-      return false;
-    }
+    await fs.promises.rm(directory, { recursive: true, force: true });
+    await fs.promises.mkdir(directory, { recursive: true });
+    this.#logger.info(`All images cleared from ${directory}`);
+    return true;
   }
 
   /**
@@ -204,7 +197,7 @@ class ImageCapture {
       directorySizeMB -= fileSizeMB;
 
       // Update for next iteration
-      oldestFilePath = await getOldestFilePathAsync(directory);
+      oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
     }
 
     this.#isRunningImageRetention = false;

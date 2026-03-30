@@ -23,7 +23,7 @@ describe("TimelapseHandlers", () => {
       getTimelapseArchiveAsync: sinon.stub(),
       getTimelapseArchiveSizeAsync: sinon.stub().resolves(1024),
       regenerateTimelapseArchiveAsync: sinon.stub(),
-      getTimelapseArchiveProgressAsync: sinon.stub(),
+      getTimelapseArchiveProgress: sinon.stub(),
     };
 
     sendSpy = sinon.spy();
@@ -99,11 +99,11 @@ describe("TimelapseHandlers", () => {
   describe("getTimelapseGenerationStatus", () => {
     it("should return the current timelapse generation status", () => {
       const mockStatus = { inProgress: true, percentComplete: 50 };
-      (cameraManager.getTimelapseArchiveProgressAsync as sinon.SinonStub).returns(mockStatus);
+      (cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).returns(mockStatus);
 
       getTimelapseGenerationStatus(req as Request, res as Response);
 
-      assert.isTrue((cameraManager.getTimelapseArchiveProgressAsync as sinon.SinonStub).calledOnce);
+      assert.isTrue((cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).calledOnce);
       assert.isTrue(statusStub.calledOnceWith(200));
       assert.isTrue(jsonSpy.calledOnce);
       const jsonResponse = jsonSpy.firstCall.args[0];

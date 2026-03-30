@@ -3,6 +3,7 @@ import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
 import { app, server } from "./setup";
 import fs from "fs";
+import { CameraManager } from "../camera/CameraManager";
 
 describe("API Tests", async function () {
   this.timeout(2000);
@@ -1210,7 +1211,8 @@ describe("API Tests", async function () {
         it("should return 200 and clear all timelapse images", async () => {
           let attempts = 0;
           while (
-            (await app.get("cameraManager").getTimelapseArchiveProgressAsync().isGenerating) &&
+            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress()
+              .isGenerating &&
             attempts < 5
           ) {
             attempts++;

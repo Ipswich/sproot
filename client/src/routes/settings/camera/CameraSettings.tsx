@@ -34,7 +34,7 @@ export interface FormValues {
   timelapseEndTime: string | null;
 }
 
-export default function OutputSettings() {
+export default function CameraSettings() {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
   const getCameraSettingsQuery = useQuery({
     queryKey: ["cameraSettings"],
@@ -46,6 +46,9 @@ export default function OutputSettings() {
     queryKey: ["timelapseArchiveStatus"],
     queryFn: () => getTimelapseArchiveStatusAsync(),
     refetchInterval: 5000,
+    enabled:
+      !!getCameraSettingsQuery.data?.enabled &&
+      !!getCameraSettingsQuery.data?.timelapseEnabled,
   });
 
   const updateCameraSettingsMutation = useMutation({

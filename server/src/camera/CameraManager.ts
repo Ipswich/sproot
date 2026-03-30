@@ -85,9 +85,9 @@ class CameraManager {
 
   /**
    * Gets the progress of the timelapse archive generation.
-   * @returns A promise that resolves to an object containing the status of the timelapse generation.
+   * @returns An object containing the status of the timelapse generation.
    */
-  getTimelapseArchiveProgressAsync() {
+  getTimelapseArchiveProgress() {
     return this.#imageCapture.getTimelapseGenerationStatus();
   }
 
