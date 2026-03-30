@@ -120,6 +120,11 @@ const config: Config = {
             },
             {
               type: "doc",
+              label: "Journals",
+              docId: "how-to/journals",
+            },
+            {
+              type: "doc",
               label: "Subcontrollers",
               docId: "how-to/subcontrollers",
             },

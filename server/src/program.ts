@@ -17,6 +17,7 @@ import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
+import { JournalService } from "./journals/JournalService";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
 import {
   createDatabaseUpdateCronJob,
@@ -42,6 +43,9 @@ export default async function setupAsync(): Promise<Express> {
 
   const mdnsService = new MdnsService(logger);
   app.set("bonjourService", mdnsService);
+
+  const journalService = new JournalService(sprootDB);
+  app.set("journalService", journalService);
 
   logger.info("Creating camera manager. . .");
   const cameraManager = await CameraManager.createInstanceAsync(

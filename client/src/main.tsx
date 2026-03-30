@@ -20,6 +20,9 @@ import LiveView from "./routes/live-view/LiveView";
 import SensorData from "./routes/sensor-data/SensorData";
 import OutputStates from "./routes/output-states/OutputStates";
 import Automations from "./routes/automations/Automations";
+import Journals from "./routes/journals/Journals";
+import JournalEntries from "./routes/journals/entries/JournalEntries";
+import JournalEntryView from "./routes/journals/entries/JournalEntryView";
 import OutputSettings from "./routes/settings/outputs/OutputSettings";
 import SensorSettings from "./routes/settings/sensors/SensorSettings";
 import SystemSettings from "./routes/settings/system/SystemSettings";
@@ -97,6 +100,18 @@ const router = createBrowserRouter([
         element: <Automations />,
       },
       {
+        path: "/journals",
+        element: <Journals />,
+      },
+      {
+        path: "/journals/:journalId",
+        element: <JournalEntries />,
+      },
+      {
+        path: "/journals/:journalId/entries/:entryId",
+        element: <JournalEntryView />,
+      },
+      {
         path: "/settings/outputs",
         element: <OutputSettings />,
       },
@@ -108,7 +123,10 @@ const router = createBrowserRouter([
         path: "/settings/camera",
         element: <CameraSettings />,
       },
-      { path: "/settings/subcontrollers", element: <SubcontrollerSettings /> },
+      {
+        path: "/settings/subcontrollers",
+        element: <SubcontrollerSettings />,
+      },
       {
         path: "/settings/system",
         element: <SystemSettings />,

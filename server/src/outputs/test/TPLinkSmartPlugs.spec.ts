@@ -12,6 +12,7 @@ chai.use(chaiAsPromised);
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
+import { toDbDate } from "../../utils/dateUtils";
 const mockSprootDB = new MockSprootDB();
 
 describe("tplinkPlug.ts tests", async function () {
@@ -88,7 +89,7 @@ describe("tplinkPlug.ts tests", async function () {
     await tplinkSmartPlugs.outputs["2"]?.setAndExecuteStateAsync({
       value: 0,
       controlMode: ControlMode.manual,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      logTime: toDbDate(),
     } as SDBOutputState);
 
     // Dispose 1 output

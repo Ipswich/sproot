@@ -3,6 +3,7 @@ import { MantineProvider, AppShell } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 
 import { getNavbarItems } from "../shell/Pages";
 import HeaderContents from "../shell/header/HeaderContents";

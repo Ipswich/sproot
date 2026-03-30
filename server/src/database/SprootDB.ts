@@ -32,7 +32,14 @@ import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import { toDbDate, dbToIso, isoToDb } from "../utils/dateUtils";
 import { SDBDeviceZone } from "@sproot/database/SDBDeviceZone";
+import { SDBJournal } from "@sproot/sproot-common/dist/database/SDBJournal";
+import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
+import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalTagLookup";
+import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
+import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -63,7 +70,7 @@ export class SprootDB implements ISprootDB {
       address: sensor.address,
       color: sensor.color,
       pin: sensor.pin,
-      deviceZoneId: (sensor as any).deviceZoneId ?? null,
+      deviceZoneId: sensor.deviceZoneId ?? null,
       lowCalibrationPoint: sensor.lowCalibrationPoint,
       highCalibrationPoint: sensor.highCalibrationPoint,
     });
@@ -78,7 +85,7 @@ export class SprootDB implements ISprootDB {
         address: sensor.address,
         color: sensor.color,
         pin: sensor.pin,
-        deviceZoneId: (sensor as any).deviceZoneId ?? null,
+        deviceZoneId: sensor.deviceZoneId ?? null,
         lowCalibrationPoint: sensor.lowCalibrationPoint,
         highCalibrationPoint: sensor.highCalibrationPoint,
       });
@@ -137,7 +144,7 @@ export class SprootDB implements ISprootDB {
           metric: readingType,
           data: sensor.lastReading[readingType as ReadingType],
           units: sensor.units[readingType as ReadingType],
-          logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+          logTime: toDbDate(),
         }),
       );
     }
@@ -162,7 +169,7 @@ export class SprootDB implements ISprootDB {
 
     if (toIsoString) {
       for (const reading of readings) {
-        reading.logTime = reading.logTime.replace(" ", "T") + "Z";
+        reading.logTime = dbToIso(reading.logTime)!;
       }
     }
     return readings;
@@ -231,6 +238,254 @@ export class SprootDB implements ISprootDB {
   async deleteDeviceZoneAsync(id: number): Promise<void> {
     return this.#connection("device_zones").where("id", id).delete();
   }
+
+  /* Journals */
+  async getJournalsAsync(): Promise<SDBJournal[]> {
+    return (await this.#connection("journals").select("*")).map((j: SDBJournal) => ({
+      id: j.id,
+      title: j.title,
+      description: j.description,
+      archived: j.archived,
+      icon: j.icon,
+      color: j.color,
+      createdAt: dbToIso(j.createdAt)!,
+      editedAt: dbToIso(j.editedAt)!,
+      archivedAt: dbToIso(j.archivedAt),
+    }));
+  }
+
+  async getJournalAsync(id: number): Promise<SDBJournal[]> {
+    const results = await this.#connection("journals").where("id", id).select("*");
+    return (results as SDBJournal[]).map((j: SDBJournal) => ({
+      id: j.id,
+      title: j.title,
+      description: j.description,
+      archived: j.archived,
+      icon: j.icon,
+      color: j.color,
+      createdAt: dbToIso(j.createdAt)!,
+      editedAt: dbToIso(j.editedAt)!,
+      archivedAt: dbToIso(j.archivedAt),
+    }));
+  }
+
+  async addJournalAsync(
+    title: string,
+    description: string | null,
+    icon: string | null,
+    color: string | null,
+    createdAt?: string | null,
+  ): Promise<number> {
+    return (
+      (
+        await this.#connection("journals").insert({
+          title,
+          description,
+          archived: 0,
+          icon,
+          color,
+          createdAt: createdAt ?? toDbDate(),
+          editedAt: createdAt ?? toDbDate(),
+          archivedAt: null,
+        })
+      )[0] ?? -1
+    );
+  }
+
+  async updateJournalAsync(journal: SDBJournal): Promise<void> {
+    const archivedAt = journal.archived ? (isoToDb(journal.archivedAt) ?? toDbDate()) : null;
+    return this.#connection("journals")
+      .where("id", journal.id)
+      .update({
+        title: journal.title,
+        description: journal.description,
+        archived: journal.archived ? 1 : 0,
+        icon: journal.icon,
+        color: journal.color,
+        editedAt: isoToDb(journal.editedAt),
+        archivedAt: archivedAt,
+      });
+  }
+
+  async deleteJournalAsync(id: number): Promise<void> {
+    return this.#connection("journals").where("id", id).delete();
+  }
+
+  async getJournalTagsAsync(): Promise<SDBJournalTag[]> {
+    return this.#connection("journal_tags").select("*");
+  }
+
+  async addJournalTagAsync(name: string, color: string | null): Promise<number> {
+    return (await this.#connection("journal_tags").insert({ name, color }))[0] ?? -1;
+  }
+
+  async updateJournalTagAsync(tag: SDBJournalTag): Promise<void> {
+    return this.#connection("journal_tags")
+      .where("id", tag.id)
+      .update({ name: tag.name, color: tag.color });
+  }
+
+  async deleteJournalTagAsync(id: number): Promise<void> {
+    return this.#connection("journal_tags").where("id", id).delete();
+  }
+
+  async getJournalTagLookupsAsync(): Promise<SDBJournalTagLookup[]> {
+    return this.#connection("journal_tag_lookup").select(
+      "id",
+      "journal_id as journalId",
+      "tag_id as tagId",
+    );
+  }
+  async addJournalTagLookupAsync(journalId: number, tagId: number): Promise<number> {
+    return (
+      (
+        await this.#connection("journal_tag_lookup").insert({
+          journal_id: journalId,
+          tag_id: tagId,
+        })
+      )[0] ?? -1
+    );
+  }
+
+  async deleteJournalTagLookupAsync(journalId: number, tagId: number): Promise<void> {
+    return this.#connection("journal_tag_lookup")
+      .where({ journal_id: journalId, tag_id: tagId })
+      .delete();
+  }
+
+  async getJournalEntriesAsync(
+    journalId: number,
+    withContent?: boolean,
+  ): Promise<SDBJournalEntry[]> {
+    let results: SDBJournalEntry[] = [];
+    if (!withContent) {
+      results = await this.#connection("journal_entries")
+        .where("journal_id", journalId)
+        .select("id", "journal_id as journalId", "title", "createdAt", "editedAt");
+    } else {
+      results = await this.#connection("journal_entries")
+        .where("journal_id", journalId)
+        .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
+    }
+    return results.map((entry: SDBJournalEntry) => ({
+      ...entry,
+      createdAt: dbToIso(entry.createdAt)!,
+      editedAt: dbToIso(entry.editedAt)!,
+    }));
+  }
+
+  async getJournalEntryAsync(entryId: number, withContent?: boolean): Promise<SDBJournalEntry[]> {
+    let results: SDBJournalEntry[] = [];
+    if (!withContent) {
+      results = await this.#connection("journal_entries")
+        .where("id", entryId)
+        .select("id", "journal_id as journalId", "title", "createdAt", "editedAt");
+    } else {
+      results = await this.#connection("journal_entries")
+        .where("id", entryId)
+        .select("id", "journal_id as journalId", "title", "content", "createdAt", "editedAt");
+    }
+    return results.map((entry: SDBJournalEntry) => ({
+      ...entry,
+      createdAt: dbToIso(entry.createdAt)!,
+      editedAt: dbToIso(entry.editedAt)!,
+    }));
+  }
+
+  async addJournalEntryAsync(
+    journalId: number,
+    title: string | null,
+    content: string,
+    createdAt?: string | null,
+  ): Promise<number> {
+    //TODO prevent updates if Journal is archived??
+    const result = await Promise.all([
+      this.#connection("journal_entries").insert({
+        journal_id: journalId,
+        title,
+        content,
+        createdAt: createdAt ?? toDbDate(),
+        editedAt: createdAt ?? toDbDate(),
+      }),
+      this.#connection("journals").where("id", journalId).update({
+        editedAt: toDbDate(),
+      }),
+    ]);
+
+    return result[0][0] ?? -1;
+  }
+
+  async updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void> {
+    //TODO prevent updates if Journal is archived??
+    await Promise.all([
+      this.#connection("journal_entries").where("id", entry.id).update({
+        journal_id: entry.journalId,
+        title: entry.title,
+        content: entry.content,
+        editedAt: toDbDate(),
+      }),
+      this.#connection("journals").where("id", entry.journalId).update({
+        editedAt: toDbDate(),
+      }),
+    ]);
+  }
+
+  async deleteJournalEntryAsync(id: number): Promise<void> {
+    const entry = await this.#connection("journal_entries")
+      .where("id", id)
+      .select("journal_id as journalId")
+      .first();
+    await Promise.all([
+      this.#connection("journal_entries").where("id", id).delete(),
+      this.#connection("journals").where("id", entry?.journalId).update({
+        editedAt: toDbDate(),
+      }),
+    ]);
+  }
+
+  async getJournalEntryTagsAsync(): Promise<SDBJournalEntryTag[]> {
+    return this.#connection("journal_entry_tags").select("*");
+  }
+
+  async addJournalEntryTagAsync(name: string, color: string | null): Promise<number> {
+    return (await this.#connection("journal_entry_tags").insert({ name, color }))[0] ?? -1;
+  }
+
+  async updateJournalEntryTagAsync(tag: SDBJournalEntryTag): Promise<void> {
+    return this.#connection("journal_entry_tags")
+      .where("id", tag.id)
+      .update({ name: tag.name, color: tag.color });
+  }
+
+  async deleteJournalEntryTagAsync(id: number): Promise<void> {
+    return this.#connection("journal_entry_tags").where("id", id).delete();
+  }
+
+  async getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]> {
+    return this.#connection("journal_entry_tag_lookup").select(
+      "id",
+      "journal_entry_id as journalEntryId",
+      "tag_id as tagId",
+    );
+  }
+
+  async addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number> {
+    return (
+      (
+        await this.#connection("journal_entry_tag_lookup").insert({
+          journal_entry_id: journalEntryId,
+          tag_id: tagId,
+        })
+      )[0] ?? -1
+    );
+  }
+
+  async deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void> {
+    return this.#connection("journal_entry_tag_lookup")
+      .where({ journal_entry_id: journalEntryId, tag_id: tagId })
+      .delete();
+  }
+
   async addOutputStateAsync(output: {
     id: number;
     value: number;
@@ -240,7 +495,7 @@ export class SprootDB implements ISprootDB {
       output_id: output.id,
       value: output.value,
       controlMode: output.controlMode,
-      logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      logTime: toDbDate(),
     });
   }
   async updateLastOutputStateAsync(output: {
@@ -248,13 +503,11 @@ export class SprootDB implements ISprootDB {
     value: number;
     controlMode: ControlMode;
   }): Promise<void> {
-    return this.#connection("outputs")
-      .where("id", output.id)
-      .update({
-        lastValue: output.value,
-        lastControlMode: output.controlMode,
-        lastStateUpdate: new Date().toISOString().slice(0, 19).replace("T", " "),
-      });
+    return this.#connection("outputs").where("id", output.id).update({
+      lastValue: output.value,
+      lastControlMode: output.controlMode,
+      lastStateUpdate: toDbDate(),
+    });
   }
   async getLastOutputStateAsync(outputId: number): Promise<SDBOutputState[]> {
     return this.#connection("outputs")
@@ -280,7 +533,7 @@ export class SprootDB implements ISprootDB {
 
     if (toIsoString) {
       for (const state of states) {
-        state.logTime = state.logTime.replace(" ", "T") + "Z";
+        state.logTime = dbToIso(state.logTime)!;
       }
     }
     return states;

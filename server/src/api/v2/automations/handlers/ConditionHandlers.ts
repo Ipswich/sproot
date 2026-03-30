@@ -108,13 +108,13 @@ export async function getAllAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     getAllConditionsResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -213,13 +213,13 @@ export async function getByTypeAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     getConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -341,13 +341,13 @@ export async function getOneOfByTypeAsync(
         ...response.locals["defaultProperties"],
       };
     }
-  } catch (error: any) {
+  } catch (error) {
     getConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -648,13 +648,13 @@ export async function addAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     addConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -1005,13 +1005,13 @@ export async function updateAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     updateConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -1157,13 +1157,13 @@ export async function deleteAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     deleteConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };

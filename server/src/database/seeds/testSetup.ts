@@ -1,5 +1,6 @@
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { Knex } from "knex";
+import { toDbDate } from "../../utils/dateUtils";
 
 export async function seed(knex: Knex): Promise<void> {
   console.log("Truncating tables...");
@@ -210,6 +211,28 @@ export async function seed(knex: Knex): Promise<void> {
     timelapseStartTime: null,
     timelapseEndTime: null,
   });
+
+  // Add recent sensor and output readings so journal entry device-data attaches find data
+  const nowSql = toDbDate();
+
+  await knex("sensor_data").insert([
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 22.5,
+      units: "°C",
+      logTime: nowSql,
+    },
+  ]);
+
+  await knex("output_data").insert([
+    {
+      output_id: 1,
+      value: 1,
+      controlMode: "manual",
+      logTime: nowSql,
+    },
+  ]);
 
   console.log("Seeding complete.");
 }

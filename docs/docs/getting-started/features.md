@@ -26,6 +26,10 @@ The core purpose of Sproot is to programatically manage an environment for plant
 - Weekdays
 - Months
 
+## Journals for keeping notes
+
+While it's nice having everything automated, someone much wiser than myself once said "the best fertilizer is the farmer's footsteps." You'll likely want to be able to take notes of what you see and what you change. Automation can carry a lot of weight, but these will help you keep track of what you did last time.
+
 ## Subcontrollers for distant control
 
 Sometimes it isn't feasible to have your environment immediately next to your Raspberry Pi. To that end, Sproot integrates with ESP32s to offer remote control over Wi-Fi. Easily flash new ESP32s from the interface, or push updates to existing devices.
