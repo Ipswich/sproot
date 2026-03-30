@@ -11,9 +11,7 @@ import {
   IconDroplet,
   IconBucketDroplet,
   IconCircuitVoltmeter,
-  // IconLayoutDashboard,
-  // IconPlant2,
-  // IconSeeding,
+  IconNotebook,
   IconSettingsAutomation,
   IconTemperature,
   IconVideo,
@@ -71,6 +69,13 @@ export function getNavbarItems(
     headerText: "Automations",
     href: "/automations",
     icon: (props?: IconProps) => <IconSettingsAutomation {...props} />,
+  };
+
+  pages["journals"] = {
+    navLinkText: "Journals",
+    headerText: "Journals",
+    href: "/journals",
+    icon: (props?: IconProps) => <IconNotebook {...props} />,
   };
 
   pages["settings"] = {

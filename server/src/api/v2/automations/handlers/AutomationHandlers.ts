@@ -22,13 +22,13 @@ export async function getAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -80,13 +80,13 @@ export async function getByIdAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -143,13 +143,13 @@ export async function addAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     addAutomationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -213,13 +213,13 @@ export async function updateAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     updateAutomationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -276,13 +276,13 @@ export async function deleteAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     deleteAutomationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };

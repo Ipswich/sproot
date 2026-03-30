@@ -141,13 +141,13 @@ export async function updateCameraSettingsAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: request.originalUrl,
-        details: [`Failed to update camera settings: ${error.message}`],
+        details: [`Failed to update camera settings: ${(error as Error).message}`],
       },
       ...response.locals["defaultProperties"],
     };

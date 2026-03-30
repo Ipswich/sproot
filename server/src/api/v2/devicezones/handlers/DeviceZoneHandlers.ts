@@ -22,7 +22,7 @@ export async function getAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to retrieve device zones: ${(error as Error).message}`],
       },
@@ -67,7 +67,7 @@ export async function addAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to add device zone: ${(error as Error).message}`],
       },
@@ -141,7 +141,7 @@ export async function updateAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to update device zone: ${(error as Error).message}`],
       },
@@ -184,7 +184,7 @@ export async function deleteAsync(
     response = {
       statusCode: 503,
       error: {
-        name: "Internal Server Error",
+        name: "Service Unavailable",
         url: req.originalUrl,
         details: [`Failed to delete device zone: ${(error as Error).message}`],
       },

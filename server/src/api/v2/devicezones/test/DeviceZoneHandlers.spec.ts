@@ -8,7 +8,7 @@ import sinon from "sinon";
 
 describe("DeviceZoneHandlers.ts", function () {
   describe("getAsync", function () {
-    it("it should return a 200 and a list of device zones", async function () {
+    it("should return a 200 and a list of device zones", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       mockSprootDb.getDeviceZonesAsync.resolves([
         { id: 1, name: "Zone 1" },
@@ -39,7 +39,7 @@ describe("DeviceZoneHandlers.ts", function () {
       assert.equal((success.content!.data as SDBDeviceZone[])[1]!.name, "Zone 2");
     });
 
-    it("it should return a 503 and an error message", async function () {
+    it("should return a 503 and an error message", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       mockSprootDb.getDeviceZonesAsync.rejects(new Error("Database error"));
       const mockRequest = {
@@ -61,7 +61,7 @@ describe("DeviceZoneHandlers.ts", function () {
       const error = (await getAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error!.name, "Internal Server Error");
+      assert.equal(error.error!.name, "Service Unavailable");
       assert.include(error.error!.details![0]!, "Failed to retrieve device zones: Database error");
     });
   });
@@ -149,7 +149,7 @@ describe("DeviceZoneHandlers.ts", function () {
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error!.name, "Internal Server Error");
+      assert.equal(error.error!.name, "Service Unavailable");
       assert.include(error.error!.details![0]!, "Failed to add device zone: Database error");
     });
   });
@@ -280,7 +280,7 @@ describe("DeviceZoneHandlers.ts", function () {
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error!.name, "Internal Server Error");
+      assert.equal(error.error!.name, "Service Unavailable");
       assert.include(error.error!.details![0]!, "Failed to update device zone: Database error");
     });
   });
@@ -366,7 +366,7 @@ describe("DeviceZoneHandlers.ts", function () {
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
 
       assert.equal(error.statusCode, 503);
-      assert.equal(error.error!.name, "Internal Server Error");
+      assert.equal(error.error!.name, "Service Unavailable");
       assert.include(error.error!.details![0]!, "Failed to delete device zone: Database error");
     });
   });
