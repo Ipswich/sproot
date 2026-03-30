@@ -258,7 +258,7 @@ export default function OutputSettings() {
                   loading={clearAllImagesMutation.isPending}
                   color="red"
                 >
-                  Clear all images
+                  Delete All Images
                 </Button>
               </Group>
             )}
