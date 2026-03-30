@@ -111,9 +111,22 @@ class ImageCapture {
     if (this.#timelapse.isGeneratingTimelapseArchive) {
       return false;
     }
-    await fs.promises.rm(directory, { recursive: true, force: true });
-    await fs.promises.mkdir(directory, { recursive: true });
-    this.#logger.info(`All images cleared from ${directory}`);
+    if (!fs.existsSync(directory)) {
+      this.#logger.info(`Directory does not exist, nothing to clear: ${directory}`);
+      return true;
+    }
+
+    const entries = await fs.promises.readdir(directory, { withFileTypes: true });
+    await Promise.all(
+      entries.map(async (dirent) => {
+        const targetPath = path.join(directory, dirent.name);
+        if (!dirent.isDirectory()) {
+          await fs.promises.unlink(targetPath);
+        }
+      }),
+    );
+
+    this.#logger.info(`All files cleared from ${directory}`);
     return true;
   }
 

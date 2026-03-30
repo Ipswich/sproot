@@ -98,7 +98,7 @@ describe("TimelapseHandlers", () => {
 
   describe("getTimelapseGenerationStatus", () => {
     it("should return the current timelapse generation status", () => {
-      const mockStatus = { inProgress: true, percentComplete: 50 };
+      const mockStatus = { isGenerating: true, archiveProgress: 50 };
       (cameraManager.getTimelapseArchiveProgress as sinon.SinonStub).returns(mockStatus);
 
       getTimelapseGenerationStatus(req as Request, res as Response);

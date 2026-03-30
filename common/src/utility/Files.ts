@@ -30,7 +30,6 @@ export async function getDirectorySizeAsync(directoryPath: string): Promise<numb
 
 export async function sortDirectoryByStatsAsync(
   directoryPath: string,
-  ignoreFiles: Set<string> = new Set(),
   sort: (
     a: {
       file: string;
@@ -41,6 +40,7 @@ export async function sortDirectoryByStatsAsync(
       stats: fs.Stats;
     },
   ) => number,
+  ignoreFiles: Set<string> = new Set(),
 ) {
   try {
     // Ensure the directory exists
@@ -89,7 +89,7 @@ export async function getSortedFileAsync(
   ) => number,
   ignoreFiles: Set<string> = new Set(),
 ) {
-  const sortedFiles = (await sortDirectoryByStatsAsync(directoryPath, ignoreFiles, sort))?.map(
+  const sortedFiles = (await sortDirectoryByStatsAsync(directoryPath, sort, ignoreFiles))?.map(
     (f) => f.name,
   );
   return sortedFiles && sortedFiles[0] ? sortedFiles[0] : null;
