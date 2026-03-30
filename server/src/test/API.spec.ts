@@ -1203,6 +1203,18 @@ describe("API Tests", async function () {
         });
       });
     });
+
+    describe("Clear All Images", () => {
+      describe("POST", () => {
+        it("should return 200 and clear all timelapse images", async () => {
+          const response = await request(server)
+            .post("/api/v2/camera/timelapse/images/clear")
+            .expect(200);
+          validateMiddlewareValues(response);
+          assert.equal(response.body["content"].data, "All images cleared successfully");
+        });
+      });
+    });
   });
 
   describe("System Routes", async () => {

@@ -14,6 +14,7 @@ import {
 import {
   getCameraSettingsAsync,
   updateCameraSettingsAsync,
+  clearAllImagesAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
@@ -53,6 +54,13 @@ export default function OutputSettings() {
 
       await updateCameraSettingsAsync(updatedSettings as SDBCameraSettings);
     },
+    onSettled: () => {
+      getCameraSettingsQuery.refetch();
+    },
+  });
+
+  const clearAllImagesMutation = useMutation({
+    mutationFn: clearAllImagesAsync,
     onSettled: () => {
       getCameraSettingsQuery.refetch();
     },
@@ -239,6 +247,21 @@ export default function OutputSettings() {
                 Update
               </Button>
             </Group>
+            {newCameraForm.values.timelapseEnabled && (
+              <Group justify="space-around">
+                <Button
+                  size="md"
+                  style={{ width: rem(200) }}
+                  onClick={() => {
+                    clearAllImagesMutation.mutate();
+                  }}
+                  loading={clearAllImagesMutation.isPending}
+                  color="red"
+                >
+                  Clear all images
+                </Button>
+              </Group>
+            )}
           </Stack>
         </form>
       </Stack>

@@ -52,6 +52,40 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 }
 
 /**
+ * Possible statusCodes: 200, 502
+ * @param request
+ * @param response
+ */
+export async function clearAllImagesHandlerAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const logger = request.app.get("logger") as winston.Logger;
+  try {
+    await cameraManager.clearAllImagesAsync();
+    response.status(200).json({
+      statusCode: 200,
+      content: {
+        data: "All images cleared successfully",
+      },
+      ...response.locals["defaultProperties"],
+    });
+  } catch (e) {
+    logger.error(`Error clearing all images: ${e}`);
+    response.status(502).json({
+      statusCode: 502,
+      error: {
+        name: "Bad Gateway",
+        url: request.originalUrl,
+        details: [`Could not clear all images`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+  }
+}
+
+/**
  * Possible statusCodes: 200, 404
  * @param request
  * @param response

@@ -104,6 +104,14 @@ class ImageCapture {
   }
 
   /**
+   * Clears all images from the specified directory.
+   * Uses runImageRetentionAsync with 0 retention limits to delete everything.
+   */
+  async clearAllImagesAsync(directory: string = TIMELAPSE_DIRECTORY): Promise<void> {
+    return this.runImageRetentionAsync(0, 0, new Date(), directory);
+  }
+
+  /**
    * Manages images based on retention settings by removing old images
    * when either space limit or time retention period is exceeded
    */

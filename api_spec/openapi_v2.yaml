@@ -5152,6 +5152,51 @@ paths:
                           details:
                             items:
                               example: "No latest image"
+  /api/v2/camera/timelapse/images/clear:
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Clear all timelapse images.
+      description: Removes all images from the timelapse directory.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  content:
+                    properties:
+                      data:
+                        type: string
+                        example: "All images cleared successfully"
+        502:
+          description: "Bad Gateway"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 502
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Gateway"
+                          url:
+                            example: "/api/v2/camera/timelapse/images/clear"
+                          details:
+                            items:
+                              example: "Could not clear all images"
   /api/v2/camera/timelapse/archive:
     get:
       security:
