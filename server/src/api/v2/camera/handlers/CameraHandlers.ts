@@ -52,7 +52,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 }
 
 /**
- * Possible statusCodes: 200, 409, 502
+ * Possible statusCodes: 200, 409, 500
  * @param request
  * @param response
  */
@@ -85,8 +85,8 @@ export async function clearAllImagesHandlerAsync(
     }
   } catch (e) {
     logger.error(`Error clearing all images: ${e}`);
-    response.status(502).json({
-      statusCode: 502,
+    response.status(500).json({
+      statusCode: 500,
       error: {
         name: "Bad Gateway",
         url: request.originalUrl,

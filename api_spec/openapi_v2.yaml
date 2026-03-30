@@ -5197,8 +5197,8 @@ paths:
                           details:
                             items:
                               example: "Could not clear images at this time. Please try again later."
-        502:
-          description: "Bad Gateway"
+        500:
+          description: "Internal Server Error"
           content:
             application/json:
               schema:
@@ -5206,11 +5206,11 @@ paths:
                   - $ref: "#/components/schemas/ErrorResponse"
                   - properties:
                       statusCode:
-                        example: 502
+                        example: 500
                       error:
                         properties:
                           name:
-                            example: "Bad Gateway"
+                            example: "Internal Server Error"
                           url:
                             example: "/api/v2/camera/timelapse/images"
                           details:
