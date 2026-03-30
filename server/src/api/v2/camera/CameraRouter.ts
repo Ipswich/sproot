@@ -47,7 +47,7 @@ router.post("/reconnect", async (req: Request, res: Response) => {
   await reconnectLivestreamAsync(req, res);
 });
 
-router.post("/timelapse/images/clear", async (req: Request, res: Response) => {
+router.delete("/timelapse/images", async (req: Request, res: Response) => {
   await clearAllImagesHandlerAsync(req, res);
 });
 

@@ -1291,15 +1291,12 @@ export async function updateCameraSettingsAsync(
 }
 
 export async function clearAllImagesAsync(): Promise<void> {
-  const response = await fetch(
-    `${SERVER_URL}/api/v2/camera/timelapse/images/clear`,
-    {
-      method: "POST",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    },
-  );
+  const response = await fetch(`${SERVER_URL}/api/v2/camera/timelapse/images`, {
+    method: "DELETE",
+    headers: {},
+    mode: "cors",
+    // credentials: "include",
+  });
   if (!response.ok) {
     console.error(`Error clearing all images: ${response}`);
   }

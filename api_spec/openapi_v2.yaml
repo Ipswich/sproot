@@ -5152,8 +5152,8 @@ paths:
                           details:
                             items:
                               example: "No latest image"
-  /api/v2/camera/timelapse/images/clear:
-    post:
+  /api/v2/camera/timelapse/images:
+    delete:
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5169,15 +5169,34 @@ paths:
               schema:
                 allOf:
                   - $ref: "#/components/schemas/SuccessResponse"
-                properties:
-                  statusCode:
-                    type: integer
-                    example: 200
-                  content:
-                    properties:
-                      data:
-                        type: string
-                        example: "All images cleared successfully"
+                  - properties:
+                      statusCode:
+                        type: integer
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: string
+                            example: "All images cleared successfully"
+        409:
+          description: "Conflict"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 409
+                      error:
+                        properties:
+                          name:
+                            example: "Conflict"
+                          url:
+                            example: "/api/v2/camera/timelapse/images"
+                          details:
+                            items:
+                              example: "Could not clear images at this time. Please try again later."
         502:
           description: "Bad Gateway"
           content:
@@ -5193,7 +5212,7 @@ paths:
                           name:
                             example: "Bad Gateway"
                           url:
-                            example: "/api/v2/camera/timelapse/images/clear"
+                            example: "/api/v2/camera/timelapse/images"
                           details:
                             items:
                               example: "Could not clear all images"
