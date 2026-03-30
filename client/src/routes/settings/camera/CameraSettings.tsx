@@ -13,9 +13,8 @@ import {
 } from "@mantine/core";
 import {
   getCameraSettingsAsync,
-  getSystemStatusAsync,
   updateCameraSettingsAsync,
-  getTimelapseGenerationStatus,
+  getTimelapseArchiveStatusAsync,
   clearAllImagesAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -43,16 +42,10 @@ export default function OutputSettings() {
     refetchInterval: 60000,
   });
 
-  const getTimelapseGenerationStatusQuery = useQuery({
-    queryKey: ["timelapseGenerationStatus"],
-    queryFn: () => getTimelapseGenerationStatus(),
+  const getTimelapseArchiveStatusQuery = useQuery({
+    queryKey: ["timelapseArchiveStatus"],
+    queryFn: () => getTimelapseArchiveStatusAsync(),
     refetchInterval: 5000,
-  });
-
-  const getSystemStatusQuery = useQuery({
-    queryKey: ["systemStatus"],
-    queryFn: () => getSystemStatusAsync(),
-    refetchInterval: 60000,
   });
 
   const updateCameraSettingsMutation = useMutation({
@@ -256,15 +249,6 @@ export default function OutputSettings() {
                 size="md"
                 style={{ width: rem(200) }}
                 type="submit"
-                disabled={
-                  getTimelapseGenerationStatusQuery.data
-                    ?.isGeneratingTimelapseArchive
-                    ? true
-                    : false ||
-                        getSystemStatusQuery.data?.timelapse.imageCount == 0
-                      ? true
-                      : false
-                }
                 loading={updateCameraSettingsMutation.isPending}
               >
                 Update
@@ -279,6 +263,11 @@ export default function OutputSettings() {
                     clearAllImagesMutation.mutate();
                   }}
                   loading={clearAllImagesMutation.isPending}
+                  disabled={
+                    getTimelapseArchiveStatusQuery.data?.isGenerating
+                      ? true
+                      : false
+                  }
                   color="red"
                 >
                   Delete All Images
