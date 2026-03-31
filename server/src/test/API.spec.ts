@@ -2,6 +2,8 @@ import { assert } from "chai";
 import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
 import { app, server } from "./setup";
+import fs from "fs";
+import { CameraManager } from "../camera/CameraManager";
 
 describe("API Tests", async function () {
   this.timeout(2000);
@@ -1200,6 +1202,31 @@ describe("API Tests", async function () {
           validateMiddlewareValues(response);
           assert.isBoolean(response.body["content"].data.isGenerating);
           assert.isNumber(response.body["content"].data.archiveProgress);
+        });
+      });
+    });
+
+    describe("Clear All Images", () => {
+      describe("DELETE", () => {
+        it("should return 200 and clear all timelapse images", async () => {
+          let attempts = 0;
+          while (
+            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress()
+              .isGenerating &&
+            attempts < 5
+          ) {
+            attempts++;
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+          let imageCount = await fs.promises.readdir("images/timelapse");
+          assert.isAbove(imageCount.length, 0, "There should be images to clear for this test");
+          const response = await request(server)
+            .delete("/api/v2/camera/timelapse/images")
+            .expect(200);
+          validateMiddlewareValues(response);
+          imageCount = await fs.promises.readdir("images/timelapse");
+          assert.equal(imageCount.length, 0, "All images should be cleared");
+          assert.equal(response.body["content"].data, "All images cleared successfully");
         });
       });
     });

@@ -5152,6 +5152,70 @@ paths:
                           details:
                             items:
                               example: "No latest image"
+  /api/v2/camera/timelapse/images:
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Camera"
+      summary: Clear all timelapse images.
+      description: Removes all images from the timelapse directory.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        type: integer
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: string
+                            example: "All images cleared successfully"
+        409:
+          description: "Conflict"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 409
+                      error:
+                        properties:
+                          name:
+                            example: "Conflict"
+                          url:
+                            example: "/api/v2/camera/timelapse/images"
+                          details:
+                            items:
+                              example: "Could not clear images at this time. Please try again later."
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/camera/timelapse/images"
+                          details:
+                            items:
+                              example: "Could not clear all images"
   /api/v2/camera/timelapse/archive:
     get:
       security:
