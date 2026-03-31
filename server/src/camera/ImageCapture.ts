@@ -117,14 +117,18 @@ class ImageCapture {
     }
 
     const entries = await fs.promises.readdir(directory, { withFileTypes: true });
-    await Promise.all(
-      entries.map(async (dirent) => {
-        const targetPath = path.join(directory, dirent.name);
+    for (const dirent of entries) {
+      const targetPath = path.join(directory, dirent.name);
+      try {
         if (!dirent.isDirectory()) {
           await fs.promises.unlink(targetPath);
         }
-      }),
-    );
+      } catch (e) {
+        this.#logger.warn(
+          `Failed to remove ${targetPath}: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
 
     this.#logger.info(`All files cleared from ${directory}`);
     return true;

@@ -88,7 +88,7 @@ export async function clearAllImagesHandlerAsync(
     response.status(500).json({
       statusCode: 500,
       error: {
-        name: "Bad Gateway",
+        name: "Internal Server Error",
         url: request.originalUrl,
         details: [`Could not clear all images`],
       },
