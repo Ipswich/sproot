@@ -71,7 +71,7 @@ export default function CameraSettings() {
 
   const clearAllImagesMutation = useMutation({
     mutationFn: clearAllImagesAsync,
-    onSettled: () => {
+    onSuccess: () => {
       getCameraSettingsQuery.refetch();
     },
   });

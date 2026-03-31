@@ -116,7 +116,7 @@ class CameraManager {
 
   /**
    * Clears all images from the timelapse directory.
-   * @return A promise that resolves to a boolean indicating whether the images were successfully cleared.
+   * @returns A promise that resolves to a boolean indicating whether the images were successfully cleared.
    */
   async clearAllImagesAsync(): Promise<boolean> {
     return this.#imageCapture.clearAllImagesAsync(TIMELAPSE_DIRECTORY);
