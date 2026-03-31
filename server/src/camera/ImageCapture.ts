@@ -175,20 +175,24 @@ class ImageCapture {
         oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
         continue;
       }
-      const stats = await fs.promises.stat(oldestFilePath);
-      const oldestFileTime = stats.mtime.getTime();
-      const fileSizeMB = stats.size / (1024 * 1024);
-
-      // Check if we need to delete this file
-      const oversizedStorage = directorySizeMB > maxRetentionSizeMB;
-      const exceededRetentionPeriod = retentionPeriodInMS > 0 && oldestFileTime < cutoffTime;
-
-      if (!oversizedStorage && !exceededRetentionPeriod) {
-        break; // Stop if we're within all limits
-      }
-
-      // Delete the file
+      let fileSizeMB: number;
+      let oldestFileTime: number;
+      let oversizedStorage: boolean;
+      let exceededRetentionPeriod: boolean;
       try {
+        const stats = await fs.promises.stat(oldestFilePath);
+        oldestFileTime = stats.mtime.getTime();
+        fileSizeMB = stats.size / (1024 * 1024);
+
+        // Check if we need to delete this file
+        oversizedStorage = directorySizeMB > maxRetentionSizeMB;
+        exceededRetentionPeriod = retentionPeriodInMS > 0 && oldestFileTime < cutoffTime;
+
+        if (!oversizedStorage && !exceededRetentionPeriod) {
+          break; // Stop if we're within all limits
+        }
+
+        // Delete the file
         await fs.promises.rm(oldestFilePath);
       } catch (e) {
         this.#logger.warn(
