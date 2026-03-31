@@ -104,6 +104,37 @@ class ImageCapture {
   }
 
   /**
+   * Clears all images from the specified directory.
+   * @returns true if images were cleared, false if operation was skipped due to ongoing timelapse generation
+   */
+  async clearAllImagesAsync(directory: string = TIMELAPSE_DIRECTORY): Promise<boolean> {
+    if (this.#timelapse.isGeneratingTimelapseArchive) {
+      return false;
+    }
+    if (!fs.existsSync(directory)) {
+      this.#logger.info(`Directory does not exist, nothing to clear: ${directory}`);
+      return true;
+    }
+
+    const entries = await fs.promises.readdir(directory, { withFileTypes: true });
+    for (const dirent of entries) {
+      const targetPath = path.join(directory, dirent.name);
+      try {
+        if (!dirent.isDirectory()) {
+          await fs.promises.unlink(targetPath);
+        }
+      } catch (e) {
+        this.#logger.warn(
+          `Failed to remove ${targetPath}: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+
+    this.#logger.info(`All files cleared from ${directory}`);
+    return true;
+  }
+
+  /**
    * Manages images based on retention settings by removing old images
    * when either space limit or time retention period is exceeded
    */
@@ -131,22 +162,46 @@ class ImageCapture {
     // Process files until we're within limits
     let oldestFilePath = await getOldestFilePathAsync(directory);
 
+    const ignoreFiles = new Set<string>();
     while (oldestFilePath) {
       // Get stats for the oldest file
-      const stats = await fs.promises.stat(oldestFilePath);
-      const oldestFileTime = stats.mtime.getTime();
-      const fileSizeMB = stats.size / (1024 * 1024);
-
-      // Check if we need to delete this file
-      const oversizedStorage = directorySizeMB > maxRetentionSizeMB;
-      const exceededRetentionPeriod = retentionPeriodInMS > 0 && oldestFileTime < cutoffTime;
-
-      if (!oversizedStorage && !exceededRetentionPeriod) {
-        break; // Stop if we're within all limits
+      try {
+        await fs.promises.access(oldestFilePath, fs.constants.R_OK | fs.constants.W_OK);
+      } catch (e) {
+        this.#logger.warn(
+          `Cannot access file for retention check: ${oldestFilePath}. Skipping. Error: ${e instanceof Error ? e.message : String(e)}`,
+        );
+        ignoreFiles.add(oldestFilePath);
+        oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
+        continue;
       }
+      let fileSizeMB: number;
+      let oldestFileTime: number;
+      let oversizedStorage: boolean;
+      let exceededRetentionPeriod: boolean;
+      try {
+        const stats = await fs.promises.stat(oldestFilePath);
+        oldestFileTime = stats.mtime.getTime();
+        fileSizeMB = stats.size / (1024 * 1024);
 
-      // Delete the file
-      await fs.promises.rm(oldestFilePath);
+        // Check if we need to delete this file
+        oversizedStorage = directorySizeMB > maxRetentionSizeMB;
+        exceededRetentionPeriod = retentionPeriodInMS > 0 && oldestFileTime < cutoffTime;
+
+        if (!oversizedStorage && !exceededRetentionPeriod) {
+          break; // Stop if we're within all limits
+        }
+
+        // Delete the file
+        await fs.promises.rm(oldestFilePath);
+      } catch (e) {
+        this.#logger.warn(
+          `Cannot delete file for retention check: ${oldestFilePath}. Skipping. Error: ${e instanceof Error ? e.message : String(e)}`,
+        );
+        ignoreFiles.add(oldestFilePath);
+        oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
+        continue;
+      }
       const reasons = [];
       if (oversizedStorage) {
         reasons.push(
@@ -163,7 +218,7 @@ class ImageCapture {
       directorySizeMB -= fileSizeMB;
 
       // Update for next iteration
-      oldestFilePath = await getOldestFilePathAsync(directory);
+      oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
     }
 
     this.#isRunningImageRetention = false;
