@@ -83,6 +83,7 @@ export class Backups {
       const files = await sortDirectoryByStatsAsync(
         directory,
         (a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime(),
+        new Set<string>(),
       );
 
       if (!files) {

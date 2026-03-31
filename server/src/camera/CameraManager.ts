@@ -1,6 +1,6 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { generateInterserviceAuthenticationToken } from "@sproot/sproot-common/dist/utility/InterserviceAuthentication";
-import { CRON } from "@sproot/sproot-common/dist/utility/Constants";
+import { CRON, TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { CronJob } from "cron";
@@ -85,9 +85,9 @@ class CameraManager {
 
   /**
    * Gets the progress of the timelapse archive generation.
-   * @returns A promise that resolves to an object containing the status of the timelapse generation.
+   * @returns An object containing the status of the timelapse generation.
    */
-  getTimelapseArchiveProgressAsync() {
+  getTimelapseArchiveProgress() {
     return this.#imageCapture.getTimelapseGenerationStatus();
   }
 
@@ -112,6 +112,14 @@ class CameraManager {
       return this.#imageCapture.getLastTimelapseGenerationDuration();
     }
     return null;
+  }
+
+  /**
+   * Clears all images from the timelapse directory.
+   * @returns A promise that resolves to a boolean indicating whether the images were successfully cleared.
+   */
+  async clearAllImagesAsync(): Promise<boolean> {
+    return this.#imageCapture.clearAllImagesAsync(TIMELAPSE_DIRECTORY);
   }
 
   /**

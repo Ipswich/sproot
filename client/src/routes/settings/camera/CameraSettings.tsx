@@ -14,6 +14,8 @@ import {
 import {
   getCameraSettingsAsync,
   updateCameraSettingsAsync,
+  getTimelapseArchiveStatusAsync,
+  clearAllImagesAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
@@ -32,12 +34,21 @@ export interface FormValues {
   timelapseEndTime: string | null;
 }
 
-export default function OutputSettings() {
+export default function CameraSettings() {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
   const getCameraSettingsQuery = useQuery({
     queryKey: ["cameraSettings"],
     queryFn: () => getCameraSettingsAsync(),
     refetchInterval: 60000,
+  });
+
+  const getTimelapseArchiveStatusQuery = useQuery({
+    queryKey: ["timelapseArchiveStatus"],
+    queryFn: () => getTimelapseArchiveStatusAsync(),
+    refetchInterval: 5000,
+    enabled:
+      !!getCameraSettingsQuery.data?.enabled &&
+      !!getCameraSettingsQuery.data?.timelapseEnabled,
   });
 
   const updateCameraSettingsMutation = useMutation({
@@ -54,6 +65,13 @@ export default function OutputSettings() {
       await updateCameraSettingsAsync(updatedSettings as SDBCameraSettings);
     },
     onSettled: () => {
+      getCameraSettingsQuery.refetch();
+    },
+  });
+
+  const clearAllImagesMutation = useMutation({
+    mutationFn: clearAllImagesAsync,
+    onSuccess: () => {
       getCameraSettingsQuery.refetch();
     },
   });
@@ -239,6 +257,22 @@ export default function OutputSettings() {
                 Update
               </Button>
             </Group>
+            {newCameraForm.values.timelapseEnabled && (
+              <Group justify="space-around">
+                <Button
+                  size="md"
+                  style={{ width: rem(200) }}
+                  onClick={() => {
+                    clearAllImagesMutation.mutate();
+                  }}
+                  loading={clearAllImagesMutation.isPending}
+                  disabled={getTimelapseArchiveStatusQuery.data?.isGenerating}
+                  color="red"
+                >
+                  Delete All Images
+                </Button>
+              </Group>
+            )}
           </Stack>
         </form>
       </Stack>

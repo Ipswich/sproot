@@ -52,6 +52,52 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 }
 
 /**
+ * Possible statusCodes: 200, 409, 500
+ * @param request
+ * @param response
+ */
+export async function clearAllImagesHandlerAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const logger = request.app.get("logger") as winston.Logger;
+  try {
+    const result = await cameraManager.clearAllImagesAsync();
+    if (result) {
+      response.status(200).json({
+        statusCode: 200,
+        content: {
+          data: "All images cleared successfully",
+        },
+        ...response.locals["defaultProperties"],
+      });
+    } else {
+      response.status(409).json({
+        statusCode: 409,
+        error: {
+          name: "Conflict",
+          url: request.originalUrl,
+          details: [`Could not clear images at this time. Please try again later.`],
+        },
+        ...response.locals["defaultProperties"],
+      });
+    }
+  } catch (e) {
+    logger.error(`Error clearing all images: ${e}`);
+    response.status(500).json({
+      statusCode: 500,
+      error: {
+        name: "Internal Server Error",
+        url: request.originalUrl,
+        details: [`Could not clear all images`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+  }
+}
+
+/**
  * Possible statusCodes: 200, 404
  * @param request
  * @param response

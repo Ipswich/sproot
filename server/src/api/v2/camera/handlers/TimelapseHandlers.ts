@@ -83,7 +83,7 @@ export function postRegenerateTimelapseArchive(request: Request, response: Respo
  */
 export function getTimelapseGenerationStatus(request: Request, response: Response): void {
   const cameraManager = request.app.get("cameraManager") as CameraManager;
-  const status = cameraManager.getTimelapseArchiveProgressAsync();
+  const status = cameraManager.getTimelapseArchiveProgress();
   response.status(200).json({
     statusCode: 200,
     content: {

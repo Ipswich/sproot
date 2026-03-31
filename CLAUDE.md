@@ -43,6 +43,7 @@ sproot/
 ## API Architecture
 
 **Versioned API:** Single v2 endpoint (`/api/v2/*`) with request-scoped JWT authentication via `authenticateMiddleware`.
+**OpenAPI Spec:** `api_spec/openapi_v2.yaml`
 **Router Structure** (`server/src/api/v2/ApiRootV2.ts`):
 ```
 /api/v2/docs  - Public (OpenAPI docs)

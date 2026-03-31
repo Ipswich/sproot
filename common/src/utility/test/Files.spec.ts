@@ -143,6 +143,32 @@ describe("Files Utility", () => {
 
       assert.strictEqual(result, null);
     });
+
+    it("should ignore specified files when sorting", async () => {
+      // Create files
+      const file1 = path.join(testDir, "file1.txt");
+      const file2 = path.join(testDir, "file2.txt");
+      const file3 = path.join(testDir, "file3.txt");
+
+      await fs.promises.writeFile(file1, "content1");
+      await fs.promises.writeFile(file2, "content2");
+      await fs.promises.writeFile(file3, "content3");
+
+      const now = new Date();
+      await fs.promises.utimes(file1, now, now);
+      await fs.promises.utimes(file2, now, now);
+      await fs.promises.utimes(file3, now, now);
+
+      const ignoreFiles = new Set<string>([file1, file2]);
+
+      // Sort by modification time (oldest first)
+      const sortFunction = (a: { stats: fs.Stats }, b: { stats: fs.Stats }) =>
+        a.stats.mtime.getTime() - b.stats.mtime.getTime();
+
+      const result = await getSortedFileAsync(testDir, sortFunction, ignoreFiles);
+
+      assert.strictEqual(result, file3); // file3 should be returned since file1 and file2 are ignored
+    });
   });
 
   describe("getOldestFilePathAsync", () => {
@@ -176,6 +202,31 @@ describe("Files Utility", () => {
       const result = await getOldestFilePathAsync(nonExistentDir);
 
       assert.strictEqual(result, null);
+    });
+
+    it("should ignore specified files when determining the oldest file", async () => {
+      // Create files
+      const file1 = path.join(testDir, "file1.txt");
+      const file2 = path.join(testDir, "file2.txt");
+      const file3 = path.join(testDir, "file3.txt");
+
+      await fs.promises.writeFile(file1, "content1");
+      await fs.promises.writeFile(file2, "content2");
+      await fs.promises.writeFile(file3, "content3");
+
+      const now = new Date();
+      const oneDayAgo = new Date(now.getTime() - 86400000); // 1 day ago
+      const twoDaysAgo = new Date(now.getTime() - 172800000); // 2 days ago
+
+      await fs.promises.utimes(file1, now, now);
+      await fs.promises.utimes(file2, oneDayAgo, oneDayAgo);
+      await fs.promises.utimes(file3, twoDaysAgo, twoDaysAgo);
+
+      const ignoreFiles = new Set<string>([file3]);
+
+      const result = await getOldestFilePathAsync(testDir, ignoreFiles);
+
+      assert.strictEqual(result, file2); // file2 should be returned since file3 is ignored
     });
   });
 
