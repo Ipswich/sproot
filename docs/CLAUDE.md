@@ -10,27 +10,6 @@ Sproot Docs is a Docusaurus documentation site that provides API documentation a
 
 **Environment:** Docusaurus (Classic preset) with TypeScript configuration.
 
-## Development Commands
-
-### Build
-
-```bash
-# Build documentation site (npm run build --workspace=docs)
-npm run build --workspace=docs
-
-# Clean build output
-npm run clean
-```
-
-### Run
-
-```bash
-# Preview documentation build
-npm run preview
-```
-
-**Note:** No runtime server - documentation is static HTML built from Docusaurus.
-
 ## Architecture
 
 **Framework:** Docusaurus (classic preset).
@@ -45,7 +24,7 @@ npm run preview
 
 ```bash
 # Build the documentation site
-npm run build --workspace=docs
+npm run build
 
 # Clean build output
 npm run clean
@@ -53,22 +32,19 @@ npm run clean
 
 ### Run
 
-```bash
-# Preview production build locally
-npm run preview --workspace=docs
-
 # Start local dev server
-npm start --workspace=docs
+npm start
 ```
 
 ### Test
 
 ```bash
 # Documentation is checked via build
-npm run build --workspace=docs
+npm run build
 ```
 
 **Note:** No automated tests - documentation is checked via successful build.
+**Note:** No runtime server - documentation is static HTML built from Docusaurus.
 
 ## Key Files
 
@@ -183,10 +159,7 @@ No dependencies on other projects. Can build docs at any time.
 
 **Recommended Build Sequence:**
 
-1. `cd common && npm run build`
-2. `cd server && npm run build`
-3. `cd client && npm run build`
-4. `npm run build --workspace=docs`
+1. `cd docs && npm run build`
 
 ## Docker Deployment
 

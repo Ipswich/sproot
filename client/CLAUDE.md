@@ -10,31 +10,6 @@ Sproot Client is the React frontend for the Sproot greenhouse controller, built 
 
 **Environment:** Vite + React 19 + TypeScript, with build output to `dist/` directory.
 
-## Development Commands
-
-### Build
-
-```bash
-# Build TypeScript and compile Vite frontend
-npm run build
-```
-
-### Run
-
-```bash
-# Start Vite dev server
-npm run start:dev
-```
-
-### Test
-
-```bash
-# Manual/exploratory testing via dev server
-npm run start:dev
-```
-
-**Note:** No automated test suite currently. Use Vite dev server with React DevTools for manual testing.
-
 ## Architecture
 
 **Entry Point:** `src/main.tsx` - Creates React root and router.
@@ -75,6 +50,8 @@ npm run preview
 # No automated tests currently.
 # Use Vite dev server with React DevTools for manual/exploratory testing.
 ```
+
+**Note:** No automated test suite currently. Use Vite dev server with React DevTools for manual testing.
 
 ## Key Directories
 

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code when working with the Sproot server p
 
 Sproot Server is the Express.js REST API backend for the Sproot greenhouse controller. It handles all HTTP requests, manages the database layer, and integrates with hardware components (sensors, outputs, subcontrollers).
 
-**Purpose:** REST API server that serves the frontend, manages database operations, and handles hardware integration via MQTT and direct device communication.
+**Purpose:** REST API server that serves the frontend, manages database operations, and handles hardware integration via HTTP and direct device communication.
 
 **Environment:** Node.js with TypeScript (compiled output), Knex.js for MySQL/MariaDB database, Express.js for HTTP serving.
 
@@ -193,6 +193,6 @@ When using `docker-compose.yaml.development`:
 
 **Cron Jobs:** Cron jobs created via helper functions in `src/system/CronJobs.ts` (e.g., `createUpdateDevicesCronJob`, `createBackupCronJob`).
 
-**Logging:** Winston logger configured in `src/logger/index.ts` (create/update this file).
+**Logging:** Winston logger configured in `src/logger.ts` (create/update this file).
 
 **API Versioning:** All routes under `/api/v2/` with version documented in OpenAPI spec.

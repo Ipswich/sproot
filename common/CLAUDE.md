@@ -39,23 +39,17 @@ npm run lint
 
 **Entry Points:**
 
-- `index.ts` - Exports `ISprootDB`, `MockSprootDB`, and various SDB\* types
+- There is no root `index.ts` entry point in this workspace.
+- Consumers import shared types and database interfaces from specific subpaths (for example, `dist/database/ISprootDB` after build).
+- When documenting or consuming exports from this package, refer to the concrete module path rather than a package-level index export.
 
 **Project Structure:**
 
 ```
 src/
 ├── api/                # API request/response types
-│   ├── api.ts
-│   ├── authenticate.ts
-│   ├── camera.ts
-│   ├── outputs.ts
-│   ├── sensors.ts
-│   ├── automations.ts
-│   ├── subcontrollers.ts
-│   ├── device-zones.ts
-│   ├── journals.ts
-│   └── entries.ts
+│   └── v2/
+│       └── Responses.ts
 ├── automation/         # Condition and action types
 │   ├── IAutomation.ts
 │   ├── IOutputCondition.ts
@@ -205,7 +199,7 @@ async addSensorAsync(sensor: SDBSensor): Promise<void> {
 
 ## Environment Variables
 
-None required for local development. Uses default database configuration from `common/.env.development` (copy to `common/.env` if needed).
+None required for local development.
 
 ## Common Module Pattern
 
