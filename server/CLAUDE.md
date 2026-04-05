@@ -193,6 +193,6 @@ When using `docker-compose.yaml.development`:
 
 **Cron Jobs:** Cron jobs created via helper functions in `src/system/CronJobs.ts` (e.g., `createUpdateDevicesCronJob`, `createBackupCronJob`).
 
-**Logging:** Winston logger configured in `src/logger.ts` (create/update this file).
+**Logging:** Winston logger is configured in `src/logger.ts`.
 
 **API Versioning:** All routes under `/api/v2/` with version documented in OpenAPI spec.

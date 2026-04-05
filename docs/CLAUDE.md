@@ -33,6 +33,8 @@ npm run clean
 ### Run
 
 # Start local dev server
+
+```bash
 npm start
 ```
 
@@ -44,7 +46,7 @@ npm run build
 ```
 
 **Note:** No automated tests - documentation is checked via successful build.
-**Note:** No runtime server - documentation is static HTML built from Docusaurus.
+**Note:** No backend service is required for the built site; Docusaurus outputs static HTML, though local development uses a dev server (`npm start`).
 
 ## Key Files
 
@@ -163,10 +165,11 @@ No dependencies on other projects. Can build docs at any time.
 
 ## Docker Deployment
 
-Documentation builds container image for static deployment:
+Documentation does not build its own container image. This workspace produces the static site artifact in `docs/build/`:
 
-- Serves static files from docs/build/
-- Image: `ghcr.io/ipswich/sproot-client:latest` (nginx + docs)
+- Build artifact: `docs/build/`
+- Deployment image: `ghcr.io/ipswich/sproot-client:latest` (nginx serves the docs under `/docs`)
+- Packaging is handled outside this workspace by the gateway/nginx image, which copies the built docs into `/usr/share/nginx/html/docs`
 
 ## Testing Patterns
 
