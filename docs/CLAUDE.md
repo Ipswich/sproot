@@ -42,6 +42,9 @@ npm start
 ### Test
 
 ```bash
+# Typecheck
+npm run typecheck
+
 # Documentation is checked via build
 npm run build
 ```
