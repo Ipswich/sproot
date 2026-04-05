@@ -99,7 +99,7 @@ src/
 
 - PCA9685: PWM relay controller via direct I2C communication (`i2c-bus`/`pca9685`; typically on I2C bus 1, with a configurable device address)
 - TPLink Smart Plugs: Runtime integration via `tplink-smarthome-api`; test simulation via `tplink-smarthome-simulator`
-- ESP32 Subcontrollers: rest-based communication for remote ESP32 devices (firmware updates via `POST /api/v2/subcontrollers/firmware/esp32/ota-update/:deviceId`)
+- ESP32 Subcontrollers: REST-based communication for remote ESP32 devices (firmware updates via `POST /api/v2/subcontrollers/firmware/esp32/ota-update/:deviceId`)
 - Sensors: BME280, DS18B20, ADS1115 (Analog-to-digital sensor)
 
 ## Environment Variables (`server/.env`)
@@ -144,11 +144,14 @@ The `common/` workspace provides:
 
 When using `docker-compose.yaml.development`:
 
-- Server runs from root project (not from within Docker image)
-- Server must be manually started with `npm run start:dev`
-- Full stack runs: MariaDB, PHPMyAdmin, Node.js server
+- The server image is built from `server/Dockerfile.development`
+- The repository is copied into the image, so server code runs inside the container
+- The server container does not automatically start the app process (it stays alive for manual use)
+- Start the stack first, then exec into the server container to run `npm run start:dev` or `npm run start`
+- Full stack includes MariaDB, PHPMyAdmin, and the server container
 - Logs mounted from `/sproot/server/logs/`
 - Backups mounted from `/sproot/server/backups/`
+  **Note:** The development compose workflow requires manually starting the server from inside the running container. If you want live reload from host file changes, update Compose to bind-mount the source and run `nodemon` as the container command/entrypoint.
 
 **Note:** Docker Compose entrypoint is not set for server - manual start required.
 

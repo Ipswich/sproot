@@ -158,7 +158,7 @@ VITE_API_SERVER_URL=<your server URL>
 - Uses @vitejs/plugin-react-swc
 - Basic CSS module handling
 
-**Linting:** ESLint + Prettier (100 char line width)
+**Linting:** ESLint + Prettier (using the effective client configuration/defaults)
 
 - Uses @tanstack/eslint-plugin-query
 - React Hooks and Refresh plugins
