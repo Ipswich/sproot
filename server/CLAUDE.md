@@ -172,8 +172,6 @@ When using `docker-compose.yaml.development`:
 
 - Mocha with `src/test/setup.ts` setup
 - Uses `nock` for HTTP mocking
-- `INTERSERVICE_AUTHENTICATION_KEY` must be set for API test runs because the server reads it during startup
-- Run with: `INTERSERVICE_AUTHENTICATION_KEY=test npm run test:api` (or otherwise export the variable before running `npm run test:api`)
 - Run with: `npm run test:api`
 
 ## Development Tips

@@ -40,7 +40,7 @@ npm run lint
 **Entry Points:**
 
 - There is no root `index.ts` entry point in this workspace.
-- Consumers import shared types and database interfaces from specific subpaths (for example, `dist/database/ISprootDB` after build).
+- Consumers import shared types and database interfaces from specific subpaths (for example, `@sproot/sproot-common/dist/database/ISprootDB` after build).
 - When documenting or consuming exports from this package, refer to the concrete module path rather than a package-level index export.
 
 **Project Structure:**
@@ -133,7 +133,7 @@ src/
 **Common Pattern:**
 
 ```typescript
-// Server-side implementation example from sever/src/database/SprootDB: Adding a sensor
+// Server-side implementation example from server/src/database/SprootDB: Adding a sensor
 async addSensorAsync(sensor: SDBSensor): Promise<void> {
   return this.#connection("sensors").insert({
     name: sensor.name,
