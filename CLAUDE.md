@@ -152,7 +152,7 @@ VITE_API_SERVER_URL=<your server URL>
 
 ## Build Configuration
 
-**TypeScript:** **TypeScript:** `common`, `server`, and `client` use the shared root `tsconfig.json` with project references (incremental builds). The `docs` workspace uses `docs/tsconfig.json`, extending `@docusaurus/tsconfig`.
+**TypeScript:** `common`, `server`, and `client` use the shared root `tsconfig.json` with project references (incremental builds). The `docs` workspace uses `docs/tsconfig.json`, extending `@docusaurus/tsconfig`.
 
 **Path Aliases:**
 - `common`: `@sproot/*` → `../common/dist/*`

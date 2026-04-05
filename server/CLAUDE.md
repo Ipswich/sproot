@@ -44,7 +44,7 @@ npm run lint
 - Single v2 endpoint prefix: `/api/v2/*`
 - Versioned routes defined in `src/api/v2/ApiRootV2.ts`
 - JWT authentication via `authenticateMiddleware`
-- OpenAPI spec at `api_spec/openapi_v2.yaml`
+- OpenAPI spec at `../api_spec/openapi_v2.yaml`
 
 **Database Layer:**
 
