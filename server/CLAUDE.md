@@ -135,7 +135,7 @@ When using `docker-compose.yaml.development`:
 - The repository is copied into the image, so server code runs inside the container
 - The server container does not automatically start the app process (it stays alive for manual use)
 - Start the stack first, then exec into the server container to run `npm run start:dev` or `npm run start`
-- Full stack includes MariaDB, PHPMyAdmin, and the server container
+- Full stack includes MariaDB, PHPMyAdmin, the server container, and the client service
 - Logs mounted from `/sproot/server/logs/`
 - Backups mounted from `/sproot/server/backups/`
   **Note:** The development compose workflow requires manually starting the server from inside the running container. If you want live reload from host file changes, update Compose to bind-mount the source and run `nodemon` as the container command/entrypoint.
@@ -172,7 +172,8 @@ When using `docker-compose.yaml.development`:
 
 - Mocha with `src/test/setup.ts` setup
 - Uses `nock` for HTTP mocking
-- `INTERSERVICE_AUTHENTICATION_KEY` is only required when running the API tests manually/outside `npm run test:api`; the npm script already sets it
+- `INTERSERVICE_AUTHENTICATION_KEY` must be set for API test runs because the server reads it during startup
+- Run with: `INTERSERVICE_AUTHENTICATION_KEY=test npm run test:api` (or otherwise export the variable before running `npm run test:api`)
 - Run with: `npm run test:api`
 
 ## Development Tips
