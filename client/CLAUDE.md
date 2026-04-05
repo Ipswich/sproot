@@ -153,7 +153,7 @@ VITE_API_SERVER_URL=<your server URL>
 - `@sproot/sproot-common` → `../common/src/*`
 - `@sproot/sproot-client` → `../client/src/*`
 
-**Vite:** Configured in `vite.config.ts`:
+**Vite:** Configured in `client/src/vite.config.ts`:
 
 - Uses @vitejs/plugin-react-swc
 - Basic CSS module handling

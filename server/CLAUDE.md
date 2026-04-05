@@ -12,24 +12,11 @@ Sproot Server is the Express.js REST API backend for the Sproot greenhouse contr
 
 ## Development Commands
 
-### Build & Compile
-
-```bash
-# Build TypeScript (must complete before running)
-npm run build
-
-# Clean compiled output
-npm run clean
-```
-
 ### Run
 
 ```bash
 # Run with nodemon (auto-reload on changes)
 npm run start:dev
-
-# Run after build completes
-npm run start
 ```
 
 ### Test
@@ -161,7 +148,7 @@ When using `docker-compose.yaml.development`:
 
 **Path Mapping:**
 
-- `@sproot/sproot-common` → `../common/dist/*`
+- `@sproot/*` → `../common/dist/*`
 
 **Linting:** ESLint + Prettier (100 char line width)
 
