@@ -14,7 +14,7 @@ Sproot Client is the React frontend for the Sproot greenhouse controller, built 
 
 **Entry Point:** `src/main.tsx` - Creates React root and router.
 
-**Build Tool:** Vite (configured in `vite.config.ts`).
+**Build Tool:** Vite (configured in `src/vite.config.ts`).
 
 **Routing:** React Router v6 with lazy loaders fetching data from server.
 
@@ -142,7 +142,7 @@ npm run preview
 VITE_API_SERVER_URL=<your server URL>
 ```
 
-**Note:** Copy `client/.env.development` to `client/.env` before running.
+**Note:** Copy `client/.env.development` to `client/.env.local` before running.
 
 ## Build Configuration
 

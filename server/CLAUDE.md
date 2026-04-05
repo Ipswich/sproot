@@ -97,8 +97,8 @@ src/
 
 **Hardware Integration:**
 
-- PCA9685: PWM relay controller via direct SPI communication
-- TPLink Smart Plugs: Via `tplink-smarthome-api` simulator
+- PCA9685: PWM relay controller via direct I2C communication (`i2c-bus`/`pca9685`; typically on I2C bus 1, with a configurable device address)
+- TPLink Smart Plugs: Runtime integration via `tplink-smarthome-api`; test simulation via `tplink-smarthome-simulator`
 - ESP32 Subcontrollers: rest-based communication for remote ESP32 devices (firmware updates via `POST /api/v2/subcontrollers/firmware/esp32/ota-update/:deviceId`)
 - Sensors: BME280, DS18B20, ADS1115 (Analog-to-digital sensor)
 
@@ -120,7 +120,7 @@ INTERSERVICE_AUTHENTICATION_KEY=<key>
 BACKUP_RETENTION_DAYS=30
 ```
 
-**Note:** Copy `server/.env.development` to `server/.env` before running. `.env` files are gitignored.
+**Note:** Copy `server/.env.development` to `server/.env` before running. Do not commit `server/.env`, as it may contain secrets.
 
 ## TypeScript Configuration
 

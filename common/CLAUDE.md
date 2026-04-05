@@ -87,8 +87,7 @@ src/
 ├── system/            # System-related types
 └── utility/           # Utility classes and functions
     ├── Constants.ts
-    ├── Crypto.ts
-    └── dateUtils.ts
+    └── Crypto.ts
 ```
 
 **Path Aliases:** `@sproot/*` → `../common/dist/*` (from server) or `../common/src/*` (from client).
