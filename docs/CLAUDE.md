@@ -122,13 +122,12 @@ npm run build
 
 ## TypeScript Configuration
 
-**Project:** Uses shared `tsconfig.json` from root.
-
-**Build:** Builds Docusaurus config and docs content.
+**Project:** Uses `docs/tsconfig.json` for this workspace.
+**Config:** `docs/tsconfig.json` extends `@docusaurus/tsconfig` and is editor-only.
 
 ## Build Configuration
 
-**TypeScript:** Shared tsconfig from root.
+**TypeScript:** Docusaurus workspace config is separate from the repo root `tsconfig.json`.
 
 **Build Output:** Static HTML to `build/` directory.
 

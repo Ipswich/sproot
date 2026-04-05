@@ -102,8 +102,9 @@ src/
 
 **API Types:**
 
-- `src/api/api.ts` - Base request/response types
-- File-specific type definitions for each API endpoint
+`src/api/v2/Responses.ts` - Versioned API response type definitions currently present in this workspace
+
+- When documenting or consuming API types, use the concrete versioned module path under `src/api/` rather than a nonexistent shared `src/api/api.ts` entry point
 
 **Automation:**
 
