@@ -30,7 +30,7 @@ npm run build
 npm run clean
 ```
 
-# Run
+## Run
 
 ### Start local dev server
 
@@ -65,7 +65,7 @@ npm run build
 **Static:**
 
 - `static/` - Static assets (favicon, etc.)
-- `img/` - Images
+- `static/img/` - Images
 
 ## Configuration (`docusaurus.config.ts`)
 
