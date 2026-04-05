@@ -124,7 +124,6 @@ src/
 
 - `src/utility/Constants.ts` - Global constants (MAX_CACHE_SIZE, INITIAL_CACHE_LOOKBACK, MAX_CHART_DATA_POINTS, etc.)
 - `src/utility/Crypto.ts` - Encryption/decryption utilities
-- `src/utility/dateUtils.ts` - Date conversion utilities (`toDbDate`, `dbToIso`, `isoToDb`)
 
 ## Database Service Patterns
 

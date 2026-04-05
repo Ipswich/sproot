@@ -30,9 +30,9 @@ npm run build
 npm run clean
 ```
 
-### Run
+# Run
 
-# Start local dev server
+### Start local dev server
 
 ```bash
 npm start
