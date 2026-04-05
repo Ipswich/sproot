@@ -133,7 +133,7 @@ src/
 **Common Pattern:**
 
 ```typescript
-// Example: Adding a sensor
+// Server-side implementation example from sever/src/database/SprootDB: Adding a sensor
 async addSensorAsync(sensor: SDBSensor): Promise<void> {
   return this.#connection("sensors").insert({
     name: sensor.name,

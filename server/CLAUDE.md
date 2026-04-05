@@ -115,7 +115,7 @@ BACKUP_RETENTION_DAYS=30
 
 **Path Aliases:** `@sproot/*` → `../common/dist/*` (pointing to compiled common)
 
-**Build Order:** Common must be built first, then server (tsconfig has `references` to common).
+**Build Order:** Common is a dependency and must compile first, but building the server will automatically build this.
 
 ## Common Module Pattern
 
