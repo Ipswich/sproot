@@ -14,7 +14,8 @@ Sproot Docs is a Docusaurus documentation site that provides API documentation a
 
 **Framework:** Docusaurus (classic preset).
 
-**TypeScript Config:** `docusaurus.config.ts` - Main Docusaurus configuration.
+**Site Config:** `docusaurus.config.ts` - Main Docusaurus site configuration.
+**TypeScript Config:** `tsconfig.json` - TypeScript compiler configuration (extends `@docusaurus/tsconfig`).
 
 **Build Tool:** Docusaurus builds static HTML from Markdown/MDX content.
 
