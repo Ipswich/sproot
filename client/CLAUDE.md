@@ -134,7 +134,7 @@ npm run preview
 - `@sproot/sproot-common` → `../common/src/*`
 - `@sproot/sproot-client` → `../client/src/*`
 
-**Build Order:** Client depends on common (imports types from common/src).
+**Build Order:** In the normal workflow you can run `npm run build` in `client/` only; the client build will automatically build `common` first via project references. Only run `npm run build` in `common/` manually if you are building workspaces separately.
 
 ## Environment Variables (`client/.env.development`)
 

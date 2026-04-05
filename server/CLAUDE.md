@@ -125,7 +125,7 @@ The `common/` workspace provides:
 - Type definitions for all entities
 - Cross-service authentication utilities
 
-**Important:** Build order matters. Run `npm run build` for common before server.
+**Important:** Build order still matters, but in the normal workflow you can run `npm run build` in `server/` only; the server build will automatically build `common` first via project references. Only run `npm run build` in `common/` manually if you are building workspaces separately.
 
 ## Docker Development
 
