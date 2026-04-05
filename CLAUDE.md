@@ -150,12 +150,16 @@ VITE_API_SERVER_URL=<your server URL>
 - `/journals/:journalId/entries/:entryId` - Entry view
 - `/settings/*` - Configuration pages for each component type
 
-## Docs Architecture
-**Backing Service:** Docusaurus v3
-**Purpose:** Documenting features in a human friendly, readable, manner.
+## Build Configuration
 
-**Routes:**
-- `/docs/*` - Page for each major component or feature.
+**TypeScript:** `common`, `server`, and `client` use the shared root `tsconfig.json` with project references (incremental builds). The `docs` workspace uses `docs/tsconfig.json`, extending `@docusaurus/tsconfig`.
+
+**Path Aliases:**
+- `common`: `@sproot/*` → `../common/dist/*`
+- `server`: `@sproot/*` → `../common/dist/*`
+- `client`: `@sproot/*` → `../common/src/*`, `../client/src/*`
+
+**Linting:** ESLint + TypeScript recommended rules, Prettier (100 char line width).
 
 ## Docker Images
 
