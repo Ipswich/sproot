@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBUser } from "@sproot/database/SDBUser";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { randomUUID } from "crypto";
@@ -48,7 +49,7 @@ export async function getTokenAsync(
     };
     return authenticationResponse;
   }
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let user: SDBUser[];
   try {
     user = await sprootDB.getUserAsync(request.body.username);

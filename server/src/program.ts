@@ -11,7 +11,7 @@ import { SprootDB } from "./database/SprootDB";
 import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
 import { OutputList } from "./outputs/list/OutputList";
-
+import { DI_KEYS } from "./utils/DependencyInjectionConstants";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationDataManager } from "./automation/AutomationDataManager";
@@ -33,19 +33,19 @@ export default async function setupAsync(): Promise<Express> {
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
   const knexConnection = await getKnexConnectionAsync();
-  app.set("knexConnection", knexConnection);
+  app.set(DI_KEYS.KnexConnection, knexConnection);
 
   const sprootDB = new SprootDB(knexConnection);
-  app.set("sprootDB", sprootDB);
-  app.set("logger", logger);
+  app.set(DI_KEYS.SprootDB, sprootDB);
+  app.set(DI_KEYS.Logger, logger);
 
   await defaultUserCheck(sprootDB, logger);
 
   const mdnsService = new MdnsService(logger);
-  app.set("bonjourService", mdnsService);
+  app.set(DI_KEYS.MdnsService, mdnsService);
 
   const journalService = new JournalService(sprootDB);
-  app.set("journalService", journalService);
+  app.set(DI_KEYS.JournalService, journalService);
 
   logger.info("Creating camera manager. . .");
   const cameraManager = await CameraManager.createInstanceAsync(
@@ -53,7 +53,7 @@ export default async function setupAsync(): Promise<Express> {
     process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
     logger,
   );
-  app.set("cameraManager", cameraManager);
+  app.set(DI_KEYS.CameraManager, cameraManager);
 
   logger.info("Creating sensor and output lists. . .");
   const sensorList = await SensorList.createInstanceAsync(
@@ -65,7 +65,7 @@ export default async function setupAsync(): Promise<Express> {
     Constants.CHART_DATA_POINT_INTERVAL,
     logger,
   );
-  app.set("sensorList", sensorList);
+  app.set(DI_KEYS.SensorList, sensorList);
   const outputList = await OutputList.createInstanceAsync(
     sprootDB,
     mdnsService,
@@ -75,10 +75,10 @@ export default async function setupAsync(): Promise<Express> {
     Constants.CHART_DATA_POINT_INTERVAL,
     logger,
   );
-  app.set("outputList", outputList);
+  app.set(DI_KEYS.OutputList, outputList);
 
   const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB, knexConnection);
-  app.set("systemStatusMonitor", systemStatusMonitor);
+  app.set(DI_KEYS.SystemStatusMonitor, systemStatusMonitor);
 
   logger.info("Initializing camera manager, and sensor and output lists. . .");
   await Promise.all([
@@ -88,7 +88,7 @@ export default async function setupAsync(): Promise<Express> {
   ]);
 
   const automationDataManager = new AutomationDataManager(sprootDB, outputList);
-  app.set("automationDataManager", automationDataManager);
+  app.set(DI_KEYS.AutomationDataManager, automationDataManager);
 
   // Cron Jobs
   const updateDevicesCronJob = createUpdateDevicesCronJob(
@@ -97,16 +97,16 @@ export default async function setupAsync(): Promise<Express> {
     outputList,
     logger,
   );
-  app.set("updateDevicesCronJob", updateDevicesCronJob);
+  app.set(DI_KEYS.UpdateDevicesCronJob, updateDevicesCronJob);
 
-  const automationsCronJuob = createRunAutomationsCronJob(sensorList, outputList, logger);
-  app.set("automationsCronJuob", automationsCronJuob);
+  const automationsCronJob = createRunAutomationsCronJob(sensorList, outputList, logger);
+  app.set(DI_KEYS.AutomationsCronJob, automationsCronJob);
 
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
-  app.set("updateDatabaseCronJob", updateDatabaseCronJob);
+  app.set(DI_KEYS.DatabaseUpdateCronJob, updateDatabaseCronJob);
 
   const backupCronJob = createBackupCronJob(sprootDB, logger);
-  app.set("backupCronJob", backupCronJob);
+  app.set(DI_KEYS.BackupCronJob, backupCronJob);
 
   app.use(cors());
   app.use(cookieParser());
@@ -128,29 +128,29 @@ export async function gracefulHaltAsync(
   app: Express,
   afterHalt?: () => Promise<void>,
 ) {
-  const logger = app.get("logger");
+  const logger = app.get(DI_KEYS.Logger);
   logger.info("Shutting down...");
   server.closeAllConnections();
   server.close(async () => {
-    app.get("bonjourService")[Symbol.dispose]();
+    app.get(DI_KEYS.MdnsService)[Symbol.dispose]();
     // Stop updating database and sensors
-    await app.get("updateDatabaseCronJob").stop();
-    await app.get("automationsCronJuob").stop();
-    await app.get("updateDevicesCronJob").stop();
-    await app.get("backupCronJob").stop();
+    await app.get(DI_KEYS.DatabaseUpdateCronJob).stop();
+    await app.get(DI_KEYS.AutomationsCronJob).stop();
+    await app.get(DI_KEYS.UpdateDevicesCronJob).stop();
+    await app.get(DI_KEYS.BackupCronJob).stop();
     try {
       // Cleanup Cameras
-      await app.get("cameraManager")[Symbol.asyncDispose]();
+      await app.get(DI_KEYS.CameraManager)[Symbol.asyncDispose]();
 
       // Cleanup sensors and turn off outputs
-      await app.get("sensorList")[Symbol.asyncDispose]();
-      await app.get("outputList")[Symbol.asyncDispose]();
+      await app.get(DI_KEYS.SensorList)[Symbol.asyncDispose]();
+      await app.get(DI_KEYS.OutputList)[Symbol.asyncDispose]();
 
       // Cleanup system status monitor
-      app.get("systemStatusMonitor")[Symbol.dispose]();
+      app.get(DI_KEYS.SystemStatusMonitor)[Symbol.dispose]();
 
       // Close database connection
-      await app.get("sprootDB")[Symbol.asyncDispose]();
+      await app.get(DI_KEYS.SprootDB)[Symbol.asyncDispose]();
     } catch (err) {
       //Dgaf, swallow anything, we're shutting down anyway.
       logger.error(err);

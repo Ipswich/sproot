@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import { ISprootDB } from "@sproot/database/ISprootDB";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -11,7 +12,7 @@ import { ISprootDB } from "@sproot/database/ISprootDB";
  * @returns
  */
 export async function getAsync(request: Request, response: Response) {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
   try {
     const automations = await sprootDB.getAutomationsAsync();
@@ -43,7 +44,7 @@ export async function getAsync(request: Request, response: Response) {
  * @returns
  */
 export async function getByIdAsync(request: Request, response: Response) {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
   if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
     automationResponse = {
@@ -101,7 +102,9 @@ export async function getByIdAsync(request: Request, response: Response) {
  * @returns
  */
 export async function addAsync(request: Request, response: Response) {
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
   let addAutomationResponse: SuccessResponse | ErrorResponse;
 
   const missingFields: Array<string> = [];
@@ -164,8 +167,10 @@ export async function addAsync(request: Request, response: Response) {
  * @returns
  */
 export async function updateAsync(request: Request, response: Response) {
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let updateAutomationResponse: SuccessResponse | ErrorResponse;
   if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
     updateAutomationResponse = {
@@ -234,8 +239,10 @@ export async function updateAsync(request: Request, response: Response) {
  * @returns
  */
 export async function deleteAsync(request: Request, response: Response) {
-  const automationDatamanager = request.app.get("automationDataManager") as AutomationDataManager;
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let deleteAutomationResponse: SuccessResponse | ErrorResponse;
 
   if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
@@ -267,7 +274,7 @@ export async function deleteAsync(request: Request, response: Response) {
       return deleteAutomationResponse;
     }
 
-    await automationDatamanager.deleteAutomationAsync(parseInt(request.params["automationId"]));
+    await automationDataManager.deleteAutomationAsync(parseInt(request.params["automationId"]));
 
     deleteAutomationResponse = {
       statusCode: 200,

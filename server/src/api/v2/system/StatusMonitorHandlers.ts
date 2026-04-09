@@ -1,12 +1,13 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../utils/DependencyInjectionConstants";
 import { SystemStatusMonitor } from "../../../system/StatusMonitor";
 
 export async function systemStatusMonitorHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const systemStatusMonitor = request.app.get("systemStatusMonitor") as SystemStatusMonitor;
+  const systemStatusMonitor = request.app.get(DI_KEYS.SystemStatusMonitor) as SystemStatusMonitor;
 
   try {
     const stats = await systemStatusMonitor.getStatusAsync();

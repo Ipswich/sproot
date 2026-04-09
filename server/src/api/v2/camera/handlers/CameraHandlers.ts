@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 import winston from "winston";
 
@@ -8,8 +9,8 @@ import winston from "winston";
  * @param response
  */
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
-  const logger = request.app.get("logger") as winston.Logger;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
     response.setHeader("Age", 0);
     response.setHeader("Cache-Control", "no-cache, private");
@@ -60,8 +61,8 @@ export async function clearAllImagesHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
-  const logger = request.app.get("logger") as winston.Logger;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
     const result = await cameraManager.clearAllImagesAsync();
     if (result) {
@@ -103,7 +104,7 @@ export async function clearAllImagesHandlerAsync(
  * @param response
  */
 export async function getLatestImageAsync(request: Request, response: Response): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const imageBuffer = await cameraManager.getLatestImageAsync();
   if (imageBuffer === null) {
     response.status(404).json({
@@ -131,8 +132,8 @@ export async function reconnectLivestreamAsync(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
-  const logger = request.app.get("logger") as winston.Logger;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
     await cameraManager.reconnectLivestreamAsync();
     response.status(200).json({
