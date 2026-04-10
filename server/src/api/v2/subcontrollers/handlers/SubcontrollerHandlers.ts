@@ -276,7 +276,7 @@ export async function deleteSubcontrollerAsync(
     }
     const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
     const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-    Promise.all([sensorList.regenerateAsync(), outputList.regenerateAsync()]);
+    void Promise.all([sensorList.regenerateAsync(), outputList.regenerateAsync()]);
 
     return {
       statusCode: 200,
