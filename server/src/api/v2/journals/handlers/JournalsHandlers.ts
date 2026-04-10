@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
-import JournalService from "../../../../journals/JournalService";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 
 /**
@@ -11,7 +12,7 @@ export async function getAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let journalId: number | undefined = undefined;
   if (req.params["journalId"]) {
     journalId = parseInt(req.params["journalId"], 10);
@@ -69,7 +70,7 @@ export async function addAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   const title = req.body["title"] as string | undefined;
   const description = req.body["description"] as string | undefined;
   const icon = req.body["icon"] as string | undefined;
@@ -145,7 +146,7 @@ export async function updateAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
   if (isNaN(journalId)) {
@@ -290,7 +291,7 @@ export async function deleteAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
   if (isNaN(journalId)) {
@@ -349,7 +350,7 @@ export async function addTagAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const tagId = parseInt(req.body["tagId"] ?? "", 10);
 
@@ -447,7 +448,7 @@ export async function removeTagAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const tagId = parseInt(req.params["tagId"] ?? "", 10);
 

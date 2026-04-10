@@ -1,9 +1,10 @@
-import { SensorList } from "../../../../sensors/list/SensorList";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { SensorList } from "../../../../sensors/list/SensorList";
 
 /**
  * Possible statusCodes: 200, 404
@@ -12,7 +13,7 @@ import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models";
  * @returns
  */
 export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
-  const sensorList = request.app.get("sensorList") as SensorList;
+  const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let getSensorResponse: SuccessResponse | ErrorResponse;
 
   if (request.params["sensorId"] !== undefined) {
@@ -59,8 +60,8 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const sensorList = request.app.get("sensorList") as SensorList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let addSensorResponse: SuccessResponse | ErrorResponse;
 
   const newSensor = {
@@ -148,8 +149,8 @@ export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const sensorList = request.app.get("sensorList") as SensorList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let updateSensorResponse: SuccessResponse | ErrorResponse;
 
   const sensorId = parseInt(request.params["sensorId"] ?? "");
@@ -231,8 +232,8 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const sensorList = request.app.get("sensorList") as SensorList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let deleteSensorResponse: SuccessResponse | ErrorResponse;
 
   const sensorId = parseInt(request.params["sensorId"] ?? "");

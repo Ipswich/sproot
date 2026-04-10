@@ -1,6 +1,7 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { toDbDate } from "../../../../utils/dateUtils";
@@ -15,7 +16,7 @@ export async function setControlModeAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const outputList = request.app.get("outputList") as OutputList;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const outputId = String(request.params["outputId"]);
   const output = outputList.outputData[outputId];
   let controlModeResponse: SuccessResponse | ErrorResponse;
@@ -85,7 +86,7 @@ export async function setControlModeAsync(
  * @returns
  */
 export async function setManualStateAsync(request: Request, response: Response) {
-  const outputList = request.app.get("outputList") as OutputList;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const outputId = String(request.params["outputId"]);
   const value = parseInt(request.body["value"]);
   const output = outputList.outputData[outputId];

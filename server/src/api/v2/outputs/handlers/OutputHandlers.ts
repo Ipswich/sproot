@@ -1,3 +1,4 @@
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
@@ -11,7 +12,7 @@ import { Request, Response } from "express";
  * @returns
  */
 export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
-  const outputList = request.app.get("outputList") as OutputList;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
   if (request.params["outputId"] !== undefined) {
@@ -57,8 +58,8 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const outputList = request.app.get("outputList") as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let addOutputResponse: SuccessResponse | ErrorResponse;
 
   const newOutput = {
@@ -143,8 +144,8 @@ export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const outputList = request.app.get("outputList") as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
   const outputId = parseInt(request.params["outputId"] ?? "");
@@ -226,8 +227,8 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const outputList = request.app.get("outputList") as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 
   const outputId = parseInt(request.params["outputId"] ?? "");
