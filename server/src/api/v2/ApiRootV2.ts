@@ -1,4 +1,5 @@
 import { Express, Request, Response, NextFunction } from "express";
+import { DI_KEYS } from "../../utils/DependencyInjectionConstants";
 import * as OpenApiValidator from "express-openapi-validator";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -33,7 +34,7 @@ const authenticateMiddleware = authorize(
 );
 
 function ApiRootV2(app: Express) {
-  const logger = app.get("logger");
+  const logger = app.get(DI_KEYS.Logger);
 
   app.use(
     "/api/v2/docs",

@@ -2,12 +2,13 @@ import { SDBDeviceZone } from "@sproot/sproot-common/dist/database/SDBDeviceZone
 import { Request, Response } from "express";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 export async function getAsync(
   req: Request,
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB: ISprootDB = req.app.get("sprootDB");
+  const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
   try {
     const results = await sprootDB.getDeviceZonesAsync();
@@ -36,7 +37,7 @@ export async function addAsync(
   req: Request,
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB: ISprootDB = req.app.get("sprootDB");
+  const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
   try {
     const deviceZoneData: Partial<SDBDeviceZone> = req.body;
@@ -81,7 +82,7 @@ export async function updateAsync(
   req: Request,
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB: ISprootDB = req.app.get("sprootDB");
+  const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
   try {
     const { deviceZoneId } = req.params;
@@ -155,7 +156,7 @@ export async function deleteAsync(
   req: Request,
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB: ISprootDB = req.app.get("sprootDB");
+  const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
   try {
     const { deviceZoneId } = req.params;

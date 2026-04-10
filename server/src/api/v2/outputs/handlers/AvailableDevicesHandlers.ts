@@ -1,5 +1,6 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 
@@ -7,7 +8,7 @@ export async function getAvailableDevices(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const outputList = request.app.get("outputList") as OutputList;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let getAvailableIdentifiersResponse: SuccessResponse | ErrorResponse;
 
   const errorDetails: string[] = [];

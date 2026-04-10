@@ -1,5 +1,6 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 
@@ -7,7 +8,7 @@ export function readingTypesHandler(
   request: Request,
   response: Response,
 ): SuccessResponse | ErrorResponse {
-  const sensorList = request.app.get("sensorList") as SensorList;
+  const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const readingTypes: Partial<Record<ReadingType, string>> = {} as Partial<
     Record<ReadingType, string>
   >;

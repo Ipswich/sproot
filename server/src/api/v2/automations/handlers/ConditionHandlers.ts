@@ -16,6 +16,7 @@ import { MonthCondition } from "../../../../automation/conditions/MonthCondition
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { DateRangeCondition } from "../../../../automation/conditions/DateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -26,7 +27,7 @@ export async function getAllAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getAllConditionsResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -132,7 +133,7 @@ export async function getByTypeAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -237,7 +238,7 @@ export async function getOneOfByTypeAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -365,8 +366,10 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
   let addConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -444,7 +447,7 @@ export async function addAsync(
         if (request.body.sensorId == null || isNaN(request.body.sensorId)) {
           invalidFields.push("Invalid or missing sensor Id.");
         } else if (
-          (request.app.get("sensorList") as SensorList).sensors[request.body.sensorId] == null
+          (request.app.get(DI_KEYS.SensorList) as SensorList).sensors[request.body.sensorId] == null
         ) {
           invalidFields.push("Sensor does not exist.");
         }
@@ -485,7 +488,7 @@ export async function addAsync(
         }
         if (request.body.outputId == null || isNaN(request.body.outputId)) {
           invalidFields.push("Invalid or missing output Id.");
-        } else if (request.app.get("outputList").outputs[request.body.outputId] == null) {
+        } else if (request.app.get(DI_KEYS.OutputList).outputs[request.body.outputId] == null) {
           invalidFields.push("Output does not exist.");
         }
         if (invalidFields.length > 0) {
@@ -672,8 +675,10 @@ export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
   let updateConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -814,7 +819,7 @@ export async function updateAsync(
         if (isNaN(condition.sensorId)) {
           invalidDetails.push("Invalid sensor Id.");
         } else if (
-          (request.app.get("sensorList") as SensorList).sensors[condition.sensorId] == null
+          (request.app.get(DI_KEYS.SensorList) as SensorList).sensors[condition.sensorId] == null
         ) {
           invalidDetails.push("Sensor does not exist.");
         }
@@ -853,7 +858,7 @@ export async function updateAsync(
         }
         if (isNaN(condition.outputId)) {
           invalidDetails.push("Invalid output Id.");
-        } else if (request.app.get("outputList").outputs[condition.outputId] == null) {
+        } else if (request.app.get(DI_KEYS.OutputList).outputs[condition.outputId] == null) {
           invalidDetails.push("Output does not exist.");
         }
         if (invalidDetails.length > 0) {
@@ -1029,8 +1034,10 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
   let deleteConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
