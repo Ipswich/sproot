@@ -1,6 +1,7 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import winston from "winston";
+import { DI_KEYS } from "../../../utils/DependencyInjectionConstants";
 
 export function powerOffHandler(
   request: Request,
@@ -14,7 +15,7 @@ export function powerOffHandler(
     ...response.locals["defaultProperties"],
   };
 
-  const logger = request.app.get("logger") as winston.Logger;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   logger.info("Shutdown request received! System is powering off in 3 seconds.");
   setTimeout(async () => {
     await request.app.get("gracefulHaltAsync")();

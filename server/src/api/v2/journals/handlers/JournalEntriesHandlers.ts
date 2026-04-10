@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
-import JournalService from "../../../../journals/JournalService";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { toDbDate, isoToDb } from "../../../../utils/dateUtils";
@@ -13,7 +14,7 @@ export async function getByJournalIdAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let journalId: number | undefined = undefined;
   let withContent = true;
 
@@ -98,7 +99,7 @@ export async function getByEntryIdAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let entryId: number | undefined = undefined;
   let withContent = true;
   const badRequests: string[] = [];
@@ -181,7 +182,7 @@ export async function addAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
   const content = req.body["content"] as string | undefined;
   const title = req.body["title"] as string | undefined;
@@ -270,7 +271,7 @@ export async function updateAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
 
@@ -369,7 +370,7 @@ export async function deleteAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
 
@@ -428,7 +429,7 @@ export async function addTagAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
   const tagId = parseInt(req.body["tagId"] ?? "", 10);
@@ -526,7 +527,7 @@ export async function removeTagAsync(
   res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
-  const journalService = req.app.get("journalService") as JournalService;
+  const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
   const tagId = parseInt(req.params["tagId"] ?? "", 10);

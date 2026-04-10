@@ -3,6 +3,7 @@ import { FirmwareManager } from "../../../../system/FirmwareManager";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 export async function getESP32ManifestAsync(
   req: Request,
@@ -220,7 +221,7 @@ export async function updateESP32FirmwareOTAAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   // const mdnsService = request.app.get("mdnsService") as MdnsService;
   const { deviceId } = request.params;
   if (deviceId != undefined && isNaN(parseInt(deviceId, 10))) {

@@ -3,6 +3,7 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -13,7 +14,7 @@ export async function getAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   try {
@@ -66,7 +67,7 @@ export async function getByIdAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
@@ -133,9 +134,11 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const outputList = request.app.get("outputList") as OutputList;
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.body["automationId"] ?? "");
@@ -234,8 +237,10 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationDataManager = request.app.get(
+    DI_KEYS.AutomationDataManager,
+  ) as AutomationDataManager;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
