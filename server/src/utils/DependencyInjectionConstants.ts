@@ -7,7 +7,7 @@ export const DI_KEYS = {
   AutomationDataManager: "automationDataManager",
   JournalService: "journalService",
   SystemStatusMonitor: "systemStatusMonitor",
-  MdnsService: "bonjourService",
+  MdnsService: "mdnsService",
 
   // Infrastructure
   KnexConnection: "knexConnection",
