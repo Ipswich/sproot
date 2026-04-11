@@ -12,7 +12,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
   readonly boardRecord: Record<string, any> = {};
   readonly outputs: Record<string, OutputBase> = {};
   readonly usedPins: Record<string, string[] | Record<string, string[]>> = {};
-  protected automationService: AutomationService; // Replace with actual type when available
+  protected automationService: AutomationService;
   protected sprootDB: ISprootDB;
   protected frequency: number;
   protected maxCacheSize: number;

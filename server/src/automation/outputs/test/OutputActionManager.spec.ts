@@ -14,6 +14,7 @@ describe("OutputActionManager.ts tests", () => {
         error: () => {},
         debug: () => {},
         warn: () => {},
+        verbose: () => {},
         startTimer: () => ({ done: () => {} }) as winston.Profiler,
       }) as unknown as winston.Logger,
   );
@@ -53,7 +54,7 @@ describe("OutputActionManager.ts tests", () => {
       assert.equal(result, 75);
     });
 
-    it("should return undefined when no automations trigger", async () => {
+    it("should return 0 (off) when no automations trigger", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
@@ -69,10 +70,10 @@ describe("OutputActionManager.ts tests", () => {
       const event = new AutomationEvent(new Map());
       const result = await manager.handleAutomationEvent(event);
 
-      assert.isUndefined(result);
+      assert.equal(result, 0);
     });
 
-    it("should return undefined when collision detected (multiple values)", async () => {
+    it("should return 0 (off) when collision detected (multiple values)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
@@ -109,7 +110,7 @@ describe("OutputActionManager.ts tests", () => {
       const event = new AutomationEvent(triggeredAutomations);
       const result = await manager.handleAutomationEvent(event);
 
-      assert.isUndefined(result);
+      assert.equal(result, 0);
     });
 
     it("should return value when multiple automations trigger with same value", async () => {

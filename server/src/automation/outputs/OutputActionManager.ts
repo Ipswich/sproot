@@ -54,7 +54,7 @@ export class OutputActionManager {
    */
   async handleAutomationEvent(
     event: AutomationEvent,
-    now: Date = new Date(),
+    now: Date = event.timestamp,
   ): Promise<number | undefined> {
     const nowTimestamp = now.getTime();
 
@@ -91,7 +91,7 @@ export class OutputActionManager {
     }
 
     if (triggeredActions.length === 0) {
-      return undefined; // No actions to take
+      return 0; // No automations triggered, default to off
     }
 
     // Detect collisions: multiple automations with different values
@@ -99,19 +99,18 @@ export class OutputActionManager {
     for (const { value } of triggeredActions) {
       valueCounts.set(value, (valueCounts.get(value) || 0) + 1);
     }
-    const hasCollision = valueCounts.size > 1;
 
-    // Collision detected - return undefined to prevent state change
-    if (hasCollision) {
-      this.#logger.warn(
+    // Collision detected, default to off
+    if (valueCounts.size > 1) {
+      this.#logger.verbose(
         `Collision detected on output ${this.#outputId}: ` +
           `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`,
       );
-      return undefined;
+      return 0;
     }
 
     // No collision - update last run time and return the single value
     this.#lastRunAt = nowTimestamp;
-    return triggeredActions.length > 0 ? triggeredActions[0]!.value : undefined;
+    return triggeredActions.length > 0 ? triggeredActions[0]!.value : 0;
   }
 }

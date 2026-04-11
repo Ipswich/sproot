@@ -146,17 +146,26 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
 
     // Register as event listener for triggered automations
     const listener = (event: AutomationEvent) => {
-      this.#actionManager.handleAutomationEvent(event).then(async (actionValue) => {
-        await this.setStateAsync({
-          value: actionValue ?? 0, // default to off if no action or collision
-          controlMode: ControlMode.automatic,
-          logTime: toDbDate(),
-        } as SDBOutputState);
+      this.#actionManager
+        .handleAutomationEvent(event)
+        .then(async (actionValue) => {
+          if (actionValue === undefined) {
+            return; // No action to take (output in timeout)
+          }
 
-        if (this.controlMode === ControlMode.automatic) {
-          await this.executeStateAsync();
-        }
-      });
+          await this.setStateAsync({
+            value: actionValue ?? 0, // default to off if no action or collision
+            controlMode: ControlMode.automatic,
+            logTime: toDbDate(),
+          } as SDBOutputState);
+
+          if (this.controlMode === ControlMode.automatic) {
+            await this.executeStateAsync();
+          }
+        })
+        .catch((error) => {
+          this.logger.error(`Error handling automation event for output ${this.id} - ${error}`);
+        });
     };
     this.automationService.addListener(TRIGGERED_AUTOMATIONS_EVENT, listener);
 
