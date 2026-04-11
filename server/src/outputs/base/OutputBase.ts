@@ -7,12 +7,12 @@ import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
-import OutputAutomationManager from "../../automation/outputs/OutputAutomationManager";
-import { SensorList } from "../../sensors/list/SensorList";
-import { OutputList } from "../list/OutputList";
-import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import { AutomationService } from "../../automation/AutomationService";
+import { OutputActionManager } from "../../automation/outputs/OutputActionManager";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { toDbDate } from "../../utils/dateUtils";
+import { TRIGGERED_AUTOMATIONS_EVENT } from "../../utils/EventConstants";
+import { AutomationEvent } from "../../automation/AutomationEvent";
 
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
@@ -28,18 +28,21 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   state: OutputState;
   color: string;
   automationTimeout: number;
+  readonly automationService: AutomationService;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
   #cache: OutputCache;
   #initialCacheLookback: number;
   #chartData: OutputChartData;
   #chartDataPointInterval: number;
-  #automationManager: OutputAutomationManager;
+  #actionManager!: OutputActionManager;
+  #actionListenerRemoval: (() => void) | null = null;
   #updateMissCount = 0;
   #isExecuting = false;
 
   constructor(
     sdbOutput: SDBOutput,
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -60,11 +63,11 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.state = new OutputState(sdbOutput.id, sprootDB);
     this.color = sdbOutput.color;
     this.automationTimeout = sdbOutput.automationTimeout;
+    this.automationService = automationService;
     this.sprootDB = sprootDB;
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
-    this.#automationManager = new OutputAutomationManager(sprootDB, logger);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
@@ -107,7 +110,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       color,
       state,
       automationTimeout,
-    } as unknown as IOutputBase;
+    };
   }
 
   /**
@@ -115,14 +118,53 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
    * (respecting the current ControlMode).
    */
   abstract executeStateAsync(forceExecution?: boolean): Promise<void>;
-  abstract [Symbol.asyncDispose](): Promise<void>;
 
-  /** Initializes all of the data for this output */
+  /**
+   * Dispose of the output, cleaning up event listeners.
+   */
+  async [Symbol.asyncDispose](): Promise<void> {
+    // Remove event listener to prevent memory leaks
+    if (this.#actionListenerRemoval) {
+      this.#actionListenerRemoval();
+      this.#actionListenerRemoval = null;
+    }
+  }
+
+  /**
+   * Initialize the output, including creating the action manager and registering as an event listener.
+   */
   protected async initializeAsync(): Promise<this> {
     await this.state.loadAsync();
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
-    await this.#automationManager.loadAsync(this.parentOutputId ?? this.id);
+    this.#actionManager = await OutputActionManager.createInstanceAsync(
+      this.parentOutputId ?? this.id,
+      this.sprootDB,
+      this.logger,
+      this.automationTimeout,
+    );
+
+    // Register as event listener for triggered automations
+    const listener = (event: AutomationEvent) => {
+      this.#actionManager.handleAutomationEvent(event).then(async (actionValue) => {
+        await this.setStateAsync({
+          value: actionValue ?? 0, // default to off if no action or collision
+          controlMode: ControlMode.automatic,
+          logTime: toDbDate(),
+        } as SDBOutputState);
+
+        if (this.controlMode === ControlMode.automatic) {
+          await this.executeStateAsync();
+        }
+      });
+    };
+    this.automationService.addListener(TRIGGERED_AUTOMATIONS_EVENT, listener);
+
+    // Store removal function to clean up listener on dispose
+    this.#actionListenerRemoval = () => {
+      this.automationService.removeListener(TRIGGERED_AUTOMATIONS_EVENT, listener);
+    };
+
     return this;
   }
 
@@ -134,6 +176,11 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   updateColor(color: string): void {
     this.color = color;
     this.loadChartData();
+  }
+
+  updateAutomationTimeout(timeoutSeconds: number): void {
+    this.automationTimeout = timeoutSeconds;
+    this.#actionManager.automationTimeout = timeoutSeconds;
   }
 
   /**
@@ -169,8 +216,11 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     return this.#chartData.get();
   }
 
-  getAutomations(): Record<string, OutputAutomation> {
-    return this.#automationManager.automations;
+  /**
+   * Reload actions for this output.
+   */
+  async reloadActionsAsync(): Promise<void> {
+    await this.#actionManager.reloadActionsAsync();
   }
 
   async updateDataStoresAsync(): Promise<void> {
@@ -204,30 +254,6 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   async updateControlModeAsync(controlMode: ControlMode): Promise<void> {
     this.state.updateControlMode(controlMode);
     await this.executeStateAsync();
-  }
-
-  async runAutomationsAsync(
-    sensorList: SensorList,
-    outputList: OutputList,
-    now: Date,
-  ): Promise<void> {
-    await this.#automationManager.loadAsync(this.parentOutputId ?? this.id);
-    const result = this.#automationManager.evaluate(
-      sensorList,
-      outputList,
-      this.automationTimeout,
-      now,
-    );
-
-    await this.setStateAsync({
-      value: result.value ?? 0,
-      controlMode: ControlMode.automatic,
-      logTime: toDbDate(),
-    } as SDBOutputState);
-
-    if (this.controlMode === ControlMode.automatic) {
-      await this.executeStateAsync();
-    }
   }
 
   protected addCurrentStateToCache(): void {

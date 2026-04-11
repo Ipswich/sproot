@@ -1,3 +1,7 @@
+import { EventEmitter } from "events";
+import { TRIGGERED_AUTOMATIONS_EVENT } from "../utils/EventConstants";
+import { AutomationEvent, AutomationEventPayload } from "./AutomationEvent";
+import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
@@ -9,23 +13,94 @@ import { ReadingType } from "@sproot/sensors/ReadingType";
 import { WeekdayCondition } from "./conditions/WeekdayCondition";
 import { MonthCondition } from "./conditions/MonthCondition";
 import { DateRangeCondition } from "./conditions/DateRangeCondition";
+import { SensorList } from "../sensors/list/SensorList";
 
 /**
- * This class serves as an interface between changes in automation data and the things
- * that depend on that data. Effectively, it serves as a way to ensure that when a change
- * in an automation or condition is made, its dependents reflect those changes.
+ * Central automation evaluator and event emitter.
+ * Loads all automations from the database, evaluates them, and emits events when they trigger.
  */
-class AutomationDataManager {
+class AutomationService extends EventEmitter {
+  #automations: Map<number, Automation>; // Key: automationId
   #sprootDB: ISprootDB;
-  #outputList: OutputList;
 
-  constructor(sprootDB: ISprootDB, outputList: OutputList) {
-    this.#sprootDB = sprootDB;
-    this.#outputList = outputList;
+  static async createInstanceAsync(sprootDB: ISprootDB): Promise<AutomationService> {
+    const service = new AutomationService(sprootDB);
+    await service.loadAllAutomationsAsync();
+    return service;
   }
 
+  private constructor(sprootDB: ISprootDB) {
+    super();
+    this.#sprootDB = sprootDB;
+    this.#automations = new Map();
+  }
+
+  /**
+   * Load all automations from the database.
+   */
+  async loadAllAutomationsAsync(): Promise<void> {
+    const rawAutomations = await this.#sprootDB.getAutomationsAsync();
+    this.#automations = new Map();
+
+    for (const automation of rawAutomations) {
+      this.#automations.set(
+        automation.automationId,
+        new Automation(
+          automation.automationId,
+          automation.name,
+          automation.operator,
+          automation.enabled,
+          this.#sprootDB,
+        ),
+      );
+    }
+  }
+
+  /**
+   * Central evaluation entry point - evaluates all automations and emits events.
+   */
+  async evaluateAllAutomationsAsync(
+    sensorList: SensorList,
+    outputList: OutputList,
+    now: Date,
+  ): Promise<void> {
+    // Evaluate each automation once
+    const evaluatedAutomations: Array<{
+      automation: Automation;
+      payload: AutomationEventPayload;
+    }> = [];
+
+    for (const [_automationId, automation] of this.#automations.entries()) {
+      if (!automation.enabled) continue;
+
+      const result = await automation.evaluate(sensorList, outputList, now);
+      if (result.result) {
+        evaluatedAutomations.push({
+          automation,
+          payload: {
+            automationId: automation.id,
+            automationName: automation.name,
+            operator: automation.operator,
+            conditions: result.conditions,
+          },
+        });
+      }
+    }
+
+    // Emit single AutomationEvent with all triggered automations
+    const triggeredAutomationsMap = new Map(
+      evaluatedAutomations.map((e) => [e.automation.id, e.payload]),
+    );
+
+    if (triggeredAutomationsMap.size > 0) {
+      this.emit(TRIGGERED_AUTOMATIONS_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
+    }
+  }
+
+  // CRUD methods
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
     const resultId = await this.#sprootDB.addAutomationAsync(name, operator);
+    await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
@@ -192,21 +267,18 @@ class AutomationDataManager {
     await this.#postAutomationChangeFunctionAsync();
   }
 
-  // Output actions
-  async addOutputActionAsync(automationId: number, outputId: number, value: number) {
-    const result = this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
-    await this.#outputList.regenerateAsync();
-    return result;
+  // Output actions - Maybe extract this to a separate class to trigger outputList to update its in-memory data instead of hitting the DB on every event evaluation?
+  addOutputActionAsync(automationId: number, outputId: number, value: number) {
+    return this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
   }
 
-  async deleteOutputActionAsync(outputActionId: number) {
-    await this.#sprootDB.deleteOutputActionAsync(outputActionId);
-    await this.#outputList.regenerateAsync();
+  deleteOutputActionAsync(outputActionId: number) {
+    return this.#sprootDB.deleteOutputActionAsync(outputActionId);
   }
 
-  async #postAutomationChangeFunctionAsync() {
-    await this.#outputList.regenerateAsync();
+  #postAutomationChangeFunctionAsync() {
+    return this.loadAllAutomationsAsync();
   }
 }
 
-export { AutomationDataManager };
+export { AutomationService };

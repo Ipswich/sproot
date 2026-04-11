@@ -14,14 +14,14 @@ import { OutputList } from "./outputs/list/OutputList";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
-import { AutomationDataManager } from "./automation/AutomationDataManager";
+import { AutomationService } from "./automation/AutomationService";
 import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
 import { JournalService } from "./journals/JournalService";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
 import {
   createDatabaseUpdateCronJob,
-  createRunAutomationsCronJob,
+  createAutomationsCronJob,
   createUpdateDevicesCronJob,
   createBackupCronJob,
 } from "./system/CronJobs";
@@ -47,6 +47,9 @@ export default async function setupAsync(): Promise<Express> {
   const journalService = new JournalService(sprootDB);
   app.set(DI_KEYS.JournalService, journalService);
 
+  const automationService = await AutomationService.createInstanceAsync(sprootDB);
+  app.set(DI_KEYS.AutomationService, automationService);
+
   logger.info("Creating camera manager. . .");
   const cameraManager = await CameraManager.createInstanceAsync(
     sprootDB,
@@ -67,6 +70,7 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.SensorList, sensorList);
   const outputList = await OutputList.createInstanceAsync(
+    automationService,
     sprootDB,
     mdnsService,
     Constants.MAX_CACHE_SIZE,
@@ -87,9 +91,6 @@ export default async function setupAsync(): Promise<Express> {
     outputList.regenerateAsync(),
   ]);
 
-  const automationDataManager = new AutomationDataManager(sprootDB, outputList);
-  app.set(DI_KEYS.AutomationDataManager, automationDataManager);
-
   // Cron Jobs
   const updateDevicesCronJob = createUpdateDevicesCronJob(
     cameraManager,
@@ -99,7 +100,12 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.UpdateDevicesCronJob, updateDevicesCronJob);
 
-  const automationsCronJob = createRunAutomationsCronJob(sensorList, outputList, logger);
+  const automationsCronJob = createAutomationsCronJob(
+    automationService,
+    sensorList,
+    outputList,
+    logger,
+  );
   app.set(DI_KEYS.AutomationsCronJob, automationsCronJob);
 
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);

@@ -1,0 +1,272 @@
+import { OutputActionManager } from "../OutputActionManager";
+import { OutputAction } from "../OutputAction";
+import { AutomationEvent } from "../../AutomationEvent";
+import { assert } from "chai";
+import sinon from "sinon";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
+
+describe("OutputActionManager.ts tests", () => {
+  sinon.stub(winston, "createLogger").callsFake(
+    () =>
+      ({
+        info: () => {},
+        error: () => {},
+        debug: () => {},
+        warn: () => {},
+        startTimer: () => ({ done: () => {} }) as winston.Profiler,
+      }) as unknown as winston.Logger,
+  );
+  const mockLogger = winston.createLogger();
+
+  describe("handleAutomationEvent", () => {
+    it("should return the action value with a single automation triggers", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+        },
+      ]);
+
+      const manager = await OutputActionManager.createInstanceAsync(
+        1,
+        sprootDB,
+        mockLogger,
+        60, // 60 second timeout
+      );
+
+      // Create event with triggered automation
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "testAutomation",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      const event = new AutomationEvent(triggeredAutomations);
+      const result = await manager.handleAutomationEvent(event);
+
+      assert.equal(result, 75);
+    });
+
+    it("should return undefined when no automations trigger", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+        },
+      ]);
+      const manager = await OutputActionManager.createInstanceAsync(1, sprootDB, mockLogger, 60);
+
+      // Create event with no triggered automations
+      const event = new AutomationEvent(new Map());
+      const result = await manager.handleAutomationEvent(event);
+
+      assert.isUndefined(result);
+    });
+
+    it("should return undefined when collision detected (multiple values)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 50,
+        },
+        {
+          id: 2,
+          automationId: 2,
+          outputId: 1,
+          value: 75,
+        },
+      ]);
+
+      const manager = await OutputActionManager.createInstanceAsync(1, sprootDB, mockLogger, 60);
+
+      // Create event with both automations triggered
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "automation1",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+      triggeredAutomations.set(2, {
+        automationId: 2,
+        automationName: "automation2",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      const event = new AutomationEvent(triggeredAutomations);
+      const result = await manager.handleAutomationEvent(event);
+
+      assert.isUndefined(result);
+    });
+
+    it("should return value when multiple automations trigger with same value", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 50,
+        },
+        {
+          id: 2,
+          automationId: 2,
+          outputId: 1,
+          value: 50,
+        },
+      ]);
+      const manager = await OutputActionManager.createInstanceAsync(1, sprootDB, mockLogger, 60);
+
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "automation1",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+      triggeredAutomations.set(2, {
+        automationId: 2,
+        automationName: "automation2",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      const event = new AutomationEvent(triggeredAutomations);
+      const result = await manager.handleAutomationEvent(event);
+
+      assert.equal(result, 50);
+    });
+
+    it("should respect timeout (not process event too soon)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+        },
+      ]);
+      const manager = await OutputActionManager.createInstanceAsync(
+        1,
+        sprootDB,
+        mockLogger,
+        60, // 60 second timeout
+      );
+
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "testAutomation",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      const event = new AutomationEvent(triggeredAutomations);
+
+      // First call should succeed
+      const result1 = await manager.handleAutomationEvent(event);
+      assert.equal(result1, 75);
+
+      // Second call immediately should be blocked by timeout
+      const result2 = await manager.handleAutomationEvent(event);
+      assert.isUndefined(result2);
+    });
+
+    it("should reload actions on each event", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 50,
+        },
+      ]);
+      const manager = await OutputActionManager.createInstanceAsync(1, sprootDB, mockLogger, 0);
+
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "testAutomation",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      const event = new AutomationEvent(triggeredAutomations);
+
+      // First call with value 50
+      const result1 = await manager.handleAutomationEvent(event);
+      assert.equal(result1, 50);
+
+      // Change the action value
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 75,
+        },
+      ]);
+
+      // Second call should see updated value
+      const result2 = await manager.handleAutomationEvent(event);
+      assert.equal(result2, 75);
+    });
+  });
+
+  describe("createInstanceAsync", () => {
+    it("should create manager and load actions", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+
+      sprootDB.getOutputActionsByOutputIdAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          outputId: 1,
+          value: 50,
+        },
+        {
+          id: 2,
+          automationId: 2,
+          outputId: 1,
+          value: 75,
+        },
+      ]);
+
+      const manager = await OutputActionManager.createInstanceAsync(1, sprootDB, mockLogger, 60);
+
+      // Manager should be created successfully
+      assert.isNotNull(manager);
+    });
+  });
+
+  describe("OutputAction", () => {
+    it("should create action with correct properties", () => {
+      const action = new OutputAction({
+        id: 1,
+        automationId: 1,
+        outputId: 1,
+        value: 75,
+      });
+
+      assert.equal(action.id, 1);
+      assert.equal(action.automationId, 1);
+      assert.equal(action.outputId, 1);
+      assert.equal(action.value, 75);
+    });
+  });
+});

@@ -8,6 +8,7 @@ import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDev
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { EventEmitter } from "events";
 import { toDbDate } from "../utils/dateUtils";
+import { AutomationService } from "../automation/AutomationService";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
   readonly plugRegistry = new PlugRegistry();
@@ -15,6 +16,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   #client: Client;
 
   constructor(
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -24,6 +26,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     connectionTimeout: number = 5000,
   ) {
     super(
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -120,6 +123,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       this.outputs[output.id] = await TPLinkPlug.createInstanceAsync(
         this.plugRegistry,
         output,
+        this.automationService,
         this.sprootDB,
         this.maxCacheSize,
         this.initialCacheLookback,
@@ -142,7 +146,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     return this.outputs[output.id];
   }
 
-  async [Symbol.asyncDispose](): Promise<void> {
+  override async [Symbol.asyncDispose](): Promise<void> {
     for (const output of Object.values(this.outputs)) {
       await output[Symbol.asyncDispose]();
     }
@@ -160,6 +164,7 @@ class TPLinkPlug extends OutputBase {
   static createInstanceAsync(
     plugRegistry: PlugRegistry,
     output: SDBOutput,
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -170,6 +175,7 @@ class TPLinkPlug extends OutputBase {
     const tplinkSmartPlug = new TPLinkPlug(
       plugRegistry,
       output,
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -183,6 +189,7 @@ class TPLinkPlug extends OutputBase {
   private constructor(
     plugRegistry: PlugRegistry,
     output: SDBOutput,
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -192,6 +199,7 @@ class TPLinkPlug extends OutputBase {
   ) {
     super(
       output,
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -233,7 +241,8 @@ class TPLinkPlug extends OutputBase {
     }, forceExecution);
   }
 
-  override [Symbol.asyncDispose](): Promise<void> {
+  override async [Symbol.asyncDispose](): Promise<void> {
+    await super[Symbol.asyncDispose]();
     this.tplinkPlug?.removeAllListeners("power-on");
     this.tplinkPlug?.removeAllListeners("power-off");
 
@@ -243,7 +252,6 @@ class TPLinkPlug extends OutputBase {
         this.logger.error(`Disposal error turning off TPLink Smart Plug ${this.id}`);
       });
     }
-    return Promise.resolve();
   }
 
   #onPlugAdded = (plug: Plug) => {

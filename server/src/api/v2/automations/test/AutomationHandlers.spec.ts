@@ -11,8 +11,7 @@ import {
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
-import { OutputList } from "../../../../outputs/list/OutputList";
+import { AutomationService } from "../../../../automation/AutomationService";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 describe("AutomationHandlers", () => {
@@ -247,8 +246,8 @@ describe("AutomationHandlers", () => {
         },
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const outputList = sinon.createStubInstance(OutputList);
-      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationsAsync.resolves([]);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB);
       sprootDB.addAutomationAsync.resolves(1);
 
       const mockRequest = {
@@ -257,8 +256,8 @@ describe("AutomationHandlers", () => {
             switch (_dependency) {
               case "sprootDB":
                 return sprootDB;
-              case "automationDataManager":
-                return automationDataManager;
+              case "automationService":
+                return automationService;
               default:
                 return null;
             }
@@ -333,8 +332,8 @@ describe("AutomationHandlers", () => {
         },
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const outputList = sinon.createStubInstance(OutputList);
-      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationsAsync.resolves([]);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB);
       sprootDB.addAutomationAsync.rejects(new Error("Failed to add automation to database."));
 
       const mockRequest = {
@@ -343,8 +342,8 @@ describe("AutomationHandlers", () => {
             switch (_dependency) {
               case "sprootDB":
                 return sprootDB;
-              case "automationDataManager":
-                return automationDataManager;
+              case "automationService":
+                return automationService;
               default:
                 return null;
             }
@@ -375,12 +374,11 @@ describe("AutomationHandlers", () => {
         },
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const outputList = sinon.createStubInstance(OutputList);
-      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
-      sprootDB.updateAutomationAsync.resolves();
+      sprootDB.getAutomationsAsync.resolves([]);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -388,8 +386,8 @@ describe("AutomationHandlers", () => {
             switch (_dependency) {
               case "sprootDB":
                 return sprootDB;
-              case "automationDataManager":
-                return automationDataManager;
+              case "automationService":
+                return automationService;
               default:
                 return null;
             }
@@ -528,11 +526,11 @@ describe("AutomationHandlers", () => {
         },
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const outputList = sinon.createStubInstance(OutputList);
-      const automationDataManager = new AutomationDataManager(sprootDB, outputList);
+      sprootDB.getAutomationsAsync.resolves([]);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -540,8 +538,8 @@ describe("AutomationHandlers", () => {
             switch (_dependency) {
               case "sprootDB":
                 return sprootDB;
-              case "automationDataManager":
-                return automationDataManager;
+              case "automationService":
+                return automationService;
               default:
                 return null;
             }
