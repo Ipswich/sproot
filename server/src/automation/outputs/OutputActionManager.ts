@@ -66,7 +66,8 @@ export class OutputActionManager {
       return undefined; // Too soon, skip
     }
 
-    // Get all actions for this output
+    // Get all actions for this output - we running, yo
+    this.#lastRunAt = nowTimestamp;
     await this.reloadActionsAsync();
 
     // Find which triggered automations have actions on this output
@@ -104,13 +105,12 @@ export class OutputActionManager {
     if (valueCounts.size > 1) {
       this.#logger.verbose(
         `Collision detected on output ${this.#outputId}: ` +
-          `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`,
+        `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`,
       );
       return 0;
     }
 
-    // No collision - update last run time and return the single value
-    this.#lastRunAt = nowTimestamp;
+    // No collision - return the single value
     return triggeredActions.length > 0 ? triggeredActions[0]!.value : 0;
   }
 }

@@ -308,7 +308,6 @@ describe("AutomationService", () => {
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now);
 
-      // Should still emit event, but with empty triggeredAutomations
       assert.isFalse(context.eventEmitted);
     });
   });
