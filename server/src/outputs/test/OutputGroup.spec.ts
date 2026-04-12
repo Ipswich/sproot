@@ -10,9 +10,11 @@ import winston from "winston";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { AutomationService } from "../../automation/AutomationService";
 
 describe("OutputGroup.ts tests", function () {
   let logger: winston.Logger;
+  const mockAutomationService = sinon.createStubInstance(AutomationService);
 
   this.beforeEach(() => {
     sinon
@@ -44,9 +46,10 @@ describe("OutputGroup.ts tests", function () {
     const mockSprootDB = new MockSprootDB();
     sinon.createStubInstance(Pca9685Driver);
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
+      mockAutomationService,
       mockSprootDB,
       5,
       5,
@@ -141,9 +144,10 @@ describe("OutputGroup.ts tests", function () {
     const mockSprootDB = new MockSprootDB();
     sinon.createStubInstance(Pca9685Driver);
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
+      mockAutomationService,
       mockSprootDB,
       5,
       5,
@@ -269,9 +273,10 @@ describe("OutputGroup.ts tests", function () {
     const mockSprootDB = new MockSprootDB();
     sinon.createStubInstance(Pca9685Driver);
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
+      mockAutomationService,
       mockSprootDB,
       5,
       5,

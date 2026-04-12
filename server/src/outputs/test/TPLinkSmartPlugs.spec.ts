@@ -13,7 +13,9 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { toDbDate } from "../../utils/dateUtils";
+import { AutomationService } from "../../automation/AutomationService";
 const mockSprootDB = new MockSprootDB();
+const mockAutomationService = sinon.createStubInstance(AutomationService);
 
 describe("tplinkPlug.ts tests", async function () {
   const simulatedHS300 = new SimulatedDevice({
@@ -38,7 +40,16 @@ describe("tplinkPlug.ts tests", async function () {
   it("should create and delete TPLink Smart Plugs outputs", async function () {
     const logger = winston.createLogger({ silent: true });
 
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 5000);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      mockAutomationService,
+      mockSprootDB,
+      5,
+      5,
+      5,
+      5,
+      logger,
+      5000,
+    );
 
     // disposing with nothing shouldn't cause issues
     await tplinkSmartPlugs.disposeOutputAsync({} as OutputBase);
@@ -112,7 +123,16 @@ describe("tplinkPlug.ts tests", async function () {
 
   it("available TPLink Smart Plugs should be tracked", async function () {
     const logger = winston.createLogger({ silent: true });
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 5000);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      mockAutomationService,
+      mockSprootDB,
+      5,
+      5,
+      5,
+      5,
+      logger,
+      5000,
+    );
 
     // No devices should be available at first - takes a hot sec for events to get emitted
     assert.equal(Object.keys(tplinkSmartPlugs.getAvailableDevices()).length, 0);
@@ -147,7 +167,16 @@ describe("tplinkPlug.ts tests", async function () {
       );
     const logger = winston.createLogger();
 
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      mockAutomationService,
+      mockSprootDB,
+      5,
+      5,
+      5,
+      5,
+      logger,
+      50,
+    );
 
     (await tplinkSmartPlugs.createOutputAsync({
       id: 1,
@@ -205,7 +234,16 @@ describe("tplinkPlug.ts tests", async function () {
   it("should return output data (no functions)", async function () {
     const logger = winston.createLogger({ silent: true });
 
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      mockAutomationService,
+      mockSprootDB,
+      5,
+      5,
+      5,
+      5,
+      logger,
+      50,
+    );
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
@@ -236,7 +274,16 @@ describe("tplinkPlug.ts tests", async function () {
   it("should update and apply states with respect to control mode", async function () {
     const logger = winston.createLogger({ silent: true });
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger, 50);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      mockAutomationService,
+      mockSprootDB,
+      5,
+      5,
+      5,
+      5,
+      logger,
+      50,
+    );
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
@@ -365,7 +412,15 @@ describe("tplinkPlug.ts tests", async function () {
     );
     const logger = winston.createLogger();
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(mockSprootDB, 5, 5, 5, 5, logger);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      mockAutomationService,
+      mockSprootDB,
+      5,
+      5,
+      5,
+      5,
+      logger,
+    );
     const plug = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",

@@ -2,7 +2,7 @@ import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { AutomationService } from "../../../../automation/AutomationService";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
@@ -136,9 +136,7 @@ export async function addAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const automationDataManager = request.app.get(
-    DI_KEYS.AutomationDataManager,
-  ) as AutomationDataManager;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.body["automationId"] ?? "");
@@ -201,11 +199,7 @@ export async function addAsync(
       return automationResponse;
     }
 
-    const automation = await automationDataManager.addOutputActionAsync(
-      automationId,
-      outputId,
-      value,
-    );
+    const automation = await automationService.addOutputActionAsync(automationId, outputId, value);
     automationResponse = {
       statusCode: 201,
       content: {
@@ -238,9 +232,7 @@ export async function deleteAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const automationDataManager = request.app.get(
-    DI_KEYS.AutomationDataManager,
-  ) as AutomationDataManager;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
@@ -260,9 +252,9 @@ export async function deleteAsync(
   }
 
   try {
-    const automationId = parseInt(request.params["outputActionId"] ?? "");
-    const automation = (await sprootDB.getOutputActionAsync(automationId))[0];
-    if (automation == null) {
+    const outputActionId = parseInt(request.params["outputActionId"] ?? "");
+    const action = (await sprootDB.getOutputActionAsync(outputActionId))[0];
+    if (action == null) {
       automationResponse = {
         statusCode: 404,
         error: {
@@ -275,7 +267,7 @@ export async function deleteAsync(
       return automationResponse;
     }
 
-    await automationDataManager.deleteOutputActionAsync(automationId);
+    await automationService.deleteOutputActionAsync(outputActionId);
     automationResponse = {
       statusCode: 200,
       content: {

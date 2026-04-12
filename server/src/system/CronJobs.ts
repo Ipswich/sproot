@@ -6,6 +6,7 @@ import { SensorList } from "../sensors/list/SensorList";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 import { Backups } from "./Backups";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { AutomationService } from "../automation/AutomationService";
 
 export function createUpdateDevicesCronJob(
   cameraManager: CameraManager,
@@ -50,7 +51,8 @@ export function createUpdateDevicesCronJob(
   );
 }
 
-export function createRunAutomationsCronJob(
+export function createAutomationsCronJob(
+  automationService: AutomationService,
   sensorList: SensorList,
   outputList: OutputList,
   logger: winston.Logger,
@@ -66,7 +68,7 @@ export function createRunAutomationsCronJob(
       running = true;
       const profiler = logger.startTimer();
       try {
-        await outputList.runAutomationsAsync(sensorList, new Date());
+        await automationService.evaluateAllAutomationsAsync(sensorList, outputList, new Date());
       } catch (e) {
         logger.error(`Exception in automation loop: ${e}`);
       } finally {
