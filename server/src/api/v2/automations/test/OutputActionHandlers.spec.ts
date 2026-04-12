@@ -9,8 +9,29 @@ import { AutomationService } from "../../../../automation/AutomationService";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
 
 describe("OutputActionHandlers.ts tests", () => {
+  let mockLogger: winston.Logger;
+  before(() => {
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          debug: () => {},
+          warn: () => {},
+          verbose: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
+    mockLogger = winston.createLogger();
+  });
+
+  after(() => {
+    sinon.restore();
+  });
+
   describe("getAsync", () => {
     it("should return a 200 and a list of all OutputActions", async () => {
       const mockResponse = {
@@ -311,7 +332,7 @@ describe("OutputActionHandlers.ts tests", () => {
       });
       sprootDB.getAutomationsAsync.resolves([]);
       sprootDB.addOutputActionAsync.resolves(1);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       let mockRequest = {
         app: {
@@ -427,7 +448,7 @@ describe("OutputActionHandlers.ts tests", () => {
       sinon.stub(outputList, "outputs").value({ 1: { id: 1, name: "test", type: "test" } });
       sprootDB.getOutputActionAsync.resolves([]);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
 
       const mockRequest = {
@@ -479,7 +500,7 @@ describe("OutputActionHandlers.ts tests", () => {
       ]);
       sprootDB.getAutomationsAsync.resolves([]);
       sprootDB.deleteOutputActionAsync.resolves();
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {

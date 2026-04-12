@@ -22,8 +22,29 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
+import winston from "winston";
 
 describe("ConditionHandlers.ts", () => {
+  let mockLogger: winston.Logger;
+  before(() => {
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          debug: () => {},
+          warn: () => {},
+          verbose: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
+    mockLogger = winston.createLogger();
+  });
+
+  after(() => {
+    sinon.restore();
+  });
+
   describe("getAllAsync", () => {
     afterEach(() => {
       sinon.restore();
@@ -1216,7 +1237,7 @@ describe("ConditionHandlers.ts", () => {
       sinon
         .stub(sensorList, "sensors")
         .value({ "1": { id: 1, name: "Sensor 1", type: "temperature" } });
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1277,7 +1298,7 @@ describe("ConditionHandlers.ts", () => {
       const outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputs").value({ "1": { id: 1, name: "Output 1" } });
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1334,7 +1355,7 @@ describe("ConditionHandlers.ts", () => {
 
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1386,7 +1407,7 @@ describe("ConditionHandlers.ts", () => {
 
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1436,7 +1457,7 @@ describe("ConditionHandlers.ts", () => {
 
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1486,7 +1507,7 @@ describe("ConditionHandlers.ts", () => {
 
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1633,7 +1654,7 @@ describe("ConditionHandlers.ts", () => {
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -1682,7 +1703,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (time)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1732,7 +1753,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (weekday)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1780,7 +1801,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (month)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1828,7 +1849,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (date range)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -1879,7 +1900,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 404 if the automation does not exist", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([]);
       const mockResponse = {
         locals: {
@@ -1925,7 +1946,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 503 if the database is unreachable", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
       const mockResponse = {
         locals: {
@@ -2005,7 +2026,7 @@ describe("ConditionHandlers.ts", () => {
         .stub(sensorList, "sensors")
         .value({ "2": { id: 2, name: "Sensor 1", type: "temperature" } });
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2076,7 +2097,7 @@ describe("ConditionHandlers.ts", () => {
       const outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputs").value({ "2": { id: 2, name: "Output 1" } });
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2137,7 +2158,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.updateTimeConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2193,7 +2214,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.updateTimeConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2247,7 +2268,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.updateTimeConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2308,7 +2329,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.updateTimeConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2398,7 +2419,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (sensor)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -2461,7 +2482,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (output)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -2520,7 +2541,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (time)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -2568,7 +2589,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (weekday)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -2615,7 +2636,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (month)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -2662,7 +2683,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 400 and details for the invalid request (date range)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -2724,7 +2745,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 404 if the automation does not exist", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([]);
       const mockResponse = {
         locals: {
@@ -2769,7 +2790,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 404 if the condition does not exist", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
@@ -2817,7 +2838,7 @@ describe("ConditionHandlers.ts", () => {
     it("should return a 503 if the database is unreachable", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
       const mockResponse = {
         locals: {
@@ -2886,7 +2907,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.deleteSensorConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2937,7 +2958,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.deleteOutputConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -2982,7 +3003,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.deleteTimeConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -3027,7 +3048,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.deleteWeekdayConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -3072,7 +3093,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.deleteMonthConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -3124,7 +3145,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       sprootDB.deleteMonthConditionAsync.resolves();
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {

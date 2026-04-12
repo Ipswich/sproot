@@ -85,7 +85,7 @@ export class OutputActionManager implements Disposable {
 
   set outputId(outputId: number) {
     this.#outputId = outputId;
-    this.#reloadActionsAsync()
+    void this.#reloadActionsAsync();
   }
 
   get lastResult(): number | undefined {

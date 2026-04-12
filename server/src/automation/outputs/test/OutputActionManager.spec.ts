@@ -8,18 +8,25 @@ import winston from "winston";
 import { AutomationService } from "../../AutomationService";
 
 describe("OutputActionManager.ts tests", () => {
-  sinon.stub(winston, "createLogger").callsFake(
-    () =>
-      ({
-        info: () => {},
-        error: () => {},
-        debug: () => {},
-        warn: () => {},
-        verbose: () => {},
-        startTimer: () => ({ done: () => {} }) as winston.Profiler,
-      }) as unknown as winston.Logger,
-  );
-  const mockLogger = winston.createLogger();
+  let mockLogger: winston.Logger;
+  before(() => {
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          debug: () => {},
+          warn: () => {},
+          verbose: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
+    mockLogger = winston.createLogger();
+  });
+
+  after(() => {
+    sinon.restore();
+  });
 
   describe("handleAutomationEvent", () => {
     it("should return the action value with a single automation trigger", async () => {
@@ -32,7 +39,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -77,7 +87,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -113,7 +126,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
 
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
@@ -171,7 +187,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -225,7 +244,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -276,7 +298,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -320,7 +345,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -383,7 +411,10 @@ describe("OutputActionManager.ts tests", () => {
           enabled: true,
         },
       ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(sprootDB);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
 
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {

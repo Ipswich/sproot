@@ -253,8 +253,8 @@ export async function deleteAsync(
 
   try {
     const outputActionId = parseInt(request.params["outputActionId"] ?? "");
-    const automation = (await sprootDB.getOutputActionAsync(outputActionId))[0];
-    if (automation == null) {
+    const action = (await sprootDB.getOutputActionAsync(outputActionId))[0];
+    if (action == null) {
       automationResponse = {
         statusCode: 404,
         error: {

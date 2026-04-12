@@ -13,8 +13,29 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
 
 describe("AutomationHandlers", () => {
+  let mockLogger: winston.Logger;
+  before(() => {
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          debug: () => {},
+          warn: () => {},
+          verbose: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
+    mockLogger = winston.createLogger();
+  });
+
+  after(() => {
+    sinon.restore();
+  });
+
   describe("getAsync ", () => {
     afterEach(() => {
       sinon.restore();
@@ -247,7 +268,7 @@ describe("AutomationHandlers", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.addAutomationAsync.resolves(1);
 
       const mockRequest = {
@@ -333,7 +354,7 @@ describe("AutomationHandlers", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       sprootDB.addAutomationAsync.rejects(new Error("Failed to add automation to database."));
 
       const mockRequest = {
@@ -378,7 +399,7 @@ describe("AutomationHandlers", () => {
         { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {
@@ -530,7 +551,7 @@ describe("AutomationHandlers", () => {
       sprootDB.getAutomationAsync.resolves([
         { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const mockRequest = {
         app: {

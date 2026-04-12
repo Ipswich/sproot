@@ -47,7 +47,7 @@ export default async function setupAsync(): Promise<Express> {
   const journalService = new JournalService(sprootDB);
   app.set(DI_KEYS.JournalService, journalService);
 
-  const automationService = await AutomationService.createInstanceAsync(sprootDB);
+  const automationService = await AutomationService.createInstanceAsync(sprootDB, logger);
   app.set(DI_KEYS.AutomationService, automationService);
 
   logger.info("Creating camera manager. . .");

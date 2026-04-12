@@ -5,13 +5,30 @@ import sinon from "sinon";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import winston from "winston";
 
 describe("AutomationService", () => {
-  describe("evaluateAllAutomationsAsync", () => {
-    afterEach(() => {
-      sinon.restore();
-    });
+  let mockLogger: winston.Logger;
+  before(() => {
+    sinon.stub(winston, "createLogger").callsFake(
+      () =>
+        ({
+          info: () => {},
+          error: () => {},
+          debug: () => {},
+          warn: () => {},
+          verbose: () => {},
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
+    );
+    mockLogger = winston.createLogger();
+  });
 
+  after(() => {
+    sinon.restore();
+  });
+
+  describe("evaluateAllAutomationsAsync", () => {
     it("should emit event with enabled automation when conditions are met", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getSensorConditionsAsync.resolves([]);
@@ -37,7 +54,7 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB);
+      const service = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -95,7 +112,7 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB);
+      const service = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -162,7 +179,7 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB as any);
+      const service = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -217,7 +234,7 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB);
+      const service = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -260,7 +277,7 @@ describe("AutomationService", () => {
         },
       ]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB as any);
+      const service = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
@@ -289,7 +306,7 @@ describe("AutomationService", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
 
-      const service = await AutomationService.createInstanceAsync(sprootDB as any);
+      const service = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);

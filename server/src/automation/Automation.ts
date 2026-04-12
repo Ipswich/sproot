@@ -12,7 +12,7 @@ export class Automation {
   enabled: boolean;
   conditions: Conditions;
 
-  constructor(
+  private constructor(
     id: number,
     name: string,
     operator: AutomationOperator,
@@ -24,6 +24,18 @@ export class Automation {
     this.operator = operator;
     this.enabled = enabled;
     this.conditions = new Conditions(this.id, sprootDB);
+  }
+
+  static async createInstanceAsync(
+    id: number,
+    name: string,
+    operator: AutomationOperator,
+    enabled: boolean,
+    sprootDB: ISprootDB,
+  ): Promise<Automation> {
+    const automation = new Automation(id, name, operator, enabled, sprootDB);
+    await automation.conditions.loadAsync();
+    return automation;
   }
 
   async evaluate(
@@ -44,8 +56,6 @@ export class Automation {
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       };
     }
-
-    await this.conditions.loadAsync();
 
     return this.conditions.evaluate(this.operator, sensorList, outputList, now);
   }

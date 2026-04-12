@@ -14,6 +14,7 @@ import { WeekdayCondition } from "./conditions/WeekdayCondition";
 import { MonthCondition } from "./conditions/MonthCondition";
 import { DateRangeCondition } from "./conditions/DateRangeCondition";
 import { SensorList } from "../sensors/list/SensorList";
+import winston from "winston";
 
 /**
  * Central automation evaluator and event emitter.
@@ -22,37 +23,46 @@ import { SensorList } from "../sensors/list/SensorList";
 class AutomationService extends EventEmitter {
   #automations: Map<number, Automation>; // Key: automationId
   #sprootDB: ISprootDB;
+  #logger: winston.Logger;
 
-  static async createInstanceAsync(sprootDB: ISprootDB): Promise<AutomationService> {
-    const service = new AutomationService(sprootDB);
+  static async createInstanceAsync(
+    sprootDB: ISprootDB,
+    logger: winston.Logger,
+  ): Promise<AutomationService> {
+    const service = new AutomationService(sprootDB, logger);
     await service.loadAllAutomationsAsync();
     return service;
   }
 
-  private constructor(sprootDB: ISprootDB) {
+  private constructor(sprootDB: ISprootDB, logger: winston.Logger) {
     super();
     this.#sprootDB = sprootDB;
     this.#automations = new Map();
+    this.#logger = logger;
   }
 
   /**
    * Load all automations from the database.
    */
   async loadAllAutomationsAsync(): Promise<void> {
-    const rawAutomations = await this.#sprootDB.getAutomationsAsync();
-    this.#automations = new Map();
+    try {
+      const rawAutomations = await this.#sprootDB.getAutomationsAsync();
+      this.#automations = new Map();
 
-    for (const automation of rawAutomations) {
-      this.#automations.set(
-        automation.automationId,
-        new Automation(
+      for (const automation of rawAutomations) {
+        this.#automations.set(
           automation.automationId,
-          automation.name,
-          automation.operator,
-          automation.enabled,
-          this.#sprootDB,
-        ),
-      );
+          await Automation.createInstanceAsync(
+            automation.automationId,
+            automation.name,
+            automation.operator,
+            automation.enabled,
+            this.#sprootDB,
+          ),
+        );
+      }
+    } catch (error) {
+      this.#logger.error(`Error loading automations from database: ${error}`);
     }
   }
 
