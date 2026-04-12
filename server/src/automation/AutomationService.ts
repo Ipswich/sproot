@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { OUTPUT_ACTIONS_UPDATED_EVENT, TRIGGERED_AUTOMATIONS_EVENT } from "../utils/EventConstants";
+import { OUTPUT_ACTIONS_UPDATED_EVENT, AUTOMATIONS_TRIGGERED_EVENT } from "../utils/EventConstants";
 import { AutomationEvent, AutomationEventPayload } from "./AutomationEvent";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
@@ -103,7 +103,7 @@ class AutomationService extends EventEmitter {
       evaluatedAutomations.map((e) => [e.automation.id, e.payload]),
     );
 
-    this.emit(TRIGGERED_AUTOMATIONS_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
+    this.emit(AUTOMATIONS_TRIGGERED_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
   }
 
   // CRUD methods

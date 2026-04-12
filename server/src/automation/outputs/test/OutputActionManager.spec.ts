@@ -71,7 +71,7 @@ describe("OutputActionManager.ts tests", () => {
       });
 
       const event = new AutomationEvent(triggeredAutomations);
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
 
       assert.equal(manager.lastResult, 75);
@@ -110,7 +110,7 @@ describe("OutputActionManager.ts tests", () => {
 
       // Create event with no triggered automations
       const event = new AutomationEvent(new Map());
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
 
       assert.equal(manager.lastResult, 0);
@@ -171,7 +171,7 @@ describe("OutputActionManager.ts tests", () => {
       });
 
       const event = new AutomationEvent(triggeredAutomations);
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
 
       assert.equal(manager.lastResult, 0);
@@ -229,7 +229,7 @@ describe("OutputActionManager.ts tests", () => {
       });
 
       const event = new AutomationEvent(triggeredAutomations);
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
       assert.equal(manager.lastResult, 50);
     });
@@ -276,12 +276,12 @@ describe("OutputActionManager.ts tests", () => {
       const event = new AutomationEvent(triggeredAutomations);
 
       // First call should succeed
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
       assert.equal(manager.lastResult, 75);
 
       // Second call immediately should be blocked by timeout
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
       assert.isUndefined(manager.lastResult);
     });
@@ -330,7 +330,7 @@ describe("OutputActionManager.ts tests", () => {
       const event = new AutomationEvent(triggeredAutomations);
 
       // Call with value 50
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
       assert.equal(manager.lastResult, 50);
     });
@@ -377,7 +377,7 @@ describe("OutputActionManager.ts tests", () => {
       const event = new AutomationEvent(triggeredAutomations);
 
       // First call with value 50
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
       assert.equal(manager.lastResult, 50);
 
@@ -394,7 +394,7 @@ describe("OutputActionManager.ts tests", () => {
       // Second call should see updated value
       mockAutomationService.emit("OutputActionsUpdated");
       await new Promise((res) => setImmediate(res));
-      mockAutomationService.emit("TriggeredAutomations", event);
+      mockAutomationService.emit("AutomationsTriggered", event);
       await new Promise((res) => setImmediate(res));
       assert.equal(manager.lastResult, 75);
     });

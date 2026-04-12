@@ -5,7 +5,7 @@ import { OutputAction } from "./OutputAction";
 import winston from "winston";
 import {
   OUTPUT_ACTIONS_UPDATED_EVENT,
-  TRIGGERED_AUTOMATIONS_EVENT,
+  AUTOMATIONS_TRIGGERED_EVENT,
 } from "../../utils/EventConstants";
 
 export class OutputActionManager implements Disposable {
@@ -71,11 +71,11 @@ export class OutputActionManager implements Disposable {
     };
 
     this.#automationService.on(OUTPUT_ACTIONS_UPDATED_EVENT, actionReloadListener);
-    this.#automationService.on(TRIGGERED_AUTOMATIONS_EVENT, automationListener);
+    this.#automationService.on(AUTOMATIONS_TRIGGERED_EVENT, automationListener);
 
     this.#listenerCleanupFunction = () => {
       this.#automationService.off(OUTPUT_ACTIONS_UPDATED_EVENT, actionReloadListener);
-      this.#automationService.off(TRIGGERED_AUTOMATIONS_EVENT, automationListener);
+      this.#automationService.off(AUTOMATIONS_TRIGGERED_EVENT, automationListener);
     };
   }
 

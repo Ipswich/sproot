@@ -69,7 +69,7 @@ describe("AutomationService", () => {
         context.receivedEvent = event;
       };
 
-      service.on("TriggeredAutomations", handler);
+      service.on("AutomationsTriggered", handler);
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, new Date());
 
@@ -83,7 +83,7 @@ describe("AutomationService", () => {
       assert.equal(payload!.automationId, 1);
       assert.equal(payload!.automationName, "Time Alert");
       assert.equal(payload!.operator, "or");
-      service.off("TriggeredAutomations", handler);
+      service.off("AutomationsTriggered", handler);
     });
 
     it("should emit event with timestamp matching the input 'now' parameter", async () => {
@@ -126,7 +126,7 @@ describe("AutomationService", () => {
         context.receivedEvent = event;
       };
 
-      service.on("TriggeredAutomations", handler);
+      service.on("AutomationsTriggered", handler);
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now);
 
@@ -195,7 +195,7 @@ describe("AutomationService", () => {
         context.receivedEvent = event;
       };
 
-      service.on("TriggeredAutomations", handler);
+      service.on("AutomationsTriggered", handler);
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now);
 
@@ -206,7 +206,7 @@ describe("AutomationService", () => {
       assert.isTrue(event.triggeredAutomations.has(1));
       assert.isFalse(event.triggeredAutomations.has(2));
       assert.isTrue(event.triggeredAutomations.has(3));
-      service.off("TriggeredAutomations", handler);
+      service.off("AutomationsTriggered", handler);
     });
 
     it("should emit (empty) event with disabled automation (conditions met)", async () => {
@@ -249,14 +249,14 @@ describe("AutomationService", () => {
         context.receivedEvent = event;
       };
 
-      service.on("TriggeredAutomations", handler);
+      service.on("AutomationsTriggered", handler);
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, new Date());
 
       assert.isTrue(context.eventEmitted);
       assert.isEmpty(context.receivedEvent!.triggeredAutomations);
 
-      service.off("TriggeredAutomations", handler);
+      service.off("AutomationsTriggered", handler);
     });
 
     it("should emit (empty) event with enabled automation when no conditions are met", async () => {
@@ -293,7 +293,7 @@ describe("AutomationService", () => {
         context.receivedEvent = event;
       };
 
-      service.on("TriggeredAutomations", handler);
+      service.on("AutomationsTriggered", handler);
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now);
 
@@ -322,7 +322,7 @@ describe("AutomationService", () => {
         context.receivedEvent = event;
       };
 
-      service.on("TriggeredAutomations", handler);
+      service.on("AutomationsTriggered", handler);
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now);
 
