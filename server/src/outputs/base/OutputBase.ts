@@ -124,6 +124,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     const actionManager = this.#actionManager;
     if (actionManager != null) {
       actionManager[Symbol.dispose]();
+      this.#actionManager = null;
     }
   }
 
