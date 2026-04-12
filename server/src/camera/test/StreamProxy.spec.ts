@@ -65,18 +65,13 @@ describe("StreamProxy", () => {
     assert.isDefined(status.upstream);
     assert.isDefined(status.buffer);
     assert.isNumber(status.buffer.subscriberCount);
-    assert.isNumber(status.buffer.frameCount);
-    assert.isNumber(status.buffer.lastFrameTime);
-    assert.isBoolean(status.buffer.isHealthy);
   });
 
-  it("should have FrameBuffer with correct options", () => {
-    const maxFrames = 10;
+  it("should have frame buffer", () => {
     streamProxy = new StreamProxy({
       logger,
       upstreamUrl: "http://localhost:3002",
       upstreamHeaders: { "X-Test": "test" },
-      maxFrameBufferFrames: maxFrames,
     });
 
     const frameBuffer = streamProxy.getFrameBuffer();
@@ -86,147 +81,126 @@ describe("StreamProxy", () => {
 
 describe("FrameBuffer", () => {
   let frameBuffer: FrameBuffer;
-  let receivedFrames: Buffer[];
 
   beforeEach(() => {
-    receivedFrames = [];
     frameBuffer = new FrameBuffer({
       logger,
-      maxFrames: 5,
     });
   });
 
-  afterEach(() => {
-    frameBuffer.clear();
-  });
-
-  it("should start with empty state", () => {
-    assert.isNull(frameBuffer.getLastFrame());
+  it("should start with no subscribers", () => {
     assert.equal(frameBuffer.getSubscriberCount(), 0);
-    assert.equal(frameBuffer.getFrameCount(), 0);
-    assert.equal(frameBuffer.getLastFrameTime(), 0);
   });
 
-  it("should receive and deliver frames to subscribers", () => {
+  it("should get pass-through stream", () => {
+    const stream = frameBuffer.getStream();
+    assert.isDefined(stream);
+    assert.instanceOf(stream, PassThrough);
+  });
+
+  it("should add and remove subscribers", () => {
+    const mockResponse = {
+      statusCode: 200,
+      headersSent: false,
+      writableEnded: false,
+      writable: true,
+      write: () => true,
+    } as any;
+
     const subscriber = {
-      onFrame: (frame: Buffer) => receivedFrames.push(frame),
+      onChunk: (_chunk: Buffer) => {},
       onDestroy: () => {},
     };
 
-    const passThrough = new PassThrough();
-    frameBuffer.addSubscriber(passThrough, subscriber);
+    frameBuffer.addSubscriber(mockResponse, subscriber);
+    assert.equal(frameBuffer.getSubscriberCount(), 1);
 
-    const frame1 = Buffer.from("frame1");
-    const frame2 = Buffer.from("frame2");
-
-    frameBuffer.receiveFrame(frame1);
-    frameBuffer.receiveFrame(frame2);
-
-    assert.equal(receivedFrames.length, 2);
-    assert.equal(receivedFrames[0]?.toString(), "frame1");
-    assert.equal(receivedFrames[1]?.toString(), "frame2");
+    frameBuffer.removeSubscriber(mockResponse);
+    assert.equal(frameBuffer.getSubscriberCount(), 0);
   });
 
-  it("should send last frame to new subscribers", () => {
+  it("should deliver chunks to subscribers", () => {
+    const receivedChunks: Buffer[] = [];
+    const mockResponse = {
+      statusCode: 200,
+      headersSent: false,
+      writableEnded: false,
+      writable: true,
+      write: () => true,
+    } as any;
+
+    const subscriber = {
+      onChunk: (chunk: Buffer) => receivedChunks.push(chunk),
+      onDestroy: () => {},
+    };
+
+    frameBuffer.addSubscriber(mockResponse, subscriber);
+
+    frameBuffer.getStream().write(Buffer.from("test data"));
+
+    assert.equal(receivedChunks.length, 1);
+    assert.equal(receivedChunks[0]?.toString(), "test data");
+  });
+
+  it("should handle multiple subscribers", () => {
+    const receivedChunks1: Buffer[] = [];
+    const receivedChunks2: Buffer[] = [];
+
+    const mockResponse1 = {
+      statusCode: 200,
+      headersSent: false,
+      writableEnded: false,
+      writable: true,
+      write: () => true,
+    } as any;
+
+    const mockResponse2 = {
+      statusCode: 200,
+      headersSent: false,
+      writableEnded: false,
+      writable: true,
+      write: () => true,
+    } as any;
+
     const subscriber1 = {
-      onFrame: (frame: Buffer) => receivedFrames.push(frame),
+      onChunk: (chunk: Buffer) => receivedChunks1.push(chunk),
       onDestroy: () => {},
     };
 
-    const passThrough1 = new PassThrough();
-    frameBuffer.addSubscriber(passThrough1, subscriber1);
-
-    const frame1 = Buffer.from("frame1");
-    frameBuffer.receiveFrame(frame1);
-
-    // Clear received frames
-    receivedFrames = [];
-
-    // Add new subscriber
     const subscriber2 = {
-      onFrame: (frame: Buffer) => receivedFrames.push(frame),
-      onDestroy: () => {},
-    };
-    const passThrough2 = new PassThrough();
-    frameBuffer.addSubscriber(passThrough2, subscriber2);
-
-    // New subscriber should receive last frame
-    assert.equal(receivedFrames.length, 1);
-    assert.equal(receivedFrames[0]?.toString(), "frame1");
-  });
-
-  it("should limit internal frame queue to maxFrames", () => {
-    const subscriber = {
-      onFrame: (frame: Buffer) => receivedFrames.push(frame),
+      onChunk: (chunk: Buffer) => receivedChunks2.push(chunk),
       onDestroy: () => {},
     };
 
-    const passThrough = new PassThrough();
-    frameBuffer.addSubscriber(passThrough, subscriber);
+    frameBuffer.addSubscriber(mockResponse1, subscriber1);
+    frameBuffer.addSubscriber(mockResponse2, subscriber2);
 
-    // Send more frames than maxFrames
-    for (let i = 0; i < 10; i++) {
-      const frame = Buffer.from(`frame${i}`);
-      frameBuffer.receiveFrame(frame);
-    }
+    frameBuffer.getStream().write(Buffer.from("test data"));
 
-    // Subscriber receives every frame - the queue is internal
-    assert.equal(receivedFrames.length, 10);
-
-    // Internal queue is limited
-    assert.equal(frameBuffer.getFrameQueueLength(), 5);
+    assert.equal(receivedChunks1.length, 1);
+    assert.equal(receivedChunks2.length, 1);
+    assert.equal(receivedChunks1[0]?.toString(), "test data");
+    assert.equal(receivedChunks2[0]?.toString(), "test data");
   });
 
-  it("should be healthy when frames are received recently", () => {
-    const frame = Buffer.from("frame1");
-    frameBuffer.receiveFrame(frame);
+  it("should mark as healthy when subscribers exist", () => {
+    assert.isFalse(frameBuffer.isHealthy());
 
-    assert.isTrue(frameBuffer.isHealthy(1000)); // Should be healthy within 1 second
-  });
+    const mockResponse = {
+      statusCode: 200,
+      headersSent: false,
+      writableEnded: false,
+      writable: true,
+      write: () => true,
+    } as any;
 
-  it("should be unhealthy when no frames for a while", () => {
-    const frame = Buffer.from("frame1");
-    frameBuffer.receiveFrame(frame);
-
-    // First verify it's healthy
-    assert.isTrue(frameBuffer.isHealthy(10000));
-
-    // Since we can't modify private fields directly in tests,
-    // we'll skip this test or use a workaround
-    // For now, just verify the healthy path works
-  });
-
-  it("should remove subscriber and call onDestroy", () => {
-    let destroyed = false;
     const subscriber = {
-      onFrame: (frame: Buffer) => receivedFrames.push(frame),
-      onDestroy: () => {
-        destroyed = true;
-      },
-    };
-
-    const passThrough = new PassThrough();
-    frameBuffer.addSubscriber(passThrough, subscriber);
-
-    assert.equal(frameBuffer.getSubscriberCount(), 1);
-
-    frameBuffer.removeSubscriber(passThrough);
-
-    assert.equal(frameBuffer.getSubscriberCount(), 0);
-    assert.isTrue(destroyed);
-  });
-
-  it("should handle duplicate subscriber registration", () => {
-    const subscriber = {
-      onFrame: (frame: Buffer) => receivedFrames.push(frame),
+      onChunk: (_chunk: Buffer) => {},
       onDestroy: () => {},
     };
 
-    const passThrough = new PassThrough();
-    frameBuffer.addSubscriber(passThrough, subscriber);
-    frameBuffer.addSubscriber(passThrough, subscriber); // Try to add again
-
-    assert.equal(frameBuffer.getSubscriberCount(), 1);
+    frameBuffer.addSubscriber(mockResponse, subscriber);
+    assert.isTrue(frameBuffer.isHealthy());
   });
 });
 
@@ -236,7 +210,6 @@ describe("UpstreamConnection", () => {
   beforeEach(() => {
     frameBuffer = new FrameBuffer({
       logger,
-      maxFrames: 5,
     });
   });
 

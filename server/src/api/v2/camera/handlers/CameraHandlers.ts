@@ -5,6 +5,7 @@ import winston from "winston";
 
 /**
  * Possible statusCodes: 200, 502
+ * Streams MJPEG from the camera to the client.
  * @param request
  * @param response
  */
@@ -32,34 +33,24 @@ export async function streamHandlerAsync(request: Request, response: Response): 
   }
 
   try {
-    response.setHeader("Age", 0);
-    response.setHeader("Cache-Control", "no-cache, private");
+    response.setHeader("Age", "0");
+    response.setHeader("Cache-Control", "no-cache");
     response.setHeader("Pragma", "no-cache");
     response.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=FRAME");
-    response.status(200);
+    // Don't set Content-Length for streaming responses
+    response.removeHeader("Content-Length");
 
     const clientId = `client_${Date.now()}_${Math.random().toString(16).slice(2)}`;
     logger.info(`StreamHandler: new client ${clientId} connected`);
 
-    // Create a subscriber for this client
-    const subscriber: { onFrame: (frame: Buffer) => void; onDestroy: () => void } = {
-      onFrame: (frame: Buffer) => {
+    // Create a subscriber for this client that writes chunks directly
+    const subscriber: { onChunk: (chunk: Buffer) => void; onDestroy: () => void } = {
+      onChunk: (chunk: Buffer) => {
         try {
-          // Build MJPEG frame
-          const frameParts = [
-            `--FRAME`,
-            `Content-Type: image/jpeg`,
-            `Content-Length: ${frame.length}`,
-            ``,
-            frame,
-            ``,
-          ];
-          const frameData = Buffer.concat(
-            frameParts.map((part) => (typeof part === "string" ? Buffer.from(part) : part)),
-          );
-          response.write(frameData);
+          // Write the chunk - Express/Node will handle buffering
+          response.write(chunk);
         } catch (e) {
-          logger.debug(`StreamHandler: failed to write frame to client ${clientId}: ${e}`);
+          logger.debug(`StreamHandler: failed to write chunk to client ${clientId}: ${e}`);
         }
       },
       onDestroy: () => {
@@ -74,16 +65,18 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     const onClientDisconnect = () => {
       logger.info(`StreamHandler: client ${clientId} disconnected`);
       frameBuffer.removeSubscriber(response);
-      response.end();
+      if (!response.writableEnded) {
+        response.end();
+      }
     };
 
     response.on("close", onClientDisconnect);
     response.on("finish", onClientDisconnect);
     response.on("error", onClientDisconnect);
 
-    // Handle errors on the frame buffer
-    frameBuffer.on("error", (err: Error) => {
-      logger.error(`StreamHandler: frame buffer error: ${err.message}`);
+    // Handle errors on the pass-through stream
+    frameBuffer.getStream().on("error", (err: Error) => {
+      logger.error(`StreamHandler: frame buffer stream error: ${err.message}`);
       onClientDisconnect();
     });
   } catch (e) {

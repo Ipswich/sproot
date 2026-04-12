@@ -13,14 +13,12 @@ export interface UpstreamConnectionOptions {
   initialReconnectDelayMs?: number;
   /** Maximum reconnection delay in milliseconds */
   maxReconnectDelayMs?: number;
-  /** Health check timeout - trigger reconnection if no frames in this time */
-  healthCheckTimeoutMs?: number;
 }
 
 export type UpstreamConnectionState =
   | { status: "disconnected"; reason?: string }
   | { status: "connecting"; attempt: number }
-  | { status: "connected"; lastFrameTime: number; frameCount: number };
+  | { status: "connected"; subscriberCount: number };
 
 export class UpstreamConnection {
   #logger: winston.Logger;
@@ -30,7 +28,6 @@ export class UpstreamConnection {
   #fetchTimeoutMs: number;
   #initialReconnectDelayMs: number;
   #maxReconnectDelayMs: number;
-  #healthCheckTimeoutMs: number;
 
   #controller: AbortController | null = null;
   #readableStream: Readable | null = null;
@@ -47,7 +44,6 @@ export class UpstreamConnection {
     this.#fetchTimeoutMs = options.fetchTimeoutMs ?? 10000;
     this.#initialReconnectDelayMs = options.initialReconnectDelayMs ?? 1000;
     this.#maxReconnectDelayMs = options.maxReconnectDelayMs ?? 60000;
-    this.#healthCheckTimeoutMs = options.healthCheckTimeoutMs ?? 10000;
   }
 
   /**
@@ -62,8 +58,7 @@ export class UpstreamConnection {
     }
     return {
       status: "connected",
-      lastFrameTime: this.#frameBuffer.getLastFrameTime(),
-      frameCount: this.#frameBuffer.getFrameCount(),
+      subscriberCount: this.#frameBuffer.getSubscriberCount(),
     };
   }
 
@@ -129,13 +124,13 @@ export class UpstreamConnection {
         throw e;
       }
 
-      // Wire up the stream to frame buffer
-      this.#readableStream.pipe(this.#frameBuffer, { end: false });
+      // Wire up the stream to frame buffer's pass through
+      this.#readableStream.pipe(this.#frameBuffer.getStream());
 
       // Add abort listener for cleanup
       this.#connectionAbortListener = () => {
         this.#logger.info("UpstreamConnection: connection aborted");
-        this.#readableStream?.unpipe(this.#frameBuffer);
+        this.#readableStream?.unpipe(this.#frameBuffer.getStream());
         this.#readableStream?.destroy();
         this.#readableStream = null;
       };
@@ -185,12 +180,9 @@ export class UpstreamConnection {
         return 0;
       }
 
-      if (!this.#frameBuffer.isHealthy(this.#healthCheckTimeoutMs)) {
-        this.#logger.warn(
-          `UpstreamConnection: health check failed - no frames for ${this.#healthCheckTimeoutMs}ms, reconnecting`,
-        );
-        this.#handleDisconnect("health check timeout");
-        return 0;
+      // Health check is now based on subscriber activity
+      if (!this.#frameBuffer.isHealthy()) {
+        // No active subscribers - not necessarily an error
       }
 
       // Check again in 2 seconds
@@ -252,7 +244,7 @@ export class UpstreamConnection {
     }
 
     if (this.#readableStream) {
-      this.#readableStream.unpipe(this.#frameBuffer);
+      this.#readableStream.unpipe(this.#frameBuffer.getStream());
       this.#readableStream.removeAllListeners();
       this.#readableStream.destroy();
       this.#readableStream = null;

@@ -7,14 +7,10 @@ export interface StreamProxyOptions {
   logger: winston.Logger;
   upstreamUrl: string;
   upstreamHeaders: Record<string, string>;
-  /** Maximum frames in queue */
-  maxFrameBufferFrames?: number;
   /** Initial reconnect delay for upstream */
   upstreamInitialReconnectDelayMs?: number;
   /** Maximum reconnect delay for upstream */
   upstreamMaxReconnectDelayMs?: number;
-  /** Health check timeout for upstream */
-  upstreamHealthCheckTimeoutMs?: number;
   /** Fetch timeout for upstream connection */
   upstreamFetchTimeoutMs?: number;
 }
@@ -23,9 +19,6 @@ export interface StreamProxyStatus {
   upstream: UpstreamConnectionState;
   buffer: {
     subscriberCount: number;
-    frameCount: number;
-    lastFrameTime: number;
-    isHealthy: boolean;
   };
 }
 
@@ -41,7 +34,6 @@ export class StreamProxy {
     // Create frame buffer
     this.#frameBuffer = new FrameBuffer({
       logger: this.#logger,
-      maxFrames: options.maxFrameBufferFrames ?? 5,
     });
 
     // Create upstream connection
@@ -53,7 +45,6 @@ export class StreamProxy {
       fetchTimeoutMs: options.upstreamFetchTimeoutMs ?? 10000,
       initialReconnectDelayMs: options.upstreamInitialReconnectDelayMs ?? 1000,
       maxReconnectDelayMs: options.upstreamMaxReconnectDelayMs ?? 60000,
-      healthCheckTimeoutMs: options.upstreamHealthCheckTimeoutMs ?? 10000,
     });
   }
 
@@ -132,9 +123,6 @@ export class StreamProxy {
       upstream: this.#upstreamConnection.getState(),
       buffer: {
         subscriberCount: this.#frameBuffer.getSubscriberCount(),
-        frameCount: this.#frameBuffer.getFrameCount(),
-        lastFrameTime: this.#frameBuffer.getLastFrameTime(),
-        isHealthy: this.#frameBuffer.isHealthy(),
       },
     };
   }
@@ -144,6 +132,13 @@ export class StreamProxy {
    */
   getFrameBuffer(): FrameBuffer {
     return this.#frameBuffer;
+  }
+
+  /**
+   * Gets the pass-through stream for direct piping (for testing or advanced usage)
+   */
+  getStream(): import("stream").PassThrough {
+    return this.#frameBuffer.getStream();
   }
 
   /**
