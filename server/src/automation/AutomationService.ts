@@ -49,18 +49,19 @@ class AutomationService extends EventEmitter {
       const rawAutomations = await this.#sprootDB.getAutomationsAsync();
       this.#automations = new Map();
 
-      for (const automation of rawAutomations) {
-        this.#automations.set(
-          automation.automationId,
-          await Automation.createInstanceAsync(
-            automation.automationId,
-            automation.name,
-            automation.operator,
-            automation.enabled,
-            this.#sprootDB,
-          ),
+      const promises = rawAutomations.map(async (automation) => {
+        const automationInstance = await Automation.createInstanceAsync(
+          automation.id,
+          automation.name,
+          automation.operator,
+          automation.enabled,
+          this.#sprootDB,
         );
-      }
+        return [automation.id, automationInstance] as [number, Automation];
+      });
+
+      const automationEntries = await Promise.all(promises);
+      this.#automations = new Map(automationEntries);
     } catch (error) {
       this.#logger.error(`Error loading automations from database: ${error}`);
     }

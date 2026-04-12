@@ -33,7 +33,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,
@@ -81,7 +81,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,
@@ -120,7 +120,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,
@@ -181,7 +181,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,
@@ -238,7 +238,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,
@@ -292,7 +292,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,
@@ -339,7 +339,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,
@@ -405,7 +405,7 @@ describe("OutputActionManager.ts tests", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "testAutomation",
           operator: "or",
           enabled: true,

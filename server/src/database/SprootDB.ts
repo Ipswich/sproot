@@ -539,12 +539,10 @@ export class SprootDB implements ISprootDB {
     return states;
   }
   async getAutomationsAsync(): Promise<SDBAutomation[]> {
-    return this.#connection("automations").select("id as automationId, name, operator, enabled");
+    return this.#connection("automations").select("*");
   }
   async getAutomationAsync(automationId: number): Promise<SDBAutomation[]> {
-    return this.#connection("automations")
-      .where("id", automationId)
-      .select("id as automationId, name, operator, enabled");
+    return this.#connection("automations").where("id", automationId).select("*");
   }
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
     return (await this.#connection("automations").insert({ name: name, operator }))[0] ?? -1;

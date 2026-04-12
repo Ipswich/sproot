@@ -51,8 +51,8 @@ describe("AutomationHandlers", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([
-        { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
-        { automationId: 2, name: "automation2", operator: "and" } as SDBAutomation,
+        { id: 1, name: "automation1", operator: "or" } as SDBAutomation,
+        { id: 2, name: "automation2", operator: "and" } as SDBAutomation,
       ]);
 
       const mockRequest = {
@@ -124,7 +124,7 @@ describe("AutomationHandlers", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([
-        { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
+        { id: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
 
       const mockRequest = {
@@ -147,7 +147,7 @@ describe("AutomationHandlers", () => {
       assert.equal(success.statusCode, 200);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(success.content?.data.automationId, 1);
+      assert.equal(success.content?.data.id, 1);
     });
 
     it("should return a 400 and an error message", async () => {
@@ -396,7 +396,7 @@ describe("AutomationHandlers", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([
-        { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
+        { id: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
       sprootDB.getAutomationsAsync.resolves([]);
       const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
@@ -549,7 +549,7 @@ describe("AutomationHandlers", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
       sprootDB.getAutomationAsync.resolves([
-        { automationId: 1, name: "automation1", operator: "or" } as SDBAutomation,
+        { id: 1, name: "automation1", operator: "or" } as SDBAutomation,
       ]);
       const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
 

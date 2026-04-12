@@ -323,7 +323,7 @@ describe("OutputActionHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([
-        { automationId: 1, name: "test", operator: "or" } as SDBAutomation,
+        { id: 1, name: "test", operator: "or" } as SDBAutomation,
       ]);
       const outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputs").value({

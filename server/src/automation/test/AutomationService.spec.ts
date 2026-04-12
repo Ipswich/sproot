@@ -47,7 +47,7 @@ describe("AutomationService", () => {
       sprootDB.getDateRangeConditionsAsync.resolves([]);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "Time Alert",
           operator: "or",
           enabled: true,
@@ -105,7 +105,7 @@ describe("AutomationService", () => {
 
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "Test Automation",
           operator: "or",
           enabled: true,
@@ -160,19 +160,19 @@ describe("AutomationService", () => {
       sprootDB.getDateRangeConditionsAsync.resolves([]);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "Automation 1",
           operator: "or",
           enabled: true,
         },
         {
-          automationId: 2,
+          id: 2,
           name: "Automation 2",
           operator: "or",
           enabled: false,
         },
         {
-          automationId: 3,
+          id: 3,
           name: "Automation 3",
           operator: "or",
           enabled: true,
@@ -227,7 +227,7 @@ describe("AutomationService", () => {
       sprootDB.getDateRangeConditionsAsync.resolves([]);
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "Time Alert",
           operator: "or",
           enabled: false,
@@ -270,7 +270,7 @@ describe("AutomationService", () => {
 
       sprootDB.getAutomationsAsync.resolves([
         {
-          automationId: 1,
+          id: 1,
           name: "Test Automation",
           operator: "or",
           enabled: true,
