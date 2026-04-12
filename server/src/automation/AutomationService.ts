@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { TRIGGERED_AUTOMATIONS_EVENT } from "../utils/EventConstants";
+import { OUTPUT_ACTIONS_UPDATED_EVENT, TRIGGERED_AUTOMATIONS_EVENT } from "../utils/EventConstants";
 import { AutomationEvent, AutomationEventPayload } from "./AutomationEvent";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
@@ -92,9 +92,7 @@ class AutomationService extends EventEmitter {
       evaluatedAutomations.map((e) => [e.automation.id, e.payload]),
     );
 
-    if (triggeredAutomationsMap.size > 0) {
-      this.emit(TRIGGERED_AUTOMATIONS_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
-    }
+    this.emit(TRIGGERED_AUTOMATIONS_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
   }
 
   // CRUD methods
@@ -127,7 +125,7 @@ class AutomationService extends EventEmitter {
     comparisonLookback: number | null,
     sensorId: number,
     readingType: ReadingType,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addSensorConditionAsync(
       automationId,
       type,
@@ -148,7 +146,7 @@ class AutomationService extends EventEmitter {
     comparisonValue: number,
     comparisonLookback: number | null,
     outputId: number,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addOutputConditionAsync(
       automationId,
       type,
@@ -166,7 +164,7 @@ class AutomationService extends EventEmitter {
     type: ConditionGroupType,
     startTime: string | null | undefined,
     endTime: string | null | undefined,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addTimeConditionAsync(
       automationId,
       type,
@@ -177,13 +175,21 @@ class AutomationService extends EventEmitter {
     return resultId;
   }
 
-  async addWeekdayConditionAsync(automationId: number, type: ConditionGroupType, weekdays: number) {
+  async addWeekdayConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    weekdays: number,
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addWeekdayConditionAsync(automationId, type, weekdays);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
-  async addMonthConditionAsync(automationId: number, type: ConditionGroupType, months: number) {
+  async addMonthConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    months: number,
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addMonthConditionAsync(automationId, type, months);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -196,7 +202,7 @@ class AutomationService extends EventEmitter {
     startDate: number,
     endMonth: number,
     endDate: number,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addDateRangeConditionAsync(
       automationId,
       type,
@@ -267,13 +273,20 @@ class AutomationService extends EventEmitter {
     await this.#postAutomationChangeFunctionAsync();
   }
 
-  // Output actions - Maybe extract this to a separate class to trigger outputList to update its in-memory data instead of hitting the DB on every event evaluation?
-  addOutputActionAsync(automationId: number, outputId: number, value: number) {
-    return this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
+  // Output actions
+  async addOutputActionAsync(
+    automationId: number,
+    outputId: number,
+    value: number,
+  ): Promise<number> {
+    const result = await this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
+    this.emit(OUTPUT_ACTIONS_UPDATED_EVENT);
+    return result;
   }
 
-  deleteOutputActionAsync(outputActionId: number) {
-    return this.#sprootDB.deleteOutputActionAsync(outputActionId);
+  async deleteOutputActionAsync(outputActionId: number) {
+    await this.#sprootDB.deleteOutputActionAsync(outputActionId);
+    this.emit(OUTPUT_ACTIONS_UPDATED_EVENT);
   }
 
   #postAutomationChangeFunctionAsync() {

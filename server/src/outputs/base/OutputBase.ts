@@ -11,8 +11,6 @@ import { AutomationService } from "../../automation/AutomationService";
 import { OutputActionManager } from "../../automation/outputs/OutputActionManager";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { toDbDate } from "../../utils/dateUtils";
-import { TRIGGERED_AUTOMATIONS_EVENT } from "../../utils/EventConstants";
-import { AutomationEvent } from "../../automation/AutomationEvent";
 
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
@@ -35,8 +33,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   #initialCacheLookback: number;
   #chartData: OutputChartData;
   #chartDataPointInterval: number;
-  #actionManager!: OutputActionManager;
-  #actionListenerRemoval: (() => void) | null = null;
+  #actionManager: OutputActionManager | null = null;
   #updateMissCount = 0;
   #isExecuting = false;
 
@@ -124,9 +121,9 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
    */
   async [Symbol.asyncDispose](): Promise<void> {
     // Remove event listener to prevent memory leaks
-    if (this.#actionListenerRemoval) {
-      this.#actionListenerRemoval();
-      this.#actionListenerRemoval = null;
+    const actionManager = this.#actionManager;
+    if (actionManager != null) {
+      actionManager[Symbol.dispose]();
     }
   }
 
@@ -139,40 +136,12 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.loadChartData();
     this.#actionManager = await OutputActionManager.createInstanceAsync(
       this.parentOutputId ?? this.id,
+      this.#actionFunctionWrapperAsync.bind(this),
+      this.automationService,
       this.sprootDB,
       this.logger,
       this.automationTimeout,
     );
-
-    // Register as event listener for triggered automations
-    const listener = (event: AutomationEvent) => {
-      this.#actionManager
-        .handleAutomationEvent(event)
-        .then(async (actionValue) => {
-          if (actionValue === undefined) {
-            return; // No action to take (output in timeout)
-          }
-
-          await this.setStateAsync({
-            value: actionValue ?? 0, // default to off if no action or collision
-            controlMode: ControlMode.automatic,
-            logTime: toDbDate(),
-          } as SDBOutputState);
-
-          if (this.controlMode === ControlMode.automatic) {
-            await this.executeStateAsync();
-          }
-        })
-        .catch((error) => {
-          this.logger.error(`Error handling automation event for output ${this.id} - ${error}`);
-        });
-    };
-    this.automationService.addListener(TRIGGERED_AUTOMATIONS_EVENT, listener);
-
-    // Store removal function to clean up listener on dispose
-    this.#actionListenerRemoval = () => {
-      this.automationService.removeListener(TRIGGERED_AUTOMATIONS_EVENT, listener);
-    };
 
     return this;
   }
@@ -189,7 +158,16 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
 
   updateAutomationTimeout(timeoutSeconds: number): void {
     this.automationTimeout = timeoutSeconds;
-    this.#actionManager.automationTimeout = timeoutSeconds;
+    if (this.#actionManager) {
+      this.#actionManager.automationTimeout = timeoutSeconds;
+    }
+  }
+
+  updateParentOutputId(parentOutputId: number | null): void {
+    this.parentOutputId = parentOutputId;
+    if (this.#actionManager) {
+      this.#actionManager.outputId = parentOutputId ?? this.id;
+    }
   }
 
   /**
@@ -223,13 +201,6 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     series: ChartSeries;
   } {
     return this.#chartData.get();
-  }
-
-  /**
-   * Reload actions for this output.
-   */
-  async reloadActionsAsync(): Promise<void> {
-    await this.#actionManager.reloadActionsAsync();
   }
 
   async updateDataStoresAsync(): Promise<void> {
@@ -325,6 +296,22 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
     } finally {
       this.#isExecuting = false;
+    }
+  }
+
+  async #actionFunctionWrapperAsync(actionValue: number | undefined): Promise<void> {
+    if (actionValue === undefined) {
+      return; // No action to take (output in timeout)
+    }
+
+    await this.setStateAsync({
+      value: actionValue ?? 0, // default to off if no action or collision
+      controlMode: ControlMode.automatic,
+      logTime: toDbDate(),
+    } as SDBOutputState);
+
+    if (this.controlMode === ControlMode.automatic) {
+      await this.executeStateAsync();
     }
   }
 

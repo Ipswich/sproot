@@ -254,7 +254,7 @@ class OutputList implements AsyncDisposable {
             await (
               this.#outputs[this.#outputs[key]!.parentOutputId!] as OutputGroup
             )?.removeOutputAsync(this.#outputs[key]!.id);
-            this.#outputs[key]!.parentOutputId = output.parentOutputId;
+            this.#outputs[key]!.updateParentOutputId(output.parentOutputId);
             if (output.parentOutputId) {
               await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(
                 this.#outputs[key]!,
@@ -366,21 +366,6 @@ class OutputList implements AsyncDisposable {
         `Updated aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
       );
     }
-  }
-
-  /**
-   * Reload actions on all outputs.
-   */
-  async reloadActionsAsync(): Promise<void> {
-    const promises = [];
-    for (const key in this.#outputs) {
-      promises.push(
-        this.#outputs[key]!.reloadActionsAsync().catch((err) => {
-          this.#logger.error(err);
-        }),
-      );
-    }
-    await Promise.allSettled(promises);
   }
 
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {

@@ -124,6 +124,7 @@ export class OutputGroup extends OutputBase {
   }
 
   override async [Symbol.asyncDispose](): Promise<void> {
+    await super[Symbol.asyncDispose]();
     for (const output of Object.values(this.outputs)) {
       await this.removeOutputAsync(output.id);
     }

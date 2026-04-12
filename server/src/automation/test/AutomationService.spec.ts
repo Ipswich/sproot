@@ -192,7 +192,7 @@ describe("AutomationService", () => {
       service.off("TriggeredAutomations", handler);
     });
 
-    it("should not emit event with disabled automation (conditions met)", async () => {
+    it("should emit (empty) event with disabled automation (conditions met)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getSensorConditionsAsync.resolves([]);
       sprootDB.getOutputConditionsAsync.resolves([]);
@@ -236,13 +236,13 @@ describe("AutomationService", () => {
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, new Date());
 
-      assert.isFalse(context.eventEmitted);
-      assert.isNull(context.receivedEvent);
+      assert.isTrue(context.eventEmitted);
+      assert.isEmpty(context.receivedEvent!.triggeredAutomations);
 
       service.off("TriggeredAutomations", handler);
     });
 
-    it("should not emit event with enabled automation when no conditions are met", async () => {
+    it("should emit (empty) event with enabled automation when no conditions are met", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getSensorConditionsAsync.resolves([]);
       sprootDB.getOutputConditionsAsync.resolves([]);
@@ -281,11 +281,11 @@ describe("AutomationService", () => {
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now);
 
       // The automation has no conditions, so it should not trigger
-      assert.isFalse(context.eventEmitted);
-      assert.isNull(context.receivedEvent);
+      assert.isTrue(context.eventEmitted);
+      assert.isEmpty(context.receivedEvent!.triggeredAutomations);
     });
 
-    it("should not emit event when handling empty automation list", async () => {
+    it("should emit (empty)event when handling empty automation list", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
 
@@ -300,15 +300,17 @@ describe("AutomationService", () => {
         receivedEvent: null as AutomationEvent | null,
       };
 
-      const handler = (_event: AutomationEvent) => {
+      const handler = (event: AutomationEvent) => {
         context.eventEmitted = true;
+        context.receivedEvent = event;
       };
 
       service.on("TriggeredAutomations", handler);
 
       await service.evaluateAllAutomationsAsync(sensorListMock, outputListMock, now);
 
-      assert.isFalse(context.eventEmitted);
+      assert.isTrue(context.eventEmitted);
+      assert.isEmpty(context.receivedEvent!.triggeredAutomations);
     });
   });
 });
