@@ -4,7 +4,7 @@ export const DI_KEYS = {
   SensorList: "sensorList",
   OutputList: "outputList",
   CameraManager: "cameraManager",
-  AutomationDataManager: "automationDataManager",
+  AutomationService: "automationService",
   JournalService: "journalService",
   SystemStatusMonitor: "systemStatusMonitor",
   MdnsService: "mdnsService",

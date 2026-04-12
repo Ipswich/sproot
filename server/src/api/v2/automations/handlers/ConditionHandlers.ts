@@ -5,7 +5,7 @@ import { OutputCondition } from "../../../../automation/conditions/OutputConditi
 import { SensorCondition } from "../../../../automation/conditions/SensorCondition";
 import { TimeCondition } from "../../../../automation/conditions/TimeCondition";
 import { WeekdayCondition } from "../../../../automation/conditions/WeekdayCondition";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { AutomationService } from "../../../../automation/AutomationService";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
@@ -367,9 +367,7 @@ export async function addAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const automationDataManager = request.app.get(
-    DI_KEYS.AutomationDataManager,
-  ) as AutomationDataManager;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let addConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -457,7 +455,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addSensorConditionAsync(
+        resultId = await automationService.addSensorConditionAsync(
           automationId,
           request.body.groupType,
           request.body.operator,
@@ -494,7 +492,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addOutputConditionAsync(
+        resultId = await automationService.addOutputConditionAsync(
           automationId,
           request.body.groupType,
           request.body.operator,
@@ -522,7 +520,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addTimeConditionAsync(
+        resultId = await automationService.addTimeConditionAsync(
           automationId,
           request.body.groupType,
           request.body.startTime ?? null,
@@ -549,7 +547,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addWeekdayConditionAsync(
+        resultId = await automationService.addWeekdayConditionAsync(
           automationId,
           request.body.groupType,
           request.body.weekdays,
@@ -569,7 +567,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addMonthConditionAsync(
+        resultId = await automationService.addMonthConditionAsync(
           automationId,
           request.body.groupType,
           request.body.months,
@@ -613,7 +611,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addDateRangeConditionAsync(
+        resultId = await automationService.addDateRangeConditionAsync(
           automationId,
           request.body.groupType,
           request.body.startMonth,
@@ -676,9 +674,7 @@ export async function updateAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const automationDataManager = request.app.get(
-    DI_KEYS.AutomationDataManager,
-  ) as AutomationDataManager;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let updateConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -829,7 +825,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -865,7 +861,7 @@ export async function updateAsync(
           break;
         }
 
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -894,7 +890,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -916,7 +912,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -934,7 +930,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -985,7 +981,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -1035,9 +1031,7 @@ export async function deleteAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const automationDataManager = request.app.get(
-    DI_KEYS.AutomationDataManager,
-  ) as AutomationDataManager;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let deleteConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -1137,22 +1131,22 @@ export async function deleteAsync(
     }
 
     if (conditionType === "sensor") {
-      await automationDataManager.deleteSensorConditionAsync(conditionId);
+      await automationService.deleteSensorConditionAsync(conditionId);
     }
     if (conditionType === "output") {
-      await automationDataManager.deleteOutputConditionAsync(conditionId);
+      await automationService.deleteOutputConditionAsync(conditionId);
     }
     if (conditionType === "time") {
-      await automationDataManager.deleteTimeConditionAsync(conditionId);
+      await automationService.deleteTimeConditionAsync(conditionId);
     }
     if (conditionType === "weekday") {
-      await automationDataManager.deleteWeekdayConditionAsync(conditionId);
+      await automationService.deleteWeekdayConditionAsync(conditionId);
     }
     if (conditionType === "month") {
-      await automationDataManager.deleteMonthConditionAsync(conditionId);
+      await automationService.deleteMonthConditionAsync(conditionId);
     }
     if (conditionType === "date-range") {
-      await automationDataManager.deleteDateRangeConditionAsync(conditionId);
+      await automationService.deleteDateRangeConditionAsync(conditionId);
     }
 
     deleteConditionResponse = {

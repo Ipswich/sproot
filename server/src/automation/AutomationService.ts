@@ -1,3 +1,7 @@
+import { EventEmitter } from "events";
+import { OUTPUT_ACTIONS_UPDATED_EVENT, AUTOMATIONS_TRIGGERED_EVENT } from "../utils/EventConstants";
+import { AutomationEvent, AutomationEventPayload } from "./AutomationEvent";
+import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
@@ -9,23 +13,103 @@ import { ReadingType } from "@sproot/sensors/ReadingType";
 import { WeekdayCondition } from "./conditions/WeekdayCondition";
 import { MonthCondition } from "./conditions/MonthCondition";
 import { DateRangeCondition } from "./conditions/DateRangeCondition";
+import { SensorList } from "../sensors/list/SensorList";
+import winston from "winston";
 
 /**
- * This class serves as an interface between changes in automation data and the things
- * that depend on that data. Effectively, it serves as a way to ensure that when a change
- * in an automation or condition is made, its dependents reflect those changes.
+ * Central automation evaluator and event emitter.
+ * Loads all automations from the database, evaluates them, and emits events when they trigger.
  */
-class AutomationDataManager {
+class AutomationService extends EventEmitter {
+  #automations: Map<number, Automation>; // Key: automationId
   #sprootDB: ISprootDB;
-  #outputList: OutputList;
+  #logger: winston.Logger;
 
-  constructor(sprootDB: ISprootDB, outputList: OutputList) {
-    this.#sprootDB = sprootDB;
-    this.#outputList = outputList;
+  static async createInstanceAsync(
+    sprootDB: ISprootDB,
+    logger: winston.Logger,
+  ): Promise<AutomationService> {
+    const service = new AutomationService(sprootDB, logger);
+    await service.loadAllAutomationsAsync();
+    return service;
   }
 
+  private constructor(sprootDB: ISprootDB, logger: winston.Logger) {
+    super();
+    this.#sprootDB = sprootDB;
+    this.#automations = new Map();
+    this.#logger = logger;
+  }
+
+  /**
+   * Load all automations from the database.
+   */
+  async loadAllAutomationsAsync(): Promise<void> {
+    try {
+      const rawAutomations = await this.#sprootDB.getAutomationsAsync();
+      this.#automations = new Map();
+
+      const promises = rawAutomations.map(async (automation) => {
+        const automationInstance = await Automation.createInstanceAsync(
+          automation.id,
+          automation.name,
+          automation.operator,
+          automation.enabled,
+          this.#sprootDB,
+        );
+        return [automation.id, automationInstance] as [number, Automation];
+      });
+
+      const automationEntries = await Promise.all(promises);
+      this.#automations = new Map(automationEntries);
+    } catch (error) {
+      this.#logger.error(`Error loading automations from database: ${error}`);
+    }
+  }
+
+  /**
+   * Central evaluation entry point - evaluates all automations and emits events.
+   */
+  async evaluateAllAutomationsAsync(
+    sensorList: SensorList,
+    outputList: OutputList,
+    now: Date,
+  ): Promise<void> {
+    // Evaluate each automation once
+    const evaluatedAutomations: Array<{
+      automation: Automation;
+      payload: AutomationEventPayload;
+    }> = [];
+
+    for (const [_automationId, automation] of this.#automations.entries()) {
+      if (!automation.enabled) continue;
+
+      const result = await automation.evaluate(sensorList, outputList, now);
+      if (result.result) {
+        evaluatedAutomations.push({
+          automation,
+          payload: {
+            automationId: automation.id,
+            automationName: automation.name,
+            operator: automation.operator,
+            conditions: result.conditions,
+          },
+        });
+      }
+    }
+
+    // Emit single AutomationEvent with all triggered automations
+    const triggeredAutomationsMap = new Map(
+      evaluatedAutomations.map((e) => [e.automation.id, e.payload]),
+    );
+
+    this.emit(AUTOMATIONS_TRIGGERED_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
+  }
+
+  // CRUD methods
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
     const resultId = await this.#sprootDB.addAutomationAsync(name, operator);
+    await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
@@ -52,7 +136,7 @@ class AutomationDataManager {
     comparisonLookback: number | null,
     sensorId: number,
     readingType: ReadingType,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addSensorConditionAsync(
       automationId,
       type,
@@ -73,7 +157,7 @@ class AutomationDataManager {
     comparisonValue: number,
     comparisonLookback: number | null,
     outputId: number,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addOutputConditionAsync(
       automationId,
       type,
@@ -91,7 +175,7 @@ class AutomationDataManager {
     type: ConditionGroupType,
     startTime: string | null | undefined,
     endTime: string | null | undefined,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addTimeConditionAsync(
       automationId,
       type,
@@ -102,13 +186,21 @@ class AutomationDataManager {
     return resultId;
   }
 
-  async addWeekdayConditionAsync(automationId: number, type: ConditionGroupType, weekdays: number) {
+  async addWeekdayConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    weekdays: number,
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addWeekdayConditionAsync(automationId, type, weekdays);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
-  async addMonthConditionAsync(automationId: number, type: ConditionGroupType, months: number) {
+  async addMonthConditionAsync(
+    automationId: number,
+    type: ConditionGroupType,
+    months: number,
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addMonthConditionAsync(automationId, type, months);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -121,7 +213,7 @@ class AutomationDataManager {
     startDate: number,
     endMonth: number,
     endDate: number,
-  ) {
+  ): Promise<number> {
     const resultId = await this.#sprootDB.addDateRangeConditionAsync(
       automationId,
       type,
@@ -193,20 +285,24 @@ class AutomationDataManager {
   }
 
   // Output actions
-  async addOutputActionAsync(automationId: number, outputId: number, value: number) {
-    const result = this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
-    await this.#outputList.regenerateAsync();
+  async addOutputActionAsync(
+    automationId: number,
+    outputId: number,
+    value: number,
+  ): Promise<number> {
+    const result = await this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
+    this.emit(OUTPUT_ACTIONS_UPDATED_EVENT);
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
     await this.#sprootDB.deleteOutputActionAsync(outputActionId);
-    await this.#outputList.regenerateAsync();
+    this.emit(OUTPUT_ACTIONS_UPDATED_EVENT);
   }
 
-  async #postAutomationChangeFunctionAsync() {
-    await this.#outputList.regenerateAsync();
+  #postAutomationChangeFunctionAsync() {
+    return this.loadAllAutomationsAsync();
   }
 }
 
-export { AutomationDataManager };
+export { AutomationService };

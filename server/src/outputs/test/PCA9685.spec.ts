@@ -10,7 +10,9 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { AutomationService } from "../../automation/AutomationService";
 const mockSprootDB = new MockSprootDB();
+const mockAutomationService = sinon.createStubInstance(AutomationService);
 
 describe("PCA9685.ts tests", function () {
   afterEach(() => {
@@ -24,7 +26,7 @@ describe("PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -94,7 +96,7 @@ describe("PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -127,7 +129,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,

@@ -42,8 +42,8 @@ describe("Conditions.ts tests", () => {
       now.setHours(12, 0);
 
       // No conditions should return false
-      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
-      assert.isFalse(conditions.evaluate("or", sensorList, outputList, now));
+      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.isFalse(conditions.evaluate("or", sensorList, outputList, now).result);
 
       const sensorConditions = [] as SDBSensorCondition[];
       const outputConditions = [] as SDBOutputCondition[];
@@ -70,7 +70,26 @@ describe("Conditions.ts tests", () => {
         readingType: ReadingType.temperature,
       } as SDBSensorCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("and", sensorList, outputList, now).conditions,
+        {
+          allOf: [
+            {
+              condition: {
+                id: 1,
+                kind: "sensor",
+                readingType: ReadingType.temperature,
+                sensorId: 1,
+                comparisonValue: 50,
+                operator: "equal",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+          ],
+        },
+      );
       sensorConditions.push({
         automationId: 1,
         id: 2,
@@ -81,7 +100,39 @@ describe("Conditions.ts tests", () => {
         readingType: ReadingType.pressure,
       } as SDBSensorCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("and", sensorList, outputList, now).conditions,
+        {
+          allOf: [
+            {
+              condition: {
+                id: 1,
+                kind: "sensor",
+                readingType: ReadingType.temperature,
+                sensorId: 1,
+                comparisonValue: 50,
+                operator: "equal",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+            {
+              condition: {
+                id: 2,
+                kind: "sensor",
+                readingType: ReadingType.pressure,
+                sensorId: 1,
+                comparisonValue: 50,
+                operator: "greater",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+          ],
+        },
+      );
+
       //This one is false, but the previous one is true
       sensorConditions.push({
         automationId: 1,
@@ -93,7 +144,50 @@ describe("Conditions.ts tests", () => {
         readingType: ReadingType.humidity,
       } as SDBSensorCondition);
       await conditions.loadAsync();
-      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("and", sensorList, outputList, now).conditions,
+        {
+          allOf: [
+            {
+              condition: {
+                id: 1,
+                kind: "sensor",
+                readingType: ReadingType.temperature,
+                sensorId: 1,
+                comparisonValue: 50,
+                operator: "equal",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+            {
+              condition: {
+                id: 2,
+                kind: "sensor",
+                readingType: ReadingType.pressure,
+                sensorId: 1,
+                comparisonValue: 50,
+                operator: "greater",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+            {
+              condition: {
+                id: 3,
+                kind: "sensor",
+                readingType: ReadingType.humidity,
+                sensorId: 1,
+                comparisonValue: 48,
+                operator: "less",
+                comparisonLookback: null,
+              },
+              result: false,
+            },
+          ],
+        },
+      );
 
       // Clean up that last one
       sensorConditions.pop();
@@ -109,7 +203,25 @@ describe("Conditions.ts tests", () => {
         outputId: 1,
       } as SDBOutputCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("and", sensorList, outputList, now).conditions,
+        {
+          anyOf: [
+            {
+              condition: {
+                id: 1,
+                kind: "output",
+                outputId: 1,
+                comparisonValue: 50,
+                operator: "greaterOrEqual",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+          ],
+        },
+      );
       //This one is false, but the previous one is true
       outputConditions.push({
         automationId: 1,
@@ -120,7 +232,36 @@ describe("Conditions.ts tests", () => {
         outputId: 1,
       } as SDBOutputCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("and", sensorList, outputList, now).conditions,
+        {
+          anyOf: [
+            {
+              condition: {
+                id: 1,
+                kind: "output",
+                outputId: 1,
+                comparisonValue: 50,
+                operator: "greaterOrEqual",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+            {
+              condition: {
+                id: 2,
+                kind: "output",
+                outputId: 1,
+                comparisonValue: 50,
+                operator: "notEqual",
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+          ],
+        },
+      );
 
       // Add some time Conditions
       timeConditions.push({
@@ -131,7 +272,24 @@ describe("Conditions.ts tests", () => {
         endTime: null,
       } as SDBTimeCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("and", sensorList, outputList, now).conditions,
+        {
+          oneOf: [
+            {
+              condition: {
+                id: 1,
+                kind: "time",
+                startTime: "12:00",
+                endTime: null,
+                comparisonLookback: null,
+              },
+              result: true,
+            },
+          ],
+        },
+      );
       //This one is false, but the previous one is true
       timeConditions.push({
         automationId: 1,
@@ -141,7 +299,19 @@ describe("Conditions.ts tests", () => {
         endTime: "14:00",
       } as SDBTimeCondition);
       await conditions.loadAsync();
-      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("and", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("and", sensorList, outputList, now).conditions,
+        {
+          oneOf: [
+            { condition: { id: 1, kind: "time", startTime: "12:00", endTime: null }, result: true },
+            {
+              condition: { id: 2, kind: "time", startTime: "13:00", endTime: "14:00" },
+              result: false,
+            },
+          ],
+        },
+      );
       //This one is also true (and should make this all return false)
       timeConditions.push({
         automationId: 1,
@@ -151,10 +321,26 @@ describe("Conditions.ts tests", () => {
         endTime: "13:00",
       } as SDBTimeCondition);
       await conditions.loadAsync();
-      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now));
+      assert.isFalse(conditions.evaluate("and", sensorList, outputList, now).result);
 
       //But evaluating as "or" should return true
-      assert.isTrue(conditions.evaluate("or", sensorList, outputList, now));
+      assert.isTrue(conditions.evaluate("or", sensorList, outputList, now).result);
+      assert.containsAllDeepKeys(
+        conditions.evaluate("or", sensorList, outputList, now).conditions,
+        {
+          oneOf: [
+            { condition: { id: 1, kind: "time", startTime: "12:00", endTime: null }, result: true },
+            {
+              condition: { id: 2, kind: "time", startTime: "13:00", endTime: "14:00" },
+              result: false,
+            },
+            {
+              condition: { id: 3, kind: "time", startTime: "16:00", endTime: "13:00" },
+              result: true,
+            },
+          ],
+        },
+      );
     });
   });
 

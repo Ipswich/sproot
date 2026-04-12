@@ -98,6 +98,7 @@ interface ISprootDB {
   getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]>;
   addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number>;
   deleteOutputActionAsync(outputActionId: number): Promise<void>;
+  getOutputActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
 
@@ -324,6 +325,9 @@ class MockSprootDB implements ISprootDB {
   }
   async deleteOutputActionAsync(_outputActionId: number): Promise<void> {
     return;
+  }
+  async getOutputActionsByOutputIdAsync(_outputId: number): Promise<SDBOutputAction[]> {
+    return [];
   }
 
   async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputActionView[]> {
