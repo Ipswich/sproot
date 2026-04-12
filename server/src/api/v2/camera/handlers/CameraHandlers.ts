@@ -11,40 +11,90 @@ import winston from "winston";
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
-  try {
-    response.setHeader("Age", 0);
-    response.setHeader("Cache-Control", "no-cache, private");
-    response.setHeader("Pragma", "no-cache");
-    response.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=FRAME");
 
-    const livestream = cameraManager.livestream;
-    if (!livestream) {
-      throw new Error("Livestream not available");
-    }
+  // Get the frame buffer for direct streaming
+  const frameBuffer = cameraManager.getFrameBuffer();
 
-    // Handle errors on the readable stream
-    const onStreamError = (err: Error) => {
-      logger.error(`Upstream error, HTTP response: ${err}`);
-      response.end();
-    };
-    livestream.on("error", onStreamError);
-
-    // Handle client disconnection
-    response.on("close", () => {
-      livestream.unpipe(response);
-      livestream.removeListener("error", onStreamError);
-    });
-
-    livestream.pipe(response);
-    response.status(200);
-  } catch (e) {
+  if (!frameBuffer) {
+    logger.error("StreamHandler: frame buffer not available");
     if (!response.headersSent) {
       response.status(502).json({
         statusCode: 502,
         error: {
           name: "Bad Gateway",
           url: request.originalUrl,
-          details: [`Could not connect to camera server`],
+          details: [`Camera stream not available`],
+        },
+        ...response.locals["defaultProperties"],
+      });
+    }
+    return;
+  }
+
+  try {
+    response.setHeader("Age", 0);
+    response.setHeader("Cache-Control", "no-cache, private");
+    response.setHeader("Pragma", "no-cache");
+    response.setHeader("Content-Type", "multipart/x-mixed-replace; boundary=FRAME");
+    response.status(200);
+
+    const clientId = `client_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    logger.info(`StreamHandler: new client ${clientId} connected`);
+
+    // Create a subscriber for this client
+    const subscriber: { onFrame: (frame: Buffer) => void; onDestroy: () => void } = {
+      onFrame: (frame: Buffer) => {
+        try {
+          // Build MJPEG frame
+          const frameParts = [
+            `--FRAME`,
+            `Content-Type: image/jpeg`,
+            `Content-Length: ${frame.length}`,
+            ``,
+            frame,
+            ``,
+          ];
+          const frameData = Buffer.concat(
+            frameParts.map((part) => (typeof part === "string" ? Buffer.from(part) : part)),
+          );
+          response.write(frameData);
+        } catch (e) {
+          logger.debug(`StreamHandler: failed to write frame to client ${clientId}: ${e}`);
+        }
+      },
+      onDestroy: () => {
+        logger.debug(`StreamHandler: client ${clientId} destroyed`);
+      },
+    };
+
+    // Add subscriber to frame buffer
+    frameBuffer.addSubscriber(response, subscriber);
+
+    // Handle client disconnection
+    const onClientDisconnect = () => {
+      logger.info(`StreamHandler: client ${clientId} disconnected`);
+      frameBuffer.removeSubscriber(response);
+      response.end();
+    };
+
+    response.on("close", onClientDisconnect);
+    response.on("finish", onClientDisconnect);
+    response.on("error", onClientDisconnect);
+
+    // Handle errors on the frame buffer
+    frameBuffer.on("error", (err: Error) => {
+      logger.error(`StreamHandler: frame buffer error: ${err.message}`);
+      onClientDisconnect();
+    });
+  } catch (e) {
+    logger.error(`StreamHandler: error handling stream: ${e}`);
+    if (!response.headersSent) {
+      response.status(502).json({
+        statusCode: 502,
+        error: {
+          name: "Bad Gateway",
+          url: request.originalUrl,
+          details: [`Could not connect to camera stream`],
         },
         ...response.locals["defaultProperties"],
       });

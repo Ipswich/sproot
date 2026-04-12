@@ -7,7 +7,7 @@ import { CronJob } from "cron";
 
 import winston from "winston";
 import ImageCapture from "./ImageCapture";
-import Livestream from "./Livestream";
+import StreamProxy from "./StreamProxy";
 
 class CameraManager {
   #sprootDB: ISprootDB;
@@ -15,7 +15,7 @@ class CameraManager {
   #logger: winston.Logger;
 
   #imageCapture: ImageCapture;
-  #livestream: Livestream;
+  #streamProxy: StreamProxy | null = null;
   #picameraServerProcess: ChildProcessWithoutNullStreams | null = null;
   #currentSettings: SDBCameraSettings | null = null;
   #isUpdating: boolean = false;
@@ -43,7 +43,6 @@ class CameraManager {
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
     this.#imageCapture = new ImageCapture(logger);
-    this.#livestream = new Livestream(logger);
     this.#imageCaptureCronJob = new CronJob(
       CRON.EVERY_MINUTE,
       async () => {
@@ -71,8 +70,12 @@ class CameraManager {
     return this.#currentSettings;
   }
 
+  /**
+   * Gets the readable stream for backward compatibility.
+   * Note: For new code, use the Express /api/v2/camera/stream endpoint instead.
+   */
   get livestream() {
-    return this.#livestream.readableStream;
+    return this.#streamProxy?.readableStream ?? null;
   }
 
   /**
@@ -132,12 +135,23 @@ class CameraManager {
   }
 
   /**
-   * Forces a reconnect to the livestream. Cleans up resources and reinitializes
-   * the livestream connection.
+   * Forces a reconnect to the upstream camera server.
    * @returns A promise that resolves with the result of the reconnection attempt.
    */
   reconnectLivestreamAsync() {
-    return this.#livestream.reconnectLivestreamAsync(this.#baseUrl, this.generateRequestHeaders());
+    if (!this.#streamProxy) {
+      this.#logger.warn("CameraManager: stream proxy not initialized");
+      return Promise.resolve(false);
+    }
+    return this.#streamProxy.reconnectAsync();
+  }
+
+  /**
+   * Gets the frame buffer for direct access (used by streaming handlers).
+   * @returns The frame buffer, or null if stream proxy is not initialized.
+   */
+  getFrameBuffer() {
+    return this.#streamProxy?.getFrameBuffer() ?? null;
   }
 
   async regenerateAsync(): Promise<this> {
@@ -165,10 +179,16 @@ class CameraManager {
               this.#imageCapture.regenerateTimelapseArchiveAsync();
             });
           this.createCameraProcess(this.#currentSettings);
-          await this.#livestream.connectToLivestreamAsync(
-            this.#baseUrl,
-            this.generateRequestHeaders(),
-          );
+
+          // Start stream proxy if not already running
+          if (!this.#streamProxy) {
+            this.#streamProxy = new StreamProxy({
+              logger: this.#logger,
+              upstreamUrl: this.#baseUrl,
+              upstreamHeaders: this.generateRequestHeaders(),
+            });
+            await this.#streamProxy.startAsync();
+          }
 
           this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
 
@@ -176,7 +196,11 @@ class CameraManager {
         }
       }
 
-      this.#livestream.disconnectFromLivestream();
+      // Camera disabled - stop stream proxy
+      if (this.#streamProxy) {
+        await this.#streamProxy.stopAsync();
+        this.#streamProxy = null;
+      }
     } finally {
       this.#isUpdating = false;
     }
@@ -186,6 +210,10 @@ class CameraManager {
   async [Symbol.asyncDispose](): Promise<void> {
     this.#disposed = true;
     await this.#imageCaptureCronJob.stop();
+    if (this.#streamProxy) {
+      await this.#streamProxy.stopAsync();
+      this.#streamProxy = null;
+    }
     this.cleanupCameraProcess();
   }
 
@@ -259,7 +287,6 @@ class CameraManager {
   }
 
   private cleanupCameraProcess() {
-    this.#livestream.disconnectFromLivestream();
     // Clean up process
     if (this.#picameraServerProcess !== null) {
       this.#picameraServerProcess.removeAllListeners();

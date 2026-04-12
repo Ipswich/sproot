@@ -1121,7 +1121,7 @@ describe("API Tests", async function () {
             .end((err, res) => {
               if (err) {
                 const msg = err.message || "";
-                if (msg.includes("MultipartParser.end(): stream ended unexpectedly")) {
+                if (msg.includes("socket hang up")) {
                   return;
                 }
                 assert.fail("Stream request failed: " + err.message);
