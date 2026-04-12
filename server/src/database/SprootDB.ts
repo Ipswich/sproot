@@ -566,6 +566,11 @@ export class SprootDB implements ISprootDB {
       "value",
     ]);
   }
+  async getOutputActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]> {
+    return this.#connection("output_actions")
+      .where("output_id", outputId)
+      .select(["id", "automation_id as automationId", "output_id as outputId", "value"]);
+  }
   async getOutputActionsByAutomationIdAsync(automationId: number): Promise<SDBOutputAction[]> {
     return this.#connection("output_actions")
       .where("automation_id", automationId)

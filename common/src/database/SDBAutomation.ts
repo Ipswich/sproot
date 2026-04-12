@@ -1,7 +1,7 @@
 import { AutomationOperator } from "../automation/IAutomation";
 
 type SDBAutomation = {
-  automationId: number;
+  id: number;
   name: string;
   operator: AutomationOperator;
   enabled: boolean;

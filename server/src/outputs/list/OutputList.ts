@@ -9,12 +9,13 @@ import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputSta
 import winston from "winston";
 import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
 import { OutputListChartData } from "./OutputListChartData";
-import { SensorList } from "../../sensors/list/SensorList";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
+import { AutomationService } from "../../automation/AutomationService";
 
 class OutputList implements AsyncDisposable {
+  #automationService: AutomationService;
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #ESP32_PCA9685: ESP32_PCA9685;
@@ -29,6 +30,7 @@ class OutputList implements AsyncDisposable {
   chartDataPointInterval: number;
 
   static createInstanceAsync(
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -38,6 +40,7 @@ class OutputList implements AsyncDisposable {
     logger: winston.Logger,
   ): Promise<OutputList> {
     const outputList = new OutputList(
+      automationService,
       sprootDB,
       mdnsService,
       maxCacheSize,
@@ -50,6 +53,7 @@ class OutputList implements AsyncDisposable {
   }
 
   private constructor(
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -58,9 +62,11 @@ class OutputList implements AsyncDisposable {
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
+    this.#automationService = automationService;
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
+      this.#automationService,
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -70,6 +76,7 @@ class OutputList implements AsyncDisposable {
       this.#logger,
     );
     this.#ESP32_PCA9685 = new ESP32_PCA9685(
+      this.#automationService,
       this.#sprootDB,
       mdnsService,
       maxCacheSize,
@@ -80,6 +87,7 @@ class OutputList implements AsyncDisposable {
       this.#logger,
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
+      this.#automationService,
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -132,17 +140,6 @@ class OutputList implements AsyncDisposable {
     this.#logger.verbose(`Executing output state for all outputs`);
     const promises = Object.keys(this.outputs).map((key) => this.outputs[key]?.executeStateAsync());
     await Promise.all(promises);
-  }
-
-  async runAutomationsAsync(sensorList: SensorList, now: Date, outputId?: number): Promise<void> {
-    if (outputId) {
-      await this.#outputs[outputId]?.runAutomationsAsync(sensorList, this, now);
-      return;
-    }
-    const promises = Object.values(this.#outputs).map((output) =>
-      output.runAutomationsAsync(sensorList, this, now),
-    );
-    await Promise.allSettled(promises);
   }
 
   getAvailableDevices(
@@ -243,7 +240,7 @@ class OutputList implements AsyncDisposable {
 
           if (this.#outputs[key]?.automationTimeout != output.automationTimeout) {
             changeList.push("Automation Timeout");
-            this.#outputs[key]!.automationTimeout = output.automationTimeout;
+            this.#outputs[key]!.updateAutomationTimeout(output.automationTimeout);
           }
 
           if (this.#outputs[key]?.deviceZoneId != output.deviceZoneId) {
@@ -257,7 +254,7 @@ class OutputList implements AsyncDisposable {
             await (
               this.#outputs[this.#outputs[key]!.parentOutputId!] as OutputGroup
             )?.removeOutputAsync(this.#outputs[key]!.id);
-            this.#outputs[key]!.parentOutputId = output.parentOutputId;
+            this.#outputs[key]!.updateParentOutputId(output.parentOutputId);
             if (output.parentOutputId) {
               await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(
                 this.#outputs[key]!,
@@ -402,6 +399,7 @@ class OutputList implements AsyncDisposable {
       case Models.OUTPUT_GROUP.toLowerCase(): {
         newOutput = await OutputGroup.createInstanceAsync(
           output,
+          this.#automationService,
           this.#sprootDB,
           this.maxCacheSize,
           this.initialCacheLookback,

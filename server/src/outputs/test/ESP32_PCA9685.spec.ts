@@ -11,7 +11,9 @@ import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
+import { AutomationService } from "../../automation/AutomationService";
 const mockSprootDB = new MockSprootDB();
+const mockAutomationService = sinon.createStubInstance(AutomationService);
 
 describe("ESP32_PCA9685.ts tests", function () {
   this.beforeEach(() => {
@@ -42,7 +44,17 @@ describe("ESP32_PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new ESP32_PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new ESP32_PCA9685(
+      mockAutomationService,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -116,7 +128,17 @@ describe("ESP32_PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new ESP32_PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new ESP32_PCA9685(
+      mockAutomationService,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.ESP32_PCA9685,
@@ -167,7 +189,17 @@ describe("ESP32_PCA9685.ts tests", function () {
         return { status: "ok" };
       });
 
-    const pca9685 = new ESP32_PCA9685(mockSprootDB, mockMdnsService, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new ESP32_PCA9685(
+      mockAutomationService,
+      mockSprootDB,
+      mockMdnsService,
+      5,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,

@@ -266,7 +266,9 @@ export default function CameraSettings() {
                     clearAllImagesMutation.mutate();
                   }}
                   loading={clearAllImagesMutation.isPending}
-                  disabled={getTimelapseArchiveStatusQuery.data?.isGenerating}
+                  disabled={
+                    getTimelapseArchiveStatusQuery.data?.isGenerating ?? false
+                  }
                   color="red"
                 >
                   Delete All Images

@@ -1,7 +1,9 @@
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
+import { ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
+import { ReadingType } from "@sproot/sensors/ReadingType";
 
 import { OutputCondition } from "./OutputCondition";
 import { SensorCondition } from "./SensorCondition";
@@ -17,6 +19,49 @@ type EnabledConditionTypes =
   | WeekdayCondition
   | MonthCondition
   | DateRangeCondition;
+
+export type IConditionProperties =
+  | {
+      kind: "sensor";
+      id: number;
+      sensorId: number;
+      readingType: ReadingType;
+      operator: ConditionOperator;
+      comparisonValue: number;
+      comparisonLookback: number | null;
+    }
+  | {
+      kind: "output";
+      id: number;
+      outputId: number;
+      operator: ConditionOperator;
+      comparisonValue: number;
+      comparisonLookback: number | null;
+    }
+  | {
+      kind: "time";
+      id: number;
+      startTime?: string | null | undefined;
+      endTime?: string | null | undefined;
+    }
+  | {
+      kind: "weekday";
+      id: number;
+      weekdays: number;
+    }
+  | {
+      kind: "month";
+      id: number;
+      months: number;
+    }
+  | {
+      kind: "dateRange";
+      id: number;
+      startMonth: number;
+      startDate: number;
+      endMonth: number;
+      endDate: number;
+    };
 
 export class Conditions {
   #automationId: number;
@@ -123,8 +168,15 @@ export class Conditions {
     sensorList: SensorList,
     outputList: OutputList,
     now: Date,
-  ): boolean {
-    const evaluateByConditionFlavor = (condition: EnabledConditionTypes) => {
+  ): {
+    result: boolean;
+    conditions: {
+      allOf: { condition: IConditionProperties; result: boolean }[];
+      anyOf: { condition: IConditionProperties; result: boolean }[];
+      oneOf: { condition: IConditionProperties; result: boolean }[];
+    };
+  } {
+    const evaluateByConditionFlavor = (condition: EnabledConditionTypes): boolean => {
       if (condition instanceof SensorCondition) {
         return condition.evaluate(sensorList, now);
       }
@@ -143,15 +195,15 @@ export class Conditions {
       if (condition instanceof DateRangeCondition) {
         return condition.evaluate(now);
       }
+      return false;
     };
 
     // If no conditions, false.
-    if (
-      Object.keys(this.allOf).length == 0 &&
-      Object.keys(this.anyOf).length == 0 &&
-      Object.keys(this.oneOf).length == 0
-    ) {
-      return false;
+    if (this.allOf.length == 0 && this.anyOf.length == 0 && this.oneOf.length == 0) {
+      return {
+        result: false,
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      };
     }
 
     // Things get weird if any of the lists are empty. If we default to returning true and
@@ -161,30 +213,110 @@ export class Conditions {
     // Basically, we need to "ignore" empty condition types.
     const defaultReturnValue = operator == "and";
 
-    const allOfEvaluationMap = this.allOf.map((c) => evaluateByConditionFlavor(c));
+    const allOfEvaluationMap = this.allOf
+      .map((c) => ({
+        condition: this.conditionToProperties(c),
+        result: evaluateByConditionFlavor(c),
+      }))
+      .filter((r) => r.condition != null) as { condition: IConditionProperties; result: boolean }[];
     const allOfResult =
       allOfEvaluationMap.length == 0
         ? defaultReturnValue
-        : allOfEvaluationMap.every((c) => c == true);
+        : allOfEvaluationMap.every((e) => e.result);
 
-    const anyOfEvaluationMap = this.anyOf.map((c) => evaluateByConditionFlavor(c));
+    const anyOfEvaluationMap = this.anyOf
+      .map((c) => ({
+        condition: this.conditionToProperties(c),
+        result: evaluateByConditionFlavor(c),
+      }))
+      .filter((r) => r.condition != null) as { condition: IConditionProperties; result: boolean }[];
     const anyOfResult =
       anyOfEvaluationMap.length == 0
         ? defaultReturnValue
-        : anyOfEvaluationMap.some((c) => c == true);
+        : anyOfEvaluationMap.some((e) => e.result);
 
-    const oneOfEvaluationMap = this.oneOf.map((c) => evaluateByConditionFlavor(c));
+    const oneOfEvaluationMap = this.oneOf
+      .map((c) => ({
+        condition: this.conditionToProperties(c),
+        result: evaluateByConditionFlavor(c),
+      }))
+      .filter((r) => r.condition != null) as { condition: IConditionProperties; result: boolean }[];
     const oneOfResult =
       oneOfEvaluationMap.length == 0
         ? defaultReturnValue
-        : oneOfEvaluationMap.filter((c) => c == true).length == 1;
+        : oneOfEvaluationMap.filter((e) => e.result).length == 1;
 
-    switch (operator) {
-      case "and":
-        return allOfResult && anyOfResult && oneOfResult;
-      case "or":
-        return allOfResult || anyOfResult || oneOfResult;
+    const result =
+      operator == "and"
+        ? allOfResult && anyOfResult && oneOfResult
+        : allOfResult || anyOfResult || oneOfResult;
+
+    return {
+      result,
+      conditions: {
+        allOf: allOfEvaluationMap,
+        anyOf: anyOfEvaluationMap,
+        oneOf: oneOfEvaluationMap,
+      },
+    };
+  }
+
+  conditionToProperties(condition: EnabledConditionTypes): IConditionProperties | null {
+    if (condition instanceof SensorCondition) {
+      return {
+        kind: "sensor",
+        id: condition.id,
+        sensorId: condition.sensorId,
+        readingType: condition.readingType,
+        operator: condition.operator,
+        comparisonValue: condition.comparisonValue,
+        comparisonLookback: condition.comparisonLookback,
+      };
     }
+    if (condition instanceof OutputCondition) {
+      return {
+        kind: "output",
+        id: condition.id,
+        outputId: condition.outputId,
+        operator: condition.operator,
+        comparisonValue: condition.comparisonValue,
+        comparisonLookback: condition.comparisonLookback,
+      };
+    }
+    if (condition instanceof TimeCondition) {
+      return {
+        kind: "time",
+        id: condition.id,
+        startTime: condition.startTime ?? undefined,
+        endTime: condition.endTime ?? undefined,
+      };
+    }
+    if (condition instanceof WeekdayCondition) {
+      return {
+        kind: "weekday",
+        id: condition.id,
+        weekdays: condition.weekdays,
+      };
+    }
+    if (condition instanceof MonthCondition) {
+      return {
+        kind: "month",
+        id: condition.id,
+        months: condition.months,
+      };
+    }
+    if (condition instanceof DateRangeCondition) {
+      return {
+        kind: "dateRange",
+        id: condition.id,
+        startMonth: condition.startMonth,
+        startDate: condition.startDate,
+        endMonth: condition.endMonth,
+        endDate: condition.endDate,
+      };
+    }
+    // This should never happen
+    return null;
   }
 
   async loadAsync(): Promise<void> {
