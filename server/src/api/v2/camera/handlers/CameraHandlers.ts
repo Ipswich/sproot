@@ -43,16 +43,11 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     response.removeHeader("Content-Length");
 
     const clientId = `client_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-    logger.info(`StreamHandler: new client ${clientId} connected`);
 
     // Create a subscriber for this client that writes chunks directly
     const subscriber: { onChunk: (chunk: Buffer) => void; onDestroy: () => void } = {
       onChunk: (chunk: Buffer) => {
         try {
-          logger.debug(
-            `StreamHandler: writing chunk of ${chunk.length} bytes to client ${clientId}`,
-          );
-          // Write the chunk - Express/Node will handle buffering
           response.write(chunk);
         } catch (e) {
           logger.error(`StreamHandler: failed to write chunk to client ${clientId}: ${e}`);
@@ -68,7 +63,6 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 
     // Handle client disconnection
     const onClientDisconnect = () => {
-      logger.info(`StreamHandler: client ${clientId} disconnected`);
       frameBuffer.removeSubscriber(response);
       if (!response.writableEnded) {
         response.end();

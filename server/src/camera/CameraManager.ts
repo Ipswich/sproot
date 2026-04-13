@@ -190,8 +190,6 @@ class CameraManager {
             });
             await this.#streamProxy.startAsync();
             this.#logger.info("CameraManager: stream proxy created");
-          } else {
-            this.#logger.info("CameraManager: stream proxy already exists");
           }
 
           this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
