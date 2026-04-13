@@ -182,12 +182,16 @@ class CameraManager {
 
           // Start stream proxy if not already running
           if (!this.#streamProxy) {
+            this.#logger.info("CameraManager: creating new stream proxy");
             this.#streamProxy = new StreamProxy({
               logger: this.#logger,
               upstreamUrl: this.#baseUrl,
               upstreamHeaders: this.generateRequestHeaders(),
             });
             await this.#streamProxy.startAsync();
+            this.#logger.info("CameraManager: stream proxy created");
+          } else {
+            this.#logger.info("CameraManager: stream proxy already exists");
           }
 
           this.#imageCapture.updateTimelapseSettings(this.#currentSettings);

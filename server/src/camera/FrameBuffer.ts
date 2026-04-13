@@ -35,10 +35,14 @@ export class FrameBuffer {
     if (!this.#passThrough) {
       this.#passThrough = new PassThrough();
       this.#passThrough.on("data", (chunk: Buffer) => {
+        this.#logger.debug(`FrameBuffer: received chunk of ${chunk.length} bytes from upstream`);
         this.#deliverChunk(chunk);
       });
       this.#passThrough.on("error", (err: Error) => {
-        this.#logger.debug(`FrameBuffer stream error: ${err.message}`);
+        this.#logger.error(`FrameBuffer stream error: ${err.message}`);
+      });
+      this.#passThrough.on("end", () => {
+        this.#logger.warn("FrameBuffer: upstream stream ended");
       });
     }
     return this.#passThrough;
@@ -86,14 +90,21 @@ export class FrameBuffer {
    * Delivers a chunk to all active subscribers
    */
   #deliverChunk(chunk: Buffer): void {
+    if (this.#subscribers.size === 0) {
+      this.#logger.debug(`FrameBuffer: no subscribers, dropping chunk of ${chunk.length} bytes`);
+      return;
+    }
+
     for (const response of this.#subscribers) {
       try {
-        // Check if response is still writable
-        if (!response.headersSent && !response.writableEnded && response.writable) {
-          const subscriber = this.#subscriberMap.get(response);
-          if (subscriber) {
-            subscriber.onChunk(chunk);
+        const subscriber = this.#subscriberMap.get(response);
+        if (subscriber) {
+          // Skip if headers already sent and socket closed
+          if (response.headersSent && !response.writable) {
+            this.#logger.debug(`FrameBuffer: response not writable, skipping subscriber`);
+            continue;
           }
+          subscriber.onChunk(chunk);
         }
       } catch (e) {
         this.#logger.debug(

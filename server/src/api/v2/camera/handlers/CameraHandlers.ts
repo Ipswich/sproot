@@ -16,6 +16,8 @@ export async function streamHandlerAsync(request: Request, response: Response): 
   // Get the frame buffer for direct streaming
   const frameBuffer = cameraManager.getFrameBuffer();
 
+  logger.info(`StreamHandler: frameBuffer available: ${!!frameBuffer}`);
+
   if (!frameBuffer) {
     logger.error("StreamHandler: frame buffer not available");
     if (!response.headersSent) {
@@ -47,10 +49,13 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     const subscriber: { onChunk: (chunk: Buffer) => void; onDestroy: () => void } = {
       onChunk: (chunk: Buffer) => {
         try {
+          logger.debug(
+            `StreamHandler: writing chunk of ${chunk.length} bytes to client ${clientId}`,
+          );
           // Write the chunk - Express/Node will handle buffering
           response.write(chunk);
         } catch (e) {
-          logger.debug(`StreamHandler: failed to write chunk to client ${clientId}: ${e}`);
+          logger.error(`StreamHandler: failed to write chunk to client ${clientId}: ${e}`);
         }
       },
       onDestroy: () => {
