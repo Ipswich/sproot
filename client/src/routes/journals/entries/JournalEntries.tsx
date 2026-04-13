@@ -695,7 +695,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
         <div style={{ display: "flex", gap: 8 }}></div>
       </div>
 
-      <ScrollArea
+      <ScrollArea.Autosize
         mah="calc(80vh - 176px)"
         style={{ width: "100%" }}
         scrollbarSize={8}
@@ -725,7 +725,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
             );
           })}
         </div>
-      </ScrollArea>
+      </ScrollArea.Autosize>
       {visibleRows.length === 0 && (
         <div
           style={{ display: "flex", justifyContent: "center", marginTop: 12 }}
