@@ -186,7 +186,7 @@ class CameraManager {
             this.#streamProxy = new StreamProxy({
               logger: this.#logger,
               upstreamUrl: this.#baseUrl,
-              upstreamHeaders: this.generateRequestHeaders(),
+              upstreamHeaders: this.generateRequestHeaders.bind(this),
             });
             await this.#streamProxy.startAsync();
             this.#logger.info("CameraManager: stream proxy created");

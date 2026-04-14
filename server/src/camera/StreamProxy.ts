@@ -6,7 +6,7 @@ import { UpstreamConnection, UpstreamConnectionState } from "./UpstreamConnectio
 export interface StreamProxyOptions {
   logger: winston.Logger;
   upstreamUrl: string;
-  upstreamHeaders: Record<string, string>;
+  upstreamHeaders: () => Record<string, string>;
   /** Initial reconnect delay for upstream */
   upstreamInitialReconnectDelayMs?: number;
   /** Maximum reconnect delay for upstream */
@@ -40,7 +40,7 @@ export class StreamProxy {
     this.#upstreamConnection = new UpstreamConnection({
       logger: this.#logger,
       url: options.upstreamUrl,
-      headers: options.upstreamHeaders,
+      headers: options.upstreamHeaders(),
       frameBuffer: this.#frameBuffer,
       fetchTimeoutMs: options.upstreamFetchTimeoutMs ?? 10000,
       initialReconnectDelayMs: options.upstreamInitialReconnectDelayMs ?? 1000,

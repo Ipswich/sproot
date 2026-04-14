@@ -22,7 +22,7 @@ describe("StreamProxy", () => {
     streamProxy = new StreamProxy({
       logger,
       upstreamUrl: "http://localhost:3002",
-      upstreamHeaders: { "X-Test": "test" },
+      upstreamHeaders: () => ({ "X-Test": "test" }),
     });
 
     assert.isDefined(streamProxy);
@@ -32,7 +32,7 @@ describe("StreamProxy", () => {
     streamProxy = new StreamProxy({
       logger,
       upstreamUrl: "http://localhost:3002",
-      upstreamHeaders: { "X-Test": "test" },
+      upstreamHeaders: () => ({ "X-Test": "test" }),
     });
 
     const frameBuffer = streamProxy.getFrameBuffer();
@@ -46,7 +46,7 @@ describe("StreamProxy", () => {
     streamProxy = new StreamProxy({
       logger,
       upstreamUrl: "http://localhost:3002",
-      upstreamHeaders: { "X-Test": "test" },
+      upstreamHeaders: () => ({ "X-Test": "test" }),
     });
 
     const stream = streamProxy.readableStream;
@@ -57,7 +57,7 @@ describe("StreamProxy", () => {
     streamProxy = new StreamProxy({
       logger,
       upstreamUrl: "http://localhost:3002",
-      upstreamHeaders: { "X-Test": "test" },
+      upstreamHeaders: () => ({ "X-Test": "test" }),
     });
 
     const status = streamProxy.getStatus();
@@ -71,7 +71,7 @@ describe("StreamProxy", () => {
     streamProxy = new StreamProxy({
       logger,
       upstreamUrl: "http://localhost:3002",
-      upstreamHeaders: { "X-Test": "test" },
+      upstreamHeaders: () => ({ "X-Test": "test" }),
     });
 
     const frameBuffer = streamProxy.getFrameBuffer();
