@@ -1,5 +1,5 @@
 import { Outlet, useLoaderData } from "react-router-dom";
-import { MantineProvider, AppShell } from "@mantine/core";
+import { MantineProvider, AppShell, createTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
@@ -33,8 +33,21 @@ export default function Root() {
     setIsNavbarOpened.close();
   }
 
+  // This prevents zoom on IOS when interacting with form elements.
+  const theme = createTheme({
+    components: {
+      Input: {
+        styles: {
+          input: {
+            fontSize: "16px",
+          },
+        },
+      },
+    },
+  });
+
   return (
-    <MantineProvider>
+    <MantineProvider theme={theme}>
       <AppShell
         navbar={{
           width: 250,

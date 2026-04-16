@@ -119,7 +119,6 @@ export default function EditAutomationModal({
 
   return (
     <Fragment>
-      <meta name="viewport" content="width=device-width, user-scalable=no" />
       <Modal
         radius="md"
         overlayProps={{
