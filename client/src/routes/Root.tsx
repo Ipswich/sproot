@@ -39,7 +39,7 @@ export default function Root() {
       Input: {
         styles: {
           input: {
-            fontSize: '16px',
+            fontSize: "16px",
           },
         },
       },
