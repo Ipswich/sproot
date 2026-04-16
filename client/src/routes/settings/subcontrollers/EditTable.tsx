@@ -101,7 +101,6 @@ export default function EditTable({
 
   return (
     <Fragment>
-      <meta name="viewport" content="width=device-width, user-scalable=no" />
       <Modal
         overlayProps={{
           backgroundOpacity: 0.55,

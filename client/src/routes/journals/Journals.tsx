@@ -432,7 +432,7 @@ export default function Journals() {
               </div>
             </div>
 
-            <ScrollArea
+            <ScrollArea.Autosize
               mah="calc(80vh - 176px)"
               style={{ width: "100%" }}
               scrollbarSize={8}
@@ -461,7 +461,7 @@ export default function Journals() {
                   );
                 })}
               </div>
-            </ScrollArea>
+            </ScrollArea.Autosize>
             <Group justify="center" mt="md">
               <Button size="xl" w={rem(300)} onClick={() => openNewJournal()}>
                 Add New
