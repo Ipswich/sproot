@@ -71,14 +71,6 @@ class CameraManager {
   }
 
   /**
-   * Gets the readable stream for backward compatibility.
-   * Note: For new code, use the Express /api/v2/camera/stream endpoint instead.
-   */
-  get livestream() {
-    return this.#streamProxy?.readableStream ?? null;
-  }
-
-  /**
    * Gets a buffer containing the latest image.
    * @returns A promise that resolves to the latest image captured by the camera.
    */

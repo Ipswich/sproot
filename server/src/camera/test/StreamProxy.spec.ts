@@ -42,17 +42,6 @@ describe("StreamProxy", () => {
     assert.isDefined(upstream);
   });
 
-  it("should have readableStream", () => {
-    streamProxy = new StreamProxy({
-      logger,
-      upstreamUrl: "http://localhost:3002",
-      upstreamHeaders: () => ({ "X-Test": "test" }),
-    });
-
-    const stream = streamProxy.readableStream;
-    assert.isDefined(stream);
-  });
-
   it("should get status with upstream and buffer", async () => {
     streamProxy = new StreamProxy({
       logger,

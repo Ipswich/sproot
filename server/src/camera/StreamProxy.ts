@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 import winston from "winston";
 import { FrameBuffer } from "./FrameBuffer";
 import { UpstreamConnection, UpstreamConnectionState } from "./UpstreamConnection";
@@ -26,7 +25,6 @@ export class StreamProxy {
   #logger: winston.Logger;
   #frameBuffer: FrameBuffer;
   #upstreamConnection: UpstreamConnection;
-  #passthrough: Readable | null = null;
 
   constructor(options: StreamProxyOptions) {
     this.#logger = options.logger;
@@ -46,21 +44,6 @@ export class StreamProxy {
       initialReconnectDelayMs: options.upstreamInitialReconnectDelayMs ?? 1000,
       maxReconnectDelayMs: options.upstreamMaxReconnectDelayMs ?? 60000,
     });
-  }
-
-  /**
-   * Gets a readable stream of the latest frames (for backward compatibility)
-   */
-  get readableStream(): Readable | null {
-    // For backward compatibility with CameraManager
-    // This provides a single PassThrough that outputs frames
-    // Note: This is not ideal for multiple clients - use Express handler instead
-    if (!this.#passthrough) {
-      this.#passthrough = new Readable({
-        read() {},
-      });
-    }
-    return this.#passthrough;
   }
 
   /**
@@ -134,13 +117,6 @@ export class StreamProxy {
    */
   getFrameBuffer(): FrameBuffer {
     return this.#frameBuffer;
-  }
-
-  /**
-   * Gets the pass-through stream for direct piping (for testing or advanced usage)
-   */
-  getStream(): import("stream").PassThrough {
-    return this.#frameBuffer.getStream();
   }
 
   /**
