@@ -91,7 +91,6 @@ export default function ManageTagsModal<T extends TagLike>({
 
   return (
     <Fragment>
-      <meta name="viewport" content="width=device-width, user-scalable=no" />
       <Modal
         overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
         centered
