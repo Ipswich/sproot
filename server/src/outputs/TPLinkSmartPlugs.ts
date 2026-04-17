@@ -38,7 +38,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     this.#client = new Client({
       defaultSendOptions: {
         timeout: connectionTimeout,
-        transport: "udp",
+        transport: "tcp",
         useSharedSocket: true,
         sharedSocketTimeout: connectionTimeout,
       },
@@ -226,17 +226,23 @@ class TPLinkPlug extends OutputBase {
       return;
     }
     await this.executeStateHelperAsync(async (value) => {
-      let result = false;
+      const targetState = !!value;
       let retryCount = 0;
+      let result = false;
       while (!result && retryCount < 3) {
         try {
           retryCount++;
-          result = await this.tplinkPlug!.setPowerState(!!value, { timeout: 800 });
+          result = await this.tplinkPlug!.setPowerState(targetState, { timeout: 800 });
         } catch (error) {
           this.logger.error(
             `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying ...`,
           );
         }
+      }
+      if (!result) {
+        throw new Error(
+          `Failed to set power state for TPLink Smart Plug ${this.id} after 3 attempts.`,
+        );
       }
     }, forceExecution);
   }
