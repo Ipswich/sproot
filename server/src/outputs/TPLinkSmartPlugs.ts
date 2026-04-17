@@ -235,7 +235,7 @@ class TPLinkPlug extends OutputBase {
           result = await this.tplinkPlug!.setPowerState(targetState, { timeout: 800 });
         } catch (error) {
           this.logger.error(
-            `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying ...`,
+            `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying...`,
           );
         }
       }
