@@ -20,6 +20,7 @@ import { ITimeCondition } from "../automation/ITimeCondition";
 import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
+import { SDBNotification } from "./SDBNotification";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { SDBMonthCondition } from "./SDBMonthCondition";
 import { SDBDateRangeCondition } from "./SDBDateRangeCondition";
@@ -99,6 +100,12 @@ interface ISprootDB {
   addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number>;
   deleteOutputActionAsync(outputActionId: number): Promise<void>;
   getOutputActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
+
+  // Notifications
+  getNotificationsAsync(): Promise<SDBNotification[]>;
+  getNotificationByIdAsync(notificationId: number): Promise<SDBNotification[]>;
+  addNotificationAsync(automationId: number, subject: string, content: string): Promise<number>;
+  deleteNotificationAsync(notificationId: number): Promise<void>;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
 
@@ -332,6 +339,23 @@ class MockSprootDB implements ISprootDB {
 
   async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputActionView[]> {
     return [];
+  }
+
+  async getNotificationsAsync(): Promise<SDBNotification[]> {
+    return [];
+  }
+  async getNotificationByIdAsync(_id: number): Promise<SDBNotification[]> {
+    return [];
+  }
+  async addNotificationAsync(
+    _automationId: number,
+    _subject: string,
+    _content: string,
+  ): Promise<number> {
+    return 0;
+  }
+  async deleteNotificationAsync(_notificationId: number): Promise<void> {
+    return;
   }
 
   async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {

@@ -1,5 +1,9 @@
 import { EventEmitter } from "events";
-import { OUTPUT_ACTIONS_UPDATED_EVENT, AUTOMATIONS_TRIGGERED_EVENT } from "../utils/EventConstants";
+import {
+  OUTPUT_ACTIONS_UPDATED_EVENT,
+  NOTIFICATION_ACTIONS_UPDATED_EVENT,
+  AUTOMATIONS_TRIGGERED_EVENT,
+} from "../utils/EventConstants";
 import { AutomationEvent, AutomationEventPayload } from "./AutomationEvent";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
@@ -282,6 +286,22 @@ class AutomationService extends EventEmitter {
   async deleteDateRangeConditionAsync(id: number) {
     await this.#sprootDB.deleteDateRangeConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
+  }
+
+  // Notification actions
+  async addNotificationAsync(
+    automationId: number,
+    subject: string,
+    content: string,
+  ): Promise<number> {
+    const result = await this.#sprootDB.addNotificationAsync(automationId, subject, content);
+    this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
+    return result;
+  }
+
+  async deleteNotificationAsync(notificationId: number) {
+    await this.#sprootDB.deleteNotificationAsync(notificationId);
+    this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
   }
 
   // Output actions

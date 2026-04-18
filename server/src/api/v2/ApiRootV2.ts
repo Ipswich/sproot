@@ -15,6 +15,7 @@ import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
 import automationsRouter from "./automations/AutomationsRouter";
 import outputActionsRouter from "./automations/OutputActionRouter";
+import notificationsRouter from "./automations/NotificationsRouter";
 import cameraRouter from "./camera/CameraRouter";
 import subcontrollersRouter from "./subcontrollers/SubcontrollersRouter";
 import deviceZoneRouter from "./devicezones/DeviceZoneRouter";
@@ -70,6 +71,7 @@ function ApiRootV2(app: Express) {
   app.use("/api/v2/outputs", authenticateMiddleware, outputsRouter);
   app.use("/api/v2/automations", authenticateMiddleware, automationsRouter);
   app.use("/api/v2/output-actions", authenticateMiddleware, outputActionsRouter);
+  app.use("/api/v2/notification-actions", authenticateMiddleware, notificationsRouter);
   app.use("/api/v2/camera", authenticateMiddleware, cameraRouter);
   app.use("/api/v2/subcontrollers", authenticateMiddleware, subcontrollersRouter);
   app.use("/api/v2/device-zones", authenticateMiddleware, deviceZoneRouter);
