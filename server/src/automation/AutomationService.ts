@@ -289,18 +289,18 @@ class AutomationService extends EventEmitter {
   }
 
   // Notification actions
-  async addNotificationAsync(
+  async addNotificationActionAsync(
     automationId: number,
     subject: string,
     content: string,
   ): Promise<number> {
-    const result = await this.#sprootDB.addNotificationAsync(automationId, subject, content);
+    const result = await this.#sprootDB.addNotificationActionAsync(automationId, subject, content);
     this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
     return result;
   }
 
-  async deleteNotificationAsync(notificationId: number) {
-    await this.#sprootDB.deleteNotificationAsync(notificationId);
+  async deleteNotificationActionAsync(notificationActionId: number) {
+    await this.#sprootDB.deleteNotificationActionAsync(notificationActionId);
     this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
   }
 

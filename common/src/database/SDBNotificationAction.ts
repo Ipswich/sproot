@@ -1,8 +1,8 @@
-type SDBNotification = {
+type SDBNotificationAction = {
   id: number;
   automationId: number;
   subject: string;
   content: string;
 };
 
-export type { SDBNotification };
+export type { SDBNotificationAction };

@@ -2,8 +2,8 @@ import { type Knex } from "knex";
 import { setTableDefaults } from "../KnexUtilities";
 
 export async function up(knex: Knex): Promise<void> {
-  if (!(await knex.schema.hasTable("notifications"))) {
-    await knex.schema.createTable("notifications", (table) => {
+  if (!(await knex.schema.hasTable("notification_actions"))) {
+    await knex.schema.createTable("notification_actions", (table) => {
       table.increments("id").primary();
       table
         .integer("automation_id")
@@ -23,7 +23,7 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  if (await knex.schema.hasTable("notifications")) {
-    await knex.schema.dropTable("notifications");
+  if (await knex.schema.hasTable("notification_actions")) {
+    await knex.schema.dropTable("notification_actions");
   }
 }

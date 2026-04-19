@@ -15,7 +15,7 @@ import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
 import automationsRouter from "./automations/AutomationsRouter";
 import outputActionsRouter from "./automations/OutputActionRouter";
-import notificationsRouter from "./automations/NotificationsRouter";
+import notificationsRouter from "./automations/NotificationActionRouter";
 import cameraRouter from "./camera/CameraRouter";
 import subcontrollersRouter from "./subcontrollers/SubcontrollersRouter";
 import deviceZoneRouter from "./devicezones/DeviceZoneRouter";

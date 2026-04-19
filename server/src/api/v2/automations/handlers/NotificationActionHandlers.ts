@@ -21,7 +21,7 @@ export async function getAsync(
       request.query["automationId"] != null &&
       !isNaN(parseInt(request.query["automationId"] as string))
     ) {
-      const notifications = await sprootDB.getNotificationByIdAsync(
+      const notifications = await sprootDB.getNotificationActionsByAutomationIdAsync(
         parseInt(request.query["automationId"] as string),
       );
       automationResponse = {
@@ -34,7 +34,7 @@ export async function getAsync(
       return automationResponse;
     }
 
-    const notifications = await sprootDB.getNotificationsAsync();
+    const notifications = await sprootDB.getNotificationActionsAsync();
     automationResponse = {
       statusCode: 200,
       content: {
@@ -70,15 +70,15 @@ export async function getByIdAsync(
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
-    request.params["notificationId"] == null ||
-    isNaN(parseInt(request.params["notificationId"]))
+    request.params["notificationActionId"] == null ||
+    isNaN(parseInt(request.params["notificationActionId"]))
   ) {
     automationResponse = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid or missing notification Id."],
+        details: ["Invalid or missing notification action Id."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -86,15 +86,17 @@ export async function getByIdAsync(
   }
 
   try {
-    const notificationId = parseInt(request.params["notificationId"] ?? "");
-    const notification = (await sprootDB.getNotificationByIdAsync(notificationId))[0];
+    const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
+    const notification = (await sprootDB.getNotificationActionByIdAsync(notificationActionId))[0];
     if (notification == null) {
       automationResponse = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Notification with Id ${request.params["notificationId"]} not found.`],
+          details: [
+            `Notification action with Id ${request.params["notificationActionId"]} not found.`,
+          ],
         },
         ...response.locals["defaultProperties"],
       };
@@ -179,7 +181,7 @@ export async function addAsync(
       return automationResponse;
     }
 
-    const notificationId = await automationService.addNotificationAsync(
+    const notificationActionId = await automationService.addNotificationActionAsync(
       automationId,
       subject,
       content,
@@ -188,7 +190,7 @@ export async function addAsync(
       statusCode: 201,
       content: {
         data: {
-          id: notificationId,
+          id: notificationActionId,
           automationId: automationId,
           subject: subject,
           content: content,
@@ -225,15 +227,15 @@ export async function deleteAsync(
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
-    request.params["notificationId"] == null ||
-    isNaN(parseInt(request.params["notificationId"]))
+    request.params["notificationActionId"] == null ||
+    isNaN(parseInt(request.params["notificationActionId"]))
   ) {
     automationResponse = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: ["Invalid or missing notification Id."],
+        details: ["Invalid or missing notification action Id."],
       },
       ...response.locals["defaultProperties"],
     };
@@ -241,26 +243,30 @@ export async function deleteAsync(
   }
 
   try {
-    const notificationId = parseInt(request.params["notificationId"] ?? "");
-    const notification = (await sprootDB.getNotificationByIdAsync(notificationId))[0];
-    if (notification == null) {
+    const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
+    const notificationAction = (
+      await sprootDB.getNotificationActionByIdAsync(notificationActionId)
+    )[0];
+    if (notificationAction == null) {
       automationResponse = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Notification with Id ${request.params["notificationId"]} not found.`],
+          details: [
+            `Notification action with Id ${request.params["notificationActionId"]} not found.`,
+          ],
         },
         ...response.locals["defaultProperties"],
       };
       return automationResponse;
     }
 
-    await automationService.deleteNotificationAsync(notificationId);
+    await automationService.deleteNotificationActionAsync(notificationActionId);
     automationResponse = {
       statusCode: 200,
       content: {
-        data: "Notification deleted successfully.",
+        data: "Notification action deleted successfully.",
       },
       ...response.locals["defaultProperties"],
     };

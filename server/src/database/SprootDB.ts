@@ -40,7 +40,7 @@ import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJour
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
-import { SDBNotification } from "@sproot/sproot-common/dist/database/SDBNotification";
+import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -605,22 +605,36 @@ export class SprootDB implements ISprootDB {
   }
 
   /* Notifications */
-  async getNotificationsAsync(): Promise<SDBNotification[]> {
-    return this.#connection("notifications").select(["id", "automationId", "subject", "content"]);
+  async getNotificationActionsAsync(): Promise<SDBNotificationAction[]> {
+    return this.#connection("notification_actions").select([
+      "id",
+      "automation_id as automationId",
+      "subject",
+      "content",
+    ]);
   }
-  async getNotificationByIdAsync(notificationId: number): Promise<SDBNotification[]> {
-    return this.#connection("notifications")
-      .where("id", notificationId)
+  async getNotificationActionByIdAsync(
+    notificationActionId: number,
+  ): Promise<SDBNotificationAction[]> {
+    return this.#connection("notification_actions")
+      .where("id", notificationActionId)
       .select(["id", "automation_id as automationId", "subject", "content"]);
   }
-  async addNotificationAsync(
+  async getNotificationActionsByAutomationIdAsync(
+    automationId: number,
+  ): Promise<SDBNotificationAction[]> {
+    return this.#connection("notification_actions")
+      .where("automation_id", automationId)
+      .select(["id", "automation_id as automationId", "subject", "content"]);
+  }
+  async addNotificationActionAsync(
     automationId: number,
     subject: string,
     content: string,
   ): Promise<number> {
     return (
       (
-        await this.#connection("notifications").insert({
+        await this.#connection("notification_actions").insert({
           automation_id: automationId,
           subject,
           content,
@@ -628,8 +642,8 @@ export class SprootDB implements ISprootDB {
       )[0] ?? -1
     );
   }
-  async deleteNotificationAsync(notificationId: number): Promise<void> {
-    return this.#connection("notifications").where("id", notificationId).delete();
+  async deleteNotificationActionAsync(notificationActionId: number): Promise<void> {
+    return this.#connection("notification_actions").where("id", notificationActionId).delete();
   }
   async getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]> {
     return this.#connection("sensor_conditions as sc")

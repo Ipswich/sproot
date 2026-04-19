@@ -20,7 +20,7 @@ import { ITimeCondition } from "../automation/ITimeCondition";
 import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
-import { SDBNotification } from "./SDBNotification";
+import { SDBNotificationAction } from "./SDBNotificationAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { SDBMonthCondition } from "./SDBMonthCondition";
 import { SDBDateRangeCondition } from "./SDBDateRangeCondition";
@@ -102,10 +102,15 @@ interface ISprootDB {
   getOutputActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
 
   // Notifications
-  getNotificationsAsync(): Promise<SDBNotification[]>;
-  getNotificationByIdAsync(notificationId: number): Promise<SDBNotification[]>;
-  addNotificationAsync(automationId: number, subject: string, content: string): Promise<number>;
-  deleteNotificationAsync(notificationId: number): Promise<void>;
+  getNotificationActionsAsync(): Promise<SDBNotificationAction[]>;
+  getNotificationActionByIdAsync(notificationActionId: number): Promise<SDBNotificationAction[]>;
+  getNotificationActionsByAutomationIdAsync(automationId: number): Promise<SDBNotificationAction[]>;
+  addNotificationActionAsync(
+    automationId: number,
+    subject: string,
+    content: string,
+  ): Promise<number>;
+  deleteNotificationActionAsync(notificationActionId: number): Promise<void>;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
 
@@ -341,20 +346,25 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async getNotificationsAsync(): Promise<SDBNotification[]> {
+  async getNotificationActionsAsync(): Promise<SDBNotificationAction[]> {
     return [];
   }
-  async getNotificationByIdAsync(_id: number): Promise<SDBNotification[]> {
+  async getNotificationActionByIdAsync(_id: number): Promise<SDBNotificationAction[]> {
     return [];
   }
-  async addNotificationAsync(
+  async getNotificationActionsByAutomationIdAsync(
+    _automationId: number,
+  ): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async addNotificationActionAsync(
     _automationId: number,
     _subject: string,
     _content: string,
   ): Promise<number> {
     return 0;
   }
-  async deleteNotificationAsync(_notificationId: number): Promise<void> {
+  async deleteNotificationActionAsync(_notificationActionId: number): Promise<void> {
     return;
   }
 
