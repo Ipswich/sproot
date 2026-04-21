@@ -58,10 +58,6 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       // Clean up non-responsive plugs
       if (plug.childId != undefined) {
         this.plugRegistry.unregister(plug.childId);
-        const device = Object.values(this.outputs).find((o) => o.pin == plug.childId);
-        if (device) {
-          await this.disposeOutputAsync(device);
-        }
       }
     });
 
@@ -158,7 +154,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
 
 class TPLinkPlug extends OutputBase {
   plugRegistry: PlugRegistry;
-  tplinkPlug?: Plug;
+  tplinkPlug: Plug | undefined;
   #powerUpdateEventRunning = false;
 
   static createInstanceAsync(
@@ -249,6 +245,8 @@ class TPLinkPlug extends OutputBase {
 
   override async [Symbol.asyncDispose](): Promise<void> {
     await super[Symbol.asyncDispose]();
+    this.plugRegistry.off("registered", this.#onPlugAdded);
+    this.plugRegistry.off("unregistered", this.#onPlugRemoved);
     this.tplinkPlug?.removeAllListeners("power-on");
     this.tplinkPlug?.removeAllListeners("power-off");
 
@@ -287,12 +285,19 @@ class TPLinkPlug extends OutputBase {
   #detach(plug: Plug) {
     plug.removeAllListeners("power-on");
     plug.removeAllListeners("power-off");
+    if (this.tplinkPlug === plug) {
+      this.tplinkPlug = undefined;
+    }
   }
 
   async #powerUpdateFunctionAsync(value: boolean): Promise<void> {
     // This should make sure that if someone externally changes the power state of the plug when it's
     // in manual mode, it updates the state in Sproot. Otherwise, we'll just ignore it.
     if (this.#powerUpdateEventRunning) {
+      this.logger.debug(
+        `TPLink Smart Plug {id: ${this.id}, pin: ${this.pin}} is already processing a power update event. ` +
+          `Ignoring duplicate event for state ${value ? 100 : 0}.`,
+      );
       return;
     }
     let retryCount = 0;

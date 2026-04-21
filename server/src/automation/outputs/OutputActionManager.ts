@@ -164,7 +164,7 @@ export class OutputActionManager implements Disposable {
 
     // Collision detected, default to off
     if (valueCounts.size > 1) {
-      this.#logger.verbose(
+      this.#logger.warn(
         `Collision detected on output ${this.#outputId}: ` +
           `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`,
       );

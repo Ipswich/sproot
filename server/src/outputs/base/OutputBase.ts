@@ -275,9 +275,6 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
         return;
       }
       if (this.value == this.state.lastValue) {
-        // this.logger.verbose(
-        //   `Output { Model: ${this.model}, id: ${this.id} } value has not changed. Skipping state execution.`,
-        // );
         return;
       }
     }
