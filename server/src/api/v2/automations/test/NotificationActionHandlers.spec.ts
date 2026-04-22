@@ -5,6 +5,7 @@ import {
   deleteAsync,
   getAsync,
   getByIdAsync,
+  getActiveNotificationsAsync,
 } from "../handlers/NotificationActionHandlers";
 import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
@@ -634,6 +635,155 @@ describe("NotificationActionHandlers.ts tests", () => {
       assert.equal(error.error.name, "Service Unreachable");
       assert.deepEqual(error.error.details, ["Database unreachable"]);
       assert.equal(error.error.url, mockRequest.originalUrl);
+    });
+  });
+
+  describe("getActiveNotificationsAsync", () => {
+    it("should return a 200 and active notifications with payload", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const mockNotificationActionManager = {
+        activeNotifications: {
+          lastRunAt: 1713523200000,
+          notifications: [
+            {
+              notificationId: 1,
+              subject: "Temperature Alert",
+              content: "Temperature exceeded threshold",
+              payload: {
+                automationId: 1,
+                automationName: "Temperature Threshold",
+                operator: "or" as const,
+                conditions: {
+                  allOf: [],
+                  anyOf: [],
+                  oneOf: [],
+                },
+              },
+            },
+          ],
+        },
+      };
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "notificationActionManager") {
+              return mockNotificationActionManager;
+            }
+          },
+        },
+        originalUrl: "/api/v2/notification-actions/active",
+      } as unknown as Request;
+
+      const success = (await getActiveNotificationsAsync(
+        mockRequest,
+        mockResponse,
+      )) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.deepEqual(success.content?.data, {
+        lastRunAt: 1713523200000,
+        notifications: [
+          {
+            notificationId: 1,
+            subject: "Temperature Alert",
+            content: "Temperature exceeded threshold",
+            payload: {
+              automationId: 1,
+              automationName: "Temperature Threshold",
+              operator: "or",
+              conditions: {
+                allOf: [],
+                anyOf: [],
+                oneOf: [],
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    it("should return empty notifications when no automations are triggered", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const mockNotificationActionManager = {
+        activeNotifications: {
+          lastRunAt: 0,
+          notifications: [],
+        },
+      };
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "notificationActionManager") {
+              return mockNotificationActionManager;
+            }
+          },
+        },
+        originalUrl: "/api/v2/notification-actions/active",
+      } as unknown as Request;
+
+      const success = (await getActiveNotificationsAsync(
+        mockRequest,
+        mockResponse,
+      )) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content?.data?.lastRunAt, 0);
+      assert.lengthOf(success.content?.data?.notifications, 0);
+    });
+
+    it("should return a 503 if the notification action manager throws an error", async () => {
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const mockNotificationActionManager = {
+        get activeNotifications() {
+          throw new Error("Manager error");
+        },
+      };
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "notificationActionManager") {
+              return mockNotificationActionManager;
+            }
+          },
+        },
+        originalUrl: "/api/v2/notification-actions/active",
+      } as unknown as Request;
+
+      const error = (await getActiveNotificationsAsync(mockRequest, mockResponse)) as ErrorResponse;
+
+      assert.equal(error.statusCode, 503);
+      assert.equal(error.error?.name, "Service Unreachable");
+      assert.deepEqual(error.error?.details, ["Manager error"]);
+      assert.equal(error.error?.url, mockRequest.originalUrl);
     });
   });
 });

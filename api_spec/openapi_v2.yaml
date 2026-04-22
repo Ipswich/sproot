@@ -4251,6 +4251,73 @@ paths:
                                 - "Failed to delete notification action from database."
                                 - "Database connection failed."
 
+  /api/v2/notification-actions/active:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Notification Actions"
+      summary: Get active notification actions.
+      description: >
+        Returns a list of notification actions that are currently active, meaning their associated
+        automations have been triggered. This endpoint returns the notification details along with
+        the automation event payload and the timestamp of the last run.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/ActiveNotifications"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/notification-actions/active"
+                          details:
+                            example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/notification-actions/active"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get active notification actions."
+                                - "Database connection failed."
+
   /api/v2/sensors:
     get:
       security:
@@ -8262,6 +8329,79 @@ components:
         content:
           type: string
           example: "This is a test notification content."
+
+    ActiveNotifications:
+      description: >
+        Contains the active notification actions for triggered automations.
+      type: object
+      required:
+        - "lastRunAt"
+        - "notifications"
+      properties:
+        lastRunAt:
+          description: "Timestamp in milliseconds of when the automations were last evaluated."
+          type: number
+          example: 1713523200000
+        notifications:
+          description: "List of active notification actions."
+          type: array
+          items:
+            $ref: "#/components/schemas/ActiveNotification"
+
+    ActiveNotification:
+      description: >
+        A notification action that is currently active due to its associated automation being triggered.
+      type: object
+      required:
+        - "notificationId"
+        - "subject"
+        - "content"
+        - "payload"
+      properties:
+        notificationId:
+          description: "The Id of the notification action."
+          type: number
+          example: 1
+        subject:
+          description: "The notification subject."
+          type: string
+          example: "Temperature Alert"
+        content:
+          description: "The notification content."
+          type: string
+          example: "Temperature has exceeded threshold."
+        payload:
+          description: "The automation event payload containing triggered automation details."
+          $ref: "#/components/schemas/AutomationEventPayload"
+
+    AutomationEventPayload:
+      description: >
+        Payload containing information about a triggered automation.
+      type: object
+      required:
+        - "automationId"
+        - "automationName"
+        - "operator"
+        - "conditions"
+      properties:
+        automationId:
+          description: "The Id of the automation."
+          type: number
+          example: 1
+        automationName:
+          description: "The name of the automation."
+          type: string
+          example: "Temperature Threshold"
+        operator:
+          description: "The logical operator for conditions (and/or)."
+          type: string
+          enum:
+            - "and"
+            - "or"
+          example: "or"
+        conditions:
+          description: "The condition results for the automation."
+          $ref: "#/components/schemas/AutomationConditions"
 
     AutomationConditions:
       description: >

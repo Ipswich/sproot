@@ -2,6 +2,7 @@ import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { AutomationService } from "../../../../automation/AutomationService";
+import { NotificationActionManager } from "../../../../automation/notifications/NotificationActionManager";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
@@ -267,6 +268,44 @@ export async function deleteAsync(
       statusCode: 200,
       content: {
         data: "Notification action deleted successfully.",
+      },
+      ...response.locals["defaultProperties"],
+    };
+  } catch (error) {
+    automationResponse = {
+      statusCode: 503,
+      error: {
+        name: "Service Unreachable",
+        url: request.originalUrl,
+        details: [(error as Error).message],
+      },
+      ...response.locals["defaultProperties"],
+    };
+  }
+  return automationResponse;
+}
+
+/**
+ * Possible statusCodes: 200, 401, 503
+ * @param request
+ * @param response
+ * @returns
+ */
+export async function getActiveNotificationsAsync(
+  request: Request,
+  response: Response,
+): Promise<SuccessResponse | ErrorResponse> {
+  const notificationActionManager = request.app.get(
+    DI_KEYS.NotificationActionManager,
+  ) as NotificationActionManager;
+  let automationResponse: SuccessResponse | ErrorResponse;
+
+  try {
+    const activeNotifications = notificationActionManager.activeNotifications;
+    automationResponse = {
+      statusCode: 200,
+      content: {
+        data: activeNotifications,
       },
       ...response.locals["defaultProperties"],
     };

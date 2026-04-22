@@ -5,6 +5,7 @@ import {
   getByIdAsync,
   addAsync,
   deleteAsync,
+  getActiveNotificationsAsync,
 } from "./handlers/NotificationActionHandlers";
 
 const router = express.Router();
@@ -32,6 +33,13 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.delete("/:notificationActionId", async (req: Request, res: Response) => {
   const response = await deleteAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.get("/active", async (req: Request, res: Response) => {
+  const response = await getActiveNotificationsAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

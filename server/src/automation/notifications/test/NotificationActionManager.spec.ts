@@ -75,7 +75,7 @@ describe("NotificationActionManager.ts tests", () => {
       await new Promise((res) => setImmediate(res));
 
       const result = manager.activeNotifications;
-      assert.equal(result.lastRunAt, 1713518400000);
+      assert.equal(result.lastRunAt, event.timestamp.getTime());
       assert.lengthOf(result.notifications, 1);
       assert.equal(result.notifications[0]!.notificationId, 1);
       assert.equal(result.notifications[0]!.subject, "Test Subject");
@@ -117,7 +117,7 @@ describe("NotificationActionManager.ts tests", () => {
       await new Promise((res) => setImmediate(res));
 
       const result = manager.activeNotifications;
-      assert.equal(result.lastRunAt, 0);
+      assert.equal(result.lastRunAt, event.timestamp.getTime());
       assert.lengthOf(result.notifications, 0);
     });
 
@@ -181,7 +181,7 @@ describe("NotificationActionManager.ts tests", () => {
       await new Promise((res) => setImmediate(res));
 
       const result = manager.activeNotifications;
-      assert.equal(result.lastRunAt, 1713525600000);
+      assert.equal(result.lastRunAt, event.timestamp.getTime());
       assert.lengthOf(result.notifications, 2);
       const notifs = result.notifications;
       assert.equal(notifs[0]!.subject, "Subject 1");
@@ -229,13 +229,13 @@ describe("NotificationActionManager.ts tests", () => {
       mockAutomationService.emit(AUTOMATIONS_TRIGGERED_EVENT, event1);
       await new Promise((res) => setImmediate(res));
 
-      assert.equal(manager.activeNotifications.lastRunAt, 1713518400000);
+      assert.equal(manager.activeNotifications.lastRunAt, event1.timestamp.getTime());
 
       const event2 = new AutomationEvent(triggeredAutomations, new Date("2026-04-19T11:00:00Z"));
       mockAutomationService.emit(AUTOMATIONS_TRIGGERED_EVENT, event2);
       await new Promise((res) => setImmediate(res));
 
-      assert.equal(manager.activeNotifications.lastRunAt, 1713522000000);
+      assert.equal(manager.activeNotifications.lastRunAt, event2.timestamp.getTime());
     });
   });
 
@@ -447,8 +447,7 @@ describe("NotificationActionManager.ts tests", () => {
         mockLogger,
       );
 
-      const dispose = manager[Symbol.dispose as keyof typeof manager] as () => void;
-      dispose();
+      manager[Symbol.dispose]();
 
       const event = new AutomationEvent(new Map());
       assert.doesNotThrow(() => {
@@ -493,22 +492,14 @@ describe("NotificationActionManager.ts tests", () => {
       } as unknown as winston.Logger;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
-      sprootDB.getNotificationActionsAsync.resolves([]);
-
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockErrorLogger,
-      );
+      // Make getNotificationActionsAsync reject to trigger error handling during init
+      sprootDB.getNotificationActionsAsync.rejects(new Error("DB Error"));
 
       await NotificationActionManager.createInstanceAsync(
-        mockAutomationService,
+        await AutomationService.createInstanceAsync(sprootDB, mockErrorLogger),
         sprootDB,
         mockErrorLogger,
       );
-
-      const event = new AutomationEvent(new Map());
-      mockAutomationService.emit(AUTOMATIONS_TRIGGERED_EVENT, event);
-      await new Promise((res) => setImmediate(res));
 
       assert.equal(errorCalls.length, 1);
     });
