@@ -4,7 +4,8 @@ import {
   NOTIFICATION_ACTIONS_UPDATED_EVENT,
   AUTOMATIONS_TRIGGERED_EVENT,
 } from "../utils/EventConstants";
-import { AutomationEvent, AutomationEventPayload } from "./AutomationEvent";
+import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
+import { AutomationEvent } from "./AutomationEvent";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -82,7 +83,7 @@ class AutomationService extends EventEmitter {
     // Evaluate each automation once
     const evaluatedAutomations: Array<{
       automation: Automation;
-      payload: AutomationEventPayload;
+      payload: IAutomationEventPayload;
     }> = [];
 
     for (const [_automationId, automation] of this.#automations.entries()) {

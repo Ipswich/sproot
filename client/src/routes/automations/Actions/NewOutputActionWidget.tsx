@@ -1,11 +1,8 @@
 import { Button, Group, Select, Slider, Stack, Switch } from "@mantine/core";
 import { Fragment } from "react/jsx-runtime";
 import { useForm } from "@mantine/form";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  addOutputActionAsync,
-  getOutputActionsByAutomationIdAsync,
-} from "../../../requests/requests_v2";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addOutputActionAsync } from "../../../requests/requests_v2";
 
 export interface NewOutputActionWidgetProps {
   automationId: number;
@@ -23,10 +20,7 @@ export default function NewOutputActionWidget({
   outputs,
   toggleAddNewOutputAction,
 }: NewOutputActionWidgetProps) {
-  const outputActionsQueryFn = useQuery({
-    queryKey: ["outputActions"],
-    queryFn: () => getOutputActionsByAutomationIdAsync(automationId),
-  });
+  const queryClient = useQueryClient();
   const addOutputActionMutation = useMutation({
     mutationFn: async (outputAction: { outputId: string; value: number }) => {
       await addOutputActionAsync(
@@ -36,7 +30,9 @@ export default function NewOutputActionWidget({
       );
     },
     onSettled: () => {
-      outputActionsQueryFn.refetch();
+      queryClient.invalidateQueries({
+        queryKey: ["outputActions", automationId],
+      });
     },
   });
 

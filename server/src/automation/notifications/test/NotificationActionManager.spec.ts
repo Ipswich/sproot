@@ -188,6 +188,62 @@ describe("NotificationActionManager.ts tests", () => {
       assert.equal(notifs[1]!.subject, "Subject 2");
     });
 
+    it("should return multiple active notifications for one automation when it has multiple actions", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationsAsync.resolves([
+        {
+          id: 1,
+          name: "automation1",
+          operator: "or",
+          enabled: true,
+        },
+      ]);
+      const mockAutomationService = await AutomationService.createInstanceAsync(
+        sprootDB,
+        mockLogger,
+      );
+      sprootDB.getNotificationActionsAsync.resolves([
+        {
+          id: 1,
+          automationId: 1,
+          subject: "Subject 1",
+          content: "Content 1",
+        },
+        {
+          id: 2,
+          automationId: 1,
+          subject: "Subject 2",
+          content: "Content 2",
+        },
+      ]);
+
+      using manager = await NotificationActionManager.createInstanceAsync(
+        mockAutomationService,
+        sprootDB,
+        mockLogger,
+      );
+
+      const triggeredAutomations = new Map<number, any>();
+      triggeredAutomations.set(1, {
+        automationId: 1,
+        automationName: "automation1",
+        operator: "or",
+        conditions: { allOf: [], anyOf: [], oneOf: [] },
+      });
+
+      const event = new AutomationEvent(triggeredAutomations, new Date("2026-04-19T12:30:00Z"));
+      mockAutomationService.emit(AUTOMATIONS_TRIGGERED_EVENT, event);
+      await new Promise((res) => setImmediate(res));
+
+      const result = manager.activeNotifications;
+      assert.equal(result.lastRunAt, event.timestamp.getTime());
+      assert.lengthOf(result.notifications, 2);
+      assert.sameMembers(
+        result.notifications.map((notification) => notification.notificationId),
+        [1, 2],
+      );
+    });
+
     it("should update lastRunAt when events are processed", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([

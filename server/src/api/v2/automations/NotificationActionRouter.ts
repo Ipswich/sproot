@@ -17,6 +17,13 @@ router.get("/", async (req: Request, res: Response) => {
   return;
 });
 
+router.get("/active", async (req: Request, res: Response) => {
+  const response = await getActiveNotificationsAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
 router.get("/:notificationActionId", async (req: Request, res: Response) => {
   const response = await getByIdAsync(req, res);
 
@@ -33,13 +40,6 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.delete("/:notificationActionId", async (req: Request, res: Response) => {
   const response = await deleteAsync(req, res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.get("/active", async (req: Request, res: Response) => {
-  const response = await getActiveNotificationsAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

@@ -1,4 +1,4 @@
-import { AutomationEvent, AutomationEventPayload } from "../AutomationEvent";
+import { AutomationEvent } from "../AutomationEvent";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationService } from "../AutomationService";
 import { NotificationAction } from "./NotificationAction";
@@ -7,22 +7,16 @@ import {
   NOTIFICATION_ACTIONS_UPDATED_EVENT,
   AUTOMATIONS_TRIGGERED_EVENT,
 } from "../../utils/EventConstants";
+import { IActiveNotificationsResponse } from "@sproot/automation/IActiveNotificationResponse";
+import { IActiveNotification } from "@sproot/automation/IActiveNotification";
 
 export class NotificationActionManager implements Disposable {
   #automationService: AutomationService;
   #sprootDB: ISprootDB;
   #logger: winston.Logger;
   #lastRunAt: number | null = null;
-  #actionMap: Map<number, NotificationAction> = new Map();
-  #activeNotifications: Map<
-    number,
-    {
-      notificationId: number;
-      subject: string;
-      content: string;
-      payload: AutomationEventPayload;
-    }
-  > = new Map();
+  #actions: NotificationAction[] = [];
+  #activeNotifications: Map<number, IActiveNotification> = new Map();
   #listenerCleanupFunction: () => void;
 
   static async createInstanceAsync(
@@ -65,15 +59,7 @@ export class NotificationActionManager implements Disposable {
     };
   }
 
-  get activeNotifications(): {
-    lastRunAt: number;
-    notifications: {
-      notificationId: number;
-      subject: string;
-      content: string;
-      payload: AutomationEventPayload;
-    }[];
-  } {
+  get activeNotifications(): IActiveNotificationsResponse {
     return {
       lastRunAt: this.#lastRunAt ?? 0,
       notifications: Array.from(this.#activeNotifications.values()),
@@ -86,9 +72,7 @@ export class NotificationActionManager implements Disposable {
   async #reloadActionsAsync(): Promise<void> {
     try {
       const notificationActions = await this.#sprootDB.getNotificationActionsAsync();
-      this.#actionMap = new Map(
-        notificationActions.map((a) => [a.automationId, new NotificationAction(a)]),
-      );
+      this.#actions = notificationActions.map((action) => new NotificationAction(action));
     } catch (error) {
       this.#logger.error(`Error reloading actions for notifications - ${error}`);
     }
@@ -102,15 +86,10 @@ export class NotificationActionManager implements Disposable {
     this.#lastRunAt = now.getTime();
 
     // Find which automations have actions on this output
-    const triggeredActions: {
-      notificationId: number;
-      subject: string;
-      content: string;
-      payload: AutomationEventPayload;
-    }[] = [];
+    const triggeredActions: IActiveNotification[] = [];
 
     // Loop through all actions and check if their automation was triggered
-    for (const [_actionId, action] of this.#actionMap.entries()) {
+    for (const action of this.#actions) {
       if (event.triggeredAutomations.has(action.automationId)) {
         const payload = event.triggeredAutomations.get(action.automationId);
         if (!payload) {
@@ -127,26 +106,10 @@ export class NotificationActionManager implements Disposable {
     }
 
     // Store active notifications for retrieval by API or other consumers
-    this.#activeNotifications = triggeredActions.reduce(
-      (map, action) => {
-        map.set(action.notificationId, {
-          notificationId: action.notificationId,
-          subject: action.subject,
-          content: action.content,
-          payload: action.payload,
-        });
-        return map;
-      },
-      new Map<
-        number,
-        {
-          notificationId: number;
-          subject: string;
-          content: string;
-          payload: AutomationEventPayload;
-        }
-      >(),
-    );
+    this.#activeNotifications = triggeredActions.reduce((map, action) => {
+      map.set(action.notificationId, action);
+      return map;
+    }, new Map<number, IActiveNotification>());
   }
 
   [Symbol.dispose](): void {
