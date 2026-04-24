@@ -27,6 +27,7 @@ import { useForm } from "@mantine/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { computeTagPillDiffs } from "./utils/tags/tagPillHelpers";
+import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
 export interface EditJournalModalProps {
   modalOpened: boolean;
@@ -185,7 +186,6 @@ export default function EditJournalModal({
   };
 
   const doDelete = async () => {
-    if (!window.confirm("Delete this journal? This cannot be undone.")) return;
     setIsUpdating(true);
     await deleteJournalAsync(journal.id);
     setIsUpdating(false);
@@ -318,15 +318,11 @@ export default function EditJournalModal({
           ) : null}
 
           <Group justify="space-between" mt="md">
-            <Button
+            <ConfirmDeleteButton
               disabled={isUpdating}
-              color="red"
-              onClick={async () => {
-                await doDelete();
-              }}
-            >
-              Delete
-            </Button>
+              loading={isUpdating}
+              onConfirm={doDelete}
+            />
             <Button
               type="submit"
               disabled={

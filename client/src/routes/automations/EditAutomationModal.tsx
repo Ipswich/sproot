@@ -33,6 +33,7 @@ import OutputActionsTable from "./Actions/OutputActionsTable";
 import NotificationActionsTable from "./Actions/NotificationActionsTable";
 import { useEffect } from "react";
 import { IconDeviceFloppy } from "@tabler/icons-react";
+import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
 interface EditAutomationModalProps {
   editAutomation: IAutomation | null;
@@ -157,7 +158,19 @@ export default function EditAutomationModal({
         <form
           id="add-automation-form"
           onSubmit={mutateAutomationForm.onSubmit((values) => {
-            addAutomationMutation.mutate(values as IAutomation);
+            if (targetAutomation == null) {
+              addAutomationMutation.mutate(values as IAutomation);
+              return;
+            }
+
+            updateAutomationMutation.mutate({
+              id: targetAutomation.id,
+              operator:
+                (values.operator as AutomationOperator) ??
+                targetAutomation.operator,
+              name: values.name,
+              enabled: targetAutomation.enabled,
+            });
           })}
         >
           {readOnly ? null : (
@@ -308,15 +321,12 @@ export default function EditAutomationModal({
             </Group>
             {readOnly ? null : (
               <Group justify="space-between" mt="md">
-                <Button
-                  color="red"
-                  onClick={() => {
+                <ConfirmDeleteButton
+                  onConfirm={() => {
                     deleteAutomationMutation.mutate(targetAutomation.id);
                     closeModal();
                   }}
-                >
-                  Delete
-                </Button>
+                />
               </Group>
             )}
           </Fragment>

@@ -24,6 +24,7 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 
 import { computeTagPillDiffs } from "../utils/tags/tagPillHelpers";
+import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 
 export interface EditJournalEntryModalProps {
   modalOpened: boolean;
@@ -156,7 +157,6 @@ export default function EditJournalEntryModal({
   };
 
   const doDelete = async () => {
-    if (!window.confirm("Delete this entry? This cannot be undone.")) return;
     if (!entry.id) return;
     await deleteMutation.mutateAsync();
     try {
@@ -225,9 +225,10 @@ export default function EditJournalEntryModal({
         </div>
 
         <Group justify="space-between" mt="md">
-          <Button color="red" onClick={async () => await doDelete()}>
-            Delete
-          </Button>
+          <ConfirmDeleteButton
+            loading={deleteMutation.isPending}
+            onConfirm={doDelete}
+          />
           <Button type="submit">Update Entry</Button>
         </Group>
       </form>
