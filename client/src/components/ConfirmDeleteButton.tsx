@@ -37,7 +37,7 @@ type ConfirmDeleteButtonProps =
     };
 
 export default function ConfirmDeleteButton(props: ConfirmDeleteButtonProps) {
-  const cooldownMs = props.cooldownMs ?? 2000;
+  const cooldownMs = props.cooldownMs ?? 1000;
   const timeoutRef = useRef<number | null>(null);
   const [confirmationState, setConfirmationState] = useState<
     "idle" | "cooldown" | "ready"
