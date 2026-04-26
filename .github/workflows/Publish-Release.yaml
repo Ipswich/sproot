@@ -2,7 +2,8 @@ name: Publish Release
 
 on:
   push:
-    # Trigger when a versioned git tag is pushed (e.g. v1.2.3)
+    # GitHub Actions cannot directly scope tag pushes to a branch.
+    # Trigger on matching tags, then verify that the tagged commit is contained in main.
     tags: ['v*']
 
 env:
@@ -16,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      version: ${{ steps.verify_version.outputs.version }}
+      tag: ${{ steps.verify_version.outputs.tag }}
 
     steps:
       - name: Checkout repository
@@ -23,18 +27,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate tag matches package.json and is on main
+      - name: Validate tag and package.json version
+        id: verify_version
         run: |
+          set -euo pipefail
+
           TAG=${GITHUB_REF#refs/tags/}
           echo "TAG=${TAG}" >> $GITHUB_ENV
+
           PKG_VERSION=$(jq -r '.version' package.json)
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
-          # expose version as a job output for downstream jobs
+
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "version=${PKG_VERSION}" >> $GITHUB_OUTPUT
+
           if [ "v${PKG_VERSION}" != "${TAG}" ]; then
             echo "Tag (${TAG}) does not match package.json version v${PKG_VERSION}"
             exit 1
           fi
+
           # Ensure the tag's commit is contained in origin/main
           git fetch origin main
           SHA=$(git rev-parse "${TAG}")
@@ -51,8 +62,6 @@ jobs:
     needs: verify-tag
     permissions:
       contents: write
-    outputs:
-      VERSION: ${{ needs.verify-tag.outputs.version }}
 
     steps:
       - uses: actions/checkout@v6
@@ -66,13 +75,19 @@ jobs:
           generateReleaseNotes: true
 
   build-and-push-images:
-    needs: create-release
+    needs:
+      - verify-tag
+      - create-release
     name: Build and Push Container Image
     env:
-      VERSION: ${{ needs.create-release.outputs.VERSION }}
+      VERSION: ${{ needs.verify-tag.outputs.version }}
     strategy:
       matrix:
-        service: [server, client]
+        include:
+          - service: server
+            dockerfile: ./server/Dockerfile
+          - service: client
+            dockerfile: ./gateway/Dockerfile
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -121,7 +136,7 @@ jobs:
           context: ./
           build-args: |
             VITE_VERSION=${{ env.VERSION }}
-          file: ./${{ matrix.service }}/Dockerfile
+          file: ${{ matrix.dockerfile }}
           platforms: linux/arm64,linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
