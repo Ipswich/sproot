@@ -131,10 +131,20 @@ class PCA9685Output extends OutputBase {
   }
 
   executeStateAsync(forceExecution: boolean = false): Promise<void> {
-    return this.executeStateHelperAsync(async (value) => {
-      // setDutyCycle takes a decimal value -> 50% == .5; 33% == .33;
-      Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value / 100));
-    }, forceExecution);
+    return this.executeStateHelperAsync(
+      async (value) =>
+        new Promise((resolve, reject) => {
+          // setDutyCycle takes a decimal value -> 50% == .5; 33% == .33;
+          this.pca9685.setDutyCycle(parseInt(this.pin), value / 100, undefined, (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(undefined);
+            }
+          });
+        }),
+      forceExecution,
+    );
   }
 
   override async [Symbol.asyncDispose](): Promise<void> {

@@ -1,12 +1,22 @@
 import fs from "fs";
 import { Express } from "express";
 import { Server } from "http";
+import { Pca9685Driver } from "pca9685";
+import * as sinon from "sinon";
 import mainAsync, { gracefulHaltAsync } from "../program";
 
 let server: Server;
 let app: Express;
 before(async function () {
   this.timeout(0);
+  // We don't want this actually trying to do something.
+  sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
+    const callback = args[3];
+    if (typeof callback === "function") {
+      callback(undefined);
+    }
+  });
+
   await fs.promises.mkdir("images/timelapse", { recursive: true });
   await fs.promises.mkdir("images/archive", { recursive: true });
   await fs.promises.mkdir("backups", { recursive: true });
@@ -39,6 +49,7 @@ before(async function () {
 
 after(async () => {
   await gracefulHaltAsync(server, app, async () => {});
+  sinon.restore();
   console.log("Server closed!");
 });
 

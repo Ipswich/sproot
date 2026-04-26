@@ -75,8 +75,8 @@ export class OutputState implements IOutputState {
    * to ensure that the lastValue is always in sync with the actual last executed state, even if setNewStateAsync
    * is not used to update the state (such as when automations are running and directly updating the state property).
    */
-  updateLastState() {
-    this.lastValue = this.value;
+  updateLastState(value: number = this.value) {
+    this.lastValue = value;
   }
 
   /**

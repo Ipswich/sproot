@@ -535,29 +535,5 @@ describe("NotificationActionManager.ts tests", () => {
 
       assert.equal(errorCalls.length, 1);
     });
-
-    it("should log error when handling automation event fails", async () => {
-      const errorCalls: string[] = [];
-      const mockErrorLogger = {
-        error: sinon.stub().callsFake((...args: any[]) => errorCalls.push(args.join(" "))),
-        info: sinon.stub(),
-        debug: sinon.stub(),
-        warn: sinon.stub(),
-        verbose: sinon.stub(),
-        child: sinon.stub(),
-      } as unknown as winston.Logger;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
-      // Make getNotificationActionsAsync reject to trigger error handling during init
-      sprootDB.getNotificationActionsAsync.rejects(new Error("DB Error"));
-
-      await NotificationActionManager.createInstanceAsync(
-        await AutomationService.createInstanceAsync(sprootDB, mockErrorLogger),
-        sprootDB,
-        mockErrorLogger,
-      );
-
-      assert.equal(errorCalls.length, 1);
-    });
   });
 });

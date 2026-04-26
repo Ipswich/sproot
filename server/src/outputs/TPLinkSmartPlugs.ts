@@ -38,7 +38,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     this.#client = new Client({
       defaultSendOptions: {
         timeout: connectionTimeout,
-        transport: "udp",
+        transport: "tcp",
         useSharedSocket: true,
         sharedSocketTimeout: connectionTimeout,
       },
@@ -58,10 +58,6 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       // Clean up non-responsive plugs
       if (plug.childId != undefined) {
         this.plugRegistry.unregister(plug.childId);
-        const device = Object.values(this.outputs).find((o) => o.pin == plug.childId);
-        if (device) {
-          await this.disposeOutputAsync(device);
-        }
       }
     });
 
@@ -158,7 +154,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
 
 class TPLinkPlug extends OutputBase {
   plugRegistry: PlugRegistry;
-  tplinkPlug?: Plug;
+  tplinkPlug: Plug | undefined;
   #powerUpdateEventRunning = false;
 
   static createInstanceAsync(
@@ -226,23 +222,31 @@ class TPLinkPlug extends OutputBase {
       return;
     }
     await this.executeStateHelperAsync(async (value) => {
-      let result = false;
+      const targetState = !!value;
       let retryCount = 0;
+      let result = false;
       while (!result && retryCount < 3) {
         try {
           retryCount++;
-          result = await this.tplinkPlug!.setPowerState(!!value, { timeout: 800 });
+          result = await this.tplinkPlug!.setPowerState(targetState, { timeout: 800 });
         } catch (error) {
           this.logger.error(
-            `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying ...`,
+            `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying...`,
           );
         }
+      }
+      if (!result) {
+        throw new Error(
+          `Failed to set power state for TPLink Smart Plug ${this.id} after 3 attempts.`,
+        );
       }
     }, forceExecution);
   }
 
   override async [Symbol.asyncDispose](): Promise<void> {
     await super[Symbol.asyncDispose]();
+    this.plugRegistry.off("registered", this.#onPlugAdded);
+    this.plugRegistry.off("unregistered", this.#onPlugRemoved);
     this.tplinkPlug?.removeAllListeners("power-on");
     this.tplinkPlug?.removeAllListeners("power-off");
 
@@ -281,12 +285,19 @@ class TPLinkPlug extends OutputBase {
   #detach(plug: Plug) {
     plug.removeAllListeners("power-on");
     plug.removeAllListeners("power-off");
+    if (this.tplinkPlug === plug) {
+      this.tplinkPlug = undefined;
+    }
   }
 
   async #powerUpdateFunctionAsync(value: boolean): Promise<void> {
     // This should make sure that if someone externally changes the power state of the plug when it's
     // in manual mode, it updates the state in Sproot. Otherwise, we'll just ignore it.
     if (this.#powerUpdateEventRunning) {
+      this.logger.debug(
+        `TPLink Smart Plug {id: ${this.id}, pin: ${this.pin}} is already processing a power update event. ` +
+          `Ignoring duplicate event for state ${value ? 100 : 0}.`,
+      );
       return;
     }
     let retryCount = 0;
