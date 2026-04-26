@@ -166,7 +166,7 @@ class ESP32_PCA9685Output extends OutputBase {
       );
       return;
     }
-    await fetch(
+    const response = await fetch(
       `http://${ipAddress}/api/outputs/pca9685/${this.outputData.address}/${this.outputData.pin}`,
       {
         method: "PUT",
@@ -178,6 +178,9 @@ class ESP32_PCA9685Output extends OutputBase {
         }),
       },
     );
+    if (!response.ok) {
+      throw new Error(`Failed to set PCA9685 output value. Status: ${response.status}`);
+    }
     return;
   }
 }

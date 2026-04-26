@@ -19,6 +19,7 @@ export class OutputActionManager implements Disposable {
   #automationTimeout: number; // Per-output timeout
   #triggeredActionFunction: (result: number | undefined) => Promise<void>;
   #listenerCleanupFunction: () => void;
+  #pendingAction: Promise<void> = Promise.resolve();
 
   static async createInstanceAsync(
     outputId: number,
@@ -60,14 +61,19 @@ export class OutputActionManager implements Disposable {
     };
 
     const automationListener = async (event: AutomationEvent) => {
-      try {
-        const result = await this.#handleAutomationEvent(event);
-        await this.#triggeredActionFunction(result);
-      } catch (error) {
-        this.#logger.error(
-          `Error handling automation event for output ${this.#outputId} - ${error}`,
-        );
-      }
+      this.#pendingAction = this.#pendingAction
+        .then(async () => {
+          const result = await this.#handleAutomationEvent(event);
+          this.#logger.debug(
+            `Received Automation event for output ${this.#outputId} - result: ${result}`,
+          );
+          await this.#triggeredActionFunction(result);
+        })
+        .catch((error) => {
+          this.#logger.error(
+            `Error handling automation event for output ${this.#outputId} - ${error}`,
+          );
+        });
     };
 
     this.#automationService.on(OUTPUT_ACTIONS_UPDATED_EVENT, actionReloadListener);
@@ -158,7 +164,7 @@ export class OutputActionManager implements Disposable {
 
     // Collision detected, default to off
     if (valueCounts.size > 1) {
-      this.#logger.verbose(
+      this.#logger.warn(
         `Collision detected on output ${this.#outputId}: ` +
           `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`,
       );

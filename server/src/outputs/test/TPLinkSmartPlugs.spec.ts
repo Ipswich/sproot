@@ -14,6 +14,7 @@ import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { toDbDate } from "../../utils/dateUtils";
 import { AutomationService } from "../../automation/AutomationService";
+import { AutomationEvent } from "../../automation/AutomationEvent";
 const mockSprootDB = new MockSprootDB();
 const mockAutomationService = sinon.createStubInstance(AutomationService);
 
@@ -493,5 +494,86 @@ describe("tplinkPlug.ts tests", async function () {
     assert.equal(setStatePowerStub.callCount, 5);
     assert.equal(plug!.controlMode, ControlMode.automatic);
     assert.equal(plug!.value, 0);
+  });
+
+  it("should preserve automatic actions across offline and online events", async function () {
+    const logger = winston.createLogger({ silent: true });
+    const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
+    const sprootDB = new MockSprootDB();
+    sinon.stub(sprootDB, "getAutomationsAsync").resolves([
+      {
+        id: 1,
+        name: "testAutomation",
+        operator: "or",
+        enabled: true,
+      },
+    ]);
+    sinon.stub(sprootDB, "getOutputActionsByOutputIdAsync").resolves([
+      {
+        id: 1,
+        automationId: 1,
+        outputId: 1,
+        value: 100,
+      },
+    ]);
+    const automationService = await AutomationService.createInstanceAsync(sprootDB, logger);
+
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      automationService,
+      sprootDB,
+      5,
+      5,
+      5,
+      5,
+      logger,
+      50,
+    );
+
+    await tplinkSmartPlugs.createOutputAsync({
+      id: 1,
+      model: "TPLINK_SMART_PLUG",
+      address: simulatedHS300.address,
+      name: "test output 1",
+      pin: simulatedHS300.children[0]?.sysinfo.id,
+      isPwm: false,
+      isInvertedPwm: false,
+    } as SDBOutput);
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assert.exists(tplinkSmartPlugs.outputs["1"]);
+    assert.exists((tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug);
+
+    const plug = (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug!;
+    tplinkSmartPlugs.plugRegistry.unregister(plug.childId!);
+
+    assert.exists(tplinkSmartPlugs.outputs["1"]);
+    assert.notExists((tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug);
+
+    tplinkSmartPlugs.plugRegistry.register(plug);
+
+    assert.exists(tplinkSmartPlugs.outputs["1"]);
+    assert.exists((tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug);
+
+    automationService.emit(
+      "AutomationsTriggered",
+      new AutomationEvent(
+        new Map([
+          [
+            1,
+            {
+              automationId: 1,
+              automationName: "testAutomation",
+              operator: "or",
+              conditions: { allOf: [], anyOf: [], oneOf: [] },
+            },
+          ],
+        ]),
+      ),
+    );
+
+    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.equal(setStatePowerStub.callCount, 1);
   });
 });

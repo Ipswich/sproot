@@ -269,19 +269,16 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   ): Promise<void> {
     if (!forceExecution) {
       if (this.#isExecuting) {
-        this.logger.warn(
+        this.logger.verbose(
           `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
         );
         return;
       }
       if (this.value == this.state.lastValue) {
-        // this.logger.verbose(
-        //   `Output { Model: ${this.model}, id: ${this.id} } value has not changed. Skipping state execution.`,
-        // );
         return;
       }
     }
-
+    const rewindValue = this.state.lastValue;
     try {
       const validatedValue = this.#validateAndFixValue(this.value);
       this.#isExecuting = true;
@@ -294,6 +291,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.state.updateLastState();
       await executionFnAsync(validatedValue);
     } catch (error) {
+      // Rewind state on error to ensure consistency
+      this.state.updateLastState(rewindValue);
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
     } finally {
       this.#isExecuting = false;
