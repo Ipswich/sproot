@@ -18,7 +18,9 @@ x-base-environment: &base_env
   TZ: "America/Los_Angeles"
   NODE_ENV: "production"
 
-# Grabbed from env - the build step for the github action sets this variable
+# Used when locally building the client image. Release builds inject the validated
+# package.json version from CI, while this compose file intentionally defaults to
+# a local fallback and continues tracking the published :latest images by default.
 x-client-args: &client_env
   VITE_VERSION: "${VITE_VERSION:-0.0.0}"
   VITE_API_SERVER_URL: ""
@@ -45,6 +47,8 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    # Release automation publishes both :latest and the validated semver tag.
+    # Compose defaults to :latest unless an operator overrides the image tag.
     image: ghcr.io/ipswich/sproot-server:latest
     build:
       context: ./
@@ -71,6 +75,8 @@ services:
     restart: unless-stopped
     depends_on:
       - server
+    # The published "client" image is built from gateway/Dockerfile and also
+    # receives both :latest and the validated semver tag during release.
     image: ghcr.io/ipswich/sproot-client:latest
     build:
       context: ./

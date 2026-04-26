@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -136,6 +136,7 @@ jobs:
           context: ./
           build-args: |
             VITE_VERSION=${{ env.VERSION }}
+            VITE_API_SERVER_URL=
           file: ${{ matrix.dockerfile }}
           platforms: linux/arm64,linux/amd64
           push: true
