@@ -1,15 +1,18 @@
 import {
   TextInput,
   Button,
+  Collapse,
   ScrollArea,
   Group,
   Modal,
   SegmentedControl,
+  Stack,
   Space,
   Title,
   Accordion,
   ActionIcon,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   addAutomationAsync,
@@ -25,9 +28,12 @@ import {
 import { Fragment } from "react/jsx-runtime";
 import { useForm } from "@mantine/form";
 import ConditionsTable from "./Conditions/ConditionsTable";
+import AddActionWidget from "./Actions/AddActionWidget";
 import OutputActionsTable from "./Actions/OutputActionsTable";
+import NotificationActionsTable from "./Actions/NotificationActionsTable";
 import { useEffect } from "react";
 import { IconDeviceFloppy } from "@tabler/icons-react";
+import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
 interface EditAutomationModalProps {
   editAutomation: IAutomation | null;
@@ -44,6 +50,8 @@ export default function EditAutomationModal({
   closeModal: closeModal,
   readOnly = false,
 }: EditAutomationModalProps) {
+  const [addActionOpened, { toggle: toggleAddAction, close: closeAddAction }] =
+    useDisclosure(false);
   const mutateAutomationForm = useForm({
     initialValues: {
       name: targetAutomation?.name ?? "",
@@ -63,6 +71,7 @@ export default function EditAutomationModal({
 
   useEffect(() => {
     setTargetAutomation(targetAutomation);
+    closeAddAction();
     mutateAutomationForm.setValues({
       name: targetAutomation?.name ?? "",
       operator: targetAutomation?.operator ?? "or",
@@ -130,6 +139,7 @@ export default function EditAutomationModal({
         opened={modalOpened}
         onClose={() => {
           closeModal();
+          closeAddAction();
           mutateAutomationForm.setValues({
             name: targetAutomation?.name ?? "",
             operator: targetAutomation?.operator ?? "or",
@@ -243,29 +253,68 @@ export default function EditAutomationModal({
                     <Title order={4}>Actions</Title>
                   </Accordion.Control>
                   <Accordion.Panel>
-                    {getOutputsQuery.data == null ||
-                    Object.keys(getOutputsQuery.data).length === 0 ? null : (
-                      <OutputActionsTable
-                        automationId={targetAutomation.id}
-                        outputs={Object.values(getOutputsQuery.data ?? {})}
-                        readOnly={readOnly}
-                      />
-                    )}
+                    <Stack gap="md">
+                      <div>
+                        <Title order={5} mb="xs">
+                          Output
+                        </Title>
+                        {getOutputsQuery.data == null ? (
+                          <div>Loading...</div>
+                        ) : (
+                          <OutputActionsTable
+                            automationId={targetAutomation.id}
+                            outputs={Object.values(getOutputsQuery.data ?? {})}
+                            readOnly={readOnly}
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <Title order={5} mb="xs">
+                          Notifications
+                        </Title>
+                        <NotificationActionsTable
+                          automationId={targetAutomation.id}
+                          readOnly={readOnly}
+                        />
+                      </div>
+                      {readOnly ? null : (
+                        <>
+                          <Button color="green" onClick={toggleAddAction}>
+                            Add Action
+                          </Button>
+                          <Collapse
+                            in={addActionOpened}
+                            transitionDuration={300}
+                          >
+                            <Space h={12} />
+                            <AddActionWidget
+                              automationId={targetAutomation.id}
+                              outputs={Object.values(
+                                getOutputsQuery.data ?? {},
+                              ).map((output) => ({
+                                id: output.id,
+                                parentOutputId: output.parentOutputId,
+                                isPwm: output.isPwm,
+                                name: output.name ?? "",
+                              }))}
+                              onSaved={closeAddAction}
+                            />
+                          </Collapse>
+                        </>
+                      )}
+                    </Stack>
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>
             </Group>
             {readOnly ? null : (
               <Group justify="space-between" mt="md">
-                <Button
-                  color="red"
-                  onClick={() => {
+                <ConfirmDeleteButton
+                  onConfirm={() => {
                     deleteAutomationMutation.mutate(targetAutomation.id);
                     closeModal();
                   }}
-                >
-                  Delete
-                </Button>
+                />
               </Group>
             )}
           </Fragment>

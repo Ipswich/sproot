@@ -1,4 +1,5 @@
-import { AutomationEvent, AutomationEventPayload } from "../AutomationEvent";
+import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
+import { AutomationEvent } from "../AutomationEvent";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationService } from "../AutomationService";
 import { OutputAction } from "./OutputAction";
@@ -133,11 +134,11 @@ export class OutputActionManager implements Disposable {
     // Find which automations have actions on this output
     const triggeredActions: {
       value: number;
-      payload: AutomationEventPayload;
+      payload: IAutomationEventPayload;
     }[] = [];
 
     // Loop through all actions and check if their automation was triggered
-    for (const [_actionId, action] of this.#actionMap.entries()) {
+    for (const action of this.#actionMap.values()) {
       if (event.triggeredAutomations.has(action.automationId)) {
         const payload = event.triggeredAutomations.get(action.automationId);
         if (!payload) {

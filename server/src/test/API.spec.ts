@@ -782,6 +782,65 @@ describe("API Tests", async function () {
     });
   });
 
+  describe("Notification Action Routes", async () => {
+    describe("GET", async () => {
+      it("should return 200 and all notifications", async () => {
+        const response = await request(server).get("/api/v2/notification-actions").expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.lengthOf(content.data, 3);
+        for (let i = 0; i < content.data.length; i++) {
+          assert.containsAllKeys(content.data[i], ["id", "automationId", "subject", "content"]);
+        }
+      });
+
+      it("should return 200 and all notifications by automationID", async () => {
+        const response = await request(server)
+          .get("/api/v2/notification-actions?automationId=1")
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.lengthOf(content.data, 2);
+        assert.containsAllKeys(content.data[0], ["id", "automationId", "subject", "content"]);
+        assert.containsAllKeys(content.data[1], ["id", "automationId", "subject", "content"]);
+      });
+
+      it("should return 200 and a single notification", async () => {
+        const response = await request(server).get("/api/v2/notification-actions/1").expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.containsAllKeys(content.data, ["id", "automationId", "subject", "content"]);
+        assert.equal(content.data.subject, "Test Notification 1");
+        assert.equal(content.data.content, "Test Content 1");
+      });
+    });
+
+    describe("Create, Delete", async () => {
+      describe("POST", async () => {
+        it("should return 201", async () => {
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 3);
+          await request(server)
+            .post("/api/v2/notification-actions")
+            .send({
+              automationId: 1,
+              subject: "New Test Notification",
+              content: "New Test Content",
+            })
+            .expect(201);
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 4);
+        });
+      });
+
+      describe("DELETE", async () => {
+        it("should return 200", async () => {
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 4);
+          await request(server).delete("/api/v2/notification-actions/4").expect(200);
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 3);
+        });
+      });
+    });
+  });
+
   describe("Sensor Routes", async () => {
     describe("Sensors", async () => {
       const sensorKeys = [

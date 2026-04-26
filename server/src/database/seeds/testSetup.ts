@@ -196,6 +196,12 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 5, automation_id: 2, output_id: 5, value: 75 },
   ]);
 
+  await knex("notification_actions").insert([
+    { id: 1, automation_id: 1, subject: "Test Notification 1", content: "Test Content 1" },
+    { id: 2, automation_id: 1, subject: "Test Notification 2", content: "Test Content 2" },
+    { id: 3, automation_id: 2, subject: "Test Notification 3", content: "Test Content 3" },
+  ]);
+
   await knex("camera_settings").insert({
     enabled: false,
     name: "Pi Camera",

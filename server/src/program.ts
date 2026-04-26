@@ -26,6 +26,7 @@ import {
   createBackupCronJob,
 } from "./system/CronJobs";
 import { MdnsService } from "./system/MdnsService";
+import { NotificationActionManager } from "./automation/notifications/NotificationActionManager";
 
 export default async function setupAsync(): Promise<Express> {
   const app = express();
@@ -49,6 +50,13 @@ export default async function setupAsync(): Promise<Express> {
 
   const automationService = await AutomationService.createInstanceAsync(sprootDB, logger);
   app.set(DI_KEYS.AutomationService, automationService);
+
+  const notificationActionManager = await NotificationActionManager.createInstanceAsync(
+    automationService,
+    sprootDB,
+    logger,
+  );
+  app.set(DI_KEYS.NotificationActionManager, notificationActionManager);
 
   logger.info("Creating camera manager. . .");
   const cameraManager = await CameraManager.createInstanceAsync(
@@ -154,6 +162,9 @@ export async function gracefulHaltAsync(
 
       // Cleanup system status monitor
       app.get(DI_KEYS.SystemStatusMonitor)[Symbol.dispose]();
+
+      // Cleanup notification action manager
+      app.get(DI_KEYS.NotificationActionManager)[Symbol.dispose]();
 
       // Close database connection
       await app.get(DI_KEYS.SprootDB)[Symbol.asyncDispose]();
