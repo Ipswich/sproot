@@ -14,6 +14,15 @@ import { AutomationService } from "../../automation/AutomationService";
 const mockSprootDB = new MockSprootDB();
 const mockAutomationService = sinon.createStubInstance(AutomationService);
 
+function stubPca9685DutyCycle() {
+  return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
+    const callback = args[3];
+    if (typeof callback === "function") {
+      callback(undefined);
+    }
+  });
+}
+
 describe("PCA9685.ts tests", function () {
   afterEach(() => {
     sinon.restore();
@@ -128,7 +137,7 @@ describe("PCA9685.ts tests", function () {
     );
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);
-    const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
+    const setDutyCycleStub = stubPca9685DutyCycle();
     const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
