@@ -158,19 +158,7 @@ export default function EditAutomationModal({
         <form
           id="add-automation-form"
           onSubmit={mutateAutomationForm.onSubmit((values) => {
-            if (targetAutomation == null) {
-              addAutomationMutation.mutate(values as IAutomation);
-              return;
-            }
-
-            updateAutomationMutation.mutate({
-              id: targetAutomation.id,
-              operator:
-                (values.operator as AutomationOperator) ??
-                targetAutomation.operator,
-              name: values.name,
-              enabled: targetAutomation.enabled,
-            });
+            addAutomationMutation.mutate(values as IAutomation);
           })}
         >
           {readOnly ? null : (

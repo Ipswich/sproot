@@ -24,7 +24,6 @@ type ConfirmDeleteButtonProps =
   | {
       kind: "icon";
       onConfirm: () => void | Promise<void>;
-      confirmLabel?: ReactNode;
       cooldownMs?: number;
       disabled?: boolean;
       loading?: boolean;
@@ -39,12 +38,15 @@ type ConfirmDeleteButtonProps =
 export default function ConfirmDeleteButton(props: ConfirmDeleteButtonProps) {
   const cooldownMs = props.cooldownMs ?? 1000;
   const timeoutRef = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
   const [confirmationState, setConfirmationState] = useState<
     "idle" | "cooldown" | "ready"
   >("idle");
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
       }
@@ -57,14 +59,20 @@ export default function ConfirmDeleteButton(props: ConfirmDeleteButtonProps) {
       timeoutRef.current = null;
     }
 
-    setConfirmationState("idle");
+    if (isMountedRef.current) {
+      setConfirmationState("idle");
+    }
   };
 
   const startConfirmation = () => {
     resetConfirmation();
-    setConfirmationState("cooldown");
+    if (isMountedRef.current) {
+      setConfirmationState("cooldown");
+    }
     timeoutRef.current = window.setTimeout(() => {
-      setConfirmationState("ready");
+      if (isMountedRef.current) {
+        setConfirmationState("ready");
+      }
       timeoutRef.current = null;
     }, cooldownMs);
   };
