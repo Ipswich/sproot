@@ -9,9 +9,7 @@ import { useEffect, useRef, useState } from "react";
 
 export default function ImageOrVideoDisplay() {
   const [showStream, setShowStream] = useState(false);
-  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(
-    null,
-  );
+  const imgRef = useRef<HTMLImageElement | null>(null);
   const latestImageObjectUrlRef = useRef<string | null>(null);
 
   const imageQuery = useQuery({
@@ -44,16 +42,16 @@ export default function ImageOrVideoDisplay() {
 
   useEffect(() => {
     return () => {
-      imageElement?.removeAttribute("src");
+      imgRef.current?.removeAttribute("src");
 
       if (latestImageObjectUrlRef.current) {
         URL.revokeObjectURL(latestImageObjectUrlRef.current);
       }
     };
-  }, [imageElement]);
+  }, []);
 
   const stopStream = async () => {
-    imageElement?.removeAttribute("src");
+    imgRef.current?.removeAttribute("src");
     setShowStream(false);
     await imageQuery.refetch();
   };
@@ -69,7 +67,7 @@ export default function ImageOrVideoDisplay() {
     <Fragment>
       <div style={{ position: "relative" }}>
         <img
-          ref={setImageElement}
+          ref={imgRef}
           src={displaySource}
           alt="Camera stream"
           style={{

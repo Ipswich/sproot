@@ -87,6 +87,8 @@ describe("StreamProxy", () => {
     assert.isFalse(await streamProxy.startAsync());
     assert.isTrue(connectAsyncStub.calledOnce);
     assert.isTrue(disconnectStub.calledOnce);
+    connectAsyncStub.restore();
+    disconnectStub.restore();
   });
 });
 
@@ -431,6 +433,7 @@ describe("UpstreamConnection", () => {
 
     upstream.disconnect();
     upstreamStream.destroy();
+    fetchStub.restore();
   });
 
   it("should disconnect and schedule reconnect when upstream data stalls", async () => {
@@ -466,6 +469,7 @@ describe("UpstreamConnection", () => {
 
     upstream.disconnect();
     upstreamStream.destroy();
+    fetchStub.restore();
   });
 
   it("should regenerate headers for each new upstream connection", async () => {
@@ -508,5 +512,6 @@ describe("UpstreamConnection", () => {
     upstream.disconnect();
     firstUpstreamStream.destroy();
     secondUpstreamStream.destroy();
+    fetchStub.restore();
   });
 });

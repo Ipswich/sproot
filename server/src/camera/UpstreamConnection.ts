@@ -44,6 +44,7 @@ export class UpstreamConnection {
   #reconnectAttempt: number = 0;
   #lastDataReceivedAt: number = 0;
   #disconnectReason: string | undefined;
+  #shouldReconnect: boolean = true;
 
   constructor(options: UpstreamConnectionOptions) {
     this.#logger = options.logger;
@@ -83,6 +84,7 @@ export class UpstreamConnection {
       this.#logger.debug("UpstreamConnection: connection attempt already in progress");
       return false;
     }
+    this.#shouldReconnect = true;
 
     if (this.#readableStream) {
       this.#logger.debug("UpstreamConnection: already connected, disconnecting first");
@@ -234,7 +236,10 @@ export class UpstreamConnection {
     await this.#disconnectInternal();
 
     const delay = this.#calculateReconnectDelay();
-    this.#logger.info(`UpstreamConnection: disconnected - ${reason}, reconnecting in ${delay}ms`);
+    this.#logger.info(`UpstreamConnection: disconnected - ${reason}, reconnect delay ${delay}ms`);
+    if (!this.#shouldReconnect) {
+      return;
+    }
 
     this.#reconnectTimeout = setTimeout(() => {
       this.#reconnectTimeout = null;
@@ -298,7 +303,15 @@ export class UpstreamConnection {
    */
   disconnect(): void {
     this.#logger.info("UpstreamConnection: explicit disconnect");
+    this.#shouldReconnect = false;
     this.#disconnectReason = "explicit disconnect";
+
+    // Clear any pending reconnect timer immediately.
+    if (this.#reconnectTimeout) {
+      clearTimeout(this.#reconnectTimeout);
+      this.#reconnectTimeout = null;
+    }
+
     void this.#disconnectInternal();
     this.#reconnectAttempt = 0;
   }
