@@ -2,7 +2,6 @@ import {
   Modal,
   TextInput,
   ScrollArea,
-  Button,
   Group,
   Stack,
   ActionIcon,
@@ -27,6 +26,7 @@ import {
   IconLoader,
 } from "@tabler/icons-react";
 import UpdateFirmwareContainer from "./UpdateFirmwareContainer";
+import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 
 interface EditTableProps {
   subcontrollers: ISubcontroller[];
@@ -153,10 +153,9 @@ export default function EditTable({
             <UpdateFirmwareContainer id={selectedDevice.id} />
           </Stack>
           <Group justify="space-between" mt="md">
-            <Button
+            <ConfirmDeleteButton
               disabled={isUpdating}
-              color="red"
-              onClick={async () => {
+              onConfirm={async () => {
                 setIsUpdating(true);
                 await deleteSubcontrollerMutation.mutateAsync(
                   selectedDevice.id,
@@ -167,9 +166,7 @@ export default function EditTable({
                 updateDeviceForm.reset();
                 newSubcontrollerCloseModal();
               }}
-            >
-              Delete
-            </Button>
+            />
           </Group>
         </form>
       </Modal>

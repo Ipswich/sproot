@@ -25,6 +25,7 @@ import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
 import { useRevalidator } from "react-router-dom";
 import { Models } from "@sproot/sproot-common/src/sensors/Models";
 import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";
+import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 
 interface EditTableProps {
   sensors: Record<string, ISensorBase>;
@@ -299,10 +300,9 @@ export default function EditTable({
             />
           )}
           <Group justify="space-between" mt="md">
-            <Button
+            <ConfirmDeleteButton
               disabled={isUpdating}
-              color="red"
-              onClick={async () => {
+              onConfirm={async () => {
                 setIsUpdating(true);
                 await deleteSensorMutation.mutateAsync(selectedSensor.id);
                 delete sensors[selectedSensor.id];
@@ -311,9 +311,7 @@ export default function EditTable({
                 closeModal();
                 updateSensorForm.reset();
               }}
-            >
-              Delete
-            </Button>
+            />
             <Button type="submit" disabled={isUpdating}>
               Update Sensor
             </Button>
