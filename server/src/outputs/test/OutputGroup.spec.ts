@@ -12,6 +12,15 @@ import { SDBOutputState } from "@sproot/database/SDBOutputState";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { AutomationService } from "../../automation/AutomationService";
 
+function stubPca9685DutyCycle() {
+  return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
+    const callback = args[3];
+    if (typeof callback === "function") {
+      callback(undefined);
+    }
+  });
+}
+
 describe("OutputGroup.ts tests", function () {
   let logger: winston.Logger;
   const mockAutomationService = sinon.createStubInstance(AutomationService);
@@ -45,6 +54,7 @@ describe("OutputGroup.ts tests", function () {
   it("should set and remove outputs correctly", async function () {
     const mockSprootDB = new MockSprootDB();
     sinon.createStubInstance(Pca9685Driver);
+    stubPca9685DutyCycle();
 
     const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
@@ -143,6 +153,7 @@ describe("OutputGroup.ts tests", function () {
   it("should set and execute state on all outputs", async function () {
     const mockSprootDB = new MockSprootDB();
     sinon.createStubInstance(Pca9685Driver);
+    stubPca9685DutyCycle();
 
     const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
@@ -272,6 +283,7 @@ describe("OutputGroup.ts tests", function () {
   it("should update control mode on all outputs", async function () {
     const mockSprootDB = new MockSprootDB();
     sinon.createStubInstance(Pca9685Driver);
+    stubPca9685DutyCycle();
 
     const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
