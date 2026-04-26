@@ -1,6 +1,11 @@
 import { EventEmitter } from "events";
-import { OUTPUT_ACTIONS_UPDATED_EVENT, AUTOMATIONS_TRIGGERED_EVENT } from "../utils/EventConstants";
-import { AutomationEvent, AutomationEventPayload } from "./AutomationEvent";
+import {
+  OUTPUT_ACTIONS_UPDATED_EVENT,
+  NOTIFICATION_ACTIONS_UPDATED_EVENT,
+  AUTOMATIONS_TRIGGERED_EVENT,
+} from "../utils/EventConstants";
+import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
+import { AutomationEvent } from "./AutomationEvent";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -78,7 +83,7 @@ class AutomationService extends EventEmitter {
     // Evaluate each automation once
     const evaluatedAutomations: Array<{
       automation: Automation;
-      payload: AutomationEventPayload;
+      payload: IAutomationEventPayload;
     }> = [];
 
     for (const [_automationId, automation] of this.#automations.entries()) {
@@ -282,6 +287,22 @@ class AutomationService extends EventEmitter {
   async deleteDateRangeConditionAsync(id: number) {
     await this.#sprootDB.deleteDateRangeConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
+  }
+
+  // Notification actions
+  async addNotificationActionAsync(
+    automationId: number,
+    subject: string,
+    content: string,
+  ): Promise<number> {
+    const result = await this.#sprootDB.addNotificationActionAsync(automationId, subject, content);
+    this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
+    return result;
+  }
+
+  async deleteNotificationActionAsync(notificationActionId: number) {
+    await this.#sprootDB.deleteNotificationActionAsync(notificationActionId);
+    this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
   }
 
   // Output actions

@@ -40,6 +40,7 @@ import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJour
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
+import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -601,6 +602,48 @@ export class SprootDB implements ISprootDB {
   }
   async getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]> {
     return this.#connection("output_actions_view").where("outputId", outputId).select("*");
+  }
+
+  /* Notifications */
+  async getNotificationActionsAsync(): Promise<SDBNotificationAction[]> {
+    return this.#connection("notification_actions").select([
+      "id",
+      "automation_id as automationId",
+      "subject",
+      "content",
+    ]);
+  }
+  async getNotificationActionByIdAsync(
+    notificationActionId: number,
+  ): Promise<SDBNotificationAction[]> {
+    return this.#connection("notification_actions")
+      .where("id", notificationActionId)
+      .select(["id", "automation_id as automationId", "subject", "content"]);
+  }
+  async getNotificationActionsByAutomationIdAsync(
+    automationId: number,
+  ): Promise<SDBNotificationAction[]> {
+    return this.#connection("notification_actions")
+      .where("automation_id", automationId)
+      .select(["id", "automation_id as automationId", "subject", "content"]);
+  }
+  async addNotificationActionAsync(
+    automationId: number,
+    subject: string,
+    content: string,
+  ): Promise<number> {
+    return (
+      (
+        await this.#connection("notification_actions").insert({
+          automation_id: automationId,
+          subject,
+          content,
+        })
+      )[0] ?? -1
+    );
+  }
+  async deleteNotificationActionAsync(notificationActionId: number): Promise<void> {
+    return this.#connection("notification_actions").where("id", notificationActionId).delete();
   }
   async getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]> {
     return this.#connection("sensor_conditions as sc")

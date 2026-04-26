@@ -1,11 +1,11 @@
 import { Automation } from "../Automation";
 import { AutomationEvent } from "../AutomationEvent";
+import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
 import { assert } from "chai";
 import sinon from "sinon";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AutomationEventPayload } from "../AutomationEvent";
 
 describe("Automation.ts tests", () => {
   describe("evaluate", () => {
@@ -23,7 +23,7 @@ describe("Automation.ts tests", () => {
       sprootDB.getDateRangeConditionsAsync.resolves([]);
 
       const automation = await Automation.createInstanceAsync(1, "test", "or", true, sprootDB);
-      let result1 = await automation.evaluate(sensorListMock, outputListMock, new Date());
+      const result1 = await automation.evaluate(sensorListMock, outputListMock, new Date());
       assert.isFalse(result1.result);
 
       // Add a condition (empty time range matches always)
@@ -163,7 +163,7 @@ describe("Automation.ts tests", () => {
 
   describe("AutomationEvent", () => {
     it("should create event with triggered automations", () => {
-      const payload: AutomationEventPayload = {
+      const payload: IAutomationEventPayload = {
         automationId: 1,
         automationName: "testAutomation",
         operator: "or",
@@ -184,7 +184,7 @@ describe("Automation.ts tests", () => {
         },
       };
 
-      const triggeredAutomations = new Map<number, AutomationEventPayload>();
+      const triggeredAutomations = new Map<number, IAutomationEventPayload>();
       triggeredAutomations.set(1, payload);
 
       const event = new AutomationEvent(triggeredAutomations, new Date());
