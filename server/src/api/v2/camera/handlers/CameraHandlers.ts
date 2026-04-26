@@ -43,6 +43,30 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     response.removeHeader("Content-Length");
 
     const clientId = `client_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const frameBufferStream = frameBuffer.getStream();
+    let disconnected = false;
+
+    const onClientDisconnect = () => {
+      if (disconnected) {
+        return;
+      }
+
+      disconnected = true;
+      response.off("close", onClientDisconnect);
+      response.off("finish", onClientDisconnect);
+      response.off("error", onClientDisconnect);
+      frameBufferStream.off("error", onFrameBufferError);
+      frameBuffer.removeSubscriber(response);
+
+      if (!response.writableEnded && response.writable) {
+        response.end();
+      }
+    };
+
+    const onFrameBufferError = (err: Error) => {
+      logger.error(`StreamHandler: frame buffer stream error: ${err.message}`);
+      onClientDisconnect();
+    };
 
     // Create a subscriber for this client that writes chunks directly
     const subscriber: { onChunk: (chunk: Buffer) => void; onDestroy: () => void } = {
@@ -51,6 +75,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
           response.write(chunk);
         } catch (e) {
           logger.error(`StreamHandler: failed to write chunk to client ${clientId}: ${e}`);
+          onClientDisconnect();
         }
       },
       onDestroy: () => {
@@ -61,23 +86,12 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     // Add subscriber to frame buffer
     frameBuffer.addSubscriber(response, subscriber);
 
-    // Handle client disconnection
-    const onClientDisconnect = () => {
-      frameBuffer.removeSubscriber(response);
-      if (!response.writableEnded) {
-        response.end();
-      }
-    };
-
-    response.on("close", onClientDisconnect);
-    response.on("finish", onClientDisconnect);
-    response.on("error", onClientDisconnect);
+    response.once("close", onClientDisconnect);
+    response.once("finish", onClientDisconnect);
+    response.once("error", onClientDisconnect);
 
     // Handle errors on the pass-through stream
-    frameBuffer.getStream().on("error", (err: Error) => {
-      logger.error(`StreamHandler: frame buffer stream error: ${err.message}`);
-      onClientDisconnect();
-    });
+    frameBufferStream.on("error", onFrameBufferError);
   } catch (e) {
     logger.error(`StreamHandler: error handling stream: ${e}`);
     if (!response.headersSent) {

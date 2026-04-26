@@ -70,20 +70,24 @@ export class FrameBuffer {
    */
   removeSubscriber(response: ExpressResponse): void {
     const subscriber = this.#subscriberMap.get(response);
-    if (subscriber) {
-      this.#subscribers.delete(response);
-      this.#subscriberMap.delete(response);
-      try {
-        subscriber.onDestroy();
-      } catch (e) {
-        this.#logger.warn(
-          `Failed to destroy subscriber: ${e instanceof Error ? e.message : String(e)}`,
-        );
-      }
-      this.#logger.debug(
-        `FrameBuffer: subscriber removed, total subscribers: ${this.#subscribers.size}`,
+    const removedSubscriber = this.#subscriberMap.delete(response);
+    const removedResponse = this.#subscribers.delete(response);
+
+    if (!removedSubscriber && !removedResponse) {
+      return;
+    }
+
+    try {
+      subscriber?.onDestroy();
+    } catch (e) {
+      this.#logger.warn(
+        `Failed to destroy subscriber: ${e instanceof Error ? e.message : String(e)}`,
       );
     }
+
+    this.#logger.debug(
+      `FrameBuffer: subscriber removed, total subscribers: ${this.#subscribers.size}`,
+    );
   }
 
   /**
@@ -95,22 +99,33 @@ export class FrameBuffer {
       return;
     }
 
+    const staleResponses = new Set<ExpressResponse>();
+
     for (const response of this.#subscribers) {
+      const subscriber = this.#subscriberMap.get(response);
+      if (!subscriber) {
+        staleResponses.add(response);
+        continue;
+      }
+
+      if (!response.writable || response.writableEnded || response.destroyed) {
+        this.#logger.debug(`FrameBuffer: response not writable, removing subscriber`);
+        staleResponses.add(response);
+        continue;
+      }
+
       try {
-        const subscriber = this.#subscriberMap.get(response);
-        if (subscriber) {
-          // Skip if headers already sent and socket closed
-          if (response.headersSent && !response.writable) {
-            this.#logger.debug(`FrameBuffer: response not writable, skipping subscriber`);
-            continue;
-          }
-          subscriber.onChunk(chunk);
-        }
+        subscriber.onChunk(chunk);
       } catch (e) {
-        this.#logger.debug(
+        staleResponses.add(response);
+        this.#logger.warn(
           `Failed to deliver chunk to subscriber: ${e instanceof Error ? e.message : String(e)}`,
         );
       }
+    }
+
+    for (const response of staleResponses) {
+      this.removeSubscriber(response);
     }
   }
 

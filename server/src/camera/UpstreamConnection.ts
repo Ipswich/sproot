@@ -13,6 +13,10 @@ export interface UpstreamConnectionOptions {
   initialReconnectDelayMs?: number;
   /** Maximum reconnection delay in milliseconds */
   maxReconnectDelayMs?: number;
+  /** Interval between health checks in milliseconds */
+  healthCheckIntervalMs?: number;
+  /** Maximum allowed time without upstream data before reconnecting */
+  staleStreamThresholdMs?: number;
 }
 
 export type UpstreamConnectionState =
@@ -28,13 +32,18 @@ export class UpstreamConnection {
   #fetchTimeoutMs: number;
   #initialReconnectDelayMs: number;
   #maxReconnectDelayMs: number;
+  #healthCheckIntervalMs: number;
+  #staleStreamThresholdMs: number;
 
   #controller: AbortController | null = null;
   #readableStream: Readable | null = null;
   #reconnectTimeout: NodeJS.Timeout | null = null;
+  #healthCheckTimeout: NodeJS.Timeout | null = null;
   #connecting: boolean = false;
   #connectionAbortListener: ((event: Event) => void) | null = null;
   #reconnectAttempt: number = 0;
+  #lastDataReceivedAt: number = 0;
+  #disconnectReason: string | undefined;
 
   constructor(options: UpstreamConnectionOptions) {
     this.#logger = options.logger;
@@ -44,6 +53,8 @@ export class UpstreamConnection {
     this.#fetchTimeoutMs = options.fetchTimeoutMs ?? 10000;
     this.#initialReconnectDelayMs = options.initialReconnectDelayMs ?? 1000;
     this.#maxReconnectDelayMs = options.maxReconnectDelayMs ?? 60000;
+    this.#healthCheckIntervalMs = options.healthCheckIntervalMs ?? 2000;
+    this.#staleStreamThresholdMs = options.staleStreamThresholdMs ?? 15000;
   }
 
   /**
@@ -54,7 +65,9 @@ export class UpstreamConnection {
       return { status: "connecting", attempt: this.#reconnectAttempt };
     }
     if (!this.#readableStream) {
-      return { status: "disconnected" };
+      return this.#disconnectReason === undefined
+        ? { status: "disconnected" }
+        : { status: "disconnected", reason: this.#disconnectReason };
     }
     return {
       status: "connected",
@@ -112,6 +125,7 @@ export class UpstreamConnection {
 
       // Set up the new readable stream
       this.#controller = newController;
+      this.#disconnectReason = undefined;
       try {
         this.#readableStream = Readable.fromWeb(upstream.body, {
           signal: this.#controller.signal,
@@ -126,6 +140,7 @@ export class UpstreamConnection {
 
       // Wire up the stream to frame buffer's pass through
       this.#readableStream.pipe(this.#frameBuffer.getStream());
+      this.#lastDataReceivedAt = Date.now();
 
       // Add abort listener for cleanup
       this.#connectionAbortListener = () => {
@@ -141,6 +156,9 @@ export class UpstreamConnection {
 
       // Handle stream end and errors
       this.#readableStream
+        .on("data", () => {
+          this.#lastDataReceivedAt = Date.now();
+        })
         .on("end", () => {
           this.#logger.info("UpstreamConnection: upstream stream ended");
           this.#handleDisconnect("stream ended");
@@ -172,39 +190,48 @@ export class UpstreamConnection {
   }
 
   /**
-   * Schedules a health check and returns the delay until next check
+   * Schedules periodic health checks for upstream data flow
    */
-  #scheduleHealthCheck(): number {
-    const checkInterval = () => {
-      if (!this.#readableStream) {
-        return 0;
-      }
-
-      // Health check is now based on subscriber activity
-      if (!this.#frameBuffer.isHealthy()) {
-        // No active subscribers - not necessarily an error
-      }
-
-      // Check again in 2 seconds
-      return 2000;
-    };
-
-    const delay = checkInterval();
-    if (delay > 0) {
-      this.#reconnectTimeout = setTimeout(checkInterval, delay);
+  #scheduleHealthCheck(): void {
+    if (this.#healthCheckTimeout) {
+      clearTimeout(this.#healthCheckTimeout);
+      this.#healthCheckTimeout = null;
     }
 
-    return delay;
+    const runCheck = () => {
+      if (!this.#readableStream) {
+        return;
+      }
+
+      const staleForMs = Date.now() - this.#lastDataReceivedAt;
+      if (staleForMs >= this.#staleStreamThresholdMs) {
+        this.#logger.warn(`UpstreamConnection: no upstream data for ${staleForMs}ms, reconnecting`);
+        this.#handleDisconnect(`stream stalled for ${staleForMs}ms`);
+        return;
+      }
+
+      this.#healthCheckTimeout = setTimeout(runCheck, this.#healthCheckIntervalMs);
+    };
+
+    this.#healthCheckTimeout = setTimeout(runCheck, this.#healthCheckIntervalMs);
   }
 
   /**
    * Handles disconnection and schedules reconnection
    */
   #handleDisconnect(reason: string): void {
+    void this.#disconnectAndReconnectAsync(reason);
+  }
+
+  async #disconnectAndReconnectAsync(reason: string): Promise<void> {
+    this.#disconnectReason = reason;
+
     if (this.#reconnectTimeout) {
       clearTimeout(this.#reconnectTimeout);
       this.#reconnectTimeout = null;
     }
+
+    await this.#disconnectInternal();
 
     const delay = this.#calculateReconnectDelay();
     this.#logger.info(`UpstreamConnection: disconnected - ${reason}, reconnecting in ${delay}ms`);
@@ -238,6 +265,11 @@ export class UpstreamConnection {
    * Internal disconnect without triggering reconnection
    */
   async #disconnectInternal(): Promise<void> {
+    if (this.#healthCheckTimeout) {
+      clearTimeout(this.#healthCheckTimeout);
+      this.#healthCheckTimeout = null;
+    }
+
     if (this.#reconnectTimeout) {
       clearTimeout(this.#reconnectTimeout);
       this.#reconnectTimeout = null;
@@ -265,7 +297,8 @@ export class UpstreamConnection {
    */
   disconnect(): void {
     this.#logger.info("UpstreamConnection: explicit disconnect");
-    this.#disconnectInternal();
+    this.#disconnectReason = "explicit disconnect";
+    void this.#disconnectInternal();
     this.#reconnectAttempt = 0;
   }
 }
