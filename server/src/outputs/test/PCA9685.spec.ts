@@ -5,14 +5,23 @@ import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { Pca9685Driver } from "pca9685";
 
-import chai, { assert } from "chai";
-import chaiAsPromised from "chai-as-promised";
-chai.use(chaiAsPromised);
+import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { AutomationService } from "../../automation/AutomationService";
 const mockSprootDB = new MockSprootDB();
+const mockAutomationService = sinon.createStubInstance(AutomationService);
+
+function stubPca9685DutyCycle() {
+  return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
+    const callback = args[3];
+    if (typeof callback === "function") {
+      callback(undefined);
+    }
+  });
+}
 
 describe("PCA9685.ts tests", function () {
   afterEach(() => {
@@ -26,7 +35,7 @@ describe("PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -96,7 +105,7 @@ describe("PCA9685.ts tests", function () {
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
 
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -128,8 +137,8 @@ describe("PCA9685.ts tests", function () {
     );
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);
-    const setDutyCycleStub = sinon.stub(Pca9685Driver.prototype, "setDutyCycle").returns();
-    const pca9685 = new PCA9685(mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const setDutyCycleStub = stubPca9685DutyCycle();
+    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -141,22 +150,22 @@ describe("PCA9685.ts tests", function () {
     } as SDBOutput);
 
     //Automatic High
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 100,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     assert.equal(setDutyCycleStub.callCount, 1);
     assert.equal(setDutyCycleStub.getCall(0).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(0).args[1], 1);
 
     //Automatic Low
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 0,
       controlMode: ControlMode.automatic,
       logTime: new Date().toISOString(),
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 0);
     assert.equal(setDutyCycleStub.callCount, 2);
     assert.equal(setDutyCycleStub.getCall(1).args[0], 0);
@@ -167,11 +176,11 @@ describe("PCA9685.ts tests", function () {
     assert.equal(setDutyCycleStub.callCount, 2);
 
     //Manual High
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 100,
       controlMode: ControlMode.manual,
       logTime: new Date().toISOString(),
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.manual.value, 100);
     assert.equal(setDutyCycleStub.callCount, 3);
     assert.equal(setDutyCycleStub.getCall(2).args[0], 0);
@@ -198,27 +207,27 @@ describe("PCA9685.ts tests", function () {
       isInvertedPwm: true,
     } as SDBOutput);
 
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 100,
       controlMode: ControlMode.automatic,
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     assert.equal(setDutyCycleStub.callCount, 5);
     assert.equal(setDutyCycleStub.getCall(4).args[0], 0);
     assert.equal(setDutyCycleStub.getCall(4).args[1], 0);
 
     //PWM error handling
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: -1,
       controlMode: ControlMode.automatic,
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 0);
     assert.equal(setDutyCycleStub.callCount, 6);
 
-    await pca9685.setAndExecuteStateAsync("1", <SDBOutputState>{
+    await pca9685.setAndExecuteStateAsync("1", {
       value: 101,
       controlMode: ControlMode.automatic,
-    });
+    } as SDBOutputState);
     assert.equal(pca9685.outputs["1"]?.state.automatic.value, 100);
     assert.equal(setDutyCycleStub.callCount, 7);
 
@@ -233,11 +242,11 @@ describe("PCA9685.ts tests", function () {
       isInvertedPwm: false,
     } as SDBOutput);
 
-    //Execute non-pwm output (not 0 or 100)
-    await pca9685.setAndExecuteStateAsync("2", <SDBOutputState>{
+    //Execute non-pwm output (not 0 or 100, but should get normalized to "100" since its not 0)
+    await pca9685.setAndExecuteStateAsync("2", {
       value: 75,
       controlMode: ControlMode.automatic,
-    });
-    assert.equal(setDutyCycleStub.callCount, 7);
+    } as SDBOutputState);
+    assert.equal(setDutyCycleStub.callCount, 8);
   });
 });

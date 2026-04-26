@@ -93,7 +93,7 @@ class SensorList {
         lastReadingTime,
         units,
         pin,
-        deviceGroupId,
+        deviceZoneId: deviceZoneId,
         lowCalibrationPoint,
         highCalibrationPoint,
       } = this.#sensors[key] as ISensorBase;
@@ -114,7 +114,7 @@ class SensorList {
         lastReadingTime,
         units,
         pin: pin ?? null,
-        deviceGroupId: deviceGroupId ?? null,
+        deviceZoneId: deviceZoneId ?? null,
         lowCalibrationPoint: lowCalibrationPoint ?? null,
         highCalibrationPoint: highCalibrationPoint ?? null,
       } as ISensorBase;
@@ -196,8 +196,8 @@ class SensorList {
             sensorChanges = true;
           }
 
-          if (this.#sensors[key].deviceGroupId != sensor.deviceGroupId) {
-            this.#sensors[key].deviceGroupId = sensor.deviceGroupId;
+          if (this.#sensors[key].deviceZoneId != sensor.deviceZoneId) {
+            this.#sensors[key].deviceZoneId = sensor.deviceZoneId;
             sensorChanges = true;
           }
 

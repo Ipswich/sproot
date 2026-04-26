@@ -19,7 +19,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   lastReadingTime: Date | null;
   color: string;
   pin: string | null = null;
-  deviceGroupId: number | null = null;
+  deviceZoneId: number | null = null;
   lowCalibrationPoint: number | null = null;
   highCalibrationPoint: number | null = null;
   readonly units: Record<ReadingType, string>;
@@ -51,7 +51,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     this.address = sdbSensor.address;
     this.color = sdbSensor.color;
     this.pin = sdbSensor.pin;
-    this.deviceGroupId = sdbSensor.deviceGroupId;
+    this.deviceZoneId = sdbSensor.deviceZoneId;
     this.lastReading = {} as Record<ReadingType, string>;
     this.lastReadingTime = null;
     this.sprootDB = sprootDB;

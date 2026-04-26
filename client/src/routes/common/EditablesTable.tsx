@@ -4,6 +4,7 @@ import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { ISubcontroller } from "@sproot/system/ISubcontroller";
 import { IconEdit } from "@tabler/icons-react";
+import { JSX } from "react";
 
 interface EditablesTableProps {
   editables: ISensorBase[] | IOutputBase[] | IAutomation[] | ISubcontroller[];

@@ -8,7 +8,7 @@ type SDBSensor = {
   address: string | null;
   color: string;
   pin: string | null;
-  deviceGroupId: number | null;
+  deviceZoneId: number | null;
   lowCalibrationPoint: number | null;
   highCalibrationPoint: number | null;
 };

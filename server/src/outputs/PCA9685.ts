@@ -6,9 +6,11 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
+import { AutomationService } from "../automation/AutomationService";
 
 class PCA9685 extends MultiOutputBase {
   constructor(
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -18,6 +20,7 @@ class PCA9685 extends MultiOutputBase {
     logger: winston.Logger,
   ) {
     super(
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -48,6 +51,7 @@ class PCA9685 extends MultiOutputBase {
       pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
       output,
       this.sprootDB,
+      this.automationService,
       this.maxCacheSize,
       this.initialCacheLookback,
       this.maxChartDataSize,
@@ -67,7 +71,7 @@ class PCA9685 extends MultiOutputBase {
     // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
   }
 
-  async [Symbol.asyncDispose](): Promise<void> {
+  override async [Symbol.asyncDispose](): Promise<void> {
     for (const output of Object.values(this.outputs)) {
       await output[Symbol.asyncDispose]();
     }
@@ -81,6 +85,7 @@ class PCA9685Output extends OutputBase {
     pca9685: Pca9685Driver,
     output: SDBOutput,
     sprootDB: ISprootDB,
+    automationService: AutomationService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -90,6 +95,7 @@ class PCA9685Output extends OutputBase {
     const pca9685Output = new PCA9685Output(
       pca9685,
       output,
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -103,6 +109,7 @@ class PCA9685Output extends OutputBase {
   private constructor(
     pca9685: Pca9685Driver,
     output: SDBOutput,
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -112,6 +119,7 @@ class PCA9685Output extends OutputBase {
   ) {
     super(
       output,
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -123,15 +131,25 @@ class PCA9685Output extends OutputBase {
   }
 
   executeStateAsync(forceExecution: boolean = false): Promise<void> {
-    return this.executeStateHelperAsync(async (value) => {
-      // setDutyCycle takes a decimal value -> 50% == .5; 33% == .33;
-      Promise.resolve(this.pca9685.setDutyCycle(parseInt(this.pin), value / 100));
-    }, forceExecution);
+    return this.executeStateHelperAsync(
+      async (value) =>
+        new Promise((resolve, reject) => {
+          // setDutyCycle takes a decimal value -> 50% == .5; 33% == .33;
+          this.pca9685.setDutyCycle(parseInt(this.pin), value / 100, undefined, (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(undefined);
+            }
+          });
+        }),
+      forceExecution,
+    );
   }
 
-  override [Symbol.asyncDispose](): Promise<void> {
+  override async [Symbol.asyncDispose](): Promise<void> {
+    await super[Symbol.asyncDispose]();
     this.pca9685.setDutyCycle(parseInt(this.pin), 0);
-    return Promise.resolve();
   }
 }
 

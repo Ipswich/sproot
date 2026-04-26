@@ -8,6 +8,7 @@ import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
 import { finished } from "stream/promises";
+import { DI_KEYS } from "../../../utils/DependencyInjectionConstants";
 
 export async function systemBackupListHandlerAsync(response: Response): Promise<SuccessResponse> {
   const backupFileNames = await Backups.getCompletedFileNamesAsync();
@@ -25,7 +26,7 @@ export async function systemBackupDownloadHandlerAsync(
   response: Response,
 ): Promise<void> {
   const fileName = request.params["fileName"];
-  const logger = request.app.get("logger") as winston.Logger;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   if (!fileName) {
     response.status(400).json({
       statusCode: 400,
@@ -106,13 +107,13 @@ export async function systemBackupRestoreHandlerAsync(
     }
 
     request.app.get("gracefulHaltAsync")(async (): Promise<void> => {
-      request.app.get("logger").info(`Restoring from backup file ${tempFile}`);
+      request.app.get(DI_KEYS.Logger).info(`Restoring from backup file ${tempFile}`);
       await Backups.restoreAsync(
         tempFile,
-        request.app.get("sprootDB") as ISprootDB,
-        request.app.get("logger") as winston.Logger,
+        request.app.get(DI_KEYS.SprootDB) as ISprootDB,
+        request.app.get(DI_KEYS.Logger) as winston.Logger,
       );
-      request.app.get("logger").info(`Restore complete! System exiting now!`);
+      request.app.get(DI_KEYS.Logger).info(`Restore complete! System exiting now!`);
     });
 
     return {
@@ -120,7 +121,7 @@ export async function systemBackupRestoreHandlerAsync(
       content: { data: "Backup restore queued." },
       ...response.locals["defaultProperties"],
     };
-  } catch (err: any) {
+  } catch (err) {
     return {
       statusCode: 400,
       error: {
@@ -137,9 +138,9 @@ export async function systemBackupCreateHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const logger = request.app.get("logger") as winston.Logger;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
-    Backups.createAsync(request.app.get("sprootDB") as ISprootDB, logger);
+    Backups.createAsync(request.app.get(DI_KEYS.SprootDB) as ISprootDB, logger);
     return {
       statusCode: 202,
       content: {
@@ -147,13 +148,13 @@ export async function systemBackupCreateHandlerAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       statusCode: 500,
       error: {
         name: "Internal Server Error",
         url: request.originalUrl,
-        details: [`Failed to create backup: ${error.message}`],
+        details: [`Failed to create backup: ${(error as Error).message}`],
       },
       ...response.locals["defaultProperties"],
     };

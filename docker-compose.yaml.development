@@ -39,7 +39,7 @@ services:
       - server
     build:
       context: ./
-      dockerfile: ./client/Dockerfile.development
+      dockerfile: ./gateway/Dockerfile.development
       args:
         VITE_VERSION: 0.0.0
         VITE_API_SERVER_URL: ""

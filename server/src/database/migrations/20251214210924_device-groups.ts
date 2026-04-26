@@ -2,11 +2,13 @@ import type { Knex } from "knex";
 import { setTableDefaults } from "../KnexUtilities";
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.createTableIfNotExists("device_groups", (table) => {
-    setTableDefaults(table);
-    table.increments("id").primary();
-    table.string("name").notNullable();
-  });
+  if (!(await knex.schema.hasTable("device_groups"))) {
+    await knex.schema.createTable("device_groups", (table) => {
+      setTableDefaults(table);
+      table.increments("id").primary();
+      table.string("name").notNullable();
+    });
+  }
 
   await knex.schema.alterTable("outputs", (table) => {
     table

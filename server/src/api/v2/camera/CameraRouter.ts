@@ -3,6 +3,7 @@ import {
   getLatestImageAsync,
   reconnectLivestreamAsync,
   streamHandlerAsync,
+  clearAllImagesHandlerAsync,
 } from "./handlers/CameraHandlers";
 import { getCameraSettings, updateCameraSettingsAsync } from "./handlers/CameraSettingsHandlers";
 import {
@@ -44,6 +45,10 @@ router.get("/timelapse/archive/status", (req: Request, res: Response) => {
 
 router.post("/reconnect", async (req: Request, res: Response) => {
   await reconnectLivestreamAsync(req, res);
+});
+
+router.delete("/timelapse/images", async (req: Request, res: Response) => {
+  await clearAllImagesHandlerAsync(req, res);
 });
 
 export default router;

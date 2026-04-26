@@ -23,7 +23,7 @@ import { sensorDataOrderKey } from "../../utility/LocalStorageKeys";
 
 interface SensorTableProps {
   readingType: ReadingType;
-  deviceGroup: number;
+  deviceZone: number;
   sensors: ISensorBase[];
   sensorToggleStates: string[];
   setSensorToggleStates: (sensorName: string[]) => void;
@@ -32,7 +32,7 @@ interface SensorTableProps {
 
 export default function SensorTable({
   readingType,
-  deviceGroup,
+  deviceZone,
   sensors,
   sensorToggleStates,
   setSensorToggleStates,
@@ -53,7 +53,7 @@ export default function SensorTable({
     updateSensorOrder();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType, _sensorToggleKey, deviceGroup, _sensorsIdKey]);
+  }, [readingType, _sensorToggleKey, deviceZone, _sensorsIdKey]);
 
   const sortableItems = orderedSensors.map((sensor) => (
     <SortableTableRow
@@ -67,30 +67,30 @@ export default function SensorTable({
   ));
 
   return (
-    <Table
-      highlightOnHover
-      style={{
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
+    <DndContext
+      sensors={dragSensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
     >
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th />
-          <Table.Th style={{ display: "flex", paddingLeft: 10 }}>
-            <IconEyeOff />
-          </Table.Th>
-          <Table.Th>Sensor</Table.Th>
-          <Table.Th>
-            {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
-          </Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <DndContext
-        sensors={dragSensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+      <Table
+        highlightOnHover
+        style={{
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
       >
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th />
+            <Table.Th style={{ display: "flex", paddingLeft: 10 }}>
+              <IconEyeOff />
+            </Table.Th>
+            <Table.Th>Sensor</Table.Th>
+            <Table.Th>
+              {readingType.charAt(0).toUpperCase() + readingType.slice(1)}
+            </Table.Th>
+          </Table.Tr>
+        </Table.Thead>
         <Table.Tbody>
           <SortableContext
             items={orderedSensors.map((s) => s.id)}
@@ -99,8 +99,8 @@ export default function SensorTable({
             {sortableItems}
           </SortableContext>
         </Table.Tbody>
-      </DndContext>
-    </Table>
+      </Table>
+    </DndContext>
   );
 
   function handleDragEnd(event: DragEndEvent) {
@@ -116,7 +116,7 @@ export default function SensorTable({
 
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
-          sensorDataOrderKey(readingType, deviceGroup),
+          sensorDataOrderKey(readingType, deviceZone),
           JSON.stringify(updatedArray),
         );
         return updatedArray;
@@ -129,7 +129,7 @@ export default function SensorTable({
     // Data from local storage
     const existingOrder = (
       JSON.parse(
-        localStorage.getItem(sensorDataOrderKey(readingType, deviceGroup)) ??
+        localStorage.getItem(sensorDataOrderKey(readingType, deviceZone)) ??
           "[]",
       ) as ISensorBase[]
     ).map((s) => s.id);

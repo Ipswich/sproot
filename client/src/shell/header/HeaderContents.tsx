@@ -1,8 +1,9 @@
-import { Burger, Container, Group, Title } from "@mantine/core";
+import { Box, Burger, Container, Title } from "@mantine/core";
 import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.module.css";
 import { useEffect, useState, useTransition } from "react";
 import { useLocation } from "react-router-dom";
 import { Page } from "../Pages";
+import NotificationCenter from "./NotificationCenter";
 
 interface HeaderContentsProps {
   navbarToggle: () => void;
@@ -31,31 +32,41 @@ export default function HeaderContents({
     );
   }, [location, navbarItems]);
 
+  // If headerText is empty, try resolving dynamic routes (e.g. /journals/:id)
+  useEffect(() => {
+    if (headerText) return;
+
+    const path = location.pathname;
+
+    // journals detail route: /journals/:journalId
+    if (path.startsWith("/journals/")) {
+      setHeaderText("Journals");
+    }
+  }, [location, headerText]);
+
   return (
     <header className={classes["header"]}>
-      <Container
-        style={{ justifyContent: "space-between" }}
-        hiddenFrom="sm"
-        size="md"
-        className={classes["inner"]!}
-      >
+      <Container hiddenFrom="sm" size="md" className={classes["gridInner"]!}>
         <Burger onClick={toggleNavbar} opened={navbarOpened} size="md" />
-        <Title hiddenFrom="sm" order={1} className={classes["hiddenTitle"]!}>
-          {headerText}
-        </Title>
-        <Group></Group>
+        <div className={classes["titleSlot"]!}>
+          <Title hiddenFrom="sm" order={1} className={classes["hiddenTitle"]!}>
+            {headerText}
+          </Title>
+        </div>
+        <div className={classes["actionSlot"]!}>
+          <NotificationCenter />
+        </div>
       </Container>
-      <Container
-        style={{ justifyContent: "center" }}
-        visibleFrom="sm"
-        size="md"
-        className={classes["inner"]!}
-      >
-        <Group>
+      <Container visibleFrom="sm" size="md" className={classes["gridInner"]!}>
+        <Box />
+        <div className={classes["titleSlot"]!}>
           <Title order={1} visibleFrom="sm">
             {headerText}
           </Title>
-        </Group>
+        </div>
+        <div className={classes["actionSlot"]!}>
+          <NotificationCenter />
+        </div>
       </Container>
     </header>
   );

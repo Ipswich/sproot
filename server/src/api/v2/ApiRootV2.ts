@@ -1,4 +1,5 @@
 import { Express, Request, Response, NextFunction } from "express";
+import { DI_KEYS } from "../../utils/DependencyInjectionConstants";
 import * as OpenApiValidator from "express-openapi-validator";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -14,9 +15,13 @@ import sensorsRouter from "./sensors/SensorsRouter";
 import outputsRouter from "./outputs/OutputsRouter";
 import automationsRouter from "./automations/AutomationsRouter";
 import outputActionsRouter from "./automations/OutputActionRouter";
+import notificationsRouter from "./automations/NotificationActionRouter";
 import cameraRouter from "./camera/CameraRouter";
 import subcontrollersRouter from "./subcontrollers/SubcontrollersRouter";
-import deviceGroupRotuer from "./devicegroups/DeviceGroupRouter";
+import deviceZoneRouter from "./devicezones/DeviceZoneRouter";
+import journalRouter from "./journals/JournalRouter";
+import entryRouter from "./journals/EntriesRouter";
+import tagRouter from "./tags/TagRouter";
 
 const spec_path = "../api_spec/openapi_v2.yaml";
 
@@ -30,7 +35,7 @@ const authenticateMiddleware = authorize(
 );
 
 function ApiRootV2(app: Express) {
-  const logger = app.get("logger");
+  const logger = app.get(DI_KEYS.Logger);
 
   app.use(
     "/api/v2/docs",
@@ -66,9 +71,13 @@ function ApiRootV2(app: Express) {
   app.use("/api/v2/outputs", authenticateMiddleware, outputsRouter);
   app.use("/api/v2/automations", authenticateMiddleware, automationsRouter);
   app.use("/api/v2/output-actions", authenticateMiddleware, outputActionsRouter);
+  app.use("/api/v2/notification-actions", authenticateMiddleware, notificationsRouter);
   app.use("/api/v2/camera", authenticateMiddleware, cameraRouter);
   app.use("/api/v2/subcontrollers", authenticateMiddleware, subcontrollersRouter);
-  app.use("/api/v2/device-groups", authenticateMiddleware, deviceGroupRotuer);
+  app.use("/api/v2/device-zones", authenticateMiddleware, deviceZoneRouter);
+  app.use("/api/v2/journals", authenticateMiddleware, journalRouter);
+  app.use("/api/v2/entries", authenticateMiddleware, entryRouter);
+  app.use("/api/v2/tags", authenticateMiddleware, tagRouter);
 
   // Error handler - anything unexpected ends up here.
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {

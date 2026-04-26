@@ -6,13 +6,14 @@ import { randomBytes } from "crypto";
 import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { OutputList } from "../../../../outputs/list/OutputList";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 export async function getSubcontrollerHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const mdnsService = request.app.get("bonjourService") as MdnsService;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const mdnsService = request.app.get(DI_KEYS.MdnsService) as MdnsService;
 
   try {
     const recognizedDevices = await sprootDB.getSubcontrollersAsync();
@@ -50,8 +51,8 @@ export async function getSubcontrollerOnlineAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const mdnsService = request.app.get("bonjourService") as MdnsService;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const mdnsService = request.app.get(DI_KEYS.MdnsService) as MdnsService;
   const { deviceId } = request.params;
 
   let hostName: string | undefined;
@@ -112,7 +113,7 @@ export async function postSubcontrollerHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const { name, hostName } = request.body;
 
   const errorStrings: string[] = [];
@@ -167,7 +168,7 @@ export async function patchSubcontrollerHandlerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const { deviceId } = request.params;
   const { name } = request.body;
 
@@ -244,7 +245,7 @@ export async function deleteSubcontrollerAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const { deviceId } = request.params;
 
   const id = parseInt(deviceId ?? "", 10);
@@ -273,9 +274,9 @@ export async function deleteSubcontrollerAsync(
         ...response.locals["defaultProperties"],
       };
     }
-    const sensorList = request.app.get("sensorList") as SensorList;
-    const outputList = request.app.get("sensorList") as OutputList;
-    Promise.all([sensorList.regenerateAsync(), outputList.regenerateAsync()]);
+    const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
+    const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+    void Promise.all([sensorList.regenerateAsync(), outputList.regenerateAsync()]);
 
     return {
       statusCode: 200,

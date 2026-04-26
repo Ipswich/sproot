@@ -2,7 +2,8 @@ import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { AutomationService } from "../../../../automation/AutomationService";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -13,7 +14,7 @@ export async function getAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   try {
@@ -42,13 +43,13 @@ export async function getAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -66,7 +67,7 @@ export async function getByIdAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
@@ -109,13 +110,13 @@ export async function getByIdAsync(
       ...response.locals["defaultProperties"],
     };
     return automationResponse;
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -133,14 +134,14 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const outputList = request.app.get("outputList") as OutputList;
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.body["automationId"] ?? "");
   const outputId = parseInt(request.body["outputId"] ?? "");
-  const value = parseInt(request.body["value"] ?? "");
+  let value = parseInt(request.body["value"] ?? "");
 
   const invalidFields = [];
   if (isNaN(automationId)) {
@@ -167,7 +168,8 @@ export async function addAsync(
       invalidFields.push("Value must be between 0 and 100.");
     }
     if (!outputList.outputs[outputId]?.isPwm && value != 0 && value != 100) {
-      invalidFields.push("Value must be 0 or 100 for PWM outputs.");
+      // Value should be set to 100 if it's greater than 0 since non-PWM outputs only support on/off states
+      value = value > 0 ? 100 : 0;
     }
   }
   if (invalidFields.length > 0) {
@@ -197,11 +199,7 @@ export async function addAsync(
       return automationResponse;
     }
 
-    const automation = await automationDataManager.addOutputActionAsync(
-      automationId,
-      outputId,
-      value,
-    );
+    const automation = await automationService.addOutputActionAsync(automationId, outputId, value);
     automationResponse = {
       statusCode: 201,
       content: {
@@ -209,13 +207,13 @@ export async function addAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -233,8 +231,8 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let automationResponse: SuccessResponse | ErrorResponse;
 
   if (
@@ -254,9 +252,9 @@ export async function deleteAsync(
   }
 
   try {
-    const automationId = parseInt(request.params["outputActionId"] ?? "");
-    const automation = (await sprootDB.getOutputActionAsync(automationId))[0];
-    if (automation == null) {
+    const outputActionId = parseInt(request.params["outputActionId"] ?? "");
+    const action = (await sprootDB.getOutputActionAsync(outputActionId))[0];
+    if (action == null) {
       automationResponse = {
         statusCode: 404,
         error: {
@@ -269,7 +267,7 @@ export async function deleteAsync(
       return automationResponse;
     }
 
-    await automationDataManager.deleteOutputActionAsync(automationId);
+    await automationService.deleteOutputActionAsync(outputActionId);
     automationResponse = {
       statusCode: 200,
       content: {
@@ -277,13 +275,13 @@ export async function deleteAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };

@@ -6,11 +6,13 @@ import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDev
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { MdnsService } from "../system/MdnsService";
+import { AutomationService } from "../automation/AutomationService";
 
 class ESP32_PCA9685 extends MultiOutputBase {
   #mdnsService: MdnsService;
 
   constructor(
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -21,6 +23,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
     logger: winston.Logger,
   ) {
     super(
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -58,6 +61,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
     this.outputs[output.id] = await ESP32_PCA9685Output.createInstanceAsync(
       output,
       subcontroller,
+      this.automationService,
       this.sprootDB,
       this.#mdnsService,
       this.maxCacheSize,
@@ -79,7 +83,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
     // return childIds.filter((childId) => !this.usedPins[address]?.includes(childId));
   }
 
-  async [Symbol.asyncDispose](): Promise<void> {
+  override async [Symbol.asyncDispose](): Promise<void> {
     for (const output of Object.values(this.outputs)) {
       await output[Symbol.asyncDispose]();
     }
@@ -93,6 +97,7 @@ class ESP32_PCA9685Output extends OutputBase {
   static createInstanceAsync(
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -104,6 +109,7 @@ class ESP32_PCA9685Output extends OutputBase {
     const esp32PCA9685Output = new ESP32_PCA9685Output(
       output,
       subcontroller,
+      automationService,
       sprootDB,
       mdnsService,
       maxCacheSize,
@@ -118,6 +124,7 @@ class ESP32_PCA9685Output extends OutputBase {
   private constructor(
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -128,6 +135,7 @@ class ESP32_PCA9685Output extends OutputBase {
   ) {
     super(
       output,
+      automationService,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -146,6 +154,7 @@ class ESP32_PCA9685Output extends OutputBase {
   }
 
   override async [Symbol.asyncDispose](): Promise<void> {
+    await super[Symbol.asyncDispose]();
     await this.#setPCA9685ValueAsync(0);
   }
 
@@ -157,7 +166,7 @@ class ESP32_PCA9685Output extends OutputBase {
       );
       return;
     }
-    await fetch(
+    const response = await fetch(
       `http://${ipAddress}/api/outputs/pca9685/${this.outputData.address}/${this.outputData.pin}`,
       {
         method: "PUT",
@@ -169,6 +178,9 @@ class ESP32_PCA9685Output extends OutputBase {
         }),
       },
     );
+    if (!response.ok) {
+      throw new Error(`Failed to set PCA9685 output value. Status: ${response.status}`);
+    }
     return;
   }
 }

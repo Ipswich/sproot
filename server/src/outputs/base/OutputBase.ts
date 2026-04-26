@@ -7,11 +7,10 @@ import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
-import OutputAutomationManager from "../../automation/outputs/OutputAutomationManager";
-import { SensorList } from "../../sensors/list/SensorList";
-import { OutputList } from "../list/OutputList";
-import { OutputAutomation } from "../../automation/outputs/OutputAutomation";
+import { AutomationService } from "../../automation/AutomationService";
+import { OutputActionManager } from "../../automation/outputs/OutputActionManager";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { toDbDate } from "../../utils/dateUtils";
 
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
@@ -19,25 +18,28 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   subcontrollerId: number | null = null;
   readonly address: string;
   readonly pin: string;
-  deviceGroupId: number | null = null;
+  deviceZoneId: number | null;
+  parentOutputId: number | null;
   name: string;
   isPwm: boolean;
   isInvertedPwm: boolean;
   state: OutputState;
   color: string;
   automationTimeout: number;
+  readonly automationService: AutomationService;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
   #cache: OutputCache;
   #initialCacheLookback: number;
   #chartData: OutputChartData;
   #chartDataPointInterval: number;
-  #automationManager: OutputAutomationManager;
+  #actionManager: OutputActionManager | null = null;
   #updateMissCount = 0;
   #isExecuting = false;
 
   constructor(
     sdbOutput: SDBOutput,
+    automationService: AutomationService,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -50,18 +52,19 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.subcontrollerId = sdbOutput.subcontrollerId;
     this.address = sdbOutput.address;
     this.pin = sdbOutput.pin;
-    this.deviceGroupId = sdbOutput.deviceGroupId;
+    this.deviceZoneId = sdbOutput.deviceZoneId;
+    this.parentOutputId = sdbOutput.parentOutputId;
     this.name = sdbOutput.name;
     this.isPwm = sdbOutput.isPwm ? true : false;
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
     this.state = new OutputState(sdbOutput.id, sprootDB);
     this.color = sdbOutput.color;
     this.automationTimeout = sdbOutput.automationTimeout;
+    this.automationService = automationService;
     this.sprootDB = sprootDB;
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
     this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
-    this.#automationManager = new OutputAutomationManager(sprootDB, logger);
     this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
   }
@@ -82,7 +85,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       address,
       name,
       pin,
-      deviceGroupId,
+      deviceZoneId,
+      parentOutputId,
       isPwm,
       isInvertedPwm,
       color,
@@ -96,28 +100,50 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       address,
       name,
       pin,
-      deviceGroupId,
+      deviceZoneId,
+      parentOutputId,
       isPwm,
       isInvertedPwm,
       color,
       state,
       automationTimeout,
-    } as unknown as IOutputBase;
+    };
   }
 
   /**
    * Executes the current state of the output, setting the physical state of the output to the recorded state
    * (respecting the current ControlMode).
    */
-  abstract executeStateAsync(): Promise<void>;
-  abstract [Symbol.asyncDispose](): Promise<void>;
+  abstract executeStateAsync(forceExecution?: boolean): Promise<void>;
 
-  /** Initializes all of the data for this output */
+  /**
+   * Dispose of the output, cleaning up event listeners.
+   */
+  async [Symbol.asyncDispose](): Promise<void> {
+    // Remove event listener to prevent memory leaks
+    const actionManager = this.#actionManager;
+    if (actionManager != null) {
+      actionManager[Symbol.dispose]();
+      this.#actionManager = null;
+    }
+  }
+
+  /**
+   * Initialize the output, including creating the action manager and registering as an event listener.
+   */
   protected async initializeAsync(): Promise<this> {
     await this.state.loadAsync();
     await this.loadCacheFromDatabaseAsync();
     this.loadChartData();
-    await this.#automationManager.loadAsync(this.id);
+    this.#actionManager = await OutputActionManager.createInstanceAsync(
+      this.parentOutputId ?? this.id,
+      this.#actionFunctionWrapperAsync.bind(this),
+      this.automationService,
+      this.sprootDB,
+      this.logger,
+      this.automationTimeout,
+    );
+
     return this;
   }
 
@@ -131,6 +157,20 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.loadChartData();
   }
 
+  updateAutomationTimeout(timeoutSeconds: number): void {
+    this.automationTimeout = timeoutSeconds;
+    if (this.#actionManager) {
+      this.#actionManager.automationTimeout = timeoutSeconds;
+    }
+  }
+
+  updateParentOutputId(parentOutputId: number | null): void {
+    this.parentOutputId = parentOutputId;
+    if (this.#actionManager) {
+      this.#actionManager.outputId = parentOutputId ?? this.id;
+    }
+  }
+
   /**
    * Sets a new state to the targeted control mode, and executes it. This keeps the physical state
    * of the output in sync with the logical state.
@@ -138,12 +178,19 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
    * @param targetControlMode The control mode to apply it to
    */
   async setAndExecuteStateAsync(newState: SDBOutputState): Promise<void> {
-    await this.state.setNewStateAsync(newState);
+    await this.setStateAsync(newState);
     await this.executeStateAsync();
   }
 
   async setStateAsync(newState: SDBOutputState): Promise<void> {
-    await this.state.setNewStateAsync(newState);
+    const tempState = { ...newState };
+    // Normalize non-PWM outputs to only allow 0 or 100
+    if (!this.isPwm) {
+      if (tempState.value > 0 && tempState.value < 100) {
+        tempState.value = 100;
+      }
+    }
+    await this.state.setNewStateAsync(tempState);
   }
 
   getCachedReadings(offset?: number, limit?: number): SDBOutputState[] {
@@ -155,10 +202,6 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     series: ChartSeries;
   } {
     return this.#chartData.get();
-  }
-
-  getAutomations(): Record<string, OutputAutomation> {
-    return this.#automationManager.automations;
   }
 
   async updateDataStoresAsync(): Promise<void> {
@@ -194,37 +237,6 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     await this.executeStateAsync();
   }
 
-  async runAutomationsAsync(
-    sensorList: SensorList,
-    outputList: OutputList,
-    now: Date,
-  ): Promise<void> {
-    await this.#automationManager.loadAsync(this.id);
-    const result = this.#automationManager.evaluate(
-      sensorList,
-      outputList,
-      this.automationTimeout,
-      now,
-    );
-    if (result.value != null) {
-      await this.state.setNewStateAsync({
-        value: result.value,
-        controlMode: ControlMode.automatic,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      } as SDBOutputState);
-    } else {
-      await this.state.setNewStateAsync({
-        value: 0,
-        controlMode: ControlMode.automatic,
-        logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-      } as SDBOutputState);
-    }
-
-    if (this.controlMode === ControlMode.automatic) {
-      await this.executeStateAsync();
-    }
-  }
-
   protected addCurrentStateToCache(): void {
     this.#cache.addData(this.state.get());
     this.logger.info(
@@ -257,19 +269,16 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   ): Promise<void> {
     if (!forceExecution) {
       if (this.#isExecuting) {
-        this.logger.warn(
+        this.logger.verbose(
           `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
         );
         return;
       }
       if (this.value == this.state.lastValue) {
-        // this.logger.verbose(
-        //   `Output { Model: ${this.model}, id: ${this.id} } value has not changed. Skipping state execution.`,
-        // );
         return;
       }
     }
-
+    const rewindValue = this.state.lastValue;
     try {
       const validatedValue = this.#validateAndFixValue(this.value);
       this.#isExecuting = true;
@@ -279,11 +288,30 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.logger.verbose(
         `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${this.pin}. New value: ${validatedValue}`,
       );
+      this.state.updateLastState();
       await executionFnAsync(validatedValue);
     } catch (error) {
+      // Rewind state on error to ensure consistency
+      this.state.updateLastState(rewindValue);
       this.logger.error(`Error executing state for output ${this.id} - ${error}`);
     } finally {
       this.#isExecuting = false;
+    }
+  }
+
+  async #actionFunctionWrapperAsync(actionValue: number | undefined): Promise<void> {
+    if (actionValue === undefined) {
+      return; // No action to take (output in timeout)
+    }
+
+    await this.setStateAsync({
+      value: actionValue ?? 0, // default to off if no action or collision
+      controlMode: ControlMode.automatic,
+      logTime: toDbDate(),
+    } as SDBOutputState);
+
+    if (this.controlMode === ControlMode.automatic) {
+      await this.executeStateAsync();
     }
   }
 

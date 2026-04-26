@@ -1,5 +1,6 @@
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { Knex } from "knex";
+import { toDbDate } from "../../utils/dateUtils";
 
 export async function seed(knex: Knex): Promise<void> {
   console.log("Truncating tables...");
@@ -30,13 +31,13 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
-  await knex("device_groups").insert([
-    { id: 1, name: "Group 1" },
-    { id: 2, name: "Group 2" },
+  await knex("device_zones").insert([
+    { id: 1, name: "Zone 1" },
+    { id: 2, name: "Zone 2" },
   ]);
 
-  await knex("outputs").where("id", 1).update({ deviceGroupId: 1 });
-  await knex("sensors").where("id", 1).update({ deviceGroupId: 1 });
+  await knex("outputs").where("id", 1).update({ deviceZoneId: 1 });
+  await knex("sensors").where("id", 1).update({ deviceZoneId: 1 });
 
   await knex("outputs").insert([
     {
@@ -46,7 +47,7 @@ export async function seed(knex: Knex): Promise<void> {
       name: "Relay #1",
       color: "#82c91e",
       pin: 0,
-      deviceGroupId: 1,
+      deviceZoneId: 1,
       isPwm: 0,
       isInvertedPwm: 0,
       automationTimeout: 1,
@@ -71,7 +72,7 @@ export async function seed(knex: Knex): Promise<void> {
       model: "BME280",
       address: "0x76",
       color: "#82c91e",
-      deviceGroupid: 1,
+      deviceZoneId: 1,
       lowCalibrationPoint: null,
       highCalibrationPoint: null,
     },
@@ -195,6 +196,12 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 5, automation_id: 2, output_id: 5, value: 75 },
   ]);
 
+  await knex("notification_actions").insert([
+    { id: 1, automation_id: 1, subject: "Test Notification 1", content: "Test Content 1" },
+    { id: 2, automation_id: 1, subject: "Test Notification 2", content: "Test Content 2" },
+    { id: 3, automation_id: 2, subject: "Test Notification 3", content: "Test Content 3" },
+  ]);
+
   await knex("camera_settings").insert({
     enabled: false,
     name: "Pi Camera",
@@ -210,6 +217,28 @@ export async function seed(knex: Knex): Promise<void> {
     timelapseStartTime: null,
     timelapseEndTime: null,
   });
+
+  // Add recent sensor and output readings so journal entry device-data attaches find data
+  const nowSql = toDbDate();
+
+  await knex("sensor_data").insert([
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 22.5,
+      units: "°C",
+      logTime: nowSql,
+    },
+  ]);
+
+  await knex("output_data").insert([
+    {
+      output_id: 1,
+      value: 1,
+      controlMode: "manual",
+      logTime: nowSql,
+    },
+  ]);
 
   console.log("Seeding complete.");
 }

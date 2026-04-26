@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 
 /**
@@ -11,7 +12,7 @@ export async function getTimelapseArchiveAsync(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const timelapseArchive = await cameraManager.getTimelapseArchiveAsync();
   const timelapseArchiveSize = await cameraManager.getTimelapseArchiveSizeAsync();
 
@@ -63,7 +64,7 @@ export async function getTimelapseArchiveAsync(
  * @returns
  */
 export function postRegenerateTimelapseArchive(request: Request, response: Response): void {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
 
   cameraManager.regenerateTimelapseArchiveAsync();
   response.status(202).json({
@@ -82,8 +83,8 @@ export function postRegenerateTimelapseArchive(request: Request, response: Respo
  * @returns
  */
 export function getTimelapseGenerationStatus(request: Request, response: Response): void {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
-  const status = cameraManager.getTimelapseArchiveProgressAsync();
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
+  const status = cameraManager.getTimelapseArchiveProgress();
   response.status(200).json({
     statusCode: 200,
     content: {

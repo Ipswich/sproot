@@ -28,7 +28,7 @@ export default function NavbarContents({
   ));
 
   return (
-    <nav className={classes["navbar"]}>
+    <nav className={classes["navbar"]!}>
       <div className={classes["header"]}>
         <Group justify="space-between">
           {/* <Logo style={{ width: rem(120) }} /> */}

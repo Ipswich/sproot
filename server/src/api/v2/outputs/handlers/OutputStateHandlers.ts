@@ -1,11 +1,13 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { toDbDate } from "../../../../utils/dateUtils";
 
 /**
- * Possible statusCodes: 200, 404
+ * Possible statusCodes: 200, 400, 404, 409
  * @param request
  * @param response
  * @returns
@@ -14,7 +16,7 @@ export async function setControlModeAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const outputList = request.app.get("outputList") as OutputList;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const outputId = String(request.params["outputId"]);
   const output = outputList.outputData[outputId];
   let controlModeResponse: SuccessResponse | ErrorResponse;
@@ -26,6 +28,21 @@ export async function setControlModeAsync(
         name: "Not Found",
         url: request.originalUrl,
         details: [`Output with ID ${outputId} not found.`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+    return controlModeResponse;
+  }
+
+  if (output.parentOutputId != null) {
+    controlModeResponse = {
+      statusCode: 409,
+      error: {
+        name: "Conflict",
+        url: request.originalUrl,
+        details: [
+          "Output is not a top-level output. Control mode can only be set on top-level outputs.",
+        ],
       },
       ...response.locals["defaultProperties"],
     };
@@ -63,13 +80,13 @@ export async function setControlModeAsync(
 }
 
 /**
- * Possible statusCodes: 200, 400, 404
+ * Possible statusCodes: 200, 400, 404, 409
  * @param request
  * @param response
  * @returns
  */
 export async function setManualStateAsync(request: Request, response: Response) {
-  const outputList = request.app.get("outputList") as OutputList;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const outputId = String(request.params["outputId"]);
   const value = parseInt(request.body["value"]);
   const output = outputList.outputData[outputId];
@@ -102,14 +119,17 @@ export async function setManualStateAsync(request: Request, response: Response) 
     };
     return manualStateResponse;
   }
-  // Output is not a PWM output
-  if (value > 0 && value < 100 && !output.isPwm) {
+
+  // Output is found, but has a parent (not a top-level output)
+  if (output.parentOutputId) {
     manualStateResponse = {
-      statusCode: 400,
+      statusCode: 409,
       error: {
-        name: "Bad Request",
+        name: "Conflict",
         url: request.originalUrl,
-        details: ["Output is not a PWM output.", "Value must be 0 or 100."],
+        details: [
+          "Output is not a top-level output. Manual state can only be set on top-level outputs.",
+        ],
       },
       ...response.locals["defaultProperties"],
     };
@@ -119,7 +139,7 @@ export async function setManualStateAsync(request: Request, response: Response) 
   await outputList.setStateAsync(outputId, {
     value: value,
     controlMode: ControlMode.manual,
-    logTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+    logTime: toDbDate(),
   } as SDBOutputState);
 
   if (output.state.controlMode == ControlMode.manual) {

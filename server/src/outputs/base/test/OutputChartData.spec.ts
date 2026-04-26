@@ -9,7 +9,8 @@ import { formatDateForChart } from "@sproot/sproot-common/dist/utility/DisplayFo
 
 describe("OutputChartData.ts tests", function () {
   const mockSprootDB = new MockSprootDB();
-  let logger: winston.Logger;
+  const logger = winston.createLogger({ silent: true });
+
   describe("constructor", function () {
     it("should create a new OutputChartData object with default values", function () {
       const outputChartData5 = new OutputChartData(3, 5);

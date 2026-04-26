@@ -5,7 +5,7 @@ import { OutputCondition } from "../../../../automation/conditions/OutputConditi
 import { SensorCondition } from "../../../../automation/conditions/SensorCondition";
 import { TimeCondition } from "../../../../automation/conditions/TimeCondition";
 import { WeekdayCondition } from "../../../../automation/conditions/WeekdayCondition";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { AutomationService } from "../../../../automation/AutomationService";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
@@ -16,6 +16,7 @@ import { MonthCondition } from "../../../../automation/conditions/MonthCondition
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { DateRangeCondition } from "../../../../automation/conditions/DateRangeCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -26,7 +27,7 @@ export async function getAllAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getAllConditionsResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -108,13 +109,13 @@ export async function getAllAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     getAllConditionsResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -132,7 +133,7 @@ export async function getByTypeAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -213,13 +214,13 @@ export async function getByTypeAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     getConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -237,7 +238,7 @@ export async function getOneOfByTypeAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -341,13 +342,13 @@ export async function getOneOfByTypeAsync(
         ...response.locals["defaultProperties"],
       };
     }
-  } catch (error: any) {
+  } catch (error) {
     getConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -365,8 +366,8 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let addConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -444,7 +445,7 @@ export async function addAsync(
         if (request.body.sensorId == null || isNaN(request.body.sensorId)) {
           invalidFields.push("Invalid or missing sensor Id.");
         } else if (
-          (request.app.get("sensorList") as SensorList).sensors[request.body.sensorId] == null
+          (request.app.get(DI_KEYS.SensorList) as SensorList).sensors[request.body.sensorId] == null
         ) {
           invalidFields.push("Sensor does not exist.");
         }
@@ -454,7 +455,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addSensorConditionAsync(
+        resultId = await automationService.addSensorConditionAsync(
           automationId,
           request.body.groupType,
           request.body.operator,
@@ -485,13 +486,13 @@ export async function addAsync(
         }
         if (request.body.outputId == null || isNaN(request.body.outputId)) {
           invalidFields.push("Invalid or missing output Id.");
-        } else if (request.app.get("outputList").outputs[request.body.outputId] == null) {
+        } else if (request.app.get(DI_KEYS.OutputList).outputs[request.body.outputId] == null) {
           invalidFields.push("Output does not exist.");
         }
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addOutputConditionAsync(
+        resultId = await automationService.addOutputConditionAsync(
           automationId,
           request.body.groupType,
           request.body.operator,
@@ -519,7 +520,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addTimeConditionAsync(
+        resultId = await automationService.addTimeConditionAsync(
           automationId,
           request.body.groupType,
           request.body.startTime ?? null,
@@ -546,7 +547,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addWeekdayConditionAsync(
+        resultId = await automationService.addWeekdayConditionAsync(
           automationId,
           request.body.groupType,
           request.body.weekdays,
@@ -566,7 +567,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addMonthConditionAsync(
+        resultId = await automationService.addMonthConditionAsync(
           automationId,
           request.body.groupType,
           request.body.months,
@@ -610,7 +611,7 @@ export async function addAsync(
         if (invalidFields.length > 0) {
           break;
         }
-        resultId = await automationDataManager.addDateRangeConditionAsync(
+        resultId = await automationService.addDateRangeConditionAsync(
           automationId,
           request.body.groupType,
           request.body.startMonth,
@@ -648,13 +649,13 @@ export async function addAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     addConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -672,8 +673,8 @@ export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let updateConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -814,7 +815,7 @@ export async function updateAsync(
         if (isNaN(condition.sensorId)) {
           invalidDetails.push("Invalid sensor Id.");
         } else if (
-          (request.app.get("sensorList") as SensorList).sensors[condition.sensorId] == null
+          (request.app.get(DI_KEYS.SensorList) as SensorList).sensors[condition.sensorId] == null
         ) {
           invalidDetails.push("Sensor does not exist.");
         }
@@ -824,7 +825,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -853,14 +854,14 @@ export async function updateAsync(
         }
         if (isNaN(condition.outputId)) {
           invalidDetails.push("Invalid output Id.");
-        } else if (request.app.get("outputList").outputs[condition.outputId] == null) {
+        } else if (request.app.get(DI_KEYS.OutputList).outputs[condition.outputId] == null) {
           invalidDetails.push("Output does not exist.");
         }
         if (invalidDetails.length > 0) {
           break;
         }
 
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -889,7 +890,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -911,7 +912,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -929,7 +930,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -980,7 +981,7 @@ export async function updateAsync(
         if (invalidDetails.length > 0) {
           break;
         }
-        await automationDataManager.updateConditionAsync(automationId, condition);
+        await automationService.updateConditionAsync(automationId, condition);
         updateResult = condition;
         break;
       }
@@ -1005,13 +1006,13 @@ export async function updateAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     updateConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -1029,8 +1030,8 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let deleteConditionResponse: SuccessResponse | ErrorResponse;
 
   const automationId = parseInt(request.params["automationId"] ?? "");
@@ -1130,22 +1131,22 @@ export async function deleteAsync(
     }
 
     if (conditionType === "sensor") {
-      await automationDataManager.deleteSensorConditionAsync(conditionId);
+      await automationService.deleteSensorConditionAsync(conditionId);
     }
     if (conditionType === "output") {
-      await automationDataManager.deleteOutputConditionAsync(conditionId);
+      await automationService.deleteOutputConditionAsync(conditionId);
     }
     if (conditionType === "time") {
-      await automationDataManager.deleteTimeConditionAsync(conditionId);
+      await automationService.deleteTimeConditionAsync(conditionId);
     }
     if (conditionType === "weekday") {
-      await automationDataManager.deleteWeekdayConditionAsync(conditionId);
+      await automationService.deleteWeekdayConditionAsync(conditionId);
     }
     if (conditionType === "month") {
-      await automationDataManager.deleteMonthConditionAsync(conditionId);
+      await automationService.deleteMonthConditionAsync(conditionId);
     }
     if (conditionType === "date-range") {
-      await automationDataManager.deleteDateRangeConditionAsync(conditionId);
+      await automationService.deleteDateRangeConditionAsync(conditionId);
     }
 
     deleteConditionResponse = {
@@ -1157,13 +1158,13 @@ export async function deleteAsync(
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     deleteConditionResponse = {
       statusCode: 503,
       error: {
         name: "Service Unavailable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };

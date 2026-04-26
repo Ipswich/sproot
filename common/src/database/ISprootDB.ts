@@ -20,6 +20,7 @@ import { ITimeCondition } from "../automation/ITimeCondition";
 import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
+import { SDBNotificationAction } from "./SDBNotificationAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { SDBMonthCondition } from "./SDBMonthCondition";
 import { SDBDateRangeCondition } from "./SDBDateRangeCondition";
@@ -27,7 +28,13 @@ import { IWeekdayCondition } from "../automation/IWeekdayCondition";
 import { IMonthCondition } from "@sproot/automation/IMonthCondition";
 import { IDateRangeCondition } from "@sproot/automation/IDateRangeCondition";
 import { SDBCameraSettings } from "./SDBCameraSettings";
-import { SDBDeviceGroup } from "./SDBDeviceGroup";
+import { SDBDeviceZone } from "./SDBDeviceZone";
+import { SDBJournal } from "./SDBJournal";
+import { SDBJournalTag } from "./SDBJournalTag";
+import { SDBJournalTagLookup } from "./SDBJournalTagLookup";
+import { SDBJournalEntry } from "./SDBJournalEntry";
+import { SDBJournalEntryTag } from "./SDBJournalEntryTag";
+import { SDBJournalEntryTagLookup } from "./SDBJournalEntryTagLookup";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -50,7 +57,7 @@ interface ISprootDB {
   ): Promise<SDBReading[]>;
   getOutputsAsync(): Promise<SDBOutput[]>;
   getOutputAsync(id: number): Promise<SDBOutput[]>;
-  addOutputAsync(output: SDBOutput): Promise<void>;
+  addOutputAsync(output: SDBOutput): Promise<number>;
   updateOutputAsync(output: SDBOutput): Promise<void>;
   deleteOutputAsync(id: number): Promise<void>;
   updateLastOutputStateAsync(output: {
@@ -92,6 +99,18 @@ interface ISprootDB {
   getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]>;
   addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number>;
   deleteOutputActionAsync(outputActionId: number): Promise<void>;
+  getOutputActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
+
+  // Notifications
+  getNotificationActionsAsync(): Promise<SDBNotificationAction[]>;
+  getNotificationActionByIdAsync(notificationActionId: number): Promise<SDBNotificationAction[]>;
+  getNotificationActionsByAutomationIdAsync(automationId: number): Promise<SDBNotificationAction[]>;
+  addNotificationActionAsync(
+    automationId: number,
+    subject: string,
+    content: string,
+  ): Promise<number>;
+  deleteNotificationActionAsync(notificationActionId: number): Promise<void>;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
 
@@ -171,10 +190,10 @@ interface ISprootDB {
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
 
-  getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]>;
-  addDeviceGroupAsync(name: string): Promise<number>;
-  updateDeviceGroupAsync(deviceGroup: SDBDeviceGroup): Promise<void>;
-  deleteDeviceGroupAsync(id: number): Promise<void>;
+  getDeviceZonesAsync(): Promise<SDBDeviceZone[]>;
+  addDeviceZoneAsync(name: string): Promise<number>;
+  updateDeviceZoneAsync(deviceZone: SDBDeviceZone): Promise<void>;
+  deleteDeviceZoneAsync(id: number): Promise<void>;
 
   getDatabaseSizeAsync(): Promise<number>;
   backupDatabaseAsync(
@@ -192,6 +211,48 @@ interface ISprootDB {
     password: string,
     inputFile: string,
   ): Promise<void>;
+
+  /* Journals */
+  getJournalsAsync(): Promise<SDBJournal[]>;
+  getJournalAsync(id: number): Promise<SDBJournal[]>;
+  addJournalAsync(
+    name: string,
+    description: string | null,
+    icon: string | null,
+    color: string | null,
+    startDate?: string | null,
+  ): Promise<number>;
+  updateJournalAsync(journal: SDBJournal): Promise<void>;
+  deleteJournalAsync(id: number): Promise<void>;
+
+  getJournalTagsAsync(): Promise<SDBJournalTag[]>;
+  addJournalTagAsync(name: string, color: string | null): Promise<number>;
+  updateJournalTagAsync(tag: SDBJournalTag): Promise<void>;
+  deleteJournalTagAsync(id: number): Promise<void>;
+
+  getJournalTagLookupsAsync(): Promise<SDBJournalTagLookup[]>;
+  addJournalTagLookupAsync(journalId: number, tagId: number): Promise<number>;
+  deleteJournalTagLookupAsync(journalId: number, tagId: number): Promise<void>;
+
+  getJournalEntriesAsync(journalId: number, withContent?: boolean): Promise<SDBJournalEntry[]>;
+  getJournalEntryAsync(entryId: number, withContent?: boolean): Promise<SDBJournalEntry[]>;
+  addJournalEntryAsync(
+    journalId: number,
+    name: string | null,
+    text: string,
+    createdAt?: string | null,
+  ): Promise<number>;
+  updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void>;
+  deleteJournalEntryAsync(id: number): Promise<void>;
+
+  getJournalEntryTagsAsync(): Promise<SDBJournalEntryTag[]>;
+  addJournalEntryTagAsync(name: string, color: string | null): Promise<number>;
+  updateJournalEntryTagAsync(tag: SDBJournalEntryTag): Promise<void>;
+  deleteJournalEntryTagAsync(id: number): Promise<void>;
+
+  getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]>;
+  addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number>;
+  deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -277,9 +338,34 @@ class MockSprootDB implements ISprootDB {
   async deleteOutputActionAsync(_outputActionId: number): Promise<void> {
     return;
   }
+  async getOutputActionsByOutputIdAsync(_outputId: number): Promise<SDBOutputAction[]> {
+    return [];
+  }
 
   async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputActionView[]> {
     return [];
+  }
+
+  async getNotificationActionsAsync(): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async getNotificationActionByIdAsync(_id: number): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async getNotificationActionsByAutomationIdAsync(
+    _automationId: number,
+  ): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async addNotificationActionAsync(
+    _automationId: number,
+    _subject: string,
+    _content: string,
+  ): Promise<number> {
+    return 0;
+  }
+  async deleteNotificationActionAsync(_notificationActionId: number): Promise<void> {
+    return;
   }
 
   async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {
@@ -462,8 +548,8 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async addOutputAsync(_output: SDBOutput): Promise<void> {
-    return;
+  async addOutputAsync(_output: SDBOutput): Promise<number> {
+    return 0;
   }
 
   async updateOutputAsync(_output: SDBOutput): Promise<void> {
@@ -513,19 +599,19 @@ class MockSprootDB implements ISprootDB {
     return;
   }
 
-  async getDeviceGroupsAsync(): Promise<SDBDeviceGroup[]> {
+  async getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
     return [];
   }
 
-  async addDeviceGroupAsync(_name: string): Promise<number> {
+  async addDeviceZoneAsync(_name: string): Promise<number> {
     return 0;
   }
 
-  async updateDeviceGroupAsync(_deviceGroup: SDBDeviceGroup): Promise<void> {
+  async updateDeviceZoneAsync(_deviceZone: SDBDeviceZone): Promise<void> {
     return;
   }
 
-  async deleteDeviceGroupAsync(_id: number): Promise<void> {
+  async deleteDeviceZoneAsync(_id: number): Promise<void> {
     return;
   }
 
@@ -534,6 +620,99 @@ class MockSprootDB implements ISprootDB {
   }
 
   async addUserAsync(_user: SDBUser): Promise<void> {
+    return;
+  }
+
+  /* Journals (mock implementations) */
+  async getJournalsAsync(): Promise<SDBJournal[]> {
+    return [];
+  }
+  async getJournalAsync(_id: number): Promise<SDBJournal[]> {
+    return [];
+  }
+  async addJournalAsync(
+    _name: string,
+    _description: string | null,
+    _icon: string | null,
+    _color: string | null,
+    _startDate?: string | null,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateJournalAsync(_journal: SDBJournal): Promise<void> {
+    return;
+  }
+  async deleteJournalAsync(_id: number): Promise<void> {
+    return;
+  }
+
+  async getJournalTagsAsync(): Promise<SDBJournalTag[]> {
+    return [];
+  }
+  async addJournalTagAsync(_name: string, _color: string | null): Promise<number> {
+    return 0;
+  }
+  async updateJournalTagAsync(_tag: SDBJournalTag): Promise<void> {
+    return;
+  }
+  async deleteJournalTagAsync(_id: number): Promise<void> {
+    return;
+  }
+
+  async getJournalTagLookupsAsync(): Promise<SDBJournalTagLookup[]> {
+    return [];
+  }
+  async addJournalTagLookupAsync(_journalId: number, _tagId: number): Promise<number> {
+    return 0;
+  }
+  async deleteJournalTagLookupAsync(_journalId: number, _tagId: number): Promise<void> {
+    return;
+  }
+
+  async getJournalEntriesAsync(
+    _journalId: number,
+    _withContent?: boolean,
+  ): Promise<SDBJournalEntry[]> {
+    return [];
+  }
+  async getJournalEntryAsync(_entryId: number, _withContent?: boolean): Promise<SDBJournalEntry[]> {
+    return [];
+  }
+  async addJournalEntryAsync(
+    _journalId: number,
+    _name: string | null,
+    _text: string,
+    _createdAt?: string | null,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateJournalEntryAsync(_entry: SDBJournalEntry): Promise<void> {
+    return;
+  }
+  async deleteJournalEntryAsync(_id: number): Promise<void> {
+    return;
+  }
+
+  async getJournalEntryTagsAsync(): Promise<SDBJournalEntryTag[]> {
+    return [];
+  }
+  async addJournalEntryTagAsync(_name: string, _color: string | null): Promise<number> {
+    return 0;
+  }
+  async updateJournalEntryTagAsync(_tag: SDBJournalEntryTag): Promise<void> {
+    return;
+  }
+  async deleteJournalEntryTagAsync(_id: number): Promise<void> {
+    return;
+  }
+
+  async getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]> {
+    return [];
+  }
+  async addJournalEntryTagLookupAsync(_journalEntryId: number, _tagId: number): Promise<number> {
+    return 0;
+  }
+  async deleteJournalEntryTagLookupAsync(_journalEntryId: number, _tagId: number): Promise<void> {
     return;
   }
 

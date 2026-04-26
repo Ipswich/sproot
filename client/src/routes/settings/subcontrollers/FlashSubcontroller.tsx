@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, JSX } from "react";
 import { ESPLoader, Transport, FlashOptions } from "esptool-js";
 import {
   getSubcontrollerBinaryAsync,

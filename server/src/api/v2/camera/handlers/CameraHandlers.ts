@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 import winston from "winston";
 
@@ -8,8 +9,8 @@ import winston from "winston";
  * @param response
  */
 export async function streamHandlerAsync(request: Request, response: Response): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
-  const logger = request.app.get("logger") as winston.Logger;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
     response.setHeader("Age", 0);
     response.setHeader("Cache-Control", "no-cache, private");
@@ -52,12 +53,58 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 }
 
 /**
+ * Possible statusCodes: 200, 409, 500
+ * @param request
+ * @param response
+ */
+export async function clearAllImagesHandlerAsync(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
+  try {
+    const result = await cameraManager.clearAllImagesAsync();
+    if (result) {
+      response.status(200).json({
+        statusCode: 200,
+        content: {
+          data: "All images cleared successfully",
+        },
+        ...response.locals["defaultProperties"],
+      });
+    } else {
+      response.status(409).json({
+        statusCode: 409,
+        error: {
+          name: "Conflict",
+          url: request.originalUrl,
+          details: [`Could not clear images at this time. Please try again later.`],
+        },
+        ...response.locals["defaultProperties"],
+      });
+    }
+  } catch (e) {
+    logger.error(`Error clearing all images: ${e}`);
+    response.status(500).json({
+      statusCode: 500,
+      error: {
+        name: "Internal Server Error",
+        url: request.originalUrl,
+        details: [`Could not clear all images`],
+      },
+      ...response.locals["defaultProperties"],
+    });
+  }
+}
+
+/**
  * Possible statusCodes: 200, 404
  * @param request
  * @param response
  */
 export async function getLatestImageAsync(request: Request, response: Response): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const imageBuffer = await cameraManager.getLatestImageAsync();
   if (imageBuffer === null) {
     response.status(404).json({
@@ -85,8 +132,8 @@ export async function reconnectLivestreamAsync(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const cameraManager = request.app.get("cameraManager") as CameraManager;
-  const logger = request.app.get("logger") as winston.Logger;
+  const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
     await cameraManager.reconnectLivestreamAsync();
     response.status(200).json({

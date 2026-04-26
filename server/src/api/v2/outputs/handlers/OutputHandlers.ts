@@ -1,3 +1,4 @@
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
@@ -11,7 +12,7 @@ import { Request, Response } from "express";
  * @returns
  */
 export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
-  const outputList = request.app.get("outputList") as OutputList;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
   if (request.params["outputId"] !== undefined) {
@@ -57,8 +58,8 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const outputList = request.app.get("outputList") as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let addOutputResponse: SuccessResponse | ErrorResponse;
 
   const newOutput = {
@@ -110,12 +111,12 @@ export async function addAsync(
   }
 
   try {
-    await sprootDB.addOutputAsync(newOutput);
+    const newOutputId = await sprootDB.addOutputAsync(newOutput);
     await outputList.regenerateAsync();
     addOutputResponse = {
       statusCode: 201,
       content: {
-        data: newOutput,
+        data: { ...newOutput, id: newOutputId },
       },
       ...response.locals["defaultProperties"],
     };
@@ -143,8 +144,8 @@ export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const outputList = request.app.get("outputList") as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
   const outputId = parseInt(request.params["outputId"] ?? "");
@@ -187,7 +188,14 @@ export async function updateAsync(
   outputData.isInvertedPwm = request.body["isInvertedPwm"] ?? outputData.isInvertedPwm;
   outputData.color = request.body["color"] ?? outputData.color;
   outputData.automationTimeout = request.body["automationTimeout"] ?? outputData.automationTimeout;
-  outputData.deviceGroupId = request.body["deviceGroupId"] ?? outputData.deviceGroupId;
+  outputData.deviceZoneId =
+    request.body["deviceZoneId"] === null
+      ? null
+      : (request.body["deviceZoneId"] ?? outputData.deviceZoneId);
+  outputData.parentOutputId =
+    request.body["parentOutputId"] === null
+      ? null
+      : (request.body["parentOutputId"] ?? outputData.parentOutputId);
 
   try {
     await sprootDB.updateOutputAsync(outputData);
@@ -219,8 +227,8 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
-  const outputList = request.app.get("outputList") as OutputList;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 
   const outputId = parseInt(request.params["outputId"] ?? "");

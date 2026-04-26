@@ -1,8 +1,9 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { AutomationDataManager } from "../../../../automation/AutomationDataManager";
+import { AutomationService } from "../../../../automation/AutomationService";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import { ISprootDB } from "@sproot/database/ISprootDB";
+import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -11,7 +12,7 @@ import { ISprootDB } from "@sproot/database/ISprootDB";
  * @returns
  */
 export async function getAsync(request: Request, response: Response) {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
   try {
     const automations = await sprootDB.getAutomationsAsync();
@@ -22,13 +23,13 @@ export async function getAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -43,7 +44,7 @@ export async function getAsync(request: Request, response: Response) {
  * @returns
  */
 export async function getByIdAsync(request: Request, response: Response) {
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
   if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
     automationResponse = {
@@ -80,13 +81,13 @@ export async function getByIdAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     automationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -101,7 +102,7 @@ export async function getByIdAsync(request: Request, response: Response) {
  * @returns
  */
 export async function addAsync(request: Request, response: Response) {
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let addAutomationResponse: SuccessResponse | ErrorResponse;
 
   const missingFields: Array<string> = [];
@@ -128,7 +129,7 @@ export async function addAsync(request: Request, response: Response) {
   }
 
   try {
-    const createdAutomationId = await automationDataManager.addAutomationAsync(
+    const createdAutomationId = await automationService.addAutomationAsync(
       request.body["name"],
       request.body["operator"],
     );
@@ -143,13 +144,13 @@ export async function addAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     addAutomationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -164,8 +165,8 @@ export async function addAsync(request: Request, response: Response) {
  * @returns
  */
 export async function updateAsync(request: Request, response: Response) {
-  const automationDataManager = request.app.get("automationDataManager") as AutomationDataManager;
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let updateAutomationResponse: SuccessResponse | ErrorResponse;
   if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
     updateAutomationResponse = {
@@ -200,7 +201,7 @@ export async function updateAsync(request: Request, response: Response) {
     automation.name = request.body["name"] ?? automation.name;
     automation.operator = request.body["operator"] ?? automation.operator;
     automation.enabled = request.body["enabled"] ?? automation.enabled;
-    await automationDataManager.updateAutomationAsync(
+    await automationService.updateAutomationAsync(
       parseInt(request.params["automationId"]),
       automation.name,
       automation.operator,
@@ -213,13 +214,13 @@ export async function updateAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     updateAutomationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };
@@ -234,8 +235,8 @@ export async function updateAsync(request: Request, response: Response) {
  * @returns
  */
 export async function deleteAsync(request: Request, response: Response) {
-  const automationDatamanager = request.app.get("automationDataManager") as AutomationDataManager;
-  const sprootDB = request.app.get("sprootDB") as ISprootDB;
+  const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let deleteAutomationResponse: SuccessResponse | ErrorResponse;
 
   if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
@@ -267,7 +268,7 @@ export async function deleteAsync(request: Request, response: Response) {
       return deleteAutomationResponse;
     }
 
-    await automationDatamanager.deleteAutomationAsync(parseInt(request.params["automationId"]));
+    await automationService.deleteAutomationAsync(parseInt(request.params["automationId"]));
 
     deleteAutomationResponse = {
       statusCode: 200,
@@ -276,13 +277,13 @@ export async function deleteAsync(request: Request, response: Response) {
       },
       ...response.locals["defaultProperties"],
     };
-  } catch (error: any) {
+  } catch (error) {
     deleteAutomationResponse = {
       statusCode: 503,
       error: {
         name: "Service Unreachable",
         url: request.originalUrl,
-        details: [error.message],
+        details: [(error as Error).message],
       },
       ...response.locals["defaultProperties"],
     };

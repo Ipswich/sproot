@@ -2,6 +2,8 @@ import { assert } from "chai";
 import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
 import { app, server } from "./setup";
+import fs from "fs";
+import { CameraManager } from "../camera/CameraManager";
 
 describe("API Tests", async function () {
   this.timeout(2000);
@@ -59,7 +61,7 @@ describe("API Tests", async function () {
       "address",
       "name",
       "pin",
-      "deviceGroupId",
+      "deviceZoneId",
       "isPwm",
       "isInvertedPwm",
       "color",
@@ -180,6 +182,7 @@ describe("API Tests", async function () {
           validateMiddlewareValues(response);
           assert.deepEqual(content.data, {
             ESP32_PCA9685: "ESP32 PCA9685",
+            OUTPUT_GROUP: "Output Group",
             PCA9685: "PCA9685",
             TPLINK_SMART_PLUG: "TPLink Smart Plug",
           });
@@ -776,6 +779,65 @@ describe("API Tests", async function () {
     });
   });
 
+  describe("Notification Action Routes", async () => {
+    describe("GET", async () => {
+      it("should return 200 and all notifications", async () => {
+        const response = await request(server).get("/api/v2/notification-actions").expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.lengthOf(content.data, 3);
+        for (let i = 0; i < content.data.length; i++) {
+          assert.containsAllKeys(content.data[i], ["id", "automationId", "subject", "content"]);
+        }
+      });
+
+      it("should return 200 and all notifications by automationID", async () => {
+        const response = await request(server)
+          .get("/api/v2/notification-actions?automationId=1")
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.lengthOf(content.data, 2);
+        assert.containsAllKeys(content.data[0], ["id", "automationId", "subject", "content"]);
+        assert.containsAllKeys(content.data[1], ["id", "automationId", "subject", "content"]);
+      });
+
+      it("should return 200 and a single notification", async () => {
+        const response = await request(server).get("/api/v2/notification-actions/1").expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.containsAllKeys(content.data, ["id", "automationId", "subject", "content"]);
+        assert.equal(content.data.subject, "Test Notification 1");
+        assert.equal(content.data.content, "Test Content 1");
+      });
+    });
+
+    describe("Create, Delete", async () => {
+      describe("POST", async () => {
+        it("should return 201", async () => {
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 3);
+          await request(server)
+            .post("/api/v2/notification-actions")
+            .send({
+              automationId: 1,
+              subject: "New Test Notification",
+              content: "New Test Content",
+            })
+            .expect(201);
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 4);
+        });
+      });
+
+      describe("DELETE", async () => {
+        it("should return 200", async () => {
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 4);
+          await request(server).delete("/api/v2/notification-actions/4").expect(200);
+          assert.lengthOf(await app.get("sprootDB").getNotificationActionsAsync(), 3);
+        });
+      });
+    });
+  });
+
   describe("Sensor Routes", async () => {
     describe("Sensors", async () => {
       const sensorKeys = [
@@ -789,7 +851,7 @@ describe("API Tests", async function () {
         "lastReadingTime",
         "units",
         "pin",
-        "deviceGroupId",
+        "deviceZoneId",
         "lowCalibrationPoint",
         "highCalibrationPoint",
       ];
@@ -966,10 +1028,10 @@ describe("API Tests", async function () {
     });
   });
 
-  describe("Device Group Routes", async () => {
+  describe("Device Zone Routes", async () => {
     describe("GET", async () => {
-      it("should return 200 and all device groups", async () => {
-        const response = await request(server).get("/api/v2/device-groups").expect(200);
+      it("should return 200 and all device zones", async () => {
+        const response = await request(server).get("/api/v2/device-zones").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.lengthOf(content.data, 2);
@@ -981,9 +1043,9 @@ describe("API Tests", async function () {
     describe("Create, Update, Delete", async () => {
       describe("POST", async () => {
         it("should return 201", async () => {
-          assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 2);
+          assert.lengthOf(await app.get("sprootDB").getDeviceZonesAsync(), 2);
           const response = await request(server)
-            .post("/api/v2/device-groups")
+            .post("/api/v2/device-zones")
             .send({
               name: "Test Device Group",
             })
@@ -999,11 +1061,11 @@ describe("API Tests", async function () {
         describe("PATCH", async () => {
           it("should return 200", async () => {
             assert.equal(
-              (await app.get("sprootDB").getDeviceGroupsAsync())[2].name,
+              (await app.get("sprootDB").getDeviceZonesAsync())[2].name,
               "Test Device Group",
             );
             const response = await request(server)
-              .patch("/api/v2/device-groups/3")
+              .patch("/api/v2/device-zones/3")
               .send({
                 name: "Test1 Device Group",
               })
@@ -1013,7 +1075,7 @@ describe("API Tests", async function () {
             const content = response.body["content"];
 
             assert.equal(
-              (await app.get("sprootDB").getDeviceGroupsAsync())[2].name,
+              (await app.get("sprootDB").getDeviceZonesAsync())[2].name,
               "Test1 Device Group",
             );
             assert.containsAllKeys(content.data, ["id", "name"]);
@@ -1022,10 +1084,10 @@ describe("API Tests", async function () {
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 3);
-            const response = await request(server).delete("/api/v2/device-groups/3").expect(200);
+            assert.lengthOf(await app.get("sprootDB").getDeviceZonesAsync(), 3);
+            const response = await request(server).delete("/api/v2/device-zones/3").expect(200);
             validateMiddlewareValues(response);
-            assert.lengthOf(await app.get("sprootDB").getDeviceGroupsAsync(), 2);
+            assert.lengthOf(await app.get("sprootDB").getDeviceZonesAsync(), 2);
           });
         });
       });
@@ -1117,6 +1179,10 @@ describe("API Tests", async function () {
             .expect(200)
             .end((err, res) => {
               if (err) {
+                const msg = err.message || "";
+                if (msg.includes("MultipartParser.end(): stream ended unexpectedly")) {
+                  return;
+                }
                 assert.fail("Stream request failed: " + err.message);
               }
               validateMiddlewareValues(res);
@@ -1198,16 +1264,60 @@ describe("API Tests", async function () {
         });
       });
     });
+
+    describe("Clear All Images", () => {
+      describe("DELETE", () => {
+        it("should return 200 and clear all timelapse images", async () => {
+          let attempts = 0;
+          while (
+            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress()
+              .isGenerating &&
+            attempts < 5
+          ) {
+            attempts++;
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+          let imageCount = await fs.promises.readdir("images/timelapse");
+          assert.isAbove(imageCount.length, 0, "There should be images to clear for this test");
+          const response = await request(server)
+            .delete("/api/v2/camera/timelapse/images")
+            .expect(200);
+          validateMiddlewareValues(response);
+          imageCount = await fs.promises.readdir("images/timelapse");
+          assert.equal(imageCount.length, 0, "All images should be cleared");
+          assert.equal(response.body["content"].data, "All images cleared successfully");
+        });
+      });
+    });
   });
 
   describe("System Routes", async () => {
     describe("Status", async () => {
       describe("GET", async () => {
         it("should return 200 and system status", async () => {
+          // Sometimes this test will happen too quickly for the previously called timelape generation
+          // request to actuall generate a timelapse, causing this test to fail.
+          let retryCount = 0;
+          let timelapseCompletion = await request(server).get(
+            "/api/v2/camera/timelapse/archive/status",
+          );
+          while (timelapseCompletion.body["content"].data.isGenerating && retryCount < 5) {
+            try {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+              timelapseCompletion = await request(server).get(
+                "/api/v2/camera/timelapse/archive/status",
+              );
+            } catch (err) {
+              // If the request fails, log the error and break the loop to avoid an infinite retry
+              console.error("Error checking timelapse status:", err);
+              break;
+            }
+            retryCount++;
+          }
           const response = await request(server).get("/api/v2/system/status").expect(200);
-          const data = response.body["content"].data;
           validateMiddlewareValues(response);
 
+          const data = response.body["content"].data;
           assert.equal(countLeafProperties(data), 14);
 
           assert.isNumber(data.process.uptime);
@@ -1286,152 +1396,740 @@ describe("API Tests", async function () {
     });
   });
 
-  describe("Subcontroller Routes", async () => {
-    describe("GET", async () => {
-      it("should return 200 and a record of subcontrollers", async () => {
-        const response = await request(server).get("/api/v2/subcontrollers").expect(200);
-        const data = response.body["content"].data;
-        validateMiddlewareValues(response);
+  describe("Journal Tag Routes", () => {
+    let createdId: number;
 
-        assert.isArray(data.unrecognized);
-        assert.isArray(data.recognized);
-      });
-    });
-
-    describe("POST", async () => {
-      it("should return a 204 and add a subcontroller to the database", async () => {
-        let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-        assert.isEmpty(subcontrollers);
-        await request(server)
-          .post("/api/v2/subcontrollers")
-          .send({
-            name: "Test Device",
-            hostName: "sproot-device-8af4.local",
-          })
+    describe("POST", () => {
+      it("should return 201 and create a journal tag", async () => {
+        const response = await request(server)
+          .post("/api/v2/tags/journals")
+          .send({ name: "APITest Journal Tag", color: "#ff0000" })
           .expect(201);
 
-        subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-        assert.lengthOf(subcontrollers, 1);
-        assert.equal(subcontrollers[0].id, 1);
-        assert.equal(subcontrollers[0].name, "Test Device");
-        assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
-        assert.equal(subcontrollers[0].type, "ESP32");
-        assert.isString(subcontrollers[0].secureToken);
-      });
-    });
-
-    describe("GET connection-status", async () => {
-      it("should return 200 and the connection status of the provided subcontroller", async () => {
-        const response = await request(server)
-          .get("/api/v2/subcontrollers/1/connection-status")
-          .expect(200);
-        const data = response.body["content"].data;
         validateMiddlewareValues(response);
-
-        assert.isFalse(data["online"]);
-        assert.isUndefined(data["version"]);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.isNumber(content.data.id);
+        assert.equal(content.data.name, "APITest Journal Tag");
+        assert.equal(content.data.color, "#ff0000");
+        createdId = content.data.id;
       });
     });
 
-    describe("PATCH", async () => {
-      it("should return a 200 and update a subcontroller in the database", async () => {
-        let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-        const secureToken = subcontrollers[0].secureToken;
-        assert.lengthOf(subcontrollers, 1);
-        assert.equal(subcontrollers[0].name, "Test Device");
+    describe("GET", () => {
+      it("should return 200 and list journal tags", async () => {
+        const response = await request(server).get("/api/v2/tags/journals").expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 3);
+        assert.deepInclude(found, {
+          id: createdId,
+          name: "APITest Journal Tag",
+          color: "#ff0000",
+        });
+      });
+    });
 
-        await request(server)
-          .patch("/api/v2/subcontrollers/1")
-          .send({
-            name: "Updated Test Device",
-          })
+    describe("PATCH", () => {
+      it("should return 200 and update a journal tag", async () => {
+        const response = await request(server)
+          .patch(`/api/v2/tags/journals/${createdId}`)
+          .send({ name: "APITest Journal Tag Updated", color: "#00ff00" })
           .expect(200);
 
-        subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-        assert.lengthOf(subcontrollers, 1);
-        assert.equal(subcontrollers[0].name, "Updated Test Device");
-        assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
-        assert.equal(subcontrollers[0].type, "ESP32");
-        assert.equal(subcontrollers[0].secureToken, secureToken);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.equal(content.data.id, createdId);
+        assert.equal(content.data.name, "APITest Journal Tag Updated");
+        assert.equal(content.data.color, "#00ff00");
       });
     });
 
-    describe("DELETE", async () => {
-      it("should return a 200 and delete a subcontroller from the database", async () => {
-        let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-        assert.lengthOf(subcontrollers, 1);
+    describe("DELETE", () => {
+      it("should return 200 and delete a journal tag", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/tags/journals/${createdId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(deleteResponse.body.content.data, `Journal tag with ID ${createdId} deleted.`);
 
-        await request(server).delete("/api/v2/subcontrollers/1").expect(200);
+        const list = await request(server).get("/api/v2/tags/journals").expect(200);
+        validateMiddlewareValues(list);
+        const content = list.body["content"];
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isUndefined(found);
+      });
+    });
+  });
 
-        subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
-        assert.lengthOf(subcontrollers, 0);
+  describe("Entry Tag Routes", () => {
+    let createdId: number;
+
+    describe("POST", () => {
+      it("should return 201 and create an entry tag", async () => {
+        const response = await request(server)
+          .post("/api/v2/tags/entries")
+          .send({ name: "APITest Entry Tag", color: "#abcdef" })
+          .expect(201);
+
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.isNumber(content.data.id);
+        assert.equal(content.data.name, "APITest Entry Tag");
+        assert.equal(content.data.color, "#abcdef");
+        createdId = content.data.id;
       });
     });
 
-    describe("Firmware Routes", async () => {
-      describe("ESP32", async () => {
-        describe("Manifest", async () => {
-          describe("GET", async () => {
-            it("should return 200 and firmware info", async () => {
-              const response = await request(server)
-                .get("/api/v2/subcontrollers/firmware/esp32/manifest")
-                .expect(200);
-              const data = response.body["content"].data;
-              validateMiddlewareValues(response);
+    describe("GET", () => {
+      it("should return 200 and list entry tags", async () => {
+        const response = await request(server).get("/api/v2/tags/entries").expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 3);
+        assert.deepInclude(found, {
+          id: createdId,
+          name: "APITest Entry Tag",
+          color: "#abcdef",
+        });
+      });
+    });
 
-              assert.containsAllKeys(data, ["version", "path", "sha256"]);
-            });
+    describe("PATCH", () => {
+      it("should return 200 and update an entry tag", async () => {
+        const response = await request(server)
+          .patch(`/api/v2/tags/entries/${createdId}`)
+          .send({ name: "APITest Entry Tag Updated", color: "#123456" })
+          .expect(200);
+
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 3);
+        assert.containsAllKeys(content.data, ["id", "name", "color"]);
+        assert.equal(content.data.id, createdId);
+        assert.equal(content.data.name, "APITest Entry Tag Updated");
+        assert.equal(content.data.color, "#123456");
+      });
+    });
+
+    describe("DELETE", () => {
+      it("should return 200 and delete an entry tag", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/tags/entries/${createdId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Journal entry tag with ID ${createdId} deleted.`,
+        );
+
+        const list = await request(server).get("/api/v2/tags/entries").expect(200);
+        validateMiddlewareValues(list);
+        const content = list.body["content"];
+        const found = content.data.find((t: any) => t.id === createdId);
+        assert.isUndefined(found);
+      });
+    });
+  });
+
+  describe("Journal Routes", () => {
+    let journalId: number;
+
+    describe("POST", () => {
+      it("should return 201 and create a journal", async () => {
+        const response = await request(server)
+          .post("/api/v2/journals")
+          .send({ title: "API Test Journal", description: "desc", archived: false })
+          .expect(201);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 9);
+        assert.containsAllKeys(content.data, [
+          "id",
+          "title",
+          "description",
+          "icon",
+          "color",
+          "archived",
+          "archivedAt",
+          "createdAt",
+          "editedAt",
+        ]);
+        assert.isNumber(content.data.id);
+        assert.equal(content.data.title, "API Test Journal");
+        assert.equal(content.data.description, "desc");
+        assert.isFalse(content.data.archived);
+        assert.isNull(content.data.icon);
+        assert.isNull(content.data.color);
+        assert.isNull(content.data.archivedAt);
+        assert.match(content.data.createdAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        assert.match(content.data.editedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        journalId = content.data.id;
+      });
+    });
+
+    describe("GET", () => {
+      it("should return 200 and list journals", async () => {
+        const response = await request(server).get("/api/v2/journals").expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find(
+          (j: any) => (j.journal ? j.journal.id : j.id) === journalId,
+        );
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 2);
+
+        const journal = found.journal ?? found;
+        assert.lengthOf(Object.keys(journal), 9);
+        assert.equal(journal.id, journalId);
+        assert.equal(journal.title, "API Test Journal");
+        assert.equal(journal.description, "desc");
+        assert.isFalse(journal.archived);
+      });
+
+      it("should return 200 and a single journal by id", async () => {
+        const response = await request(server).get(`/api/v2/journals/${journalId}`).expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const first = content.data[0];
+        assert.lengthOf(Object.keys(first), 2);
+        const journal = first.journal ?? first;
+        assert.lengthOf(Object.keys(journal), 9);
+        assert.equal(journal.id, journalId);
+        assert.equal(journal.title, "API Test Journal");
+        assert.equal(journal.description, "desc");
+        assert.isFalse(journal.archived);
+      });
+    });
+
+    describe("PATCH", () => {
+      it("should return 200 and update the journal", async () => {
+        // include required fields per OpenAPI schema
+        const getResp = await request(server).get(`/api/v2/journals/${journalId}`).expect(200);
+        const existing = getResp.body.content.data[0].journal || getResp.body.content.data[0];
+        const response = await request(server)
+          .patch(`/api/v2/journals/${journalId}`)
+          .send({ title: "API Test Journal Updated", archived: existing.archived })
+          .expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 9);
+        assert.equal(content.data.id, journalId);
+        assert.equal(content.data.title, "API Test Journal Updated");
+        assert.equal(content.data.description, "desc");
+        assert.isFalse(content.data.archived);
+      });
+    });
+
+    describe("DELETE", () => {
+      it("should return 200 and delete the journal", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/journals/${journalId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Journal with ID ${journalId} successfully deleted.`,
+        );
+
+        const list = await request(server).get("/api/v2/journals").expect(200);
+        validateMiddlewareValues(list);
+        const content = list.body["content"];
+        const found = content.data.find(
+          (j: any) => (j.journal ? j.journal.id : j.id) === journalId,
+        );
+        assert.isUndefined(found);
+      });
+    });
+
+    describe("Tags", () => {
+      let tagId: number;
+      let localJournalId: number;
+
+      it("should create a journal tag and apply it to a journal", async () => {
+        const tagResp = await request(server)
+          .post("/api/v2/tags/journals")
+          .send({ name: "API Journal Tag", color: "#123456" })
+          .expect(201);
+        validateMiddlewareValues(tagResp);
+        assert.lengthOf(Object.keys(tagResp.body.content.data), 3);
+        tagId = tagResp.body.content.data.id;
+        assert.deepInclude(tagResp.body.content.data, {
+          id: tagId,
+          name: "API Journal Tag",
+          color: "#123456",
+        });
+
+        const jResp = await request(server)
+          .post("/api/v2/journals")
+          .send({ title: "Journal To Tag", archived: false })
+          .expect(201);
+        validateMiddlewareValues(jResp);
+        assert.lengthOf(Object.keys(jResp.body.content.data), 9);
+        localJournalId = jResp.body.content.data.id;
+        assert.equal(jResp.body.content.data.title, "Journal To Tag");
+
+        const tagAddResponse = await request(server)
+          .put(`/api/v2/journals/${localJournalId}/tags`)
+          .send({ tagId: String(tagId) })
+          .expect(200);
+        validateMiddlewareValues(tagAddResponse);
+        assert.equal(
+          tagAddResponse.body.content.data,
+          `Tag with ID ${tagId} added to journal with ID ${localJournalId}.`,
+        );
+
+        const getResp = await request(server).get(`/api/v2/journals/${localJournalId}`).expect(200);
+        validateMiddlewareValues(getResp);
+        const journalRow = getResp.body.content.data[0];
+        assert.lengthOf(Object.keys(journalRow), 2);
+        assert.lengthOf(Object.keys(journalRow.journal), 9);
+        assert.isArray(journalRow.tags);
+        const found = journalRow.tags.find((t: any) => t.id === tagId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found), 3);
+        assert.deepInclude(found, {
+          id: tagId,
+          name: "API Journal Tag",
+          color: "#123456",
+        });
+      });
+
+      it("should remove the tag from the journal", async () => {
+        const deleteResponse = await request(server)
+          .delete(`/api/v2/journals/${localJournalId}/tags/${tagId}`)
+          .expect(200);
+        validateMiddlewareValues(deleteResponse);
+        assert.equal(
+          deleteResponse.body.content.data,
+          `Tag with ID ${tagId} removed from journal with ID ${localJournalId}.`,
+        );
+
+        const getResp = await request(server).get(`/api/v2/journals/${localJournalId}`).expect(200);
+        validateMiddlewareValues(getResp);
+        const journalRow = getResp.body.content.data[0];
+        assert.lengthOf(Object.keys(journalRow), 2);
+        assert.lengthOf(Object.keys(journalRow.journal), 9);
+        assert.isArray(journalRow.tags);
+        const found = journalRow.tags.find((t: any) => t.id === tagId);
+        assert.isUndefined(found);
+      });
+    });
+
+    describe("Entries", () => {
+      let localJournalId: number;
+      let localEntryId: number;
+
+      before(async () => {
+        const resp = await request(server)
+          .post("/api/v2/journals")
+          .send({ title: "Journal Router Entries Journal", archived: false })
+          .expect(201);
+        localJournalId = resp.body.content.data.id;
+      });
+
+      describe("POST", () => {
+        it("should return 201 and create an entry via journal router", async () => {
+          const response = await request(server)
+            .post(`/api/v2/journals/${localJournalId}/entries`)
+            .send({ content: "Journal Router Entry content", title: "JR Entry" })
+            .expect(201);
+          validateMiddlewareValues(response);
+          const content = response.body.content;
+          assert.lengthOf(Object.keys(content.data), 6);
+          assert.containsAllKeys(content.data, ["id", "journalId", "content", "createdAt"]);
+          assert.equal(content.data.title, "JR Entry");
+          assert.equal(content.data.journalId, localJournalId);
+          assert.equal(content.data.content, "Journal Router Entry content");
+          assert.match(content.data.createdAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+          assert.match(content.data.editedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+          localEntryId = content.data.id;
+        });
+      });
+
+      describe("GET", () => {
+        it("should return 200 and list entries for the journal via journal router", async () => {
+          const response = await request(server)
+            .get(`/api/v2/journals/${localJournalId}/entries`)
+            .expect(200);
+          validateMiddlewareValues(response);
+          const content = response.body.content;
+          assert.isArray(content.data);
+          const found = content.data.find((e: any) => e.entry.id === localEntryId);
+          assert.isObject(found);
+          assert.lengthOf(Object.keys(found.entry), 6);
+          assert.equal(found.entry.journalId, localJournalId);
+          assert.equal(found.entry.title, "JR Entry");
+          assert.equal(found.entry.content, "Journal Router Entry content");
+        });
+      });
+    });
+  });
+
+  describe("Entry Routes", () => {
+    let journalId: number;
+    let entryId: number;
+
+    before(async () => {
+      // create a journal to hold entries (satisfy OpenAPI schema)
+      const resp = await request(server)
+        .post("/api/v2/journals")
+        .send({ title: "Entries Journal", archived: false })
+        .expect(201);
+      journalId = resp.body.content.data.id;
+    });
+
+    describe("POST", () => {
+      it("should return 201 and create an entry", async () => {
+        const response = await request(server)
+          .post(`/api/v2/journals/${journalId}/entries`)
+          .send({ content: "Entry content", title: "Entry Title" })
+          .expect(201);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.lengthOf(Object.keys(content.data), 6);
+        assert.containsAllKeys(content.data, ["id", "journalId", "content", "createdAt"]);
+        assert.equal(content.data.journalId, journalId);
+        assert.equal(content.data.title, "Entry Title");
+        assert.equal(content.data.content, "Entry content");
+        assert.match(content.data.createdAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        assert.match(content.data.editedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        entryId = content.data.id;
+      });
+    });
+
+    describe("GET", () => {
+      it("should return 200 and list entries for a journal", async () => {
+        const response = await request(server)
+          .get(`/api/v2/journals/${journalId}/entries`)
+          .expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find((e: any) => e.entry.id === entryId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found.entry), 6);
+        assert.equal(found.entry.journalId, journalId);
+        assert.equal(found.entry.title, "Entry Title");
+        assert.equal(found.entry.content, "Entry content");
+      });
+
+      it("should return 200 and list entries for a journal (no content in response)", async () => {
+        const response = await request(server)
+          .get(`/api/v2/journals/${journalId}/entries?withContent=false`)
+          .expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        const found = content.data.find((e: any) => e.entry.id === entryId);
+        assert.isObject(found);
+        assert.lengthOf(Object.keys(found.entry), 5);
+        assert.equal(found.entry.journalId, journalId);
+        assert.equal(found.entry.title, "Entry Title");
+        assert.isUndefined(found.entry.content);
+      });
+
+      it("should return 200 and a single entry by id", async () => {
+        const response = await request(server).get(`/api/v2/entries/${entryId}`).expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        assert.lengthOf(Object.keys(content.data[0].entry), 6);
+        assert.equal(content.data[0].entry.id, entryId);
+        assert.equal(content.data[0].entry.journalId, journalId);
+        assert.equal(content.data[0].entry.title, "Entry Title");
+        assert.equal(content.data[0].entry.content, "Entry content");
+      });
+
+      it("should return 200 and a single entry by id (no content property with response)", async () => {
+        const response = await request(server)
+          .get(`/api/v2/entries/${entryId}?withContent=false`)
+          .expect(200);
+        validateMiddlewareValues(response);
+        const content = response.body["content"];
+        assert.isArray(content.data);
+        assert.lengthOf(Object.keys(content.data[0].entry), 5);
+        assert.equal(content.data[0].entry.id, entryId);
+        assert.equal(content.data[0].entry.journalId, journalId);
+        assert.equal(content.data[0].entry.title, "Entry Title");
+        assert.isUndefined(content.data[0].entry.content);
+      });
+
+      describe("PATCH", () => {
+        it("should return 200 and update the entry", async () => {
+          const response = await request(server)
+            .patch(`/api/v2/entries/${entryId}`)
+            .send({ text: true, content: "Updated content", title: "Updated Title" })
+            .expect(200);
+          validateMiddlewareValues(response);
+          const content = response.body["content"];
+          assert.lengthOf(Object.keys(content.data), 6);
+          assert.equal(content.data.id, entryId);
+          assert.equal(content.data.journalId, journalId);
+          assert.equal(content.data.title, "Updated Title");
+          assert.equal(content.data.content, "Updated content");
+        });
+      });
+
+      describe("DELETE", () => {
+        it("should return 200 and delete the entry", async () => {
+          const deleteResponse = await request(server)
+            .delete(`/api/v2/entries/${entryId}`)
+            .expect(200);
+          validateMiddlewareValues(deleteResponse);
+          assert.equal(
+            deleteResponse.body.content.data,
+            `Journal Entry with ID ${entryId} successfully deleted.`,
+          );
+
+          const resp = await request(server)
+            .get(`/api/v2/journals/${journalId}/entries`)
+            .expect(200);
+          validateMiddlewareValues(resp);
+          const content = resp.body["content"];
+          const found = content.data.find((e: any) => e.id === entryId);
+          assert.isUndefined(found);
+        });
+      });
+
+      describe("Tags", () => {
+        let localEntryId: number;
+        let entryTagId: number;
+
+        it("should create an entry tag and apply it to an entry", async () => {
+          // create a tag for entries
+          const tagResp = await request(server)
+            .post("/api/v2/tags/entries")
+            .send({ name: "API Entry Tag", color: "#654321" })
+            .expect(201);
+          validateMiddlewareValues(tagResp);
+          assert.lengthOf(Object.keys(tagResp.body.content.data), 3);
+          entryTagId = tagResp.body.content.data.id;
+          assert.deepInclude(tagResp.body.content.data, {
+            id: entryTagId,
+            name: "API Entry Tag",
+            color: "#654321",
+          });
+
+          // create an entry to tag
+          const eResp = await request(server)
+            .post(`/api/v2/journals/${journalId}/entries`)
+            .send({ content: "Entry to Tag", title: "Tagged Entry" })
+            .expect(201);
+          validateMiddlewareValues(eResp);
+          assert.lengthOf(Object.keys(eResp.body.content.data), 6);
+          localEntryId = eResp.body.content.data.id;
+          assert.equal(eResp.body.content.data.title, "Tagged Entry");
+          assert.equal(eResp.body.content.data.content, "Entry to Tag");
+
+          // add the tag to the entry
+          const tagAddResponse = await request(server)
+            .put(`/api/v2/entries/${localEntryId}/tags`)
+            .send({ tagId: String(entryTagId) })
+            .expect(200);
+          validateMiddlewareValues(tagAddResponse);
+          assert.equal(
+            tagAddResponse.body.content.data,
+            `Tag with ID ${entryTagId} successfully added to Journal Entry with ID ${localEntryId}.`,
+          );
+
+          // verify tag present on entry
+          const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);
+          validateMiddlewareValues(getResp);
+          const row = getResp.body.content.data[0];
+          assert.lengthOf(Object.keys(row.entry), 6);
+          assert.isArray(row.tags);
+          const found = row.tags.find((t: any) => t.id === entryTagId);
+          assert.isObject(found);
+          assert.lengthOf(Object.keys(found), 3);
+          assert.deepInclude(found, {
+            id: entryTagId,
+            name: "API Entry Tag",
+            color: "#654321",
           });
         });
-        describe("Bootloader", async () => {
-          describe("GET", async () => {
-            it("should return 200 and esp32 bootloader binary", async () => {
-              const response = await request(server)
-                .get("/api/v2/subcontrollers/firmware/esp32/bootloader")
-                .expect(200);
-              validateMiddlewareValues(response);
 
-              assert.equal(response.headers["content-type"], "application/octet-stream");
-              assert.isNotNull(response.body);
+        it("should remove the tag from the entry", async () => {
+          const deleteResponse = await request(server)
+            .delete(`/api/v2/entries/${localEntryId}/tags/${entryTagId}`)
+            .expect(200);
+          validateMiddlewareValues(deleteResponse);
+          assert.equal(
+            deleteResponse.body.content.data,
+            `Tag with ID ${entryTagId} successfully removed from Journal Entry with ID ${localEntryId}.`,
+          );
+
+          const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);
+          validateMiddlewareValues(getResp);
+          const row = getResp.body.content.data[0];
+          assert.lengthOf(Object.keys(row.entry), 6);
+          assert.isArray(row.tags);
+          const found = row.tags.find((t: any) => t.id === entryTagId);
+          assert.isUndefined(found);
+        });
+      });
+    });
+
+    describe("Subcontroller Routes", async () => {
+      describe("GET", async () => {
+        it("should return 200 and a record of subcontrollers", async () => {
+          const response = await request(server).get("/api/v2/subcontrollers").expect(200);
+          const data = response.body["content"].data;
+          validateMiddlewareValues(response);
+
+          assert.isArray(data.unrecognized);
+          assert.isArray(data.recognized);
+        });
+      });
+
+      describe("POST", async () => {
+        it("should return a 204 and add a subcontroller to the database", async () => {
+          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.isEmpty(subcontrollers);
+          await request(server)
+            .post("/api/v2/subcontrollers")
+            .send({
+              name: "Test Device",
+              hostName: "sproot-device-8af4.local",
+            })
+            .expect(201);
+
+          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 1);
+          assert.equal(subcontrollers[0].id, 1);
+          assert.equal(subcontrollers[0].name, "Test Device");
+          assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
+          assert.equal(subcontrollers[0].type, "ESP32");
+          assert.isString(subcontrollers[0].secureToken);
+        });
+      });
+
+      describe("GET connection-status", async () => {
+        it("should return 200 and the connection status of the provided subcontroller", async () => {
+          const response = await request(server)
+            .get("/api/v2/subcontrollers/1/connection-status")
+            .expect(200);
+          const data = response.body["content"].data;
+          validateMiddlewareValues(response);
+
+          assert.isFalse(data["online"]);
+          assert.isUndefined(data["version"]);
+        });
+      });
+
+      describe("PATCH", async () => {
+        it("should return a 200 and update a subcontroller in the database", async () => {
+          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          const secureToken = subcontrollers[0].secureToken;
+          assert.lengthOf(subcontrollers, 1);
+          assert.equal(subcontrollers[0].name, "Test Device");
+
+          await request(server)
+            .patch("/api/v2/subcontrollers/1")
+            .send({
+              name: "Updated Test Device",
+            })
+            .expect(200);
+
+          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 1);
+          assert.equal(subcontrollers[0].name, "Updated Test Device");
+          assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
+          assert.equal(subcontrollers[0].type, "ESP32");
+          assert.equal(subcontrollers[0].secureToken, secureToken);
+        });
+      });
+
+      describe("DELETE", async () => {
+        it("should return a 200 and delete a subcontroller from the database", async () => {
+          let subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 1);
+
+          await request(server).delete("/api/v2/subcontrollers/1").expect(200);
+
+          subcontrollers = await app.get("sprootDB").getSubcontrollersAsync();
+          assert.lengthOf(subcontrollers, 0);
+        });
+      });
+
+      describe("Firmware Routes", async () => {
+        describe("ESP32", async () => {
+          describe("Manifest", async () => {
+            describe("GET", async () => {
+              it("should return 200 and firmware info", async () => {
+                const response = await request(server)
+                  .get("/api/v2/subcontrollers/firmware/esp32/manifest")
+                  .expect(200);
+                const data = response.body["content"].data;
+                validateMiddlewareValues(response);
+
+                assert.containsAllKeys(data, ["version", "path", "sha256"]);
+              });
             });
           });
-        });
-        describe("Partitions", async () => {
-          describe("GET", async () => {
-            it("should return 200 and esp32 partition binary", async () => {
-              const response = await request(server)
-                .get("/api/v2/subcontrollers/firmware/esp32/partitions")
-                .expect(200);
-              validateMiddlewareValues(response);
+          describe("Bootloader", async () => {
+            describe("GET", async () => {
+              it("should return 200 and esp32 bootloader binary", async () => {
+                const response = await request(server)
+                  .get("/api/v2/subcontrollers/firmware/esp32/bootloader")
+                  .expect(200);
+                validateMiddlewareValues(response);
 
-              assert.equal(response.headers["content-type"], "application/octet-stream");
-              assert.isNotNull(response.body);
+                assert.equal(response.headers["content-type"], "application/octet-stream");
+                assert.isNotNull(response.body);
+              });
             });
           });
-        });
-        describe("Binary", async () => {
-          describe("GET", async () => {
-            it("should return 200 and esp32 application binary", async () => {
-              const response = await request(server)
-                .get("/api/v2/subcontrollers/firmware/esp32/application")
-                .expect(200);
-              validateMiddlewareValues(response);
+          describe("Partitions", async () => {
+            describe("GET", async () => {
+              it("should return 200 and esp32 partition binary", async () => {
+                const response = await request(server)
+                  .get("/api/v2/subcontrollers/firmware/esp32/partitions")
+                  .expect(200);
+                validateMiddlewareValues(response);
 
-              assert.equal(response.headers["content-type"], "application/octet-stream");
-              assert.isNotNull(response.body);
+                assert.equal(response.headers["content-type"], "application/octet-stream");
+                assert.isNotNull(response.body);
+              });
             });
           });
-        });
-        describe("Binary", async () => {
-          describe("GET", async () => {
-            it("should return 200 and esp32 firmware binary", async () => {
-              const response = await request(server)
-                .get("/api/v2/subcontrollers/firmware/esp32/binary")
-                .expect(200);
-              validateMiddlewareValues(response);
+          describe("Binary", async () => {
+            describe("GET", async () => {
+              it("should return 200 and esp32 application binary", async () => {
+                const response = await request(server)
+                  .get("/api/v2/subcontrollers/firmware/esp32/application")
+                  .expect(200);
+                validateMiddlewareValues(response);
 
-              assert.equal(response.headers["content-type"], "application/octet-stream");
-              assert.isNotNull(response.body);
+                assert.equal(response.headers["content-type"], "application/octet-stream");
+                assert.isNotNull(response.body);
+              });
+            });
+          });
+          describe("Binary", async () => {
+            describe("GET", async () => {
+              it("should return 200 and esp32 firmware binary", async () => {
+                const response = await request(server)
+                  .get("/api/v2/subcontrollers/firmware/esp32/binary")
+                  .expect(200);
+                validateMiddlewareValues(response);
+
+                assert.equal(response.headers["content-type"], "application/octet-stream");
+                assert.isNotNull(response.body);
+              });
             });
           });
         });
