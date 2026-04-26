@@ -1,9 +1,8 @@
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
-import { ConditionOperator } from "@sproot/automation/ConditionTypes";
+import { IConditionProperties } from "@sproot/automation/IConditionProperties";
 import { OutputList } from "../../outputs/list/OutputList";
 import { SensorList } from "../../sensors/list/SensorList";
-import { ReadingType } from "@sproot/sensors/ReadingType";
 
 import { OutputCondition } from "./OutputCondition";
 import { SensorCondition } from "./SensorCondition";
@@ -19,49 +18,6 @@ type EnabledConditionTypes =
   | WeekdayCondition
   | MonthCondition
   | DateRangeCondition;
-
-export type IConditionProperties =
-  | {
-      kind: "sensor";
-      id: number;
-      sensorId: number;
-      readingType: ReadingType;
-      operator: ConditionOperator;
-      comparisonValue: number;
-      comparisonLookback: number | null;
-    }
-  | {
-      kind: "output";
-      id: number;
-      outputId: number;
-      operator: ConditionOperator;
-      comparisonValue: number;
-      comparisonLookback: number | null;
-    }
-  | {
-      kind: "time";
-      id: number;
-      startTime?: string | null | undefined;
-      endTime?: string | null | undefined;
-    }
-  | {
-      kind: "weekday";
-      id: number;
-      weekdays: number;
-    }
-  | {
-      kind: "month";
-      id: number;
-      months: number;
-    }
-  | {
-      kind: "dateRange";
-      id: number;
-      startMonth: number;
-      startDate: number;
-      endMonth: number;
-      endDate: number;
-    };
 
 export class Conditions {
   #automationId: number;
