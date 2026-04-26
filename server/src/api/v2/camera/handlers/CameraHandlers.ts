@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 import winston from "winston";
+import { Subscriber } from "../../../../camera/FrameBuffer";
 
 /**
  * Possible statusCodes: 200, 502
@@ -42,7 +43,51 @@ export async function streamHandlerAsync(request: Request, response: Response): 
 
     const clientId = `client_${Date.now()}_${Math.random().toString(16).slice(2)}`;
     const frameBufferStream = frameBuffer.getStream();
+    const maxPendingBytes = Math.max(response.writableHighWaterMark ?? 0, 128 * 1024);
+    const pendingChunks: Buffer[] = [];
+    let pendingBytes = 0;
+    let waitingForDrain = false;
     let disconnected = false;
+
+    const queueChunk = (chunk: Buffer): boolean => {
+      pendingChunks.push(chunk);
+      pendingBytes += chunk.length;
+
+      if (pendingBytes <= maxPendingBytes) {
+        return true;
+      }
+
+      logger.warn(
+        `StreamHandler: client ${clientId} exceeded pending buffer limit (${pendingBytes} bytes), disconnecting`,
+      );
+      onClientDisconnect();
+      return false;
+    };
+
+    const onDrain = () => {
+      waitingForDrain = false;
+
+      while (!disconnected && pendingChunks.length > 0) {
+        const chunk = pendingChunks.shift();
+        if (!chunk) {
+          continue;
+        }
+
+        pendingBytes -= chunk.length;
+
+        try {
+          if (!response.write(chunk)) {
+            waitingForDrain = true;
+            response.once("drain", onDrain);
+            return;
+          }
+        } catch (e) {
+          logger.error(`StreamHandler: failed to flush buffered chunk to client ${clientId}: ${e}`);
+          onClientDisconnect();
+          return;
+        }
+      }
+    };
 
     const onClientDisconnect = () => {
       if (disconnected) {
@@ -50,7 +95,11 @@ export async function streamHandlerAsync(request: Request, response: Response): 
       }
 
       disconnected = true;
+      waitingForDrain = false;
+      pendingChunks.length = 0;
+      pendingBytes = 0;
       response.off("close", onClientDisconnect);
+      response.off("drain", onDrain);
       response.off("finish", onClientDisconnect);
       response.off("error", onClientDisconnect);
       frameBufferStream.off("error", onFrameBufferError);
@@ -67,13 +116,21 @@ export async function streamHandlerAsync(request: Request, response: Response): 
     };
 
     // Create a subscriber for this client that writes chunks directly
-    const subscriber: { onChunk: (chunk: Buffer) => void; onDestroy: () => void } = {
+    const subscriber: Subscriber = {
       onChunk: (chunk: Buffer) => {
+        if (disconnected) {
+          return;
+        }
+
+        if (waitingForDrain) {
+          queueChunk(chunk);
+          return;
+        }
+
         try {
-          const result = response.write(chunk);
-          if (result === false) {
-            // Disconnect if the internal buffer is full and cannot accept more data
-            throw new Error("Client write buffer is full");
+          if (!response.write(chunk)) {
+            waitingForDrain = true;
+            response.once("drain", onDrain);
           }
         } catch (e) {
           logger.error(`StreamHandler: failed to write chunk to client ${clientId}: ${e}`);
@@ -194,7 +251,10 @@ export async function reconnectLivestreamAsync(
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
-    await cameraManager.reconnectLivestreamAsync();
+    const result = await cameraManager.reconnectLivestreamAsync();
+    if (!result) {
+      throw new Error("Failed to reconnect livestream");
+    }
     response.status(200).json({
       statusCode: 200,
       content: {

@@ -298,6 +298,7 @@ describe("streamHandlerAsync", () => {
       headersSent: false,
       writableEnded: false,
       writable: true,
+      writableHighWaterMark: 16,
       destroyed: false,
       locals: {
         defaultProperties: {},
@@ -339,6 +340,44 @@ describe("streamHandlerAsync", () => {
 
     assert.equal(frameBuffer.getSubscriberCount(), 0);
     assert.equal(stream.listenerCount("error"), baselineErrorListeners);
+    assert.equal(response.end.callCount, 1);
+  });
+
+  it("should buffer chunks until drain is emitted", async () => {
+    const stream = frameBuffer.getStream();
+    let writeCallCount = 0;
+
+    response.write = sinon.stub().callsFake(() => {
+      writeCallCount++;
+      return writeCallCount !== 1;
+    });
+
+    await streamHandlerAsync(request, response);
+
+    stream.write(Buffer.from("frame-1"));
+    stream.write(Buffer.from("frame-2"));
+
+    assert.equal(response.write.callCount, 1);
+    assert.equal(frameBuffer.getSubscriberCount(), 1);
+
+    response.emit("drain");
+
+    assert.equal(response.write.callCount, 2);
+    assert.equal((response.write as sinon.SinonStub).secondCall.args[0].toString(), "frame-2");
+    assert.equal(frameBuffer.getSubscriberCount(), 1);
+  });
+
+  it("should disconnect slow clients when buffered data exceeds the limit", async () => {
+    const stream = frameBuffer.getStream();
+    response.writableHighWaterMark = 8;
+    response.write = sinon.stub().returns(false);
+
+    await streamHandlerAsync(request, response);
+
+    stream.write(Buffer.from("12345678"));
+    stream.write(Buffer.alloc(1024 * 1024 + 1, "a"));
+
+    assert.equal(frameBuffer.getSubscriberCount(), 0);
     assert.equal(response.end.callCount, 1);
   });
 });
