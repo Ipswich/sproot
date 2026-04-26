@@ -42,9 +42,9 @@ export class NotificationActionManager implements Disposable {
       await this.#reloadActionsAsync();
     };
 
-    const automationListener = async (event: AutomationEvent) => {
+    const automationListener = (event: AutomationEvent) => {
       try {
-        await this.#handleAutomationEvent(event);
+        this.#handleAutomationEvent(event);
       } catch (error) {
         this.#logger.error(`Error handling automation event for notifications - ${error}`);
       }
@@ -82,7 +82,7 @@ export class NotificationActionManager implements Disposable {
    * Handle automation events.
    * @param event The automation event containing triggered automations
    */
-  async #handleAutomationEvent(event: AutomationEvent, now: Date = event.timestamp): Promise<void> {
+  #handleAutomationEvent(event: AutomationEvent, now: Date = event.timestamp): void {
     this.#lastRunAt = now.getTime();
 
     // Find which automations have actions on this output

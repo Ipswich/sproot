@@ -3,7 +3,7 @@ import classes from "@sproot/sproot-client/src/shell/header/HeaderContents.modul
 import { useEffect, useState, useTransition } from "react";
 import { useLocation } from "react-router-dom";
 import { Page } from "../Pages";
-import NotificationCenter from "./NotificationCenter.tsx";
+import NotificationCenter from "./NotificationCenter";
 
 interface HeaderContentsProps {
   navbarToggle: () => void;

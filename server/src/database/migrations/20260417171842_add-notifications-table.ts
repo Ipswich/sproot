@@ -4,7 +4,7 @@ import { setTableDefaults } from "../KnexUtilities";
 export async function up(knex: Knex): Promise<void> {
   if (!(await knex.schema.hasTable("notification_actions"))) {
     await knex.schema.createTable("notification_actions", (table) => {
-      table.increments("id").primary();
+      table.increments("id").notNullable();
       table
         .integer("automation_id")
         .unsigned()
@@ -13,7 +13,7 @@ export async function up(knex: Knex): Promise<void> {
         .inTable("automations")
         .onDelete("CASCADE")
         .onUpdate("CASCADE");
-      table.string("subject", 64).notNullable();
+      table.string("subject", 128).notNullable();
       table.text("content").notNullable();
       table.primary(["id"]);
       table.index(["automation_id"]);
