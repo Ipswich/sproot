@@ -1,26 +1,27 @@
 import { Fragment, useEffect } from "react";
 import {
-  Text,
   Button,
+  Fieldset,
   Group,
+  LoadingOverlay,
   NumberInput,
   Stack,
+  Switch,
+  Text,
   TextInput,
   rem,
-  Fieldset,
-  Switch,
-  LoadingOverlay,
 } from "@mantine/core";
-import {
-  getCameraSettingsAsync,
-  updateCameraSettingsAsync,
-  getTimelapseArchiveStatusAsync,
-  clearAllImagesAsync,
-} from "@sproot/sproot-client/src/requests/requests_v2";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "@mantine/form";
 import { TimeInput } from "@mantine/dates";
+import { useForm } from "@mantine/form";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
+import {
+  clearAllImagesAsync,
+  getCameraSettingsAsync,
+  getTimelapseArchiveStatusAsync,
+  updateCameraSettingsAsync,
+} from "@sproot/sproot-client/src/requests/requests_v2";
+import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 
 export interface FormValues {
   id?: number;
@@ -36,6 +37,7 @@ export interface FormValues {
 
 export default function CameraSettings() {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+
   const getCameraSettingsQuery = useQuery({
     queryKey: ["cameraSettings"],
     queryFn: () => getCameraSettingsAsync(),
@@ -58,6 +60,7 @@ export default function CameraSettings() {
       if (updatedSettings.timelapseStartTime === "") {
         updatedSettings.timelapseStartTime = null;
       }
+
       if (updatedSettings.timelapseEndTime === "") {
         updatedSettings.timelapseEndTime = null;
       }
@@ -76,7 +79,7 @@ export default function CameraSettings() {
     },
   });
 
-  const newCameraForm = useForm({
+  const newCameraForm = useForm<FormValues>({
     initialValues: {
       name: "",
       enabled: false,
@@ -86,8 +89,7 @@ export default function CameraSettings() {
       timelapseInterval: null,
       timelapseStartTime: "",
       timelapseEndTime: "",
-    } as FormValues,
-
+    },
     validate: {
       name: (value: string) =>
         !value || (value.length > 0 && value.length <= 64)
@@ -118,7 +120,6 @@ export default function CameraSettings() {
     },
   });
 
-  // Update form values when data is fetched
   useEffect(() => {
     if (getCameraSettingsQuery.data) {
       newCameraForm.setValues({
@@ -137,7 +138,6 @@ export default function CameraSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getCameraSettingsQuery.data]);
 
-  // Handle form submission
   const handleSubmit = (values: FormValues) => {
     updateCameraSettingsMutation.mutate(values);
   };
@@ -213,12 +213,12 @@ export default function CameraSettings() {
                   }
                   label="End time"
                   value={newCameraForm.values.timelapseEndTime ?? ""}
-                  onChange={(value) =>
+                  onChange={(value) => {
                     newCameraForm.setFieldValue(
                       "timelapseEndTime",
                       value.currentTarget.value,
-                    )
-                  }
+                    );
+                  }}
                 />
               </Group>
             </Fragment>
@@ -259,20 +259,18 @@ export default function CameraSettings() {
             </Group>
             {newCameraForm.values.timelapseEnabled && (
               <Group justify="space-around">
-                <Button
-                  size="md"
-                  style={{ width: rem(200) }}
-                  onClick={() => {
-                    clearAllImagesMutation.mutate();
-                  }}
+                <ConfirmDeleteButton
+                  buttonProps={{ size: "md", style: { width: rem(200) } }}
                   loading={clearAllImagesMutation.isPending}
                   disabled={
                     getTimelapseArchiveStatusQuery.data?.isGenerating ?? false
                   }
-                  color="red"
+                  onConfirm={() => {
+                    clearAllImagesMutation.mutate();
+                  }}
                 >
                   Delete All Images
-                </Button>
+                </ConfirmDeleteButton>
               </Group>
             )}
           </Stack>

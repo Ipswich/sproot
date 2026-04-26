@@ -30,6 +30,7 @@ import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";
 import GroupedOutputForm from "./forms/OutputGroupForm";
 import { Models } from "@sproot/sproot-common/src/outputs/Models";
 import ESP32_PCA9685Form from "./forms/ESP32_PCA9685Form";
+import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 
 interface EditTableProps {
   outputs: Record<string, IOutputBase>;
@@ -341,10 +342,9 @@ export default function EditTable({
             />
           ) : null}
           <Group justify="space-between" mt="md">
-            <Button
+            <ConfirmDeleteButton
               disabled={isUpdating}
-              color="red"
-              onClick={async () => {
+              onConfirm={async () => {
                 setIsUpdating(true);
                 await deleteOutputMutation.mutateAsync(selectedOutput.id);
                 delete outputs[selectedOutput.id];
@@ -353,9 +353,7 @@ export default function EditTable({
                 closeModal();
                 updateOutputForm.reset();
               }}
-            >
-              Delete
-            </Button>
+            />
             <Button type="submit" disabled={isUpdating}>
               Update Output
             </Button>
