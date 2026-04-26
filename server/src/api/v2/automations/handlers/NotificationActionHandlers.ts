@@ -148,10 +148,10 @@ export async function addAsync(
   if (isNaN(automationId)) {
     invalidFields.push("Invalid or missing automation Id.");
   }
-  if (subject == null || subject.trim() === "") {
+  if (subject == null || typeof subject !== "string" || subject.trim() === "") {
     invalidFields.push("Subject is required.");
   }
-  if (content == null || content.trim() === "") {
+  if (content == null || typeof content !== "string" || content.trim() === "") {
     invalidFields.push("Content is required.");
   }
 
