@@ -71,6 +71,23 @@ describe("StreamProxy", () => {
     const frameBuffer = streamProxy.getFrameBuffer();
     assert.isDefined(frameBuffer);
   });
+
+  it("should disconnect upstream state when startup fails", async () => {
+    const connectAsyncStub = sinon
+      .stub(UpstreamConnection.prototype, "connectAsync")
+      .resolves(false);
+    const disconnectStub = sinon.stub(UpstreamConnection.prototype, "disconnect");
+
+    streamProxy = new StreamProxy({
+      logger,
+      upstreamUrl: "http://localhost:3002",
+      upstreamHeaders: () => ({ "X-Test": "test" }),
+    });
+
+    assert.isFalse(await streamProxy.startAsync());
+    assert.isTrue(connectAsyncStub.calledOnce);
+    assert.isTrue(disconnectStub.calledOnce);
+  });
 });
 
 describe("FrameBuffer", () => {
@@ -344,7 +361,7 @@ describe("UpstreamConnection", () => {
     const upstream = new UpstreamConnection({
       logger,
       url: "http://localhost:3002",
-      headers: { "X-Test": "test" },
+      headers: () => ({ "X-Test": "test" }),
       frameBuffer,
     });
 
@@ -355,7 +372,7 @@ describe("UpstreamConnection", () => {
     const upstream = new UpstreamConnection({
       logger,
       url: "http://localhost:3002",
-      headers: { "X-Test": "test" },
+      headers: () => ({ "X-Test": "test" }),
       frameBuffer,
     });
 
@@ -367,7 +384,7 @@ describe("UpstreamConnection", () => {
     const upstream = new UpstreamConnection({
       logger,
       url: "http://localhost:3002",
-      headers: { "X-Test": "test" },
+      headers: () => ({ "X-Test": "test" }),
       frameBuffer,
     });
 
@@ -390,7 +407,7 @@ describe("UpstreamConnection", () => {
     const upstream = new UpstreamConnection({
       logger,
       url: "http://localhost:3002",
-      headers: { "X-Test": "test" },
+      headers: () => ({ "X-Test": "test" }),
       frameBuffer,
       healthCheckIntervalMs: 100,
       staleStreamThresholdMs: 250,
@@ -427,7 +444,7 @@ describe("UpstreamConnection", () => {
     const upstream = new UpstreamConnection({
       logger,
       url: "http://localhost:3002",
-      headers: { "X-Test": "test" },
+      headers: () => ({ "X-Test": "test" }),
       frameBuffer,
       healthCheckIntervalMs: 100,
       staleStreamThresholdMs: 250,
@@ -449,5 +466,47 @@ describe("UpstreamConnection", () => {
 
     upstream.disconnect();
     upstreamStream.destroy();
+  });
+
+  it("should regenerate headers for each new upstream connection", async () => {
+    const firstUpstreamStream = new PassThrough();
+    const secondUpstreamStream = new PassThrough();
+    const headersFactory = sinon
+      .stub<[], Record<string, string>>()
+      .onFirstCall()
+      .returns({ "X-Test": "first" })
+      .onSecondCall()
+      .returns({ "X-Test": "second" });
+
+    const fetchStub = sinon.stub(globalThis, "fetch");
+    fetchStub.onFirstCall().resolves(
+      new Response(Readable.toWeb(firstUpstreamStream) as ReadableStream, {
+        status: 200,
+      }),
+    );
+    fetchStub.onSecondCall().resolves(
+      new Response(Readable.toWeb(secondUpstreamStream) as ReadableStream, {
+        status: 200,
+      }),
+    );
+
+    const upstream = new UpstreamConnection({
+      logger,
+      url: "http://localhost:3002",
+      headers: headersFactory,
+      frameBuffer,
+    });
+
+    assert.isTrue(await upstream.connectAsync());
+    upstream.disconnect();
+    assert.isTrue(await upstream.connectAsync());
+
+    assert.equal(headersFactory.callCount, 2);
+    assert.deepEqual(fetchStub.firstCall.args[1]?.headers, { "X-Test": "first" });
+    assert.deepEqual(fetchStub.secondCall.args[1]?.headers, { "X-Test": "second" });
+
+    upstream.disconnect();
+    firstUpstreamStream.destroy();
+    secondUpstreamStream.destroy();
   });
 });

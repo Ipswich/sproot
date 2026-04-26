@@ -5,7 +5,7 @@ import { FrameBuffer } from "./FrameBuffer";
 export interface UpstreamConnectionOptions {
   logger: winston.Logger;
   url: string;
-  headers: Record<string, string>;
+  headers: () => Record<string, string>;
   frameBuffer: FrameBuffer;
   /** Timeout for initial fetch in milliseconds */
   fetchTimeoutMs?: number;
@@ -27,7 +27,7 @@ export type UpstreamConnectionState =
 export class UpstreamConnection {
   #logger: winston.Logger;
   #url: string;
-  #headers: Record<string, string>;
+  #headers: () => Record<string, string>;
   #frameBuffer: FrameBuffer;
   #fetchTimeoutMs: number;
   #initialReconnectDelayMs: number;
@@ -105,7 +105,7 @@ export class UpstreamConnection {
 
       upstream = await fetch(`${this.#url}/stream.mjpg`, {
         method: "GET",
-        headers: this.#headers,
+        headers: this.#headers(),
         signal: newController.signal,
       });
 
@@ -139,7 +139,7 @@ export class UpstreamConnection {
       }
 
       // Wire up the stream to frame buffer's pass through
-      this.#readableStream.pipe(this.#frameBuffer.getStream());
+      this.#readableStream.pipe(this.#frameBuffer.getStream(), { end: false });
       this.#lastDataReceivedAt = Date.now();
 
       // Add abort listener for cleanup
@@ -237,6 +237,7 @@ export class UpstreamConnection {
     this.#logger.info(`UpstreamConnection: disconnected - ${reason}, reconnecting in ${delay}ms`);
 
     this.#reconnectTimeout = setTimeout(() => {
+      this.#reconnectTimeout = null;
       this.connectAsync().catch((e) => {
         this.#logger.error(`UpstreamConnection: reconnection failed: ${e}`);
       });

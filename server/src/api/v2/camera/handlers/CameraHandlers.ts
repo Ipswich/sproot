@@ -80,6 +80,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
       },
       onDestroy: () => {
         logger.debug(`StreamHandler: client ${clientId} destroyed`);
+        onClientDisconnect();
       },
     };
 

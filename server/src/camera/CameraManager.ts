@@ -59,10 +59,10 @@ class CameraManager {
       undefined, // timezone
       null, // context
       true, // runOnInit
+      undefined, // utcOffset
       undefined, // unrefTimeout
-      undefined, // startDate
-      undefined, // endDate
-      (err) => this.#logger.error(`Image capture cron error: ${err}`),
+      undefined, // waitForCompletion
+      (err: unknown) => this.#logger.error(`Image capture cron error: ${err}`),
     );
   }
 
@@ -154,6 +154,7 @@ class CameraManager {
     if (this.#disposed) {
       return this;
     }
+    this.#isUpdating = true;
     try {
       const settings = await this.#sprootDB.getCameraSettingsAsync();
 
@@ -175,13 +176,18 @@ class CameraManager {
           // Start stream proxy if not already running
           if (!this.#streamProxy) {
             this.#logger.info("CameraManager: creating new stream proxy");
-            this.#streamProxy = new StreamProxy({
+            const streamProxy = new StreamProxy({
               logger: this.#logger,
               upstreamUrl: this.#baseUrl,
               upstreamHeaders: this.generateRequestHeaders.bind(this),
             });
-            await this.#streamProxy.startAsync();
-            this.#logger.info("CameraManager: stream proxy created");
+            const streamProxyStarted = await streamProxy.startAsync();
+            if (streamProxyStarted) {
+              this.#streamProxy = streamProxy;
+              this.#logger.info("CameraManager: stream proxy created");
+            } else {
+              this.#logger.warn("CameraManager: stream proxy failed to connect to upstream");
+            }
           }
 
           this.#imageCapture.updateTimelapseSettings(this.#currentSettings);
