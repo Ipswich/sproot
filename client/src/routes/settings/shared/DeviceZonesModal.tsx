@@ -15,7 +15,8 @@ import {
   Table,
   TextInput,
 } from "@mantine/core";
-import { IconDeviceFloppy, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconDeviceFloppy, IconPlus } from "@tabler/icons-react";
+import ConfirmDeleteButton from "../../../components/ConfirmDeleteButton";
 
 interface DeviceZonesModal {
   modalOpened: boolean;
@@ -135,15 +136,14 @@ export default function DeviceZonesModal({
                 </Table.Td>
                 <Table.Td style={{ width: "10%" }} align="center">
                   <Group justify="center">
-                    <ActionIcon
-                      color="grey"
-                      onClick={async () => {
+                    <ConfirmDeleteButton
+                      kind="icon"
+                      loading={deleteDeviceZonesMutation.isPending}
+                      onConfirm={async () => {
                         await deleteDeviceZonesMutation.mutateAsync(zone.id);
                         await deviceZonesQuery.refetch();
                       }}
-                    >
-                      <IconTrash />
-                    </ActionIcon>
+                    />
                   </Group>
                 </Table.Td>
               </Table.Tr>

@@ -1,7 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  ActionIcon,
   Group,
   Modal,
   ScrollArea,
@@ -9,8 +8,10 @@ import {
   TextInput,
   ColorInput,
 } from "@mantine/core";
-import { IconDeviceFloppy, IconTrash, IconPlus } from "@tabler/icons-react";
+import { ActionIcon } from "@mantine/core";
+import { IconDeviceFloppy, IconPlus } from "@tabler/icons-react";
 import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
 type TagLike = { id: number; name?: string | null; color?: string | null };
 
@@ -201,15 +202,14 @@ export default function ManageTagsModal<T extends TagLike>({
                     ) : null}
                     <Table.Td style={{ width: "10%" }} align="center">
                       <Group justify="center">
-                        <ActionIcon
-                          color="grey"
-                          onClick={async () => {
+                        <ConfirmDeleteButton
+                          kind="icon"
+                          loading={deleteTagMutation.isPending}
+                          onConfirm={async () => {
                             await deleteTagMutation.mutateAsync(tag.id);
                             await tagsQuery.refetch();
                           }}
-                        >
-                          <IconTrash />
-                        </ActionIcon>
+                        />
                       </Group>
                     </Table.Td>
                   </Table.Tr>
