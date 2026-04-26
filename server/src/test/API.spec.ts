@@ -1199,12 +1199,22 @@ describe("API Tests", async function () {
           }
         });
 
+        // This test doesn't _really_ test the reconnect endpoint, but it at least ensures that the endpoint is hit and returns a 200
         it("should return a 200 after reconnecting to the livestream server", async () => {
-          // First make the reconnect request
-          const response = await request(server).post("/api/v2/camera/reconnect").expect(200);
+          const cameraManager = app.get("cameraManager") as CameraManager;
+          const reconnectStub = sinon
+            .stub(cameraManager, "reconnectLivestreamAsync")
+            .resolves(true);
 
-          validateMiddlewareValues(response);
-          assert.equal(response.body.content.data, "Livestream successfully reconnected");
+          try {
+            const response = await request(server).post("/api/v2/camera/reconnect").expect(200);
+
+            validateMiddlewareValues(response);
+            assert.isTrue(reconnectStub.calledOnce);
+            assert.equal(response.body.content.data, "Livestream successfully reconnected");
+          } finally {
+            reconnectStub.restore();
+          }
         });
       });
     });
