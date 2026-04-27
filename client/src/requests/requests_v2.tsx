@@ -4,6 +4,7 @@ import {
   AutomationOperator,
   IAutomation,
 } from "@sproot/automation/IAutomation";
+import { IActiveNotificationsResponse } from "@sproot/automation/IActiveNotificationResponse";
 import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
@@ -29,6 +30,7 @@ import {
 } from "@sproot/automation/ConditionTypes";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
+import { SDBNotificationAction } from "@sproot/database/SDBNotificationAction";
 import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import { SDBJournalEntryTag } from "@sproot/database/SDBJournalEntryTag";
@@ -654,6 +656,80 @@ export async function deleteOutputActionAsync(id: number): Promise<void> {
   if (!response.ok) {
     console.error(`Error deleting output action: ${response}`);
   }
+}
+
+export async function getNotificationActionsByAutomationIdAsync(
+  automationId: number,
+): Promise<SDBNotificationAction[]> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/notification-actions?automationId=${automationId}`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error fetching notification actions: ${response}`);
+    return [];
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data as SDBNotificationAction[];
+}
+
+export async function addNotificationActionAsync(
+  automationId: number,
+  subject: string,
+  content: string,
+): Promise<SDBNotificationAction | undefined> {
+  const response = await fetch(`${SERVER_URL}/api/v2/notification-actions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ automationId, subject, content }),
+    mode: "cors",
+    // credentials: "include",
+  });
+  if (!response.ok) {
+    console.error(`Error adding notification action: ${response}`);
+    return undefined;
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data as
+    | SDBNotificationAction
+    | undefined;
+}
+
+export async function deleteNotificationActionAsync(id: number): Promise<void> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/notification-actions/${id}`,
+    {
+      method: "DELETE",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    console.error(`Error deleting notification action: ${response}`);
+  }
+}
+
+export async function getActiveNotificationsAsync(): Promise<IActiveNotificationsResponse> {
+  const response = await fetch(
+    `${SERVER_URL}/api/v2/notification-actions/active`,
+    {
+      method: "GET",
+      headers: {},
+      mode: "cors",
+      // credentials: "include",
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Error fetching active notifications: ${response.status}`);
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data as IActiveNotificationsResponse;
 }
 
 export async function getSupportedOutputModelsAsync(): Promise<

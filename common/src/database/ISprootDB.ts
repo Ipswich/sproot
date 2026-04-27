@@ -20,6 +20,7 @@ import { ITimeCondition } from "../automation/ITimeCondition";
 import { IOutputCondition } from "../automation/IOutputCondition";
 import { ISensorCondition } from "../automation/ISensorCondition";
 import { SDBOutputAction, SDBOutputActionView } from "./SDBOutputAction";
+import { SDBNotificationAction } from "./SDBNotificationAction";
 import { SDBWeekdayCondition } from "./SDBWeekdayCondition";
 import { SDBMonthCondition } from "./SDBMonthCondition";
 import { SDBDateRangeCondition } from "./SDBDateRangeCondition";
@@ -99,6 +100,17 @@ interface ISprootDB {
   addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number>;
   deleteOutputActionAsync(outputActionId: number): Promise<void>;
   getOutputActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
+
+  // Notifications
+  getNotificationActionsAsync(): Promise<SDBNotificationAction[]>;
+  getNotificationActionByIdAsync(notificationActionId: number): Promise<SDBNotificationAction[]>;
+  getNotificationActionsByAutomationIdAsync(automationId: number): Promise<SDBNotificationAction[]>;
+  addNotificationActionAsync(
+    automationId: number,
+    subject: string,
+    content: string,
+  ): Promise<number>;
+  deleteNotificationActionAsync(notificationActionId: number): Promise<void>;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
 
@@ -332,6 +344,28 @@ class MockSprootDB implements ISprootDB {
 
   async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputActionView[]> {
     return [];
+  }
+
+  async getNotificationActionsAsync(): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async getNotificationActionByIdAsync(_id: number): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async getNotificationActionsByAutomationIdAsync(
+    _automationId: number,
+  ): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async addNotificationActionAsync(
+    _automationId: number,
+    _subject: string,
+    _content: string,
+  ): Promise<number> {
+    return 0;
+  }
+  async deleteNotificationActionAsync(_notificationActionId: number): Promise<void> {
+    return;
   }
 
   async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {

@@ -1,23 +1,11 @@
-import { AutomationOperator } from "@sproot/automation/IAutomation";
-import { IConditionProperties } from "./conditions/Conditions";
-
-export interface AutomationEventPayload {
-  automationId: number;
-  automationName: string;
-  operator: AutomationOperator;
-  conditions: {
-    allOf: { condition: IConditionProperties; result: boolean }[];
-    anyOf: { condition: IConditionProperties; result: boolean }[];
-    oneOf: { condition: IConditionProperties; result: boolean }[];
-  };
-}
+import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
 
 export class AutomationEvent {
-  triggeredAutomations: Map<number, AutomationEventPayload>;
+  triggeredAutomations: Map<number, IAutomationEventPayload>;
   timestamp: Date;
 
   constructor(
-    triggeredAutomations: Map<number, AutomationEventPayload>,
+    triggeredAutomations: Map<number, IAutomationEventPayload>,
     timestamp: Date = new Date(),
   ) {
     this.triggeredAutomations = triggeredAutomations;

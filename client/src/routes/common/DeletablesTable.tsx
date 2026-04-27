@@ -1,6 +1,6 @@
-import { Table, ActionIcon } from "@mantine/core";
-import { IconTrash } from "@tabler/icons-react";
+import { Table } from "@mantine/core";
 import { ReactNode } from "react";
+import ConfirmDeleteButton from "../../components/ConfirmDeleteButton";
 
 interface DeletablesTableProps {
   deletables: {
@@ -34,14 +34,10 @@ export default function DeletablesTable({
             </Table.Td>
             {!readOnly && (
               <Table.Td align="center" w={"40px"}>
-                <ActionIcon
-                  color="grey"
-                  onClick={async () => {
-                    await deletable.deleteFn(deletable.id);
-                  }}
-                >
-                  <IconTrash />
-                </ActionIcon>
+                <ConfirmDeleteButton
+                  kind="icon"
+                  onConfirm={() => deletable.deleteFn(deletable.id)}
+                />
               </Table.Td>
             )}
           </Table.Tr>

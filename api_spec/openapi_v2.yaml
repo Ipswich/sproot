@@ -3865,6 +3865,459 @@ paths:
                                 - "Failed to delete output action from database."
                                 - "Database connection failed."
 
+  /api/v2/notification-actions:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Notification Actions"
+      summary: Get notification actions.
+      parameters:
+        - in: query
+          name: automationId
+          required: false
+          description: "Automation Id"
+          schema:
+            type: string
+          example: "1"
+      description: >
+        Returns a list of notification actions. This includes basic information about each action,
+        such as the Id, the automation Id, subject, and content.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            items:
+                              $ref: "#/components/schemas/NotificationAction"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/notification-actions"
+                          details:
+                            example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/notification-actions"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get notification actions from database."
+                                - "Database connection failed."
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Notification Actions"
+      summary: Create a new notification action.
+      description: >
+        Creates a new notification action. This will send a notification when the linked automation triggers.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationAction"
+      responses:
+        201:
+          description: "Created"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 201
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/NotificationAction"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/notification-actions"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+                              - "Subject is required."
+                              - "Content is required."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/notification-actions"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/notification-actions"
+                          details:
+                            items:
+                              example: "Automation with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/notification-actions"
+                          details:
+                            items:
+                              example:
+                                - "Failed to create notification action."
+                                - "Database connection failed."
+
+  /api/v2/notification-actions/{notificationActionId}:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Notification Actions"
+      summary: Get a notification action by Id.
+      description: >
+        Returns the notification action with the given Id. This includes the Id, the automation Id, subject, and content.
+      parameters:
+        - in: path
+          name: notificationActionId
+          required: true
+          description: "Notification Action Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/NotificationAction"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/notification-actions/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/notification-actions/-1"
+                          details:
+                            items:
+                              example: "Notification action with Id -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/notification-actions/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get notification action from database."
+                                - "Database connection failed."
+
+    delete:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Notification Actions"
+      summary: Delete a notification action by Id.
+      description: >
+        Deletes a notification action with the given Id. This operation is permanent and cannot be undone.
+      parameters:
+        - in: path
+          name: notificationActionId
+          required: true
+          description: "Notification Action Id"
+          schema:
+            type: string
+          example: "1"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            example: "Notification action deleted successfully."
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/notification-actions/1"
+                          details:
+                            example:
+                              - "Invalid or missing notification action Id."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/notification-actions/1"
+                          details:
+                            example: "Invalid or Missing JWT."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 404
+                      error:
+                        properties:
+                          name:
+                            example: "Not Found"
+                          url:
+                            example: "/api/v2/notification-actions/-1"
+                          details:
+                            items:
+                              example: "Notification action with ID -1 not found."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/notification-actions/1"
+                          details:
+                            items:
+                              example:
+                                - "Failed to delete notification action from database."
+                                - "Database connection failed."
+
+  /api/v2/notification-actions/active:
+    get:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Notification Actions"
+      summary: Get active notification actions.
+      description: >
+        Returns a list of notification actions that are currently active, meaning their associated
+        automations have been triggered. This endpoint returns the notification details along with
+        the automation event payload and the timestamp of the last run.
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            $ref: "#/components/schemas/ActiveNotifications"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/notification-actions/active"
+                          details:
+                            example: "Invalid or Missing JWT."
+        503:
+          description: "Service unavailable"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 503
+                      error:
+                        properties:
+                          name:
+                            example: "Service Unavailable"
+                          url:
+                            example: "/api/v2/notification-actions/active"
+                          details:
+                            items:
+                              example:
+                                - "Failed to get active notification actions."
+                                - "Database connection failed."
+
   /api/v2/sensors:
     get:
       security:
@@ -3874,7 +4327,7 @@ paths:
         - "Sensors"
       summary: Get all sensors.
       description: >
-        Returns a list of all sensors. This includes basic information about each sensor, such as 
+        Returns a list of all sensors. This includes basic information about each sensor, such as
         name, model, and address. Also contains the last reading and time of the last reading.
       responses:
         200:
@@ -7852,6 +8305,103 @@ components:
         value:
           type: number
           example: 50
+
+    NotificationAction:
+      description: >
+        An action object that is stored in the database. Contains the information needed to
+        send a notification when an automation triggers.
+      type: object
+      required:
+        - "automationId"
+        - "subject"
+        - "content"
+      properties:
+        id:
+          readOnly: true
+          type: number
+          example: 1
+        automationId:
+          type: number
+          example: 1
+        subject:
+          type: string
+          example: "Test Notification"
+        content:
+          type: string
+          example: "This is a test notification content."
+
+    ActiveNotifications:
+      description: >
+        Contains the active notification actions for triggered automations.
+      type: object
+      required:
+        - "lastRunAt"
+        - "notifications"
+      properties:
+        lastRunAt:
+          description: "Timestamp in milliseconds of when the automations were last evaluated."
+          type: number
+          example: 1713523200000
+        notifications:
+          description: "List of active notification actions."
+          type: array
+          items:
+            $ref: "#/components/schemas/ActiveNotification"
+
+    ActiveNotification:
+      description: >
+        A notification action that is currently active due to its associated automation being triggered.
+      type: object
+      required:
+        - "notificationId"
+        - "subject"
+        - "content"
+        - "payload"
+      properties:
+        notificationId:
+          description: "The Id of the notification action."
+          type: number
+          example: 1
+        subject:
+          description: "The notification subject."
+          type: string
+          example: "Temperature Alert"
+        content:
+          description: "The notification content."
+          type: string
+          example: "Temperature has exceeded threshold."
+        payload:
+          description: "The automation event payload containing triggered automation details."
+          $ref: "#/components/schemas/AutomationEventPayload"
+
+    AutomationEventPayload:
+      description: >
+        Payload containing information about a triggered automation.
+      type: object
+      required:
+        - "automationId"
+        - "automationName"
+        - "operator"
+        - "conditions"
+      properties:
+        automationId:
+          description: "The Id of the automation."
+          type: number
+          example: 1
+        automationName:
+          description: "The name of the automation."
+          type: string
+          example: "Temperature Threshold"
+        operator:
+          description: "The logical operator for conditions (and/or)."
+          type: string
+          enum:
+            - "and"
+            - "or"
+          example: "or"
+        conditions:
+          description: "The condition results for the automation."
+          $ref: "#/components/schemas/AutomationConditions"
 
     AutomationConditions:
       description: >
