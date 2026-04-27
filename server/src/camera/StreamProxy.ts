@@ -51,7 +51,7 @@ export class StreamProxy {
    */
   async startAsync(): Promise<boolean> {
     this.#logger.info("StreamProxy: starting");
-    this.#logger.info(`StreamProxy: frame buffer created, address: ${this.#frameBuffer}`);
+    this.#logger.info(`StreamProxy: frame buffer created`);
 
     try {
       // Connect to upstream camera server
