@@ -4,29 +4,77 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment } from "react/jsx-runtime";
-import { Image } from "@mantine/core";
 import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ImageOrVideoDisplay() {
   const [showStream, setShowStream] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const latestImageObjectUrlRef = useRef<string | null>(null);
 
   const imageQuery = useQuery({
     queryKey: ["latest-image"],
     queryFn: () => getLatestImageAsync(),
-    refetchInterval: 60000,
+    refetchInterval: showStream ? false : 60000,
   });
 
   const streamQuery = useQuery({
     queryKey: ["livestream"],
     queryFn: () => getLivestreamAsync(),
+    enabled: showStream,
   });
+
+  useEffect(() => {
+    if (
+      typeof imageQuery.data !== "string" ||
+      !imageQuery.data.startsWith("blob:")
+    ) {
+      return;
+    }
+
+    const previousObjectUrl = latestImageObjectUrlRef.current;
+    latestImageObjectUrlRef.current = imageQuery.data;
+
+    if (previousObjectUrl && previousObjectUrl !== imageQuery.data) {
+      URL.revokeObjectURL(previousObjectUrl);
+    }
+  }, [imageQuery.data]);
+
+  useEffect(() => {
+    return () => {
+      imgRef.current?.removeAttribute("src");
+
+      if (latestImageObjectUrlRef.current) {
+        URL.revokeObjectURL(latestImageObjectUrlRef.current);
+      }
+    };
+  }, []);
+
+  const stopStream = async () => {
+    imgRef.current?.removeAttribute("src");
+    setShowStream(false);
+    await imageQuery.refetch();
+  };
+
+  const displaySource =
+    showStream && typeof streamQuery.data === "string"
+      ? streamQuery.data
+      : typeof imageQuery.data === "string"
+        ? imageQuery.data
+        : undefined;
+
   return (
     <Fragment>
       <div style={{ position: "relative" }}>
-        <Image
-          radius="sm"
-          src={showStream ? streamQuery.data : imageQuery.data}
+        <img
+          ref={imgRef}
+          src={displaySource}
+          alt="Camera stream"
+          style={{
+            display: "block",
+            width: "100%",
+            borderRadius: "var(--mantine-radius-sm)",
+          }}
         />
         <div
           style={{
@@ -39,9 +87,11 @@ export default function ImageOrVideoDisplay() {
           }}
           onClick={async () => {
             if (showStream) {
-              await imageQuery.refetch();
+              await stopStream();
+              return;
             }
-            setShowStream(!showStream);
+
+            setShowStream(true);
           }}
         >
           {showStream ? (
