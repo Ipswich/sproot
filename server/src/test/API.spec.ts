@@ -1,9 +1,12 @@
 import { assert } from "chai";
+import { get as httpGet } from "http";
+import sinon from "sinon";
 import request from "supertest";
 import { validateMiddlewareValues } from "./utils";
 import { app, server } from "./setup";
 import fs from "fs";
 import { CameraManager } from "../camera/CameraManager";
+import { FrameBuffer } from "../camera/FrameBuffer";
 
 describe("API Tests", async function () {
   this.timeout(2000);
@@ -1173,43 +1176,104 @@ describe("API Tests", async function () {
     describe("Stream", () => {
       describe("GET", () => {
         it("should return 200 and a stream", async () => {
-          const req = request(server)
-            .get("/api/v2/camera/stream")
-            .buffer(false)
-            .expect(200)
-            .end((err, res) => {
-              if (err) {
-                const msg = err.message || "";
-                if (msg.includes("MultipartParser.end(): stream ended unexpectedly")) {
+          const cameraManager = app.get("cameraManager") as CameraManager;
+          const frameBuffer = new FrameBuffer({ logger: app.get("logger") });
+          const getFrameBufferStub = sinon
+            .stub(cameraManager, "getFrameBuffer")
+            .returns(frameBuffer);
+
+          try {
+            await new Promise<void>((resolve, reject) => {
+              let settled = false;
+              const req = httpGet("http://127.0.0.1:3000/api/v2/camera/stream", (res) => {
+                try {
+                  assert.equal(res.statusCode, 200);
+                  assert.equal(
+                    res.headers["content-type"],
+                    "multipart/x-mixed-replace; boundary=FRAME",
+                  );
+                } catch (error) {
+                  clearTimeout(timeout);
+                  settled = true;
+                  req.destroy();
+                  reject(error);
                   return;
                 }
-                assert.fail("Stream request failed: " + err.message);
-              }
-              validateMiddlewareValues(res);
 
-              // Verify headers
-              assert.equal(
-                res.headers["content-type"],
-                "multipart/x-mixed-replace; boundary=FRAME",
-              );
-              // Listen for first data chunk to confirm streaming works
-              res.on("data", () => {
-                req.abort();
+                res.once("data", () => {
+                  if (settled) {
+                    return;
+                  }
+                  settled = true;
+                  clearTimeout(timeout);
+                  req.destroy();
+                  resolve();
+                });
+                res.once("error", (streamError: Error) => {
+                  if (settled) {
+                    return;
+                  }
+                  settled = true;
+                  clearTimeout(timeout);
+                  clearInterval(waitForSubscriberInterval);
+                  req.destroy();
+                  reject(streamError);
+                });
               });
-
-              setTimeout(() => {
-                req.abort();
-                assert.fail("Stream did not send data within timeout period");
+              const timeout = setTimeout(() => {
+                if (settled) {
+                  return;
+                }
+                settled = true;
+                clearInterval(waitForSubscriberInterval);
+                req.destroy();
+                reject(new Error("Stream did not send data within timeout period"));
               }, 300);
+              const waitForSubscriberInterval = setInterval(() => {
+                if (settled || frameBuffer.getSubscriberCount() === 0) {
+                  return;
+                }
+
+                clearInterval(waitForSubscriberInterval);
+                frameBuffer.getStream().write(Buffer.from("test-stream-chunk"));
+              }, 5);
+
+              req.on("error", (err) => {
+                if (
+                  settled &&
+                  (err.message.includes("aborted") || err.message.includes("socket hang up"))
+                ) {
+                  return;
+                }
+                if (!settled) {
+                  settled = true;
+                  clearTimeout(timeout);
+                  clearInterval(waitForSubscriberInterval);
+                  reject(err);
+                }
+              });
             });
+          } finally {
+            getFrameBufferStub.restore();
+          }
         });
 
+        // This test doesn't _really_ test the reconnect endpoint, but it at least ensures that the endpoint is hit and returns a 200
         it("should return a 200 after reconnecting to the livestream server", async () => {
-          // First make the reconnect request
-          const response = await request(server).post("/api/v2/camera/reconnect").expect(200);
+          const cameraManager = app.get("cameraManager") as CameraManager;
+          const reconnectStub = sinon
+            .stub(cameraManager, "reconnectLivestreamAsync")
+            .resolves(true);
 
-          validateMiddlewareValues(response);
-          assert.equal(response.body.content.data, "Livestream successfully reconnected");
+          try {
+            const response = await request(server).post("/api/v2/camera/reconnect").expect(200);
+
+            validateMiddlewareValues(response);
+            assert.isTrue(reconnectStub.calledOnce);
+            assert.equal(response.body.content.data, "Livestream successfully reconnected");
+          } finally {
+            reconnectStub.restore();
+          }
         });
       });
     });
