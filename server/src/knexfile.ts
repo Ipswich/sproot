@@ -63,10 +63,25 @@ function getConfigForSuffix(
   };
 }
 
+export function getKnexConfigForEnvironment(
+  environmentName: string | undefined,
+): Knex.Config | undefined {
+  switch (environmentName?.toLowerCase()) {
+    case "development":
+      return getConfigForSuffix("-development", ".js");
+    case "test":
+      return getConfigForSuffix("-test", ".ts");
+    case "production":
+      return getConfigForSuffix("", ".js");
+    default:
+      return undefined;
+  }
+}
+
 const config: { [key: string]: Knex.Config } = {
-  development: getConfigForSuffix("-development", ".js"),
-  test: getConfigForSuffix("-test", ".ts"),
-  production: getConfigForSuffix("", ".js"),
+  development: getKnexConfigForEnvironment("development")!,
+  test: getKnexConfigForEnvironment("test")!,
+  production: getKnexConfigForEnvironment("production")!,
 };
 
 function castTinyIntsToBooleans(field: TypeCastField, next: () => any) {

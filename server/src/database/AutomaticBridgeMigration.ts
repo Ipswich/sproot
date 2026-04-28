@@ -86,12 +86,12 @@ export function shouldAttemptAutomaticBridgeMigration(): boolean {
 }
 
 export function applySourceBridgeEnvironmentFromRuntime(): void {
-  process.env["SOURCE_DATABASE_CLIENT"] ??= process.env["DATABASE_CLIENT"];
-  process.env["SOURCE_DATABASE_HOST"] ??= process.env["DATABASE_HOST"];
-  process.env["SOURCE_DATABASE_PORT"] ??= process.env["DATABASE_PORT"];
-  process.env["SOURCE_DATABASE_USER"] ??= process.env["DATABASE_USER"];
-  process.env["SOURCE_DATABASE_PASSWORD"] ??= process.env["DATABASE_PASSWORD"];
-  process.env["SOURCE_DATABASE_NAME"] ??= process.env["DATABASE_NAME"];
+  copyRuntimeEnvironmentValue("SOURCE_DATABASE_CLIENT", "DATABASE_CLIENT");
+  copyRuntimeEnvironmentValue("SOURCE_DATABASE_HOST", "DATABASE_HOST");
+  copyRuntimeEnvironmentValue("SOURCE_DATABASE_PORT", "DATABASE_PORT");
+  copyRuntimeEnvironmentValue("SOURCE_DATABASE_USER", "DATABASE_USER");
+  copyRuntimeEnvironmentValue("SOURCE_DATABASE_PASSWORD", "DATABASE_PASSWORD");
+  copyRuntimeEnvironmentValue("SOURCE_DATABASE_NAME", "DATABASE_NAME");
 }
 
 export function switchRuntimeEnvironmentToTarget(): void {
@@ -175,5 +175,16 @@ async function withTemporaryRuntimeEnvironment<T>(
 
       process.env[key] = value;
     }
+  }
+}
+
+function copyRuntimeEnvironmentValue(targetName: string, sourceName: string): void {
+  if (process.env[targetName] != null) {
+    return;
+  }
+
+  const value = process.env[sourceName];
+  if (value != null) {
+    process.env[targetName] = value;
   }
 }

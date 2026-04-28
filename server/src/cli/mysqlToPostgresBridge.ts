@@ -437,14 +437,32 @@ async function createMigrationRunAsync(
       target_database: targetDatabase,
       status: "running",
     })
-    .returning<{ id: number }[]>("id");
+    .returning<Array<{ id: number | string | bigint }>>("id");
 
-  const runId = result[0]?.id;
-  if (typeof runId !== "number") {
+  const runId = normalizeNumericIdentifier(result[0]?.id);
+  if (runId == null) {
     throw new Error("Failed to create a database migration run record.");
   }
 
   return runId;
+}
+
+function normalizeNumericIdentifier(value: number | string | bigint | undefined): number | null {
+  if (typeof value === "number" && Number.isSafeInteger(value)) {
+    return value;
+  }
+
+  if (typeof value === "bigint") {
+    const normalizedValue = Number(value);
+    return Number.isSafeInteger(normalizedValue) ? normalizedValue : null;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const normalizedValue = Number.parseInt(value, 10);
+    return Number.isSafeInteger(normalizedValue) ? normalizedValue : null;
+  }
+
+  return null;
 }
 
 async function truncateTargetTablesAsync(connection: Knex): Promise<void> {

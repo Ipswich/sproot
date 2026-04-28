@@ -1,4 +1,4 @@
-import knexConfig from "../knexfile";
+import { getKnexConfigForEnvironment } from "../knexfile";
 import knex, { Knex } from "knex";
 import {
   getAdministrativeDatabaseName,
@@ -17,7 +17,7 @@ export type KnexConnectionOptions = {
 export async function getKnexConnectionAsync(
   options: KnexConnectionOptions = {},
 ): Promise<Knex<any, unknown>> {
-  const config = knexConfig[process.env["NODE_ENV"]?.toLowerCase()!];
+  const config = getKnexConfigForEnvironment(process.env["NODE_ENV"]);
   if (!config) {
     throw new Error("Invalid NODE_ENV, could not find knex configuration.");
   }

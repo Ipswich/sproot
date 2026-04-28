@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { Knex } from "knex";
 import sinon from "sinon";
+import { getKnexConfigForEnvironment } from "../../knexfile";
 import {
   applySourceBridgeEnvironmentFromRuntime,
   getStartupKnexConnectionAsync,
@@ -48,6 +49,13 @@ describe("AutomaticBridgeMigration", () => {
   });
 
   it("does not attempt automatic migration without target configuration", () => {
+    delete process.env["TARGET_DATABASE_CLIENT"];
+    delete process.env["TARGET_DATABASE_HOST"];
+    delete process.env["TARGET_DATABASE_PORT"];
+    delete process.env["TARGET_DATABASE_USER"];
+    delete process.env["TARGET_DATABASE_PASSWORD"];
+    delete process.env["TARGET_DATABASE_NAME"];
+
     expect(shouldAttemptAutomaticBridgeMigration()).to.equal(false);
   });
 
@@ -59,6 +67,14 @@ describe("AutomaticBridgeMigration", () => {
     expect(process.env["SOURCE_DATABASE_PORT"]).to.equal("3306");
     expect(process.env["SOURCE_DATABASE_USER"]).to.equal("root");
     expect(process.env["SOURCE_DATABASE_PASSWORD"]).to.equal("root");
+  });
+
+  it("does not stringify an absent runtime database name into SOURCE_DATABASE_NAME", () => {
+    delete process.env["DATABASE_NAME"];
+
+    applySourceBridgeEnvironmentFromRuntime();
+
+    expect(process.env["SOURCE_DATABASE_NAME"]).to.equal(undefined);
   });
 
   it("switches the runtime environment to PostgreSQL after cutover", () => {
@@ -174,6 +190,29 @@ describe("AutomaticBridgeMigration", () => {
     expect(process.env["DATABASE_CLIENT"]).to.equal("mysql2");
     expect(logger.warn.calledOnce).to.equal(true);
     expect(runBridgeCutoverAsync.called).to.equal(false);
+  });
+
+  it("resolves knex configuration from the current runtime environment", () => {
+    process.env["NODE_ENV"] = "development";
+    process.env["DATABASE_CLIENT"] = "mysql2";
+    process.env["DATABASE_HOST"] = "127.0.0.1";
+    process.env["DATABASE_PORT"] = "3306";
+    process.env["DATABASE_USER"] = "root";
+    process.env["DATABASE_PASSWORD"] = "root";
+
+    const mysqlConfig = getKnexConfigForEnvironment(process.env["NODE_ENV"]);
+
+    process.env["DATABASE_CLIENT"] = "pg";
+    process.env["DATABASE_HOST"] = "127.0.0.1";
+    process.env["DATABASE_PORT"] = "5432";
+    process.env["DATABASE_USER"] = "postgres";
+    process.env["DATABASE_PASSWORD"] = "postgres";
+
+    const pgConfig = getKnexConfigForEnvironment(process.env["NODE_ENV"]);
+
+    expect(mysqlConfig?.client).to.equal("mysql2");
+    expect(pgConfig?.client).to.equal("pg");
+    expect((pgConfig?.connection as Knex.PgConnectionConfig).port).to.equal(5432);
   });
 });
 

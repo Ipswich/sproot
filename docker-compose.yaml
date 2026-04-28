@@ -156,7 +156,7 @@ services:
     network_mode: "host"
 
   postgres:
-    image: postgres:16
+    image: postgres:18.3-trixie
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -167,14 +167,13 @@ services:
     expose:
       - "5432"
 
-  phpmyadmin:
-    image: phpmyadmin:5.2.1-apache
+  pgadmin:
+    image: dpage/pgadmin4:9.14.0
     restart: unless-stopped
     network_mode: "host"
     expose:
       - "3001"
     environment:
-      APACHE_PORT: 3001
-      PMA_HOST: 127.0.0.1
-      UPLOAD_LIMIT: 500M
+      PGADMIN_LISTEN_PORT: 3001
+      PGADMIN_DEFAULT_EMAIL: ""
       
