@@ -1,25 +1,13 @@
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { Knex } from "knex";
+import { isPostgresClient, normalizeDatabaseClient } from "../DatabaseClient";
 import { toDbDate } from "../../utils/dateUtils";
 
 export async function seed(knex: Knex): Promise<void> {
   console.log("Truncating tables...");
 
-  let tables = await knex
-    .select("table_name")
-    .from("information_schema.tables")
-    .where("table_schema", "sproot-test");
-
-  tables = tables
-    .map((table) => table.table_name as string)
-    // Filter out knex migration tables and views
-    .filter((table) => !table.includes("knex") && !table.includes("view"));
-
-  await knex.raw("SET FOREIGN_KEY_CHECKS = 0;");
-  for (const table of tables) {
-    await knex(table).truncate();
-  }
-  await knex.raw("SET FOREIGN_KEY_CHECKS = 1;");
+  const tables = await getSeedTableNamesAsync(knex);
+  await truncateSeedTablesAsync(knex, tables);
 
   console.log("Seeding test database...");
 
@@ -46,10 +34,10 @@ export async function seed(knex: Knex): Promise<void> {
       address: "0x40",
       name: "Relay #1",
       color: "#82c91e",
-      pin: 0,
+      pin: "0",
       deviceZoneId: 1,
-      isPwm: 0,
-      isInvertedPwm: 0,
+      isPwm: false,
+      isInvertedPwm: false,
       automationTimeout: 1,
     },
     {
@@ -58,9 +46,9 @@ export async function seed(knex: Knex): Promise<void> {
       address: "0x40",
       name: "Pwm #1",
       color: "#228be6",
-      pin: 4,
-      isPwm: 1,
-      isInvertedPwm: 0,
+      pin: "4",
+      isPwm: true,
+      isInvertedPwm: false,
       automationTimeout: 1,
     },
   ]);
@@ -241,4 +229,60 @@ export async function seed(knex: Knex): Promise<void> {
   ]);
 
   console.log("Seeding complete.");
+}
+
+async function getSeedTableNamesAsync(knex: Knex): Promise<string[]> {
+  const client = normalizeDatabaseClient(knex.client.config.client as string | undefined);
+  const excludedTableNames = new Set([
+    "knex_migrations",
+    "knex_migrations_lock",
+    "database_migration_runs",
+    "database_migration_state",
+  ]);
+
+  if (isPostgresClient(client)) {
+    const tables = await knex
+      .select("table_name")
+      .from("information_schema.tables")
+      .where({ table_schema: "public", table_type: "BASE TABLE" });
+
+    return tables
+      .map((table) => table.table_name as string)
+      .filter((tableName) => !excludedTableNames.has(tableName));
+  }
+
+  const tables = await knex.select("table_name").from("information_schema.tables").where({
+    table_schema: knex.client.database(),
+    table_type: "BASE TABLE",
+  });
+
+  return tables
+    .map((table) => table.table_name as string)
+    .filter((tableName) => !excludedTableNames.has(tableName));
+}
+
+async function truncateSeedTablesAsync(knex: Knex, tables: string[]): Promise<void> {
+  if (tables.length === 0) {
+    return;
+  }
+
+  const client = normalizeDatabaseClient(knex.client.config.client as string | undefined);
+  if (isPostgresClient(client)) {
+    const tableList = tables.map((tableName) => quoteIdentifier(tableName)).join(", ");
+    await knex.raw(`TRUNCATE TABLE ${tableList} RESTART IDENTITY CASCADE;`);
+    return;
+  }
+
+  await knex.raw("SET FOREIGN_KEY_CHECKS = 0;");
+  try {
+    for (const table of tables) {
+      await knex(table).truncate();
+    }
+  } finally {
+    await knex.raw("SET FOREIGN_KEY_CHECKS = 1;");
+  }
+}
+
+function quoteIdentifier(identifier: string): string {
+  return `"${identifier.replaceAll('"', '""')}"`;
 }

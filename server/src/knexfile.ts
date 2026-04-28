@@ -1,18 +1,37 @@
 import type { Knex } from "knex";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 import { TypeCastField } from "mysql2";
+import {
+  getDatabaseClientFromEnvironment,
+  getMigrationDirectoryForClient,
+  getDatabasePortFromEnvironment,
+  isMySqlClient,
+} from "./database/DatabaseClient";
 
-function getConnectionConfiguration(databaseSuffix: string) {
-  return {
+function getConnectionConfiguration(
+  databaseSuffix: string,
+): Knex.MySqlConnectionConfig | Knex.PgConnectionConfig {
+  const client = getDatabaseClientFromEnvironment();
+  const databaseName =
+    process.env["DATABASE_NAME"] ?? `${Constants.DATABASE_NAME}${databaseSuffix}`;
+  const baseConnection = {
     host: process.env["DATABASE_HOST"]!,
     user: process.env["DATABASE_USER"]!,
     password: process.env["DATABASE_PASSWORD"]!,
-    database: `${Constants.DATABASE_NAME}${databaseSuffix}`,
-    port: parseInt(process.env["DATABASE_PORT"]!),
-    dateStrings: true,
-    typeCast: castTinyIntsToBooleans,
-    decimalNumbers: true,
+    database: databaseName,
+    port: getDatabasePortFromEnvironment(client),
   };
+
+  if (isMySqlClient(client)) {
+    return {
+      ...baseConnection,
+      dateStrings: true,
+      typeCast: castTinyIntsToBooleans,
+      decimalNumbers: true,
+    };
+  }
+
+  return baseConnection;
 }
 
 const poolConfig = {
@@ -23,51 +42,31 @@ const poolConfig = {
   reapIntervalMillis: 30000,
 };
 
+function getConfigForSuffix(
+  databaseSuffix: string,
+  migrationExtension: ".js" | ".ts",
+): Knex.Config {
+  const client = getDatabaseClientFromEnvironment();
+  return {
+    client,
+    pool: poolConfig,
+    connection: getConnectionConfiguration(databaseSuffix),
+    migrations: {
+      loadExtensions: [migrationExtension],
+      directory: getMigrationDirectoryForClient(client, migrationExtension),
+      tableName: "knex_migrations",
+    },
+    seeds: {
+      loadExtensions: [migrationExtension],
+      directory: migrationExtension === ".ts" ? "src/database/seeds" : "dist/database/seeds",
+    },
+  };
+}
+
 const config: { [key: string]: Knex.Config } = {
-  development: {
-    client: "mysql2",
-    pool: poolConfig,
-    connection: getConnectionConfiguration("-development"),
-    migrations: {
-      loadExtensions: [".js"],
-      directory: "dist/database/migrations",
-      tableName: "knex_migrations",
-    },
-    seeds: {
-      loadExtensions: [".js"],
-      directory: "dist/database/seeds",
-    },
-  },
-
-  test: {
-    client: "mysql2",
-    pool: poolConfig,
-    connection: getConnectionConfiguration("-test"),
-    migrations: {
-      loadExtensions: [".ts"],
-      directory: "src/database/migrations",
-      tableName: "knex_migrations",
-    },
-    seeds: {
-      loadExtensions: [".ts"],
-      directory: "src/database/seeds",
-    },
-  },
-
-  production: {
-    client: "mysql2",
-    pool: poolConfig,
-    connection: getConnectionConfiguration(""),
-    migrations: {
-      loadExtensions: [".js"],
-      directory: "dist/database/migrations",
-      tableName: "knex_migrations",
-    },
-    seeds: {
-      loadExtensions: [".js"],
-      directory: "dist/database/seeds",
-    },
-  },
+  development: getConfigForSuffix("-development", ".js"),
+  test: getConfigForSuffix("-test", ".ts"),
+  production: getConfigForSuffix("", ".js"),
 };
 
 function castTinyIntsToBooleans(field: TypeCastField, next: () => any) {

@@ -2,12 +2,14 @@ services:
   server:
     depends_on:
       - db
+      - postgres
     build:
        context: ./
        dockerfile: ./server/Dockerfile.development
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
+      DATABASE_CLIENT: mysql2
       LOG_DEBUG: true
       DEFAULT_USER: dev-test
       DEFAULT_USER_EMAIL: dev-test@example.com
@@ -19,6 +21,12 @@ services:
       DATABASE_PORT: 3306
       DATABASE_USER: root
       DATABASE_PASSWORD: root
+      TARGET_DATABASE_CLIENT: pg
+      TARGET_DATABASE_HOST: 127.0.0.1
+      TARGET_DATABASE_PORT: 5432
+      TARGET_DATABASE_USER: postgres
+      TARGET_DATABASE_PASSWORD: root
+      AUTO_DATABASE_MIGRATION: true
       INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
       BACKUP_RETENTION_DAYS: 30
     volumes:
@@ -61,6 +69,63 @@ services:
     network_mode: "host"
     expose:
       - "3306"
+
+  migrator:
+    profiles:
+      - bridge
+    depends_on:
+      - db
+      - postgres
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile.development
+    environment:
+      NODE_ENV: development
+      BRIDGE_BACKUP_SOURCE_BEFORE_IMPORT: "true"
+      BRIDGE_BACKUP_TARGET_BEFORE_IMPORT: "true"
+      BRIDGE_BACKUP_DIRECTORY: ./backups/bridge
+      SOURCE_DATABASE_CLIENT: mysql2
+      SOURCE_DATABASE_HOST: 127.0.0.1
+      SOURCE_DATABASE_PORT: 3306
+      SOURCE_DATABASE_USER: root
+      SOURCE_DATABASE_PASSWORD: root
+      TARGET_DATABASE_CLIENT: pg
+      TARGET_DATABASE_HOST: 127.0.0.1
+      TARGET_DATABASE_PORT: 5432
+      TARGET_DATABASE_USER: postgres
+      TARGET_DATABASE_PASSWORD: root
+    network_mode: "host"
+    command: ["npm", "run", "migrate:bridge:preflight"]
+
+  cutover:
+    profiles:
+      - bridge
+    depends_on:
+      - postgres
+    build:
+      context: ./
+      dockerfile: ./server/Dockerfile.development
+    environment:
+      NODE_ENV: development
+      TARGET_DATABASE_CLIENT: pg
+      TARGET_DATABASE_HOST: 127.0.0.1
+      TARGET_DATABASE_PORT: 5432
+      TARGET_DATABASE_USER: postgres
+      TARGET_DATABASE_PASSWORD: root
+    network_mode: "host"
+    command: ["npm", "run", "migrate:bridge:cutover"]
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - ./docker_volumes/postgres/data:/var/lib/postgresql/data
+    network_mode: "host"
+    expose:
+      - "5432"
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache

@@ -16,6 +16,7 @@ env:
   AUTHENTICATION_ENABLED: false
   JWT_SECRET: Default
   JWT_EXPIRATION: 259200000
+  DATABASE_CLIENT: mysql2
   DATABASE_HOST: 127.0.0.1
   DATABASE_PORT: 3306
   DATABASE_USER: root
@@ -37,9 +38,9 @@ jobs:
         run: npm run prettier:check
 
   # Depends on prettier finishing successfully
-  test:
+  test-mysql:
     needs: prettier
-    name: Run Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
+    name: Run MySQL Tests (Node ${{ matrix.node-version }}) ${{ matrix.experimental && '(experimental)' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: ${{ matrix.experimental }}
@@ -71,3 +72,75 @@ jobs:
         run: npm test
       - name: Run API tests
         run: npm run test:api
+
+  test-postgres:
+    needs: prettier
+    name: Run PostgreSQL Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DATABASE_CLIENT: pg
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm test
+      - name: Run API tests
+        run: npm run test:api
+
+  test-bridge:
+    needs: prettier
+    name: Run Bridge Migration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      db:
+        image: mariadb:11.5.2-noble
+        env:
+          MARIADB_ROOT_PASSWORD: ${{ env.DATABASE_PASSWORD }}
+        ports:
+          - 3306:3306
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Run bridge migration tests
+        env:
+          BRIDGE_TEST_TARGET_USER: postgres
+          BRIDGE_TEST_TARGET_PASSWORD: postgres
+        run: npm run test:bridge --workspace=server
