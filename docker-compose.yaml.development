@@ -1,8 +1,10 @@
 services:
   server:
     depends_on:
-      - db
-      - postgres
+      db:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     build:
        context: ./
        dockerfile: ./server/Dockerfile.development
@@ -64,76 +66,59 @@ services:
     restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: root
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p$$MARIADB_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
     network_mode: "host"
     expose:
       - "3306"
 
-  migrator:
-    profiles:
-      - bridge
-    depends_on:
-      - db
-      - postgres
-    build:
-      context: ./
-      dockerfile: ./server/Dockerfile.development
-    environment:
-      NODE_ENV: development
-      BRIDGE_BACKUP_SOURCE_BEFORE_IMPORT: "true"
-      BRIDGE_BACKUP_TARGET_BEFORE_IMPORT: "true"
-      BRIDGE_BACKUP_DIRECTORY: ./backups/bridge
-      SOURCE_DATABASE_CLIENT: mysql2
-      SOURCE_DATABASE_HOST: 127.0.0.1
-      SOURCE_DATABASE_PORT: 3306
-      SOURCE_DATABASE_USER: root
-      SOURCE_DATABASE_PASSWORD: root
-      TARGET_DATABASE_CLIENT: pg
-      TARGET_DATABASE_HOST: 127.0.0.1
-      TARGET_DATABASE_PORT: 5432
-      TARGET_DATABASE_USER: postgres
-      TARGET_DATABASE_PASSWORD: root
-    network_mode: "host"
-    command: ["npm", "run", "migrate:bridge:preflight"]
-
-  cutover:
-    profiles:
-      - bridge
-    depends_on:
-      - postgres
-    build:
-      context: ./
-      dockerfile: ./server/Dockerfile.development
-    environment:
-      NODE_ENV: development
-      TARGET_DATABASE_CLIENT: pg
-      TARGET_DATABASE_HOST: 127.0.0.1
-      TARGET_DATABASE_PORT: 5432
-      TARGET_DATABASE_USER: postgres
-      TARGET_DATABASE_PASSWORD: root
-    network_mode: "host"
-    command: ["npm", "run", "migrate:bridge:cutover"]
-
   postgres:
-    image: postgres:16
+    image: postgres:18.3-trixie
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     volumes:
       - ./docker_volumes/postgres/data:/var/lib/postgresql/data
     network_mode: "host"
     expose:
       - "5432"
 
-  phpmyadmin:
-    image: phpmyadmin:5.2.1-apache
+  pgadmin:
+    image: dpage/pgadmin4:9.14.0
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     network_mode: "host"
     expose:
       - "3001"
     environment:
-      - APACHE_PORT=3001
-      - PMA_HOST=127.0.0.1
-      - UPLOAD_LIMIT=500M
+      PGADMIN_DISABLE_POSTFIX: true
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_LISTEN_PORT: 3001
+      PGADMIN_DEFAULT_EMAIL: root
+      PGADMIN_DEFAULT_PASSWORD: root
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_SERVER_NAME: "sproot-postgres"
+      PGADMIN_SERVER_GROUP: "Sproot"
+      PGADMIN_SERVER_HOST: "127.0.0.1"
+      PGADMIN_SERVER_PORT: "5432"
+      PGADMIN_SERVER_DB: "postgres"
+      PGADMIN_SERVER_USER: "postgres"
+      PGADMIN_SERVER_PASS: root
+    volumes:
+      - ./scripts/pgadmin-bootstrap.sh:/pgadmin-bootstrap.sh:ro
+    command: ["/bin/sh", "/pgadmin-bootstrap.sh"]

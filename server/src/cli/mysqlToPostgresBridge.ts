@@ -80,6 +80,9 @@ type BridgeBackupSummary = {
 };
 
 const INSERT_BATCH_SIZE = 500;
+const DATABASE_CONNECTIVITY_MAX_ATTEMPTS = 12;
+const TABLE_IMPORT_MAX_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
 
 const TABLE_COPY_CONFIGURATIONS: TableCopyConfiguration[] = [
   { tableName: "automations", strategy: "all", booleanColumns: ["enabled"], sequenceColumn: "id" },
@@ -250,7 +253,14 @@ export async function runBridgePreflightAsync(): Promise<void> {
   const targetConnection = knex(buildKnexConfiguration(targetConfiguration));
 
   try {
-    await verifySourceDatabaseConnectivityAsync(sourceConnection);
+    await waitForDatabaseConnectivityAsync(
+      sourceConnection,
+      `MySQL source ${sourceConfiguration.database}`,
+    );
+    await waitForDatabaseConnectivityAsync(
+      targetConnection,
+      `PostgreSQL target ${targetConfiguration.database}`,
+    );
     await ensureMigrationMetadataAsync(targetConnection);
     await targetConnection.migrate.latest();
     await acquireTargetLockAsync(targetConnection);
@@ -425,6 +435,38 @@ async function verifySourceDatabaseConnectivityAsync(connection: Knex): Promise<
   await connection.raw("SELECT 1");
 }
 
+async function waitForDatabaseConnectivityAsync(connection: Knex, label: string): Promise<void> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= DATABASE_CONNECTIVITY_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      await verifySourceDatabaseConnectivityAsync(connection);
+
+      if (attempt > 1) {
+        console.info(`${label} became available on attempt ${attempt}.`);
+      }
+
+      return;
+    } catch (error) {
+      lastError = error;
+      const errorDetails = formatDatabaseErrorDetails(error);
+
+      if (attempt === DATABASE_CONNECTIVITY_MAX_ATTEMPTS) {
+        break;
+      }
+
+      console.warn(
+        `${label} is not ready yet (attempt ${attempt}/${DATABASE_CONNECTIVITY_MAX_ATTEMPTS}). ${errorDetails}`,
+      );
+      await waitAsync(RETRY_DELAY_MS * attempt);
+    }
+  }
+
+  throw new Error(
+    `${label} did not become ready after ${DATABASE_CONNECTIVITY_MAX_ATTEMPTS} attempts. ${formatDatabaseErrorDetails(lastError)}`,
+  );
+}
+
 async function createMigrationRunAsync(
   connection: Knex,
   sourceDatabase: string,
@@ -480,12 +522,58 @@ async function importTablesAsync(
 
   for (const configuration of TABLE_COPY_CONFIGURATIONS) {
     console.info(`Importing ${configuration.tableName}...`);
-    const importedCount = await importTableAsync(sourceConnection, targetConnection, configuration);
+    const importedCount = await importTableWithRetryAsync(
+      sourceConnection,
+      targetConnection,
+      configuration,
+    );
     importedRowCounts[configuration.tableName] = importedCount;
     console.info(`Imported ${importedCount} rows into ${configuration.tableName}.`);
   }
 
   return importedRowCounts;
+}
+
+async function importTableWithRetryAsync(
+  sourceConnection: Knex,
+  targetConnection: Knex,
+  configuration: TableCopyConfiguration,
+): Promise<number> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= TABLE_IMPORT_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      if (attempt > 1) {
+        console.warn(`Retrying import for ${configuration.tableName} (attempt ${attempt}).`);
+      }
+
+      const importedCount = await importTableAsync(sourceConnection, targetConnection, configuration);
+
+      if (attempt > 1) {
+        console.info(`${configuration.tableName} imported successfully on retry attempt ${attempt}.`);
+      }
+
+      return importedCount;
+    } catch (error) {
+      lastError = error;
+      const errorDetails = formatDatabaseErrorDetails(error);
+
+      console.error(
+        `Import attempt ${attempt}/${TABLE_IMPORT_MAX_ATTEMPTS} failed for ${configuration.tableName}. ${errorDetails}`,
+      );
+
+      if (attempt === TABLE_IMPORT_MAX_ATTEMPTS) {
+        break;
+      }
+
+      await truncateTargetTableAsync(targetConnection, configuration.tableName);
+      await waitAsync(RETRY_DELAY_MS * attempt);
+    }
+  }
+
+  throw new Error(
+    `Bridge import failed for table ${configuration.tableName} after ${TABLE_IMPORT_MAX_ATTEMPTS} attempts. ${formatDatabaseErrorDetails(lastError)}`,
+  );
 }
 
 async function validateImportedDataAsync(
@@ -549,7 +637,7 @@ async function importTableAsync(
 
   const rows = await sourceConnection(configuration.tableName).select("*");
   const normalizedRows = normalizeRows(rows, configuration);
-  await insertRowsInBatchesAsync(targetConnection, configuration.tableName, normalizedRows);
+  await insertRowsInBatchesAsync(targetConnection, configuration, normalizedRows);
   return normalizedRows.length;
 }
 
@@ -578,7 +666,7 @@ async function importTableByIdAsync(
     }
 
     const normalizedRows = normalizeRows(rows, configuration);
-    await insertRowsInBatchesAsync(targetConnection, configuration.tableName, normalizedRows);
+    await insertRowsInBatchesAsync(targetConnection, configuration, normalizedRows);
     importedRowCount += normalizedRows.length;
     lastSeenId = normalizeComparableNumber(normalizedRows[normalizedRows.length - 1]?.[idColumn]);
   }
@@ -750,15 +838,100 @@ function normalizeRows(
 
 async function insertRowsInBatchesAsync(
   connection: Knex,
-  tableName: string,
+  configuration: TableCopyConfiguration,
   rows: Array<Record<string, unknown>>,
 ): Promise<void> {
   for (let startIndex = 0; startIndex < rows.length; startIndex += INSERT_BATCH_SIZE) {
     const batch = rows.slice(startIndex, startIndex + INSERT_BATCH_SIZE);
     if (batch.length > 0) {
-      await connection(tableName).insert(batch);
+      try {
+        await connection(configuration.tableName).insert(batch);
+      } catch (error) {
+        throw new Error(
+          [
+            `Insert batch failed for ${configuration.tableName}.`,
+            describeBatchContext(configuration, batch, startIndex),
+            formatDatabaseErrorDetails(error),
+          ].join(" "),
+        );
+      }
     }
   }
+}
+
+async function truncateTargetTableAsync(connection: Knex, tableName: string): Promise<void> {
+  await connection.raw("TRUNCATE TABLE ?? RESTART IDENTITY CASCADE;", [tableName]);
+}
+
+function describeBatchContext(
+  configuration: TableCopyConfiguration,
+  batch: Array<Record<string, unknown>>,
+  startIndex: number,
+): string {
+  const batchStart = startIndex + 1;
+  const batchEnd = startIndex + batch.length;
+  const sequenceColumn = configuration.sequenceColumn;
+
+  if (!sequenceColumn) {
+    return `Batch rows ${batchStart}-${batchEnd}.`;
+  }
+
+  const firstValue = batch[0]?.[sequenceColumn];
+  const lastValue = batch[batch.length - 1]?.[sequenceColumn];
+  const firstId = normalizeNullableNumber(firstValue);
+  const lastId = normalizeNullableNumber(lastValue);
+
+  if (firstId == null || lastId == null) {
+    return `Batch rows ${batchStart}-${batchEnd}.`;
+  }
+
+  return `Batch rows ${batchStart}-${batchEnd} (${sequenceColumn} ${firstId}-${lastId}).`;
+}
+
+function formatDatabaseErrorDetails(error: unknown): string {
+  if (error instanceof Error) {
+    const details = extractDatabaseErrorDetails(error as Error & Record<string, unknown>);
+    return details.length > 0 ? `${error.message} [${details.join(", ")}]` : error.message;
+  }
+
+  return String(error);
+}
+
+function extractDatabaseErrorDetails(error: Error & Record<string, unknown>): string[] {
+  const detailKeys = [
+    "code",
+    "detail",
+    "schema",
+    "table",
+    "column",
+    "constraint",
+    "routine",
+    "severity",
+    "errno",
+    "sqlState",
+    "sqlMessage",
+  ] as const;
+
+  const detailValues = detailKeys
+    .map((key) => {
+      const value = error[key];
+      return value == null || value === "" ? null : `${key}=${String(value)}`;
+    })
+    .filter((value): value is string => value != null);
+
+  const cause = error["cause"];
+  if (cause instanceof Error) {
+    const causeMessage = formatDatabaseErrorDetails(cause);
+    if (causeMessage !== cause.message) {
+      detailValues.push(`cause=${causeMessage}`);
+    }
+  }
+
+  return detailValues;
+}
+
+async function waitAsync(milliseconds: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 async function reseedTargetSequencesAsync(connection: Knex): Promise<void> {

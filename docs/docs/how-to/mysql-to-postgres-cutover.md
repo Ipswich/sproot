@@ -63,9 +63,10 @@ npm run migrate:bridge:preflight
 Or with Docker Compose:
 
 ```bash
-docker compose --profile bridge up -d db postgres
-docker compose --profile bridge run --rm migrator
+docker compose up -d
 ```
+
+Once the databases are healthy, the server container performs the same bridge preflight during its normal startup path. Use the explicit npm command when you need to rehearse or debug outside that automatic startup flow.
 
 The preflight command:
 
@@ -76,7 +77,7 @@ The preflight command:
 - validates row counts and id ranges per imported table
 - writes status and summaries into `database_migration_runs` and `database_migration_state`
 
-If backup flags are enabled, backup metadata is recorded with the migration run summary. The Docker Compose bridge profile enables both source and target preflight backups by default.
+If backup flags are enabled, backup metadata is recorded with the migration run summary.
 
 For a repeatable local dry run from the repo root:
 
@@ -104,7 +105,7 @@ npm run migrate:bridge:cutover
 Or with Docker Compose:
 
 ```bash
-docker compose --profile bridge run --rm cutover
+docker compose exec server npm run migrate:bridge:cutover
 ```
 
 Cutover succeeds only when:
