@@ -22,6 +22,11 @@ describe("dateUtils", function () {
       assert.equal(iso, "2020-01-02T03:04:05Z");
     });
 
+    it("should convert a Date instance to an ISO string", function () {
+      const iso = dbToIso(new Date("2020-01-02T03:04:05Z"));
+      assert.equal(iso, "2020-01-02T03:04:05.000Z");
+    });
+
     it("should return null for null or undefined input", function () {
       assert.isNull(dbToIso(null));
       assert.isNull(dbToIso(undefined));

@@ -547,10 +547,16 @@ async function importTableWithRetryAsync(
         console.warn(`Retrying import for ${configuration.tableName} (attempt ${attempt}).`);
       }
 
-      const importedCount = await importTableAsync(sourceConnection, targetConnection, configuration);
+      const importedCount = await importTableAsync(
+        sourceConnection,
+        targetConnection,
+        configuration,
+      );
 
       if (attempt > 1) {
-        console.info(`${configuration.tableName} imported successfully on retry attempt ${attempt}.`);
+        console.info(
+          `${configuration.tableName} imported successfully on retry attempt ${attempt}.`,
+        );
       }
 
       return importedCount;

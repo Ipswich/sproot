@@ -146,7 +146,10 @@ async function getMigrationStateAsync(connection: Knex): Promise<MigrationStateR
     throw new Error("Expected database_migration_state row to exist.");
   }
 
-  return state;
+  return {
+    ...state,
+    active_run_id: normalizeNullableNumber(state.active_run_id),
+  };
 }
 
 async function getMigrationRunAsync(connection: Knex, runId: number): Promise<MigrationRunRow> {
@@ -164,6 +167,14 @@ async function getTableCountAsync(connection: Knex, tableName: string): Promise<
   const result = await connection(tableName).count<{ count: string | number }[]>("* as count");
   const count = result[0]?.count;
   return typeof count === "number" ? count : parseInt(String(count ?? 0), 10);
+}
+
+function normalizeNullableNumber(value: number | string | null): number | null {
+  if (value == null) {
+    return null;
+  }
+
+  return typeof value === "number" ? value : parseInt(value, 10);
 }
 
 function applyBridgeEnvironment(

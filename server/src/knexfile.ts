@@ -69,8 +69,10 @@ export function getKnexConfigForEnvironment(
   switch (environmentName?.toLowerCase()) {
     case "development":
       return getConfigForSuffix("-development", ".js");
-    case "test":
-      return getConfigForSuffix("-test", ".ts");
+    case "test": {
+      const client = getDatabaseClientFromEnvironment();
+      return getConfigForSuffix("-test", isMySqlClient(client) ? ".ts" : ".js");
+    }
     case "production":
       return getConfigForSuffix("", ".js");
     default:

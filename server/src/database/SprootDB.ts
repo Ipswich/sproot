@@ -55,18 +55,24 @@ export class SprootDB implements ISprootDB {
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors").select("*", "subcontroller_id as subcontrollerId");
+    const sensors = await this.#connection("sensors").select(
+      "*",
+      "subcontroller_id as subcontrollerId",
+    );
+    return this.#normalizeSensors(sensors);
   }
   async getSensorAsync(id: number): Promise<SDBSensor[]> {
-    return this.#connection("sensors")
+    const sensors = await this.#connection("sensors")
       .select("*", "subcontroller_id as subcontrollerId")
       .where("id", id);
+    return this.#normalizeSensors(sensors);
   }
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors as s")
+    const sensors = await this.#connection("sensors as s")
       .leftJoin("subcontrollers as ed", "s.subcontroller_id", "ed.id")
       .select("s.*", "subcontroller_id as subcontrollerId", "ed.hostName")
       .whereIn("s.model", ["DS18B20", "ESP32_DS18B20"]);
+    return this.#normalizeSensors(sensors);
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
     return this.#connection("sensors").insert({
@@ -150,7 +156,7 @@ export class SprootDB implements ISprootDB {
           metric: readingType,
           data: sensor.lastReading[readingType as ReadingType],
           units: sensor.units[readingType as ReadingType],
-          logTime: toDbDate(),
+          logTime: this.#getCurrentTimestampValue(),
         }),
       );
     }
@@ -169,12 +175,75 @@ export class SprootDB implements ISprootDB {
       .andWhere("d.sensor_id", sensor.id)
       .orderBy("d.logTime", "asc");
 
-    if (toIsoString) {
-      for (const reading of readings) {
-        reading.logTime = dbToIso(reading.logTime)!;
-      }
+    return this.#normalizeReadings(readings, toIsoString);
+  }
+  async getSensorChartReadingsAsync(
+    sensor: ISensorBase | { id: number },
+    since: Date,
+    minutes: number,
+    bucketMinutes: number,
+    toIsoString: boolean = false,
+  ): Promise<SDBReading[]> {
+    if (!isPostgresClient(this.#getDatabaseClient())) {
+      return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
     }
-    return readings;
+
+    const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
+    const aggregateViewName = this.#getSensorAggregateViewName(bucketInterval);
+    if (!aggregateViewName) {
+      return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
+    }
+
+    const lookbackDate = this.#getLookbackDate(since, minutes);
+    const tailStart = this.#getRecentTailStart(since, minutes, bucketInterval);
+    const [aggregateResult, tailResult] = await Promise.all([
+      this.#connection.raw(
+        `
+          SELECT
+            a.bucket AS "logTime",
+            a.metric,
+            COALESCE(raw.data::text, a.average_data::text) AS data,
+            COALESCE(raw.units, a.units) AS units
+          FROM ${aggregateViewName} a
+          LEFT JOIN sensor_data raw
+            ON raw.sensor_id = a.sensor_id
+            AND raw.metric = a.metric
+            AND raw."logTime" = a.last_log_time
+          WHERE a.sensor_id = ?
+            AND a.bucket > ?
+          ORDER BY a.bucket ASC, a.metric ASC
+        `,
+        [sensor.id, lookbackDate],
+      ),
+      this.#connection.raw(
+        `
+          SELECT DISTINCT ON (
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime"),
+            d.metric
+          )
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") AS "logTime",
+            d.metric,
+            d.data::text AS data,
+            d.units
+          FROM sensor_data d
+          WHERE d.sensor_id = ?
+            AND d."logTime" > ?
+          ORDER BY
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") ASC,
+            d.metric ASC,
+            d."logTime" DESC
+        `,
+        [sensor.id, tailStart],
+      ),
+    ]);
+
+    return this.#normalizeReadings(
+      this.#mergeSensorChartReadings(
+        this.#getRawRows<SDBReading>(aggregateResult),
+        this.#getRawRows<SDBReading>(tailResult),
+      ),
+      toIsoString,
+    );
   }
   async getOutputsAsync(): Promise<SDBOutput[]> {
     return this.#connection("outputs").select("*", "subcontroller_id as subcontrollerId");
@@ -479,7 +548,7 @@ export class SprootDB implements ISprootDB {
       output_id: output.id,
       value: output.value,
       controlMode: output.controlMode,
-      logTime: toDbDate(),
+      logTime: this.#getCurrentTimestampValue(),
     });
   }
   async updateLastOutputStateAsync(output: {
@@ -490,13 +559,17 @@ export class SprootDB implements ISprootDB {
     return this.#connection("outputs").where("id", output.id).update({
       lastValue: output.value,
       lastControlMode: output.controlMode,
-      lastStateUpdate: toDbDate(),
+      lastStateUpdate: this.#getCurrentTimestampValue(),
     });
   }
   async getLastOutputStateAsync(outputId: number): Promise<SDBOutputState[]> {
-    return this.#connection("outputs")
+    const rows = await this.#connection("outputs")
       .where("id", outputId)
       .select("lastControlMode as controlMode", "lastValue as value", "lastStateUpdate as logTime");
+    return rows.map((row: SDBOutputState) => ({
+      ...row,
+      logTime: dbToIso(row.logTime) ?? "",
+    }));
   }
   async getOutputStatesAsync(
     output: IOutputBase | { id: number },
@@ -511,12 +584,68 @@ export class SprootDB implements ISprootDB {
       .andWhere("d.output_id", output.id)
       .orderBy("d.logTime", "asc");
 
-    if (toIsoString) {
-      for (const state of states) {
-        state.logTime = dbToIso(state.logTime)!;
-      }
+    return this.#normalizeOutputStates(states, toIsoString);
+  }
+  async getOutputChartStatesAsync(
+    output: IOutputBase | { id: number },
+    since: Date,
+    minutes: number,
+    bucketMinutes: number,
+    toIsoString: boolean = false,
+  ): Promise<SDBOutputState[]> {
+    if (!isPostgresClient(this.#getDatabaseClient())) {
+      return this.getOutputStatesAsync(output, since, minutes, toIsoString);
     }
-    return states;
+
+    const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
+    const aggregateViewName = this.#getOutputAggregateViewName(bucketInterval);
+    if (!aggregateViewName) {
+      return this.getOutputStatesAsync(output, since, minutes, toIsoString);
+    }
+
+    const lookbackDate = this.#getLookbackDate(since, minutes);
+    const tailStart = this.#getRecentTailStart(since, minutes, bucketInterval);
+    const [aggregateResult, tailResult] = await Promise.all([
+      this.#connection.raw(
+        `
+          SELECT
+            a.bucket AS "logTime",
+            raw.value,
+            raw."controlMode"
+          FROM ${aggregateViewName} a
+          LEFT JOIN output_data raw
+            ON raw.output_id = a.output_id
+            AND raw."logTime" = a.last_log_time
+          WHERE a.output_id = ?
+            AND a.bucket > ?
+          ORDER BY a.bucket ASC
+        `,
+        [output.id, lookbackDate],
+      ),
+      this.#connection.raw(
+        `
+          SELECT DISTINCT ON (time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime"))
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") AS "logTime",
+            d.value,
+            d."controlMode"
+          FROM output_data d
+          WHERE d.output_id = ?
+            AND d."logTime" > ?
+          ORDER BY
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") ASC,
+            d."logTime" DESC
+        `,
+        [output.id, tailStart],
+      ),
+    ]);
+
+    return this.#normalizeOutputStates(
+      this.#mergeOutputChartStates(
+        this.#getRawRows<SDBOutputState>(aggregateResult),
+        this.#getRawRows<SDBOutputState>(tailResult),
+      ),
+      toIsoString,
+    );
   }
   async getAutomationsAsync(): Promise<SDBAutomation[]> {
     return this.#connection("automations").select("*");
@@ -1046,8 +1175,131 @@ export class SprootDB implements ISprootDB {
     return typeof result[0] === "number" ? result[0] : Number(result[0] ?? -1);
   }
 
-  #getLookbackDate(since: Date, minutes: number): string {
-    return toDbDate(new Date(since.getTime() - minutes * 60_000));
+  #getCurrentTimestampValue(): Date | string {
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return new Date();
+    }
+
+    return toDbDate();
+  }
+
+  #getLookbackDate(since: Date, minutes: number): Date | string {
+    const lookbackDate = new Date(since.getTime() - minutes * 60_000);
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return lookbackDate;
+    }
+
+    return toDbDate(lookbackDate);
+  }
+
+  #getRecentTailStart(since: Date, minutes: number, bucketMinutes: number): Date | string {
+    const lookbackDate = new Date(since.getTime() - minutes * 60_000);
+    const tailStart = new Date(since.getTime() - bucketMinutes * 60_000);
+    const effectiveStart = tailStart > lookbackDate ? tailStart : lookbackDate;
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return effectiveStart;
+    }
+
+    return toDbDate(effectiveStart);
+  }
+
+  #normalizeBucketMinutes(bucketMinutes: number): number {
+    if (!Number.isInteger(bucketMinutes) || bucketMinutes <= 0) {
+      throw new Error(`Invalid bucketMinutes value: ${bucketMinutes}`);
+    }
+
+    return bucketMinutes;
+  }
+
+  #getSensorAggregateViewName(bucketMinutes: number): string | null {
+    return bucketMinutes === 5 ? "sensor_data_5m" : null;
+  }
+
+  #getOutputAggregateViewName(bucketMinutes: number): string | null {
+    return bucketMinutes === 5 ? "output_data_5m" : null;
+  }
+
+  #normalizeReadings(readings: SDBReading[], toIsoString: boolean): SDBReading[] {
+    return readings.map((reading) => ({
+      ...reading,
+      logTime: this.#normalizeLogTime(reading.logTime, toIsoString),
+    }));
+  }
+
+  #normalizeOutputStates(states: SDBOutputState[], toIsoString: boolean): SDBOutputState[] {
+    return states.map((state) => ({
+      ...state,
+      logTime: this.#normalizeLogTime(state.logTime, toIsoString),
+    }));
+  }
+
+  #normalizeSensors(sensors: SDBSensor[]): SDBSensor[] {
+    return sensors.map((sensor) => ({
+      ...sensor,
+      lowCalibrationPoint: this.#normalizeNullableNumber(sensor.lowCalibrationPoint),
+      highCalibrationPoint: this.#normalizeNullableNumber(sensor.highCalibrationPoint),
+    }));
+  }
+
+  #normalizeLogTime(value: string | Date | null | undefined, toIsoString: boolean): string {
+    const isoValue = dbToIso(value);
+    if (!isoValue) {
+      return "";
+    }
+
+    if (toIsoString || value instanceof Date) {
+      return isoValue;
+    }
+
+    return typeof value === "string" ? value : isoValue;
+  }
+
+  #mergeSensorChartReadings(baseRows: SDBReading[], tailRows: SDBReading[]): SDBReading[] {
+    const mergedRows = new Map<string, SDBReading>();
+    for (const row of baseRows) {
+      mergedRows.set(`${row.metric}:${dbToIso(row.logTime) ?? row.logTime}`, row);
+    }
+    for (const row of tailRows) {
+      mergedRows.set(`${row.metric}:${dbToIso(row.logTime) ?? row.logTime}`, row);
+    }
+
+    return [...mergedRows.values()].sort((left, right) => {
+      const timeDifference = new Date(left.logTime).getTime() - new Date(right.logTime).getTime();
+      if (timeDifference !== 0) {
+        return timeDifference;
+      }
+
+      return left.metric.localeCompare(right.metric);
+    });
+  }
+
+  #mergeOutputChartStates(
+    baseRows: SDBOutputState[],
+    tailRows: SDBOutputState[],
+  ): SDBOutputState[] {
+    const mergedRows = new Map<string, SDBOutputState>();
+    for (const row of baseRows) {
+      mergedRows.set(dbToIso(row.logTime) ?? String(row.logTime), row);
+    }
+    for (const row of tailRows) {
+      mergedRows.set(dbToIso(row.logTime) ?? String(row.logTime), row);
+    }
+
+    return [...mergedRows.values()].sort(
+      (left, right) => new Date(left.logTime).getTime() - new Date(right.logTime).getTime(),
+    );
+  }
+
+  #getRawRows<T>(result: unknown): T[] {
+    if (Array.isArray((result as { rows?: T[] })?.rows)) {
+      return (result as { rows: T[] }).rows;
+    }
+
+    if (Array.isArray((result as [T[]])?.[0])) {
+      return (result as [T[]])[0];
+    }
+
+    return [];
   }
 
   #getFirstRawRow(result: any): Record<string, unknown> | undefined {
@@ -1072,6 +1324,23 @@ export class SprootDB implements ISprootDB {
     }
 
     return 0;
+  }
+
+  #normalizeNullableNumber(value: unknown): number | null {
+    if (value == null) {
+      return null;
+    }
+
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : null;
+    }
+
+    if (typeof value === "bigint") {
+      return Number(value);
+    }
+
+    const normalizedValue = Number(value);
+    return Number.isFinite(normalizedValue) ? normalizedValue : null;
   }
 
   async #backupPostgresDatabaseAsync(

@@ -55,6 +55,13 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBReading[]>;
+  getSensorChartReadingsAsync(
+    sensor: ISensorBase | { id: number },
+    since: Date,
+    minutes: number,
+    bucketMinutes: number,
+    toIsoString: boolean,
+  ): Promise<SDBReading[]>;
   getOutputsAsync(): Promise<SDBOutput[]>;
   getOutputAsync(id: number): Promise<SDBOutput[]>;
   addOutputAsync(output: SDBOutput): Promise<number>;
@@ -75,6 +82,13 @@ interface ISprootDB {
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
+    toIsoString: boolean,
+  ): Promise<SDBOutputState[]>;
+  getOutputChartStatesAsync(
+    output: IOutputBase | { id: number },
+    since: Date,
+    minutes: number,
+    bucketMinutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
 
@@ -472,6 +486,16 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
+  async getOutputChartStatesAsync(
+    output: IOutputBase | { id: number },
+    since: Date,
+    minutes: number,
+    _bucketMinutes: number,
+    toIsoString: boolean,
+  ): Promise<SDBOutputState[]> {
+    return this.getOutputStatesAsync(output, since, minutes, toIsoString);
+  }
+
   async addOutputStateAsync(_output: {
     id: number;
     value: number;
@@ -564,8 +588,19 @@ class MockSprootDB implements ISprootDB {
     _sensor: ISensorBase,
     _since: Date,
     _minutes?: number,
+    _toIsoString?: boolean,
   ): Promise<SDBReading[]> {
     return [];
+  }
+
+  async getSensorChartReadingsAsync(
+    sensor: ISensorBase,
+    since: Date,
+    minutes: number,
+    _bucketMinutes: number,
+    toIsoString: boolean,
+  ): Promise<SDBReading[]> {
+    return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
   }
 
   async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
