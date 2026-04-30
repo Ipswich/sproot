@@ -102,8 +102,6 @@ services:
       postgres:
         condition: service_healthy
     network_mode: "host"
-    expose:
-      - "3003"
     environment:
       PGADMIN_LISTEN_PORT: 3003
       PGADMIN_DEFAULT_EMAIL: admin@local.host
@@ -113,11 +111,12 @@ services:
       PGADMIN_DISABLE_POSTFIX: 'True'
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 30
-      PGADMIN_SERVER_JSON_FILE: ./pgadmin/servers.json
-      PGADMIN_CUSTOM_CONFIG_DISTRO_FILE: ./pgadmin/config_local.py
-      PGPASS_FILE: ./pgadmin/pgpass
+      PGADMIN_SERVER_JSON_FILE: /pgadmin/servers.json
+      PGADMIN_CUSTOM_CONFIG_DISTRO_FILE: /pgadmin/config_local.py
+      PGPASS_FILE: /pgadmin/pgpass
     volumes:
-      - ./docker_volumes/pgadmin:/var/lib/pgadmin
+      - pgadmin_runtime:/var/lib/pgadmin
+      - ./pgadmin:/pgadmin:ro
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache
@@ -129,3 +128,6 @@ services:
       - APACHE_PORT=3001
       - PMA_HOST=127.0.0.1
       - UPLOAD_LIMIT=500M
+
+volumes:
+  pgadmin_runtime:
