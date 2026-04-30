@@ -4,9 +4,8 @@ import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 import {
   buildKnexConfiguration,
   type PrefixedConnectionConfiguration,
-} from "../cli/mysqlToPostgresBridgeShared";
-import { runBridgePreflightAsync } from "../cli/mysqlToPostgresBridge";
-import { runBridgeCutoverAsync } from "../cli/mysqlToPostgresBridgeCutover";
+} from "../database/BridgeMigrationShared";
+import { runBridgeCutoverAsync, runBridgePreflightAsync } from "../database/BridgeMigration";
 import { assertRuntimeDatabaseAllowedAsync } from "../database/BridgeRuntimeGuard";
 
 type MigrationStateRow = {

@@ -4,7 +4,7 @@ import {
   getDefaultPortForClient,
   getMigrationDirectoryForClient,
   normalizeDatabaseClient,
-} from "../database/DatabaseClient";
+} from "./DatabaseClient";
 
 export type PrefixedConnectionConfiguration = {
   client: "mysql2" | "pg";

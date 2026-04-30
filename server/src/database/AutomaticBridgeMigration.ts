@@ -3,9 +3,8 @@ import { Logger } from "winston";
 import {
   buildKnexConfiguration,
   getConnectionConfigurationFromPrefix,
-} from "../cli/mysqlToPostgresBridgeShared";
-import { runBridgeCutoverAsync } from "../cli/mysqlToPostgresBridgeCutover";
-import { runBridgePreflightAsync } from "../cli/mysqlToPostgresBridge";
+} from "./BridgeMigrationShared";
+import { runBridgeCutoverAsync, runBridgePreflightAsync } from "./BridgeMigration";
 import { getBridgeMigrationStateIfPresentAsync } from "./BridgeRuntimeGuard";
 import { getKnexConnectionAsync, type KnexConnectionOptions } from "./KnexUtilities";
 import { getDatabaseClientFromEnvironment, isMySqlClient } from "./DatabaseClient";

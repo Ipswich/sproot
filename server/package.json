@@ -8,8 +8,6 @@
     "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
     "coverage": "nyc npm run test",
     "lint": "npx eslint ./src",
-    "migrate:bridge:cutover": "npm run build && node ./dist/cli/mysqlToPostgresBridgeCutover.js",
-    "migrate:bridge:preflight": "npm run build && node ./dist/cli/mysqlToPostgresBridge.js",
     "prettier:write": "npx --yes prettier . --write",
     "prettier:check": "npx --yes prettier . --check",
     "start": "npm run build && node ./dist/index.js",
