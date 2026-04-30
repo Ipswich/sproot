@@ -60,7 +60,7 @@ sproot/
 /api/v2/tags - Tag management for journals/entries
 ```
 
-## Data Models (Database - MySQL/MariaDB)
+## Data Models (Database - PostgreSQL)
 
 **Core Entity Types:**
 - `User` - Authentication accounts
@@ -102,7 +102,7 @@ The `common/` module contains shared TypeScript code:
 When using `docker-compose.yaml.development`:
 - Server builds and runs from root project
 - Server must be manually started (Docker file does not have an entrypoint)
-- Runs full stack including MariaDB, PHPMyAdmin
+- Runs full stack including PostgreSQL and pgAdmin
 - Logs and backups mounted from host directories
 
 ## Environment Variables
@@ -165,8 +165,8 @@ VITE_API_SERVER_URL=<your server URL>
 
 **Server:** `ghcr.io/ipswich/sproot-server:latest`
 **Client:** `ghcr.io/ipswich/sproot-client:latest` (nginx + React)
-**DB:** `mariadb:11.5.2-noble`
-**PhpMyAdmin:** `phpmyadmin:5.2.1-apache`
+**DB:** `timescale/timescaledb:2.26.4-pg18`
+**pgAdmin:** `dpage/pgadmin4:9.14.0`
 
 ## Key Directories
 

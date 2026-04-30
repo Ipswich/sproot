@@ -1,37 +1,37 @@
 import type { Knex } from "knex";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
-import { TypeCastField } from "mysql2";
-import {
-  getDatabaseClientFromEnvironment,
-  getMigrationDirectoryForClient,
-  getDatabasePortFromEnvironment,
-  isMySqlClient,
-} from "./database/DatabaseClient";
 
-function getConnectionConfiguration(
-  databaseSuffix: string,
-): Knex.MySqlConnectionConfig | Knex.PgConnectionConfig {
-  const client = getDatabaseClientFromEnvironment();
+const DATABASE_DEFAULT_PORT = 5432;
+
+function getMigrationDirectory(extension: ".js" | ".ts"): string {
+  const sourceRoot = extension === ".ts" ? "src" : "dist";
+  return `${sourceRoot}/database/migrations`;
+}
+
+function getDatabasePort(): number {
+  const rawPort = process.env["DATABASE_PORT"];
+  if (!rawPort) {
+    return DATABASE_DEFAULT_PORT;
+  }
+
+  const port = parseInt(rawPort, 10);
+  if (Number.isNaN(port)) {
+    throw new Error(`Invalid DATABASE_PORT value: ${rawPort}`);
+  }
+
+  return port;
+}
+
+function getConnectionConfiguration(databaseSuffix: string): Knex.StaticConnectionConfig {
   const databaseName =
     process.env["DATABASE_NAME"] ?? `${Constants.DATABASE_NAME}${databaseSuffix}`;
-  const baseConnection = {
+  return {
     host: process.env["DATABASE_HOST"]!,
     user: process.env["DATABASE_USER"]!,
     password: process.env["DATABASE_PASSWORD"]!,
     database: databaseName,
-    port: getDatabasePortFromEnvironment(client),
+    port: getDatabasePort(),
   };
-
-  if (isMySqlClient(client)) {
-    return {
-      ...baseConnection,
-      dateStrings: true,
-      typeCast: castTinyIntsToBooleans,
-      decimalNumbers: true,
-    };
-  }
-
-  return baseConnection;
 }
 
 const poolConfig = {
@@ -46,14 +46,13 @@ function getConfigForSuffix(
   databaseSuffix: string,
   migrationExtension: ".js" | ".ts",
 ): Knex.Config {
-  const client = getDatabaseClientFromEnvironment();
   return {
-    client,
+    client: "pg",
     pool: poolConfig,
     connection: getConnectionConfiguration(databaseSuffix),
     migrations: {
       loadExtensions: [migrationExtension],
-      directory: getMigrationDirectoryForClient(client, migrationExtension),
+      directory: getMigrationDirectory(migrationExtension),
       tableName: "knex_migrations",
     },
     seeds: {
@@ -69,10 +68,8 @@ export function getKnexConfigForEnvironment(
   switch (environmentName?.toLowerCase()) {
     case "development":
       return getConfigForSuffix("-development", ".js");
-    case "test": {
-      const client = getDatabaseClientFromEnvironment();
-      return getConfigForSuffix("-test", isMySqlClient(client) ? ".ts" : ".js");
-    }
+    case "test":
+      return getConfigForSuffix("-test", ".js");
     case "production":
       return getConfigForSuffix("", ".js");
     default:
@@ -85,13 +82,5 @@ const config: { [key: string]: Knex.Config } = {
   test: getKnexConfigForEnvironment("test")!,
   production: getKnexConfigForEnvironment("production")!,
 };
-
-function castTinyIntsToBooleans(field: TypeCastField, next: () => any) {
-  if (field.type == "TINY" && field.length == 1) {
-    let value = field.string();
-    return value ? value == "1" : null;
-  }
-  return next();
-}
 
 export default config;

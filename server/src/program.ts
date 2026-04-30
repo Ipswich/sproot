@@ -18,8 +18,7 @@ import { AutomationService } from "./automation/AutomationService";
 import { CameraManager } from "./camera/CameraManager";
 import { JournalService } from "./journals/JournalService";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
-import { getStartupKnexConnectionAsync } from "./database/AutomaticBridgeMigration";
-import { assertRuntimeDatabaseAllowedAsync } from "./database/BridgeRuntimeGuard";
+import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import {
   createDatabaseUpdateCronJob,
   createAutomationsCronJob,
@@ -34,8 +33,7 @@ export default async function setupAsync(): Promise<Express> {
   const logger = setupLogger(app);
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
-  const knexConnection = await getStartupKnexConnectionAsync(logger);
-  await assertRuntimeDatabaseAllowedAsync(knexConnection);
+  const knexConnection = await getKnexConnectionAsync();
   app.set(DI_KEYS.KnexConnection, knexConnection);
 
   const sprootDB = new SprootDB(knexConnection);

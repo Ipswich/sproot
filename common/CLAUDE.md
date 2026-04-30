@@ -163,7 +163,6 @@ async addSensorAsync(sensor: SDBSensor): Promise<void> {
 
 **Dependencies:**
 
-- mysql2 (database connections)
 - winston (logging)
 - mocha (testing framework)
 - ts-node (test runner)

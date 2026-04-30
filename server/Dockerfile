@@ -40,7 +40,7 @@ COPY --from=build /sproot/server/python /sproot/server/python
 COPY --from=build /sproot/server/static /sproot/server/static
 COPY --from=build /sproot/api_spec /sproot/api_spec
 
-# Install mysql and camera dependencies
+# Install PostgreSQL client and camera dependencies
 ENV PYTHONDONTWRITEBYTECODE=1
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
@@ -53,7 +53,7 @@ RUN install -d /usr/share/postgresql-common/pgdg \
   && wget --quiet -O /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
   && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update && apt-get -y upgrade \
-  && apt-get install -y --no-install-recommends default-mysql-client postgresql-client-18 udev python3-pip python3-picamera2\
+  && apt-get install -y --no-install-recommends postgresql-client-18 udev python3-pip python3-picamera2\
   && apt-get clean \
   && apt-get autoremove \
   && rm -rf /var/cache/apt/archives/* \

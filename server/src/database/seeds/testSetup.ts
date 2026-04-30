@@ -1,6 +1,5 @@
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { Knex } from "knex";
-import { isPostgresClient, normalizeDatabaseClient } from "../DatabaseClient";
 import { toDbDate } from "../../utils/dateUtils";
 
 export async function seed(knex: Knex): Promise<void> {
@@ -232,27 +231,9 @@ export async function seed(knex: Knex): Promise<void> {
 }
 
 async function getSeedTableNamesAsync(knex: Knex): Promise<string[]> {
-  const client = normalizeDatabaseClient(knex.client.config.client as string | undefined);
-  const excludedTableNames = new Set([
-    "knex_migrations",
-    "knex_migrations_lock",
-    "database_migration_runs",
-    "database_migration_state",
-  ]);
-
-  if (isPostgresClient(client)) {
-    const tables = await knex
-      .select("table_name")
-      .from("information_schema.tables")
-      .where({ table_schema: "public", table_type: "BASE TABLE" });
-
-    return tables
-      .map((table) => table.table_name as string)
-      .filter((tableName) => !excludedTableNames.has(tableName));
-  }
-
+  const excludedTableNames = new Set(["knex_migrations", "knex_migrations_lock"]);
   const tables = await knex.select("table_name").from("information_schema.tables").where({
-    table_schema: knex.client.database(),
+    table_schema: "public",
     table_type: "BASE TABLE",
   });
 
@@ -266,21 +247,8 @@ async function truncateSeedTablesAsync(knex: Knex, tables: string[]): Promise<vo
     return;
   }
 
-  const client = normalizeDatabaseClient(knex.client.config.client as string | undefined);
-  if (isPostgresClient(client)) {
-    const tableList = tables.map((tableName) => quoteIdentifier(tableName)).join(", ");
-    await knex.raw(`TRUNCATE TABLE ${tableList} RESTART IDENTITY CASCADE;`);
-    return;
-  }
-
-  await knex.raw("SET FOREIGN_KEY_CHECKS = 0;");
-  try {
-    for (const table of tables) {
-      await knex(table).truncate();
-    }
-  } finally {
-    await knex.raw("SET FOREIGN_KEY_CHECKS = 1;");
-  }
+  const tableList = tables.map((tableName) => quoteIdentifier(tableName)).join(", ");
+  await knex.raw(`TRUNCATE TABLE ${tableList} RESTART IDENTITY CASCADE;`);
 }
 
 function quoteIdentifier(identifier: string): string {

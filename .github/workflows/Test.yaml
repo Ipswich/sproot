@@ -16,7 +16,6 @@ env:
   AUTHENTICATION_ENABLED: false
   JWT_SECRET: Default
   JWT_EXPIRATION: 259200000
-  DATABASE_CLIENT: pg
   DATABASE_HOST: 127.0.0.1
   DATABASE_PORT: 5432
   DATABASE_USER: postgres
@@ -46,15 +45,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: ${{ matrix.experimental }}
-    env:
-      BRIDGE_TEST_SOURCE_HOST: 127.0.0.1
-      BRIDGE_TEST_SOURCE_PORT: 3306
-      BRIDGE_TEST_SOURCE_USER: root
-      BRIDGE_TEST_SOURCE_PASSWORD: root
-      BRIDGE_TEST_TARGET_HOST: 127.0.0.1
-      BRIDGE_TEST_TARGET_PORT: 5432
-      BRIDGE_TEST_TARGET_USER: postgres
-      BRIDGE_TEST_TARGET_PASSWORD: postgres
     strategy:
       fail-fast: false
       matrix:
@@ -64,17 +54,6 @@ jobs:
           # - node-version: 22.x
           #   experimental: true
     services:
-      mysql:
-        image: mariadb:11.5.2-noble
-        env:
-          MARIADB_ROOT_PASSWORD: root
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mariadb-admin ping -h 127.0.0.1 -proot"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
       postgres:
         image: timescale/timescaledb:2.26.4-pg18
         env:

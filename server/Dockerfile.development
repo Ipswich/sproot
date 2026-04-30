@@ -35,12 +35,12 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | g
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null;
 RUN apt-get update && apt-get install -y gh;
 
-# Install database clients for bridge tooling
+# Install PostgreSQL client tooling
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates wget gnupg
 RUN install -d /usr/share/postgresql-common/pgdg \
   && wget --quiet -O /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
   && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-RUN apt-get update && apt-get install -y default-mysql-client postgresql-client-18
+RUN apt-get update && apt-get install -y postgresql-client-18
 
 # Copy project
 COPY .. /sproot

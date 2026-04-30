@@ -102,7 +102,7 @@ Create a complete CRUD API framework for managing notification actions in automa
 Every task MUST include agent-executed QA scenarios. Evidence saved to `.sisyphus/evidence/task-{N}-{scenario-slug}.{ext}`.
 
 - **API Testing**: Use Bash (curl) - Send requests, assert status + response fields
-- **Database**: Use Bash (mysql/mariadb CLI) - Query table structure, verify data
+- **Database**: Use Bash (psql) - Query table structure, verify data
 - **Each scenario**: Ultra-detailed with exact curl commands, selectors, expected results
 
 ---
@@ -317,7 +317,7 @@ Max Concurrent: 4 (Wave 1)
 
   ```
   Scenario: Database queries execute correctly
-    Tool: Bash (mysql CLI)
+    Tool: Bash (psql)
     Preconditions: Migration applied, server can connect to DB
     Steps:
       1. Insert test notification via raw SQL
