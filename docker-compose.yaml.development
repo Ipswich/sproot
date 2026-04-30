@@ -90,7 +90,7 @@ services:
       timeout: 3s
       retries: 20
     volumes:
-      - ./docker_volumes/postgres:/var/lib/postgresql
+      - ./docker_volumes/postgresql:/var/lib/postgresql
     network_mode: "host"
     expose:
       - "5432"

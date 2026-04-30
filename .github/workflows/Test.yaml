@@ -24,6 +24,9 @@ env:
   INTERSERVICE_AUTHENTICATION_KEY: test
   BACKUP_RETENTION_DAYS: 30
 
+permissions:
+  contents: read
+
 jobs:
   prettier:
     name: Style Check
@@ -43,6 +46,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: ${{ matrix.experimental }}
+    env:
+      BRIDGE_TEST_SOURCE_HOST: 127.0.0.1
+      BRIDGE_TEST_SOURCE_PORT: 3306
+      BRIDGE_TEST_SOURCE_USER: root
+      BRIDGE_TEST_SOURCE_PASSWORD: root
+      BRIDGE_TEST_TARGET_HOST: 127.0.0.1
+      BRIDGE_TEST_TARGET_PORT: 5432
+      BRIDGE_TEST_TARGET_USER: postgres
+      BRIDGE_TEST_TARGET_PASSWORD: postgres
     strategy:
       fail-fast: false
       matrix:
@@ -52,6 +64,17 @@ jobs:
           # - node-version: 22.x
           #   experimental: true
     services:
+      mysql:
+        image: mariadb:11.5.2-noble
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mariadb-admin ping -h 127.0.0.1 -proot"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
       postgres:
         image: timescale/timescaledb:2.26.4-pg18
         env:
@@ -70,6 +93,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Install PostgreSQL 18 client
+        run: |
+          set -e
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc >/dev/null
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo "$VERSION_CODENAME")-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-18
       - name: Install dependencies
         run: npm ci
       - name: Run unit tests

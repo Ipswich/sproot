@@ -1351,6 +1351,7 @@ export class SprootDB implements ISprootDB {
     outputFile: string,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
+      const stderrChunks: string[] = [];
       const dump = spawn(
         "pg_dump",
         [
@@ -1363,7 +1364,13 @@ export class SprootDB implements ISprootDB {
           this.#connection.client.database(),
         ],
         {
-          env: { ...process.env, PGPASSWORD: password },
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
         },
       );
       const gzip = spawn("gzip", ["-c"]);
@@ -1372,11 +1379,23 @@ export class SprootDB implements ISprootDB {
       dump.stdout.pipe(gzip.stdin);
       gzip.stdout.pipe(out);
 
-      dump.stderr.on("data", (d) => console.error("pg_dump:", d.toString()));
+      dump.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("pg_dump:", chunk);
+      });
       gzip.stderr.on("data", (d) => console.error("gzip:", d.toString()));
 
+      dump.on("error", (err) => reject(err));
+      gzip.on("error", (err) => reject(err));
+      out.on("error", (err) => reject(err));
+
       dump.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`pg_dump exited with ${code}`));
+        if (code !== 0) {
+          return reject(
+            new Error(this.#buildPostgresDumpErrorMessage(code, stderrChunks.join(""))),
+          );
+        }
       });
 
       gzip.on("exit", (code) => {
@@ -1408,7 +1427,13 @@ export class SprootDB implements ISprootDB {
           "--set=ON_ERROR_STOP=on",
         ],
         {
-          env: { ...process.env, PGPASSWORD: password },
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
         },
       );
 
@@ -1429,5 +1454,23 @@ export class SprootDB implements ISprootDB {
         resolve();
       });
     });
+  }
+
+  #buildPostgresDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
+    const normalizedStderr = stderrOutput.trim();
+    if (normalizedStderr.includes("server version mismatch")) {
+      return [
+        `pg_dump exited with ${exitCode ?? "unknown"}.`,
+        "PostgreSQL backup requires client tools that match the server major version.",
+        "Install a PostgreSQL 18 client or run backups from an environment that provides a matching pg_dump binary.",
+        normalizedStderr,
+      ].join(" ");
+    }
+
+    if (normalizedStderr.length > 0) {
+      return `pg_dump exited with ${exitCode ?? "unknown"}: ${normalizedStderr}`;
+    }
+
+    return `pg_dump exited with ${exitCode ?? "unknown"}`;
   }
 }
