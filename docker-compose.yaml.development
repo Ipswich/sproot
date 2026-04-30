@@ -103,9 +103,9 @@ services:
         condition: service_healthy
     network_mode: "host"
     expose:
-      - "3002"
+      - "3003"
     environment:
-      PGADMIN_LISTEN_PORT: 3002
+      PGADMIN_LISTEN_PORT: 3003
       PGADMIN_DEFAULT_EMAIL: admin@local.host
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: 'False'
@@ -113,19 +113,11 @@ services:
       PGADMIN_DISABLE_POSTFIX: 'True'
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 30
+      PGADMIN_SERVER_JSON_FILE: ./pgadmin/servers.json
+      PGADMIN_CUSTOM_CONFIG_DISTRO_FILE: ./pgadmin/config_local.py
+      PGPASS_FILE: ./pgadmin/pgpass
     volumes:
-      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
-      - ./pgadmin/pgpass:/pgadmin4/pgpass:ro
-      - ./pgadmin/config_local.py:/pgadmin4/config_local.py:ro
-      - ./pgadmin/storage:/var/lib/pgadmin/storage
-      - ./docker_volumes/pgadmin/data:/var/lib/pgadmin
-
-    entrypoint: >
-      /bin/sh -c "
-      cp /pgadmin4/pgpass /var/lib/pgadmin/pgpass &&
-      chmod 600 /var/lib/pgadmin/pgpass &&
-      /entrypoint.sh
-      "
+      - ./docker_volumes/pgadmin:/var/lib/pgadmin
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache

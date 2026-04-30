@@ -24,23 +24,6 @@ You can easily spin up a development instance by running `sudo docker compose -f
 ### Client
 Navigate to the `sproot/client` directory. If your api server is running on a different host, open `.env.development` and update `VITE_API_SERVER_URL` to contain your servers URL (i.e, `http://192.168.1.1`). Finally, run `npm run start:dev` to start the vite development server.
 
-## MySQL to PostgreSQL Bridge
-The bridge release now supports seamless startup migration during normal container boot. With the default compose file, `docker compose up -d` starts both databases and the server will:
-
-1. Start from the existing MySQL configuration.
-2. Detect the configured PostgreSQL target.
-3. Run bridge import, validation, and cutover automatically.
-4. Continue startup on PostgreSQL once cutover succeeds.
-5. Fall back to MySQL if PostgreSQL is unavailable or validation fails.
-
-Bridge state is recorded in `database_migration_runs` and `database_migration_state` inside PostgreSQL. Once cutover is complete, later restarts continue on PostgreSQL automatically.
-
-For manual rehearsal or debugging, the explicit bridge commands still exist:
-
-```bash
-npm run bridge:rehearsal
-```
-
 ## Parts
 Foremost, I'd like to note that my implementation is soldered. This can still be implemented on a breadboard if that's more your speed, though it'll change what parts you truly need and make it "difficult" to attach it to the 3D printed mount.
 
