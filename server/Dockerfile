@@ -42,18 +42,17 @@ COPY --from=build /sproot/api_spec /sproot/api_spec
 
 # Install mysql and camera dependencies
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV DEBIAN_FRONTEND=noninteractive
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
 
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg ca-certificates wget \
-  && echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
-  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
-RUN install -d /usr/share/postgresql-common/pgdg \
-  && wget --quiet -O /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-  && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+  && curl -fsSL https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
+    | gpg --dearmor -o /usr/share/keyrings/raspberrypi-archive-keyring.gpg \
+  && echo "deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list
 RUN apt-get update && apt-get -y upgrade \
-  && apt-get install -y --no-install-recommends default-mysql-client postgresql-client-18 udev python3-pip python3-picamera2\
+  && apt-get install -y --no-install-recommends default-mysql-client udev python3-pip python3-picamera2\
   && apt-get clean \
   && apt-get autoremove \
   && rm -rf /var/cache/apt/archives/* \
