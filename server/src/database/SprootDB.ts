@@ -41,6 +41,11 @@ import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalE
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
 import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
+import {
+  isPostgresClient,
+  normalizeDatabaseClient,
+  type SupportedDatabaseClient,
+} from "./DatabaseClient";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -50,18 +55,24 @@ export class SprootDB implements ISprootDB {
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors").select("*", "subcontroller_id as subcontrollerId");
+    const sensors = await this.#connection("sensors").select(
+      "*",
+      "subcontroller_id as subcontrollerId",
+    );
+    return this.#normalizeSensors(sensors);
   }
   async getSensorAsync(id: number): Promise<SDBSensor[]> {
-    return this.#connection("sensors")
+    const sensors = await this.#connection("sensors")
       .select("*", "subcontroller_id as subcontrollerId")
       .where("id", id);
+    return this.#normalizeSensors(sensors);
   }
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
-    return this.#connection("sensors as s")
+    const sensors = await this.#connection("sensors as s")
       .leftJoin("subcontrollers as ed", "s.subcontroller_id", "ed.id")
       .select("s.*", "subcontroller_id as subcontrollerId", "ed.hostName")
       .whereIn("s.model", ["DS18B20", "ESP32_DS18B20"]);
+    return this.#normalizeSensors(sensors);
   }
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
     return this.#connection("sensors").insert({
@@ -109,7 +120,7 @@ export class SprootDB implements ISprootDB {
 
   async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
     const result = await this.#connection("subcontrollers").select("*");
-    result.forEach((device) => {
+    result.forEach((device: SDBSubcontroller) => {
       device.secureToken =
         device.secureToken == null ? null : decrypt(device.secureToken, process.env["JWT_SECRET"]!);
     });
@@ -120,7 +131,7 @@ export class SprootDB implements ISprootDB {
     const copy = { ...subcontroller };
     copy.secureToken =
       copy.secureToken == null ? null : encrypt(copy.secureToken, process.env["JWT_SECRET"]!);
-    return (await this.#connection("subcontrollers").insert(copy))[0] ?? -1;
+    return this.#insertAndGetIdAsync("subcontrollers", copy);
   }
 
   async deleteSubcontrollersAsync(id: number): Promise<number> {
@@ -145,7 +156,7 @@ export class SprootDB implements ISprootDB {
           metric: readingType,
           data: sensor.lastReading[readingType as ReadingType],
           units: sensor.units[readingType as ReadingType],
-          logTime: toDbDate(),
+          logTime: this.#getCurrentTimestampValue(),
         }),
       );
     }
@@ -160,20 +171,79 @@ export class SprootDB implements ISprootDB {
     const readings = await this.#connection("sensors as s")
       .join("sensor_data as d", "s.id", "d.sensor_id")
       .select("metric", "data", "units", "logTime")
-      .where(
-        "d.logTime",
-        ">",
-        this.#connection.raw("DATE_SUB(?, INTERVAL ? MINUTE)", [since.toISOString(), minutes]),
-      )
+      .where("d.logTime", ">", this.#getLookbackDate(since, minutes))
       .andWhere("d.sensor_id", sensor.id)
       .orderBy("d.logTime", "asc");
 
-    if (toIsoString) {
-      for (const reading of readings) {
-        reading.logTime = dbToIso(reading.logTime)!;
-      }
+    return this.#normalizeReadings(readings, toIsoString);
+  }
+  async getSensorChartReadingsAsync(
+    sensor: ISensorBase | { id: number },
+    since: Date,
+    minutes: number,
+    bucketMinutes: number,
+    toIsoString: boolean = false,
+  ): Promise<SDBReading[]> {
+    if (!isPostgresClient(this.#getDatabaseClient())) {
+      return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
     }
-    return readings;
+
+    const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
+    const aggregateViewName = this.#getSensorAggregateViewName(bucketInterval);
+    if (!aggregateViewName) {
+      return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
+    }
+
+    const lookbackDate = this.#getLookbackDate(since, minutes);
+    const tailStart = this.#getRecentTailStart(since, minutes, bucketInterval);
+    const [aggregateResult, tailResult] = await Promise.all([
+      this.#connection.raw(
+        `
+          SELECT
+            a.bucket AS "logTime",
+            a.metric,
+            COALESCE(raw.data::text, a.average_data::text) AS data,
+            COALESCE(raw.units, a.units) AS units
+          FROM ${aggregateViewName} a
+          LEFT JOIN sensor_data raw
+            ON raw.sensor_id = a.sensor_id
+            AND raw.metric = a.metric
+            AND raw."logTime" = a.last_log_time
+          WHERE a.sensor_id = ?
+            AND a.bucket > ?
+          ORDER BY a.bucket ASC, a.metric ASC
+        `,
+        [sensor.id, lookbackDate],
+      ),
+      this.#connection.raw(
+        `
+          SELECT DISTINCT ON (
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime"),
+            d.metric
+          )
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") AS "logTime",
+            d.metric,
+            d.data::text AS data,
+            d.units
+          FROM sensor_data d
+          WHERE d.sensor_id = ?
+            AND d."logTime" > ?
+          ORDER BY
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") ASC,
+            d.metric ASC,
+            d."logTime" DESC
+        `,
+        [sensor.id, tailStart],
+      ),
+    ]);
+
+    return this.#normalizeReadings(
+      this.#mergeSensorChartReadings(
+        this.#getRawRows<SDBReading>(aggregateResult),
+        this.#getRawRows<SDBReading>(tailResult),
+      ),
+      toIsoString,
+    );
   }
   async getOutputsAsync(): Promise<SDBOutput[]> {
     return this.#connection("outputs").select("*", "subcontroller_id as subcontrollerId");
@@ -184,22 +254,18 @@ export class SprootDB implements ISprootDB {
       .where("id", id);
   }
   async addOutputAsync(output: SDBOutput): Promise<number> {
-    return (
-      (
-        await this.#connection("outputs").insert({
-          name: output.name,
-          model: output.model,
-          subcontroller_id: output.subcontrollerId ?? null,
-          address: output.address,
-          color: output.color,
-          pin: output.pin,
-          deviceZoneId: output.deviceZoneId ?? null,
-          isPwm: output.isPwm,
-          isInvertedPwm: output.isInvertedPwm,
-          automationTimeout: output.automationTimeout,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("outputs", {
+      name: output.name,
+      model: output.model,
+      subcontroller_id: output.subcontrollerId ?? null,
+      address: output.address,
+      color: output.color,
+      pin: output.pin,
+      deviceZoneId: output.deviceZoneId ?? null,
+      isPwm: output.isPwm,
+      isInvertedPwm: output.isInvertedPwm,
+      automationTimeout: output.automationTimeout,
+    });
   }
   async updateOutputAsync(output: SDBOutput): Promise<void> {
     if (output.parentOutputId === output.id) {
@@ -229,7 +295,7 @@ export class SprootDB implements ISprootDB {
     return this.#connection("device_zones").select("*");
   }
   async addDeviceZoneAsync(name: string): Promise<number> {
-    return (await this.#connection("device_zones").insert({ name }))[0] ?? -1;
+    return this.#insertAndGetIdAsync("device_zones", { name });
   }
   async updateDeviceZoneAsync(deviceZone: SDBDeviceZone): Promise<void> {
     return this.#connection("device_zones")
@@ -277,20 +343,16 @@ export class SprootDB implements ISprootDB {
     color: string | null,
     createdAt?: string | null,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("journals").insert({
-          title,
-          description,
-          archived: 0,
-          icon,
-          color,
-          createdAt: createdAt ?? toDbDate(),
-          editedAt: createdAt ?? toDbDate(),
-          archivedAt: null,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("journals", {
+      title,
+      description,
+      archived: false,
+      icon,
+      color,
+      createdAt: createdAt ?? toDbDate(),
+      editedAt: createdAt ?? toDbDate(),
+      archivedAt: null,
+    });
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
@@ -300,7 +362,7 @@ export class SprootDB implements ISprootDB {
       .update({
         title: journal.title,
         description: journal.description,
-        archived: journal.archived ? 1 : 0,
+        archived: journal.archived,
         icon: journal.icon,
         color: journal.color,
         editedAt: isoToDb(journal.editedAt),
@@ -317,7 +379,7 @@ export class SprootDB implements ISprootDB {
   }
 
   async addJournalTagAsync(name: string, color: string | null): Promise<number> {
-    return (await this.#connection("journal_tags").insert({ name, color }))[0] ?? -1;
+    return this.#insertAndGetIdAsync("journal_tags", { name, color });
   }
 
   async updateJournalTagAsync(tag: SDBJournalTag): Promise<void> {
@@ -338,14 +400,10 @@ export class SprootDB implements ISprootDB {
     );
   }
   async addJournalTagLookupAsync(journalId: number, tagId: number): Promise<number> {
-    return (
-      (
-        await this.#connection("journal_tag_lookup").insert({
-          journal_id: journalId,
-          tag_id: tagId,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("journal_tag_lookup", {
+      journal_id: journalId,
+      tag_id: tagId,
+    });
   }
 
   async deleteJournalTagLookupAsync(journalId: number, tagId: number): Promise<void> {
@@ -400,20 +458,18 @@ export class SprootDB implements ISprootDB {
     createdAt?: string | null,
   ): Promise<number> {
     //TODO prevent updates if Journal is archived??
-    const result = await Promise.all([
-      this.#connection("journal_entries").insert({
-        journal_id: journalId,
-        title,
-        content,
-        createdAt: createdAt ?? toDbDate(),
-        editedAt: createdAt ?? toDbDate(),
-      }),
-      this.#connection("journals").where("id", journalId).update({
-        editedAt: toDbDate(),
-      }),
-    ]);
+    const journalEntryId = await this.#insertAndGetIdAsync("journal_entries", {
+      journal_id: journalId,
+      title,
+      content,
+      createdAt: createdAt ?? toDbDate(),
+      editedAt: createdAt ?? toDbDate(),
+    });
+    await this.#connection("journals").where("id", journalId).update({
+      editedAt: toDbDate(),
+    });
 
-    return result[0][0] ?? -1;
+    return journalEntryId;
   }
 
   async updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void> {
@@ -449,7 +505,7 @@ export class SprootDB implements ISprootDB {
   }
 
   async addJournalEntryTagAsync(name: string, color: string | null): Promise<number> {
-    return (await this.#connection("journal_entry_tags").insert({ name, color }))[0] ?? -1;
+    return this.#insertAndGetIdAsync("journal_entry_tags", { name, color });
   }
 
   async updateJournalEntryTagAsync(tag: SDBJournalEntryTag): Promise<void> {
@@ -471,14 +527,10 @@ export class SprootDB implements ISprootDB {
   }
 
   async addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number> {
-    return (
-      (
-        await this.#connection("journal_entry_tag_lookup").insert({
-          journal_entry_id: journalEntryId,
-          tag_id: tagId,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("journal_entry_tag_lookup", {
+      journal_entry_id: journalEntryId,
+      tag_id: tagId,
+    });
   }
 
   async deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void> {
@@ -496,7 +548,7 @@ export class SprootDB implements ISprootDB {
       output_id: output.id,
       value: output.value,
       controlMode: output.controlMode,
-      logTime: toDbDate(),
+      logTime: this.#getCurrentTimestampValue(),
     });
   }
   async updateLastOutputStateAsync(output: {
@@ -507,13 +559,17 @@ export class SprootDB implements ISprootDB {
     return this.#connection("outputs").where("id", output.id).update({
       lastValue: output.value,
       lastControlMode: output.controlMode,
-      lastStateUpdate: toDbDate(),
+      lastStateUpdate: this.#getCurrentTimestampValue(),
     });
   }
   async getLastOutputStateAsync(outputId: number): Promise<SDBOutputState[]> {
-    return this.#connection("outputs")
+    const rows = await this.#connection("outputs")
       .where("id", outputId)
       .select("lastControlMode as controlMode", "lastValue as value", "lastStateUpdate as logTime");
+    return rows.map((row: SDBOutputState) => ({
+      ...row,
+      logTime: dbToIso(row.logTime) ?? "",
+    }));
   }
   async getOutputStatesAsync(
     output: IOutputBase | { id: number },
@@ -524,20 +580,72 @@ export class SprootDB implements ISprootDB {
     const states = await this.#connection("outputs as o")
       .join("output_data as d", "o.id", "d.output_id")
       .select("d.value", "d.controlMode", "d.logTime")
-      .where(
-        "d.logTime",
-        ">",
-        this.#connection.raw("DATE_SUB(?, INTERVAL ? MINUTE)", [since.toISOString(), minutes]),
-      )
+      .where("d.logTime", ">", this.#getLookbackDate(since, minutes))
       .andWhere("d.output_id", output.id)
       .orderBy("d.logTime", "asc");
 
-    if (toIsoString) {
-      for (const state of states) {
-        state.logTime = dbToIso(state.logTime)!;
-      }
+    return this.#normalizeOutputStates(states, toIsoString);
+  }
+  async getOutputChartStatesAsync(
+    output: IOutputBase | { id: number },
+    since: Date,
+    minutes: number,
+    bucketMinutes: number,
+    toIsoString: boolean = false,
+  ): Promise<SDBOutputState[]> {
+    if (!isPostgresClient(this.#getDatabaseClient())) {
+      return this.getOutputStatesAsync(output, since, minutes, toIsoString);
     }
-    return states;
+
+    const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
+    const aggregateViewName = this.#getOutputAggregateViewName(bucketInterval);
+    if (!aggregateViewName) {
+      return this.getOutputStatesAsync(output, since, minutes, toIsoString);
+    }
+
+    const lookbackDate = this.#getLookbackDate(since, minutes);
+    const tailStart = this.#getRecentTailStart(since, minutes, bucketInterval);
+    const [aggregateResult, tailResult] = await Promise.all([
+      this.#connection.raw(
+        `
+          SELECT
+            a.bucket AS "logTime",
+            raw.value,
+            raw."controlMode"
+          FROM ${aggregateViewName} a
+          LEFT JOIN output_data raw
+            ON raw.output_id = a.output_id
+            AND raw."logTime" = a.last_log_time
+          WHERE a.output_id = ?
+            AND a.bucket > ?
+          ORDER BY a.bucket ASC
+        `,
+        [output.id, lookbackDate],
+      ),
+      this.#connection.raw(
+        `
+          SELECT DISTINCT ON (time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime"))
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") AS "logTime",
+            d.value,
+            d."controlMode"
+          FROM output_data d
+          WHERE d.output_id = ?
+            AND d."logTime" > ?
+          ORDER BY
+            time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") ASC,
+            d."logTime" DESC
+        `,
+        [output.id, tailStart],
+      ),
+    ]);
+
+    return this.#normalizeOutputStates(
+      this.#mergeOutputChartStates(
+        this.#getRawRows<SDBOutputState>(aggregateResult),
+        this.#getRawRows<SDBOutputState>(tailResult),
+      ),
+      toIsoString,
+    );
   }
   async getAutomationsAsync(): Promise<SDBAutomation[]> {
     return this.#connection("automations").select("*");
@@ -546,7 +654,7 @@ export class SprootDB implements ISprootDB {
     return this.#connection("automations").where("id", automationId).select("*");
   }
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
-    return (await this.#connection("automations").insert({ name: name, operator }))[0] ?? -1;
+    return this.#insertAndGetIdAsync("automations", { name: name, operator });
   }
   async updateAutomationAsync(
     name: string,
@@ -587,15 +695,11 @@ export class SprootDB implements ISprootDB {
     outputId: number,
     value: number,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("output_actions").insert({
-          automation_id: automationId,
-          output_id: outputId,
-          value,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("output_actions", {
+      automation_id: automationId,
+      output_id: outputId,
+      value,
+    });
   }
   async deleteOutputActionAsync(outputActionId: number): Promise<void> {
     return this.#connection("output_actions").where("id", outputActionId).delete();
@@ -632,15 +736,11 @@ export class SprootDB implements ISprootDB {
     subject: string,
     content: string,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("notification_actions").insert({
-          automation_id: automationId,
-          subject,
-          content,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("notification_actions", {
+      automation_id: automationId,
+      subject,
+      content,
+    });
   }
   async deleteNotificationActionAsync(notificationActionId: number): Promise<void> {
     return this.#connection("notification_actions").where("id", notificationActionId).delete();
@@ -670,19 +770,15 @@ export class SprootDB implements ISprootDB {
     sensorId: number,
     readingType: string,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("sensor_conditions").insert({
-          automation_id: automationId,
-          groupType: type,
-          operator,
-          comparisonValue,
-          comparisonLookback,
-          sensor_id: sensorId,
-          readingType,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("sensor_conditions", {
+      automation_id: automationId,
+      groupType: type,
+      operator,
+      comparisonValue,
+      comparisonLookback,
+      sensor_id: sensorId,
+      readingType,
+    });
   }
   async updateSensorConditionAsync(
     automationId: number,
@@ -726,18 +822,14 @@ export class SprootDB implements ISprootDB {
     comparisonLookback: number | null,
     outputId: number,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("output_conditions").insert({
-          automation_id: automationId,
-          groupType: type,
-          operator,
-          comparisonValue,
-          comparisonLookback,
-          output_id: outputId,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("output_conditions", {
+      automation_id: automationId,
+      groupType: type,
+      operator,
+      comparisonValue,
+      comparisonLookback,
+      output_id: outputId,
+    });
   }
   async updateOutputConditionAsync(
     automationId: number,
@@ -768,16 +860,12 @@ export class SprootDB implements ISprootDB {
     startTime: string | undefined | null,
     endTime: string | undefined | null,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("time_conditions").insert({
-          automation_id: automationId,
-          groupType: type,
-          startTime,
-          endTime,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("time_conditions", {
+      automation_id: automationId,
+      groupType: type,
+      startTime,
+      endTime,
+    });
   }
   async updateTimeConditionAsync(automationId: number, condition: ITimeCondition): Promise<void> {
     return this.#connection("time_conditions")
@@ -802,15 +890,11 @@ export class SprootDB implements ISprootDB {
     groupType: ConditionGroupType,
     weekdays: number,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("weekday_conditions").insert({
-          automation_id: automationId,
-          groupType,
-          weekdays,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("weekday_conditions", {
+      automation_id: automationId,
+      groupType,
+      weekdays,
+    });
   }
   async updateWeekdayConditionAsync(
     automationId: number,
@@ -838,15 +922,11 @@ export class SprootDB implements ISprootDB {
     groupType: ConditionGroupType,
     months: number,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("month_conditions").insert({
-          automation_id: automationId,
-          groupType,
-          months,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("month_conditions", {
+      automation_id: automationId,
+      groupType,
+      months,
+    });
   }
   async updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void> {
     return this.#connection("month_conditions")
@@ -882,18 +962,14 @@ export class SprootDB implements ISprootDB {
     endMonth: number,
     endDate: number,
   ): Promise<number> {
-    return (
-      (
-        await this.#connection("date_range_conditions").insert({
-          automation_id: automationId,
-          groupType,
-          startMonth,
-          startDate,
-          endMonth,
-          endDate,
-        })
-      )[0] ?? -1
-    );
+    return this.#insertAndGetIdAsync("date_range_conditions", {
+      automation_id: automationId,
+      groupType,
+      startMonth,
+      startDate,
+      endMonth,
+      endDate,
+    });
   }
   async updateDateRangeConditionAsync(
     automationId: number,
@@ -979,11 +1055,18 @@ export class SprootDB implements ISprootDB {
   }
 
   async getDatabaseSizeAsync(): Promise<number> {
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      const result = await this.#connection.raw(
+        "SELECT ROUND(pg_database_size(current_database()) / 1024.0 / 1024.0, 2) AS size",
+      );
+      return this.#parseSizeValue(this.#getFirstRawRow(result)?.["size"]);
+    }
+
     const result = await this.#connection.raw(
       "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size FROM information_schema.tables WHERE table_schema = ?",
       [this.#connection.client.database()],
     );
-    return parseFloat(result[0][0].size);
+    return this.#parseSizeValue(this.#getFirstRawRow(result)?.["size"]);
   }
 
   async backupDatabaseAsync(
@@ -993,6 +1076,10 @@ export class SprootDB implements ISprootDB {
     password: string,
     outputFile: string,
   ): Promise<void> {
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return this.#backupPostgresDatabaseAsync(host, port, user, password, outputFile);
+    }
+
     return new Promise((resolve, reject) => {
       const dump = spawn("mysqldump", [
         `--host=${host}`,
@@ -1035,6 +1122,10 @@ export class SprootDB implements ISprootDB {
   ): Promise<void> {
     const dbName = this.#connection.client.database();
 
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return this.#restorePostgresDatabaseAsync(host, port, user, password, inputFile, dbName);
+    }
+
     await new Promise<void>((resolve, reject) => {
       const gunzip = spawn("gunzip", ["-c", inputFile]); // write decompressed SQL to stdout
       const mysql = spawn("mysql", [
@@ -1066,5 +1157,320 @@ export class SprootDB implements ISprootDB {
 
   async [Symbol.asyncDispose](): Promise<void> {
     await this.#connection.destroy();
+  }
+
+  #getDatabaseClient(): SupportedDatabaseClient {
+    return normalizeDatabaseClient(this.#connection.client.config.client);
+  }
+
+  async #insertAndGetIdAsync(tableName: string, values: Record<string, unknown>): Promise<number> {
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      const result = await this.#connection(tableName)
+        .insert(values)
+        .returning<{ id: number }[]>("id");
+      return result[0]?.id ?? -1;
+    }
+
+    const result = await this.#connection(tableName).insert(values);
+    return typeof result[0] === "number" ? result[0] : Number(result[0] ?? -1);
+  }
+
+  #getCurrentTimestampValue(): Date | string {
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return new Date();
+    }
+
+    return toDbDate();
+  }
+
+  #getLookbackDate(since: Date, minutes: number): Date | string {
+    const lookbackDate = new Date(since.getTime() - minutes * 60_000);
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return lookbackDate;
+    }
+
+    return toDbDate(lookbackDate);
+  }
+
+  #getRecentTailStart(since: Date, minutes: number, bucketMinutes: number): Date | string {
+    const lookbackDate = new Date(since.getTime() - minutes * 60_000);
+    const tailStart = new Date(since.getTime() - bucketMinutes * 60_000);
+    const effectiveStart = tailStart > lookbackDate ? tailStart : lookbackDate;
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return effectiveStart;
+    }
+
+    return toDbDate(effectiveStart);
+  }
+
+  #normalizeBucketMinutes(bucketMinutes: number): number {
+    if (!Number.isInteger(bucketMinutes) || bucketMinutes <= 0) {
+      throw new Error(`Invalid bucketMinutes value: ${bucketMinutes}`);
+    }
+
+    return bucketMinutes;
+  }
+
+  #getSensorAggregateViewName(bucketMinutes: number): string | null {
+    return bucketMinutes === 5 ? "sensor_data_5m" : null;
+  }
+
+  #getOutputAggregateViewName(bucketMinutes: number): string | null {
+    return bucketMinutes === 5 ? "output_data_5m" : null;
+  }
+
+  #normalizeReadings(readings: SDBReading[], toIsoString: boolean): SDBReading[] {
+    return readings.map((reading) => ({
+      ...reading,
+      logTime: this.#normalizeLogTime(reading.logTime, toIsoString),
+    }));
+  }
+
+  #normalizeOutputStates(states: SDBOutputState[], toIsoString: boolean): SDBOutputState[] {
+    return states.map((state) => ({
+      ...state,
+      logTime: this.#normalizeLogTime(state.logTime, toIsoString),
+    }));
+  }
+
+  #normalizeSensors(sensors: SDBSensor[]): SDBSensor[] {
+    return sensors.map((sensor) => ({
+      ...sensor,
+      lowCalibrationPoint: this.#normalizeNullableNumber(sensor.lowCalibrationPoint),
+      highCalibrationPoint: this.#normalizeNullableNumber(sensor.highCalibrationPoint),
+    }));
+  }
+
+  #normalizeLogTime(value: string | Date | null | undefined, toIsoString: boolean): string {
+    const isoValue = dbToIso(value);
+    if (!isoValue) {
+      return "";
+    }
+
+    if (toIsoString || value instanceof Date) {
+      return isoValue;
+    }
+
+    return typeof value === "string" ? value : isoValue;
+  }
+
+  #mergeSensorChartReadings(baseRows: SDBReading[], tailRows: SDBReading[]): SDBReading[] {
+    const mergedRows = new Map<string, SDBReading>();
+    for (const row of baseRows) {
+      mergedRows.set(`${row.metric}:${dbToIso(row.logTime) ?? row.logTime}`, row);
+    }
+    for (const row of tailRows) {
+      mergedRows.set(`${row.metric}:${dbToIso(row.logTime) ?? row.logTime}`, row);
+    }
+
+    return [...mergedRows.values()].sort((left, right) => {
+      const timeDifference = new Date(left.logTime).getTime() - new Date(right.logTime).getTime();
+      if (timeDifference !== 0) {
+        return timeDifference;
+      }
+
+      return left.metric.localeCompare(right.metric);
+    });
+  }
+
+  #mergeOutputChartStates(
+    baseRows: SDBOutputState[],
+    tailRows: SDBOutputState[],
+  ): SDBOutputState[] {
+    const mergedRows = new Map<string, SDBOutputState>();
+    for (const row of baseRows) {
+      mergedRows.set(dbToIso(row.logTime) ?? String(row.logTime), row);
+    }
+    for (const row of tailRows) {
+      mergedRows.set(dbToIso(row.logTime) ?? String(row.logTime), row);
+    }
+
+    return [...mergedRows.values()].sort(
+      (left, right) => new Date(left.logTime).getTime() - new Date(right.logTime).getTime(),
+    );
+  }
+
+  #getRawRows<T>(result: unknown): T[] {
+    if (Array.isArray((result as { rows?: T[] })?.rows)) {
+      return (result as { rows: T[] }).rows;
+    }
+
+    if (Array.isArray((result as [T[]])?.[0])) {
+      return (result as [T[]])[0];
+    }
+
+    return [];
+  }
+
+  #getFirstRawRow(result: any): Record<string, unknown> | undefined {
+    if (Array.isArray(result?.rows)) {
+      return result.rows[0] as Record<string, unknown> | undefined;
+    }
+
+    if (Array.isArray(result?.[0])) {
+      return result[0][0] as Record<string, unknown> | undefined;
+    }
+
+    return undefined;
+  }
+
+  #parseSizeValue(value: unknown): number {
+    if (typeof value === "number") {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      return parseFloat(value);
+    }
+
+    return 0;
+  }
+
+  #normalizeNullableNumber(value: unknown): number | null {
+    if (value == null) {
+      return null;
+    }
+
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : null;
+    }
+
+    if (typeof value === "bigint") {
+      return Number(value);
+    }
+
+    const normalizedValue = Number(value);
+    return Number.isFinite(normalizedValue) ? normalizedValue : null;
+  }
+
+  async #backupPostgresDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    outputFile: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const stderrChunks: string[] = [];
+      const dump = spawn(
+        "pg_dump",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          "--format=plain",
+          "--no-owner",
+          "--no-privileges",
+          this.#connection.client.database(),
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+      const gzip = spawn("gzip", ["-c"]);
+      const out = fs.createWriteStream(outputFile, { flags: "w" });
+
+      dump.stdout.pipe(gzip.stdin);
+      gzip.stdout.pipe(out);
+
+      dump.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("pg_dump:", chunk);
+      });
+      gzip.stderr.on("data", (d) => console.error("gzip:", d.toString()));
+
+      dump.on("error", (err) => reject(err));
+      gzip.on("error", (err) => reject(err));
+      out.on("error", (err) => reject(err));
+
+      dump.on("exit", (code) => {
+        if (code !== 0) {
+          return reject(
+            new Error(this.#buildPostgresDumpErrorMessage(code, stderrChunks.join(""))),
+          );
+        }
+      });
+
+      gzip.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`gzip exited with ${code}`));
+      });
+
+      out.on("close", () => resolve());
+    });
+  }
+
+  async #restorePostgresDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    inputFile: string,
+    databaseName: string,
+  ): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      const gunzip = spawn("gunzip", ["-c", inputFile]);
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          `--dbname=${databaseName}`,
+          "--single-transaction",
+          "--set=ON_ERROR_STOP=on",
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+
+      gunzip.stdout.pipe(psql.stdin);
+
+      gunzip.stderr.on("data", (d) => console.error("gunzip:", d.toString()));
+      psql.stderr.on("data", (d) => console.error("psql:", d.toString()));
+
+      gunzip.on("error", (err) => reject(err));
+      psql.on("error", (err) => reject(err));
+
+      gunzip.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`gunzip exited with ${code}`));
+      });
+
+      psql.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`psql exited with ${code}`));
+        resolve();
+      });
+    });
+  }
+
+  #buildPostgresDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
+    const normalizedStderr = stderrOutput.trim();
+    if (normalizedStderr.includes("server version mismatch")) {
+      return [
+        `pg_dump exited with ${exitCode ?? "unknown"}.`,
+        "PostgreSQL backup requires client tools that match the server major version.",
+        "Install a PostgreSQL 18 client or run backups from an environment that provides a matching pg_dump binary.",
+        normalizedStderr,
+      ].join(" ");
+    }
+
+    if (normalizedStderr.length > 0) {
+      return `pg_dump exited with ${exitCode ?? "unknown"}: ${normalizedStderr}`;
+    }
+
+    return `pg_dump exited with ${exitCode ?? "unknown"}`;
   }
 }

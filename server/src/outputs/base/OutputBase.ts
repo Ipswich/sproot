@@ -246,7 +246,11 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
 
   protected async loadCacheFromDatabaseAsync(): Promise<void> {
     try {
-      await this.#cache.loadFromDatabaseAsync(this.id, this.#initialCacheLookback);
+      await this.#cache.loadFromDatabaseAsync(
+        this.id,
+        this.#initialCacheLookback,
+        this.#chartDataPointInterval,
+      );
       this.logger.info(
         `Loaded cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`,
       );

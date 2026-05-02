@@ -1,13 +1,17 @@
 services:
   server:
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     build:
        context: ./
        dockerfile: ./server/Dockerfile.development
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
+      DATABASE_CLIENT: mysql2
       LOG_DEBUG: true
       DEFAULT_USER: dev-test
       DEFAULT_USER_EMAIL: dev-test@example.com
@@ -19,6 +23,12 @@ services:
       DATABASE_PORT: 3306
       DATABASE_USER: root
       DATABASE_PASSWORD: root
+      TARGET_DATABASE_CLIENT: pg
+      TARGET_DATABASE_HOST: 127.0.0.1
+      TARGET_DATABASE_PORT: 5432
+      TARGET_DATABASE_USER: postgres
+      TARGET_DATABASE_PASSWORD: root
+      AUTO_DATABASE_MIGRATION: true
       INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
       BACKUP_RETENTION_DAYS: 30
     volumes:
@@ -56,11 +66,57 @@ services:
     restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: root
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p$$MARIADB_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     volumes:
       - ./docker_volumes/mariadb/data:/var/lib/mysql
     network_mode: "host"
     expose:
       - "3306"
+
+  postgres:
+    image: timescale/timescaledb:2.26.4-pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - ./docker_volumes/postgresql:/var/lib/postgresql
+    network_mode: "host"
+    expose:
+      - "5432"
+
+  pgadmin:
+    image: dpage/pgadmin4:9.14.0
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    network_mode: "host"
+    environment:
+      PGADMIN_LISTEN_PORT: 3003
+      PGADMIN_DEFAULT_EMAIL: admin@local.host
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      PGADMIN_DISABLE_POSTFIX: 'True'
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 30
+      PGADMIN_SERVER_JSON_FILE: /pgadmin/servers.json
+      PGADMIN_CUSTOM_CONFIG_DISTRO_FILE: /pgadmin/config_local.py
+      PGPASS_FILE: /pgadmin/pgpass
+    volumes:
+      - pgadmin_runtime:/var/lib/pgadmin
+      - ./pgadmin:/pgadmin:ro
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache
@@ -72,3 +128,6 @@ services:
       - APACHE_PORT=3001
       - PMA_HOST=127.0.0.1
       - UPLOAD_LIMIT=500M
+
+volumes:
+  pgadmin_runtime:

@@ -23,14 +23,22 @@ export class SensorCache {
     return this.queueCache[key].get(offset, limit);
   }
 
-  async loadFromDatabaseAsync(sensorId: number, minutes: number): Promise<void> {
+  async loadFromDatabaseAsync(
+    sensorId: number,
+    minutes: number,
+    bucketMinutes: number = 5,
+  ): Promise<void> {
     this.clear();
-    const sdbReadings = await this.sprootDB.getSensorReadingsAsync(
+    const chartReadings = await this.sprootDB.getSensorChartReadingsAsync(
       { id: sensorId },
       new Date(),
       minutes,
+      bucketMinutes,
       true,
     );
+    const sdbReadings =
+      chartReadings ??
+      (await this.sprootDB.getSensorReadingsAsync({ id: sensorId }, new Date(), minutes, true));
     for (const reading of sdbReadings) {
       const newReading = {
         data: reading.data,

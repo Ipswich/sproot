@@ -42,13 +42,15 @@ COPY --from=build /sproot/api_spec /sproot/api_spec
 
 # Install mysql and camera dependencies
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV DEBIAN_FRONTEND=noninteractive
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
 
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
-  && echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
-  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+  && curl -fsSL https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
+    | gpg --dearmor -o /usr/share/keyrings/raspberrypi-archive-keyring.gpg \
+  && echo "deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list
 RUN apt-get update && apt-get -y upgrade \
   && apt-get install -y --no-install-recommends default-mysql-client udev python3-pip python3-picamera2\
   && apt-get clean \

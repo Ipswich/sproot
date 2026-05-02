@@ -29,7 +29,7 @@ describe("SensorCache.ts tests", function () {
 
   describe("loadCacheFromDatabaseAsync", function () {
     it("should load the cache from the database", async function () {
-      sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+      sinon.stub(mockSprootDB, "getSensorChartReadingsAsync").resolves([
         {
           data: "100",
           units: "°C",

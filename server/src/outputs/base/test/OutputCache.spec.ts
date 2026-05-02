@@ -28,7 +28,7 @@ describe("OutputCache.ts", function () {
 
   describe("loadCacheFromDatabaseAsync", function () {
     it("should load the cache from the database", async function () {
-      sinon.stub(mockSprootDB, "getOutputStatesAsync").resolves([
+      sinon.stub(mockSprootDB, "getOutputChartStatesAsync").resolves([
         {
           controlMode: ControlMode.automatic,
           value: 100,

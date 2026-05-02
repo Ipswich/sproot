@@ -166,7 +166,11 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   async #loadCacheFromDatabaseAsync(): Promise<void> {
     try {
       this.#cache.clear();
-      await this.#cache.loadFromDatabaseAsync(this.id, this.#initialCacheLookback);
+      await this.#cache.loadFromDatabaseAsync(
+        this.id,
+        this.#initialCacheLookback,
+        this.#chartDataPointInterval,
+      );
 
       let updateInfoString = "";
       for (const readingType in this.units) {

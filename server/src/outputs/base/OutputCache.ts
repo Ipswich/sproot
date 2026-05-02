@@ -17,14 +17,22 @@ export class OutputCache {
     return this.queueCache.get(offset, limit);
   }
 
-  async loadFromDatabaseAsync(outputId: number, minutes: number): Promise<void> {
+  async loadFromDatabaseAsync(
+    outputId: number,
+    minutes: number,
+    bucketMinutes: number = 5,
+  ): Promise<void> {
     this.queueCache.clear();
-    const sdbStates = await this.sprootDB.getOutputStatesAsync(
+    const chartStates = await this.sprootDB.getOutputChartStatesAsync(
       { id: outputId },
       new Date(),
       minutes,
+      bucketMinutes,
       true,
     );
+    const sdbStates =
+      chartStates ??
+      (await this.sprootDB.getOutputStatesAsync({ id: outputId }, new Date(), minutes, true));
     for (const sdbState of sdbStates) {
       const newState = {
         controlMode: sdbState.controlMode,

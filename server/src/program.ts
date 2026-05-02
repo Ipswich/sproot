@@ -15,10 +15,11 @@ import { DI_KEYS } from "./utils/DependencyInjectionConstants";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationService } from "./automation/AutomationService";
-import { getKnexConnectionAsync } from "./database/KnexUtilities";
 import { CameraManager } from "./camera/CameraManager";
 import { JournalService } from "./journals/JournalService";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
+import { getStartupKnexConnectionAsync } from "./database/AutomaticBridgeMigration";
+import { assertRuntimeDatabaseAllowedAsync } from "./database/BridgeRuntimeGuard";
 import {
   createDatabaseUpdateCronJob,
   createAutomationsCronJob,
@@ -33,7 +34,8 @@ export default async function setupAsync(): Promise<Express> {
   const logger = setupLogger(app);
   const profiler = logger.startTimer();
   logger.info("Initializing sproot app. . .");
-  const knexConnection = await getKnexConnectionAsync();
+  const knexConnection = await getStartupKnexConnectionAsync(logger);
+  await assertRuntimeDatabaseAllowedAsync(knexConnection);
   app.set(DI_KEYS.KnexConnection, knexConnection);
 
   const sprootDB = new SprootDB(knexConnection);
