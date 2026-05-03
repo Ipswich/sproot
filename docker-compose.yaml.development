@@ -9,7 +9,6 @@ services:
     environment:
       TZ: America/Los_Angeles
       NODE_ENV: development
-      DATABASE_CLIENT: mysql2
       LOG_DEBUG: true
       DEFAULT_USER: dev-test
       DEFAULT_USER_EMAIL: dev-test@example.com
@@ -21,12 +20,6 @@ services:
       DATABASE_PORT: 5432
       DATABASE_USER: postgres
       DATABASE_PASSWORD: root
-      TARGET_DATABASE_CLIENT: pg
-      TARGET_DATABASE_HOST: 127.0.0.1
-      TARGET_DATABASE_PORT: 5432
-      TARGET_DATABASE_USER: postgres
-      TARGET_DATABASE_PASSWORD: root
-      AUTO_DATABASE_MIGRATION: true
       INTERSERVICE_AUTHENTICATION_KEY: CHANGE ME #Change this to something long and unique
       BACKUP_RETENTION_DAYS: 30
     volumes:
