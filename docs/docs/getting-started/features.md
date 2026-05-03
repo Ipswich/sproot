@@ -26,6 +26,10 @@ The core purpose of Sproot is to programatically manage an environment for plant
 - Weekdays
 - Months
 
+## Notifications and alerts
+
+Sometimes it's nice to have a reminder that something needs doing, or if something is going awry. The same conditions that can be set up to trigger outputs can also be used to trigger in-app notifications. Whether it's a reminder for a bi-monthly neem oil spray, or a "your plants are gettin' a little dry" alert, notifications have got you covered.
+
 ## Journals for keeping notes
 
 While it's nice having everything automated, someone much wiser than myself once said "the best fertilizer is the farmer's footsteps." You'll likely want to be able to take notes of what you see and what you change. Automation can carry a lot of weight, but these will help you keep track of what you did last time.
