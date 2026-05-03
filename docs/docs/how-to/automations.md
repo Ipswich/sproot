@@ -181,4 +181,10 @@ The `Group` drop down will let you select which [condition group](#condition-gro
 
 ### Actions
 
-You can add or remove actions by expanding the `Actions` drop down to reveal your actions and the `Add Action` button. To remove an action, simply click the `Trashcan` icon next to the action you wish to delete. To add an action, click the `Add Action` button. This will reveal the outputs that you can control, and, depending on whether the output is PWM or not, either an on/off toggle or a slider for controlling intensity.
+You can add or remove actions by expanding the `Actions` drop down to reveal your actions and the `Add Action` button. To remove an action, simply click the `Trashcan` icon next to the action you wish to delete. To add an action, click the `Add Action` button. Currently, there are two types of actions:
+
+- Output Actions, used to trigger output changes
+  - Selecting this action type will reveal a list of outputs to choose from.
+  - If the selected output supports PWM, you will also be able to enable PWM and set the desired level with the slider.
+- Notification Actions, used to trigger in-app alerts
+  - Selecting this action type will reveal the notification options so you can configure the alert that should be sent when the automation is triggered.
