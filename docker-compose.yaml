@@ -178,4 +178,7 @@ services:
           }
         }
     volumes:
-      - ./docker_volumes/pgadmin:/var/lib/pgadmin
+      - pgadmin_runtime/pgadmin:/var/lib/pgadmin
+
+volumes:
+  pgadmin_runtime:

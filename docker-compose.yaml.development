@@ -139,7 +139,7 @@ services:
           }
         }
     volumes:
-      - ./docker_volumes/pgadmin:/var/lib/pgadmin
+      - pgadmin_runtime/pgadmin:/var/lib/pgadmin
 
   phpmyadmin:
     image: phpmyadmin:5.2.1-apache
@@ -151,3 +151,6 @@ services:
       - APACHE_PORT=3003
       - PMA_HOST=127.0.0.1
       - UPLOAD_LIMIT=500M
+
+volumes:
+  pgadmin_runtime:
