@@ -105,10 +105,10 @@ services:
       - /bin/sh
       - -ec
       - |
-          if [ ! -f "$${PGADMIN_SERVER_JSON_FILE:-/tmp/servers.json}" ] && [ -n "$${PGADMIN_SERVER_JSON:-}" ]; then
+          if [ -n "$${PGADMIN_SERVER_JSON:-}" ] && { [ ! -f "$${PGADMIN_SERVER_JSON_FILE:-/tmp/servers.json}" ] || [ "$${PGADMIN_REPLACE_SERVERS_ON_STARTUP:-}" = "True" ]; }; then
             printf '%s\n' "$$PGADMIN_SERVER_JSON" > "$${PGADMIN_SERVER_JSON_FILE:-/tmp/servers.json}"
           fi
-          exec /entrypoint.sh
+          exec /entrypoint.sh "$@"
     network_mode: "host"
     environment:
       PGADMIN_LISTEN_PORT: 3001
