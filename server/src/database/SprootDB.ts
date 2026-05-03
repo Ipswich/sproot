@@ -41,6 +41,11 @@ import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalE
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
 import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
+import {
+  isPostgresClient,
+  normalizeDatabaseClient,
+  type SupportedDatabaseClient,
+} from "./DatabaseClient";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -1230,6 +1235,10 @@ export class SprootDB implements ISprootDB {
     password: string,
     outputFile: string,
   ): Promise<void> {
+    if (isPostgresClient(this.#getDatabaseClient())) {
+      return this.#backupPostgresDatabaseAsync(host, port, user, password, outputFile);
+    }
+
     return new Promise((resolve, reject) => {
       const stderrChunks: string[] = [];
       const dump = spawn(
@@ -1337,6 +1346,137 @@ export class SprootDB implements ISprootDB {
   }
 
   #buildDatabaseDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
+    const normalizedStderr = stderrOutput.trim();
+    if (normalizedStderr.includes("server version mismatch")) {
+      return [
+        `pg_dump exited with ${exitCode ?? "unknown"}.`,
+        "PostgreSQL backup requires client tools that match the server major version.",
+        "Install a PostgreSQL 18 client or run backups from an environment that provides a matching pg_dump binary.",
+        normalizedStderr,
+      ].join(" ");
+    }
+
+    if (normalizedStderr.length > 0) {
+      return `pg_dump exited with ${exitCode ?? "unknown"}: ${normalizedStderr}`;
+    }
+
+    return `pg_dump exited with ${exitCode ?? "unknown"}`;
+  }
+
+  async #backupPostgresDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    outputFile: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const stderrChunks: string[] = [];
+      const dump = spawn(
+        "pg_dump",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          "--format=plain",
+          "--no-owner",
+          "--no-privileges",
+          this.#connection.client.database(),
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+      const gzip = spawn("gzip", ["-c"]);
+      const out = fs.createWriteStream(outputFile, { flags: "w" });
+
+      dump.stdout.pipe(gzip.stdin);
+      gzip.stdout.pipe(out);
+
+      dump.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("pg_dump:", chunk);
+      });
+      gzip.stderr.on("data", (d) => console.error("gzip:", d.toString()));
+
+      dump.on("error", (err) => reject(err));
+      gzip.on("error", (err) => reject(err));
+      out.on("error", (err) => reject(err));
+
+      dump.on("exit", (code) => {
+        if (code !== 0) {
+          return reject(
+            new Error(this.#buildPostgresDumpErrorMessage(code, stderrChunks.join(""))),
+          );
+        }
+      });
+
+      gzip.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`gzip exited with ${code}`));
+      });
+
+      out.on("close", () => resolve());
+    });
+  }
+
+  async #restorePostgresDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    inputFile: string,
+    databaseName: string,
+  ): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      const gunzip = spawn("gunzip", ["-c", inputFile]);
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          `--dbname=${databaseName}`,
+          "--single-transaction",
+          "--set=ON_ERROR_STOP=on",
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+
+      gunzip.stdout.pipe(psql.stdin);
+
+      gunzip.stderr.on("data", (d) => console.error("gunzip:", d.toString()));
+      psql.stderr.on("data", (d) => console.error("psql:", d.toString()));
+
+      gunzip.on("error", (err) => reject(err));
+      psql.on("error", (err) => reject(err));
+
+      gunzip.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`gunzip exited with ${code}`));
+      });
+
+      psql.on("exit", (code) => {
+        if (code !== 0) return reject(new Error(`psql exited with ${code}`));
+        resolve();
+      });
+    });
+  }
+
+  #buildPostgresDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
     const normalizedStderr = stderrOutput.trim();
     if (normalizedStderr.includes("server version mismatch")) {
       return [

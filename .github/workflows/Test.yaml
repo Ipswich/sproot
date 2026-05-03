@@ -25,7 +25,7 @@ env:
 
 permissions:
   contents: read
-
+ 
 jobs:
   prettier:
     name: Style Check
@@ -45,6 +45,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: ${{ matrix.experimental }}
+    env:
+      BRIDGE_TEST_SOURCE_HOST: 127.0.0.1
+      BRIDGE_TEST_SOURCE_PORT: 3306
+      BRIDGE_TEST_SOURCE_USER: root
+      BRIDGE_TEST_SOURCE_PASSWORD: root
+      BRIDGE_TEST_TARGET_HOST: 127.0.0.1
+      BRIDGE_TEST_TARGET_PORT: 5432
+      BRIDGE_TEST_TARGET_USER: postgres
+      BRIDGE_TEST_TARGET_PASSWORD: postgres
     strategy:
       fail-fast: false
       matrix:

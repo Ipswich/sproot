@@ -1,5 +1,7 @@
 FROM debian:12.13-slim
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN echo "Acquire::http::Pipeline-Depth 0;" > /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf.d/99custom && \
   echo "Acquire::BrokenProxy true;" >> /etc/apt/apt.conf.d/99custom
@@ -10,9 +12,10 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install curl nano python3 make g++ git udev -y
 
 # Install camera dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg
-RUN echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list \
-  && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg
+RUN curl -fsSL https://archive.raspberrypi.org/debian/raspberrypi.gpg.key \
+  | gpg --dearmor -o /usr/share/keyrings/raspberrypi-archive-keyring.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/raspberrypi-archive-keyring.gpg] https://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y --no-install-recommends python3-pip python3-picamera2\
   && apt-get clean \
