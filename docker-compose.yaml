@@ -1,5 +1,6 @@
 # These values should be changed to secure your installation
 x-database-password: &db_password "root"
+x-pgadmin-password: &pgadmin_password "root"
 x-jwt-secret: &jwt_secret "CHANGE ME"
 x-interservice-authentication-key: &interservice_authentication_key "CHANGE ME"
 
@@ -151,7 +152,7 @@ services:
     environment:
       PGADMIN_LISTEN_PORT: 3001
       PGADMIN_DEFAULT_EMAIL: admin@local.host
-      PGADMIN_DEFAULT_PASSWORD: *db_password
+      PGADMIN_DEFAULT_PASSWORD: *pgadmin_password
       PGADMIN_SERVER_JSON_FILE: /tmp/servers.json
       PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
       PGADMIN_CONFIG_SERVER_MODE: 'False'

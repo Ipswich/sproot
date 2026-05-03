@@ -113,7 +113,7 @@ services:
     environment:
       PGADMIN_LISTEN_PORT: 3001
       PGADMIN_DEFAULT_EMAIL: admin@local.host
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_PASSWORD: root
       PGADMIN_SERVER_JSON_FILE: /tmp/servers.json
       PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
       PGADMIN_CONFIG_SERVER_MODE: 'False'
