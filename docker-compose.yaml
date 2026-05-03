@@ -178,7 +178,7 @@ services:
           }
         }
     volumes:
-      - pgadmin_runtime/pgadmin:/var/lib/pgadmin
+      - pgadmin_runtime:/var/lib/pgadmin
 
 volumes:
   pgadmin_runtime:
