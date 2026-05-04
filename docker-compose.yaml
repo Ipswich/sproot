@@ -1,5 +1,6 @@
 # These values should be changed to secure your installation
 x-database-password: &db_password "root"
+x-pgadmin-password: &pgadmin_password "root"
 x-jwt-secret: &jwt_secret "CHANGE ME"
 x-interservice-authentication-key: &interservice_authentication_key "CHANGE ME"
 
@@ -95,7 +96,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
+      POSTGRES_PASSWORD: *db_password
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -113,22 +114,45 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+          if [ -n "$${PGADMIN_SERVER_JSON:-}" ] && { [ ! -f "$${PGADMIN_SERVER_JSON_FILE:-/tmp/servers.json}" ] || [ "$${PGADMIN_REPLACE_SERVERS_ON_STARTUP:-}" = "True" ]; }; then
+            printf '%s\n' "$$PGADMIN_SERVER_JSON" > "$${PGADMIN_SERVER_JSON_FILE:-/tmp/servers.json}"
+          fi
+          exec /entrypoint.sh "$@"
     network_mode: "host"
     environment:
       PGADMIN_LISTEN_PORT: 3001
       PGADMIN_DEFAULT_EMAIL: admin@local.host
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_PASSWORD: *pgadmin_password
+      PGADMIN_SERVER_JSON_FILE: /tmp/servers.json
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
       PGADMIN_DISABLE_POSTFIX: 'True'
       PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
       PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 30
-      PGADMIN_SERVER_JSON_FILE: /pgadmin/servers.json
-      PGADMIN_CUSTOM_CONFIG_DISTRO_FILE: /pgadmin/config_local.py
-      PGPASS_FILE: /pgadmin/pgpass
+      PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: 'False'
+      PGADMIN_CONFIG_CHECK_SUPPORTED_BROWSER: 'False'
+      PGADMIN_CONFIG_ALLOW_SAVE_PASSWORD: 'True'
+      PGADMIN_SERVER_JSON: |
+        {
+          "Servers": {
+            "1": {
+              "Name": "Sproot",
+              "Group": "Servers",
+              "Host": "127.0.0.1",
+              "Port": 5432,
+              "MaintenanceDB": "postgres",
+              "Username": "postgres",
+              "SSLMode": "prefer"
+            }
+          }
+        }
     volumes:
       - pgadmin_runtime:/var/lib/pgadmin
-      - ./pgadmin:/pgadmin:ro
 
 volumes:
   pgadmin_runtime:
