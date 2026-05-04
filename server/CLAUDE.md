@@ -8,7 +8,7 @@ Sproot Server is the Express.js REST API backend for the Sproot greenhouse contr
 
 **Purpose:** REST API server that serves the frontend, manages database operations, and handles hardware integration via HTTP and direct device communication.
 
-**Environment:** Node.js with TypeScript (compiled output), Knex.js for MySQL/MariaDB database, Express.js for HTTP serving.
+**Environment:** Node.js with TypeScript (compiled output), Knex.js for PostgreSQL database access, Express.js for HTTP serving.
 
 ## Development Commands
 
@@ -48,9 +48,9 @@ npm run lint
 
 **Database Layer:**
 
-- Knex.js for MySQL/MariaDB operations
+- Knex.js for PostgreSQL operations
 - Central database class: `src/database/SprootDB.ts` implements `ISprootDB`
-- Database migrations managed via Knex migrations directory
+- Database migrations managed via `src/database/migrations/`
 - Environment variables: DATABASE_HOST, DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD
 
 **Application Structure:**
@@ -135,7 +135,7 @@ When using `docker-compose.yaml.development`:
 - The repository is copied into the image, so server code runs inside the container
 - The server container does not automatically start the app process (it stays alive for manual use)
 - Start the stack first, then exec into the server container to run `npm run start:dev` or `npm run start`
-- Full stack includes MariaDB, PHPMyAdmin, the server container, and the client service
+- Full stack includes PostgreSQL, pgAdmin, the server container, and the client service
 - Logs mounted from `/sproot/server/logs/`
 - Backups mounted from `/sproot/server/backups/`
   **Note:** The development compose workflow requires manually starting the server from inside the running container. If you want live reload from host file changes, update Compose to bind-mount the source and run `nodemon` as the container command/entrypoint.

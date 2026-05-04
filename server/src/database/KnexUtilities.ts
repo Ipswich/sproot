@@ -1,12 +1,7 @@
 import { getKnexConfigForEnvironment } from "../knexfile";
 import knex, { Knex } from "knex";
-import {
-  getAdministrativeDatabaseName,
-  getDatabaseClientFromEnvironment,
-  isMySqlClient,
-  isPostgresClient,
-  type SupportedDatabaseClient,
-} from "./DatabaseClient";
+
+const ADMIN_DATABASE_NAME = "postgres";
 
 export type KnexConnectionOptions = {
   ensureDatabase?: boolean;
@@ -50,21 +45,24 @@ async function createDatabaseIfNotExistsAsync(config: Knex.Config): Promise<bool
     throw new Error("Knex configuration is missing a database name.");
   }
 
-  const client = getDatabaseClientFromEnvironment();
   const adminConfig: Knex.Config = {
     ...config,
-    connection: buildAdministrativeConnectionConfig(connectionConfiguration, client),
+    connection: {
+      ...connectionConfiguration,
+      database: ADMIN_DATABASE_NAME,
+    },
   };
 
   const adminConnection = knex(adminConfig);
 
   try {
-    const databaseExists = await databaseExistsAsync(adminConnection, client, databaseName);
+    const databaseExists =
+      (await adminConnection("pg_database").where("datname", databaseName).first()) != null;
     if (databaseExists) {
       return false;
     }
 
-    await createDatabaseAsync(adminConnection, client, databaseName);
+    await adminConnection.raw(`CREATE DATABASE "${databaseName.replaceAll('"', '""')}";`);
     return true;
   } finally {
     await adminConnection.destroy();
@@ -78,14 +76,11 @@ async function seedDatabaseAsync(connection: Knex) {
       | undefined;
     const seedExtension = configuredExtensions?.[0] ?? ".ts";
     await connection.seed.run({ specific: `testSetup${seedExtension}` });
-
-    if (isPostgresClient(getDatabaseClientFromEnvironment())) {
-      await reseedPostgresSequencesAsync(connection);
-    }
+    await reseedDatabaseSequencesAsync(connection);
   }
 }
 
-async function reseedPostgresSequencesAsync(connection: Knex): Promise<void> {
+async function reseedDatabaseSequencesAsync(connection: Knex): Promise<void> {
   const sequenceColumns = await connection
     .select<{ table_name: string; column_name: string }[]>("table_name", "column_name")
     .from("information_schema.columns")
@@ -134,72 +129,4 @@ function normalizeNullableNumber(value: unknown): number | null {
 
   const normalizedValue = Number(value);
   return Number.isFinite(normalizedValue) ? normalizedValue : null;
-}
-
-export function setTableDefaults(table: Knex.CreateTableBuilder) {
-  if (isMySqlClient(getDatabaseClientFromEnvironment())) {
-    table.engine("InnoDB");
-    table.charset("utf8mb4");
-    table.collate("utf8mb4_general_ci");
-  }
-}
-
-function buildAdministrativeConnectionConfig(
-  connectionConfiguration: Record<string, unknown>,
-  client: SupportedDatabaseClient,
-): Record<string, unknown> {
-  if (isMySqlClient(client)) {
-    const mysqlAdminConfiguration = { ...connectionConfiguration };
-    delete mysqlAdminConfiguration["database"];
-    return mysqlAdminConfiguration;
-  }
-
-  return {
-    ...connectionConfiguration,
-    database: getAdministrativeDatabaseName(client),
-  };
-}
-
-async function databaseExistsAsync(
-  adminConnection: Knex,
-  client: SupportedDatabaseClient,
-  databaseName: string,
-): Promise<boolean> {
-  if (isMySqlClient(client)) {
-    return (
-      (await adminConnection.from("information_schema.SCHEMATA").where("SCHEMA_NAME", databaseName))
-        .length !== 0
-    );
-  }
-
-  if (isPostgresClient(client)) {
-    const result = await adminConnection("pg_database").where("datname", databaseName).first();
-    return result != null;
-  }
-
-  throw new Error(`Unsupported database client: ${client}`);
-}
-
-async function createDatabaseAsync(
-  adminConnection: Knex,
-  client: SupportedDatabaseClient,
-  databaseName: string,
-): Promise<void> {
-  if (isMySqlClient(client)) {
-    await adminConnection.raw(
-      `CREATE DATABASE \`${databaseName}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`,
-    );
-    return;
-  }
-
-  if (isPostgresClient(client)) {
-    await adminConnection.raw(`CREATE DATABASE ${quotePostgresIdentifier(databaseName)};`);
-    return;
-  }
-
-  throw new Error(`Unsupported database client: ${client}`);
-}
-
-function quotePostgresIdentifier(identifier: string): string {
-  return `"${identifier.replaceAll('"', '""')}"`;
 }

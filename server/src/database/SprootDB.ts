@@ -41,11 +41,6 @@ import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalE
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
 import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
-import {
-  isPostgresClient,
-  normalizeDatabaseClient,
-  type SupportedDatabaseClient,
-} from "./DatabaseClient";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -184,10 +179,6 @@ export class SprootDB implements ISprootDB {
     bucketMinutes: number,
     toIsoString: boolean = false,
   ): Promise<SDBReading[]> {
-    if (!isPostgresClient(this.#getDatabaseClient())) {
-      return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
-    }
-
     const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
     const aggregateViewName = this.#getSensorAggregateViewName(bucketInterval);
     if (!aggregateViewName) {
@@ -593,10 +584,6 @@ export class SprootDB implements ISprootDB {
     bucketMinutes: number,
     toIsoString: boolean = false,
   ): Promise<SDBOutputState[]> {
-    if (!isPostgresClient(this.#getDatabaseClient())) {
-      return this.getOutputStatesAsync(output, since, minutes, toIsoString);
-    }
-
     const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
     const aggregateViewName = this.#getOutputAggregateViewName(bucketInterval);
     if (!aggregateViewName) {
@@ -1055,16 +1042,8 @@ export class SprootDB implements ISprootDB {
   }
 
   async getDatabaseSizeAsync(): Promise<number> {
-    if (isPostgresClient(this.#getDatabaseClient())) {
-      const result = await this.#connection.raw(
-        "SELECT ROUND(pg_database_size(current_database()) / 1024.0 / 1024.0, 2) AS size",
-      );
-      return this.#parseSizeValue(this.#getFirstRawRow(result)?.["size"]);
-    }
-
     const result = await this.#connection.raw(
-      "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size FROM information_schema.tables WHERE table_schema = ?",
-      [this.#connection.client.database()],
+      "SELECT ROUND(pg_database_size(current_database()) / 1024.0 / 1024.0, 2) AS size",
     );
     return this.#parseSizeValue(this.#getFirstRawRow(result)?.["size"]);
   }
@@ -1076,41 +1055,7 @@ export class SprootDB implements ISprootDB {
     password: string,
     outputFile: string,
   ): Promise<void> {
-    if (isPostgresClient(this.#getDatabaseClient())) {
-      return this.#backupPostgresDatabaseAsync(host, port, user, password, outputFile);
-    }
-
-    return new Promise((resolve, reject) => {
-      const dump = spawn("mysqldump", [
-        `--host=${host}`,
-        `--port=${port}`,
-        `--user=${user}`,
-        `--password=${password}`,
-        "--single-transaction",
-        "--quick",
-        this.#connection.client.database(),
-      ]);
-
-      const gzip = spawn("gzip", ["-c"]); // -c = write compressed to stdout
-
-      const out = fs.createWriteStream(outputFile, { flags: "w" });
-
-      dump.stdout.pipe(gzip.stdin);
-      gzip.stdout.pipe(out);
-
-      dump.stderr.on("data", (d) => console.error("mysqldump:", d.toString()));
-      gzip.stderr.on("data", (d) => console.error("gzip:", d.toString()));
-
-      dump.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`mysqldump exited with ${code}`));
-      });
-
-      gzip.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`gzip exited with ${code}`));
-      });
-
-      out.on("close", () => resolve());
-    });
+    return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile);
   }
 
   async restoreDatabaseAsync(
@@ -1122,85 +1067,34 @@ export class SprootDB implements ISprootDB {
   ): Promise<void> {
     const dbName = this.#connection.client.database();
 
-    if (isPostgresClient(this.#getDatabaseClient())) {
-      return this.#restorePostgresDatabaseAsync(host, port, user, password, inputFile, dbName);
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      const gunzip = spawn("gunzip", ["-c", inputFile]); // write decompressed SQL to stdout
-      const mysql = spawn("mysql", [
-        `--host=${host}`,
-        `--port=${port}`,
-        `--user=${user}`,
-        `--password=${password}`,
-        dbName,
-      ]);
-
-      gunzip.stdout.pipe(mysql.stdin);
-
-      gunzip.stderr.on("data", (d) => console.error("gunzip:", d.toString()));
-      mysql.stderr.on("data", (d) => console.error("mysql:", d.toString()));
-
-      gunzip.on("error", (err) => reject(err));
-      mysql.on("error", (err) => reject(err));
-
-      gunzip.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`gunzip exited with ${code}`));
-      });
-
-      mysql.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`mysql exited with ${code}`));
-        resolve();
-      });
-    });
+    return this.#restoreDatabaseArchiveAsync(host, port, user, password, inputFile, dbName);
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
     await this.#connection.destroy();
   }
 
-  #getDatabaseClient(): SupportedDatabaseClient {
-    return normalizeDatabaseClient(this.#connection.client.config.client);
-  }
-
   async #insertAndGetIdAsync(tableName: string, values: Record<string, unknown>): Promise<number> {
-    if (isPostgresClient(this.#getDatabaseClient())) {
-      const result = await this.#connection(tableName)
-        .insert(values)
-        .returning<{ id: number }[]>("id");
-      return result[0]?.id ?? -1;
-    }
-
-    const result = await this.#connection(tableName).insert(values);
-    return typeof result[0] === "number" ? result[0] : Number(result[0] ?? -1);
+    const result = await this.#connection(tableName)
+      .insert(values)
+      .returning<{ id: number }[]>("id");
+    return result[0]?.id ?? -1;
   }
 
-  #getCurrentTimestampValue(): Date | string {
-    if (isPostgresClient(this.#getDatabaseClient())) {
-      return new Date();
-    }
-
-    return toDbDate();
+  #getCurrentTimestampValue(): Date {
+    return new Date();
   }
 
-  #getLookbackDate(since: Date, minutes: number): Date | string {
+  #getLookbackDate(since: Date, minutes: number): Date {
     const lookbackDate = new Date(since.getTime() - minutes * 60_000);
-    if (isPostgresClient(this.#getDatabaseClient())) {
-      return lookbackDate;
-    }
-
-    return toDbDate(lookbackDate);
+    return lookbackDate;
   }
 
-  #getRecentTailStart(since: Date, minutes: number, bucketMinutes: number): Date | string {
+  #getRecentTailStart(since: Date, minutes: number, bucketMinutes: number): Date {
     const lookbackDate = new Date(since.getTime() - minutes * 60_000);
     const tailStart = new Date(since.getTime() - bucketMinutes * 60_000);
     const effectiveStart = tailStart > lookbackDate ? tailStart : lookbackDate;
-    if (isPostgresClient(this.#getDatabaseClient())) {
-      return effectiveStart;
-    }
-
-    return toDbDate(effectiveStart);
+    return effectiveStart;
   }
 
   #normalizeBucketMinutes(bucketMinutes: number): number {
@@ -1291,27 +1185,13 @@ export class SprootDB implements ISprootDB {
   }
 
   #getRawRows<T>(result: unknown): T[] {
-    if (Array.isArray((result as { rows?: T[] })?.rows)) {
-      return (result as { rows: T[] }).rows;
-    }
-
-    if (Array.isArray((result as [T[]])?.[0])) {
-      return (result as [T[]])[0];
-    }
-
-    return [];
+    return Array.isArray((result as { rows?: T[] })?.rows) ? (result as { rows: T[] }).rows : [];
   }
 
   #getFirstRawRow(result: any): Record<string, unknown> | undefined {
-    if (Array.isArray(result?.rows)) {
-      return result.rows[0] as Record<string, unknown> | undefined;
-    }
-
-    if (Array.isArray(result?.[0])) {
-      return result[0][0] as Record<string, unknown> | undefined;
-    }
-
-    return undefined;
+    return Array.isArray(result?.rows)
+      ? (result.rows[0] as Record<string, unknown> | undefined)
+      : undefined;
   }
 
   #parseSizeValue(value: unknown): number {
@@ -1343,7 +1223,7 @@ export class SprootDB implements ISprootDB {
     return Number.isFinite(normalizedValue) ? normalizedValue : null;
   }
 
-  async #backupPostgresDatabaseAsync(
+  async #backupDatabaseArchiveAsync(
     host: string,
     port: number,
     user: string,
@@ -1393,7 +1273,7 @@ export class SprootDB implements ISprootDB {
       dump.on("exit", (code) => {
         if (code !== 0) {
           return reject(
-            new Error(this.#buildPostgresDumpErrorMessage(code, stderrChunks.join(""))),
+            new Error(this.#buildDatabaseDumpErrorMessage(code, stderrChunks.join(""))),
           );
         }
       });
@@ -1406,7 +1286,7 @@ export class SprootDB implements ISprootDB {
     });
   }
 
-  async #restorePostgresDatabaseAsync(
+  async #restoreDatabaseArchiveAsync(
     host: string,
     port: number,
     user: string,
@@ -1456,7 +1336,7 @@ export class SprootDB implements ISprootDB {
     });
   }
 
-  #buildPostgresDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
+  #buildDatabaseDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
     const normalizedStderr = stderrOutput.trim();
     if (normalizedStderr.includes("server version mismatch")) {
       return [

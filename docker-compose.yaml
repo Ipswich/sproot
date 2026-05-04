@@ -29,7 +29,6 @@ x-client-args: &client_env
 x-server-environment: &server_env
   <<: 
     - *base_env
-  DATABASE_CLIENT: "mysql2"
   LOG_DEBUG: "false"
   DEFAULT_USER: *default_user_name
   DEFAULT_USER_EMAIL: *default_user_email
@@ -38,15 +37,9 @@ x-server-environment: &server_env
   JWT_SECRET: *jwt_secret
   JWT_EXPIRATION: "259200000"
   DATABASE_HOST: "127.0.0.1"
-  DATABASE_PORT: "3306"
-  DATABASE_USER: "root"
+  DATABASE_PORT: "5432"
+  DATABASE_USER: "postgres"
   DATABASE_PASSWORD: *db_password
-  TARGET_DATABASE_CLIENT: "pg"
-  TARGET_DATABASE_HOST: "127.0.0.1"
-  TARGET_DATABASE_PORT: "5432"
-  TARGET_DATABASE_USER: "postgres"
-  TARGET_DATABASE_PASSWORD: *db_password
-  AUTO_DATABASE_MIGRATION: "true"
   INTERSERVICE_AUTHENTICATION_KEY: *interservice_authentication_key
   BACKUP_RETENTION_DAYS: "30"
 
@@ -54,8 +47,6 @@ services:
   server:
     restart: unless-stopped
     depends_on:
-      db:
-        condition: service_healthy
       postgres:
         condition: service_healthy
     # Release automation publishes both :latest and the validated semver tag.
@@ -99,23 +90,6 @@ services:
     network_mode: "host"
     expose:
       - "80"
-
-  db:
-    image: mariadb:11.5.2-noble
-    restart: unless-stopped
-    environment:
-      MARIADB_ROOT_PASSWORD: *db_password
-    healthcheck:
-      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -p$$MARIADB_ROOT_PASSWORD"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-      start_period: 10s
-    volumes:
-      - ./docker_volumes/mariadb/data:/var/lib/mysql
-    network_mode: "host"
-    expose:
-      - "3306"
 
   postgres:
     image: timescale/timescaledb:2.26.4-pg18
