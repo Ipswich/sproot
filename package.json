@@ -9,6 +9,8 @@
     "build:docs": "npm run build --workspace=docs",
     "build:client": "npm run build --workspace=common --workspace=client",
     "build:server": "npm run build --workspace=common --workspace=server",
+    "generate:api-contracts": "node ./scripts/generate-api-contracts.mjs",
+    "verify:api-contracts": "node ./scripts/verify-api-contracts.mjs",
     "clean": "npm run clean --workspaces --if-present",
     "coverage": "npm run coverage --workspaces --if-present",
     "install:common": "npm ci --workspace=common",
@@ -55,11 +57,14 @@
     "mocha": "^10.2.0",
     "nodemon": "^3.0.1",
     "nyc": "^15.1.0",
+    "openapi-typescript": "^7.13.0",
+    "openapi-zod-client": "^1.18.3",
     "rimraf": "^5.0.1",
     "sinon": "^18.0.0",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.1",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "yaml": "^2.8.4"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

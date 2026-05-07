@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import createContractRoute from "../../validation/createContractRoute";
 
 import {
   getAsync,
@@ -11,40 +12,55 @@ import conditionsRouter from "./ConditionsRouter";
 
 const router = express.Router();
 
-router.get("/", async (req: Request, res: Response) => {
-  const response = await getAsync(req, res);
+router.get(
+  "/",
+  createContractRoute("listAutomations", async (req: Request, res: Response) => {
+    const response = await getAsync(req, res);
 
-  res.status(response.statusCode).json(response);
-  return;
-});
+    res.status(response.statusCode).json(response);
+    return;
+  }),
+);
 
-router.get("/:automationId", async (req: Request, res: Response) => {
-  const response = await getByIdAsync(req, res);
+router.get(
+  "/:automationId",
+  createContractRoute("getAutomationById", async (req: Request, res: Response) => {
+    const response = await getByIdAsync(req, res);
 
-  res.status(response.statusCode).json(response);
-  return;
-});
+    res.status(response.statusCode).json(response);
+    return;
+  }),
+);
 
-router.post("/", async (req: Request, res: Response) => {
-  const response = await addAsync(req, res);
+router.post(
+  "/",
+  createContractRoute("createAutomation", async (req: Request, res: Response) => {
+    const response = await addAsync(req, res);
 
-  res.status(response.statusCode).json(response);
-  return;
-});
+    res.status(response.statusCode).json(response);
+    return;
+  }),
+);
 
-router.patch("/:automationId", async (req: Request, res: Response) => {
-  const response = await updateAsync(req, res);
+router.patch(
+  "/:automationId",
+  createContractRoute("updateAutomation", async (req: Request, res: Response) => {
+    const response = await updateAsync(req, res);
 
-  res.status(response.statusCode).json(response);
-  return;
-});
+    res.status(response.statusCode).json(response);
+    return;
+  }),
+);
 
-router.delete("/:automationId", async (req: Request, res: Response) => {
-  const response = await deleteAsync(req, res);
+router.delete(
+  "/:automationId",
+  createContractRoute("deleteAutomation", async (req: Request, res: Response) => {
+    const response = await deleteAsync(req, res);
 
-  res.status(response.statusCode).json(response);
-  return;
-});
+    res.status(response.statusCode).json(response);
+    return;
+  }),
+);
 
 conditionsRouter(router);
 

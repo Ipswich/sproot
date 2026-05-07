@@ -22,6 +22,7 @@ import deviceZoneRouter from "./devicezones/DeviceZoneRouter";
 import journalRouter from "./journals/JournalRouter";
 import entryRouter from "./journals/EntriesRouter";
 import tagRouter from "./tags/TagRouter";
+import ContractValidationError from "../validation/ContractValidationError";
 
 const spec_path = "../api_spec/openapi_v2.yaml";
 
@@ -98,8 +99,55 @@ function ApiRootV2(app: Express) {
       ...(res.locals["defaultProperties"] ?? createDefaultProperties()),
     };
 
-    // Log 500s
-    if (err.status === 500) {
+    if (err instanceof ContractValidationError) {
+      const validationLogPayload = {
+        operationId: err.operationId,
+        phase: err.phase,
+        method: req.method,
+        url: req.originalUrl,
+        details: err.errors,
+      };
+
+      if (
+        process.env["NODE_ENV"] === "test" &&
+        req.originalUrl.startsWith("/api/v2/outputs/chart-data")
+      ) {
+        console.error(
+          "[chart-debug] contract validation error",
+          JSON.stringify({
+            operationId: err.operationId,
+            phase: err.phase,
+            method: req.method,
+            url: req.originalUrl,
+            details: err.errors,
+            stack: err.stack,
+          }),
+        );
+      }
+
+      if (err.phase === "request") {
+        logger.warn(`Contract validation failed: ${JSON.stringify(validationLogPayload)}`);
+      } else {
+        logger.error(`Contract validation failed: ${JSON.stringify(validationLogPayload)}`);
+      }
+    } else if (err.status === 500) {
+      if (
+        process.env["NODE_ENV"] === "test" &&
+        req.originalUrl.startsWith("/api/v2/outputs/chart-data")
+      ) {
+        console.error(
+          "[chart-debug] error middleware",
+          JSON.stringify({
+            method: req.method,
+            url: req.originalUrl,
+            name: err?.name,
+            message: err?.message,
+            status: err?.status ?? 500,
+            stack: err?.stack,
+            errors: err?.errors,
+          }),
+        );
+      }
       logger.error(JSON.stringify(errorResponse));
     }
 

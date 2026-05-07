@@ -24,6 +24,11 @@ You can easily spin up a development instance by running `sudo docker compose -f
 ### Client
 Navigate to the `sproot/client` directory. If your api server is running on a different host, open `.env.development` and update `VITE_API_SERVER_URL` to contain your servers URL (i.e, `http://192.168.1.1`). Finally, run `npm run start:dev` to start the vite development server.
 
+## API Contract Maintenance
+
+OpenAPI contract regeneration, generated artifact ownership, runtime validation behavior, and intentional non-JSON response exclusions are documented in [API_CONTRACTS.md](API_CONTRACTS.md).
+Use `npm run generate:api-contracts` to regenerate contracts and `npm run verify:api-contracts` to enforce deterministic output plus `common/src/api/generated.sha256` drift checks.
+
 ## Parts
 Foremost, I'd like to note that my implementation is soldered. This can still be implemented on a breadboard if that's more your speed, though it'll change what parts you truly need and make it "difficult" to attach it to the 3D printed mount.
 

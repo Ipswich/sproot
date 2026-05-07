@@ -733,7 +733,7 @@ export class SprootDB implements ISprootDB {
     return this.#connection("notification_actions").where("id", notificationActionId).delete();
   }
   async getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]> {
-    return this.#connection("sensor_conditions as sc")
+    const conditions = await this.#connection("sensor_conditions as sc")
       .select([
         "sc.id",
         "sc.automation_id as automationId",
@@ -747,6 +747,11 @@ export class SprootDB implements ISprootDB {
       ])
       .innerJoin("sensors as s", "sc.sensor_id", "s.id")
       .where("automation_id", automationId);
+
+    return conditions.map((condition) => ({
+      ...condition,
+      comparisonValue: Number(condition.comparisonValue),
+    }));
   }
   async addSensorConditionAsync(
     automationId: number,
@@ -787,7 +792,7 @@ export class SprootDB implements ISprootDB {
     return this.#connection("sensor_conditions").where("id", conditionId).delete();
   }
   async getOutputConditionsAsync(automationId: number): Promise<SDBOutputCondition[]> {
-    return this.#connection("output_conditions as oc")
+    const conditions = await this.#connection("output_conditions as oc")
       .select([
         "oc.id",
         "oc.automation_id as automationId",
@@ -800,6 +805,11 @@ export class SprootDB implements ISprootDB {
       ])
       .innerJoin("outputs as o", "oc.output_id", "o.id")
       .where("automation_id", automationId);
+
+    return conditions.map((condition) => ({
+      ...condition,
+      comparisonValue: Number(condition.comparisonValue),
+    }));
   }
   async addOutputConditionAsync(
     automationId: number,

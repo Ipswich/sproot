@@ -89,7 +89,7 @@ export async function updateAsync(
     const deviceZoneData: Partial<SDBDeviceZone> = req.body;
     const errorMessages: string[] = [];
 
-    if (deviceZoneData.name == null || deviceZoneData.name === "") {
+    if (deviceZoneData.name !== undefined && (deviceZoneData.name == null || deviceZoneData.name === "")) {
       errorMessages.push("Device zone name is required.");
     }
 

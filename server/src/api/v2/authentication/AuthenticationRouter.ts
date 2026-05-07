@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { getTokenAsync } from "./handlers/TokenHandlers";
+import createContractRoute from "../../validation/createContractRoute";
 
 export default function initializeAuthenticationRoutes(
   isAuthEnabled: string,
@@ -14,11 +15,14 @@ export default function initializeAuthenticationRoutes(
    * @param response
    * @returns
    */
-  router.post("/token", async (req: Request, res: Response) => {
-    const response = await getTokenAsync(req, res, isAuthEnabled, jwtExpiration, jwtSecret, false);
+  router.post(
+    "/token",
+    createContractRoute("authenticateToken", async (req: Request, res: Response) => {
+      const response = await getTokenAsync(req, res, isAuthEnabled, jwtExpiration, jwtSecret, false);
 
-    res.status(response.statusCode).json(response);
-  });
+      res.status(response.statusCode).json(response);
+    }),
+  );
 
   /**
    * Possible statusCodes: 200, 400, 401, 501, 503
@@ -26,26 +30,29 @@ export default function initializeAuthenticationRoutes(
    * @param response
    * @returns
    */
-  router.post("/login", async (req: Request, res: Response) => {
-    const response = await getTokenAsync(req, res, isAuthEnabled, jwtExpiration, jwtSecret, true);
-    if (response.statusCode === 200 && "content" in response) {
-      const token = response.content?.data?.token;
-      // Remove the token from the response, as it shouldn't be made visible to the client
-      delete response.content.data.token;
+  router.post(
+    "/login",
+    createContractRoute("authenticateLogin", async (req: Request, res: Response) => {
+      const response = await getTokenAsync(req, res, isAuthEnabled, jwtExpiration, jwtSecret, true);
+      if (response.statusCode === 200 && "content" in response) {
+        const token = response.content?.data?.token;
+        // Remove the token from the response, as it shouldn't be made visible to the client
+        delete response.content.data.token;
 
-      res
-        .cookie("jwt_token", token, {
-          maxAge: jwtExpiration,
-          httpOnly: true,
-          sameSite: "strict",
-        })
-        .status(response.statusCode)
-        .json(response);
-      return;
-    }
+        res
+          .cookie("jwt_token", token, {
+            maxAge: jwtExpiration,
+            httpOnly: true,
+            sameSite: "strict",
+          })
+          .status(response.statusCode)
+          .json(response);
+        return;
+      }
 
-    res.status(response.statusCode).json(response);
-  });
+      res.status(response.statusCode).json(response);
+    }),
+  );
 
   return router;
 }

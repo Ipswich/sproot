@@ -11,44 +11,72 @@ import {
   getTimelapseGenerationStatus,
   postRegenerateTimelapseArchive,
 } from "./handlers/TimelapseHandlers";
+import createContractRoute from "../../validation/createContractRoute";
 
 const router = express.Router();
-router.get("/settings", (req: Request, res: Response) => {
-  const response = getCameraSettings(req, res);
-  res.status(response.statusCode).json(response);
-});
+router.get(
+  "/settings",
+  createContractRoute("getCameraSettings", (req: Request, res: Response) => {
+    const response = getCameraSettings(req, res);
+    res.status(response.statusCode).json(response);
+  }),
+);
 
-router.patch("/settings", async (req: Request, res: Response) => {
-  const response = await updateCameraSettingsAsync(req, res);
-  res.status(response.statusCode).json(response);
-});
+router.patch(
+  "/settings",
+  createContractRoute("updateCameraSettings", async (req: Request, res: Response) => {
+    const response = await updateCameraSettingsAsync(req, res);
+    res.status(response.statusCode).json(response);
+  }),
+);
 
-router.get("/stream", async (req: Request, res: Response) => {
-  await streamHandlerAsync(req, res);
-});
+router.get(
+  "/stream",
+  createContractRoute("getCameraStream", async (req: Request, res: Response) => {
+    await streamHandlerAsync(req, res);
+  }),
+);
 
-router.get("/latest-image", async (req: Request, res: Response) => {
-  await getLatestImageAsync(req, res);
-});
+router.get(
+  "/latest-image",
+  createContractRoute("getLatestCameraImage", async (req: Request, res: Response) => {
+    await getLatestImageAsync(req, res);
+  }),
+);
 
-router.get("/timelapse/archive", async (req: Request, res: Response) => {
-  await getTimelapseArchiveAsync(req, res);
-});
+router.get(
+  "/timelapse/archive",
+  createContractRoute("downloadTimelapseArchive", async (req: Request, res: Response) => {
+    await getTimelapseArchiveAsync(req, res);
+  }),
+);
 
-router.post("/timelapse/archive/regenerate", (req: Request, res: Response) => {
-  postRegenerateTimelapseArchive(req, res);
-});
+router.post(
+  "/timelapse/archive/regenerate",
+  createContractRoute("regenerateTimelapseArchive", (req: Request, res: Response) => {
+    postRegenerateTimelapseArchive(req, res);
+  }),
+);
 
-router.get("/timelapse/archive/status", (req: Request, res: Response) => {
-  getTimelapseGenerationStatus(req, res);
-});
+router.get(
+  "/timelapse/archive/status",
+  createContractRoute("getTimelapseArchiveStatus", (req: Request, res: Response) => {
+    getTimelapseGenerationStatus(req, res);
+  }),
+);
 
-router.post("/reconnect", async (req: Request, res: Response) => {
-  await reconnectLivestreamAsync(req, res);
-});
+router.post(
+  "/reconnect",
+  createContractRoute("reconnectCamera", async (req: Request, res: Response) => {
+    await reconnectLivestreamAsync(req, res);
+  }),
+);
 
-router.delete("/timelapse/images", async (req: Request, res: Response) => {
-  await clearAllImagesHandlerAsync(req, res);
-});
+router.delete(
+  "/timelapse/images",
+  createContractRoute("clearTimelapseImages", async (req: Request, res: Response) => {
+    await clearAllImagesHandlerAsync(req, res);
+  }),
+);
 
 export default router;

@@ -13,6 +13,7 @@ info:
 paths:
   /api/v2/authenticate/token:
     post:
+      operationId: authenticateToken
       tags:
         - "Authentication"
       summary: Get an authentication token for authorization header.
@@ -136,6 +137,7 @@ paths:
 
   /api/v2/authenticate/login:
     post:
+      operationId: authenticateLogin
       tags:
         - "Authentication"
       summary: Get an authentication token set as a cookie.
@@ -264,6 +266,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/system/power-off:
     post:
+      operationId: powerOffSystem
       tags:
         - "System"
       summary: "Power off the system."
@@ -309,6 +312,7 @@ paths:
                                 - "System is not available."
   /api/v2/system/status:
     get:
+      operationId: getSystemStatus
       tags:
         - "System"
       summary: Get system status.
@@ -354,6 +358,7 @@ paths:
                               example: "Failed to retrieve system status."
   /api/v2/system/backups:
     get:
+      operationId: listSystemBackups
       tags:
         - "System"
       summary: List system backups.
@@ -398,6 +403,7 @@ paths:
                               example: "Failed to retrieve system backups."
   /api/v2/system/backups/download/{fileName}:
     get:
+      operationId: downloadSystemBackup
       tags:
         - "System"
       summary: Download a system backup.
@@ -489,6 +495,7 @@ paths:
                               example: "Failed to download backup."
   /api/v2/system/backups/restore:
     post:
+      operationId: restoreSystemBackup
       tags:
         - "System"
       summary: Restore a system backup.
@@ -556,6 +563,7 @@ paths:
                               example: "Failed to restore backup."
   /api/v2/system/backups/create:
     post:
+      operationId: createSystemBackup
       tags:
         - "System"
       summary: Create a system backup.
@@ -597,6 +605,7 @@ paths:
                               example: "Failed to create backup."
   /api/v2/system/backups/create/status:
     get:
+      operationId: getSystemBackupCreateStatus
       tags:
         - "System"
       summary: Get the status of the current backup creation.
@@ -641,6 +650,7 @@ paths:
                               example: "Failed to retrieve backup status."
   /api/v2/subcontrollers:
     get:
+      operationId: listSubcontrollers
       tags:
         - "Subcontrollers"
       summary: Get subcontrollers discovered via mDNS.
@@ -692,6 +702,7 @@ paths:
                             items:
                               example: "Failed to retrieve subcontrollers."
     post:
+      operationId: createSubcontroller
       tags:
         - "Subcontrollers"
       summary: Add a new subcontroller.
@@ -702,7 +713,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBSubcontroller"
+              $ref: "#/components/schemas/SubcontrollerCreateRequest"
       responses:
         201:
           description: "subcontroller created"
@@ -759,6 +770,7 @@ paths:
                               example: "Failed to add subcontroller."
   /api/v2/subcontrollers/{deviceId}:
     patch:
+      operationId: updateSubcontroller
       tags:
         - "Subcontrollers"
       summary: Update a subcontroller.
@@ -855,6 +867,7 @@ paths:
                             items:
                               example: "Failed to update subcontroller."
     delete:
+      operationId: deleteSubcontroller
       tags:
         - "Subcontrollers"
       summary: Delete a subcontroller.
@@ -923,6 +936,7 @@ paths:
                               example: "Failed to delete subcontroller."
   /api/v2/subcontrollers/{deviceId}/connection-status:
     get:
+      operationId: getSubcontrollerConnectionStatus
       tags:
         - "Subcontrollers"
       summary: Get subcontroller connection status.
@@ -997,6 +1011,7 @@ paths:
                               example: "Database connection failed."
   /api/v2/subcontrollers/firmware/esp32/manifest:
     get:
+      operationId: getEsp32FirmwareManifest
       tags:
         - "Subcontroller Firmware"
       summary: Get the ESP32 firmware manifest.
@@ -1019,6 +1034,7 @@ paths:
                             $ref: "#/components/schemas/FirmwareManifest"
   /api/v2/subcontrollers/firmware/esp32/binary:
     get:
+      operationId: downloadEsp32FirmwareBinary
       tags:
         - "Subcontroller Firmware"
       summary: Get the ESP32 firmware binary.
@@ -1064,6 +1080,7 @@ paths:
                               example: "Error retrieving firmware binary."
   /api/v2/subcontrollers/firmware/esp32/bootloader:
     get:
+      operationId: downloadEsp32FirmwareBootloader
       tags:
         - "Subcontroller Firmware"
       summary: Get the ESP32 bootloader binary.
@@ -1109,6 +1126,7 @@ paths:
                               example: "Error retrieving bootloader binary."
   /api/v2/subcontrollers/firmware/esp32/partitions:
     get:
+      operationId: downloadEsp32FirmwarePartitions
       tags:
         - "Subcontroller Firmware"
       summary: Get the ESP32 partitions binary.
@@ -1154,6 +1172,7 @@ paths:
                               example: "Error retrieving partitions binary."
   /api/v2/subcontrollers/firmware/esp32/application:
     get:
+      operationId: downloadEsp32FirmwareApplication
       tags:
         - "Subcontroller Firmware"
       summary: Get the ESP32 application binary.
@@ -1199,6 +1218,7 @@ paths:
                               example: "Error retrieving application binary."
   /api/v2/subcontrollers/firmware/esp32/ota-update/{deviceId}:
     post:
+      operationId: runEsp32OtaUpdate
       tags:
         - "Subcontroller Firmware"
       summary: Trigger an OTA update for the ESP32 subcontroller.
@@ -1344,6 +1364,7 @@ paths:
 
   /api/v2/ping:
     get:
+      operationId: ping
       tags:
         - "Ping"
       summary: Ping the server.
@@ -1367,6 +1388,7 @@ paths:
 
   /api/v2/outputs:
     get:
+      operationId: listOutputs
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1412,6 +1434,7 @@ paths:
                             items:
                               example: "Invalid or Missing JWT."
     post:
+      operationId: createOutput
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1426,7 +1449,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBOutput"
+              $ref: "#/components/schemas/OutputCreateRequest"
       responses:
         201:
           description: "Output created"
@@ -1441,7 +1464,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBOutput"
+                            $ref: "#/components/schemas/OutputCreateResponse"
         400:
           description: "Bad request"
           content:
@@ -1508,6 +1531,7 @@ paths:
 
   /api/v2/outputs/{outputId}:
     get:
+      operationId: getOutputById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1580,6 +1604,7 @@ paths:
                             items:
                               example: "Output with ID -1 not found."
     patch:
+      operationId: updateOutput
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1718,6 +1743,7 @@ paths:
                                 - "Failed to update output in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteOutput
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1829,6 +1855,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/outputs/chart-data:
     get:
+      operationId: getOutputChartData
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1902,6 +1929,7 @@ paths:
                               example: "Invalid or Missing JWT."
   /api/v2/outputs/supported-models:
     get:
+      operationId: listSupportedOutputModels
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1952,6 +1980,7 @@ paths:
                               example: "Invalid or Missing JWT."
   /api/v2/outputs/available-devices/{model}:
     get:
+      operationId: listAvailableOutputDevices
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2039,6 +2068,7 @@ paths:
                               example: "Invalid or Missing JWT."
   /api/v2/outputs/{outputId}/control-mode:
     put:
+      operationId: setOutputControlMode
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2142,6 +2172,7 @@ paths:
 
   /api/v2/outputs/{outputId}/manual-state:
     put:
+      operationId: setOutputManualState
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2244,6 +2275,7 @@ paths:
 
   /api/v2/automations:
     get:
+      operationId: listAutomations
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2310,6 +2342,7 @@ paths:
                                 - "Failed to retrieve automations from database."
                                 - "Database connection failed."
     post:
+      operationId: createAutomation
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2324,7 +2357,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Automation"
+              $ref: "#/components/schemas/AutomationCreateRequest"
       responses:
         201:
           description: "Created"
@@ -2402,6 +2435,7 @@ paths:
 
   /api/v2/automations/{automationId}:
     get:
+      operationId: getAutomationById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2492,6 +2526,7 @@ paths:
                                 - "Failed to retrieve automation from database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteAutomation
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2601,6 +2636,7 @@ paths:
                                 - "Failed to delete automation from database."
                                 - "Database connection failed."
     patch:
+      operationId: updateAutomation
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2622,7 +2658,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Automation"
+              $ref: "#/components/schemas/AutomationUpdateRequest"
       responses:
         200:
           description: "Success"
@@ -2717,6 +2753,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/automations/{automationId}/conditions:
     get:
+      operationId: listAutomationConditions
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2748,8 +2785,7 @@ paths:
                       content:
                         properties:
                           data:
-                            anyOf:
-                              - $ref: "#/components/schemas/AutomationConditions"
+                            $ref: "#/components/schemas/AutomationConditions"
         401:
           description: "Unauthorized"
           content:
@@ -2810,6 +2846,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/automations/{automationId}/conditions/{type}:
     get:
+      operationId: listAutomationConditionsByType
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2854,14 +2891,13 @@ paths:
                       content:
                         properties:
                           data:
-                            items:
-                              anyOf:
-                                - $ref: "#/components/schemas/SensorCondition"
-                                - $ref: "#/components/schemas/OutputCondition"
-                                - $ref: "#/components/schemas/TimeCondition"
-                                - $ref: "#/components/schemas/WeekdayCondition"
-                                - $ref: "#/components/schemas/MonthCondition"
-                                - $ref: "#/components/schemas/DateRangeCondition"
+                            anyOf:
+                              - $ref: "#/components/schemas/SensorConditionGroup"
+                              - $ref: "#/components/schemas/OutputConditionGroup"
+                              - $ref: "#/components/schemas/TimeConditionGroup"
+                              - $ref: "#/components/schemas/WeekdayConditionGroup"
+                              - $ref: "#/components/schemas/MonthConditionGroup"
+                              - $ref: "#/components/schemas/DateRangeConditionGroup"
         400:
           description: "Bad request"
           content:
@@ -2941,6 +2977,7 @@ paths:
                                 - "Failed to get conditions from database."
                                 - "Database connection failed."
     post:
+      operationId: createAutomationConditionByType
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -2976,12 +3013,12 @@ paths:
           application/json:
             schema:
               anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
-                - $ref: "#/components/schemas/WeekdayCondition"
-                - $ref: "#/components/schemas/MonthCondition"
-                - $ref: "#/components/schemas/DateRangeCondition"
+                - $ref: "#/components/schemas/SensorConditionCreateRequest"
+                - $ref: "#/components/schemas/OutputConditionCreateRequest"
+                - $ref: "#/components/schemas/TimeConditionCreateRequest"
+                - $ref: "#/components/schemas/WeekdayConditionCreateRequest"
+                - $ref: "#/components/schemas/MonthConditionCreateRequest"
+                - $ref: "#/components/schemas/DateRangeConditionCreateRequest"
       responses:
         201:
           description: "Created"
@@ -3083,6 +3120,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/automations/{automationId}/conditions/{type}/{conditionId}:
     get:
+      operationId: getAutomationConditionById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3200,6 +3238,7 @@ paths:
                                 - "Failed to get condition from database."
                                 - "Database connection failed."
     patch:
+      operationId: updateAutomationCondition
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3242,12 +3281,12 @@ paths:
           application/json:
             schema:
               anyOf:
-                - $ref: "#/components/schemas/SensorCondition"
-                - $ref: "#/components/schemas/OutputCondition"
-                - $ref: "#/components/schemas/TimeCondition"
-                - $ref: "#/components/schemas/WeekdayCondition"
-                - $ref: "#/components/schemas/MonthCondition"
-                - $ref: "#/components/schemas/DateRangeCondition"
+                - $ref: "#/components/schemas/SensorConditionUpdateRequest"
+                - $ref: "#/components/schemas/OutputConditionUpdateRequest"
+                - $ref: "#/components/schemas/TimeConditionUpdateRequest"
+                - $ref: "#/components/schemas/WeekdayConditionUpdateRequest"
+                - $ref: "#/components/schemas/MonthConditionUpdateRequest"
+                - $ref: "#/components/schemas/DateRangeConditionUpdateRequest"
       responses:
         200:
           description: "Success"
@@ -3349,6 +3388,7 @@ paths:
                                 - "Failed to update condition in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteAutomationCondition
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3482,6 +3522,7 @@ paths:
 
   /api/v2/output-actions:
     get:
+      operationId: listOutputActions
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3555,6 +3596,7 @@ paths:
                                 - "Failed to get output actions from database."
                                 - "Database connection failed."
     post:
+      operationId: createOutputAction
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3568,7 +3610,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OutputAction"
+              $ref: "#/components/schemas/OutputActionCreateRequest"
       responses:
         201:
           description: "Created"
@@ -3665,6 +3707,7 @@ paths:
 
   /api/v2/output-actions/{outputActionId}:
     get:
+      operationId: getOutputActionById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3756,6 +3799,7 @@ paths:
                                 - "Database connection failed."
 
     delete:
+      operationId: deleteOutputAction
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3867,6 +3911,7 @@ paths:
 
   /api/v2/notification-actions:
     get:
+      operationId: listNotificationActions
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3940,6 +3985,7 @@ paths:
                                 - "Failed to get notification actions from database."
                                 - "Database connection failed."
     post:
+      operationId: createNotificationAction
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -3953,7 +3999,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NotificationAction"
+              $ref: "#/components/schemas/NotificationActionCreateRequest"
       responses:
         201:
           description: "Created"
@@ -4051,6 +4097,7 @@ paths:
 
   /api/v2/notification-actions/{notificationActionId}:
     get:
+      operationId: getNotificationActionById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4142,6 +4189,7 @@ paths:
                                 - "Database connection failed."
 
     delete:
+      operationId: deleteNotificationAction
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4253,6 +4301,7 @@ paths:
 
   /api/v2/notification-actions/active:
     get:
+      operationId: listActiveNotifications
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4320,6 +4369,7 @@ paths:
 
   /api/v2/sensors:
     get:
+      operationId: listSensors
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4365,6 +4415,7 @@ paths:
                             items:
                               example: "Invalid or Missing JWT."
     post:
+      operationId: createSensor
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4379,7 +4430,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBSensor"
+              $ref: "#/components/schemas/SensorCreateRequest"
       responses:
         201:
           description: "Sensor created"
@@ -4394,7 +4445,7 @@ paths:
                       content:
                         properties:
                           data:
-                            $ref: "#/components/schemas/SDBSensor"
+                            $ref: "#/components/schemas/SensorCreateResponse"
         400:
           description: "Bad request"
           content:
@@ -4459,6 +4510,7 @@ paths:
 
   /api/v2/sensors/{sensorId}:
     get:
+      operationId: getSensorById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4532,6 +4584,7 @@ paths:
                             items:
                               example: "Sensor with ID -1 not found."
     patch:
+      operationId: updateSensor
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4661,6 +4714,7 @@ paths:
                                 - "Failed to update sensor in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteSensor
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4774,6 +4828,7 @@ paths:
 
   /api/v2/sensors/chart-data:
     get:
+      operationId: getSensorChartData
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4810,41 +4865,40 @@ paths:
                           data:
                             type: object
                             properties:
-                              temperature:
+                              data:
+                                type: object
+                                additionalProperties:
+                                  type: array
+                                  items:
+                                    $ref: "#/components/schemas/DataPoint"
+                                example:
+                                  temperature:
+                                    - name: "1/24 12:00 am"
+                                      sensor1: 25.000
+                                      sensor2: 25.000
+                                      units: "°C"
+                                    - name: "1/24 12:05 am"
+                                      sensor1: 25.625
+                                      sensor2: 25.625
+                                      units: "°C"
+                                  humidity:
+                                    - name: "1/24 12:00 am"
+                                      sensor1: 50.000
+                                      sensor2: 50.000
+                                      units: "%rH"
+                                    - name: "1/24 12:05 am"
+                                      sensor1: 50.625
+                                      sensor2: 50.625
+                                      units: "%rH"
+                              series:
                                 type: array
                                 items:
-                                  $ref: "#/components/schemas/DataPoint"
+                                  $ref: "#/components/schemas/ChartSeries"
                                 example:
-                                  - name: "1/24 12:00 am"
-                                    sensor1: 25.000
-                                    sensor2: 25.000
-                                    units: "°C"
-                                  - name: "1/24 12:05 am"
-                                    sensor1: 25.625
-                                    sensor2: 25.625
-                                    units: "°C"
-                              humidity:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/DataPoint"
-                                example:
-                                  - name: "1/24 12:00 am"
-                                    sensor1: 50.000
-                                    sensor2: 50.000
-                                    units: "%rH"
-                                  - name: "1/24 12:05 am"
-                                    sensor1: 50.625
-                                    sensor2: 50.625
-                                    units: "%rH"
-                          series:
-                            type: array
-                            items:
-                              $ref: "#/components/schemas/ChartSeries"
-                            example:
-                              - name: "sensor1"
-                                color: "lime"
-                              - name: "sensor2"
-                                color: "blue"
+                                  - name: "sensor1"
+                                    color: "lime"
+                                  - name: "sensor2"
+                                    color: "blue"
         401:
           description: "Unauthorized"
           content:
@@ -4867,6 +4921,7 @@ paths:
 
   /api/v2/sensors/supported-models:
     get:
+      operationId: listSupportedSensorModels
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4920,6 +4975,7 @@ paths:
 
   /api/v2/sensors/reading-types:
     get:
+      operationId: getSensorReadingTypes
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4972,6 +5028,7 @@ paths:
                               example: "Invalid or Missing JWT."
   /api/v2/device-zones:
     get:
+      operationId: listDeviceZones
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5038,6 +5095,7 @@ paths:
                                 - "Failed to get device zonse from database."
                                 - "Database connection failed."
     post:
+      operationId: createDeviceZone
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5052,7 +5110,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBDeviceZone"
+              $ref: "#/components/schemas/DeviceZoneCreateRequest"
       responses:
         201:
           description: "Device zone created"
@@ -5129,6 +5187,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/device-zones/{deviceZoneId}:
     patch:
+      operationId: updateDeviceZone
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5150,7 +5209,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBDeviceZone"
+              $ref: "#/components/schemas/DeviceZoneUpdateRequest"
       responses:
         200:
           description: "Device zone updated"
@@ -5246,6 +5305,7 @@ paths:
                                 - "Failed to update device zone in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteDeviceZone
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5357,6 +5417,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/camera/settings:
     get:
+      operationId: getCameraSettings
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5399,6 +5460,7 @@ paths:
                             items:
                               example: "Invalid or Missing JWT."
     patch:
+      operationId: updateCameraSettings
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5490,6 +5552,7 @@ paths:
                               example: "Failed to update camera settings: database connection failed."
   /api/v2/camera/stream:
     get:
+      operationId: getCameraStream
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5526,6 +5589,7 @@ paths:
                               example: "Failed to connect to camera stream"
   /api/v2/camera/reconnect:
     post:
+      operationId: reconnectCamera
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5571,6 +5635,7 @@ paths:
                               example: "Could not connect to camera server"
   /api/v2/camera/latest-image:
     get:
+      operationId: getLatestCameraImage
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5607,6 +5672,7 @@ paths:
                               example: "No latest image"
   /api/v2/camera/timelapse/images:
     delete:
+      operationId: clearTimelapseImages
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5671,6 +5737,7 @@ paths:
                               example: "Could not clear all images"
   /api/v2/camera/timelapse/archive:
     get:
+      operationId: downloadTimelapseArchive
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5738,6 +5805,7 @@ paths:
 
   /api/v2/camera/timelapse/archive/regenerate:
     post:
+      operationId: regenerateTimelapseArchive
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5763,6 +5831,7 @@ paths:
                             example: "Timelapse archive regeneration queued."
   /api/v2/camera/timelapse/archive/status:
     get:
+      operationId: getTimelapseArchiveStatus
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5795,6 +5864,7 @@ paths:
                                 example: 75
   /api/v2/tags/journals:
     get:
+      operationId: listJournalTags
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5861,6 +5931,7 @@ paths:
                                 - "Failed to get journal tags from database."
                                 - "Database connection failed."
     post:
+      operationId: createJournalTag
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5875,7 +5946,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalTag"
+              $ref: "#/components/schemas/JournalTagCreateRequest"
       responses:
         201:
           description: "Journal tag created"
@@ -5953,6 +6024,7 @@ paths:
 
   /api/v2/tags/journals/{tagId}:
     patch:
+      operationId: updateJournalTag
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -5974,7 +6046,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalTag"
+              $ref: "#/components/schemas/JournalTagUpdateRequest"
       responses:
         200:
           description: "Journal tag updated"
@@ -6070,6 +6142,7 @@ paths:
                                 - "Failed to update journal tag in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteJournalTag
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6181,6 +6254,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/tags/entries:
     get:
+      operationId: listJournalEntryTags
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6247,6 +6321,7 @@ paths:
                                 - "Failed to get journal entry tags from database."
                                 - "Database connection failed."
     post:
+      operationId: createJournalEntryTag
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6261,7 +6336,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalEntryTag"
+              $ref: "#/components/schemas/JournalEntryTagCreateRequest"
       responses:
         201:
           description: "Journal entry tag created"
@@ -6339,6 +6414,7 @@ paths:
   
   /api/v2/tags/entries/{tagId}:
     patch:
+      operationId: updateJournalEntryTag
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6360,7 +6436,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalEntryTag"
+              $ref: "#/components/schemas/JournalEntryTagUpdateRequest"
       responses:
         200:
           description: "Journal entry tag updated"
@@ -6456,6 +6532,7 @@ paths:
                                 - "Failed to update journal entry tag in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteJournalEntryTag
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6565,6 +6642,7 @@ paths:
                               example: "Failed to delete journal entry tag: 1"
   /api/v2/journals:
     get:
+      operationId: listJournals
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6638,6 +6716,7 @@ paths:
                                 - "Failed to get journals from database."
                                 - "Database connection failed."
     post:
+      operationId: createJournal
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6652,7 +6731,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournal"
+              $ref: "#/components/schemas/JournalCreateRequest"
       responses:
         201:
           description: "Journal created"
@@ -6738,6 +6817,7 @@ paths:
           type: string
         example: "1"
     get:
+      operationId: getJournalById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6830,6 +6910,7 @@ paths:
                                 - "Failed to get journal from database."
                                 - "Database connection failed."
     patch:
+      operationId: updateJournal
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -6843,7 +6924,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournal"
+              $ref: "#/components/schemas/JournalUpdateRequest"
       responses:
         200:
           description: "Journal updated"
@@ -6939,6 +7020,7 @@ paths:
                                 - "Failed to update journal in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteJournal
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7042,6 +7124,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/journals/{journalId}/tags:
     put:
+      operationId: attachTagToJournal
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7166,6 +7249,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/journals/{journalId}/tags/{tagId}:
     delete:
+      operationId: detachTagFromJournal
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7288,6 +7372,7 @@ paths:
   
   /api/v2/journals/{journalId}/entries:
     get:
+      operationId: listJournalEntries
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7396,6 +7481,7 @@ paths:
                                 - "Failed to get journal entries from database."
                                 - "Database connection failed."
     post:
+      operationId: createJournalEntry
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7418,7 +7504,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalEntryWrite"
+              $ref: "#/components/schemas/SDBJournalEntryCreateRequest"
       responses:
         201:
           description: "Journal entry created"
@@ -7515,6 +7601,7 @@ paths:
   
   /api/v2/entries/{entryId}:
     get:
+      operationId: getJournalEntryById
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7641,6 +7728,7 @@ paths:
                                 - "Failed to get journal entry from database."
                                 - "Database connection failed."
     patch:
+      operationId: updateJournalEntry
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7662,7 +7750,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SDBJournalEntryWrite"
+              $ref: "#/components/schemas/SDBJournalEntryUpdateRequest"
       responses:
         200:
           description: "Journal entry updated"
@@ -7758,6 +7846,7 @@ paths:
                                 - "Failed to update journal entry in database."
                                 - "Database connection failed."
     delete:
+      operationId: deleteJournalEntry
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7869,6 +7958,7 @@ paths:
                                 - "Database connection failed."
   /api/v2/entries/{entryId}/tags:
     put:
+      operationId: attachTagToJournalEntry
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -7994,6 +8084,7 @@ paths:
 
   /api/v2/entries/{entryId}/tags/{tagId}:
     delete:
+      operationId: detachTagFromJournalEntry
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -8160,6 +8251,8 @@ components:
                   type: string
                 details:
                   type: array
+                  items:
+                    type: string
         - $ref: "#/components/schemas/ApiResponse"
 
     SDBOutput:
@@ -8201,6 +8294,96 @@ components:
           nullable: true
           type: number
           example: null
+        isPwm:
+          type: boolean
+          example: true
+        isInvertedPwm:
+          type: boolean
+          example: false
+        color:
+          type: string
+          example: "#ff0000"
+        automationTimeout:
+          type: number
+          example: 60
+
+    OutputCreateRequest:
+      description: >
+        Request body for creating an output. Contains only client-writable fields accepted by the
+        create output handler.
+      type: object
+      required:
+        - "model"
+        - "address"
+        - "name"
+        - "pin"
+        - "isPwm"
+        - "isInvertedPwm"
+        - "automationTimeout"
+      properties:
+        model:
+          type: string
+          example: "PCA9685"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
+        address:
+          type: string
+          example: "0x40"
+        name:
+          type: string
+          example: "PCA9685"
+        pin:
+          type: string
+          example: "0"
+        isPwm:
+          type: boolean
+          example: true
+        isInvertedPwm:
+          type: boolean
+          example: false
+        color:
+          type: string
+          example: "#ff0000"
+        automationTimeout:
+          type: number
+          example: 60
+
+    OutputCreateResponse:
+      description: >
+        Transport shape returned by create output. This reflects the handler response before any
+        follow-up read normalization.
+      type: object
+      required:
+        - "id"
+        - "model"
+        - "address"
+        - "name"
+        - "pin"
+        - "isPwm"
+        - "isInvertedPwm"
+        - "automationTimeout"
+      properties:
+        id:
+          type: number
+          example: 1
+        model:
+          type: string
+          example: "PCA9685"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
+        address:
+          type: string
+          example: "0x40"
+        name:
+          type: string
+          example: "PCA9685"
+        pin:
+          type: string
+          example: "0"
         isPwm:
           type: boolean
           example: true
@@ -8283,6 +8466,42 @@ components:
           type: boolean
           example: true
 
+    AutomationCreateRequest:
+      description: >
+        Request body for creating an automation.
+      type: object
+      required:
+        - "name"
+        - "operator"
+      properties:
+        name:
+          type: string
+          example: "Turn on light"
+        operator:
+          type: string
+          enum:
+            - and
+            - or
+          example: "or"
+
+    AutomationUpdateRequest:
+      description: >
+        Request body for updating an automation. This operation changes only the fields provided.
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Turn on light"
+        operator:
+          type: string
+          enum:
+            - and
+            - or
+          example: "or"
+        enabled:
+          type: boolean
+          example: true
+
     OutputAction:
       description: >
         An action object that is stored in the database. Contains the information needed to
@@ -8296,6 +8515,25 @@ components:
           readOnly: true
           type: number
           example: 1
+        automationId:
+          type: number
+          example: 1
+        outputId:
+          type: number
+          example: 1
+        value:
+          type: number
+          example: 50
+
+    OutputActionCreateRequest:
+      description: >
+        Request body for creating an output action.
+      type: object
+      required:
+        - "automationId"
+        - "outputId"
+        - "value"
+      properties:
         automationId:
           type: number
           example: 1
@@ -8320,6 +8558,25 @@ components:
           readOnly: true
           type: number
           example: 1
+        automationId:
+          type: number
+          example: 1
+        subject:
+          type: string
+          example: "Test Notification"
+        content:
+          type: string
+          example: "This is a test notification content."
+
+    NotificationActionCreateRequest:
+      description: >
+        Request body for creating a notification action.
+      type: object
+      required:
+        - "automationId"
+        - "subject"
+        - "content"
+      properties:
         automationId:
           type: number
           example: 1
@@ -8401,283 +8658,851 @@ components:
           example: "or"
         conditions:
           description: "The condition results for the automation."
-          $ref: "#/components/schemas/AutomationConditions"
+          $ref: "#/components/schemas/AutomationConditionEvaluationSummary"
 
     AutomationConditions:
       description: >
         These conditions define when an automation will run.
-      readOnly: true
+      type: object
+      required:
+        - "sensor"
+        - "output"
+        - "time"
+        - "weekday"
+        - "month"
+        - "dateRange"
       properties:
         sensor:
-          type: object
-          properties:
-            allOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
-            anyOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
-            oneOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
+          $ref: "#/components/schemas/SensorConditionGroup"
         output:
-          type: object
-          properties:
-            allOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
-            anyOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
-            oneOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
+          $ref: "#/components/schemas/OutputConditionGroup"
         time:
-          type: object
-          properties:
-            allOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
-            anyOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
-            oneOf:
-              items:
-                anyOf:
-                  - $ref: "#/components/schemas/SensorCondition"
-                  - $ref: "#/components/schemas/OutputCondition"
-                  - $ref: "#/components/schemas/TimeCondition"
-                  - $ref: "#/components/schemas/WeekdayCondition"
-                  - $ref: "#/components/schemas/MonthCondition"
-                  - $ref: "#/components/schemas/DateRangeCondition"
+          $ref: "#/components/schemas/TimeConditionGroup"
+        weekday:
+          $ref: "#/components/schemas/WeekdayConditionGroup"
+        month:
+          $ref: "#/components/schemas/MonthConditionGroup"
+        dateRange:
+          $ref: "#/components/schemas/DateRangeConditionGroup"
+
+    AutomationConditionEvaluationSummary:
+      description: >
+        Summarized evaluation results for an automation, grouped by boolean operator.
+      type: object
+      required:
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        allOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationConditionEvaluationItem"
+        anyOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationConditionEvaluationItem"
+        oneOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationConditionEvaluationItem"
+
+    AutomationConditionEvaluationItem:
+      description: >
+        The evaluation result for a single automation condition.
+      type: object
+      required:
+        - "condition"
+        - "result"
+      properties:
+        condition:
+          anyOf:
+            - $ref: "#/components/schemas/SensorConditionEvaluation"
+            - $ref: "#/components/schemas/OutputConditionEvaluation"
+            - $ref: "#/components/schemas/TimeConditionEvaluation"
+            - $ref: "#/components/schemas/WeekdayConditionEvaluation"
+            - $ref: "#/components/schemas/MonthConditionEvaluation"
+            - $ref: "#/components/schemas/DateRangeConditionEvaluation"
+        result:
+          type: boolean
+          example: true
+
+    SensorConditionGroup:
+      description: >
+        Sensor conditions grouped by boolean operator.
+      type: object
+      required:
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        allOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/SensorCondition"
+        anyOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/SensorCondition"
+        oneOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/SensorCondition"
+
+    OutputConditionGroup:
+      description: >
+        Output conditions grouped by boolean operator.
+      type: object
+      required:
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        allOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutputCondition"
+        anyOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutputCondition"
+        oneOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutputCondition"
+
+    TimeConditionGroup:
+      description: >
+        Time conditions grouped by boolean operator.
+      type: object
+      required:
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        allOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeCondition"
+        anyOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeCondition"
+        oneOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeCondition"
+
+    WeekdayConditionGroup:
+      description: >
+        Weekday conditions grouped by boolean operator.
+      type: object
+      required:
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        allOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeekdayCondition"
+        anyOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeekdayCondition"
+        oneOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeekdayCondition"
+
+    MonthConditionGroup:
+      description: >
+        Month conditions grouped by boolean operator.
+      type: object
+      required:
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        allOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthCondition"
+        anyOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthCondition"
+        oneOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthCondition"
+
+    DateRangeConditionGroup:
+      description: >
+        Date range conditions grouped by boolean operator.
+      type: object
+      required:
+        - "allOf"
+        - "anyOf"
+        - "oneOf"
+      properties:
+        allOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/DateRangeCondition"
+        anyOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/DateRangeCondition"
+        oneOf:
+          type: array
+          items:
+            $ref: "#/components/schemas/DateRangeCondition"
 
     SensorCondition:
       description: >
         Defines a condition based on a sensor value.
-      allOf:
-        - type: object
-          required:
-            - operator
-            - comparisonValue
-            - sensorId
-            - readingType
-        - properties:
-            id:
-              type: number
-              readOnly: true
-              example: 1
-            groupType:
-              type: string
-              enum:
-                - allOf
-                - anyOf
-                - oneOf
-            operator:
-              type: string
-              example: "greaterOrEqual"
-            comparisonValue:
-              type: number
-              example: 50
-            comparisonLookback:
-              nullable: true
-              type: number
-              example: 3
-            sensorId:
-              type: number
-              example: 1
-            sensorName:
-              readOnly: true
-              type: string
-              example: "Windowsill"
-            readingType:
-              type: string
-              example: "temperature"
+      type: object
+      required:
+        - "id"
+        - "groupType"
+        - "operator"
+        - "comparisonValue"
+        - "sensorId"
+        - "readingType"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+        sensorId:
+          type: number
+          example: 1
+        readingType:
+          type: string
+          example: "temperature"
+
+    SensorConditionCreateRequest:
+      description: >
+        Request body for creating a sensor condition.
+      type: object
+      required:
+        - "groupType"
+        - "operator"
+        - "comparisonValue"
+        - "sensorId"
+        - "readingType"
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+        sensorId:
+          type: number
+          example: 1
+        readingType:
+          type: string
+          example: "temperature"
+
+    SensorConditionUpdateRequest:
+      description: >
+        Request body for updating a sensor condition.
+      type: object
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+        sensorId:
+          type: number
+          example: 1
+        readingType:
+          type: string
+          example: "temperature"
 
     OutputCondition:
       description: >
         Defines a condition based on an output value.
-      allOf:
-        - type: object
-          required:
-            - operator
-            - comparisonValue
-            - outputId
-        - properties:
-            id:
-              type: number
-              readOnly: true
-              example: 1
-            groupType:
-              type: string
-              enum:
-                - allOf
-                - anyOf
-                - oneOf
-            operator:
-              type: string
-              example: "greaterOrEqual"
-            comparisonValue:
-              type: number
-              example: 50
-            comparisonLookback:
-              nullable: true
-              type: number
-              example: 3
-            outputId:
-              type: number
-              example: 1
-            outputName:
-              readOnly: true
-              type: string
-              example: "Relay #1"
+      type: object
+      required:
+        - "id"
+        - "groupType"
+        - "operator"
+        - "comparisonValue"
+        - "outputId"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+        outputId:
+          type: number
+          example: 1
+
+    OutputConditionCreateRequest:
+      description: >
+        Request body for creating an output condition.
+      type: object
+      required:
+        - "groupType"
+        - "operator"
+        - "comparisonValue"
+        - "outputId"
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+        outputId:
+          type: number
+          example: 1
+
+    OutputConditionUpdateRequest:
+      description: >
+        Request body for updating an output condition.
+      type: object
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+        outputId:
+          type: number
+          example: 1
 
     TimeCondition:
       description: >
         Defines a condition based on time.
-      allOf:
-        - type: object
-        - properties:
-            id:
-              type: number
-              readOnly: true
-              example: 1
-            groupType:
-              type: string
-              enum:
-                - allOf
-                - anyOf
-                - oneOf
-            startTime:
-              nullable: true
-              type: string
-              example: "12:00"
-            endTime:
-              nullable: true
-              type: string
-              example: "18:00"
+      type: object
+      required:
+        - "id"
+        - "groupType"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        startTime:
+          nullable: true
+          type: string
+          example: "12:00"
+        endTime:
+          nullable: true
+          type: string
+          example: "18:00"
+
+    TimeConditionCreateRequest:
+      description: >
+        Request body for creating a time condition.
+      type: object
+      required:
+        - "groupType"
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        startTime:
+          nullable: true
+          type: string
+          example: "12:00"
+        endTime:
+          nullable: true
+          type: string
+          example: "18:00"
+
+    TimeConditionUpdateRequest:
+      description: >
+        Request body for updating a time condition.
+      type: object
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        startTime:
+          nullable: true
+          type: string
+          example: "12:00"
+        endTime:
+          nullable: true
+          type: string
+          example: "18:00"
 
     WeekdayCondition:
       description: >
         Defines a condition based on the days of the week.
-      allOf:
-        - type: object
-        - properties:
-            id:
-              type: number
-              readOnly: true
-              example: 1
-            groupType:
-              type: string
-              enum:
-                - allOf
-                - anyOf
-                - oneOf
-            weekdays:
-              description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
-              type: number
-              example: 127
+      type: object
+      required:
+        - "id"
+        - "groupType"
+        - "weekdays"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        weekdays:
+          description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
+          type: number
+          example: 127
+
+    WeekdayConditionCreateRequest:
+      description: >
+        Request body for creating a weekday condition.
+      type: object
+      required:
+        - "groupType"
+        - "weekdays"
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        weekdays:
+          description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
+          type: number
+          example: 127
+
+    WeekdayConditionUpdateRequest:
+      description: >
+        Request body for updating a weekday condition.
+      type: object
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        weekdays:
+          description: "A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc."
+          type: number
+          example: 127
 
     MonthCondition:
       description: >
         Defines a condition based on the months of the year.
-      allOf:
-        - type: object
-        - properties:
-            id:
-              type: number
-              readOnly: true
-              example: 1
-            groupType:
-              type: string
-              enum:
-                - allOf
-                - anyOf
-                - oneOf
-            months:
-              description: "A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc."
-              type: number
-              example: 4095
+      type: object
+      required:
+        - "id"
+        - "groupType"
+        - "months"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        months:
+          description: "A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc."
+          type: number
+          example: 4095
+
+    MonthConditionCreateRequest:
+      description: >
+        Request body for creating a month condition.
+      type: object
+      required:
+        - "groupType"
+        - "months"
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        months:
+          description: "A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc."
+          type: number
+          example: 4095
+
+    MonthConditionUpdateRequest:
+      description: >
+        Request body for updating a month condition.
+      type: object
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        months:
+          description: "A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc."
+          type: number
+          example: 4095
 
     DateRangeCondition:
       description: >
         Defines a condition for an interval of dates of the year.
-      allOf:
-        - type: object
-        - properties:
-            id:
-              type: number
-              readOnly: true
-              example: 1
-            groupType:
-              type: string
-              enum:
-                - allOf
-                - anyOf
-                - oneOf
-            startMonth:
-              description: "The month the date range starts on, as a number from 1 to 12."
-              type: number
-              example: 1
-            startDay:
-              description: "The day the date range starts on, with the first day of the month as 1 and the last day as 28-31."
-              type: number
-              example: 1
-            endMonth:
-              description: "The month the date range ends on, as a number from 1 to 12."
-              type: number
-              example: 12
-            endDay:
-              description: "The day the date range ends on, with the first day of the month as 1 and the last day as 28-31."
-              type: number
-              example: 31
+      type: object
+      required:
+        - "id"
+        - "groupType"
+        - "startMonth"
+        - "startDate"
+        - "endMonth"
+        - "endDate"
+      properties:
+        id:
+          type: number
+          readOnly: true
+          example: 1
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        startMonth:
+          description: "The month the date range starts on, as a number from 1 to 12."
+          type: number
+          example: 1
+        startDate:
+          description: "The day the date range starts on, with the first day of the month as 1 and the last day as 28-31."
+          type: number
+          example: 1
+        endMonth:
+          description: "The month the date range ends on, as a number from 1 to 12."
+          type: number
+          example: 12
+        endDate:
+          description: "The day the date range ends on, with the first day of the month as 1 and the last day as 28-31."
+          type: number
+          example: 31
+
+    DateRangeConditionCreateRequest:
+      description: >
+        Request body for creating a date range condition.
+      type: object
+      required:
+        - "groupType"
+        - "startMonth"
+        - "startDate"
+        - "endMonth"
+        - "endDate"
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        startMonth:
+          description: "The month the date range starts on, as a number from 1 to 12."
+          type: number
+          example: 1
+        startDate:
+          description: "The day the date range starts on, with the first day of the month as 1 and the last day as 28-31."
+          type: number
+          example: 1
+        endMonth:
+          description: "The month the date range ends on, as a number from 1 to 12."
+          type: number
+          example: 12
+        endDate:
+          description: "The day the date range ends on, with the first day of the month as 1 and the last day as 28-31."
+          type: number
+          example: 31
+
+    DateRangeConditionUpdateRequest:
+      description: >
+        Request body for updating a date range condition.
+      type: object
+      properties:
+        groupType:
+          type: string
+          enum:
+            - allOf
+            - anyOf
+            - oneOf
+        startMonth:
+          description: "The month the date range starts on, as a number from 1 to 12."
+          type: number
+          example: 1
+        startDate:
+          description: "The day the date range starts on, with the first day of the month as 1 and the last day as 28-31."
+          type: number
+          example: 1
+        endMonth:
+          description: "The month the date range ends on, as a number from 1 to 12."
+          type: number
+          example: 12
+        endDate:
+          description: "The day the date range ends on, with the first day of the month as 1 and the last day as 28-31."
+          type: number
+          example: 31
+
+    SensorConditionEvaluation:
+      description: >
+        Serialized sensor condition details used in automation evaluation payloads.
+      type: object
+      required:
+        - "kind"
+        - "id"
+        - "sensorId"
+        - "readingType"
+        - "operator"
+        - "comparisonValue"
+        - "comparisonLookback"
+      properties:
+        kind:
+          type: string
+          enum:
+            - sensor
+        id:
+          type: number
+          example: 1
+        sensorId:
+          type: number
+          example: 1
+        readingType:
+          type: string
+          example: "temperature"
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+
+    OutputConditionEvaluation:
+      description: >
+        Serialized output condition details used in automation evaluation payloads.
+      type: object
+      required:
+        - "kind"
+        - "id"
+        - "outputId"
+        - "operator"
+        - "comparisonValue"
+        - "comparisonLookback"
+      properties:
+        kind:
+          type: string
+          enum:
+            - output
+        id:
+          type: number
+          example: 1
+        outputId:
+          type: number
+          example: 1
+        operator:
+          type: string
+          example: "greaterOrEqual"
+        comparisonValue:
+          type: number
+          example: 50
+        comparisonLookback:
+          nullable: true
+          type: number
+          example: 3
+
+    TimeConditionEvaluation:
+      description: >
+        Serialized time condition details used in automation evaluation payloads.
+      type: object
+      required:
+        - "kind"
+        - "id"
+      properties:
+        kind:
+          type: string
+          enum:
+            - time
+        id:
+          type: number
+          example: 1
+        startTime:
+          nullable: true
+          type: string
+          example: "12:00"
+        endTime:
+          nullable: true
+          type: string
+          example: "18:00"
+
+    WeekdayConditionEvaluation:
+      description: >
+        Serialized weekday condition details used in automation evaluation payloads.
+      type: object
+      required:
+        - "kind"
+        - "id"
+        - "weekdays"
+      properties:
+        kind:
+          type: string
+          enum:
+            - weekday
+        id:
+          type: number
+          example: 1
+        weekdays:
+          type: number
+          example: 127
+
+    MonthConditionEvaluation:
+      description: >
+        Serialized month condition details used in automation evaluation payloads.
+      type: object
+      required:
+        - "kind"
+        - "id"
+        - "months"
+      properties:
+        kind:
+          type: string
+          enum:
+            - month
+        id:
+          type: number
+          example: 1
+        months:
+          type: number
+          example: 4095
+
+    DateRangeConditionEvaluation:
+      description: >
+        Serialized date range condition details used in automation evaluation payloads.
+      type: object
+      required:
+        - "kind"
+        - "id"
+        - "startMonth"
+        - "startDate"
+        - "endMonth"
+        - "endDate"
+      properties:
+        kind:
+          type: string
+          enum:
+            - dateRange
+        id:
+          type: number
+          example: 1
+        startMonth:
+          type: number
+          example: 1
+        startDate:
+          type: number
+          example: 1
+        endMonth:
+          type: number
+          example: 12
+        endDate:
+          type: number
+          example: 31
 
     SDBSensor:
       description: >
@@ -8718,6 +9543,68 @@ components:
           nullable: true
           type: number
           example: 100
+
+    SensorCreateRequest:
+      description: >
+        Request body for creating a sensor. Contains only the fields consumed by the create sensor
+        handler.
+      type: object
+      required:
+        - "name"
+        - "model"
+        - "address"
+      properties:
+        name:
+          type: string
+          example: "Windowsill"
+        model:
+          type: string
+          example: "DS18B20"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
+        address:
+          type: string
+          example: "28-00000"
+        color:
+          type: string
+          example: "#ff0000"
+        pin:
+          nullable: true
+          type: string
+          example: "0"
+
+    SensorCreateResponse:
+      description: >
+        Transport shape returned by create sensor. This reflects the handler response before any
+        follow-up read normalization.
+      type: object
+      required:
+        - "name"
+        - "model"
+        - "address"
+      properties:
+        name:
+          type: string
+          example: "Windowsill"
+        model:
+          type: string
+          example: "DS18B20"
+        subcontrollerId:
+          nullable: true
+          type: number
+          example: 1
+        address:
+          type: string
+          example: "28-00000"
+        color:
+          type: string
+          example: "#ff0000"
+        pin:
+          nullable: true
+          type: string
+          example: "0"
 
     SensorBase:
       description: >
@@ -8777,6 +9664,21 @@ components:
           type: string
           example: "sproot-esp32-1C78.local"
 
+    SubcontrollerCreateRequest:
+      description: >
+        Request body for creating a subcontroller.
+      type: object
+      required:
+        - "name"
+        - "hostName"
+      properties:
+        name:
+          type: string
+          example: "sproot-esp32-1C78"
+        hostName:
+          type: string
+          example: "sproot-esp32-1C78.local"
+
     SupportedModels:
       description: >
         A Record of supported device models, mapped to a presentable label.
@@ -8817,6 +9719,26 @@ components:
         name:
           type: string
           example: "Living Room"
+
+    DeviceZoneCreateRequest:
+      description: >
+        Request body for creating a device zone.
+      type: object
+      required:
+        - "name"
+      properties:
+        name:
+          type: string
+          example: "Living Room"
+
+    DeviceZoneUpdateRequest:
+      description: >
+        Request body for updating a device zone. This operation changes only the fields provided.
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Living Room"
     
     SDBJournalTag:
       description: >
@@ -8834,6 +9756,35 @@ components:
           type: string
           example: "Shelf #1"
         color:
+          nullable: true
+          type: string
+          example: "#0000ff"
+
+    JournalTagCreateRequest:
+      description: >
+        Request body for creating a journal tag.
+      type: object
+      required:
+        - "name"
+      properties:
+        name:
+          type: string
+          example: "Shelf #1"
+        color:
+          nullable: true
+          type: string
+          example: "#0000ff"
+
+    JournalTagUpdateRequest:
+      description: >
+        Request body for updating a journal tag. This operation changes only the fields provided.
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Shelf #1"
+        color:
+          nullable: true
           type: string
           example: "#0000ff"
     
@@ -8853,6 +9804,35 @@ components:
           type: string
           example: "Watering"
         color:
+          nullable: true
+          type: string
+          example: "#0000ff"
+
+    JournalEntryTagCreateRequest:
+      description: >
+        Request body for creating a journal entry tag.
+      type: object
+      required:
+        - "name"
+      properties:
+        name:
+          type: string
+          example: "Watering"
+        color:
+          nullable: true
+          type: string
+          example: "#0000ff"
+
+    JournalEntryTagUpdateRequest:
+      description: >
+        Request body for updating a journal entry tag. This operation changes only the fields provided.
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Watering"
+        color:
+          nullable: true
           type: string
           example: "#0000ff"
     
@@ -8905,6 +9885,53 @@ components:
           type: string
           format: date-time
           example: "2021-12-31T23:59:59.000Z"
+
+    JournalCreateRequest:
+      description: >
+        Request body for creating a journal.
+      type: object
+      required:
+        - "title"
+      properties:
+        title:
+          type: string
+          example: "My Journal"
+        description:
+          nullable: true
+          type: string
+          example: "Tracks care for my fern."
+        icon:
+          nullable: true
+          type: string
+          example: "leaf"
+        color:
+          nullable: true
+          type: string
+          example: "#00ff00"
+
+    JournalUpdateRequest:
+      description: >
+        Request body for updating a journal. This operation changes only the fields provided.
+      type: object
+      properties:
+        title:
+          type: string
+          example: "My Journal"
+        description:
+          nullable: true
+          type: string
+          example: "Tracks care for my fern."
+        icon:
+          nullable: true
+          type: string
+          example: "leaf"
+        color:
+          nullable: true
+          type: string
+          example: "#00ff00"
+        archived:
+          type: boolean
+          example: false
     
     SDBJournalEntry:
       description: >
@@ -8950,6 +9977,34 @@ components:
         - $ref: "#/components/schemas/SDBJournalEntry"
       required:
         - "content"
+
+    SDBJournalEntryCreateRequest:
+      description: >
+        Request body for creating a journal entry. Contains only client-writable fields.
+      type: object
+      required:
+        - "content"
+      properties:
+        title:
+          nullable: true
+          type: string
+          example: "Watered my fern"
+        content:
+          type: string
+          example: "Gave my fern 500ml of water. The soil was pretty dry."
+
+    SDBJournalEntryUpdateRequest:
+      description: >
+        Request body for updating a journal entry. Contains only client-writable fields.
+      type: object
+      properties:
+        title:
+          nullable: true
+          type: string
+          example: "Watered my fern"
+        content:
+          type: string
+          example: "Gave my fern 500ml of water. The soil was pretty dry."
       
     ReadingTypes:
       description: >
@@ -8959,14 +10014,20 @@ components:
     DataPoint:
       description: >
         A data point for recharts.
-      type: object
-      required:
-        - "name"
-      properties:
-        name:
-          type: string
-        units:
-          type: string
+      allOf:
+        - type: object
+          required:
+            - "name"
+          properties:
+            name:
+              type: string
+            units:
+              type: string
+        - type: object
+          additionalProperties:
+            oneOf:
+              - type: number
+              - type: string
 
     ChartSeries:
       description: >
