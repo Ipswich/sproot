@@ -46,7 +46,7 @@ describe("BackupHandlers.ts", () => {
       // Setup: Create a temporary backup file
       const tempDir = path.join(
         tmpdir(),
-        `test-backup-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        `test-backup-${Date.now()}-${Math.floor(Math.random() * 1000)}`
       );
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
@@ -88,19 +88,19 @@ describe("BackupHandlers.ts", () => {
       await systemBackupDownloadHandlerAsync(request, response as unknown as Response);
       assert.isTrue((response.status as SinonSpy).calledWith(200));
       assert.isTrue(
-        (response.setHeader as SinonSpy).calledWith("Content-Type", "application/octet-stream"),
+        (response.setHeader as SinonSpy).calledWith("Content-Type", "application/octet-stream")
       );
       assert.isTrue(
         (response.setHeader as SinonSpy).calledWith(
           "Content-Disposition",
-          `attachment; filename=${tempFileName}`,
-        ),
+          `attachment; filename=${tempFileName}`
+        )
       );
       assert.isTrue(
         (response.setHeader as SinonSpy).calledWith(
           "Content-Length",
-          fs.statSync(tempFilePath).size.toString(),
-        ),
+          fs.statSync(tempFilePath).size.toString()
+        )
       );
 
       // Cleanup
@@ -140,7 +140,7 @@ describe("BackupHandlers.ts", () => {
           },
           ...response.locals["defaultProperties"],
         }),
-        true,
+        true
       );
     });
 
@@ -176,7 +176,7 @@ describe("BackupHandlers.ts", () => {
           },
           ...response.locals["defaultProperties"],
         }),
-        true,
+        true
       );
     });
   });

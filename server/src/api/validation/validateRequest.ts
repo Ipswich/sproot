@@ -1,30 +1,49 @@
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import { z } from "zod";
 
-import type { ContractOperationId } from "@sproot/sproot-common/dist/api/contracts/operation-types";
+import type {
+  ContractOperationHeaderParams,
+  ContractOperationId,
+  ContractOperationPathParams,
+  ContractOperationQueryParams,
+  ContractOperationRequestBody,
+} from "@sproot/sproot-common/dist/api/contracts/operation-types";
 
 import ContractValidationError from "./ContractValidationError";
-import { getOperationContract, type OperationContract, type OperationParameterSchema } from "./operationRegistry";
+import {
+  getOperationContract,
+  type OperationContract,
+  type OperationParameterSchema,
+} from "./operationRegistry";
 
-type ValidatedRequestData = {
+type RawValidatedRequestData = {
   body?: unknown;
   params?: Record<string, unknown>;
   query?: Record<string, unknown>;
   headers?: Record<string, unknown>;
 };
 
+export const VALIDATED_CONTRACT_REQUEST_DATA_KEY = "validatedContractRequestData";
+
+export type ContractValidatedRequestData<OperationId extends ContractOperationId> = {
+  body?: ContractOperationRequestBody<OperationId>;
+  params?: ContractOperationPathParams<OperationId>;
+  query?: ContractOperationQueryParams<OperationId>;
+  headers?: ContractOperationHeaderParams<OperationId>;
+};
+
 export default function validateRequest(
   operationId: ContractOperationId,
-  request: Request,
-): ValidatedRequestData {
+  request: Request
+): RawValidatedRequestData {
   return validateRequestAgainstContract(getOperationContract(operationId), request);
 }
 
 export function validateRequestAgainstContract(
   contract: OperationContract,
-  request: Request,
-): ValidatedRequestData {
-  const validated: ValidatedRequestData = {};
+  request: Request
+): RawValidatedRequestData {
+  const validated: RawValidatedRequestData = {};
 
   const params = validateParameterGroup(contract, "params", contract.request.path, request.params);
   if (params) {
@@ -35,7 +54,7 @@ export function validateRequestAgainstContract(
     contract,
     "query",
     contract.request.query,
-    request.query as Record<string, unknown>,
+    request.query as Record<string, unknown>
   );
   if (query) {
     validated.query = query;
@@ -49,7 +68,7 @@ export function validateRequestAgainstContract(
         contract.operationId,
         "request",
         "body",
-        bodyResult.error,
+        bodyResult.error
       );
     }
 
@@ -60,7 +79,7 @@ export function validateRequestAgainstContract(
     contract,
     "headers",
     contract.request.header,
-    request.headers as Record<string, unknown>,
+    request.headers as Record<string, unknown>
   );
   if (headers) {
     validated.headers = headers;
@@ -69,11 +88,24 @@ export function validateRequestAgainstContract(
   return validated;
 }
 
+export function setValidatedContractRequestData(
+  response: Response,
+  validatedRequestData: RawValidatedRequestData
+): void {
+  response.locals[VALIDATED_CONTRACT_REQUEST_DATA_KEY] = validatedRequestData;
+}
+
+export function getValidatedContractRequestData<OperationId extends ContractOperationId>(
+  response: Response
+): ContractValidatedRequestData<OperationId> {
+  return (response.locals[VALIDATED_CONTRACT_REQUEST_DATA_KEY] ?? {}) as ContractValidatedRequestData<OperationId>;
+}
+
 function validateParameterGroup(
   contract: OperationContract,
   source: "params" | "query" | "headers",
   schemas: readonly OperationParameterSchema[],
-  values: Record<string, unknown>,
+  values: Record<string, unknown>
 ): Record<string, unknown> | undefined {
   if (schemas.length === 0) {
     return undefined;
@@ -88,7 +120,7 @@ function validateParameterGroup(
       contract.operationId,
       "request",
       source === "params" ? "params" : source === "query" ? "query" : "headers",
-      parseResult.error,
+      parseResult.error
     );
   }
 
@@ -96,7 +128,7 @@ function validateParameterGroup(
 }
 
 function composeParameterGroupSchema(
-  schemas: readonly OperationParameterSchema[],
+  schemas: readonly OperationParameterSchema[]
 ): z.ZodObject<z.ZodRawShape> {
   const shape: z.ZodRawShape = {};
 
@@ -110,7 +142,7 @@ function composeParameterGroupSchema(
 function normalizeParameterGroupValues(
   schemas: readonly OperationParameterSchema[],
   values: Record<string, unknown>,
-  caseInsensitive: boolean,
+  caseInsensitive: boolean
 ): Record<string, unknown> {
   const normalizedValues: Record<string, unknown> = {};
 
@@ -125,7 +157,7 @@ function normalizeParameterGroupValues(
 function getNamedValue(
   values: Record<string, unknown>,
   key: string,
-  caseInsensitive: boolean,
+  caseInsensitive: boolean
 ): unknown {
   if (!caseInsensitive) {
     return values[key];
@@ -167,7 +199,11 @@ function unwrapSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
     return unwrapSchema(schema.unwrap());
   }
 
-  if (schema instanceof z.ZodDefault || schema instanceof z.ZodCatch || schema instanceof z.ZodReadonly) {
+  if (
+    schema instanceof z.ZodDefault ||
+    schema instanceof z.ZodCatch ||
+    schema instanceof z.ZodReadonly
+  ) {
     return unwrapSchema(schema._def.innerType);
   }
 

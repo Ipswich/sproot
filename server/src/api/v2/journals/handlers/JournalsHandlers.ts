@@ -3,13 +3,22 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournal } from "@sproot/database/SDBJournal";
+import type { operations as JournalContractOperations } from "@sproot/sproot-common/dist/api/generated/journals/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type CreateJournalRequestBody =
+  JournalContractOperations["createJournal"]["requestBody"]["content"]["application/json"];
+type UpdateJournalRequestBody =
+  JournalContractOperations["updateJournal"]["requestBody"]["content"]["application/json"];
+type AttachTagToJournalRequestBody =
+  JournalContractOperations["attachTagToJournal"]["requestBody"]["content"]["application/json"];
 
 /**
  * Possible statusCodes 200, 400, 404, 503
  */
 export async function getAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -67,17 +76,16 @@ export async function getAsync(
 
 export async function addAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
-  const title = req.body["title"] as string | undefined;
-  const description = req.body["description"] as string | undefined;
-  const icon = req.body["icon"] as string | undefined;
-  const color = req.body["color"] as string | undefined;
+  const requestBody = getValidatedContractRequestData<"createJournal">(res)
+    .body as unknown as CreateJournalRequestBody;
+  const { title, description, icon, color } = requestBody;
 
   const badRequests: string[] = [];
-  if (title == null || title === "" || title.length > 64) {
+  if (title === "" || (title != null && title.length > 64)) {
     badRequests.push("Journal name is required and cannot exceed 64 characters.");
   }
   if (icon !== undefined && icon !== null && icon.length > 64) {
@@ -100,13 +108,14 @@ export async function addAsync(
   }
 
   const startDate = new Date();
+  const journalTitle = title as string;
   try {
     const newId = await journalService.journalManager.createJournalAsync(
-      title!,
+      journalTitle,
       description ?? null,
       icon ?? null,
       color ?? null,
-      startDate,
+      startDate
     );
 
     response = {
@@ -114,7 +123,7 @@ export async function addAsync(
       content: {
         data: {
           id: newId,
-          title,
+          title: journalTitle,
           description: description ?? null,
           icon: icon ?? null,
           color: color ?? null,
@@ -143,10 +152,12 @@ export async function addAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function updateAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const requestBody = (getValidatedContractRequestData<"updateJournal">(res).body ??
+    {}) as UpdateJournalRequestBody;
 
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
   if (isNaN(journalId)) {
@@ -178,23 +189,19 @@ export async function updateAsync(
     }
 
     const archived: boolean =
-      req.body["archived"] === undefined
-        ? existingJournal[0]!.journal.archived
-        : Boolean(req.body["archived"] === true || req.body["archived"] === "true");
+      requestBody.archived === undefined ? existingJournal[0]!.journal.archived : requestBody.archived;
 
     // If trying to make changes to an already archived journal,
     // or trying to archive a journal that is already archived, return an error
     const title: string =
-      req.body["title"] === undefined
-        ? existingJournal[0]!.journal.title
-        : String(req.body["title"]);
+      requestBody.title === undefined ? existingJournal[0]!.journal.title : requestBody.title;
 
     const description: string | null =
-      req.body["description"] === undefined
+      requestBody.description === undefined
         ? existingJournal[0]!.journal.description
-        : req.body["description"] === null || req.body["description"] === ""
-          ? null
-          : String(req.body["description"]);
+        : requestBody.description === null || requestBody.description === ""
+        ? null
+        : requestBody.description;
     const badRequests: string[] = [];
     if (title === "" || title.length > 64) {
       badRequests.push("Journal title cannot be empty or exceed 64 characters.");
@@ -219,18 +226,18 @@ export async function updateAsync(
     }
 
     const icon: string | null =
-      req.body["icon"] === undefined
+      requestBody.icon === undefined
         ? existingJournal[0]!.journal.icon
-        : req.body["icon"] === null || req.body["icon"] === ""
-          ? null
-          : String(req.body["icon"]);
+        : requestBody.icon === null || requestBody.icon === ""
+        ? null
+        : requestBody.icon;
 
     const color: string | null =
-      req.body["color"] === undefined
+      requestBody.color === undefined
         ? existingJournal[0]!.journal.color
-        : req.body["color"] === null || req.body["color"] === ""
-          ? null
-          : String(req.body["color"]);
+        : requestBody.color === null || requestBody.color === ""
+        ? null
+        : requestBody.color;
 
     // existingJournal contains ISO formatted timestamps for responses
     const createdAtIso = existingJournal[0]!.journal.createdAt;
@@ -239,8 +246,8 @@ export async function updateAsync(
       archived === true && !existingJournal[0]!.journal.archived
         ? editedAtIso
         : archived === false && existingJournal[0]!.journal.archived
-          ? null
-          : existingJournal[0]!.journal.archivedAt;
+        ? null
+        : existingJournal[0]!.journal.archivedAt;
 
     await journalService.journalManager.updateJournalAsync({
       id: journalId,
@@ -288,7 +295,7 @@ export async function updateAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -347,12 +354,14 @@ export async function deleteAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function addTagAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
-  const tagId = parseInt(req.body["tagId"] ?? "", 10);
+  const requestBody = getValidatedContractRequestData<"attachTagToJournal">(res)
+    .body as unknown as AttachTagToJournalRequestBody;
+  const tagId = parseInt(requestBody.tagId ?? "", 10);
 
   const badRequests: string[] = [];
   if (isNaN(journalId)) {
@@ -445,7 +454,7 @@ export async function addTagAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function removeTagAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;

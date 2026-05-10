@@ -108,6 +108,9 @@ const AvailableDevices = z.array(
     .partial()
     .passthrough()
 );
+const setOutputControlMode_Body = z
+  .object({ controlMode: z.enum(["manual", "automatic"]) })
+  .passthrough();
 const SDBOutputState = z
   .object({
     controlMode: z.string().optional(),
@@ -143,6 +146,7 @@ export const schemas: Record<string, z.ZodTypeAny> = {
   ChartSeries,
   SupportedModels,
   AvailableDevices,
+  setOutputControlMode_Body,
   SDBOutputState,
   OutputBase,
 };
@@ -579,7 +583,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.object({ controlMode: z.string() }).partial().passthrough(),
+        schema: setOutputControlMode_Body,
       },
       {
         name: "outputId",
@@ -670,7 +674,10 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.object({ value: z.number() }).partial().passthrough(),
+        schema: z
+          .object({ value: z.number().gte(0).lte(100) })
+          .partial()
+          .passthrough(),
       },
       {
         name: "outputId",

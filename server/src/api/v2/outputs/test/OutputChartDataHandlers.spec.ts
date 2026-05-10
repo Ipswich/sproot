@@ -5,6 +5,7 @@ import { outputChartDataHandler } from "../handlers/OutputChartDataHandlers";
 import { assert } from "chai";
 import sinon from "sinon";
 import { SuccessResponse } from "@sproot/api/v2/Responses";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
 
 describe("OutputChartDataHandlers.ts tests", () => {
   describe("outputChartDataHandler", () => {
@@ -19,14 +20,21 @@ describe("OutputChartDataHandlers.ts tests", () => {
         { name: "output2", color: "green" },
       ],
     };
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
+
+    function createMockResponse(validatedQuery: Record<string, unknown> = {}): Response {
+      const response = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
         },
-      },
-    } as unknown as Response;
+      } as unknown as Response;
+
+      setValidatedContractRequestData(response, { query: validatedQuery });
+
+      return response;
+    }
 
     beforeEach(() => {
       outputList = sinon.createStubInstance(OutputList);
@@ -44,6 +52,7 @@ describe("OutputChartDataHandlers.ts tests", () => {
         },
         query: {},
       } as unknown as Request;
+      const mockResponse = createMockResponse();
 
       const response = outputChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
@@ -57,6 +66,7 @@ describe("OutputChartDataHandlers.ts tests", () => {
         },
         query: { latest: "true" },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ latest: true });
 
       const response = outputChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
@@ -64,6 +74,20 @@ describe("OutputChartDataHandlers.ts tests", () => {
         data: chartData.data.slice(-1),
         series: chartData.series,
       });
+    });
+
+    it("should consume validated latest query instead of raw req.query", () => {
+      const request = {
+        app: {
+          get: (_dependency: string) => outputList,
+        },
+        query: { latest: "true" },
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ latest: "false" });
+
+      const response = outputChartDataHandler(request, mockResponse) as SuccessResponse;
+      assert.equal(response.statusCode, 200);
+      assert.deepEqual(response.content?.data, chartData);
     });
   });
 });

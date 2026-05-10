@@ -29,6 +29,14 @@ Navigate to the `sproot/client` directory. If your api server is running on a di
 OpenAPI contract regeneration, generated artifact ownership, runtime validation behavior, and intentional non-JSON response exclusions are documented in [API_CONTRACTS.md](API_CONTRACTS.md).
 Use `npm run generate:api-contracts` to regenerate contracts and `npm run verify:api-contracts` to enforce deterministic output plus `common/src/api/generated.sha256` drift checks.
 
+## Contract Migration Summary
+
+The API contract migration is operational and now uses `api_spec/openapi_v2.yaml` as the canonical public contract, domain-sliced generated artifacts under `common/src/api/generated`, typed operation metadata in `common/src/api/contracts/operation-types.ts`, and runtime request and response validation in `server/src/api/validation`.
+
+Request validation runs before handlers through `createContractRoute(...)`, and successful JSON responses are validated by a temporary `response.json(...)` wrapper before they are emitted. Deterministic generation is enforced with `npm run verify:api-contracts`, which reruns generation twice and compares the resulting tree hash against `common/src/api/generated.sha256`. CI executes that check before the test suite.
+
+Intentional response-validation exclusions are limited to non-JSON transports such as firmware downloads, camera streams, image responses, archive downloads, and backup downloads. The main remaining debt is the temporary coexistence of the new generated validation path with the legacy `express-openapi-validator` middleware. Detailed architecture, lifecycle diagrams, debugging guidance, known debt, operational risks, and the safe workflow for adding endpoints live in [API_CONTRACTS.md](API_CONTRACTS.md).
+
 ## Parts
 Foremost, I'd like to note that my implementation is soldered. This can still be implemented on a breadboard if that's more your speed, though it'll change what parts you truly need and make it "difficult" to attach it to the 3D printed mount.
 

@@ -17,8 +17,8 @@ describe("SensorCache.ts tests", function () {
         ({
           info: () => {},
           error: () => {},
-          startTimer: () => ({ done: () => {} }) as winston.Profiler,
-        }) as unknown as winston.Logger,
+          startTimer: () => ({ done: () => {} } as winston.Profiler),
+        } as unknown as winston.Logger)
     );
     logger = winston.createLogger();
   });
@@ -65,12 +65,12 @@ describe("SensorCache.ts tests", function () {
       assert.equal(sensorCache.get(ReadingType.temperature)[0]!.data, "100");
       assert.isTrue(
         sensorCache.get(ReadingType.temperature)[0]!.logTime.includes("Z") &&
-          sensorCache.get(ReadingType.temperature)[0]!.logTime.includes("T"),
+          sensorCache.get(ReadingType.temperature)[0]!.logTime.includes("T")
       );
       assert.equal(sensorCache.get(ReadingType.temperature)[1]!.data, "101");
       assert.isTrue(
         sensorCache.get(ReadingType.temperature)[1]!.logTime.includes("Z") &&
-          sensorCache.get(ReadingType.temperature)[1]!.logTime.includes("T"),
+          sensorCache.get(ReadingType.temperature)[1]!.logTime.includes("T")
       );
     });
   });
@@ -93,7 +93,7 @@ describe("SensorCache.ts tests", function () {
       assert.equal(sensorCache.get(ReadingType.temperature)[0]!.data, "100");
       assert.isTrue(
         sensorCache.get(ReadingType.temperature)[0]!.logTime.includes("Z") &&
-          sensorCache.get(ReadingType.temperature)[0]!.logTime.includes("T"),
+          sensorCache.get(ReadingType.temperature)[0]!.logTime.includes("T")
       );
     });
 

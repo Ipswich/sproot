@@ -53,7 +53,7 @@ export default function SortableTableRow({
                 if (sensorToggleStates.includes(sensor.name)) {
                   sensorToggleStates.splice(
                     sensorToggleStates.indexOf(sensor.name),
-                    1,
+                    1
                   );
                 } else {
                   sensorToggleStates.push(sensor.name);
@@ -61,7 +61,7 @@ export default function SortableTableRow({
                 setSensorToggleState([...sensorToggleStates]);
                 localStorage.setItem(
                   sensorsToggledKey(readingType),
-                  JSON.stringify([...sensorToggleStates]),
+                  JSON.stringify([...sensorToggleStates])
                 );
               });
             }}

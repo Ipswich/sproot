@@ -61,7 +61,7 @@ export class FrameBuffer {
     this.#subscriberMap.set(response, subscriber);
 
     this.#logger.debug(
-      `FrameBuffer: subscriber added, total subscribers: ${this.#subscribers.size}`,
+      `FrameBuffer: subscriber added, total subscribers: ${this.#subscribers.size}`
     );
   }
 
@@ -81,12 +81,12 @@ export class FrameBuffer {
       subscriber?.onDestroy();
     } catch (e) {
       this.#logger.warn(
-        `Failed to destroy subscriber: ${e instanceof Error ? e.message : String(e)}`,
+        `Failed to destroy subscriber: ${e instanceof Error ? e.message : String(e)}`
       );
     }
 
     this.#logger.debug(
-      `FrameBuffer: subscriber removed, total subscribers: ${this.#subscribers.size}`,
+      `FrameBuffer: subscriber removed, total subscribers: ${this.#subscribers.size}`
     );
   }
 
@@ -119,7 +119,7 @@ export class FrameBuffer {
       } catch (e) {
         staleResponses.add(response);
         this.#logger.warn(
-          `Failed to deliver chunk to subscriber: ${e instanceof Error ? e.message : String(e)}`,
+          `Failed to deliver chunk to subscriber: ${e instanceof Error ? e.message : String(e)}`
         );
       }
     }

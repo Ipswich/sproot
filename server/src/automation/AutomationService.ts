@@ -32,7 +32,7 @@ class AutomationService extends EventEmitter {
 
   static async createInstanceAsync(
     sprootDB: ISprootDB,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<AutomationService> {
     const service = new AutomationService(sprootDB, logger);
     await service.loadAllAutomationsAsync();
@@ -60,7 +60,7 @@ class AutomationService extends EventEmitter {
           automation.name,
           automation.operator,
           automation.enabled,
-          this.#sprootDB,
+          this.#sprootDB
         );
         return [automation.id, automationInstance] as [number, Automation];
       });
@@ -78,7 +78,7 @@ class AutomationService extends EventEmitter {
   async evaluateAllAutomationsAsync(
     sensorList: SensorList,
     outputList: OutputList,
-    now: Date,
+    now: Date
   ): Promise<void> {
     // Evaluate each automation once
     const evaluatedAutomations: Array<{
@@ -105,7 +105,7 @@ class AutomationService extends EventEmitter {
 
     // Emit single AutomationEvent with all triggered automations
     const triggeredAutomationsMap = new Map(
-      evaluatedAutomations.map((e) => [e.automation.id, e.payload]),
+      evaluatedAutomations.map((e) => [e.automation.id, e.payload])
     );
 
     this.emit(AUTOMATIONS_TRIGGERED_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
@@ -127,7 +127,7 @@ class AutomationService extends EventEmitter {
     id: number,
     name: string,
     operator: AutomationOperator,
-    enabled: boolean,
+    enabled: boolean
   ) {
     await this.#sprootDB.updateAutomationAsync(name, operator, id, enabled);
     await this.#postAutomationChangeFunctionAsync();
@@ -140,7 +140,7 @@ class AutomationService extends EventEmitter {
     comparisonValue: number,
     comparisonLookback: number | null,
     sensorId: number,
-    readingType: ReadingType,
+    readingType: ReadingType
   ): Promise<number> {
     const resultId = await this.#sprootDB.addSensorConditionAsync(
       automationId,
@@ -149,7 +149,7 @@ class AutomationService extends EventEmitter {
       comparisonValue,
       comparisonLookback,
       sensorId,
-      readingType,
+      readingType
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -161,7 +161,7 @@ class AutomationService extends EventEmitter {
     operator: ConditionOperator,
     comparisonValue: number,
     comparisonLookback: number | null,
-    outputId: number,
+    outputId: number
   ): Promise<number> {
     const resultId = await this.#sprootDB.addOutputConditionAsync(
       automationId,
@@ -169,7 +169,7 @@ class AutomationService extends EventEmitter {
       operator,
       comparisonValue,
       comparisonLookback,
-      outputId,
+      outputId
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -179,13 +179,13 @@ class AutomationService extends EventEmitter {
     automationId: number,
     type: ConditionGroupType,
     startTime: string | null | undefined,
-    endTime: string | null | undefined,
+    endTime: string | null | undefined
   ): Promise<number> {
     const resultId = await this.#sprootDB.addTimeConditionAsync(
       automationId,
       type,
       startTime,
-      endTime,
+      endTime
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -194,7 +194,7 @@ class AutomationService extends EventEmitter {
   async addWeekdayConditionAsync(
     automationId: number,
     type: ConditionGroupType,
-    weekdays: number,
+    weekdays: number
   ): Promise<number> {
     const resultId = await this.#sprootDB.addWeekdayConditionAsync(automationId, type, weekdays);
     await this.#postAutomationChangeFunctionAsync();
@@ -204,7 +204,7 @@ class AutomationService extends EventEmitter {
   async addMonthConditionAsync(
     automationId: number,
     type: ConditionGroupType,
-    months: number,
+    months: number
   ): Promise<number> {
     const resultId = await this.#sprootDB.addMonthConditionAsync(automationId, type, months);
     await this.#postAutomationChangeFunctionAsync();
@@ -217,7 +217,7 @@ class AutomationService extends EventEmitter {
     startMonth: number,
     startDate: number,
     endMonth: number,
-    endDate: number,
+    endDate: number
   ): Promise<number> {
     const resultId = await this.#sprootDB.addDateRangeConditionAsync(
       automationId,
@@ -225,7 +225,7 @@ class AutomationService extends EventEmitter {
       startMonth,
       startDate,
       endMonth,
-      endDate,
+      endDate
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -239,7 +239,7 @@ class AutomationService extends EventEmitter {
       | TimeCondition
       | WeekdayCondition
       | MonthCondition
-      | DateRangeCondition,
+      | DateRangeCondition
   ) {
     if (condition instanceof SensorCondition) {
       await this.#sprootDB.updateSensorConditionAsync(automationId, condition);
@@ -293,7 +293,7 @@ class AutomationService extends EventEmitter {
   async addNotificationActionAsync(
     automationId: number,
     subject: string,
-    content: string,
+    content: string
   ): Promise<number> {
     const result = await this.#sprootDB.addNotificationActionAsync(automationId, subject, content);
     this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
@@ -309,7 +309,7 @@ class AutomationService extends EventEmitter {
   async addOutputActionAsync(
     automationId: number,
     outputId: number,
-    value: number,
+    value: number
   ): Promise<number> {
     const result = await this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
     this.emit(OUTPUT_ACTIONS_UPDATED_EVENT);

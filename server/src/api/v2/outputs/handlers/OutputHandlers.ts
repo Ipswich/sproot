@@ -4,6 +4,14 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { Request, Response } from "express";
+import type { operations as OutputContractOperations } from "@sproot/sproot-common/dist/api/generated/outputs/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type GetOutputByIdPathParams = OutputContractOperations["getOutputById"]["parameters"]["path"];
+type CreateOutputRequestBody =
+  OutputContractOperations["createOutput"]["requestBody"]["content"]["application/json"];
+type UpdateOutputPathParams = OutputContractOperations["updateOutput"]["parameters"]["path"];
+type DeleteOutputPathParams = OutputContractOperations["deleteOutput"]["parameters"]["path"];
 
 /**
  * Possible statusCodes: 200, 404
@@ -13,14 +21,17 @@ import { Request, Response } from "express";
  */
 export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+  const pathParams = getValidatedContractRequestData<"getOutputById">(response)
+    .params as GetOutputByIdPathParams | undefined;
+  const outputId = pathParams?.outputId;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
-  if (request.params["outputId"] !== undefined) {
-    if (outputList.outputData[request.params["outputId"]]) {
+  if (outputId !== undefined) {
+    if (outputList.outputData[outputId]) {
       getOutputResponse = {
         statusCode: 200,
         content: {
-          data: [outputList.outputData[request.params["outputId"]]],
+          data: [outputList.outputData[outputId]],
         },
         ...response.locals["defaultProperties"],
       };
@@ -30,7 +41,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Output with ID ${request.params["outputId"]} not found.`],
+          details: [`Output with ID ${outputId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -56,59 +67,25 @@ export function get(request: Request, response: Response): SuccessResponse | Err
  */
 export async function addAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+  const requestBody = getValidatedContractRequestData<"createOutput">(response)
+    .body as unknown as CreateOutputRequestBody;
   let addOutputResponse: SuccessResponse | ErrorResponse;
 
   const newOutput = {
-    model: request.body["model"],
-    subcontrollerId: request.body["subcontrollerId"],
-    address: request.body["address"],
-    name: request.body["name"],
-    pin: request.body["pin"],
-    isPwm: request.body["isPwm"],
-    isInvertedPwm: request.body["isInvertedPwm"],
-    color: request.body["color"],
-    automationTimeout: request.body["automationTimeout"],
+    model: requestBody.model,
+    subcontrollerId: requestBody.subcontrollerId,
+    address: requestBody.address,
+    name: requestBody.name,
+    pin: requestBody.pin,
+    isPwm: requestBody.isPwm,
+    isInvertedPwm: requestBody.isInvertedPwm,
+    color: requestBody.color,
+    automationTimeout: requestBody.automationTimeout,
   } as SDBOutput;
-
-  const missingFields: Array<string> = [];
-  if (newOutput.model == undefined || newOutput.model == null) {
-    missingFields.push("Missing required field: model");
-  }
-  if (newOutput.address == undefined || newOutput.address == null) {
-    missingFields.push("Missing required field: address");
-  }
-  if (newOutput.name == undefined || newOutput.name == null) {
-    missingFields.push("Missing required field: name");
-  }
-  if (newOutput.pin == undefined || newOutput.pin == null) {
-    missingFields.push("Missing required field: pin");
-  }
-  if (newOutput.isPwm == undefined || newOutput.isPwm == null) {
-    missingFields.push("Missing required field: isPwm");
-  }
-  if (newOutput.isInvertedPwm == undefined || newOutput.isInvertedPwm == null) {
-    missingFields.push("Missing required field: isInvertedPwm");
-  }
-  if (newOutput.automationTimeout == undefined || newOutput.automationTimeout == null) {
-    missingFields.push("Missing required field: automationTimeout");
-  }
-
-  if (missingFields.length > 0) {
-    addOutputResponse = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: [...missingFields],
-      },
-      ...response.locals["defaultProperties"],
-    };
-    return addOutputResponse;
-  }
 
   try {
     const newOutputId = await sprootDB.addOutputAsync(newOutput);
@@ -142,13 +119,15 @@ export async function addAsync(
  */
 export async function updateAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+  const pathParams = getValidatedContractRequestData<"updateOutput">(response)
+    .params as UpdateOutputPathParams | undefined;
+  const outputId = Number.parseInt(String(pathParams?.outputId ?? ""), 10);
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
-  const outputId = parseInt(request.params["outputId"] ?? "");
   if (isNaN(outputId)) {
     updateOutputResponse = {
       statusCode: 400,
@@ -191,11 +170,11 @@ export async function updateAsync(
   outputData.deviceZoneId =
     request.body["deviceZoneId"] === null
       ? null
-      : (request.body["deviceZoneId"] ?? outputData.deviceZoneId);
+      : request.body["deviceZoneId"] ?? outputData.deviceZoneId;
   outputData.parentOutputId =
     request.body["parentOutputId"] === null
       ? null
-      : (request.body["parentOutputId"] ?? outputData.parentOutputId);
+      : request.body["parentOutputId"] ?? outputData.parentOutputId;
 
   try {
     await sprootDB.updateOutputAsync(outputData);
@@ -225,13 +204,15 @@ export async function updateAsync(
 
 export async function deleteAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
+  const pathParams = getValidatedContractRequestData<"deleteOutput">(response)
+    .params as DeleteOutputPathParams | undefined;
+  const outputId = Number.parseInt(String(pathParams?.outputId ?? ""), 10);
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 
-  const outputId = parseInt(request.params["outputId"] ?? "");
   if (isNaN(outputId)) {
     deleteOutputResponse = {
       statusCode: 400,

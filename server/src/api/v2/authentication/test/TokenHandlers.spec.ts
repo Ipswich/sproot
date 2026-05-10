@@ -44,7 +44,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        false,
+        false
       )) as SuccessResponse;
       assert.equal(result.statusCode, 200);
       const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
@@ -76,43 +76,12 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        true,
+        true
       )) as SuccessResponse;
       assert.equal(result.statusCode, 200);
       const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
       assert.equal("dev-test", jwtPayload["username"]);
       assert.isString(jwtPayload["csrf"]);
-      assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
-      assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
-    });
-
-    it("should return a 400 and details for each missing required field", async () => {
-      const request = {
-        body: {},
-        app: {
-          get: (_dependency: string) => sprootDB,
-        },
-      } as unknown as Request;
-      const response = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
-
-      const result = (await getTokenAsync(
-        request,
-        response,
-        "true",
-        jwtExpiration,
-        jwtSecret,
-        false,
-      )) as ErrorResponse;
-      assert.equal(result.statusCode, 400);
-      assert.equal(result.error.name, "Bad Request");
-      assert.deepEqual(result.error.details, ["Missing username", "Missing password"]);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
@@ -139,7 +108,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        false,
+        false
       )) as ErrorResponse;
       assert.equal(result.statusCode, 401);
       assert.equal(result.error.name, "Unauthorized");
@@ -170,7 +139,7 @@ describe("TokenHandlers.ts tests", () => {
         "false",
         jwtExpiration,
         jwtSecret,
-        false,
+        false
       )) as ErrorResponse;
       assert.equal(result.statusCode, 501);
       assert.equal(result.error.name, "Not Implemented");
@@ -202,7 +171,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        false,
+        false
       )) as ErrorResponse;
       assert.equal(result.statusCode, 503);
       assert.equal(result.error.name, "Service Unavailable");

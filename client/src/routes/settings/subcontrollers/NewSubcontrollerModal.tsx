@@ -105,7 +105,11 @@ export default function NewSubcontrollerModal({
             placeholder="Select Device"
             data={devices.map((device) => ({
               value: device.hostName,
-              label: `${device.name} (${Array.isArray(device.address) ? device.address.join(", ") : device.address})`,
+              label: `${device.name} (${
+                Array.isArray(device.address)
+                  ? device.address.join(", ")
+                  : device.address
+              })`,
             }))}
             {...newSubcontrollerForm.getInputProps("hostName")}
           />

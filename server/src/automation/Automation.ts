@@ -17,7 +17,7 @@ export class Automation {
     name: string,
     operator: AutomationOperator,
     enabled: boolean,
-    sprootDB: ISprootDB,
+    sprootDB: ISprootDB
   ) {
     this.id = id;
     this.name = name;
@@ -31,7 +31,7 @@ export class Automation {
     name: string,
     operator: AutomationOperator,
     enabled: boolean,
-    sprootDB: ISprootDB,
+    sprootDB: ISprootDB
   ): Promise<Automation> {
     const automation = new Automation(id, name, operator, enabled, sprootDB);
     await automation.conditions.loadAsync();
@@ -41,7 +41,7 @@ export class Automation {
   async evaluate(
     sensorList: SensorList,
     outputList: OutputList,
-    now: Date,
+    now: Date
   ): Promise<{
     result: boolean;
     conditions: {

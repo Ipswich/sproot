@@ -16,7 +16,9 @@ export default class ContractValidationError extends Error {
   readonly phase: ContractValidationPhase;
 
   constructor(options: ContractValidationErrorOptions) {
-    const summary = `${capitalize(options.phase)} contract validation failed for ${options.operationId}.`;
+    const summary = `${capitalize(options.phase)} contract validation failed for ${
+      options.operationId
+    }.`;
     super(summary);
 
     this.name = options.phase === "request" ? "Bad Request" : "Internal Server Error";
@@ -30,7 +32,7 @@ export default class ContractValidationError extends Error {
     operationId: string,
     phase: ContractValidationPhase,
     source: ContractValidationSource,
-    error: ZodError,
+    error: ZodError
   ): ContractValidationError {
     const details = error.issues.map((issue) => {
       const issuePath = issue.path.length > 0 ? issue.path.join(".") : "root";

@@ -45,7 +45,7 @@ export default function NewConditionWidget({
 
   const optionsFilter: OptionsFilter = ({ options }) => {
     const filtered = (options as ComboboxItem[]).filter(
-      (option) => option.disabled == false,
+      (option) => option.disabled == false
     );
 
     return filtered;
@@ -105,7 +105,7 @@ export default function NewConditionWidget({
         }) ?? [],
         Object.values(getOutputsQuery.data ?? {}).map((output) => {
           return { id: output.id, name: output.name ?? "" };
-        }) ?? [],
+        }) ?? []
       )}
     </Fragment>
   );
@@ -121,7 +121,7 @@ function updateDisplayedCondition(
     units: Partial<Record<ReadingType, string>>;
     name: string;
   }[],
-  outputs: { id: number; name: string }[],
+  outputs: { id: number; name: string }[]
 ) {
   switch (conditionType) {
     case "Sensor":

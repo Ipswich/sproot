@@ -30,7 +30,7 @@ export function getCameraSettings(request: Request, response: Response): Success
  */
 export async function updateCameraSettingsAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const newSettings = request.body as SDBCameraSettings;
@@ -116,7 +116,7 @@ export async function updateCameraSettingsAsync(
     (newSettings.timelapseStartTime !== null && newSettings.timelapseEndTime === null)
   ) {
     missingOrInvalidFields.push(
-      "Both timelapseStartTime and timelapseEndTime must be provided or both must be null",
+      "Both timelapseStartTime and timelapseEndTime must be provided or both must be null"
     );
   }
   if (missingOrInvalidFields.length > 0) {

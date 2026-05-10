@@ -9,10 +9,10 @@ import { JSX } from "react";
 interface EditablesTableProps {
   editables: ISensorBase[] | IOutputBase[] | IAutomation[] | ISubcontroller[];
   onEditClick: (
-    item: ISensorBase | IOutputBase | IAutomation | ISubcontroller,
+    item: ISensorBase | IOutputBase | IAutomation | ISubcontroller
   ) => void;
   onNameClick?: (
-    item: ISensorBase | IOutputBase | IAutomation | ISubcontroller,
+    item: ISensorBase | IOutputBase | IAutomation | ISubcontroller
   ) => void;
   tableLeftComponent?: {
     label: string;
@@ -50,7 +50,7 @@ export default function EditablesTable({
           .sort((a, b) =>
             (a.name || "").localeCompare(b.name || "", undefined, {
               sensitivity: "base",
-            }),
+            })
           )
           .map((editable) => (
             <Table.Tr key={editable.id}>

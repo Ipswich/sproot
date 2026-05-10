@@ -33,7 +33,7 @@ export default function OutputSettings() {
     { open: newOutputModalOpen, close: newOutputModalClose },
   ] = useDisclosure(false);
   const [supportedModels, setSupportedModels] = useState(
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const [
     deviceZonesModalOpened,

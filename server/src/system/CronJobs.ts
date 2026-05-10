@@ -12,7 +12,7 @@ export function createUpdateDevicesCronJob(
   cameraManager: CameraManager,
   sensorList: SensorList,
   outputList: OutputList,
-  logger: winston.Logger,
+  logger: winston.Logger
 ) {
   let running = false;
   return new CronJob(
@@ -47,7 +47,7 @@ export function createUpdateDevicesCronJob(
     null,
     null,
     true,
-    (err) => logger.error(`Device update cron error: ${err}`),
+    (err) => logger.error(`Device update cron error: ${err}`)
   );
 }
 
@@ -55,7 +55,7 @@ export function createAutomationsCronJob(
   automationService: AutomationService,
   sensorList: SensorList,
   outputList: OutputList,
-  logger: winston.Logger,
+  logger: winston.Logger
 ) {
   let running = false;
   return new CronJob(
@@ -86,14 +86,14 @@ export function createAutomationsCronJob(
     null,
     null,
     true,
-    (err) => logger.error(`Automation cron error: ${err}`),
+    (err) => logger.error(`Automation cron error: ${err}`)
   );
 }
 
 export function createDatabaseUpdateCronJob(
   sensorList: SensorList,
   outputList: OutputList,
-  logger: winston.Logger,
+  logger: winston.Logger
 ) {
   let running = false;
   return new CronJob(
@@ -123,7 +123,7 @@ export function createDatabaseUpdateCronJob(
     null,
     null,
     null,
-    (err) => logger.error(`State update cron error: ${err}`),
+    (err) => logger.error(`State update cron error: ${err}`)
   );
 }
 
@@ -144,7 +144,7 @@ export function createBackupCronJob(sprootDB: ISprootDB, logger: winston.Logger)
         await Backups.runRetentionPolicyAsync(
           logger,
           Constants.BACKUP_DIRECTORY,
-          process.env["BACKUP_RETENTION_DAYS"]!,
+          process.env["BACKUP_RETENTION_DAYS"]!
         );
       } catch (e) {
         logger.error(`Exception in backup loop: ${e}`);
@@ -163,6 +163,6 @@ export function createBackupCronJob(sprootDB: ISprootDB, logger: winston.Logger)
     null,
     null,
     true,
-    (err) => logger.error(`Backup cron error: ${err}`),
+    (err) => logger.error(`Backup cron error: ${err}`)
   );
 }

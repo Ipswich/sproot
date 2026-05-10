@@ -4,6 +4,15 @@ import { AutomationService } from "../../../../automation/AutomationService";
 import { IAutomation } from "@sproot/automation/IAutomation";
 import { ISprootDB } from "@sproot/database/ISprootDB";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import type { operations as AutomationContractOperations } from "@sproot/sproot-common/dist/api/generated/automations/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type CreateAutomationRequestBody =
+  AutomationContractOperations["createAutomation"]["requestBody"]["content"]["application/json"];
+type UpdateAutomationPathParams =
+  AutomationContractOperations["updateAutomation"]["parameters"]["path"];
+type UpdateAutomationRequestBody =
+  AutomationContractOperations["updateAutomation"]["requestBody"]["content"]["application/json"];
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -103,43 +112,24 @@ export async function getByIdAsync(request: Request, response: Response) {
  */
 export async function addAsync(request: Request, response: Response) {
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const requestBody = (getValidatedContractRequestData<"createAutomation">(response).body ??
+    request.body) as CreateAutomationRequestBody;
   let addAutomationResponse: SuccessResponse | ErrorResponse;
-
-  const missingFields: Array<string> = [];
-  if (request.body["name"] == null) {
-    missingFields.push("Missing required field: name");
-  }
-  if (request.body["operator"] == null) {
-    missingFields.push("Missing required field: operator");
-  } else if (request.body["operator"] != "and" && request.body["operator"] != "or") {
-    missingFields.push("Invalid value for operator: must be 'and' or 'or'");
-  }
-
-  if (missingFields.length > 0) {
-    addAutomationResponse = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: [...missingFields],
-      },
-      ...response.locals["defaultProperties"],
-    };
-    return addAutomationResponse;
-  }
+  const automationName = requestBody["name"];
+  const automationOperator = requestBody["operator"];
 
   try {
     const createdAutomationId = await automationService.addAutomationAsync(
-      request.body["name"],
-      request.body["operator"],
+      automationName,
+      automationOperator
     );
     addAutomationResponse = {
       statusCode: 201,
       content: {
         data: {
           id: createdAutomationId,
-          name: request.body["name"],
-          operator: request.body["operator"],
+          name: automationName,
+          operator: automationOperator,
         } as IAutomation,
       },
       ...response.locals["defaultProperties"],
@@ -167,8 +157,12 @@ export async function addAsync(request: Request, response: Response) {
 export async function updateAsync(request: Request, response: Response) {
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const validatedRequest = getValidatedContractRequestData<"updateAutomation">(response);
+  const pathParams = (validatedRequest.params ?? request.params) as UpdateAutomationPathParams;
+  const requestBody = (validatedRequest.body ?? request.body) as UpdateAutomationRequestBody;
+  const automationId = pathParams["automationId"];
   let updateAutomationResponse: SuccessResponse | ErrorResponse;
-  if (request.params["automationId"] == null || isNaN(parseInt(request.params["automationId"]))) {
+  if (automationId == null || isNaN(parseInt(automationId))) {
     updateAutomationResponse = {
       statusCode: 400,
       error: {
@@ -182,30 +176,28 @@ export async function updateAsync(request: Request, response: Response) {
   }
 
   try {
-    const automation = (
-      await sprootDB.getAutomationAsync(parseInt(request.params["automationId"]))
-    )[0];
+    const automation = (await sprootDB.getAutomationAsync(parseInt(automationId)))[0];
     if (automation == null) {
       updateAutomationResponse = {
         statusCode: 404,
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Automation with Id ${request.params["automationId"]} not found.`],
+          details: [`Automation with Id ${automationId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
       return updateAutomationResponse;
     }
 
-    automation.name = request.body["name"] ?? automation.name;
-    automation.operator = request.body["operator"] ?? automation.operator;
-    automation.enabled = request.body["enabled"] ?? automation.enabled;
+    automation.name = requestBody["name"] ?? automation.name;
+    automation.operator = requestBody["operator"] ?? automation.operator;
+    automation.enabled = requestBody["enabled"] ?? automation.enabled;
     await automationService.updateAutomationAsync(
-      parseInt(request.params["automationId"]),
+      parseInt(automationId),
       automation.name,
       automation.operator,
-      automation.enabled,
+      automation.enabled
     );
     updateAutomationResponse = {
       statusCode: 200,

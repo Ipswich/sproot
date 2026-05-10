@@ -50,8 +50,8 @@ export default function NotificationCenter() {
     const nextNotificationStates = syncNotificationStates(
       notificationStates,
       activeNotificationsQuery.isSuccess
-        ? (activeNotifications?.notifications ?? [])
-        : undefined,
+        ? activeNotifications?.notifications ?? []
+        : undefined
     );
 
     if (nextNotificationStates !== notificationStates) {
@@ -70,7 +70,7 @@ export default function NotificationCenter() {
       (result, notification) => {
         const notificationState = getNotificationDisplayState(
           notification,
-          notificationStates,
+          notificationStates
         );
 
         if (notificationState === "active") {
@@ -85,13 +85,13 @@ export default function NotificationCenter() {
       {
         activeItems: [] as IActiveNotification[],
         readItems: [] as IActiveNotification[],
-      },
+      }
     );
   }, [activeNotifications, notificationStates]);
 
   function updateNotificationState(
     notification: IActiveNotification,
-    state: Exclude<NotificationDisplayState, "active">,
+    state: Exclude<NotificationDisplayState, "active">
   ) {
     const notificationKey = getNotificationStateKey(notification);
     const nextNotificationStates = syncNotificationStates({
@@ -322,7 +322,7 @@ function loadNotificationStates(): StoredNotificationStateMap {
 
   try {
     const storedValue = window.localStorage.getItem(
-      NOTIFICATION_STATE_STORAGE_KEY,
+      NOTIFICATION_STATE_STORAGE_KEY
     );
     if (!storedValue) {
       return {};
@@ -336,7 +336,7 @@ function loadNotificationStates(): StoredNotificationStateMap {
 }
 
 function persistNotificationStates(
-  notificationStates: StoredNotificationStateMap,
+  notificationStates: StoredNotificationStateMap
 ) {
   if (typeof window === "undefined") {
     return;
@@ -344,21 +344,21 @@ function persistNotificationStates(
 
   window.localStorage.setItem(
     NOTIFICATION_STATE_STORAGE_KEY,
-    JSON.stringify(notificationStates),
+    JSON.stringify(notificationStates)
   );
 }
 
 function syncNotificationStates(
   notificationStates: StoredNotificationStateMap,
-  activeNotifications?: IActiveNotification[],
+  activeNotifications?: IActiveNotification[]
 ): StoredNotificationStateMap {
   const now = Date.now();
   let changed = false;
   const activeNotificationKeys = activeNotifications
     ? new Set(
         activeNotifications.map((notification) =>
-          getNotificationStateKey(notification),
-        ),
+          getNotificationStateKey(notification)
+        )
       )
     : null;
 
@@ -374,8 +374,8 @@ function syncNotificationStates(
           changed = true;
         }
         return keepEntry;
-      },
-    ),
+      }
+    )
   );
 
   if (!changed) {
@@ -385,7 +385,7 @@ function syncNotificationStates(
   if (typeof window !== "undefined") {
     window.localStorage.setItem(
       NOTIFICATION_STATE_STORAGE_KEY,
-      JSON.stringify(nextNotificationStates),
+      JSON.stringify(nextNotificationStates)
     );
   }
 
@@ -398,7 +398,7 @@ function getNotificationStateKey(notification: IActiveNotification) {
 
 function getNotificationDisplayState(
   notification: IActiveNotification,
-  notificationStates: StoredNotificationStateMap,
+  notificationStates: StoredNotificationStateMap
 ): NotificationDisplayState {
   const storedState = notificationStates[getNotificationStateKey(notification)];
 

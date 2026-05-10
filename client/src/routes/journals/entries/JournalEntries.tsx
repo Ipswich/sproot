@@ -64,11 +64,11 @@ export default function JournalEntries() {
   });
 
   const journal = (journalsQuery.data ?? []).find(
-    (j) => String(j.journal.id) === String(journalId),
+    (j) => String(j.journal.id) === String(journalId)
   ) as { journal: SDBJournal; tags?: SDBJournalTag[] } | undefined;
 
   const IconComp = getIcon(
-    journal?.journal.icon ?? "NullIcon",
+    journal?.journal.icon ?? "NullIcon"
   ) as ElementType | null;
 
   return (
@@ -289,7 +289,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
     try {
       localStorage.setItem(
         journalEntriesSortKey(),
-        JSON.stringify({ sortBy, sortDir }),
+        JSON.stringify({ sortBy, sortDir })
       );
     } catch {
       /* ignore */
@@ -318,7 +318,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
             try {
               localStorage.setItem(
                 journalEntriesFiltersKey(),
-                JSON.stringify(sanitized),
+                JSON.stringify(sanitized)
               );
             } catch {
               // ignore localStorage errors
@@ -349,7 +349,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
   const allTags = Array.from(tagMap.values()).sort((a, b) =>
     (a.name || "").localeCompare(b.name || "", undefined, {
       sensitivity: "base",
-    }),
+    })
   );
 
   // Keep filters in sync when tags are removed elsewhere (e.g. deleted)
@@ -365,7 +365,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
       try {
         localStorage.setItem(
           journalEntriesFiltersKey(),
-          JSON.stringify(sanitized),
+          JSON.stringify(sanitized)
         );
       } catch {
         // ignore
@@ -386,7 +386,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
 
     // date-range presence
     const hasRange = Boolean(
-      dateRangeExact && (dateRangeExact[0] || dateRangeExact[1]),
+      dateRangeExact && (dateRangeExact[0] || dateRangeExact[1])
     );
     const created = r.entry.createdAt ? new Date(r.entry.createdAt) : null;
     const dateActive = hasRange && !!created;
@@ -480,7 +480,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
     sorted.map((s) => ({
       id: s.entry.id,
       tagIds: (s.tags ?? []).map((t) => t.id).sort(),
-    })),
+    }))
   );
 
   useEffect(() => {
@@ -520,7 +520,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
 
     const clearT = setTimeout(() => {
       setVisibleRows((prev) =>
-        prev.map((p) => (p.appearing ? { ...p, appearing: false } : p)),
+        prev.map((p) => (p.appearing ? { ...p, appearing: false } : p))
       );
     }, 20);
 
@@ -556,8 +556,8 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
               key: String(s.entry.id),
               entry: s.entry,
               tags: s.tags ?? null,
-            }) as EntryRowWithKey,
-        ),
+            } as EntryRowWithKey)
+        )
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -600,7 +600,7 @@ function JournalEntriesList({ journalId }: { journalId: number }) {
                     try {
                       localStorage.setItem(
                         journalEntriesFiltersKey(),
-                        JSON.stringify(newFilters),
+                        JSON.stringify(newFilters)
                       );
                     } catch {
                       // Ignore storage errors (e.g., disabled storage, quota exceeded)

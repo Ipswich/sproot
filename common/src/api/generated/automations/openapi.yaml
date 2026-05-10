@@ -199,6 +199,25 @@ paths:
                         properties:
                           data:
                             $ref: "#/components/schemas/Automation"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: Bad Request
+                          url:
+                            example: /api/v2/automations/invalid-id
+                          details:
+                            example:
+                              - Invalid or missing automation Id.
         "401":
           description: Unauthorized
           content:
@@ -908,6 +927,27 @@ paths:
                               - $ref: "#/components/schemas/WeekdayCondition"
                               - $ref: "#/components/schemas/MonthCondition"
                               - $ref: "#/components/schemas/DateRangeCondition"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: Bad Request
+                          url:
+                            example: /api/v2/automations/1/conditions/sensor/1
+                          details:
+                            example:
+                              - Invalid or missing automation Id.
+                              - Invalid or missing condition type.
+                              - Invalid or missing condition Id.
         "401":
           description: Unauthorized
           content:
@@ -1465,6 +1505,25 @@ paths:
                         properties:
                           data:
                             $ref: "#/components/schemas/OutputAction"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: Bad Request
+                          url:
+                            example: /api/v2/output-actions/not-a-number
+                          details:
+                            example:
+                              - Invalid or missing outputAction Id.
         "401":
           description: Unauthorized
           content:
@@ -1851,6 +1910,25 @@ paths:
                         properties:
                           data:
                             $ref: "#/components/schemas/NotificationAction"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: Bad Request
+                          url:
+                            example: /api/v2/notification-actions/not-a-number
+                          details:
+                            example:
+                              - Invalid or missing notification action Id.
         "401":
           description: Unauthorized
           content:

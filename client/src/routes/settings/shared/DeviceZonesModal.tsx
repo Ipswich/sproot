@@ -100,7 +100,7 @@ export default function DeviceZonesModal({
             .sort((a, b) =>
               (a.name || "").localeCompare(b.name || "", undefined, {
                 sensitivity: "base",
-              }),
+              })
             )
             .map((zone) => (
               <Table.Tr key={zone.id}>
@@ -111,8 +111,8 @@ export default function DeviceZonesModal({
                       const value = event.currentTarget.value;
                       setLocalZones((prev) =>
                         prev.map((g) =>
-                          g.id === zone.id ? { ...g, name: value } : g,
-                        ),
+                          g.id === zone.id ? { ...g, name: value } : g
+                        )
                       );
                     }}
                   />
@@ -122,7 +122,7 @@ export default function DeviceZonesModal({
                     <ActionIcon
                       onClick={async () => {
                         const updated = localZones.find(
-                          (g) => g.id === zone.id,
+                          (g) => g.id === zone.id
                         );
                         if (updated) {
                           await updateDeviceZonesMutation.mutateAsync(updated);
@@ -163,7 +163,7 @@ export default function DeviceZonesModal({
                   onClick={async () => {
                     if (!newZoneName.trim()) return;
                     await addDeviceZonesMutation.mutateAsync(
-                      newZoneName.trim(),
+                      newZoneName.trim()
                     );
                     setNewZoneName("");
                     await deviceZonesQuery.refetch();

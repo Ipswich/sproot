@@ -4,6 +4,13 @@ import { Request, Response } from "express";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { AutomationService } from "../../../../automation/AutomationService";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import type { operations as AutomationContractOperations } from "@sproot/sproot-common/dist/api/generated/automations/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type ListOutputActionsQuery =
+  AutomationContractOperations["listOutputActions"]["parameters"]["query"];
+type CreateOutputActionRequestBody =
+  AutomationContractOperations["createOutputAction"]["requestBody"]["content"]["application/json"];
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -12,19 +19,17 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
  */
 export async function getAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const query = (getValidatedContractRequestData<"listOutputActions">(response).query ??
+    request.query) as ListOutputActionsQuery;
+  const automationId = query?.["automationId"];
   let automationResponse: SuccessResponse | ErrorResponse;
 
   try {
-    if (
-      request.query["automationId"] != null &&
-      !isNaN(parseInt(request.query["automationId"] as string))
-    ) {
-      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(
-        parseInt(request.query["automationId"] as string),
-      );
+    if (automationId != null && !isNaN(parseInt(automationId))) {
+      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(parseInt(automationId));
       automationResponse = {
         statusCode: 200,
         content: {
@@ -65,7 +70,7 @@ export async function getAsync(
  */
 export async function getByIdAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
@@ -132,24 +137,21 @@ export async function getByIdAsync(
  */
 export async function addAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const requestBody = (getValidatedContractRequestData<"createOutputAction">(response).body ??
+    request.body) as CreateOutputActionRequestBody;
   let automationResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.body["automationId"] ?? "");
-  const outputId = parseInt(request.body["outputId"] ?? "");
-  let value = parseInt(request.body["value"] ?? "");
+  const automationId = requestBody["automationId"];
+  const outputId = requestBody["outputId"];
+  let value = requestBody["value"];
 
   const invalidFields = [];
-  if (isNaN(automationId)) {
-    invalidFields.push("Invalid or missing automation Id.");
-  }
-  if (isNaN(outputId)) {
-    invalidFields.push("Invalid or missing output Id.");
-  } else if (outputList.outputs[outputId] == null) {
+  if (outputList.outputs[outputId] == null) {
     automationResponse = {
       statusCode: 404,
       error: {
@@ -161,16 +163,12 @@ export async function addAsync(
     };
     return automationResponse;
   }
-  if (isNaN(value)) {
-    invalidFields.push("Invalid or missing value.");
-  } else {
-    if (value < 0 || value > 100) {
-      invalidFields.push("Value must be between 0 and 100.");
-    }
-    if (!outputList.outputs[outputId]?.isPwm && value != 0 && value != 100) {
-      // Value should be set to 100 if it's greater than 0 since non-PWM outputs only support on/off states
-      value = value > 0 ? 100 : 0;
-    }
+  if (value < 0 || value > 100) {
+    invalidFields.push("Value must be between 0 and 100.");
+  }
+  if (!outputList.outputs[outputId]?.isPwm && value != 0 && value != 100) {
+    // Value should be set to 100 if it's greater than 0 since non-PWM outputs only support on/off states
+    value = value > 0 ? 100 : 0;
   }
   if (invalidFields.length > 0) {
     automationResponse = {
@@ -229,7 +227,7 @@ export async function addAsync(
  */
 export async function deleteAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;

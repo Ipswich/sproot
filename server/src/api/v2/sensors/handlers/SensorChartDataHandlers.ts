@@ -3,28 +3,31 @@ import { Request, Response } from "express";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { ReadingType } from "@sproot/sensors/ReadingType";
 import { SensorList } from "../../../../sensors/list/SensorList";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
 
 export function sensorChartDataHandler(
   request: Request,
-  response: Response,
+  response: Response
 ): SuccessResponse | ErrorResponse {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
+  const validatedRequest = getValidatedContractRequestData<"getSensorChartData">(response);
+  const readingType = validatedRequest.query?.["readingType"];
   let getSensorChartDataResponse: SuccessResponse | ErrorResponse;
   const chartData = sensorList.chartData.get();
 
   //Filter out all values that aren't the requested readingType
-  if (request.query["readingType"] !== undefined) {
-    for (const readingType in chartData.data) {
-      if (readingType !== request.query["readingType"]) {
-        delete chartData.data[readingType as ReadingType];
+  if (readingType !== undefined) {
+    for (const chartReadingType in chartData.data) {
+      if (chartReadingType !== readingType) {
+        delete chartData.data[chartReadingType as ReadingType];
       }
     }
   }
 
-  if (String(request.query["latest"]).toLowerCase() == "true") {
-    for (const readingType in chartData.data) {
-      chartData.data[readingType as ReadingType] =
-        chartData.data[readingType as ReadingType].slice(-1);
+  if (String(validatedRequest.query?.["latest"]).toLowerCase() == "true") {
+    for (const chartReadingType in chartData.data) {
+      chartData.data[chartReadingType as ReadingType] =
+        chartData.data[chartReadingType as ReadingType].slice(-1);
     }
   }
 

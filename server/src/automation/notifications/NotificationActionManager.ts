@@ -22,7 +22,7 @@ export class NotificationActionManager implements Disposable {
   static async createInstanceAsync(
     automationService: AutomationService,
     sprootDB: ISprootDB,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<NotificationActionManager> {
     const manager = new NotificationActionManager(automationService, sprootDB, logger);
     await manager.#reloadActionsAsync();
@@ -32,7 +32,7 @@ export class NotificationActionManager implements Disposable {
   private constructor(
     automationService: AutomationService,
     sprootDB: ISprootDB,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     this.#automationService = automationService;
     this.#sprootDB = sprootDB;

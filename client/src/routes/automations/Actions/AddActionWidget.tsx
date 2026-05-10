@@ -37,7 +37,7 @@ export default function AddActionWidget({
 }: AddActionWidgetProps) {
   const queryClient = useQueryClient();
   const rootOutputs = outputs.filter(
-    (output) => output.parentOutputId === null,
+    (output) => output.parentOutputId === null
   );
 
   const actionForm = useForm({
@@ -70,7 +70,7 @@ export default function AddActionWidget({
         await addOutputActionAsync(
           automationId,
           parseInt(values.outputId),
-          values.value,
+          values.value
         );
         return;
       }
@@ -78,7 +78,7 @@ export default function AddActionWidget({
       await addNotificationActionAsync(
         automationId,
         values.subject.trim(),
-        values.content.trim(),
+        values.content.trim()
       );
     },
     onSettled: async (_data, _error, values) => {
@@ -133,16 +133,16 @@ export default function AddActionWidget({
                 onChange={(value) => {
                   actionForm.setFieldValue("outputId", value ?? "");
                   const selectedOutput = rootOutputs.find(
-                    (output) => String(output.id) === value,
+                    (output) => String(output.id) === value
                   );
                   actionForm.setFieldValue(
                     "value",
-                    selectedOutput?.isPwm ? 50 : 100,
+                    selectedOutput?.isPwm ? 50 : 100
                   );
                 }}
               />
               {rootOutputs.find(
-                (output) => String(output.id) === actionForm.values.outputId,
+                (output) => String(output.id) === actionForm.values.outputId
               )?.isPwm ? (
                 <Slider
                   min={0}
@@ -166,7 +166,7 @@ export default function AddActionWidget({
                     onChange={(event) => {
                       actionForm.setFieldValue(
                         "value",
-                        event.target.checked ? 100 : 0,
+                        event.target.checked ? 100 : 0
                       );
                     }}
                   />

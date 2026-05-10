@@ -18,7 +18,7 @@ export function encrypt(plainText: string, secret: string): string {
     Buffer.concat([
       new Uint8Array(cipher.update(plainText, "utf8")),
       new Uint8Array(cipher.final()),
-    ]),
+    ])
   );
   const authTag = new Uint8Array(cipher.getAuthTag());
 

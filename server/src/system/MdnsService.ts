@@ -12,7 +12,7 @@ export class MdnsService implements Disposable {
     this.#logger = logger;
     this.#browser = this.#bonjour.find({ type: MDNS_SERVICE_TYPE }, (service) => {
       this.#logger.info(
-        `Discovered MDNS service: ${service.name} at ${service.host}:${service.port}`,
+        `Discovered MDNS service: ${service.name} at ${service.host}:${service.port}`
       );
     });
   }

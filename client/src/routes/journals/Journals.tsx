@@ -69,7 +69,7 @@ export default function Journals() {
     try {
       localStorage.setItem(
         journalsSortKey(),
-        JSON.stringify({ sortBy, sortDir }),
+        JSON.stringify({ sortBy, sortDir })
       );
     } catch {
       /* ignore */
@@ -124,7 +124,7 @@ export default function Journals() {
   const allTags = Array.from(tagMap.values()).sort((a, b) =>
     (a.name || "").localeCompare(b.name || "", undefined, {
       sensitivity: "base",
-    }),
+    })
   );
 
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function Journals() {
             try {
               localStorage.setItem(
                 journalsFiltersKey(),
-                JSON.stringify(sanitized),
+                JSON.stringify(sanitized)
               );
             } catch {
               // ignore
@@ -242,7 +242,7 @@ export default function Journals() {
     sorted.map((s) => ({
       id: s.journal.id,
       tagIds: (s.tags ?? []).map((t) => (t as { id?: number }).id).sort(),
-    })),
+    }))
   );
 
   // Manage visible rows to animate enter / leave transitions when sorted changes
@@ -284,7 +284,7 @@ export default function Journals() {
 
     const clearT = setTimeout(() => {
       setVisibleRows((prev) =>
-        prev.map((p) => (p.appearing ? { ...p, appearing: false } : p)),
+        prev.map((p) => (p.appearing ? { ...p, appearing: false } : p))
       );
     }, 20);
 
@@ -307,7 +307,7 @@ export default function Journals() {
           key: String(s.journal.id),
           journal: s.journal,
           tags: s.tags ?? null,
-        })),
+        }))
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -354,7 +354,7 @@ export default function Journals() {
                     try {
                       localStorage.setItem(
                         journalsFiltersKey(),
-                        JSON.stringify(newFilters),
+                        JSON.stringify(newFilters)
                       );
                     } catch (error) {
                       console.error("Failed to save journal filters:", error);

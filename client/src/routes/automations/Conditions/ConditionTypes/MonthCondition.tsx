@@ -29,7 +29,7 @@ export default function MonthCondition({
       await addMonthConditionAsync(
         automationId,
         groupType,
-        monthCondition.months,
+        monthCondition.months
       );
     },
     onSettled: () => {
@@ -187,7 +187,7 @@ export default function MonthCondition({
             <Button
               type="submit"
               disabled={Object.values(monthConditionForm.values).every(
-                (month) => month == false,
+                (month) => month == false
               )}
             >
               Save

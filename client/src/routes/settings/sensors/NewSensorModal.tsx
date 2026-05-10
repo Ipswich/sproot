@@ -112,7 +112,7 @@ export default function NewSensorModal({
           newSensorForm.values.model === Models.ESP32_DS18B20
         ) {
           return subcontrollersQuery.data?.recognized.some(
-            (dev) => dev.id === parseInt(String(value)),
+            (dev) => dev.id === parseInt(String(value))
           )
             ? null
             : "Must be a valid subcontroller";
@@ -218,7 +218,7 @@ export default function NewSensorModal({
                   (device: SDBSubcontroller) => ({
                     value: String(device.id),
                     label: device.name,
-                  }),
+                  })
                 ) ?? []
               }
               {...newSensorForm.getInputProps("subcontrollerId")}
@@ -230,7 +230,7 @@ export default function NewSensorModal({
               onChange={(val) =>
                 newSensorForm.setFieldValue(
                   "subcontrollerId",
-                  val !== null ? parseInt(val, 10) : undefined,
+                  val !== null ? parseInt(val, 10) : undefined
                 )
               }
               required

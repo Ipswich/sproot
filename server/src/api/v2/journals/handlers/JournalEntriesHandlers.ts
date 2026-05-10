@@ -4,41 +4,40 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import type {
+  ContractOperationQueryParams,
+} from "@sproot/sproot-common/dist/api/contracts/operation-types";
+import type { operations as JournalContractOperations } from "@sproot/sproot-common/dist/api/generated/journals/types";
 import { toDbDate, isoToDb } from "../../../../utils/dateUtils";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type ListJournalEntriesQuery = ContractOperationQueryParams<"listJournalEntries">;
+type GetJournalEntryByIdQuery = ContractOperationQueryParams<"getJournalEntryById">;
+type CreateJournalEntryRequestBody =
+  JournalContractOperations["createJournalEntry"]["requestBody"]["content"]["application/json"];
+type UpdateJournalEntryRequestBody =
+  JournalContractOperations["updateJournalEntry"]["requestBody"]["content"]["application/json"];
+type AttachTagToJournalEntryRequestBody =
+  JournalContractOperations["attachTagToJournalEntry"]["requestBody"]["content"]["application/json"];
 
 /**
  * Possible statusCodes 200, 400, 404, 503
  */
 export async function getByJournalIdAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let journalId: number | undefined = undefined;
-  let withContent = true;
+  const query = (getValidatedContractRequestData<"listJournalEntries">(res).query ??
+    {}) as ListJournalEntriesQuery;
+  const withContent = query["withContent"] ?? true;
 
   journalId = parseInt(req.params["journalId"] ?? "", 10);
   const badRequests: string[] = [];
   if (isNaN(journalId) || journalId <= 0) {
     badRequests.push("Valid Journal ID is required.");
-  }
-  if (req.query["withContent"] !== undefined) {
-    const raw = req.query["withContent"];
-    if (typeof raw === "boolean") {
-      withContent = raw;
-    } else if (typeof raw === "string") {
-      const valueAsString = raw.toLowerCase();
-      if (valueAsString === "true") {
-        withContent = true;
-      } else if (valueAsString === "false") {
-        withContent = false;
-      } else {
-        badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
-      }
-    } else {
-      badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
-    }
   }
   if (badRequests.length > 0) {
     response = {
@@ -96,36 +95,20 @@ export async function getByJournalIdAsync(
  */
 export async function getByEntryIdAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let entryId: number | undefined = undefined;
-  let withContent = true;
+  const query = (getValidatedContractRequestData<"getJournalEntryById">(res).query ??
+    {}) as GetJournalEntryByIdQuery;
+  const withContent = query["withContent"] ?? true;
   const badRequests: string[] = [];
 
   if (req.params["entryId"]) {
     entryId = parseInt(req.params["entryId"] ?? "", 10);
     if (isNaN(entryId) || entryId <= 0) {
       badRequests.push("Valid Journal Entry ID is required.");
-    }
-  }
-
-  if (req.query["withContent"] !== undefined) {
-    const raw = req.query["withContent"];
-    if (typeof raw === "boolean") {
-      withContent = raw;
-    } else if (typeof raw === "string") {
-      const valueAsString = raw.toLowerCase();
-      if (valueAsString === "true") {
-        withContent = true;
-      } else if (valueAsString === "false") {
-        withContent = false;
-      } else {
-        badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
-      }
-    } else {
-      badRequests.push("withContent query parameter must be 'true' or 'false' if provided.");
     }
   }
   if (badRequests.length > 0) {
@@ -179,13 +162,14 @@ export async function getByEntryIdAsync(
 
 export async function addAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   const journalId = parseInt(req.params["journalId"] ?? "", 10);
-  const content = req.body["content"] as string | undefined;
-  const title = req.body["title"] as string | undefined;
+  const requestBody = getValidatedContractRequestData<"createJournalEntry">(res)
+    .body as unknown as CreateJournalEntryRequestBody;
+  const { content, title } = requestBody;
 
   const badRequests: string[] = [];
 
@@ -193,11 +177,11 @@ export async function addAsync(
     badRequests.push("Valid Journal ID is required.");
   }
 
-  if (content == null || content === "") {
+  if (content === "") {
     badRequests.push("Journal Entry content is required.");
   }
 
-  if (title !== undefined && title.length > 64) {
+  if (title !== undefined && title !== null && title.length > 64) {
     badRequests.push("Journal Entry title cannot exceed 64 characters.");
   }
 
@@ -230,11 +214,12 @@ export async function addAsync(
     }
 
     const createdAt = new Date();
+    const entryContent = content as string;
     const newId = await journalService.entryManager.createAsync(
       journalId!,
-      content!,
+      entryContent,
       title,
-      createdAt,
+      createdAt
     );
 
     response = {
@@ -244,7 +229,7 @@ export async function addAsync(
           id: newId,
           journalId: journalId!,
           title,
-          content,
+          content: entryContent,
           createdAt: createdAt.toISOString(),
           editedAt: createdAt.toISOString(),
         } as SDBJournalEntry,
@@ -268,10 +253,12 @@ export async function addAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function updateAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const requestBody = (getValidatedContractRequestData<"updateJournalEntry">(res).body ??
+    {}) as UpdateJournalEntryRequestBody;
 
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
 
@@ -279,10 +266,7 @@ export async function updateAsync(
   if (isNaN(entryId)) {
     badRequests.push("Valid Journal Entry ID is required.");
   }
-  if (req.body["content"] === null) {
-    badRequests.push("Journal Entry content cannot be null.");
-  }
-  if (req.body["title"] && req.body["title"].length > 64) {
+  if (requestBody.title && requestBody.title.length > 64) {
     badRequests.push("Journal Entry title cannot exceed 64 characters.");
   }
 
@@ -315,16 +299,14 @@ export async function updateAsync(
     }
 
     const content: string =
-      req.body["content"] == undefined
-        ? existingEntry[0]!.entry.content!
-        : String(req.body["content"]);
+      requestBody.content == undefined ? existingEntry[0]!.entry.content! : requestBody.content;
 
     const title: string | null =
-      req.body["title"] === undefined
+      requestBody.title === undefined
         ? existingEntry[0]!.entry.title
-        : req.body["title"] === null
-          ? null
-          : String(req.body["title"]);
+        : requestBody.title === null
+        ? null
+        : requestBody.title;
 
     const editedAt = new Date();
     await journalService.entryManager.updateAsync({
@@ -367,7 +349,7 @@ export async function updateAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -426,13 +408,15 @@ export async function deleteAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function addTagAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
 
   const entryId = parseInt(req.params["entryId"] ?? "", 10);
-  const tagId = parseInt(req.body["tagId"] ?? "", 10);
+  const requestBody = getValidatedContractRequestData<"attachTagToJournalEntry">(res)
+    .body as unknown as AttachTagToJournalEntryRequestBody;
+  const tagId = parseInt(requestBody.tagId ?? "", 10);
 
   const badRequests: string[] = [];
   if (isNaN(entryId)) {
@@ -524,7 +508,7 @@ export async function addTagAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function removeTagAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;

@@ -20,7 +20,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
     maxChartDataSize: number,
     chartDataPointInterval: number,
     frequency: number = 800,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     super(
       automationService,
@@ -30,7 +30,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       maxChartDataSize,
       chartDataPointInterval,
       frequency,
-      logger,
+      logger
     );
     this.#mdnsService = mdnsService;
   }
@@ -41,11 +41,11 @@ class ESP32_PCA9685 extends MultiOutputBase {
       return undefined;
     }
     const subcontroller = (await this.sprootDB.getSubcontrollersAsync()).find(
-      (device) => device.id == output.subcontrollerId,
+      (device) => device.id == output.subcontrollerId
     );
     if (subcontroller == null) {
       this.logger.error(
-        `ESP32_PCA9685 Output ${output.id} references non-existent subcontrollerId ${output.subcontrollerId}.`,
+        `ESP32_PCA9685 Output ${output.id} references non-existent subcontrollerId ${output.subcontrollerId}.`
       );
       return undefined;
     }
@@ -68,10 +68,10 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.initialCacheLookback,
       this.maxChartDataSize,
       this.chartDataPointInterval,
-      this.logger,
+      this.logger
     );
     (this.usedPins[output.subcontrollerId] as Record<string, string[]>)[output.address]?.push(
-      output.pin,
+      output.pin
     );
     return this.outputs[output.id];
   }
@@ -104,7 +104,7 @@ class ESP32_PCA9685Output extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<ESP32_PCA9685Output> {
     const esp32PCA9685Output = new ESP32_PCA9685Output(
       output,
@@ -116,7 +116,7 @@ class ESP32_PCA9685Output extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     );
     return esp32PCA9685Output.initializeAsync();
   }
@@ -131,7 +131,7 @@ class ESP32_PCA9685Output extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     super(
       output,
@@ -141,7 +141,7 @@ class ESP32_PCA9685Output extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     );
     this.subcontroller = subcontroller;
     this.#mdnsService = mdnsService;
@@ -162,7 +162,7 @@ class ESP32_PCA9685Output extends OutputBase {
     const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
     if (ipAddress == null) {
       this.logger.error(
-        `Failed to set PCA9685 output ${this.outputData.id} value. Unable to resolve hostname ${this.subcontroller.hostName}.`,
+        `Failed to set PCA9685 output ${this.outputData.id} value. Unable to resolve hostname ${this.subcontroller.hostName}.`
       );
       return;
     }
@@ -176,7 +176,7 @@ class ESP32_PCA9685Output extends OutputBase {
         body: JSON.stringify({
           value,
         }),
-      },
+      }
     );
     if (!response.ok) {
       throw new Error(`Failed to set PCA9685 output value. Status: ${response.status}`);

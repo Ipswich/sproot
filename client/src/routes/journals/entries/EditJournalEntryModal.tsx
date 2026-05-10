@@ -107,7 +107,7 @@ export default function EditJournalEntryModal({
       availableTags,
       tags ?? [],
       tagAdds,
-      tagRemoves,
+      tagRemoves
     );
     setLocalTags(newLocalTags);
     setTagAdds(newTagAdds);
@@ -116,16 +116,16 @@ export default function EditJournalEntryModal({
 
   const save = async () => {
     const updated = await updateMutation.mutateAsync(
-      form.values as Partial<SDBJournalEntry>,
+      form.values as Partial<SDBJournalEntry>
     );
     try {
       const entryId = entry.id;
       if (entryId) {
         const addPromises = tagAdds.map((tid) =>
-          addTagToJournalEntryAsync(entryId, tid),
+          addTagToJournalEntryAsync(entryId, tid)
         );
         const removePromises = tagRemoves.map((tid) =>
-          removeTagFromJournalEntryAsync(entryId, tid),
+          removeTagFromJournalEntryAsync(entryId, tid)
         );
         await Promise.allSettled([...addPromises, ...removePromises]);
       }
@@ -211,11 +211,8 @@ export default function EditJournalEntryModal({
             <TagsPillsCombo
               allTags={Array.from(
                 new Map(
-                  [...availableTags, ...(localTags ?? [])].map((t) => [
-                    t.id,
-                    t,
-                  ]),
-                ).values(),
+                  [...availableTags, ...(localTags ?? [])].map((t) => [t.id, t])
+                ).values()
               )}
               value={(localTags ?? []).map((t) => `tag:${t.id}`)}
               onChange={handlePillsChange}

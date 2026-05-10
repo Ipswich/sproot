@@ -20,7 +20,7 @@ describe("OutputChartData.ts tests", function () {
       const threeMinutes = 1000 * 60 * 3;
       const fiveMinuteDate = new Date(Math.floor(new Date().getTime() / fiveMinutes) * fiveMinutes);
       const threeMinuteDate = new Date(
-        Math.floor(new Date().getTime() / threeMinutes) * threeMinutes,
+        Math.floor(new Date().getTime() / threeMinutes) * threeMinutes
       );
       const earlierFiveMinuteDate = new Date(fiveMinuteDate.getTime() - fiveMinutes);
       const earliestFiveMinuteDate = new Date(earlierFiveMinuteDate.getTime() - fiveMinutes);
@@ -33,28 +33,26 @@ describe("OutputChartData.ts tests", function () {
       assert.isTrue(
         outputChartData5
           .get()
-          .data[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString()),
+          .data[0]?.name.includes(earliestFiveMinuteDate.getMinutes().toString())
       );
       assert.isTrue(
-        outputChartData5
-          .get()
-          .data[1]?.name.includes(earlierFiveMinuteDate.getMinutes().toString()),
+        outputChartData5.get().data[1]?.name.includes(earlierFiveMinuteDate.getMinutes().toString())
       );
       assert.isTrue(
-        outputChartData5.get().data[2]?.name.includes(fiveMinuteDate.getMinutes().toString()),
-      );
-      assert.isTrue(
-        outputChartData3
-          .get()
-          .data[0]?.name.includes(earliestThreeMinuteDate.getMinutes().toString()),
+        outputChartData5.get().data[2]?.name.includes(fiveMinuteDate.getMinutes().toString())
       );
       assert.isTrue(
         outputChartData3
           .get()
-          .data[1]?.name.includes(earlierThreeMinuteDate.getMinutes().toString()),
+          .data[0]?.name.includes(earliestThreeMinuteDate.getMinutes().toString())
       );
       assert.isTrue(
-        outputChartData3.get().data[2]?.name.includes(threeMinuteDate.getMinutes().toString()),
+        outputChartData3
+          .get()
+          .data[1]?.name.includes(earlierThreeMinuteDate.getMinutes().toString())
+      );
+      assert.isTrue(
+        outputChartData3.get().data[2]?.name.includes(threeMinuteDate.getMinutes().toString())
       );
     });
 
@@ -79,7 +77,7 @@ describe("OutputChartData.ts tests", function () {
           controlMode: ControlMode.manual,
           value: 100,
         } as SDBOutputState,
-        new Date("2024-03-03T18:40:01Z"),
+        new Date("2024-03-03T18:40:01Z")
       );
       outputCache.addData(
         {
@@ -87,7 +85,7 @@ describe("OutputChartData.ts tests", function () {
           controlMode: ControlMode.automatic,
           value: 30,
         } as SDBOutputState,
-        new Date("2024-03-03T18:45:01Z"),
+        new Date("2024-03-03T18:45:01Z")
       );
       outputCache.addData(
         {
@@ -95,7 +93,7 @@ describe("OutputChartData.ts tests", function () {
           controlMode: ControlMode.manual,
           value: 0,
         } as SDBOutputState,
-        new Date("2024-03-03T18:47:01Z"),
+        new Date("2024-03-03T18:47:01Z")
       ); //should be ignored
       outputCache.addData(
         {
@@ -103,7 +101,7 @@ describe("OutputChartData.ts tests", function () {
           controlMode: ControlMode.manual,
           value: 0,
         } as SDBOutputState,
-        new Date("2024-03-03T18:50:01Z"),
+        new Date("2024-03-03T18:50:01Z")
       );
       const outputChartData = new OutputChartData(4, 5, [
         { name: formatDateForChart(new Date("2024-03-03T18:40:01Z")) },
@@ -129,11 +127,11 @@ describe("OutputChartData.ts tests", function () {
       //Only one of these should be added.
       outputChartData.updateChartData(
         [{ value: 100, logTime: "2024-03-03T03:30:01Z" } as SDBOutputState],
-        "Test",
+        "Test"
       );
       outputChartData.updateChartData(
         [{ value: 100, logTime: "2024-03-03T03:30:01Z" } as SDBOutputState],
-        "Test",
+        "Test"
       );
 
       assert.equal(outputChartData.get().data.length, 1);
@@ -155,7 +153,7 @@ describe("OutputChartData.ts tests", function () {
           controlMode: ControlMode.manual,
           value: 100,
         } as SDBOutputState,
-        new Date("2024-03-03T18:50:01Z"),
+        new Date("2024-03-03T18:50:01Z")
       );
 
       assert.isTrue(outputChartData.shouldUpdateChartData(outputCache.get().slice(-1)[0]));
@@ -173,7 +171,7 @@ describe("OutputChartData.ts tests", function () {
           controlMode: ControlMode.manual,
           value: 100,
         } as SDBOutputState,
-        new Date("2024-03-03T18:49:01Z"),
+        new Date("2024-03-03T18:49:01Z")
       );
       assert.isFalse(outputChartData.shouldUpdateChartData(outputCache.get().slice(-1)[0]));
     });

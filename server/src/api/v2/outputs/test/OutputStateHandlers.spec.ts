@@ -7,6 +7,24 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { ControlMode, IOutputBase } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { setControlModeAsync, setManualStateAsync } from "../handlers/OutputStateHandlers";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
+
+function makeResponse(validatedRequestData?: Record<string, unknown>): Response {
+  const response = {
+    locals: {
+      defaultProperties: {
+        timestamp: new Date().toISOString(),
+        requestId: "1234",
+      },
+    },
+  } as unknown as Response;
+
+  if (validatedRequestData) {
+    setValidatedContractRequestData(response, validatedRequestData);
+  }
+
+  return response;
+}
 
 describe("OutputStateHandlers.ts tests", () => {
   describe("setControlModeAsync", async () => {
@@ -46,14 +64,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { controlMode: ControlMode.manual } });
 
       let success = (await setControlModeAsync(mockRequest, mockResponse)) as SuccessResponse;
 
@@ -63,6 +74,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, ["Control mode successfully updated."]);
 
       mockRequest.body["controlMode"] = ControlMode.automatic;
+      setValidatedContractRequestData(mockResponse, { body: { controlMode: ControlMode.automatic } });
       success = (await setControlModeAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -72,7 +84,7 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.equal(outputList.updateControlModeAsync.callCount, 2);
     });
 
-    it("should return a 400 and details for the invalid request", async () => {
+    it("should consume validated control mode instead of raw req.body", async () => {
       const mockRequest = {
         app: {
           get: () => outputList,
@@ -80,30 +92,17 @@ describe("OutputStateHandlers.ts tests", () => {
         params: {
           outputId: "1",
         },
-        originalUrl: "/outputs/1/controlMode",
         body: {
           controlMode: "invalid",
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { controlMode: ControlMode.automatic } });
 
-      const error = (await setControlModeAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const success = (await setControlModeAsync(mockRequest, mockResponse)) as SuccessResponse;
 
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/outputs/1/controlMode");
-      assert.deepEqual(error.error.details, ["Invalid control mode."]);
-      assert.isTrue(outputList.updateControlModeAsync.notCalled);
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(outputList.updateControlModeAsync.calledOnceWithExactly("1", ControlMode.automatic));
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -120,14 +119,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { controlMode: ControlMode.manual } });
 
       const error = (await setControlModeAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -154,14 +146,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { controlMode: ControlMode.manual } });
 
       const error = (await setControlModeAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -226,14 +211,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { value: 50 } });
 
       let success = (await setManualStateAsync(mockRequest, mockResponse)) as SuccessResponse;
 
@@ -244,6 +222,7 @@ describe("OutputStateHandlers.ts tests", () => {
 
       mockRequest.params["id"] = "2";
       mockRequest.body["value"] = 100;
+      setValidatedContractRequestData(mockResponse, { body: { value: 100 } });
       success = await setManualStateAsync(mockRequest, mockResponse);
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -252,6 +231,7 @@ describe("OutputStateHandlers.ts tests", () => {
 
       mockRequest.params["id"] = "2";
       mockRequest.body["value"] = 50;
+      setValidatedContractRequestData(mockResponse, { body: { value: 50 } });
       success = await setManualStateAsync(mockRequest, mockResponse);
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -261,53 +241,26 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.isTrue(outputList.executeOutputStateAsync.calledThrice);
     });
 
-    it("should return a 400 and details for the invalid request", async () => {
-      let mockRequest = {
+    it("should consume validated manual value instead of raw req.body", async () => {
+      const mockRequest = {
         app: {
           get: () => outputList,
         },
         params: {
           outputId: "1",
         },
-        originalUrl: "/outputs/1/manual-state",
         body: {
-          value: "string",
+          value: 5,
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { value: 75 } });
 
-      let error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      const success = (await setManualStateAsync(mockRequest, mockResponse)) as SuccessResponse;
 
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/outputs/1/manual-state");
-      assert.deepEqual(error.error.details, [
-        "Invalid value.",
-        "Value must be a number between 0 and 100.",
-      ]);
-
-      mockRequest.body["value"] = -1;
-      error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
-
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/outputs/1/manual-state");
-      assert.deepEqual(error.error.details, [
-        "Invalid value.",
-        "Value must be a number between 0 and 100.",
-      ]);
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(outputList.setStateAsync.calledOnce);
+      assert.equal(outputList.setStateAsync.firstCall.args[1]?.value, 75);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -324,14 +277,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { value: 50 } });
 
       let error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -359,14 +305,7 @@ describe("OutputStateHandlers.ts tests", () => {
         },
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = makeResponse({ body: { value: 50 } });
 
       let error = (await setManualStateAsync(mockRequest, mockResponse)) as ErrorResponse;
 

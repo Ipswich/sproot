@@ -33,7 +33,7 @@ export default function OutputGroupForm({
       .filter((o) =>
         selectedOutput
           ? o.parentOutputId === selectedOutput.id
-          : o.parentOutputId == null,
+          : o.parentOutputId == null
       )
       .map((o) => o.id as number);
 
@@ -43,7 +43,7 @@ export default function OutputGroupForm({
 
   // show all outputs that can be children (not OUTPUT_GROUP)
   const availableOutputs = Object.values(outputsQuery.data ?? {}).filter(
-    (o) => o.model !== Models.OUTPUT_GROUP,
+    (o) => o.model !== Models.OUTPUT_GROUP
   );
 
   const toggle = (id: number) => {
@@ -51,7 +51,7 @@ export default function OutputGroupForm({
     if (current.includes(id)) {
       form.setFieldValue(
         "groupedOutputIds",
-        current.filter((x) => x !== id),
+        current.filter((x) => x !== id)
       );
     } else {
       form.setFieldValue("groupedOutputIds", [...current, id]);

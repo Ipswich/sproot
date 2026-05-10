@@ -13,10 +13,10 @@ import EditAutomationModal from "./EditAutomationModal";
 
 export default function Automations() {
   const [viewAutomation, setViewAutomation] = useState<IAutomation | null>(
-    null,
+    null
   );
   const [editAutomation, setEditAutomation] = useState<IAutomation | null>(
-    null,
+    null
   );
 
   const getAutomationsQuery = useQuery({
@@ -30,7 +30,7 @@ export default function Automations() {
         params.id,
         undefined,
         undefined,
-        params.enabled,
+        params.enabled
       );
     },
     onSuccess: () => {
@@ -86,7 +86,7 @@ export default function Automations() {
                     <Switch
                       checked={automation.enabled}
                       onChange={(
-                        event: React.ChangeEvent<HTMLInputElement>,
+                        event: React.ChangeEvent<HTMLInputElement>
                       ) => {
                         mutateAutomationEnabled.mutate({
                           id: automation.id,

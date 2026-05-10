@@ -718,6 +718,26 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
     ),
     errors: [
       {
+        status: 400,
+        description: `Bad request`,
+        schema: ErrorResponse.and(
+          z
+            .object({
+              statusCode: z.unknown(),
+              error: z
+                .object({
+                  name: z.unknown(),
+                  url: z.unknown(),
+                  details: z.unknown(),
+                })
+                .partial()
+                .passthrough(),
+            })
+            .partial()
+            .passthrough()
+        ),
+      },
+      {
         status: 401,
         description: `Unauthorized`,
         schema: ErrorResponse.and(
@@ -1398,6 +1418,26 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
     ),
     errors: [
       {
+        status: 400,
+        description: `Bad request`,
+        schema: ErrorResponse.and(
+          z
+            .object({
+              statusCode: z.unknown(),
+              error: z
+                .object({
+                  name: z.unknown(),
+                  url: z.unknown(),
+                  details: z.unknown(),
+                })
+                .partial()
+                .passthrough(),
+            })
+            .partial()
+            .passthrough()
+        ),
+      },
+      {
         status: 401,
         description: `Unauthorized`,
         schema: ErrorResponse.and(
@@ -1921,6 +1961,26 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
     ),
     errors: [
       {
+        status: 400,
+        description: `Bad Request`,
+        schema: ErrorResponse.and(
+          z
+            .object({
+              statusCode: z.unknown(),
+              error: z
+                .object({
+                  name: z.unknown(),
+                  url: z.unknown(),
+                  details: z.unknown(),
+                })
+                .partial()
+                .passthrough(),
+            })
+            .partial()
+            .passthrough()
+        ),
+      },
+      {
         status: 401,
         description: `Unauthorized`,
         schema: ErrorResponse.and(
@@ -2361,6 +2421,26 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
         .passthrough()
     ),
     errors: [
+      {
+        status: 400,
+        description: `Bad request`,
+        schema: ErrorResponse.and(
+          z
+            .object({
+              statusCode: z.unknown(),
+              error: z
+                .object({
+                  name: z.unknown(),
+                  url: z.unknown(),
+                  details: z.unknown(),
+                })
+                .partial()
+                .passthrough(),
+            })
+            .partial()
+            .passthrough()
+        ),
+      },
       {
         status: 401,
         description: `Unauthorized`,

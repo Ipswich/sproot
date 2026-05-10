@@ -2092,9 +2092,14 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - controlMode
               properties:
                 controlMode:
                   type: string
+                  enum:
+                    - manual
+                    - automatic
                   example: "manual"
       responses:
         200:
@@ -2198,6 +2203,8 @@ paths:
               properties:
                 value:
                   type: number
+                  minimum: 0
+                  maximum: 100
                   example: 50
       responses:
         200:
@@ -2467,6 +2474,25 @@ paths:
                         properties:
                           data:
                             $ref: "#/components/schemas/Automation"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/invalid-id"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
         401:
           description: "Unauthorized"
           content:
@@ -3179,6 +3205,28 @@ paths:
                               - $ref: "#/components/schemas/MonthCondition"
                               - $ref: "#/components/schemas/DateRangeCondition"
 
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/automations/1/conditions/sensor/1"
+                          details:
+                            example:
+                              - "Invalid or missing automation Id."
+                              - "Invalid or missing condition type."
+                              - "Invalid or missing condition Id."
+
         401:
           description: "Unauthorized"
           content:
@@ -3739,6 +3787,25 @@ paths:
                         properties:
                           data:
                             $ref: "#/components/schemas/OutputAction"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/output-actions/not-a-number"
+                          details:
+                            example:
+                              - "Invalid or missing outputAction Id."
         401:
           description: "Unauthorized"
           content:
@@ -4129,6 +4196,25 @@ paths:
                         properties:
                           data:
                             $ref: "#/components/schemas/NotificationAction"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Bad Request"
+                          url:
+                            example: "/api/v2/notification-actions/not-a-number"
+                          details:
+                            example:
+                              - "Invalid or missing notification action Id."
         401:
           description: "Unauthorized"
           content:
@@ -4599,27 +4685,14 @@ paths:
           required: true
           description: "sensor Id"
           schema:
-            type: string
-          example: "1"
+            type: number
+          example: 1
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: "Windowsill"
-                model:
-                  type: string
-                  example: "BME280"
-                address:
-                  type: string
-                  example: "0x76"
-                color:
-                  type: string
-                  example: "#ff0000"
+              $ref: "#/components/schemas/SensorUpdateRequest"
       responses:
         200:
           description: "Sensor updated"
@@ -4729,8 +4802,8 @@ paths:
           required: true
           description: "sensor Id"
           schema:
-            type: string
-          example: "1"
+            type: number
+          example: 1
       responses:
         200:
           description: "Sensor deleted"
@@ -9606,6 +9679,26 @@ components:
           type: string
           example: "0"
 
+    SensorUpdateRequest:
+      description: >
+        Request body for updating a sensor. This operation changes only the declared transport
+        fields provided. Other writable fields still remain handler-owned until the runtime
+        behavior is fully represented in the contract.
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Windowsill"
+        model:
+          type: string
+          example: "BME280"
+        address:
+          type: string
+          example: "0x76"
+        color:
+          type: string
+          example: "#ff0000"
+
     SensorBase:
       description: >
         A basic sensor object that is returned by the API. This expands upon SDBSensor, including the
@@ -10208,6 +10301,7 @@ components:
           example: "sproot-esp32-1C78"
         host:
           type: string
+          
           example: "sproot-esp32-1C78.local"
         address:
           oneOf:

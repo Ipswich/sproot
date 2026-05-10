@@ -5,6 +5,19 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalEntryTagHandlers";
 import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
+
+function makeRes(validatedRequestData?: Record<string, unknown>): Response {
+  const response = {
+    locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "test" } },
+  } as unknown as Response;
+
+  if (validatedRequestData) {
+    setValidatedContractRequestData(response, validatedRequestData);
+  }
+
+  return response;
+}
 
 describe("JournalEntryTagHandlers.ts tests", () => {
   describe("getAsync", () => {
@@ -59,9 +72,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
 
   describe("addAsync", () => {
     it("should return 201 and the created entry tag", async () => {
-      const mockResponse = {
-        locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er2" } },
-      } as unknown as Response;
+      const mockResponse = makeRes({ body: { name: "etag", color: null } });
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.addJournalEntryTagAsync.resolves(7);
 
@@ -87,23 +98,56 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.deepEqual(success.content.data, { id: 7, name: "etag", color: null });
     });
 
-    it("should return 400 when name missing", async () => {
-      const mockResponse = {
-        locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er2" } },
-      } as unknown as Response;
+    it("should return 400 when remaining tag field validation fails", async () => {
+      const mockResponse = makeRes({ body: { name: "", color: "#123456".repeat(6) } });
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? {} : undefined) },
-        body: {},
+        body: { name: "", color: "#123456".repeat(6) },
+        originalUrl: "/api/v2/tags/entries",
       } as unknown as Request;
 
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
+      assert.deepEqual(error.error.details, [
+        "Valid tag name is required.",
+        "Valid tag color is required.",
+      ]);
+    });
+
+    it("should consume validated create body instead of raw req.body", async () => {
+      const mockResponse = makeRes({ body: { name: "validated-entry-tag", color: "#abc" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.addJournalEntryTagAsync.resolves(12);
+
+      const mockRequest = {
+        app: {
+          get: (k: string) =>
+            k === "journalService"
+              ? {
+                  entryTagManager: {
+                    createTagAsync: (n: string, c: string | null) =>
+                      sprootDB.addJournalEntryTagAsync(n, c),
+                  },
+                }
+              : undefined,
+        },
+        body: { name: "raw-entry-tag", color: "#def" },
+      } as unknown as Request;
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, {
+        id: 12,
+        name: "validated-entry-tag",
+        color: "#abc",
+      });
+      assert.isTrue(
+        sprootDB.addJournalEntryTagAsync.calledOnceWithExactly("validated-entry-tag", "#abc")
+      );
     });
 
     it("should return 503 when DB fails", async () => {
-      const mockResponse = {
-        locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er3" } },
-      } as unknown as Response;
+      const mockResponse = makeRes({ body: { name: "n" } });
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.addJournalEntryTagAsync.rejects(new Error("addFail2"));
 
@@ -147,9 +191,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
     });
 
     it("should return 404 when tag not found", async () => {
-      const mockResponse = {
-        locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er4" } },
-      } as unknown as Response;
+      const mockResponse = makeRes({ body: {} });
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getJournalEntryTagsAsync.resolves([]);
 
@@ -170,9 +212,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
     });
 
     it("should return 200 and the updated entry tag", async () => {
-      const mockResponse = {
-        locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er5" } },
-      } as unknown as Response;
+      const mockResponse = makeRes({ body: { name: "n", color: "#111" } });
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getJournalEntryTagsAsync.resolves([{ id: 3, name: "old", color: null }]);
       sprootDB.updateJournalEntryTagAsync.resolves();
@@ -201,10 +241,47 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       assert.deepEqual(success.content.data, { id: 3, name: "n", color: "#111" });
     });
 
+    it("should consume validated update body instead of raw req.body", async () => {
+      const mockResponse = makeRes({ body: { name: "validated-update", color: "#222" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 14, name: "old", color: null }]);
+      sprootDB.updateJournalEntryTagAsync.resolves();
+
+      const mockRequest = {
+        app: {
+          get: (k: string) =>
+            k === "journalService"
+              ? {
+                  entryTagManager: {
+                    getTagsAsync: () => sprootDB.getJournalEntryTagsAsync(),
+                    updateTagAsync: (t: SDBJournalEntryTag) =>
+                      sprootDB.updateJournalEntryTagAsync(t),
+                  },
+                }
+              : undefined,
+        },
+        params: { tagId: "14" },
+        body: { name: "raw-update", color: "#333" },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.deepEqual(success.content?.data, {
+        id: 14,
+        name: "validated-update",
+        color: "#222",
+      });
+      assert.isTrue(
+        sprootDB.updateJournalEntryTagAsync.calledOnceWithExactly({
+          id: 14,
+          name: "validated-update",
+          color: "#222",
+        })
+      );
+    });
+
     it("should return 503 when update fails", async () => {
-      const mockResponse = {
-        locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er6" } },
-      } as unknown as Response;
+      const mockResponse = makeRes({ body: { name: "b" } });
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getJournalEntryTagsAsync.resolves([{ id: 4, name: "a", color: null }]);
       sprootDB.updateJournalEntryTagAsync.rejects(new Error("updFail"));

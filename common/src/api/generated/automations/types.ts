@@ -990,6 +990,30 @@ export interface operations {
                     };
                 };
             };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/invalid-id */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
             /** @description Unauthorized */
             401: {
                 headers: {
@@ -1648,6 +1672,32 @@ export interface operations {
                     };
                 };
             };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Invalid or missing condition type.",
+                             *       "Invalid or missing condition Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
             /** @description Unauthorized */
             401: {
                 headers: {
@@ -2173,6 +2223,30 @@ export interface operations {
                     };
                 };
             };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/not-a-number */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing outputAction Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
             /** @description Unauthorized */
             401: {
                 headers: {
@@ -2559,6 +2633,30 @@ export interface operations {
                         statusCode?: unknown;
                         content?: {
                             data?: components["schemas"]["NotificationAction"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/not-a-number */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing notification action Id."
+                             *     ]
+                             */
+                            details?: unknown;
                         };
                     };
                 };

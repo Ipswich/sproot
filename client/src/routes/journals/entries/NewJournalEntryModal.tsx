@@ -95,7 +95,7 @@ export default function NewJournalEntryModal({
         <form
           onSubmit={form.onSubmit(async (values) => {
             const tagIds = selectedTags.map((s) =>
-              Number(String(s).replace(/^tag:/, "")),
+              Number(String(s).replace(/^tag:/, ""))
             );
             const title =
               values.title && String(values.title).trim().length > 0
@@ -118,7 +118,7 @@ export default function NewJournalEntryModal({
                   typeof idVal === "number" ? (idVal as number) : undefined;
                 if (createdId && tagIds && tagIds.length > 0) {
                   const attachPromises = tagIds.map((tid) =>
-                    addTagToJournalEntryAsync(createdId, tid),
+                    addTagToJournalEntryAsync(createdId, tid)
                   );
                   await Promise.allSettled(attachPromises);
                 }

@@ -34,7 +34,7 @@ export default function SubcontrollerSettings() {
             id: sdb.id,
             name: sdb.name,
           };
-        }) ?? [],
+        }) ?? []
       );
     });
   };

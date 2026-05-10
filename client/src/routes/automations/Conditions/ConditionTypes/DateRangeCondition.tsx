@@ -38,7 +38,7 @@ export default function DateRangeCondition({
         dateRangeCondition.startMonth,
         dateRangeCondition.startDate,
         dateRangeCondition.endMonth,
-        dateRangeCondition.endDate,
+        dateRangeCondition.endDate
       );
     },
     onSettled: () => {
@@ -73,7 +73,7 @@ export default function DateRangeCondition({
           startDate: string | undefined;
           endMonth: string | undefined;
           endDate: string | undefined;
-        },
+        }
       ) => {
         if (value == null) {
           return "Start date is required";
@@ -107,7 +107,7 @@ export default function DateRangeCondition({
           startDate: string | undefined;
           endMonth: string | undefined;
           endDate: string | undefined;
-        },
+        }
       ) => {
         if (value == null) {
           return "Start date is required";
@@ -154,7 +154,7 @@ export default function DateRangeCondition({
     (_, i) => ({
       value: (i + 1).toString(),
       label: `${i + 1}${getOrdinalSuffix(i + 1)}`,
-    }),
+    })
   );
 
   const endDayOptions = Array.from(
@@ -162,7 +162,7 @@ export default function DateRangeCondition({
     (_, i) => ({
       value: (i + 1).toString(),
       label: `${i + 1}${getOrdinalSuffix(i + 1)}`,
-    }),
+    })
   );
 
   useEffect(() => {
@@ -252,7 +252,7 @@ export default function DateRangeCondition({
             <Button
               type="submit"
               disabled={Object.values(dateRangeConditionForm.values).some(
-                (value) => value == null,
+                (value) => value == null
               )}
             >
               Save

@@ -23,7 +23,7 @@ export class ESP32_ADS1115 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<ESP32_ADS1115 | null> {
     const sensor = new ESP32_ADS1115(
       sdbSensor,
@@ -36,7 +36,7 @@ export class ESP32_ADS1115 extends SensorBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     );
     return sensor.initializeAsync(ESP32_ADS1115.MAX_SENSOR_READ_TIME);
   }
@@ -52,7 +52,7 @@ export class ESP32_ADS1115 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     super(
       sdbSensor,
@@ -62,7 +62,7 @@ export class ESP32_ADS1115 extends SensorBase {
       maxChartDataSize,
       chartDataPointInterval,
       [readingType],
-      logger,
+      logger
     );
     this.gain = gain;
     this.#mdnsService = mdnsService;
@@ -74,18 +74,18 @@ export class ESP32_ADS1115 extends SensorBase {
       const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
       if (ipAddress == null) {
         throw new Error(
-          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`,
+          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`
         );
       }
       const reading = await ESP32_Ads1115Device.getReadingFromDeviceAsync(
         this.pin,
         this.address!,
         ipAddress,
-        this.gain,
+        this.gain
       );
       this.lastReading[ReadingType.voltage] = ESP32_Ads1115Device.computeVoltage(
         reading,
-        this.gain,
+        this.gain
       ).toString();
       this.lastReadingTime = new Date();
     } catch (error) {
@@ -99,7 +99,7 @@ export class ESP32_Ads1115Device {
     pin: string | null,
     deviceAddress: string,
     ipAddress: string,
-    gain: string,
+    gain: string
   ): Promise<number> {
     if (pin == null || !(pin in ["0", "1", "2", "3"])) {
       throw new Error(`Invalid pin: ${pin}. Must be one of '0', '1', '2', or '3'.`);
@@ -109,7 +109,7 @@ export class ESP32_Ads1115Device {
       `http://${ipAddress}/api/sensors/ads1115/${deviceAddress}/${pin}?gain=${calculatedGain}`,
       {
         method: "GET",
-      },
+      }
     );
     if (response.ok) {
       const readings = ((await response.json()) as ESP32_ADS1115Response).readings;

@@ -37,7 +37,7 @@ export default function TimeCondition({
         automationId,
         groupType,
         timeCondition.startTime || null,
-        timeCondition.endTime || null,
+        timeCondition.endTime || null
       );
     },
     onSettled: () => {
@@ -95,7 +95,7 @@ export default function TimeCondition({
                   onChange={(value) => {
                     timeConditionForm.setFieldValue(
                       "startTime",
-                      value.currentTarget.value,
+                      value.currentTarget.value
                     );
                   }}
                 />
@@ -110,7 +110,7 @@ export default function TimeCondition({
                   onChange={(value) => {
                     timeConditionForm.setFieldValue(
                       "startTime",
-                      value.currentTarget.value,
+                      value.currentTarget.value
                     );
                   }}
                 />
@@ -121,7 +121,7 @@ export default function TimeCondition({
                   onChange={(value) =>
                     timeConditionForm.setFieldValue(
                       "endTime",
-                      value.currentTarget.value,
+                      value.currentTarget.value
                     )
                   }
                 />

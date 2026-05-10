@@ -87,7 +87,7 @@ describe("ImageCapture.ts tests", () => {
       assert.strictEqual(fs.existsSync(savedFilePath), false);
       assert.strictEqual((mockLogger.error as sinon.SinonSpy).calledOnce, true);
       assert.ok(
-        (mockLogger.error as sinon.SinonSpy).firstCall.args[0].includes("Image capture failed"),
+        (mockLogger.error as sinon.SinonSpy).firstCall.args[0].includes("Image capture failed")
       );
     });
 
@@ -101,8 +101,8 @@ describe("ImageCapture.ts tests", () => {
       assert.strictEqual((mockLogger.error as sinon.SinonSpy).calledOnce, true);
       assert.ok(
         (mockLogger.error as sinon.SinonSpy).firstCall.args[0].includes(
-          "Image capture was unsuccessful",
-        ),
+          "Image capture was unsuccessful"
+        )
       );
     });
   });

@@ -5,19 +5,26 @@ import { sensorChartDataHandler } from "../handlers/SensorChartDataHandlers";
 import { assert } from "chai";
 import sinon from "sinon";
 import { SuccessResponse } from "@sproot/api/v2/Responses";
+import { VALIDATED_CONTRACT_REQUEST_DATA_KEY } from "../../../validation/validateRequest";
 
 describe("SensorChartDataHandlers.ts tests", () => {
   describe("sensorChartDataHandler", () => {
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     let chartData: any;
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
+
+    function createMockResponse(validatedQuery: Record<string, unknown> = {}): Response {
+      return {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+          [VALIDATED_CONTRACT_REQUEST_DATA_KEY]: {
+            query: validatedQuery,
+          },
         },
-      },
-    } as unknown as Response;
+      } as unknown as Response;
+    }
 
     beforeEach(() => {
       chartData = {
@@ -51,6 +58,7 @@ describe("SensorChartDataHandlers.ts tests", () => {
         },
         query: {},
       } as unknown as Request;
+      const mockResponse = createMockResponse();
 
       const response = sensorChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
@@ -64,6 +72,7 @@ describe("SensorChartDataHandlers.ts tests", () => {
         },
         query: { readingType: "temperature" },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ readingType: "temperature" });
 
       const response = sensorChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
@@ -82,6 +91,7 @@ describe("SensorChartDataHandlers.ts tests", () => {
         },
         query: { latest: "true" },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ latest: "true" });
 
       const response = sensorChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
@@ -101,6 +111,8 @@ describe("SensorChartDataHandlers.ts tests", () => {
         },
         query: { latest: "true", readingType: "temperature" },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ latest: "true", readingType: "temperature" });
+
       const response = sensorChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
       assert.deepEqual(response.content?.data, {

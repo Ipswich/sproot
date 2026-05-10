@@ -68,7 +68,7 @@ export class StreamProxy {
     } catch (e) {
       this.#upstreamConnection.disconnect();
       this.#logger.error(
-        `StreamProxy: error starting: ${e instanceof Error ? e.message : String(e)}`,
+        `StreamProxy: error starting: ${e instanceof Error ? e.message : String(e)}`
       );
       return false;
     }
@@ -87,7 +87,7 @@ export class StreamProxy {
       this.#logger.info("StreamProxy: stopped");
     } catch (e) {
       this.#logger.error(
-        `StreamProxy: error stopping: ${e instanceof Error ? e.message : String(e)}`,
+        `StreamProxy: error stopping: ${e instanceof Error ? e.message : String(e)}`
       );
     }
   }

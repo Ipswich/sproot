@@ -85,7 +85,7 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
 
   const order = (
     JSON.parse(
-      localStorage.getItem(`outputStateOrder`) ?? "[]",
+      localStorage.getItem(`outputStateOrder`) ?? "[]"
     ) as IOutputBase[]
   ).map((s) => s.name);
 

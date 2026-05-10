@@ -28,7 +28,7 @@ class CameraManager {
   static createInstanceAsync(
     sprootDB: ISprootDB,
     interserviceAuthenticationKey: string,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<CameraManager> {
     const cameraManager = new CameraManager(sprootDB, interserviceAuthenticationKey, logger);
     return cameraManager.regenerateAsync();
@@ -37,7 +37,7 @@ class CameraManager {
   private constructor(
     sprootDB: ISprootDB,
     interserviceAuthenticationKey: string,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     this.#sprootDB = sprootDB;
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
@@ -50,7 +50,7 @@ class CameraManager {
           await this.#imageCapture.captureImageAsync(
             "latest.jpg",
             this.#baseUrl,
-            this.generateRequestHeaders(),
+            this.generateRequestHeaders()
           );
         }
       },
@@ -62,7 +62,7 @@ class CameraManager {
       undefined, // utcOffset
       undefined, // unrefTimeout
       undefined, // waitForCompletion
-      (err: unknown) => this.#logger.error(`Image capture cron error: ${err}`),
+      (err: unknown) => this.#logger.error(`Image capture cron error: ${err}`)
     );
   }
 
@@ -166,7 +166,7 @@ class CameraManager {
           this.#imageCapture
             .runImageRetentionAsync(
               this.#currentSettings.imageRetentionSize,
-              this.#currentSettings.imageRetentionDays,
+              this.#currentSettings.imageRetentionDays
             )
             .then(() => {
               this.#imageCapture.regenerateTimelapseArchiveAsync();
@@ -229,13 +229,13 @@ class CameraManager {
       if (cameraSettings.xImageResolution && cameraSettings.yImageResolution) {
         cameraArguments.push("--imageResolution");
         cameraArguments.push(
-          `${cameraSettings.xImageResolution}x${cameraSettings.yImageResolution}`,
+          `${cameraSettings.xImageResolution}x${cameraSettings.yImageResolution}`
         );
       }
       if (cameraSettings.xVideoResolution && cameraSettings.yVideoResolution) {
         cameraArguments.push("--videoResolution");
         cameraArguments.push(
-          `${cameraSettings.xVideoResolution}x${cameraSettings.yVideoResolution}`,
+          `${cameraSettings.xVideoResolution}x${cameraSettings.yVideoResolution}`
         );
       }
       if (cameraSettings.videoFps) {
@@ -274,7 +274,7 @@ class CameraManager {
 
       this.#picameraServerProcess.on("close", async (code, signal) => {
         this.#logger.info(
-          `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`,
+          `Picamera server exited with status: ${code ?? signal ?? "Unknown exit condition!"}`
         );
         //SIGINT should basically only come from a ctrl-c, everything is dying at this point
         if (signal === "SIGINT") {
@@ -317,7 +317,7 @@ class CameraManager {
   private generateRequestHeaders(): Record<string, string> {
     return {
       "X-Interservice-Authentication-Token": generateInterserviceAuthenticationToken(
-        this.#interserviceAuthenticationKey,
+        this.#interserviceAuthenticationKey
       ),
     };
   }

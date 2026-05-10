@@ -6,7 +6,7 @@ export function computeTagPillDiffs<T extends TagLike>(
   availableTags: T[],
   serverTags: T[],
   tagAdds: number[],
-  tagRemoves: number[],
+  tagRemoves: number[]
 ): {
   newLocalTags: T[];
   newTagAdds: number[];

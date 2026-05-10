@@ -1011,8 +1011,11 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @example manual */
-                    controlMode?: string;
+                    /**
+                     * @example manual
+                     * @enum {string}
+                     */
+                    controlMode: "manual" | "automatic";
                 };
             };
         };

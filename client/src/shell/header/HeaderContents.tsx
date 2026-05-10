@@ -27,8 +27,8 @@ export default function HeaderContents({
   useEffect(() => {
     setHeaderText(
       extractHeaderText(Object.values(navbarItems)).filter(
-        (page) => page.href === location.pathname,
-      )[0]?.headerText ?? "",
+        (page) => page.href === location.pathname
+      )[0]?.headerText ?? ""
     );
   }, [location, navbarItems]);
 
@@ -73,7 +73,7 @@ export default function HeaderContents({
 }
 
 function extractHeaderText(
-  pages: Page[],
+  pages: Page[]
 ): { href: string; headerText: string }[] {
   const result = [];
 

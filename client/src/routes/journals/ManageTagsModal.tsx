@@ -72,7 +72,7 @@ export default function ManageTagsModal<T extends TagLike>({
     DefaultColors[0] ??
     "#000000";
   const [newTagColor, setNewTagColor] = useState<string | null>(
-    initialRandomColor,
+    initialRandomColor
   );
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function ManageTagsModal<T extends TagLike>({
                 .sort((a, b) =>
                   (a.name || "").localeCompare(b.name || "", undefined, {
                     sensitivity: "base",
-                  }),
+                  })
                 )
                 .map((tag) => (
                   <Table.Tr key={tag.id}>
@@ -158,8 +158,8 @@ export default function ManageTagsModal<T extends TagLike>({
                             const value = event.currentTarget.value;
                             setLocalTags((prev) =>
                               prev.map((g) =>
-                                g.id === tag.id ? { ...g, name: value } : g,
-                              ),
+                                g.id === tag.id ? { ...g, name: value } : g
+                              )
                             );
                           }}
                         />
@@ -174,8 +174,8 @@ export default function ManageTagsModal<T extends TagLike>({
                             const color = value || null;
                             setLocalTags((prev) =>
                               prev.map((g) =>
-                                g.id === tag.id ? { ...g, color } : g,
-                              ),
+                                g.id === tag.id ? { ...g, color } : g
+                              )
                             );
                           }}
                         />
@@ -187,7 +187,7 @@ export default function ManageTagsModal<T extends TagLike>({
                           <ActionIcon
                             onClick={async () => {
                               const updated = localTags.find(
-                                (g) => g.id === tag.id,
+                                (g) => g.id === tag.id
                               );
                               if (updated) {
                                 await updateTagMutation.mutateAsync(updated);
@@ -255,7 +255,7 @@ export default function ManageTagsModal<T extends TagLike>({
                               Math.floor(Math.random() * DefaultColors.length)
                             ] ??
                               DefaultColors[0] ??
-                              "#000000",
+                              "#000000"
                           );
                           await tagsQuery.refetch();
                         }}
@@ -281,7 +281,7 @@ export default function ManageTagsModal<T extends TagLike>({
                               Math.floor(Math.random() * DefaultColors.length)
                             ] ??
                               DefaultColors[0] ??
-                              "#000000",
+                              "#000000"
                           );
                           await tagsQuery.refetch();
                         }}

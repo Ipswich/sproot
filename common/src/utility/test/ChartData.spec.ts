@@ -124,11 +124,11 @@ describe("ChartData.ts tests", function () {
         assert.equal(chartData.get().length, 10);
         assert.equal(
           chartData.get()[9]?.name,
-          formatDateForChart(new Date("2021-01-01T00:00:00Z")),
+          formatDateForChart(new Date("2021-01-01T00:00:00Z"))
         );
         assert.equal(
           chartData.get()[8]?.name,
-          formatDateForChart(new Date("2021-12-31T23:55:00Z")),
+          formatDateForChart(new Date("2021-12-31T23:55:00Z"))
         );
 
         // Different length, different interval
@@ -136,11 +136,11 @@ describe("ChartData.ts tests", function () {
         assert.equal(chartData.get().length, 13);
         assert.equal(
           chartData.get()[12]?.name,
-          formatDateForChart(new Date("2021-01-01T00:00:00Z")),
+          formatDateForChart(new Date("2021-01-01T00:00:00Z"))
         );
         assert.equal(
           chartData.get()[11]?.name,
-          formatDateForChart(new Date("2021-12-31T23:50:00Z")),
+          formatDateForChart(new Date("2021-12-31T23:50:00Z"))
         );
       });
 

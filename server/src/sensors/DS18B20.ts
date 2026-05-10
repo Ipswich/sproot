@@ -16,7 +16,7 @@ class DS18B20 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<DS18B20 | null> {
     return new DS18B20(
       sdbSensor,
@@ -25,7 +25,7 @@ class DS18B20 extends SensorBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     ).initializeAsync(DS18B20.MAX_SENSOR_READ_TIME);
   }
 
@@ -36,7 +36,7 @@ class DS18B20 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     super(
       sdbSensor,
@@ -46,7 +46,7 @@ class DS18B20 extends SensorBase {
       maxChartDataSize,
       chartDataPointInterval,
       [ReadingType.temperature],
-      logger,
+      logger
     );
   }
 
@@ -61,7 +61,7 @@ class DS18B20 extends SensorBase {
       this.lastReadingTime = new Date();
     } catch (err) {
       this.logger.error(
-        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
+        `Failed to get reading for sensor {DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`
       );
     } finally {
       profiler.done({

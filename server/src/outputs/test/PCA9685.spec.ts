@@ -32,7 +32,7 @@ describe("PCA9685.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     sinon
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(() => ({ info: () => {}, error: () => {} } as unknown as winston.Logger));
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
@@ -102,7 +102,7 @@ describe("PCA9685.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     sinon
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
+      .callsFake(() => ({ info: () => {}, error: () => {} } as unknown as winston.Logger));
     const logger = winston.createLogger();
 
     const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
@@ -133,7 +133,7 @@ describe("PCA9685.ts tests", function () {
           error: () => {},
           verbose: () => {},
           debug: () => {},
-        }) as unknown as winston.Logger,
+        } as unknown as winston.Logger)
     );
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);

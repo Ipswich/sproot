@@ -17,7 +17,7 @@ export default function SensorSettings() {
     { open: newSensorModalOpen, close: newSensorModalClose },
   ] = useDisclosure(false);
   const [supportedModels, setSupportedModels] = useState(
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
   const [
     deviceZonesModalOpened,

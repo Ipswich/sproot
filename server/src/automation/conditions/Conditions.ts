@@ -123,7 +123,7 @@ export class Conditions {
     operator: AutomationOperator,
     sensorList: SensorList,
     outputList: OutputList,
-    now: Date,
+    now: Date
   ): {
     result: boolean;
     conditions: {
@@ -295,10 +295,10 @@ export class Conditions {
             sensorCondition.readingType,
             sensorCondition.operator,
             sensorCondition.comparisonValue,
-            sensorCondition.comparisonLookback,
+            sensorCondition.comparisonLookback
           );
         });
-      }),
+      })
     );
     promises.push(
       this.#sprootDB.getOutputConditionsAsync(this.#automationId).then((outputConditions) => {
@@ -309,10 +309,10 @@ export class Conditions {
             outputCondition.outputId,
             outputCondition.operator,
             outputCondition.comparisonValue,
-            outputCondition.comparisonLookback,
+            outputCondition.comparisonLookback
           );
         });
-      }),
+      })
     );
     promises.push(
       this.#sprootDB.getTimeConditionsAsync(this.#automationId).then((timeConditions) => {
@@ -321,10 +321,10 @@ export class Conditions {
             timeCondition.id,
             timeCondition.groupType,
             timeCondition.startTime,
-            timeCondition.endTime,
+            timeCondition.endTime
           );
         });
-      }),
+      })
     );
     promises.push(
       this.#sprootDB.getWeekdayConditionsAsync(this.#automationId).then((weekdayConditions) => {
@@ -332,10 +332,10 @@ export class Conditions {
           this.#weekdayConditions[weekdayCondition.id] = new WeekdayCondition(
             weekdayCondition.id,
             weekdayCondition.groupType,
-            weekdayCondition.weekdays,
+            weekdayCondition.weekdays
           );
         });
-      }),
+      })
     );
     promises.push(
       this.#sprootDB.getMonthConditionsAsync(this.#automationId).then((monthConditions) => {
@@ -343,10 +343,10 @@ export class Conditions {
           this.#monthConditions[monthCondition.id] = new MonthCondition(
             monthCondition.id,
             monthCondition.groupType,
-            monthCondition.months,
+            monthCondition.months
           );
         });
-      }),
+      })
     );
     promises.push(
       this.#sprootDB.getDateRangeConditionsAsync(this.#automationId).then((dateRangeConditions) => {
@@ -357,10 +357,10 @@ export class Conditions {
             dateRangeCondition.startMonth,
             dateRangeCondition.startDate,
             dateRangeCondition.endMonth,
-            dateRangeCondition.endDate,
+            dateRangeCondition.endDate
           );
         });
-      }),
+      })
     );
 
     await Promise.all(promises);

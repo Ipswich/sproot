@@ -22,7 +22,7 @@ export default function UpdateFirmwareContainer(props: { id: number }) {
       queryFn: async () => {
         return await getSubcontrollerConnectionStatusAsync(props.id);
       },
-    },
+    }
   );
 
   const updateFirmwareMutation = useMutation({

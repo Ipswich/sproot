@@ -117,14 +117,14 @@ describe("Automation.ts tests", () => {
         "enabledAutomation",
         "or",
         true,
-        sprootDB,
+        sprootDB
       );
       const automationDisabled = await Automation.createInstanceAsync(
         2,
         "disabledAutomation",
         "or",
         false,
-        sprootDB,
+        sprootDB
       );
 
       // No conditions, both should return false

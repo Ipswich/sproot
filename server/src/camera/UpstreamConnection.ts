@@ -102,7 +102,7 @@ export class UpstreamConnection {
       timeoutId = setTimeout(() => newController?.abort(), this.#fetchTimeoutMs);
 
       this.#logger.info(
-        `UpstreamConnection: connecting to ${this.#url} (attempt ${this.#reconnectAttempt})`,
+        `UpstreamConnection: connecting to ${this.#url} (attempt ${this.#reconnectAttempt})`
       );
 
       upstream = await fetch(`${this.#url}/stream.mjpg`, {
@@ -166,7 +166,9 @@ export class UpstreamConnection {
           this.#handleDisconnect("stream ended");
         })
         .on("error", (e) => {
-          const errorMsg = `UpstreamConnection: upstream error: ${e instanceof Error ? e.message : String(e)}`;
+          const errorMsg = `UpstreamConnection: upstream error: ${
+            e instanceof Error ? e.message : String(e)
+          }`;
           this.#logger.error(errorMsg);
           this.#handleDisconnect(errorMsg);
         });
@@ -175,7 +177,7 @@ export class UpstreamConnection {
       return true;
     } catch (e) {
       this.#logger.error(
-        `UpstreamConnection: error connecting: ${e instanceof Error ? e.message : String(e)}`,
+        `UpstreamConnection: error connecting: ${e instanceof Error ? e.message : String(e)}`
       );
       await upstream?.body?.cancel();
       if (timeoutId) {

@@ -7,7 +7,7 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 export async function getESP32ManifestAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   try {
@@ -35,7 +35,7 @@ export async function getESP32ManifestAsync(
 
 export async function getESP32FirmwareBinaryAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<void> {
   try {
     const data = await FirmwareManager.ESP32.getESP32FirmwareBinaryAsync();
@@ -81,7 +81,7 @@ export async function getESP32FirmwareBinaryAsync(
 
 export async function getESP32BootloaderBinaryAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<void> {
   try {
     const data = await FirmwareManager.ESP32.getESP32BootloaderBinaryAsync();
@@ -127,7 +127,7 @@ export async function getESP32BootloaderBinaryAsync(
 
 export async function getESP32PartitionsBinaryAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<void> {
   try {
     const data = await FirmwareManager.ESP32.getESP32PartitionsBinaryAsync();
@@ -173,7 +173,7 @@ export async function getESP32PartitionsBinaryAsync(
 
 export async function getESP32ApplicationBinaryAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<void> {
   try {
     const data = await FirmwareManager.ESP32.getESP32ApplicationBinaryAsync();
@@ -219,7 +219,7 @@ export async function getESP32ApplicationBinaryAsync(
 
 export async function updateESP32FirmwareOTAAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   // const mdnsService = request.app.get("mdnsService") as MdnsService;

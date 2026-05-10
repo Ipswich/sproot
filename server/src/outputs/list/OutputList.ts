@@ -37,7 +37,7 @@ class OutputList implements AsyncDisposable {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<OutputList> {
     const outputList = new OutputList(
       automationService,
@@ -47,7 +47,7 @@ class OutputList implements AsyncDisposable {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     );
     return outputList.regenerateAsync();
   }
@@ -60,7 +60,7 @@ class OutputList implements AsyncDisposable {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     this.#automationService = automationService;
     this.#sprootDB = sprootDB;
@@ -73,7 +73,7 @@ class OutputList implements AsyncDisposable {
       maxChartDataSize,
       chartDataPointInterval,
       undefined,
-      this.#logger,
+      this.#logger
     );
     this.#ESP32_PCA9685 = new ESP32_PCA9685(
       this.#automationService,
@@ -84,7 +84,7 @@ class OutputList implements AsyncDisposable {
       maxChartDataSize,
       chartDataPointInterval,
       undefined,
-      this.#logger,
+      this.#logger
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
       this.#automationService,
@@ -93,7 +93,7 @@ class OutputList implements AsyncDisposable {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      this.#logger,
+      this.#logger
     );
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
@@ -145,7 +145,7 @@ class OutputList implements AsyncDisposable {
   getAvailableDevices(
     model: string,
     address?: string,
-    filterUsed?: boolean,
+    filterUsed?: boolean
   ): Record<string, string>[] {
     switch (model) {
       case Models.PCA9685:
@@ -166,7 +166,9 @@ class OutputList implements AsyncDisposable {
         await this.#deleteOutputAsync(this.#outputs[key]!);
       } catch (err) {
         this.#logger.error(
-          `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
+          `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${
+            this.#outputs[key]?.id
+          }}. ${err}`
         );
       }
     }
@@ -181,6 +183,8 @@ class OutputList implements AsyncDisposable {
       this.#logger.warn("OutputList is already updating, skipping regenerateAsync call.");
       return this;
     }
+    this.#isUpdating = true;
+
     try {
       let outputListChanges = false;
       const profiler = this.#logger.startTimer();
@@ -201,7 +205,7 @@ class OutputList implements AsyncDisposable {
 
           if (this.#outputs[key] instanceof ESP32_PCA9685Output) {
             const subcontroller = subcontrollersFromDatabase.find(
-              (sub) => sub.id == output.subcontrollerId,
+              (sub) => sub.id == output.subcontrollerId
             );
 
             if (subcontroller != null) {
@@ -257,14 +261,16 @@ class OutputList implements AsyncDisposable {
             this.#outputs[key]!.updateParentOutputId(output.parentOutputId);
             if (output.parentOutputId) {
               await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(
-                this.#outputs[key]!,
+                this.#outputs[key]!
               );
             }
           }
 
           if (changeList.length > 0) {
             this.#logger.info(
-              `Updating output { model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id} }. Changes: ${changeList.join(", ")}`,
+              `Updating output { model: ${this.#outputs[key]?.model}, id: ${
+                this.#outputs[key]?.id
+              } }. Changes: ${changeList.join(", ")}`
             );
             outputListChanges = true;
           }
@@ -274,9 +280,9 @@ class OutputList implements AsyncDisposable {
           promises.push(
             this.#createOutputAsync(output).catch((err) =>
               this.#logger.error(
-                `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
-              ),
-            ),
+                `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`
+              )
+            )
           );
           outputListChanges = true;
         }
@@ -289,7 +295,7 @@ class OutputList implements AsyncDisposable {
         if (!outputIdsFromDatabase.includes(key)) {
           try {
             this.#logger.info(
-              `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
+              `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`
             );
             // If this output is part of an output group, remove it from the group before deleting to avoid orphaned references
             if (this.#outputs[key]?.parentOutputId) {
@@ -302,7 +308,9 @@ class OutputList implements AsyncDisposable {
             outputListChanges = true;
           } catch (err) {
             this.#logger.error(
-              `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}. ${err}`,
+              `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${
+                this.#outputs[key]?.id
+              }}. ${err}`
             );
           }
         }
@@ -338,7 +346,9 @@ class OutputList implements AsyncDisposable {
         this.#chartData.loadChartData(data, "output");
         this.#chartData.loadChartSeries(series);
         this.#logger.info(
-          `Loaded aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
+          `Loaded aggregate output chart data. Data count: ${
+            Object.keys(this.#chartData.chartData.get()).length
+          }`
         );
       }
 
@@ -360,10 +370,12 @@ class OutputList implements AsyncDisposable {
     if (ChartData.shouldUpdateByInterval(new Date(), this.chartDataPointInterval)) {
       this.#chartData.updateChartData(
         Object.values(this.outputs).map((output) => output.getChartData().data),
-        "output",
+        "output"
       );
       this.#logger.info(
-        `Updated aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length}`,
+        `Updated aggregate output chart data. Data count: ${
+          Object.keys(this.#chartData.chartData.get()).length
+        }`
       );
     }
   }
@@ -375,7 +387,7 @@ class OutputList implements AsyncDisposable {
       promises.push(
         fn(this.#outputs[key] as OutputBase).catch((err) => {
           this.#logger.error(err);
-        }),
+        })
       );
     }
     await Promise.allSettled(promises);
@@ -405,7 +417,7 @@ class OutputList implements AsyncDisposable {
           this.initialCacheLookback,
           this.maxChartDataSize,
           this.chartDataPointInterval,
-          this.#logger,
+          this.#logger
         );
         break;
       }

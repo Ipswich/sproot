@@ -60,7 +60,7 @@ const SensorCreateResponse = z
     pin: z.string().nullish(),
   })
   .passthrough();
-const updateSensor_Body = z
+const SensorUpdateRequest = z
   .object({
     name: z.string(),
     model: z.string(),
@@ -110,7 +110,7 @@ export const schemas: Record<string, z.ZodTypeAny> = {
   ErrorResponse,
   SensorCreateRequest,
   SensorCreateResponse,
-  updateSensor_Body,
+  SensorUpdateRequest,
   SDBSensor,
   DataPoint,
   ChartSeries,
@@ -328,12 +328,12 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: updateSensor_Body,
+        schema: SensorUpdateRequest,
       },
       {
         name: "sensorId",
         type: "Path",
-        schema: z.string().describe("sensor Id"),
+        schema: z.number().describe("sensor Id"),
       },
     ],
     response: SuccessResponse.and(
@@ -445,7 +445,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
       {
         name: "sensorId",
         type: "Path",
-        schema: z.string().describe("sensor Id"),
+        schema: z.number().describe("sensor Id"),
       },
     ],
     response: SuccessResponse.and(

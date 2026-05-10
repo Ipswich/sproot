@@ -235,27 +235,14 @@ paths:
           required: true
           description: sensor Id
           schema:
-            type: string
-          example: "1"
+            type: number
+          example: 1
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: Windowsill
-                model:
-                  type: string
-                  example: BME280
-                address:
-                  type: string
-                  example: "0x76"
-                color:
-                  type: string
-                  example: "#ff0000"
+              $ref: "#/components/schemas/SensorUpdateRequest"
       responses:
         "200":
           description: Sensor updated
@@ -365,8 +352,8 @@ paths:
           required: true
           description: sensor Id
           schema:
-            type: string
-          example: "1"
+            type: number
+          example: 1
       responses:
         "200":
           description: Sensor deleted
@@ -798,6 +785,23 @@ components:
           nullable: true
           type: string
           example: "0"
+    SensorUpdateRequest:
+      description: |
+        Request body for updating a sensor. This operation changes only the declared transport fields provided. Other writable fields still remain handler-owned until the runtime behavior is fully represented in the contract.
+      type: object
+      properties:
+        name:
+          type: string
+          example: Windowsill
+        model:
+          type: string
+          example: BME280
+        address:
+          type: string
+          example: "0x76"
+        color:
+          type: string
+          example: "#ff0000"
     SDBSensor:
       description: |
         A sensor object that is stored in the database. Contains all the information needed to  create a sensor, including name, model, address, and, color.

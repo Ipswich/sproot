@@ -5,7 +5,7 @@ import createContractRoute from "../../validation/createContractRoute";
 export default function initializeAuthenticationRoutes(
   isAuthEnabled: string,
   jwtExpiration: number,
-  jwtSecret: string,
+  jwtSecret: string
 ): express.Router {
   const router = express.Router();
 
@@ -18,10 +18,17 @@ export default function initializeAuthenticationRoutes(
   router.post(
     "/token",
     createContractRoute("authenticateToken", async (req: Request, res: Response) => {
-      const response = await getTokenAsync(req, res, isAuthEnabled, jwtExpiration, jwtSecret, false);
+      const response = await getTokenAsync(
+        req,
+        res,
+        isAuthEnabled,
+        jwtExpiration,
+        jwtSecret,
+        false
+      );
 
       res.status(response.statusCode).json(response);
-    }),
+    })
   );
 
   /**
@@ -51,7 +58,7 @@ export default function initializeAuthenticationRoutes(
       }
 
       res.status(response.statusCode).json(response);
-    }),
+    })
   );
 
   return router;

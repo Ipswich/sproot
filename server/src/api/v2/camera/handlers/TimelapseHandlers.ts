@@ -10,7 +10,7 @@ import { CameraManager } from "../../../../camera/CameraManager";
  */
 export async function getTimelapseArchiveAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<void> {
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const timelapseArchive = await cameraManager.getTimelapseArchiveAsync();

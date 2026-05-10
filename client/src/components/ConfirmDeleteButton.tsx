@@ -119,8 +119,8 @@ export default function ConfirmDeleteButton(props: ConfirmDeleteButtonProps) {
         {...props.actionIconProps}
       >
         {isConfirming
-          ? (props.confirmIcon ?? <IconCheck size={16} />)
-          : (props.icon ?? <IconTrash size={16} />)}
+          ? props.confirmIcon ?? <IconCheck size={16} />
+          : props.icon ?? <IconTrash size={16} />}
       </ActionIcon>
     );
   }
@@ -137,8 +137,8 @@ export default function ConfirmDeleteButton(props: ConfirmDeleteButtonProps) {
       {...props.buttonProps}
     >
       {isConfirming
-        ? (props.confirmLabel ?? "Confirm")
-        : (props.children ?? "Delete")}
+        ? props.confirmLabel ?? "Confirm"
+        : props.children ?? "Delete"}
     </Button>
   );
 }

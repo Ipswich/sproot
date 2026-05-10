@@ -8,6 +8,22 @@ import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SensorBase } from "../../../../sensors/base/SensorBase";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
+
+function createMockResponse(validatedRequestData: Record<string, unknown> = {}): Response {
+  const response = {
+    locals: {
+      defaultProperties: {
+        timestamp: new Date().toISOString(),
+        requestId: "1234",
+      },
+    },
+  } as unknown as Response;
+
+  setValidatedContractRequestData(response, validatedRequestData);
+
+  return response;
+}
 
 describe("SensorHandlers.ts tests", () => {
   describe("get", () => {
@@ -32,14 +48,7 @@ describe("SensorHandlers.ts tests", () => {
         units: { temperature: "°C" },
       } as SensorBase,
     };
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
+    const mockResponse = createMockResponse();
     beforeEach(() => {
       sensorList = sinon.createStubInstance(SensorList);
       sinon.stub(sensorList, "sensorData").value(sensorData);
@@ -78,7 +87,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(
         (success.content?.data as Array<SDBSensor>).length,
-        Object.keys(sensorData).length,
+        Object.keys(sensorData).length
       );
       assert.deepEqual(success.content?.data, Object.values(sensorData));
     });
@@ -115,16 +124,10 @@ describe("SensorHandlers.ts tests", () => {
       sinon.restore();
     });
 
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
+    const mockResponse = createMockResponse();
 
     it("should return a 201 and add a new sensor", async () => {
+      const mockResponse = createMockResponse();
       const newSensor = {
         name: "test sensor 4",
         model: Models.DS18B20,
@@ -167,8 +170,55 @@ describe("SensorHandlers.ts tests", () => {
       assert.isTrue(sensorList.regenerateAsync.calledTwice);
     });
 
-    it("should return a 400 and details for each missing required field", async () => {
-      const newSensor = {} as SDBSensor;
+    it("should prefer validated create body data over raw request body", async () => {
+      const mockResponse = createMockResponse({
+        body: {
+          name: "Validated Sensor",
+          model: Models.DS18B20,
+          address: "28-validated",
+          color: "#ffffff",
+          subcontrollerId: 1,
+        },
+      });
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "sensorList":
+                return sensorList;
+            }
+          },
+        },
+        body: {
+          name: "Raw Sensor",
+          model: Models.BME280,
+          address: "0x76",
+          color: "#000000",
+        },
+      } as unknown as Request;
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, {
+        name: "Validated Sensor",
+        model: Models.DS18B20,
+        address: "28-validated",
+        color: "#ffffff",
+        subcontrollerId: 1,
+        pin: undefined,
+      });
+    });
+
+    it("should return a 400 for remaining model validation errors", async () => {
+      const newSensor = {
+        name: "test sensor 4",
+        model: Models.ADS1115,
+        address: "0x48",
+        color: "#000000",
+      } as SDBSensor;
 
       const mockRequest = {
         app: {
@@ -191,44 +241,12 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], [
-        "Missing required field: name",
-        "Missing required field: model",
-        "Missing required field: address",
-      ]);
-      assert.isTrue(sprootDB.addSensorAsync.notCalled);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
-
-      newSensor.model = Models.BME280;
-      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], [
-        "Missing required field: name",
-        "Missing required field: address",
-      ]);
-      assert.isTrue(sprootDB.addSensorAsync.notCalled);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
-
-      newSensor.model = Models.ADS1115;
-      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], [
-        "Missing required field: name",
-        "Missing required field: pin",
-        "Missing required field: address",
-      ]);
+      assert.deepEqual(error.error["details"], ["Missing required field: pin"]);
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
       assert.isTrue(sensorList.regenerateAsync.notCalled);
 
       newSensor.model = "Not A Valid Model" as keyof typeof Models;
+      newSensor.pin = "4";
       error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -236,9 +254,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], [
-        "Missing required field: name",
         `Invalid model: Not A Valid Model. Supported models are: ${Object.keys(Models).join(", ")}`,
-        "Missing required field: address",
       ]);
       assert.isTrue(sprootDB.addSensorAsync.notCalled);
       assert.isTrue(sensorList.regenerateAsync.notCalled);
@@ -293,16 +309,10 @@ describe("SensorHandlers.ts tests", () => {
       sinon.restore();
     });
 
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
+    const mockResponse = createMockResponse();
 
     it("should return a 200 and update an existing sensor", async () => {
+      const mockResponse = createMockResponse();
       const updatedSensor = {
         1: {
           id: 1,
@@ -336,6 +346,53 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.updateSensorAsync.calledOnce);
       assert.isTrue(sensorList.regenerateAsync.calledOnce);
+    });
+
+    it("should prefer validated update params and body over raw request data", async () => {
+      const sensors = {
+        1: {
+          id: 1,
+          name: "original sensor",
+          model: "DS18B20",
+          address: "28-00002",
+          color: "#000000",
+          pin: "1",
+        } as SDBSensor,
+        2: {
+          id: 2,
+          name: "validated target",
+          model: "BME280",
+          address: "0x76",
+          color: "#111111",
+          pin: "2",
+        } as SDBSensor,
+      };
+      sinon.stub(sensorList, "sensorData").value(sensors);
+      const mockResponse = createMockResponse({
+        params: { sensorId: 2 },
+        body: { name: "validated update", color: "#abcdef" },
+      });
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "sensorList":
+                return sensorList;
+            }
+          },
+        },
+        params: { sensorId: "1" },
+        body: { name: "raw update", color: "#123456" },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal((success.content?.data as SDBSensor).id, 2);
+      assert.equal((success.content?.data as SDBSensor).name, "validated update");
+      assert.equal((success.content?.data as SDBSensor).color, "#abcdef");
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -473,16 +530,10 @@ describe("SensorHandlers.ts tests", () => {
       sinon.restore();
     });
 
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
+    const mockResponse = createMockResponse();
 
     it("should return a 200 and delete an existing sensor", async () => {
+      const mockResponse = createMockResponse();
       const deletedSensor = {
         1: {
           id: 1,
@@ -515,6 +566,45 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.deleteSensorAsync.calledOnce);
       assert.isTrue(sensorList.regenerateAsync.calledOnce);
+    });
+
+    it("should prefer validated delete params over raw request params", async () => {
+      const deletedSensor = {
+        1: {
+          id: 1,
+          name: "raw target",
+          model: "DS18B20",
+          address: "28-00002",
+          color: "#000000",
+        } as SDBSensor,
+        2: {
+          id: 2,
+          name: "validated target",
+          model: "BME280",
+          address: "0x76",
+          color: "#ffffff",
+        } as SDBSensor,
+      };
+      sinon.stub(sensorList, "sensorData").value(deletedSensor);
+      const mockResponse = createMockResponse({ params: { sensorId: 2 } });
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "sensorList":
+                return sensorList;
+            }
+          },
+        },
+        params: { sensorId: "1" },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sprootDB.deleteSensorAsync.calledOnceWith(2));
     });
 
     it("should return a 400 and details for the invalid request", async () => {

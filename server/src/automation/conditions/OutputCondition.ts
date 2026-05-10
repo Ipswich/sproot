@@ -17,7 +17,7 @@ export class OutputCondition implements IOutputCondition {
     outputId: number,
     operator: ConditionOperator,
     comparisonValue: number,
-    comparisonLookback: number | null,
+    comparisonLookback: number | null
   ) {
     this.id = id;
     this.groupType = groupType;
@@ -41,7 +41,7 @@ export class OutputCondition implements IOutputCondition {
       .filter(
         (outputState) =>
           new Date(outputState.logTime).getTime() >=
-          now.getTime() - this.comparisonLookback! * 60000,
+          now.getTime() - this.comparisonLookback! * 60000
       )
       .map((outputState) => outputState.value);
 

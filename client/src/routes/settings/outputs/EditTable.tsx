@@ -67,7 +67,7 @@ export default function EditTable({
     mutationFn: async (newOutputValues: IOutputBase) => {
       if (newOutputValues.subcontrollerId != undefined) {
         newOutputValues.subcontrollerId = parseInt(
-          String(newOutputValues.subcontrollerId),
+          String(newOutputValues.subcontrollerId)
         );
       }
       newOutputValues.pin = String(newOutputValues.pin);
@@ -79,7 +79,7 @@ export default function EditTable({
           [];
 
         const children = Object.values(outputs).filter(
-          (o) => o.model !== Models.OUTPUT_GROUP,
+          (o) => o.model !== Models.OUTPUT_GROUP
         );
 
         await Promise.all(
@@ -99,7 +99,7 @@ export default function EditTable({
                 parentOutputId: null,
               } as unknown as IOutputBase);
             }
-          }),
+          })
         );
       }
 
@@ -156,7 +156,7 @@ export default function EditTable({
       subcontrollerId: (value: number | undefined) => {
         if (updateOutputForm.values.model === Models.ESP32_PCA9685) {
           return subcontrollersQuery.data?.recognized.some(
-            (dev) => dev.id === parseInt(String(value)),
+            (dev) => dev.id === parseInt(String(value))
           )
             ? null
             : "Must be a valid subcontroller";
@@ -192,7 +192,7 @@ export default function EditTable({
     updateOutputForm.setFieldValue("model", output.model);
     updateOutputForm.setFieldValue(
       "subcontrollerId",
-      output.subcontrollerId ?? undefined,
+      output.subcontrollerId ?? undefined
     );
     updateOutputForm.setFieldValue("address", output.address);
     updateOutputForm.setFieldValue("id", output.id);
@@ -201,11 +201,11 @@ export default function EditTable({
     updateOutputForm.setFieldValue("isInvertedPwm", output.isInvertedPwm);
     updateOutputForm.setFieldValue(
       "automationTimeout",
-      output.automationTimeout,
+      output.automationTimeout
     );
     updateOutputForm.setFieldValue(
       "deviceZoneId",
-      output.deviceZoneId ?? undefined,
+      output.deviceZoneId ?? undefined
     );
     // populate groupedOutputIds for group edits
     if (output.model === Models.OUTPUT_GROUP) {

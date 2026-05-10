@@ -62,11 +62,26 @@ const domainApis: Record<ContractDomainExportName, readonly ZodiosEndpointDefini
 // Remaining response-validation exclusions are intentional non-JSON transport responses.
 // JSON endpoints should not be added here without a proven contract/runtime mismatch.
 const responseValidationExclusions = new Map<ContractOperationId, string>([
-  ["downloadSystemBackup", "intentional non-JSON transport exclusion: binary system backup download"],
-  ["downloadEsp32FirmwareBinary", "intentional non-JSON transport exclusion: binary ESP32 firmware bundle download"],
-  ["downloadEsp32FirmwareBootloader", "intentional non-JSON transport exclusion: binary ESP32 bootloader download"],
-  ["downloadEsp32FirmwarePartitions", "intentional non-JSON transport exclusion: binary ESP32 partition table download"],
-  ["downloadEsp32FirmwareApplication", "intentional non-JSON transport exclusion: binary ESP32 application download"],
+  [
+    "downloadSystemBackup",
+    "intentional non-JSON transport exclusion: binary system backup download",
+  ],
+  [
+    "downloadEsp32FirmwareBinary",
+    "intentional non-JSON transport exclusion: binary ESP32 firmware bundle download",
+  ],
+  [
+    "downloadEsp32FirmwareBootloader",
+    "intentional non-JSON transport exclusion: binary ESP32 bootloader download",
+  ],
+  [
+    "downloadEsp32FirmwarePartitions",
+    "intentional non-JSON transport exclusion: binary ESP32 partition table download",
+  ],
+  [
+    "downloadEsp32FirmwareApplication",
+    "intentional non-JSON transport exclusion: binary ESP32 application download",
+  ],
   ["getCameraStream", "intentional non-JSON transport exclusion: multipart camera stream"],
   ["getLatestCameraImage", "intentional non-JSON transport exclusion: binary camera image"],
   ["downloadTimelapseArchive", "intentional non-JSON transport exclusion: archive download"],
@@ -106,7 +121,9 @@ function buildRegistry(): Record<ContractOperationId, OperationContract> {
       const endpoint = endpointsByAlias.get(operationId);
 
       if (!endpoint) {
-        throw new Error(`Generated endpoint metadata for ${operationId} was not found in domain ${domain.exportName}.`);
+        throw new Error(
+          `Generated endpoint metadata for ${operationId} was not found in domain ${domain.exportName}.`
+        );
       }
 
       if (seenOperationIds.has(operationId)) {
@@ -138,7 +155,7 @@ function buildRegistry(): Record<ContractOperationId, OperationContract> {
 
   if (seenOperationIds.size !== generatedApiContractManifest.operationTotal) {
     throw new Error(
-      `Validation registry expected ${generatedApiContractManifest.operationTotal} operations, found ${seenOperationIds.size}.`,
+      `Validation registry expected ${generatedApiContractManifest.operationTotal} operations, found ${seenOperationIds.size}.`
     );
   }
 
@@ -152,7 +169,7 @@ function getBodySchema(endpoint: ZodiosEndpointDefinition): z.ZodTypeAny | undef
 
 function getParameterSchemas(
   endpoint: ZodiosEndpointDefinition,
-  source: OperationParameterSource,
+  source: OperationParameterSource
 ): readonly OperationParameterSchema[] {
   const targetType = sourceToZodiosType(source);
 
@@ -166,7 +183,7 @@ function getParameterSchemas(
 
 function getResponseValidationConfig(
   operationId: ContractOperationId,
-  endpoint: ZodiosEndpointDefinition,
+  endpoint: ZodiosEndpointDefinition
 ): OperationContract["response"] {
   const exclusionReason = responseValidationExclusions.get(operationId);
 
@@ -200,7 +217,9 @@ function getResponseValidationConfig(
   return responseConfig;
 }
 
-function sourceToZodiosType(source: OperationParameterSource): "Body" | "Path" | "Query" | "Header" {
+function sourceToZodiosType(
+  source: OperationParameterSource
+): "Body" | "Path" | "Query" | "Header" {
   switch (source) {
     case "body":
       return "Body";

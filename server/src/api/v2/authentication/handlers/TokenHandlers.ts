@@ -14,7 +14,7 @@ export async function getTokenAsync(
   isAuthEnabled: string,
   jwtExpiration: number,
   jwtSecret: string,
-  withCsrfToken: boolean,
+  withCsrfToken: boolean
 ): Promise<SuccessResponse | ErrorResponse> {
   let authenticationResponse: SuccessResponse | ErrorResponse;
   if (isAuthEnabled.toLowerCase() != "true") {
@@ -30,25 +30,6 @@ export async function getTokenAsync(
     return authenticationResponse;
   }
 
-  let details: string[] = [];
-  if (!request.body?.username) {
-    details.push("Missing username");
-  }
-  if (!request.body?.password) {
-    details.push("Missing password");
-  }
-  if (details.length > 0) {
-    authenticationResponse = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: details,
-      },
-      ...response.locals["defaultProperties"],
-    };
-    return authenticationResponse;
-  }
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let user: SDBUser[];
   try {

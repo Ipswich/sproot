@@ -10,8 +10,24 @@ import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { OutputBase } from "../../../../outputs/base/OutputBase";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
 
 describe("OutputHandlers.ts tests", () => {
+  function createMockResponse(validatedRequestData: Record<string, unknown> = {}): Response {
+    const response = {
+      locals: {
+        defaultProperties: {
+          timestamp: new Date().toISOString(),
+          requestId: "1234",
+        },
+      },
+    } as unknown as Response;
+
+    setValidatedContractRequestData(response, validatedRequestData);
+
+    return response;
+  }
+
   describe("get", () => {
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     const outputData = {
@@ -42,15 +58,6 @@ describe("OutputHandlers.ts tests", () => {
         },
       } as OutputBase,
     };
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
-
     beforeEach(() => {
       outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputData").value(outputData);
@@ -66,6 +73,7 @@ describe("OutputHandlers.ts tests", () => {
         },
         params: { outputId: 1 },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
 
       const success = get(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
@@ -82,6 +90,7 @@ describe("OutputHandlers.ts tests", () => {
         },
         params: {},
       } as unknown as Request;
+      const mockResponse = createMockResponse();
 
       const success = get(mockRequest, mockResponse) as SuccessResponse;
       assert.equal(success.statusCode, 200);
@@ -89,7 +98,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(
         (success.content?.data as Array<SDBOutput>).length,
-        Object.keys(outputData).length,
+        Object.keys(outputData).length
       );
       assert.deepEqual(success.content?.data, Object.values(outputData));
     });
@@ -102,6 +111,7 @@ describe("OutputHandlers.ts tests", () => {
         originalUrl: "/api/v2/outputs/-1",
         params: { outputId: -1 },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "-1" } });
 
       const error = get(mockRequest, mockResponse) as ErrorResponse;
 
@@ -111,6 +121,20 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
       assert.equal(error.error["details"].at(0), "Output with ID -1 not found.");
+    });
+
+    it("should consume validated outputId instead of raw req.params", () => {
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => outputList,
+        },
+        params: { outputId: 2 },
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
+
+      const success = get(mockRequest, mockResponse) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.deepEqual(success.content?.data, [outputData[1]]);
     });
   });
 
@@ -127,15 +151,6 @@ describe("OutputHandlers.ts tests", () => {
     afterEach(() => {
       sinon.restore();
     });
-
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
 
     it("should return a 201 and add a new output", async () => {
       const newOutput = {
@@ -164,6 +179,7 @@ describe("OutputHandlers.ts tests", () => {
         },
         body: newOutput,
       } as unknown as Request;
+      const mockResponse = createMockResponse({ body: newOutput });
 
       const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 201);
@@ -172,44 +188,6 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.addOutputAsync.calledOnce);
       assert.isTrue(outputList.regenerateAsync.calledOnce);
-    });
-
-    it("should return a 400 and details for each missing required field", async () => {
-      const newOutput = {} as SDBOutput;
-
-      const mockRequest = {
-        app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
-        },
-        originalUrl: "/api/v2/outputs",
-        params: { outputId: "string" },
-        body: newOutput,
-      } as unknown as Request;
-
-      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/api/v2/outputs");
-      assert.deepEqual(error.error["details"], [
-        "Missing required field: model",
-        "Missing required field: address",
-        "Missing required field: name",
-        "Missing required field: pin",
-        "Missing required field: isPwm",
-        "Missing required field: isInvertedPwm",
-        "Missing required field: automationTimeout",
-      ]);
-      assert.isTrue(sprootDB.addOutputAsync.notCalled);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -239,6 +217,7 @@ describe("OutputHandlers.ts tests", () => {
         params: { outputId: 1 },
         body: newOutput,
       } as unknown as Request;
+      const mockResponse = createMockResponse({ body: newOutput });
 
       sprootDB.addOutputAsync.rejects(new Error("DB Error"));
 
@@ -251,6 +230,52 @@ describe("OutputHandlers.ts tests", () => {
       assert.deepEqual(error.error["details"], ["Failed to add output to database.", "DB Error"]);
       assert.isTrue(sprootDB.addOutputAsync.calledOnce);
       assert.isTrue(outputList.regenerateAsync.notCalled);
+    });
+
+    it("should consume validated output create body instead of raw req.body", async () => {
+      const rawOutput = {
+        model: Models.PCA9685,
+        address: "ignored-address",
+        name: "Ignored Output",
+        pin: "9",
+        isPwm: false,
+        isInvertedPwm: false,
+        color: "#000000",
+        automationTimeout: 2,
+      } as SDBOutput;
+
+      const validatedOutput = {
+        model: Models.PCA9685,
+        address: "0x40",
+        name: "Validated Output",
+        pin: "0",
+        isPwm: true,
+        isInvertedPwm: true,
+        color: "#FF0000",
+        automationTimeout: 60,
+        subcontrollerId: null,
+      } as SDBOutput;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        body: rawOutput,
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ body: validatedOutput });
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, { ...validatedOutput, id: 1 });
+      assert.isTrue(sprootDB.addOutputAsync.calledOnce);
+      assert.isTrue(sprootDB.addOutputAsync.calledWithMatch({ name: "Validated Output" }));
     });
   });
 
@@ -267,15 +292,6 @@ describe("OutputHandlers.ts tests", () => {
     afterEach(() => {
       sinon.restore();
     });
-
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
 
     it("should return a 200 and update an existing output", async () => {
       const updatedOutput = {
@@ -307,6 +323,7 @@ describe("OutputHandlers.ts tests", () => {
         params: { outputId: 1 },
         body: updatedOutput,
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
 
       const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
@@ -315,49 +332,6 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(sprootDB.updateOutputAsync.calledOnce);
       assert.isTrue(outputList.regenerateAsync.calledOnce);
-    });
-
-    it("should return a 400 and details for the invalid request", async () => {
-      const updatedOutput = {
-        1: {
-          id: 1,
-          model: Models.PCA9685,
-          address: "0x40",
-          name: "test output",
-          pin: "0",
-          isPwm: true,
-          isInvertedPwm: true,
-          color: "#FF0000",
-          automationTimeout: 60,
-        } as SDBOutput,
-      };
-      sinon.stub(outputList, "outputData").value(updatedOutput);
-
-      const mockRequest = {
-        app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
-        },
-        originalUrl: "/api/v2/outputs",
-        params: {},
-        body: updatedOutput,
-      } as unknown as Request;
-
-      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/api/v2/outputs");
-      assert.deepEqual(error.error["details"], ["Invalid or missing output ID."]);
-      assert.isTrue(sprootDB.updateOutputAsync.notCalled);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -390,6 +364,7 @@ describe("OutputHandlers.ts tests", () => {
         params: { outputId: -1 },
         body: updatedOutput,
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "-1" } });
 
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
@@ -432,6 +407,7 @@ describe("OutputHandlers.ts tests", () => {
         params: { outputId: 1 },
         body: updatedOutput,
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
 
       sprootDB.updateOutputAsync.rejects(new Error("DB Error"));
 
@@ -448,6 +424,43 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(sprootDB.updateOutputAsync.calledOnce);
       assert.isTrue(outputList.regenerateAsync.notCalled);
     });
+
+    it("should consume validated outputId instead of raw req.params", async () => {
+      const updatedOutput = {
+        1: {
+          id: 1,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output",
+          pin: "0",
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+          automationTimeout: 60,
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(updatedOutput);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        params: { outputId: "not-a-number" },
+        body: updatedOutput,
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sprootDB.updateOutputAsync.calledOnce);
+    });
   });
 
   describe("deleteAsync", () => {
@@ -463,15 +476,6 @@ describe("OutputHandlers.ts tests", () => {
     afterEach(() => {
       sinon.restore();
     });
-
-    const mockResponse = {
-      locals: {
-        defaultProperties: {
-          timestamp: new Date().toISOString(),
-          requestId: "1234",
-        },
-      },
-    } as unknown as Response;
 
     it("should return a 200 and delete an existing output", async () => {
       const deletedOutput = {
@@ -501,6 +505,7 @@ describe("OutputHandlers.ts tests", () => {
         },
         params: { outputId: 1 },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
 
       const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
@@ -540,6 +545,7 @@ describe("OutputHandlers.ts tests", () => {
         originalUrl: "/api/v2/outputs",
         params: {},
       } as unknown as Request;
+      const mockResponse = createMockResponse();
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
@@ -581,6 +587,7 @@ describe("OutputHandlers.ts tests", () => {
         originalUrl: "/api/v2/outputs/-1",
         params: { outputId: -1 },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "-1" } });
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 404);
@@ -622,6 +629,7 @@ describe("OutputHandlers.ts tests", () => {
         originalUrl: "/api/v2/outputs/1",
         params: { outputId: 1 },
       } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
 
       sprootDB.deleteOutputAsync.rejects(new Error("DB Error"));
 
@@ -637,6 +645,41 @@ describe("OutputHandlers.ts tests", () => {
       ]);
       assert.isTrue(sprootDB.deleteOutputAsync.calledOnce);
       assert.isTrue(outputList.regenerateAsync.notCalled);
+    });
+
+    it("should consume validated outputId instead of raw req.params", async () => {
+      const deletedOutput = {
+        1: {
+          id: 1,
+          model: Models.PCA9685,
+          address: "0x40",
+          name: "test output",
+          pin: "0",
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#FF0000",
+        } as SDBOutput,
+      };
+      sinon.stub(outputList, "outputData").value(deletedOutput);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        params: { outputId: "not-a-number" },
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { outputId: "1" } });
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sprootDB.deleteOutputAsync.calledOnceWith(1));
     });
   });
 });

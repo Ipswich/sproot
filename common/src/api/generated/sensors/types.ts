@@ -192,6 +192,17 @@ export interface components {
             /** @example 0 */
             pin?: string | null;
         };
+        /** @description Request body for updating a sensor. This operation changes only the declared transport fields provided. Other writable fields still remain handler-owned until the runtime behavior is fully represented in the contract. */
+        SensorUpdateRequest: {
+            /** @example Windowsill */
+            name?: string;
+            /** @example BME280 */
+            model?: string;
+            /** @example 0x76 */
+            address?: string;
+            /** @example #ff0000 */
+            color?: string;
+        };
         /** @description A sensor object that is stored in the database. Contains all the information needed to  create a sensor, including name, model, address, and, color. */
         SDBSensor: {
             /** @example Windowsill */
@@ -464,7 +475,7 @@ export interface operations {
                  * @description sensor Id
                  * @example 1
                  */
-                sensorId: string;
+                sensorId: number;
             };
             cookie?: never;
         };
@@ -578,22 +589,13 @@ export interface operations {
                  * @description sensor Id
                  * @example 1
                  */
-                sensorId: string;
+                sensorId: number;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": {
-                    /** @example Windowsill */
-                    name?: string;
-                    /** @example BME280 */
-                    model?: string;
-                    /** @example 0x76 */
-                    address?: string;
-                    /** @example #ff0000 */
-                    color?: string;
-                };
+                "application/json": components["schemas"]["SensorUpdateRequest"];
             };
         };
         responses: {

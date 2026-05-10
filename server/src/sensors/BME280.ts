@@ -15,7 +15,7 @@ class BME280 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<BME280 | null> {
     const sensor = new BME280(
       sdbsensor,
@@ -24,7 +24,7 @@ class BME280 extends SensorBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     );
     return sensor.initializeAsync(BME280.MAX_SENSOR_READ_TIME);
   }
@@ -36,7 +36,7 @@ class BME280 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     super(
       sdbsensor,
@@ -46,7 +46,7 @@ class BME280 extends SensorBase {
       maxChartDataSize,
       chartDataPointInterval,
       [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
-      logger,
+      logger
     );
   }
 

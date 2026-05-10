@@ -15,9 +15,25 @@ import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
 
 describe("NotificationActionHandlers.ts tests", () => {
   let mockLogger: winston.Logger;
+  function createMockResponse(validatedRequestData: Record<string, unknown> = {}): Response {
+    const response = {
+      locals: {
+        defaultProperties: {
+          timestamp: new Date().toISOString(),
+          requestId: "1234",
+        },
+      },
+    } as unknown as Response;
+
+    setValidatedContractRequestData(response, validatedRequestData);
+
+    return response;
+  }
+
   before(() => {
     sinon.stub(winston, "createLogger").callsFake(
       () =>
@@ -27,8 +43,8 @@ describe("NotificationActionHandlers.ts tests", () => {
           debug: () => {},
           warn: () => {},
           verbose: () => {},
-          startTimer: () => ({ done: () => {} }) as winston.Profiler,
-        }) as unknown as winston.Logger,
+          startTimer: () => ({ done: () => {} } as winston.Profiler),
+        } as unknown as winston.Logger)
     );
     mockLogger = winston.createLogger();
   });
@@ -38,6 +54,38 @@ describe("NotificationActionHandlers.ts tests", () => {
   });
 
   describe("getAsync", () => {
+    it("should consume validated notification-action query instead of raw Express query", async () => {
+      const mockResponse = createMockResponse({ query: { automationId: "2" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getNotificationActionsByAutomationIdAsync.resolves([
+        {
+          id: 2,
+          automationId: 2,
+          subject: "Validated Subject",
+          content: "Validated Content",
+        } as SDBNotificationAction,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "sprootDB") {
+              return sprootDB;
+            }
+          },
+        },
+        query: {
+          automationId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sprootDB.getNotificationActionsByAutomationIdAsync.calledOnceWith(2));
+      assert.isTrue(sprootDB.getNotificationActionsAsync.notCalled);
+    });
+
     it("should return a 200 and a list of all notification actions", async () => {
       const mockResponse = {
         locals: {
@@ -317,6 +365,58 @@ describe("NotificationActionHandlers.ts tests", () => {
   });
 
   describe("addAsync", () => {
+    it("should consume validated notification-action body instead of raw Express body", async () => {
+      const mockResponse = createMockResponse({
+        body: {
+          automationId: 2,
+          subject: "Validated Subject",
+          content: "Validated Content",
+        },
+      });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { id: 2, name: "validated", operator: "or" } as SDBAutomation,
+      ]);
+      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.addNotificationActionAsync.resolves(42);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            switch (key) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationService":
+                return automationService;
+            }
+          },
+        },
+        body: {
+          automationId: 1,
+          subject: "Ignored Subject",
+          content: "Ignored Content",
+        },
+      } as unknown as Request;
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, {
+        id: 42,
+        automationId: 2,
+        subject: "Validated Subject",
+        content: "Validated Content",
+      });
+      assert.isTrue(
+        sprootDB.addNotificationActionAsync.calledOnceWith(
+          2,
+          "Validated Subject",
+          "Validated Content"
+        )
+      );
+    });
+
     it("should return a 201 and the created notification action", async () => {
       const mockResponse = {
         locals: {
@@ -346,7 +446,7 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
         body: {
-          automationId: "1",
+          automationId: 1,
           subject: "Test Subject",
           content: "Test Content",
         },
@@ -386,7 +486,7 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
         body: {
-          automationId: "a",
+          automationId: 1,
           subject: "",
           content: "   ",
         },
@@ -398,11 +498,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, [
-        "Invalid or missing automation Id.",
-        "Subject is required.",
-        "Content is required.",
-      ]);
+      assert.deepEqual(error.error.details, ["Subject is required.", "Content is required."]);
       assert.equal(error.error.url, mockRequest.originalUrl);
     });
 
@@ -431,7 +527,7 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
         body: {
-          automationId: "1",
+          automationId: 1,
           subject: "Test Subject",
           content: "Test Content",
         },
@@ -472,7 +568,7 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
         body: {
-          automationId: "1",
+          automationId: 1,
           subject: "Test Subject",
           content: "Test Content",
         },
@@ -685,7 +781,7 @@ describe("NotificationActionHandlers.ts tests", () => {
 
       const success = (await getActiveNotificationsAsync(
         mockRequest,
-        mockResponse,
+        mockResponse
       )) as SuccessResponse;
 
       assert.equal(success.statusCode, 200);
@@ -743,7 +839,7 @@ describe("NotificationActionHandlers.ts tests", () => {
 
       const success = (await getActiveNotificationsAsync(
         mockRequest,
-        mockResponse,
+        mockResponse
       )) as SuccessResponse;
 
       assert.equal(success.statusCode, 200);

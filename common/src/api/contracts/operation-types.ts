@@ -98,10 +98,8 @@ export type ContractOperationSuccessStatus<OperationId extends ContractOperation
   keyof ContractOperationResponses<OperationId>,
   SuccessStatusCode
 >;
-export type ContractOperationRequestBody<OperationId extends ContractOperationId> = ZodiosBodyByAlias<
-  ContractGeneratedApi<OperationId>,
-  OperationId
->;
+export type ContractOperationRequestBody<OperationId extends ContractOperationId> =
+  ZodiosBodyByAlias<ContractGeneratedApi<OperationId>, OperationId>;
 export type ContractOperationPathParams<OperationId extends ContractOperationId> =
   ZodiosPathParamByAlias<ContractGeneratedApi<OperationId>, OperationId>;
 export type ContractOperationQueryParams<OperationId extends ContractOperationId> =
@@ -112,7 +110,7 @@ export type ContractOperationSuccessResponse<OperationId extends ContractOperati
   ZodiosResponseByAlias<ContractGeneratedApi<OperationId>, OperationId>;
 
 export const contractDomainExportNames = generatedApiContractManifest.domains.map(
-  (domain) => domain.exportName,
+  (domain) => domain.exportName
 ) as readonly ContractDomainExportName[];
 
 export const contractOperationIds = generatedApiContractManifest.domains.flatMap((domain) => [

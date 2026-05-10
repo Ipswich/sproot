@@ -38,7 +38,7 @@ describe("CameraManager", () => {
 
   const createManager = async (
     settings: SDBCameraSettings[] = [],
-    overrides?: Partial<Record<string, sinon.SinonStub>>,
+    overrides?: Partial<Record<string, sinon.SinonStub>>
   ) => {
     const sprootDB = {
       getCameraSettingsAsync: sandbox.stub().resolves(settings),
@@ -279,7 +279,7 @@ describe("CameraManager", () => {
       () =>
         new Promise<SDBCameraSettings[]>((resolve) => {
           resolveSettings = resolve;
-        }),
+        })
     );
 
     const manager = (await createManager([], { getCameraSettingsAsync })).manager;
@@ -290,7 +290,7 @@ describe("CameraManager", () => {
     assert.strictEqual(await secondRegenerate, manager);
     const warnings = warnStub.getCalls().map((call) => String(call.args[0]));
     assert.isTrue(
-      warnings.includes("CameraManager is already updating, skipping regenerateAsync call."),
+      warnings.includes("CameraManager is already updating, skipping regenerateAsync call.")
     );
     assert.equal(getCameraSettingsAsync.callCount, 2);
 

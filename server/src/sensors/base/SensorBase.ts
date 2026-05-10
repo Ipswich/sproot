@@ -42,7 +42,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     maxChartDataSize: number,
     chartDataPointInterval: number,
     readingTypes: ReadingType[],
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     this.id = sdbSensor.id;
     this.name = sdbSensor.name;
@@ -68,7 +68,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       maxChartDataSize,
       this.#chartDataPointInterval,
       undefined,
-      readingTypes,
+      readingTypes
     );
   }
 
@@ -88,7 +88,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
           await this.takeReadingAsync();
         } catch (err) {
           this.logger.error(
-            `Error taking reading for sensor {${this.model}, id: ${this.id}, address: ${this.address}}. ${err}`,
+            `Error taking reading for sensor {${this.model}, id: ${this.id}, address: ${this.address}}. ${err}`
           );
         } finally {
           this.#isTakingReading = false;
@@ -148,7 +148,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
         //If miss count exceeds 3 * N, force update (3 real tries, because intervals).
         if (this.#updateMissCount >= 3 * this.#chartDataPointInterval) {
           this.logger.warn(
-            `Chart data update miss count exceeded (3) for sensor {id: ${this.id}}. Forcing update to re-sync.`,
+            `Chart data update miss count exceeded (3) for sensor {id: ${this.id}}. Forcing update to re-sync.`
           );
           this.#updateChartData();
           this.#updateMissCount = 0;
@@ -169,7 +169,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       await this.#cache.loadFromDatabaseAsync(
         this.id,
         this.#initialCacheLookback,
-        this.#chartDataPointInterval,
+        this.#chartDataPointInterval
       );
 
       let updateInfoString = "";
@@ -180,11 +180,11 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
         }
       }
       this.logger.info(
-        `Loaded cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
+        `Loaded cached readings for {${this.constructor.name}, id: ${this.id}}. Cache Size - ${updateInfoString}`
       );
     } catch (err) {
       this.logger.error(
-        `Failed to load cached readings for {${this.constructor.name}, id: ${this.id}}. ${err}`,
+        `Failed to load cached readings for {${this.constructor.name}, id: ${this.id}}. ${err}`
       );
     }
   }
@@ -207,7 +207,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       }
     }
     this.logger.info(
-      `Updated cached readings for {${this.model}, id: ${this.id}}. Cache Size - ${updateInfoString}`,
+      `Updated cached readings for {${this.model}, id: ${this.id}}. Cache Size - ${updateInfoString}`
     );
   }
 
@@ -224,10 +224,12 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       this.#chartData.loadChartData(
         this.#cache.get(readingType as ReadingType),
         this.name,
-        readingType as ReadingType,
+        readingType as ReadingType
       );
       this.logger.info(
-        `Loaded chart data for sensor {id: ${this.id}}. Chart data size - ${this.#chartData.get().data[readingType as ReadingType].length}`,
+        `Loaded chart data for sensor {id: ${this.id}}. Chart data size - ${
+          this.#chartData.get().data[readingType as ReadingType].length
+        }`
       );
     }
     this.#chartData.loadChartSeries({ name: this.name, color: this.color });
@@ -238,10 +240,12 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       this.#chartData.updateChartData(
         this.#cache.get(readingType as ReadingType),
         this.name,
-        readingType as ReadingType,
+        readingType as ReadingType
       );
       this.logger.info(
-        `Updated chart data for sensor {id: ${this.id}, ${readingType}}. Chart data size - ${this.#chartData.get().data[readingType as ReadingType].length}`,
+        `Updated chart data for sensor {id: ${this.id}, ${readingType}}. Chart data size - ${
+          this.#chartData.get().data[readingType as ReadingType].length
+        }`
       );
     }
   }

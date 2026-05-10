@@ -16,6 +16,7 @@ import {
   addTagAsync,
   removeTagAsync,
 } from "../handlers/JournalEntriesHandlers";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
 
 describe("JournalEntriesHandlers", () => {
   let sandbox: sinon.SinonSandbox;
@@ -28,10 +29,15 @@ describe("JournalEntriesHandlers", () => {
     sandbox.restore();
   });
 
-  const makeRes = () => {
+  const makeRes = (validatedRequestData?: Record<string, unknown>) => {
     const res: Partial<Response> = {
       locals: { defaultProperties: {} },
     };
+
+    if (validatedRequestData) {
+      setValidatedContractRequestData(res as Response, validatedRequestData);
+    }
+
     return res as Response;
   };
 
@@ -126,7 +132,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ query: { withContent: false } });
       const result = (await getByJournalIdAsync(req, res)) as SuccessResponse;
       assert.equal(result.statusCode, 200);
       assert.exists(result.content);
@@ -251,7 +257,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ query: { withContent: false } });
       const result = (await getByEntryIdAsync(req, res)) as SuccessResponse;
       assert.equal(result.statusCode, 200);
       assert.exists(result.content);
@@ -320,7 +326,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "ok" } });
       const result = (await addAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 404);
       const err = result.error;
@@ -343,7 +349,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "ok" } });
       const result = (await addAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 400);
       const err = result.error;
@@ -352,7 +358,7 @@ describe("JournalEntriesHandlers", () => {
       assert.includeMembers(err.details, [`Valid Journal ID is required.`]);
     });
 
-    it("should return 400 when content missing", async () => {
+    it("should return 400 for remaining create validation", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getJournalAsync.resolves([
         {
@@ -375,17 +381,20 @@ describe("JournalEntriesHandlers", () => {
 
       const req = {
         params: { journalId: "2" },
-        body: { content: "" },
+        body: { content: "", title: "x".repeat(65) },
         originalUrl: "/api/journals/2/entries",
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "", title: "x".repeat(65) } });
       const result = (await addAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 400);
       const err = result.error;
       assert.isArray(err.details);
-      assert.includeMembers(err.details, ["Journal Entry content is required."]);
+      assert.includeMembers(err.details, [
+        "Journal Entry content is required.",
+        "Journal Entry title cannot exceed 64 characters.",
+      ]);
     });
 
     it("should return 201 when created", async () => {
@@ -415,12 +424,47 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "ok", title: "hi" } });
       const result = (await addAsync(req, res)) as SuccessResponse;
       assert.equal(result.statusCode, 201);
       assert.exists(result.content);
       assert.isObject(result.content!.data);
       assert.equal(result.content!.data.id, 7);
+    });
+
+    it("should consume validated create body instead of raw req.body", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getJournalAsync.resolves([
+        {
+          id: 2,
+          title: "j",
+          description: null,
+          archived: false,
+          icon: null,
+          color: null,
+          createdAt: new Date().toISOString(),
+          editedAt: new Date().toISOString(),
+          archivedAt: null,
+        },
+      ]);
+      sprootDB.getJournalTagsAsync.resolves([]);
+      sprootDB.getJournalTagLookupsAsync.resolves([]);
+      sprootDB.addJournalEntryAsync.resolves(8);
+      const journalService = new JournalService(sprootDB as ISprootDB);
+
+      const req = {
+        params: { journalId: "2" },
+        body: { content: "raw", title: "raw" },
+        originalUrl: "/api/journals/2/entries",
+        app: { get: () => journalService },
+      } as unknown as Request;
+
+      const res = makeRes({ body: { content: "validated", title: "validated" } });
+      const result = (await addAsync(req, res)) as SuccessResponse;
+      assert.equal(result.statusCode, 201);
+      assert.equal(result.content?.data.id, 8);
+      assert.equal(result.content?.data.content, "validated");
+      assert.equal(result.content?.data.title, "validated");
     });
 
     it("should return 503 when create throws", async () => {
@@ -450,7 +494,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "ok" } });
       const result = (await addAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 503);
       const err = result.error;
@@ -472,7 +516,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "ok" } });
       const result = (await updateAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 400);
       const err = result.error;
@@ -480,23 +524,23 @@ describe("JournalEntriesHandlers", () => {
       assert.includeMembers(err.details, ["Valid Journal Entry ID is required."]);
     });
 
-    it("should return 400 when content is explicitly null", async () => {
+    it("should return 400 when title exceeds the maximum length", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       const journalService = new JournalService(sprootDB as ISprootDB);
 
       const req = {
         params: { entryId: "5" },
-        body: { content: null },
+        body: { title: "x".repeat(65) },
         originalUrl: "/api/journals/entries/5",
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { title: "x".repeat(65) } });
       const result = (await updateAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 400);
       const err = result.error;
       assert.isArray(err.details);
-      assert.includeMembers(err.details, ["Journal Entry content cannot be null."]);
+      assert.includeMembers(err.details, ["Journal Entry title cannot exceed 64 characters."]);
     });
 
     it("should return 404 when entry not found", async () => {
@@ -511,7 +555,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "ok" } });
       const result = (await updateAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 404);
       const err = result.error;
@@ -536,9 +580,32 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "new content" } });
       const result = (await updateAsync(req, res)) as SuccessResponse;
       assert.equal(result.statusCode, 200);
+    });
+
+    it("should consume validated update body instead of raw req.body", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const existing = { ...sampleEntry };
+      sprootDB.getJournalEntryAsync.resolves([existing]);
+      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
+      sprootDB.getJournalEntryTagsAsync.resolves([]);
+      sprootDB.updateJournalEntryAsync.resolves();
+      const journalService = new JournalService(sprootDB as ISprootDB);
+
+      const req = {
+        params: { entryId: "5" },
+        body: { content: "raw content", title: "raw title" },
+        originalUrl: "/api/journals/entries/5",
+        app: { get: () => journalService },
+      } as unknown as Request;
+
+      const res = makeRes({ body: { content: "validated content", title: "validated title" } });
+      const result = (await updateAsync(req, res)) as SuccessResponse;
+      assert.equal(result.statusCode, 200);
+      assert.equal(result.content?.data.content, "validated content");
+      assert.equal(result.content?.data.title, "validated title");
     });
 
     it("should return 503 when update throws", async () => {
@@ -556,7 +623,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { content: "new content" } });
       const result = (await updateAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 503);
       const err = result.error;
@@ -660,7 +727,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { tagId: "y" } });
       const result = (await addTagAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 400);
       const err = result.error;
@@ -683,7 +750,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { tagId: "11" } });
       const result = (await addTagAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 404);
       const err = result.error;
@@ -709,7 +776,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { tagId: "11" } });
       const result = (await addTagAsync(req, res)) as SuccessResponse;
       assert.equal(result.statusCode, 200);
     });
@@ -734,7 +801,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { tagId: "11" } });
       const result = (await addTagAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 404);
       const err = result.error;
@@ -762,9 +829,37 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { tagId: "11" } });
       const result = (await addTagAsync(req, res)) as SuccessResponse;
       assert.equal(result.statusCode, 200);
+    });
+
+    it("should consume validated attach body instead of raw req.body", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const entryNoTags = { ...sampleEntry, tags: [] } as SDBJournalEntry & {
+        tags: SDBJournalEntryTag[];
+      };
+      sprootDB.getJournalEntryAsync.resolves([entryNoTags]);
+      sprootDB.getJournalEntryTagLookupsAsync.resolves([]);
+      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
+      sprootDB.addJournalEntryTagLookupAsync.resolves(77);
+      const journalService = new JournalService(sprootDB as ISprootDB);
+
+      const req = {
+        params: { entryId: "5" },
+        body: { tagId: "99" },
+        originalUrl: "/api/journals/entries/5/tags",
+        app: { get: () => journalService },
+      } as unknown as Request;
+
+      const res = makeRes({ body: { tagId: "11" } });
+      const result = (await addTagAsync(req, res)) as SuccessResponse;
+      assert.equal(result.statusCode, 200);
+      assert.equal(
+        result.content?.data,
+        "Tag with ID 11 successfully added to Journal Entry with ID 5."
+      );
+      assert.isTrue(sprootDB.addJournalEntryTagLookupAsync.calledOnceWithExactly(5, 11));
     });
 
     it("should return 503 when addTag throws", async () => {
@@ -786,7 +881,7 @@ describe("JournalEntriesHandlers", () => {
         app: { get: () => journalService },
       } as unknown as Request;
 
-      const res = makeRes();
+      const res = makeRes({ body: { tagId: "11" } });
       const result = (await addTagAsync(req, res)) as ErrorResponse;
       assert.equal(result.statusCode, 503);
       const err = result.error;

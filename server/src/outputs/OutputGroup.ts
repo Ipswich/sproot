@@ -17,7 +17,7 @@ export class OutputGroup extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ): Promise<OutputGroup> {
     const outputGroup = new OutputGroup(
       output,
@@ -27,7 +27,7 @@ export class OutputGroup extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     );
 
     await outputGroup.initializeAsync();
@@ -43,7 +43,7 @@ export class OutputGroup extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger,
+    logger: winston.Logger
   ) {
     super(
       output,
@@ -53,7 +53,7 @@ export class OutputGroup extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger,
+      logger
     );
   }
 
@@ -99,14 +99,14 @@ export class OutputGroup extends OutputBase {
           ? Promise.resolve()
           : output.setStateAsync(newState);
       },
-      () => super.setStateAsync(newState),
+      () => super.setStateAsync(newState)
     );
   }
 
   override updateControlModeAsync(controlMode: ControlMode): Promise<void> {
     return this.#runFunctionOnAllOutputsAsync(
       (output) => output.updateControlModeAsync(controlMode),
-      () => super.updateControlModeAsync(controlMode),
+      () => super.updateControlModeAsync(controlMode)
     );
   }
 
@@ -119,7 +119,7 @@ export class OutputGroup extends OutputBase {
             ? Promise.resolve()
             : output.executeStateAsync(forceExecution);
         }),
-      forceExecution,
+      forceExecution
     );
   }
 
@@ -133,7 +133,7 @@ export class OutputGroup extends OutputBase {
 
   async #runFunctionOnAllOutputsAsync(
     runOnOtherFunc: (output: OutputBase) => Promise<void>,
-    runOnSelfFunc?: () => Promise<void>,
+    runOnSelfFunc?: () => Promise<void>
   ): Promise<void> {
     const promises: Promise<void>[] = [];
     for (const output of Object.values(this.outputs)) {

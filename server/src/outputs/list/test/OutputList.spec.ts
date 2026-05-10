@@ -228,6 +228,65 @@ describe("OutputList.ts tests", function () {
     });
   });
 
+  describe("regenerateAsync", function () {
+    it("should skip overlapping regenerate calls", async function () {
+      const mockMdnsService = sinon.createStubInstance(MdnsService);
+      sinon.createStubInstance(Pca9685Driver);
+
+      const getOutputsAsyncStub = sinon
+        .stub(MockSprootDB.prototype, "getOutputsAsync")
+        .callsFake(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+          return [
+            {
+              id: 1,
+              model: Models.PCA9685,
+              address: "0x40",
+              name: "test output 1",
+              pin: "0",
+              isPwm: true,
+              isInvertedPwm: false,
+              color: "blue",
+            } as SDBOutput,
+          ];
+        });
+
+      const warn = sinon.stub();
+      sinon.stub(winston, "createLogger").callsFake(
+        () =>
+          ({
+            info: () => {},
+            warn,
+            error: () => {},
+            debug: () => {},
+            startTimer: () => ({ done: () => {} }) as winston.Profiler,
+          }) as unknown as winston.Logger,
+      );
+      const logger = winston.createLogger();
+
+      await using outputList = await OutputList.createInstanceAsync(
+        mockAutomationService,
+        mockSprootDB,
+        mockMdnsService,
+        5,
+        5,
+        5,
+        5,
+        logger,
+      );
+
+      getOutputsAsyncStub.resetHistory();
+
+      const firstRegenerate = outputList.regenerateAsync();
+      const secondRegenerate = outputList.regenerateAsync();
+
+      await Promise.all([firstRegenerate, secondRegenerate]);
+
+      assert.equal(getOutputsAsyncStub.callCount, 1);
+      assert.isTrue(warn.calledWith("OutputList is already updating, skipping regenerateAsync call."));
+    });
+  });
+
   describe("dispose", function () {
     it("should dispose of all outputs", async function () {
       const mockMdnsService = sinon.createStubInstance(MdnsService);

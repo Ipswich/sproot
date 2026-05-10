@@ -63,7 +63,7 @@ describe("TimelapseHandlers", () => {
 
       assert.isTrue(setHeaderSpy.calledWith("Content-Type", "application/x-tar"));
       assert.isTrue(
-        setHeaderSpy.calledWith("Content-Disposition", "attachment; filename=timelapse.tar"),
+        setHeaderSpy.calledWith("Content-Disposition", "attachment; filename=timelapse.tar")
       );
     });
 

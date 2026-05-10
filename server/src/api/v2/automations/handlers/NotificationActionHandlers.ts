@@ -4,6 +4,13 @@ import { Request, Response } from "express";
 import { AutomationService } from "../../../../automation/AutomationService";
 import { NotificationActionManager } from "../../../../automation/notifications/NotificationActionManager";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import type { operations as AutomationContractOperations } from "@sproot/sproot-common/dist/api/generated/automations/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type ListNotificationActionsQuery =
+  AutomationContractOperations["listNotificationActions"]["parameters"]["query"];
+type CreateNotificationActionRequestBody =
+  AutomationContractOperations["createNotificationAction"]["requestBody"]["content"]["application/json"];
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -12,18 +19,18 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
  */
 export async function getAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const query = (getValidatedContractRequestData<"listNotificationActions">(response).query ??
+    request.query) as ListNotificationActionsQuery;
+  const automationId = query?.["automationId"];
   let automationResponse: SuccessResponse | ErrorResponse;
 
   try {
-    if (
-      request.query["automationId"] != null &&
-      !isNaN(parseInt(request.query["automationId"] as string))
-    ) {
+    if (automationId != null && !isNaN(parseInt(automationId))) {
       const notifications = await sprootDB.getNotificationActionsByAutomationIdAsync(
-        parseInt(request.query["automationId"] as string),
+        parseInt(automationId)
       );
       automationResponse = {
         statusCode: 200,
@@ -65,7 +72,7 @@ export async function getAsync(
  */
 export async function getByIdAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
@@ -134,24 +141,23 @@ export async function getByIdAsync(
  */
 export async function addAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
+  const requestBody = (getValidatedContractRequestData<"createNotificationAction">(response)
+    .body ?? request.body) as CreateNotificationActionRequestBody;
   let automationResponse: SuccessResponse | ErrorResponse;
 
-  const automationId = parseInt(request.body["automationId"] ?? "");
-  const subject = request.body["subject"] ?? "";
-  const content = request.body["content"] ?? "";
+  const automationId = requestBody["automationId"];
+  const subject = requestBody["subject"];
+  const content = requestBody["content"];
 
   const invalidFields = [];
-  if (isNaN(automationId)) {
-    invalidFields.push("Invalid or missing automation Id.");
-  }
-  if (subject == null || typeof subject !== "string" || subject.trim() === "") {
+  if (subject.trim() === "") {
     invalidFields.push("Subject is required.");
   }
-  if (content == null || typeof content !== "string" || content.trim() === "") {
+  if (content.trim() === "") {
     invalidFields.push("Content is required.");
   }
 
@@ -185,7 +191,7 @@ export async function addAsync(
     const notificationActionId = await automationService.addNotificationActionAsync(
       automationId,
       subject,
-      content,
+      content
     );
     automationResponse = {
       statusCode: 201,
@@ -221,7 +227,7 @@ export async function addAsync(
  */
 export async function deleteAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
@@ -293,10 +299,10 @@ export async function deleteAsync(
  */
 export async function getActiveNotificationsAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const notificationActionManager = request.app.get(
-    DI_KEYS.NotificationActionManager,
+    DI_KEYS.NotificationActionManager
   ) as NotificationActionManager;
   let automationResponse: SuccessResponse | ErrorResponse;
 

@@ -5,6 +5,27 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models";
 import { SensorList } from "../../../../sensors/list/SensorList";
+import type { operations as SensorContractOperations } from "@sproot/sproot-common/dist/api/generated/sensors/types";
+import {
+  ContractOperationPathParams,
+} from "@sproot/sproot-common/dist/api/contracts/operation-types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type CreateSensorRequestBody =
+  SensorContractOperations["createSensor"]["requestBody"]["content"]["application/json"];
+type GetSensorByIdPathParams = ContractOperationPathParams<"getSensorById">;
+type UpdateSensorPathParams = ContractOperationPathParams<"updateSensor">;
+type UpdateSensorRequestBody =
+  SensorContractOperations["updateSensor"]["requestBody"]["content"]["application/json"];
+type DeleteSensorPathParams = ContractOperationPathParams<"deleteSensor">;
+
+type SensorUpdateFallbackBody = {
+  subcontrollerId?: number | null;
+  pin?: string | null;
+  lowCalibrationPoint?: number | null;
+  highCalibrationPoint?: number | null;
+  deviceZoneId?: number | null;
+};
 
 /**
  * Possible statusCodes: 200, 404
@@ -15,13 +36,16 @@ import { SensorList } from "../../../../sensors/list/SensorList";
 export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let getSensorResponse: SuccessResponse | ErrorResponse;
+  const validatedPathParams = getValidatedContractRequestData<"getSensorById">(response)
+    .params as GetSensorByIdPathParams | undefined;
+  const sensorId = validatedPathParams?.["sensorId"] ?? request.params["sensorId"];
 
-  if (request.params["sensorId"] !== undefined) {
-    if (sensorList.sensorData[request.params["sensorId"]]) {
+  if (sensorId !== undefined) {
+    if (sensorList.sensorData[sensorId]) {
       getSensorResponse = {
         statusCode: 200,
         content: {
-          data: [sensorList.sensorData[request.params["sensorId"]]],
+          data: [sensorList.sensorData[sensorId]],
         },
         ...response.locals["defaultProperties"],
       };
@@ -31,7 +55,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`Sensor with ID ${request.params["sensorId"]} not found.`],
+          details: [`Sensor with ID ${sensorId} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -58,34 +82,33 @@ export function get(request: Request, response: Response): SuccessResponse | Err
  */
 export async function addAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
+  const requestBody = (getValidatedContractRequestData<"createSensor">(response).body ??
+    request.body) as CreateSensorRequestBody;
   let addSensorResponse: SuccessResponse | ErrorResponse;
 
   const newSensor = {
-    name: request.body["name"],
-    model: request.body["model"],
-    subcontrollerId: request.body["subcontrollerId"],
-    address: request.body["address"],
-    color: request.body["color"],
-    pin: request.body["pin"],
+    name: requestBody["name"],
+    model: requestBody["model"],
+    subcontrollerId: requestBody["subcontrollerId"],
+    address: requestBody["address"],
+    color: requestBody["color"],
+    pin: requestBody["pin"],
   } as SDBSensor;
 
-  const missingFields: Array<string> = [];
-  if (newSensor.name == undefined || newSensor.name == null) {
-    missingFields.push("Missing required field: name");
-  }
-  if (newSensor.model == undefined || newSensor.model == null) {
-    missingFields.push("Missing required field: model");
-  } else if (
+  const validationErrors: Array<string> = [];
+  if (
+    newSensor.model !== undefined &&
+    newSensor.model !== null &&
     !Object.keys(Models)
       .map((key) => key)
       .includes(newSensor.model)
   ) {
-    missingFields.push(
-      `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(Models).join(", ")}`,
+    validationErrors.push(
+      `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(Models).join(", ")}`
     );
   }
   if (
@@ -93,21 +116,17 @@ export async function addAsync(
     newSensor.model == ModelList.CAPACITIVE_MOISTURE_SENSOR
   ) {
     if (newSensor.pin == undefined || newSensor.pin == null) {
-      missingFields.push("Missing required field: pin");
+      validationErrors.push("Missing required field: pin");
     }
   }
 
-  if (newSensor.address == undefined || newSensor.address == null) {
-    missingFields.push("Missing required field: address");
-  }
-
-  if (missingFields.length > 0) {
+  if (validationErrors.length > 0) {
     addSensorResponse = {
       statusCode: 400,
       error: {
         name: "Bad Request",
         url: request.originalUrl,
-        details: [...missingFields],
+        details: [...validationErrors],
       },
       ...response.locals["defaultProperties"],
     };
@@ -147,13 +166,19 @@ export async function addAsync(
  **/
 export async function updateAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
+  const validatedRequest = getValidatedContractRequestData<"updateSensor">(response);
+  const pathParams = (validatedRequest.params ?? request.params) as UpdateSensorPathParams;
+  const requestBody = request.body as SensorUpdateFallbackBody;
+  const validatedBody = (validatedRequest.body ?? request.body) as UpdateSensorRequestBody;
   let updateSensorResponse: SuccessResponse | ErrorResponse;
 
-  const sensorId = parseInt(request.params["sensorId"] ?? "");
+  const sensorIdValue = pathParams["sensorId"];
+  const sensorId =
+    typeof sensorIdValue === "number" ? sensorIdValue : parseInt(sensorIdValue ?? "", 10);
   if (isNaN(sensorId)) {
     updateSensorResponse = {
       statusCode: 400,
@@ -183,18 +208,17 @@ export async function updateAsync(
     return updateSensorResponse;
   }
 
-  sensorData.name = request.body["name"] ?? sensorData.name;
-  sensorData.model = request.body["model"] ?? sensorData.model;
-  sensorData.subcontrollerId = request.body["subcontrollerId"] ?? sensorData.subcontrollerId;
-  sensorData.address = request.body["address"] ?? sensorData.address;
-  sensorData.color = request.body["color"] ?? sensorData.color;
-  sensorData.pin = request.body["pin"] ?? sensorData.pin;
+  sensorData.name = validatedBody["name"] ?? sensorData.name;
+  sensorData.model = (validatedBody["model"] as SDBSensor["model"] | undefined) ?? sensorData.model;
+  sensorData.address = validatedBody["address"] ?? sensorData.address;
+  sensorData.color = validatedBody["color"] ?? sensorData.color;
+  sensorData.subcontrollerId = requestBody["subcontrollerId"] ?? sensorData.subcontrollerId;
+  sensorData.pin = requestBody["pin"] ?? sensorData.pin;
   sensorData.lowCalibrationPoint =
-    request.body["lowCalibrationPoint"] ?? sensorData.lowCalibrationPoint;
+    requestBody["lowCalibrationPoint"] ?? sensorData.lowCalibrationPoint;
   sensorData.highCalibrationPoint =
-    request.body["highCalibrationPoint"] ?? sensorData.highCalibrationPoint;
-  sensorData.deviceZoneId =
-    request.body["deviceZoneId"] ?? request.body["deviceZoneId"] ?? sensorData.deviceZoneId;
+    requestBody["highCalibrationPoint"] ?? sensorData.highCalibrationPoint;
+  sensorData.deviceZoneId = requestBody["deviceZoneId"] ?? sensorData.deviceZoneId;
 
   try {
     await sprootDB.updateSensorAsync(sensorData);
@@ -230,13 +254,17 @@ export async function updateAsync(
  */
 export async function deleteAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
+  const pathParams = (getValidatedContractRequestData<"deleteSensor">(response).params ??
+    request.params) as DeleteSensorPathParams;
   let deleteSensorResponse: SuccessResponse | ErrorResponse;
 
-  const sensorId = parseInt(request.params["sensorId"] ?? "");
+  const sensorIdValue = pathParams["sensorId"];
+  const sensorId =
+    typeof sensorIdValue === "number" ? sensorIdValue : parseInt(sensorIdValue ?? "", 10);
   if (isNaN(sensorId)) {
     deleteSensorResponse = {
       statusCode: 400,

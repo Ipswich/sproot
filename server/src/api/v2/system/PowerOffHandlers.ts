@@ -5,7 +5,7 @@ import { DI_KEYS } from "../../../utils/DependencyInjectionConstants";
 
 export function powerOffHandler(
   request: Request,
-  response: Response,
+  response: Response
 ): SuccessResponse | ErrorResponse {
   const powerOffResponse = {
     statusCode: 200,

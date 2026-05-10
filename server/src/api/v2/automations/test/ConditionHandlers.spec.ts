@@ -35,8 +35,8 @@ describe("ConditionHandlers.ts", () => {
           debug: () => {},
           warn: () => {},
           verbose: () => {},
-          startTimer: () => ({ done: () => {} }) as winston.Profiler,
-        }) as unknown as winston.Logger,
+          startTimer: () => ({ done: () => {} } as winston.Profiler),
+        } as unknown as winston.Logger)
     );
     mockLogger = winston.createLogger();
   });
@@ -1596,64 +1596,13 @@ describe("ConditionHandlers.ts", () => {
       ]);
     });
 
-    it("should return a 400 and details for the invalid request (sensor)", async () => {
+    it("should return a 400 for remaining sensor domain validation", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
-
-      const mockRequest = {
-        app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "automationService":
-                return sinon.createStubInstance(AutomationService);
-            }
-          },
-        },
-        params: {
-          automationId: "1",
-          type: "sensor",
-        },
-        body: {
-          groupType: null,
-          operator: null,
-          comparisonValue: null,
-          sensorId: null,
-          readingType: null,
-        },
-      } as unknown as Request;
-
-      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, [
-        "Invalid or missing condition groupType.",
-        "Invalid or missing operator.",
-        "Invalid or missing comparison value.",
-        "Invalid or missing sensor Id.",
-        "Invalid or missing reading type.",
-      ]);
-    });
-
-    it("should return a 400 and details for the invalid request (output)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationAsync.resolves([
-        { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
-      ]);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sensorList = sinon.createStubInstance(SensorList);
+      sinon.stub(sensorList, "sensors").value({});
       const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
       const mockResponse = {
         locals: {
@@ -1672,18 +1621,21 @@ describe("ConditionHandlers.ts", () => {
                 return sprootDB;
               case "automationService":
                 return automationService;
+              case "sensorList":
+                return sensorList;
             }
           },
         },
         params: {
           automationId: "1",
-          type: "output",
+          type: "sensor",
         },
         body: {
-          groupType: null,
-          operator: null,
-          comparisonValue: null,
-          outputId: null,
+          groupType: "allOf",
+          operator: "equal",
+          comparisonValue: 50,
+          sensorId: 999,
+          readingType: "temperature",
         },
       } as unknown as Request;
 
@@ -1692,12 +1644,58 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, [
-        "Invalid or missing condition groupType.",
-        "Invalid or missing operator.",
-        "Invalid or missing comparison value.",
-        "Invalid or missing output Id.",
+      assert.deepEqual(error.error.details, ["Sensor does not exist."]);
+    });
+
+    it("should return a 400 and details for the invalid request (output)", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
+      sprootDB.getAutomationsAsync.resolves([]);
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const outputList = sinon.createStubInstance(OutputList);
+      sinon.stub(outputList, "outputs").value({});
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationService":
+                return automationService;
+              case "outputList":
+                return outputList;
+            }
+          },
+        },
+        params: {
+          automationId: "1",
+          type: "output",
+        },
+        body: {
+          groupType: "allOf",
+          operator: "equal",
+          comparisonValue: 50,
+          outputId: 999,
+        },
+      } as unknown as Request;
+
+      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
+      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
+      assert.equal(error.error.name, "Bad Request");
+      assert.deepEqual(error.error.details, ["Output does not exist."]);
     });
 
     it("should return a 400 and details for the invalid request (time)", async () => {
@@ -1732,7 +1730,7 @@ describe("ConditionHandlers.ts", () => {
           type: "time",
         },
         body: {
-          groupType: null,
+          groupType: "allOf",
           startTime: "test1",
           endTime: "test",
         },
@@ -1744,7 +1742,6 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
       assert.deepEqual(error.error.details, [
-        "Invalid or missing condition groupType.",
         "Invalid or missing start time.",
         "Invalid or missing end time.",
       ]);
@@ -1782,7 +1779,7 @@ describe("ConditionHandlers.ts", () => {
           type: "weekday",
         },
         body: {
-          groupType: null,
+          groupType: "allOf",
           weekdays: -1,
         },
       } as unknown as Request;
@@ -1793,7 +1790,6 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
       assert.deepEqual(error.error.details, [
-        "Invalid or missing condition groupType.",
         "Invalid or missing weekdays. Weekdays should be a number between 0 and 127.",
       ]);
     });
@@ -1830,7 +1826,7 @@ describe("ConditionHandlers.ts", () => {
           type: "month",
         },
         body: {
-          groupType: null,
+          groupType: "allOf",
           months: -1,
         },
       } as unknown as Request;
@@ -1841,7 +1837,6 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
       assert.deepEqual(error.error.details, [
-        "Invalid or missing condition groupType.",
         "Invalid or missing months. Months should be a number between 0 and 4095.",
       ]);
     });
@@ -1878,7 +1873,7 @@ describe("ConditionHandlers.ts", () => {
           type: "date-range",
         },
         body: {
-          groupType: null,
+          groupType: "allOf",
           months: 16,
         },
       } as unknown as Request;
@@ -1889,7 +1884,6 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.error.name, "Bad Request");
       assert.deepEqual(error.error.details, [
-        "Invalid or missing condition groupType.",
         "Invalid or missing start month.",
         "Invalid or missing start date.",
         "Invalid or missing end month.",
@@ -2416,7 +2410,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
     });
 
-    it("should return a 400 and details for the invalid request (sensor)", async () => {
+    it("should return a 400 for remaining sensor domain validation", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
       const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
@@ -2433,6 +2427,8 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
+      const sensorList = sinon.createStubInstance(SensorList);
+      sinon.stub(sensorList, "sensors").value({ "1": { id: 1 }, "2": { id: 2 } });
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -2449,6 +2445,8 @@ describe("ConditionHandlers.ts", () => {
                 return sprootDB;
               case "automationService":
                 return automationService;
+              case "sensorList":
+                return sensorList;
             }
           },
         },
@@ -2458,10 +2456,10 @@ describe("ConditionHandlers.ts", () => {
           conditionId: "1",
         },
         body: {
-          groupType: "test",
+          groupType: "anyOf",
           operator: "test",
-          comparisonValue: "test",
-          sensorId: "test",
+          comparisonValue: 51,
+          sensorId: 2,
           readingType: "test",
         },
       } as unknown as Request;
@@ -2471,10 +2469,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.deepEqual(error.error.details, [
-        "Invalid or missing condition groupType.",
         "Invalid operator.",
-        "Invalid comparison value.",
-        "Invalid sensor Id.",
         "Invalid reading type.",
       ]);
     });
@@ -2495,6 +2490,8 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
+      const outputList = sinon.createStubInstance(OutputList);
+      sinon.stub(outputList, "outputs").value({ "1": { id: 1 }, "2": { id: 2 } });
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -2511,6 +2508,8 @@ describe("ConditionHandlers.ts", () => {
                 return sprootDB;
               case "automationService":
                 return automationService;
+              case "outputList":
+                return outputList;
             }
           },
         },
@@ -2520,10 +2519,10 @@ describe("ConditionHandlers.ts", () => {
           conditionId: "1",
         },
         body: {
-          groupType: null,
+          groupType: "anyOf",
           operator: "test",
-          comparisonValue: "test",
-          outputId: "test",
+          comparisonValue: 51,
+          outputId: 2,
         },
       } as unknown as Request;
 
@@ -2531,11 +2530,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.statusCode, 400);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.deepEqual(error.error.details, [
-        "Invalid operator.",
-        "Invalid comparison value.",
-        "Invalid output Id.",
-      ]);
+      assert.deepEqual(error.error.details, ["Invalid operator."]);
     });
 
     it("should return a 400 and details for the invalid request (time)", async () => {

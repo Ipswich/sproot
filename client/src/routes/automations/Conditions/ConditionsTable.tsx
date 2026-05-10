@@ -109,7 +109,7 @@ export default function ConditionsTable({
       | SDBTimeCondition
       | SDBWeekdayCondition
       | SDBMonthCondition
-      | SDBDateRangeCondition,
+      | SDBDateRangeCondition
   ): (id: number) => Promise<void> {
     if ("sensorId" in condition && "readingType" in condition) {
       return async (conditionId: number) => {
@@ -261,7 +261,7 @@ function sortTypes(
     | SDBTimeCondition
     | SDBWeekdayCondition
     | SDBMonthCondition
-    | SDBDateRangeCondition,
+    | SDBDateRangeCondition
 ) {
   const rankOf = (
     c:
@@ -270,7 +270,7 @@ function sortTypes(
       | SDBTimeCondition
       | SDBWeekdayCondition
       | SDBMonthCondition
-      | SDBDateRangeCondition,
+      | SDBDateRangeCondition
   ) => {
     if ("sensorId" in c && "readingType" in c) return 0; // Sensor
     if ("outputId" in c) return 1; // Output
@@ -321,7 +321,7 @@ function mapToType(
     | SDBTimeCondition
     | SDBWeekdayCondition
     | SDBMonthCondition
-    | SDBDateRangeCondition,
+    | SDBDateRangeCondition
 ): ReactNode {
   if ("sensorId" in condition && "readingType" in condition) {
     return <SensorConditionRow {...(condition as SDBSensorCondition)} />;
@@ -393,7 +393,7 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
     localStorage.getItem("temperature-useAlternateUnits") == "true"
   ) {
     comparisonValue = parseFloat(
-      String(convertCelsiusToFahrenheit(comparisonValue) ?? 0),
+      String(convertCelsiusToFahrenheit(comparisonValue) ?? 0)
     );
     readingType = "°F";
   }
@@ -408,7 +408,9 @@ function SensorConditionRow(sensorCondition: SDBSensorCondition): ReactNode {
           <Code mx={"-10px"} fw={700}>
             for
           </Code>
-          {` ${sensorCondition.comparisonLookback} ${sensorCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
+          {` ${sensorCondition.comparisonLookback} ${
+            sensorCondition.comparisonLookback === 1 ? " minute" : " minutes"
+          }`}
         </Fragment>
       ) : (
         ""
@@ -428,7 +430,9 @@ function OutputConditionRow(outputCondition: SDBOutputCondition): ReactNode {
           <Code mx={"-10px"} fw={700}>
             for
           </Code>
-          {` ${outputCondition.comparisonLookback} ${outputCondition.comparisonLookback === 1 ? " minute" : " minutes"}`}
+          {` ${outputCondition.comparisonLookback} ${
+            outputCondition.comparisonLookback === 1 ? " minute" : " minutes"
+          }`}
         </Fragment>
       ) : (
         ""
@@ -466,7 +470,7 @@ function WeekdayConditionRow(weekdayCondition: SDBWeekdayCondition): ReactNode {
           "Tuesday",
           "Monday",
           "Sunday",
-        ][i],
+        ][i]
       );
     }
   }
@@ -500,7 +504,7 @@ function MonthConditionRow(monthCondition: SDBMonthCondition): ReactNode {
           "March",
           "February",
           "January",
-        ][i],
+        ][i]
       );
     }
   }

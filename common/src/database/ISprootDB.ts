@@ -45,7 +45,7 @@ interface ISprootDB {
   updateSensorCalibrationAsync(
     sensorId: number,
     lowCalibrationPoint: number,
-    highCalibrationPoint: number,
+    highCalibrationPoint: number
   ): Promise<void>;
   deleteSensorAsync(id: number): Promise<void>;
   addSensorReadingAsync(sensor: ISensorBase): Promise<void>;
@@ -53,14 +53,14 @@ interface ISprootDB {
     sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
-    toIsoString: boolean,
+    toIsoString: boolean
   ): Promise<SDBReading[]>;
   getSensorChartReadingsAsync(
     sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
     bucketMinutes: number,
-    toIsoString: boolean,
+    toIsoString: boolean
   ): Promise<SDBReading[]>;
   getOutputsAsync(): Promise<SDBOutput[]>;
   getOutputAsync(id: number): Promise<SDBOutput[]>;
@@ -82,14 +82,14 @@ interface ISprootDB {
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
-    toIsoString: boolean,
+    toIsoString: boolean
   ): Promise<SDBOutputState[]>;
   getOutputChartStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
     bucketMinutes: number,
-    toIsoString: boolean,
+    toIsoString: boolean
   ): Promise<SDBOutputState[]>;
 
   getSubcontrollersAsync(): Promise<SDBSubcontroller[]>;
@@ -104,7 +104,7 @@ interface ISprootDB {
     name: string,
     operator: AutomationOperator,
     id: number,
-    enabled: boolean,
+    enabled: boolean
   ): Promise<void>;
   deleteAutomationAsync(automationId: number): Promise<void>;
 
@@ -122,7 +122,7 @@ interface ISprootDB {
   addNotificationActionAsync(
     automationId: number,
     subject: string,
-    content: string,
+    content: string
   ): Promise<number>;
   deleteNotificationActionAsync(notificationActionId: number): Promise<void>;
 
@@ -136,7 +136,7 @@ interface ISprootDB {
     comparisonValue: number,
     comparisonLookback: number | null,
     sensorId: number,
-    readingType: string,
+    readingType: string
   ): Promise<number>;
   updateSensorConditionAsync(automationId: number, condition: ISensorCondition): Promise<void>;
   deleteSensorConditionAsync(conditionId: number): Promise<void>;
@@ -148,7 +148,7 @@ interface ISprootDB {
     operator: ConditionOperator,
     comparisonValue: number,
     comparisonLookback: number | null,
-    outputId: number,
+    outputId: number
   ): Promise<number>;
   updateOutputConditionAsync(automationId: number, condition: IOutputCondition): Promise<void>;
   deleteOutputConditionAsync(conditionId: number): Promise<void>;
@@ -158,7 +158,7 @@ interface ISprootDB {
     automationId: number,
     type: ConditionGroupType,
     startTime: string | undefined | null,
-    endTime: string | undefined | null,
+    endTime: string | undefined | null
   ): Promise<number>;
   updateTimeConditionAsync(automationId: number, condition: ITimeCondition): Promise<void>;
   deleteTimeConditionAsync(conditionId: number): Promise<void>;
@@ -167,7 +167,7 @@ interface ISprootDB {
   addWeekdayConditionAsync(
     automationId: number,
     groupType: ConditionGroupType,
-    weekdays: number,
+    weekdays: number
   ): Promise<number>;
   updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
   deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
@@ -176,7 +176,7 @@ interface ISprootDB {
   addMonthConditionAsync(
     automationId: number,
     groupType: ConditionGroupType,
-    months: number,
+    months: number
   ): Promise<number>;
   updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void>;
   deleteMonthConditionAsync(conditionId: number): Promise<void>;
@@ -188,11 +188,11 @@ interface ISprootDB {
     startMonth: number,
     startDate: number,
     endMonth: number,
-    endDate: number,
+    endDate: number
   ): Promise<number>;
   updateDateRangeConditionAsync(
     automationId: number,
-    condition: IDateRangeCondition,
+    condition: IDateRangeCondition
   ): Promise<void>;
   deleteDateRangeConditionAsync(conditionId: number): Promise<void>;
 
@@ -215,7 +215,7 @@ interface ISprootDB {
     port: number,
     user: string,
     password: string,
-    outputFile: string,
+    outputFile: string
   ): Promise<void>;
 
   restoreDatabaseAsync(
@@ -223,7 +223,7 @@ interface ISprootDB {
     port: number,
     user: string,
     password: string,
-    inputFile: string,
+    inputFile: string
   ): Promise<void>;
 
   /* Journals */
@@ -234,7 +234,7 @@ interface ISprootDB {
     description: string | null,
     icon: string | null,
     color: string | null,
-    startDate?: string | null,
+    startDate?: string | null
   ): Promise<number>;
   updateJournalAsync(journal: SDBJournal): Promise<void>;
   deleteJournalAsync(id: number): Promise<void>;
@@ -254,7 +254,7 @@ interface ISprootDB {
     journalId: number,
     name: string | null,
     text: string,
-    createdAt?: string | null,
+    createdAt?: string | null
   ): Promise<number>;
   updateJournalEntryAsync(entry: SDBJournalEntry): Promise<void>;
   deleteJournalEntryAsync(id: number): Promise<void>;
@@ -276,13 +276,13 @@ class MockSprootDB implements ISprootDB {
   async addWeekdayConditionAsync(
     _automationId: number,
     _groupType: ConditionGroupType,
-    _weekdays: number,
+    _weekdays: number
   ): Promise<number> {
     return 0;
   }
   async updateWeekdayConditionAsync(
     _automationId: number,
-    _condition: IWeekdayCondition,
+    _condition: IWeekdayCondition
   ): Promise<void> {
     return;
   }
@@ -296,13 +296,13 @@ class MockSprootDB implements ISprootDB {
   async addMonthConditionAsync(
     _automationId: number,
     _groupType: ConditionGroupType,
-    _months: number,
+    _months: number
   ): Promise<number> {
     return 0;
   }
   async updateMonthConditionAsync(
     _automationId: number,
-    _condition: IMonthCondition,
+    _condition: IMonthCondition
   ): Promise<void> {
     return;
   }
@@ -319,13 +319,13 @@ class MockSprootDB implements ISprootDB {
     _startMonth: number,
     _startDate: number,
     _endMonth: number,
-    _endDate: number,
+    _endDate: number
   ): Promise<number> {
     return 0;
   }
   async updateDateRangeConditionAsync(
     _automationId: number,
-    _condition: IDateRangeCondition,
+    _condition: IDateRangeCondition
   ): Promise<void> {
     return;
   }
@@ -345,7 +345,7 @@ class MockSprootDB implements ISprootDB {
   async addOutputActionAsync(
     _automationId: number,
     _outputId: number,
-    _value: number,
+    _value: number
   ): Promise<number> {
     return 0;
   }
@@ -367,14 +367,14 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
   async getNotificationActionsByAutomationIdAsync(
-    _automationId: number,
+    _automationId: number
   ): Promise<SDBNotificationAction[]> {
     return [];
   }
   async addNotificationActionAsync(
     _automationId: number,
     _subject: string,
-    _content: string,
+    _content: string
   ): Promise<number> {
     return 0;
   }
@@ -389,7 +389,7 @@ class MockSprootDB implements ISprootDB {
     _automationId: number,
     _type: ConditionGroupType,
     _startTime: string | null,
-    _endTime: string | null,
+    _endTime: string | null
   ): Promise<number> {
     return 1;
   }
@@ -401,13 +401,13 @@ class MockSprootDB implements ISprootDB {
   }
   async deleteSensorAutomationConditionsExceptAsync(
     _automationId: number,
-    _exceptConditionIds: number[],
+    _exceptConditionIds: number[]
   ): Promise<void> {
     return;
   }
   async deleteOutputAutomationConditionsExceptAsync(
     _automationId: number,
-    _exceptConditionIds: number[],
+    _exceptConditionIds: number[]
   ): Promise<void> {
     return;
   }
@@ -424,7 +424,7 @@ class MockSprootDB implements ISprootDB {
     _name: string,
     _operator: AutomationOperator,
     _id: number,
-    _enabled: boolean,
+    _enabled: boolean
   ): Promise<void> {
     return;
   }
@@ -441,13 +441,13 @@ class MockSprootDB implements ISprootDB {
     _comparisonValue: number,
     _comparisonLookback: number | null,
     _sensorId: number,
-    _readingType: string,
+    _readingType: string
   ): Promise<number> {
     return 0;
   }
   async updateSensorConditionAsync(
     _automationId: number,
-    _condition: ISensorCondition,
+    _condition: ISensorCondition
   ): Promise<void> {
     return;
   }
@@ -463,13 +463,13 @@ class MockSprootDB implements ISprootDB {
     _operator: ConditionOperator,
     _comparisonValue: number,
     _comparisonLookback: number | null,
-    _outputId: number,
+    _outputId: number
   ): Promise<number> {
     return 0;
   }
   async updateOutputConditionAsync(
     _automationId: number,
-    _condition: IOutputCondition,
+    _condition: IOutputCondition
   ): Promise<void> {
     return;
   }
@@ -481,7 +481,7 @@ class MockSprootDB implements ISprootDB {
     _output: IOutputBase | { id: number },
     _since: Date,
     _minutes: number,
-    _toIsoString: boolean,
+    _toIsoString: boolean
   ): Promise<SDBOutputState[]> {
     return [];
   }
@@ -491,7 +491,7 @@ class MockSprootDB implements ISprootDB {
     since: Date,
     minutes: number,
     _bucketMinutes: number,
-    toIsoString: boolean,
+    toIsoString: boolean
   ): Promise<SDBOutputState[]> {
     return this.getOutputStatesAsync(output, since, minutes, toIsoString);
   }
@@ -559,7 +559,7 @@ class MockSprootDB implements ISprootDB {
   async updateSensorCalibrationAsync(
     _sensorId: number,
     _lowCalibrationPoint: number,
-    _highCalibrationPoint: number,
+    _highCalibrationPoint: number
   ): Promise<void> {
     return;
   }
@@ -588,7 +588,7 @@ class MockSprootDB implements ISprootDB {
     _sensor: ISensorBase,
     _since: Date,
     _minutes?: number,
-    _toIsoString?: boolean,
+    _toIsoString?: boolean
   ): Promise<SDBReading[]> {
     return [];
   }
@@ -598,7 +598,7 @@ class MockSprootDB implements ISprootDB {
     since: Date,
     minutes: number,
     _bucketMinutes: number,
-    toIsoString: boolean,
+    toIsoString: boolean
   ): Promise<SDBReading[]> {
     return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
   }
@@ -670,7 +670,7 @@ class MockSprootDB implements ISprootDB {
     _description: string | null,
     _icon: string | null,
     _color: string | null,
-    _startDate?: string | null,
+    _startDate?: string | null
   ): Promise<number> {
     return 0;
   }
@@ -706,7 +706,7 @@ class MockSprootDB implements ISprootDB {
 
   async getJournalEntriesAsync(
     _journalId: number,
-    _withContent?: boolean,
+    _withContent?: boolean
   ): Promise<SDBJournalEntry[]> {
     return [];
   }
@@ -717,7 +717,7 @@ class MockSprootDB implements ISprootDB {
     _journalId: number,
     _name: string | null,
     _text: string,
-    _createdAt?: string | null,
+    _createdAt?: string | null
   ): Promise<number> {
     return 0;
   }
@@ -760,7 +760,7 @@ class MockSprootDB implements ISprootDB {
     _port: number,
     _user: string,
     _password: string,
-    _outputFile: string,
+    _outputFile: string
   ): Promise<void> {
     return;
   }
@@ -770,7 +770,7 @@ class MockSprootDB implements ISprootDB {
     _port: number,
     _user: string,
     _password: string,
-    _inputFile: string,
+    _inputFile: string
   ): Promise<void> {
     return Promise.resolve();
   }

@@ -10,9 +10,25 @@ import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
 
 describe("OutputActionHandlers.ts tests", () => {
   let mockLogger: winston.Logger;
+  function createMockResponse(validatedRequestData: Record<string, unknown> = {}): Response {
+    const response = {
+      locals: {
+        defaultProperties: {
+          timestamp: new Date().toISOString(),
+          requestId: "1234",
+        },
+      },
+    } as unknown as Response;
+
+    setValidatedContractRequestData(response, validatedRequestData);
+
+    return response;
+  }
+
   before(() => {
     sinon.stub(winston, "createLogger").callsFake(
       () =>
@@ -22,8 +38,8 @@ describe("OutputActionHandlers.ts tests", () => {
           debug: () => {},
           warn: () => {},
           verbose: () => {},
-          startTimer: () => ({ done: () => {} }) as winston.Profiler,
-        }) as unknown as winston.Logger,
+          startTimer: () => ({ done: () => {} } as winston.Profiler),
+        } as unknown as winston.Logger)
     );
     mockLogger = winston.createLogger();
   });
@@ -33,6 +49,33 @@ describe("OutputActionHandlers.ts tests", () => {
   });
 
   describe("getAsync", () => {
+    it("should consume validated output-action query instead of raw Express query", async () => {
+      const mockResponse = createMockResponse({ query: { automationId: "2" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionsByAutomationIdAsync.resolves([
+        { id: 2, automationId: 2, outputId: 2, value: 50 } as SDBOutputAction,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "sprootDB") {
+              return sprootDB;
+            }
+          },
+        },
+        query: {
+          automationId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sprootDB.getOutputActionsByAutomationIdAsync.calledOnceWith(2));
+      assert.isTrue(sprootDB.getOutputActionsAsync.notCalled);
+    });
+
     it("should return a 200 and a list of all OutputActions", async () => {
       const mockResponse = {
         locals: {
@@ -312,6 +355,59 @@ describe("OutputActionHandlers.ts tests", () => {
   });
 
   describe("addAsync", () => {
+    it("should consume validated output-action body instead of raw Express body", async () => {
+      const mockResponse = createMockResponse({
+        body: {
+          automationId: 2,
+          outputId: 2,
+          value: 50,
+        },
+      });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { id: 2, name: "validated", operator: "or" } as SDBAutomation,
+      ]);
+      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.addOutputActionAsync.resolves(99);
+      const outputList = sinon.createStubInstance(OutputList);
+      sinon.stub(outputList, "outputs").value({
+        1: { id: 1, name: "raw", type: "test", isPwm: true },
+        2: { id: 2, name: "validated", type: "test", isPwm: false },
+      });
+      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            switch (key) {
+              case "sprootDB":
+                return sprootDB;
+              case "outputList":
+                return outputList;
+              case "automationService":
+                return automationService;
+            }
+          },
+        },
+        body: {
+          automationId: 1,
+          outputId: 1,
+          value: 0,
+        },
+      } as unknown as Request;
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, {
+        id: 99,
+        automationId: 2,
+        outputId: 2,
+        value: 100,
+      });
+      assert.isTrue(sprootDB.addOutputActionAsync.calledOnceWith(2, 2, 100));
+    });
+
     it("should return a 201 and the created outputAction", async () => {
       const mockResponse = {
         locals: {
@@ -348,7 +444,7 @@ describe("OutputActionHandlers.ts tests", () => {
           },
         },
         body: {
-          automationId: "1",
+          automationId: 1,
           outputId: 1,
           value: 100,
         },
@@ -379,9 +475,11 @@ describe("OutputActionHandlers.ts tests", () => {
       });
     });
 
-    it("should return a 400 and details for the invalid request", async () => {
+    it("should return a 400 for remaining output-action domain validation", async () => {
       const outputList = sinon.createStubInstance(OutputList);
-      sinon.stub(outputList, "outputs").value({ 1: { id: 1, name: "test", type: "test" } });
+      sinon.stub(outputList, "outputs").value({
+        1: { id: 1, name: "test", type: "test", isPwm: true },
+      });
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -405,9 +503,9 @@ describe("OutputActionHandlers.ts tests", () => {
           },
         },
         body: {
-          automationId: "a",
-          outputId: "b",
-          value: "c",
+          automationId: 1,
+          outputId: 1,
+          value: -1,
         },
         originalUrl: "/api/v2/output-action",
       } as unknown as Request;
@@ -417,21 +515,14 @@ describe("OutputActionHandlers.ts tests", () => {
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, [
-        "Invalid or missing automation Id.",
-        "Invalid or missing output Id.",
-        "Invalid or missing value.",
-      ]);
+      assert.deepEqual(error.error.details, ["Value must be between 0 and 100."]);
       assert.equal(error.error.url, mockRequest.originalUrl);
 
-      mockRequest.body.value = -1;
+      mockRequest.body.outputId = 999;
+      mockRequest.body.value = 50;
       const error2 = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error2.statusCode, 400);
-      assert.deepEqual(error2.error.details, [
-        "Invalid or missing automation Id.",
-        "Invalid or missing output Id.",
-        "Value must be between 0 and 100.",
-      ]);
+      assert.equal(error2.statusCode, 404);
+      assert.deepEqual(error2.error.details, ["Output not found."]);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -465,7 +556,7 @@ describe("OutputActionHandlers.ts tests", () => {
           },
         },
         body: {
-          automationId: "1",
+          automationId: 1,
           outputId: 1,
           value: 100,
         },

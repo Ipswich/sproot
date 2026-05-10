@@ -7,11 +7,11 @@ import ZoneAccordion from "./components/ZoneAccordion";
 export default function OutputStates() {
   const [deviceZoneToggleStates, setDeviceZoneToggleStates] = useState(
     JSON.parse(
-      localStorage.getItem(outputStateToggledZonesKey()) ?? "[]",
-    ) as string[],
+      localStorage.getItem(outputStateToggledZonesKey()) ?? "[]"
+    ) as string[]
   );
   const [chartInterval, setChartInterval] = useState(
-    localStorage.getItem("outputChartInterval") ?? "24",
+    localStorage.getItem("outputChartInterval") ?? "24"
   );
   const [segmentedControlValue, setSegmentedControlValue] =
     useState(chartInterval);

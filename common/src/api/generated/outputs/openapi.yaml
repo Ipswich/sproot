@@ -707,9 +707,14 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - controlMode
               properties:
                 controlMode:
                   type: string
+                  enum:
+                    - manual
+                    - automatic
                   example: manual
       responses:
         "200":
@@ -812,6 +817,8 @@ paths:
               properties:
                 value:
                   type: number
+                  minimum: 0
+                  maximum: 100
                   example: 50
       responses:
         "200":

@@ -23,7 +23,7 @@ export async function systemBackupListHandlerAsync(response: Response): Promise<
 
 export async function systemBackupDownloadHandlerAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<void> {
   const fileName = request.params["fileName"];
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
@@ -63,7 +63,7 @@ export async function systemBackupDownloadHandlerAsync(
 
 export async function systemBackupRestoreHandlerAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   // Generate a temp file path
   const tempFile =
@@ -111,7 +111,7 @@ export async function systemBackupRestoreHandlerAsync(
       await Backups.restoreAsync(
         tempFile,
         request.app.get(DI_KEYS.SprootDB) as ISprootDB,
-        request.app.get(DI_KEYS.Logger) as winston.Logger,
+        request.app.get(DI_KEYS.Logger) as winston.Logger
       );
       request.app.get(DI_KEYS.Logger).info(`Restore complete! System exiting now!`);
     });
@@ -136,7 +136,7 @@ export async function systemBackupRestoreHandlerAsync(
 
 export async function systemBackupCreateHandlerAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
   try {
@@ -162,7 +162,7 @@ export async function systemBackupCreateHandlerAsync(
 }
 
 export async function systemBackupCreateStatusHandlerAsync(
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse> {
   return {
     statusCode: 200,

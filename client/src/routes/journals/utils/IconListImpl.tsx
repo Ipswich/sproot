@@ -103,10 +103,8 @@ const SELECT_DATA = ICON_NAMES.map((name) => ({
   label: friendlyName(name),
 }));
 
-export interface IconSelectProps extends Omit<
-  SelectProps,
-  "data" | "itemComponent" | "icon"
-> {
+export interface IconSelectProps
+  extends Omit<SelectProps, "data" | "itemComponent" | "icon"> {
   iconSize?: number;
   iconColor?: string;
 }

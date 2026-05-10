@@ -5,8 +5,24 @@ import { SDBDeviceZone } from "@sproot/sproot-common/dist/database/SDBDeviceZone
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/DeviceZoneHandlers";
 import { assert } from "chai";
 import sinon from "sinon";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
 
 describe("DeviceZoneHandlers.ts", function () {
+  function createMockResponse(validatedRequestData: Record<string, unknown> = {}): Response {
+    const response = {
+      locals: {
+        defaultProperties: {
+          timestamp: new Date().toISOString(),
+          requestId: "1234",
+        },
+      },
+    } as unknown as Response;
+
+    setValidatedContractRequestData(response, validatedRequestData);
+
+    return response;
+  }
+
   describe("getAsync", function () {
     it("should return a 200 and a list of device zones", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
@@ -21,14 +37,7 @@ describe("DeviceZoneHandlers.ts", function () {
         originalUrl: "/api/v2/device-zones",
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = createMockResponse();
 
       const success = (await getAsync(mockRequest, mockResponse)) as SuccessResponse;
 
@@ -49,14 +58,7 @@ describe("DeviceZoneHandlers.ts", function () {
         originalUrl: "/api/v2/device-zones",
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = createMockResponse();
 
       const error = (await getAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -80,14 +82,7 @@ describe("DeviceZoneHandlers.ts", function () {
         originalUrl: "/api/v2/device-zones",
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = createMockResponse({ body: { name: "New Zone" } });
 
       const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
 
@@ -96,7 +91,7 @@ describe("DeviceZoneHandlers.ts", function () {
       assert.equal(success.content!.data.name, "New Zone");
     });
 
-    it("should return a 400 and an error message", async function () {
+    it("should return a 400 for remaining empty-name domain validation", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       const mockRequest = {
         app: {
@@ -108,14 +103,7 @@ describe("DeviceZoneHandlers.ts", function () {
         originalUrl: "/api/v2/device-zones",
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = createMockResponse({ body: { name: "" } });
 
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -137,14 +125,7 @@ describe("DeviceZoneHandlers.ts", function () {
         originalUrl: "/api/v2/device-zones",
       } as unknown as Request;
 
-      const mockResponse = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const mockResponse = createMockResponse({ body: { name: "New Zone" } });
 
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
 
@@ -152,9 +133,61 @@ describe("DeviceZoneHandlers.ts", function () {
       assert.equal(error.error!.name, "Service Unavailable");
       assert.include(error.error!.details![0]!, "Failed to add device zone: Database error");
     });
+
+    it("should consume validated device zone body instead of raw req.body", async function () {
+      const mockSprootDb = sinon.createStubInstance(MockSprootDB);
+      mockSprootDb.addDeviceZoneAsync.resolves(1);
+      const mockRequest = {
+        app: {
+          get: () => mockSprootDb,
+        },
+        body: {
+          name: "Ignored Zone",
+        },
+        originalUrl: "/api/v2/device-zones",
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ body: { name: "Validated Zone" } });
+
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 201);
+      assert.equal(success.content!.data.name, "Validated Zone");
+      assert.isTrue(mockSprootDb.addDeviceZoneAsync.calledOnceWith("Validated Zone"));
+    });
   });
 
   describe("updateAsync", function () {
+    it("should consume validated device zone params and body instead of raw Express data", async function () {
+      const mockSprootDb = sinon.createStubInstance(MockSprootDB);
+      mockSprootDb.getDeviceZonesAsync.resolves([{ id: 2, name: "Old Zone" } as SDBDeviceZone]);
+      mockSprootDb.updateDeviceZoneAsync.resolves();
+      const mockRequest = {
+        app: {
+          get: () => mockSprootDb,
+        },
+        params: {
+          deviceZoneId: "1",
+        },
+        body: {
+          name: "Ignored Zone",
+        },
+        originalUrl: "/api/v2/device-zones/2",
+      } as unknown as Request;
+
+      const mockResponse = createMockResponse({
+        params: { deviceZoneId: "2" },
+        body: { name: "Validated Zone" },
+      });
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content!.data.id, 2);
+      assert.equal(success.content!.data.name, "Validated Zone");
+      assert.isTrue(mockSprootDb.updateDeviceZoneAsync.calledOnce);
+      assert.isTrue(mockSprootDb.updateDeviceZoneAsync.calledWithMatch({ id: 2, name: "Validated Zone" }));
+    });
+
     it("should return a 200 and the updated device zone", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       mockSprootDb.getDeviceZonesAsync.resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]);
@@ -188,7 +221,7 @@ describe("DeviceZoneHandlers.ts", function () {
       assert.equal(success.content!.data.name, "Updated Zone");
     });
 
-    it("should return a 400 and an error message", async function () {
+    it("should return a 400 for remaining empty-name domain validation", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       mockSprootDb.getDeviceZonesAsync.resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]);
       const mockRequest = {
@@ -200,6 +233,36 @@ describe("DeviceZoneHandlers.ts", function () {
         },
         body: {
           name: "",
+        },
+        originalUrl: "/api/v2/device-zones/1",
+      } as unknown as Request;
+
+      const mockResponse = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+
+      const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.error!.name, "Bad Request");
+      assert.include(error.error!.details![0]!, "Device zone name is required.");
+    });
+
+    it("should return a 400 for invalid device zone IDs", async function () {
+      const mockSprootDb = sinon.createStubInstance(MockSprootDB);
+      const mockRequest = {
+        app: {
+          get: () => mockSprootDb,
+        },
+        params: {
+          deviceZoneId: "abc",
+        },
+        body: {
+          name: "Updated Zone",
         },
         originalUrl: "/api/v2/device-zones/abc",
       } as unknown as Request;
@@ -216,7 +279,7 @@ describe("DeviceZoneHandlers.ts", function () {
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 400);
       assert.equal(error.error!.name, "Bad Request");
-      assert.include(error.error!.details![0]!, "Device zone name is required.");
+      assert.include(error.error!.details![0]!, "Valid device zone ID is required.");
     });
 
     it("should return a 404 and an error message", async function () {
@@ -286,6 +349,27 @@ describe("DeviceZoneHandlers.ts", function () {
   });
 
   describe("deleteAsync", function () {
+    it("should consume validated device zone params instead of raw Express data", async function () {
+      const mockSprootDb = sinon.createStubInstance(MockSprootDB);
+      mockSprootDb.deleteDeviceZoneAsync.resolves();
+      const mockRequest = {
+        app: {
+          get: () => mockSprootDb,
+        },
+        params: {
+          deviceZoneId: "1",
+        },
+        originalUrl: "/api/v2/device-zones/2",
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { deviceZoneId: "2" } });
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content!.data, "Device zone with ID 2 successfully deleted.");
+      assert.isTrue(mockSprootDb.deleteDeviceZoneAsync.calledOnceWith(2));
+    });
+
     it("should return a 200 and a success message", async function () {
       const mockSprootDb = sinon.createStubInstance(MockSprootDB);
       mockSprootDb.deleteDeviceZoneAsync.resolves();

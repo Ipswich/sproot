@@ -5,6 +5,13 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { toDbDate } from "../../../../utils/dateUtils";
+import type { operations as OutputContractOperations } from "@sproot/sproot-common/dist/api/generated/outputs/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type SetOutputControlModeRequestBody =
+  OutputContractOperations["setOutputControlMode"]["requestBody"]["content"]["application/json"];
+type SetOutputManualStateRequestBody =
+  OutputContractOperations["setOutputManualState"]["requestBody"]["content"]["application/json"];
 
 /**
  * Possible statusCodes: 200, 400, 404, 409
@@ -14,10 +21,13 @@ import { toDbDate } from "../../../../utils/dateUtils";
  */
 export async function setControlModeAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const outputId = String(request.params["outputId"]);
+  const requestBody = getValidatedContractRequestData<"setOutputControlMode">(response)
+    .body as unknown as SetOutputControlModeRequestBody;
+  const controlMode = requestBody["controlMode"] as ControlMode;
   const output = outputList.outputData[outputId];
   let controlModeResponse: SuccessResponse | ErrorResponse;
 
@@ -49,25 +59,7 @@ export async function setControlModeAsync(
     return controlModeResponse;
   }
 
-  switch (request.body["controlMode"]) {
-    case ControlMode.manual:
-      await outputList.updateControlModeAsync(outputId, ControlMode.manual);
-      break;
-    case ControlMode.automatic:
-      await outputList.updateControlModeAsync(outputId, ControlMode.automatic);
-      break;
-    default:
-      controlModeResponse = {
-        statusCode: 400,
-        error: {
-          name: "Bad Request",
-          url: request.originalUrl,
-          details: ["Invalid control mode."],
-        },
-        ...response.locals["defaultProperties"],
-      };
-      return controlModeResponse;
-  }
+  await outputList.updateControlModeAsync(outputId, controlMode);
 
   controlModeResponse = {
     statusCode: 200,
@@ -88,23 +80,11 @@ export async function setControlModeAsync(
 export async function setManualStateAsync(request: Request, response: Response) {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const outputId = String(request.params["outputId"]);
-  const value = parseInt(request.body["value"]);
+  const requestBody = (getValidatedContractRequestData<"setOutputManualState">(response).body ??
+    {}) as SetOutputManualStateRequestBody;
+  const value = requestBody.value as number;
   const output = outputList.outputData[outputId];
   let manualStateResponse: SuccessResponse | ErrorResponse;
-
-  // Bad value (string, etc.)
-  if (isNaN(value) || value < 0 || value > 100) {
-    manualStateResponse = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: ["Invalid value.", "Value must be a number between 0 and 100."],
-      },
-      ...response.locals["defaultProperties"],
-    };
-    return manualStateResponse;
-  }
 
   // Output not found
   if (!output) {

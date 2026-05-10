@@ -3,13 +3,20 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
+import type { operations as TagContractOperations } from "@sproot/sproot-common/dist/api/generated/tags/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type CreateJournalTagRequestBody =
+  TagContractOperations["createJournalTag"]["requestBody"]["content"]["application/json"];
+type UpdateJournalTagRequestBody =
+  TagContractOperations["updateJournalTag"]["requestBody"]["content"]["application/json"];
 
 /**
  * Possible statusCodes: 200, 503
  */
 export async function getAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
@@ -39,19 +46,21 @@ export async function getAsync(
  */
 export async function addAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const name = req.body["name"] as string | undefined;
-    const color = req.body["color"] as string | null | undefined;
+    const requestBody = getValidatedContractRequestData<"createJournalTag">(res)
+      .body as unknown as CreateJournalTagRequestBody;
+    const name = requestBody.name;
+    const color = requestBody.color;
 
     const badRequestDetails: string[] = [];
-    if (name == null || name === "" || typeof name !== "string" || name.length > 32) {
+    if (name === "" || (name != null && name.length > 32)) {
       badRequestDetails.push("Valid tag name is required.");
     }
-    if (color != null && (typeof color !== "string" || color.length > 32)) {
+    if (color != null && color.length > 32) {
       badRequestDetails.push("Valid tag color is required.");
     }
     if (badRequestDetails.length > 0) {
@@ -67,10 +76,11 @@ export async function addAsync(
       return response;
     }
 
-    const newId = await journalService.journalTagManager.createTagAsync(name!, color ?? null);
+    const tagName = name as string;
+    const newId = await journalService.journalTagManager.createTagAsync(tagName, color ?? null);
     response = {
       statusCode: 201,
-      content: { data: { id: newId, name, color: color ?? null } },
+      content: { data: { id: newId, name: tagName, color: color ?? null } },
       ...res.locals["defaultProperties"],
     };
   } catch (error) {
@@ -92,14 +102,15 @@ export async function addAsync(
  */
 export async function updateAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
     const tagId = parseInt(req.params["tagId"] ?? "", 10);
-    const tag = req.body as Partial<SDBJournalTag>;
-    if (tag == null || isNaN(tagId) || tagId <= 0) {
+    const tag = (getValidatedContractRequestData<"updateJournalTag">(res).body ??
+      {}) as UpdateJournalTagRequestBody;
+    if (isNaN(tagId) || tagId <= 0) {
       response = {
         statusCode: 400,
         error: {
@@ -113,7 +124,7 @@ export async function updateAsync(
     }
 
     const existing = (await journalService.journalTagManager.getTagsAsync()).find(
-      (t) => t.id === tagId,
+      (t) => t.id === tagId
     );
     if (!existing) {
       response = {
@@ -159,7 +170,7 @@ export async function updateAsync(
  */
 export async function deleteAsync(
   req: Request,
-  res: Response,
+  res: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
@@ -179,7 +190,7 @@ export async function deleteAsync(
     }
 
     const existing = (await journalService.journalTagManager.getTagsAsync()).find(
-      (t) => t.id === tagId,
+      (t) => t.id === tagId
     );
     if (!existing) {
       response = {

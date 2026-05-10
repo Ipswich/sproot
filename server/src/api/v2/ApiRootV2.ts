@@ -32,7 +32,7 @@ const swaggerUiOptions = {
 };
 const authenticateMiddleware = authorize(
   process.env["AUTHENTICATION_ENABLED"]!,
-  process.env["JWT_SECRET"]!,
+  process.env["JWT_SECRET"]!
 );
 
 function ApiRootV2(app: Express) {
@@ -41,7 +41,7 @@ function ApiRootV2(app: Express) {
   app.use(
     "/api/v2/docs",
     swaggerUi.serveFiles(openapi_v2_doc, swaggerUiOptions),
-    swaggerUi.setup(openapi_v2_doc),
+    swaggerUi.setup(openapi_v2_doc)
   );
 
   // OpenAPI Validator
@@ -51,7 +51,7 @@ function ApiRootV2(app: Express) {
       validateRequests: true,
       validateResponses: true,
       validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
-    }),
+    })
   );
 
   app.use("/api/v2/", addDefaultProperties);
@@ -63,8 +63,8 @@ function ApiRootV2(app: Express) {
     authenticationRouter(
       process.env["AUTHENTICATION_ENABLED"]!,
       parseInt(process.env["JWT_EXPIRATION"]!),
-      process.env["JWT_SECRET"]!,
-    ),
+      process.env["JWT_SECRET"]!
+    )
   );
 
   // The real data routes
@@ -108,46 +108,12 @@ function ApiRootV2(app: Express) {
         details: err.errors,
       };
 
-      if (
-        process.env["NODE_ENV"] === "test" &&
-        req.originalUrl.startsWith("/api/v2/outputs/chart-data")
-      ) {
-        console.error(
-          "[chart-debug] contract validation error",
-          JSON.stringify({
-            operationId: err.operationId,
-            phase: err.phase,
-            method: req.method,
-            url: req.originalUrl,
-            details: err.errors,
-            stack: err.stack,
-          }),
-        );
-      }
-
       if (err.phase === "request") {
         logger.warn(`Contract validation failed: ${JSON.stringify(validationLogPayload)}`);
       } else {
         logger.error(`Contract validation failed: ${JSON.stringify(validationLogPayload)}`);
       }
     } else if (err.status === 500) {
-      if (
-        process.env["NODE_ENV"] === "test" &&
-        req.originalUrl.startsWith("/api/v2/outputs/chart-data")
-      ) {
-        console.error(
-          "[chart-debug] error middleware",
-          JSON.stringify({
-            method: req.method,
-            url: req.originalUrl,
-            name: err?.name,
-            message: err?.message,
-            status: err?.status ?? 500,
-            stack: err?.stack,
-            errors: err?.errors,
-          }),
-        );
-      }
       logger.error(JSON.stringify(errorResponse));
     }
 

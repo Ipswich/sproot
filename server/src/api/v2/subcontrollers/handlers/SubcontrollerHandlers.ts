@@ -7,10 +7,21 @@ import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcont
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
+import type { operations as SubcontrollerContractOperations } from "@sproot/sproot-common/dist/api/generated/subcontrollers/types";
+import { getValidatedContractRequestData } from "../../../validation/validateRequest";
+
+type CreateSubcontrollerRequestBody =
+  SubcontrollerContractOperations["createSubcontroller"]["requestBody"]["content"]["application/json"];
+type UpdateSubcontrollerPathParams =
+  SubcontrollerContractOperations["updateSubcontroller"]["parameters"]["path"];
+type UpdateSubcontrollerRequestBody =
+  SubcontrollerContractOperations["updateSubcontroller"]["requestBody"]["content"]["application/json"];
+type DeleteSubcontrollerPathParams =
+  SubcontrollerContractOperations["deleteSubcontroller"]["parameters"]["path"];
 
 export async function getSubcontrollerHandlerAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const mdnsService = request.app.get(DI_KEYS.MdnsService) as MdnsService;
@@ -49,7 +60,7 @@ export async function getSubcontrollerHandlerAsync(
 
 export async function getSubcontrollerOnlineAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const mdnsService = request.app.get(DI_KEYS.MdnsService) as MdnsService;
@@ -58,7 +69,7 @@ export async function getSubcontrollerOnlineAsync(
   let hostName: string | undefined;
   try {
     hostName = (await sprootDB.getSubcontrollersAsync()).find(
-      (device) => device.id.toString() === deviceId,
+      (device) => device.id.toString() === deviceId
     )?.hostName;
   } catch {
     return {
@@ -111,30 +122,12 @@ export async function getSubcontrollerOnlineAsync(
 
 export async function postSubcontrollerHandlerAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const { name, hostName } = request.body;
-
-  const errorStrings: string[] = [];
-  if (!name || typeof name !== "string") {
-    errorStrings.push("Invalid or missing 'name' field.");
-  }
-  if (!hostName || typeof hostName !== "string") {
-    errorStrings.push("Invalid or missing 'address' field.");
-  }
-
-  if (errorStrings.length > 0) {
-    return {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: errorStrings,
-      },
-      ...response.locals["defaultProperties"],
-    };
-  }
+  const requestBody = getValidatedContractRequestData<"createSubcontroller">(response)
+    .body as unknown as CreateSubcontrollerRequestBody;
+  const { name, hostName } = requestBody;
 
   try {
     const newDevice = {
@@ -166,11 +159,12 @@ export async function postSubcontrollerHandlerAsync(
 
 export async function patchSubcontrollerHandlerAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const { deviceId } = request.params;
-  const { name } = request.body;
+  const validatedRequest = getValidatedContractRequestData<"updateSubcontroller">(response);
+  const { deviceId } = (validatedRequest.params ?? request.params) as UpdateSubcontrollerPathParams;
+  const { name } = (validatedRequest.body ?? request.body) as UpdateSubcontrollerRequestBody;
 
   const errorStrings: string[] = [];
   const id = parseInt(deviceId ?? "", 10);
@@ -204,7 +198,7 @@ export async function patchSubcontrollerHandlerAsync(
     }
 
     const deviceFromDBs = (await sprootDB.getSubcontrollersAsync()).filter(
-      (device) => device.id === id,
+      (device) => device.id === id
     );
     if (deviceFromDBs.length === 0) {
       return {
@@ -243,10 +237,11 @@ export async function patchSubcontrollerHandlerAsync(
 
 export async function deleteSubcontrollerAsync(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
-  const { deviceId } = request.params;
+  const { deviceId } = (getValidatedContractRequestData<"deleteSubcontroller">(response).params ??
+    request.params) as DeleteSubcontrollerPathParams;
 
   const id = parseInt(deviceId ?? "", 10);
   if (isNaN(id)) {

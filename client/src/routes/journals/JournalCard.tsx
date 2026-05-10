@@ -107,7 +107,9 @@ export default function JournalCard({ journal, tags }: JournalCardProps) {
                     journal.archivedAt
                       ? (() => {
                           try {
-                            return `Archived ${new Date(journal.archivedAt).toLocaleString()}`;
+                            return `Archived ${new Date(
+                              journal.archivedAt
+                            ).toLocaleString()}`;
                           } catch {
                             return "Archived";
                           }
