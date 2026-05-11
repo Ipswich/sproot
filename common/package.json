@@ -8,8 +8,8 @@
     "clean": "rimraf tsconfig.tsbuildinfo && rimraf ./dist",
     "lint": "npx eslint ./src",
     "coverage": "nyc npm run test",
-    "prettier:write": "npx --yes prettier . --write",
-    "prettier:check": "npx --yes prettier . --check",
+    "prettier:write": "npm exec -- prettier . --write",
+    "prettier:check": "npm exec -- prettier . --check",
     "test": "mocha -r ts-node/register --colors ./src/**/*.spec.ts",
     "check": "npm run prettier:check && mocha -r ts-node/register --colors ./src/**/*.spec.ts"
   },
