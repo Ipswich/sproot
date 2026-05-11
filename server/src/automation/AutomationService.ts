@@ -295,13 +295,13 @@ class AutomationService {
     content: string,
   ): Promise<number> {
     const result = await this.#sprootDB.addNotificationActionAsync(automationId, subject, content);
-    this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
+    await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
     return result;
   }
 
   async deleteNotificationActionAsync(notificationActionId: number) {
     await this.#sprootDB.deleteNotificationActionAsync(notificationActionId);
-    this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
+    await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
   }
 
   // Output actions
@@ -311,13 +311,13 @@ class AutomationService {
     value: number,
   ): Promise<number> {
     const result = await this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
-    this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+    await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
     await this.#sprootDB.deleteOutputActionAsync(outputActionId);
-    this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+    await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
   }
 
   #postAutomationChangeFunctionAsync() {

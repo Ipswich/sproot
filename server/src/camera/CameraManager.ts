@@ -174,7 +174,7 @@ class CameraManager {
 
   async updateCameraSettingsAsync(newSettings: SDBCameraSettings): Promise<void> {
     await this.#sprootDB.updateCameraSettingsAsync(newSettings);
-    await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent(newSettings));
+    await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent({}));
   }
 
   async regenerateAsync(): Promise<this> {

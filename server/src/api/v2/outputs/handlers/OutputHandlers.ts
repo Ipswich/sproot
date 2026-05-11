@@ -257,7 +257,7 @@ export async function deleteAsync(
   }
 
   try {
-    await outputList.deleteOutputAsync(outputId.toString());
+    await outputList.deleteOutputAsync(outputId);
 
     deleteOutputResponse = {
       statusCode: 200,

@@ -483,7 +483,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, "Output deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly("1"));
+      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly(1));
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -587,7 +587,7 @@ describe("OutputHandlers.ts tests", () => {
         "Failed to delete output from database.",
         "DB Error",
       ]);
-      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly("1"));
+      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly(1));
     });
   });
 });

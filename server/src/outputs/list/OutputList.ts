@@ -12,12 +12,12 @@ import { OutputListChartData } from "./OutputListChartData";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
-import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
+import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { OutputModifiedEvent } from "../../eventbus/events/outputs/OutputModifiedEvent";
 
 class OutputList implements AsyncDisposable {
-  #eventBus: MemoryEventBus;
+  #eventBus: IEventBus;
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #ESP32_PCA9685: ESP32_PCA9685;
@@ -33,7 +33,7 @@ class OutputList implements AsyncDisposable {
   #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
-    eventBus: MemoryEventBus,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -56,7 +56,7 @@ class OutputList implements AsyncDisposable {
   }
 
   private constructor(
-    eventBus: MemoryEventBus,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -406,8 +406,8 @@ class OutputList implements AsyncDisposable {
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
-  async deleteOutputAsync(outputId: string): Promise<void> {
-    await this.#sprootDB.deleteOutputAsync(parseInt(outputId));
+  async deleteOutputAsync(outputId: number): Promise<void> {
+    await this.#sprootDB.deleteOutputAsync(outputId);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
