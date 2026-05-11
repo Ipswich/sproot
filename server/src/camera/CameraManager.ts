@@ -172,6 +172,11 @@ class CameraManager {
     return this.#streamProxy?.getFrameBuffer() ?? null;
   }
 
+  async updateCameraSettingsAsync(newSettings: SDBCameraSettings): Promise<void> {
+    await this.#sprootDB.updateCameraSettingsAsync(newSettings);
+    await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent(newSettings));
+  }
+
   async regenerateAsync(): Promise<this> {
     if (this.#isUpdating) {
       this.#logger.warn("CameraManager is already updating, skipping regenerateAsync call.");

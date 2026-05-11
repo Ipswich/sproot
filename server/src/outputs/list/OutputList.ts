@@ -395,6 +395,22 @@ class OutputList implements AsyncDisposable {
     }
   }
 
+  async addOutputAsync(output: SDBOutput): Promise<number> {
+    const newOutputId = await this.#sprootDB.addOutputAsync(output);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+    return newOutputId;
+  }
+
+  async updateOutputAsync(output: SDBOutput): Promise<void> {
+    await this.#sprootDB.updateOutputAsync(output);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+  }
+
+  async deleteOutputAsync(outputId: string): Promise<void> {
+    await this.#sprootDB.deleteOutputAsync(parseInt(outputId));
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+  }
+
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {
     const promises = [];
 

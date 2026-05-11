@@ -356,6 +356,21 @@ class SensorList {
     });
   }
 
+  async addSensorAsync(sensor: SDBSensor): Promise<void> {
+    await this.#sprootDB.addSensorAsync(sensor);
+    await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
+  }
+
+  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
+    await this.#sprootDB.updateSensorAsync(sensor);
+    await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
+  }
+
+  async deleteSensorAsync(sensorId: number): Promise<void> {
+    await this.#sprootDB.deleteSensorAsync(sensorId);
+    await this.#eventBus.publishAsync(new SensorModifiedEvent({}));
+  }
+
   async #touchAllSensorsAsync(fn: (arg0: SensorBase) => Promise<void>): Promise<void> {
     const promises = [];
 

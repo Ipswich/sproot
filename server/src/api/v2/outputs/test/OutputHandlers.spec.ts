@@ -4,7 +4,6 @@ import { OutputList } from "../../../../outputs/list/OutputList";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/OutputHandlers";
 
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
@@ -115,13 +114,10 @@ describe("OutputHandlers.ts tests", () => {
   });
 
   describe("addAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addOutputAsync.resolves(1);
       outputList = sinon.createStubInstance(OutputList);
-      outputList.regenerateAsync.resolves();
+      outputList.addOutputAsync.resolves(1);
     });
 
     afterEach(() => {
@@ -153,14 +149,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         body: newOutput,
       } as unknown as Request;
@@ -170,8 +159,18 @@ describe("OutputHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, newOutput);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDB.addOutputAsync.calledOnce);
-      assert.isTrue(outputList.regenerateAsync.calledOnce);
+      assert.isTrue(outputList.addOutputAsync.calledOnce);
+      assert.deepInclude(outputList.addOutputAsync.firstCall.args[0], {
+        model: Models.PCA9685,
+        address: "0x40",
+        name: "test output",
+        pin: "0",
+        isPwm: true,
+        isInvertedPwm: true,
+        color: "#FF0000",
+        automationTimeout: 60,
+        subcontrollerId: null,
+      });
     });
 
     it("should return a 400 and details for each missing required field", async () => {
@@ -179,14 +178,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs",
         params: { outputId: "string" },
@@ -208,8 +200,7 @@ describe("OutputHandlers.ts tests", () => {
         "Missing required field: isInvertedPwm",
         "Missing required field: automationTimeout",
       ]);
-      assert.isTrue(sprootDB.addOutputAsync.notCalled);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.addOutputAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -226,21 +217,14 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs",
         params: { outputId: 1 },
         body: newOutput,
       } as unknown as Request;
 
-      sprootDB.addOutputAsync.rejects(new Error("DB Error"));
+      outputList.addOutputAsync.rejects(new Error("DB Error"));
 
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -249,19 +233,15 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Service Unreachable");
       assert.equal(error.error.url, "/api/v2/outputs");
       assert.deepEqual(error.error["details"], ["Failed to add output to database.", "DB Error"]);
-      assert.isTrue(sprootDB.addOutputAsync.calledOnce);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.addOutputAsync.calledOnce);
     });
   });
 
   describe("updateAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addSensorAsync.resolves();
       outputList = sinon.createStubInstance(OutputList);
-      outputList.regenerateAsync.resolves();
+      outputList.updateOutputAsync.resolves();
     });
 
     afterEach(() => {
@@ -295,14 +275,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         params: { outputId: 1 },
         body: updatedOutput,
@@ -313,8 +286,45 @@ describe("OutputHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, updatedOutput[1]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDB.updateOutputAsync.calledOnce);
-      assert.isTrue(outputList.regenerateAsync.calledOnce);
+      assert.isTrue(outputList.updateOutputAsync.calledOnceWithExactly(updatedOutput[1]));
+    });
+
+    it("should allow nullable relationship fields to be cleared", async () => {
+      const existingOutput = {
+        id: 1,
+        model: Models.PCA9685,
+        address: "0x40",
+        name: "test output",
+        pin: "0",
+        isPwm: true,
+        isInvertedPwm: true,
+        color: "#FF0000",
+        automationTimeout: 60,
+        deviceZoneId: 3,
+        parentOutputId: 7,
+      } as SDBOutput;
+      sinon.stub(outputList, "outputData").value({ 1: existingOutput });
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
+        },
+        params: { outputId: 1 },
+        body: {
+          deviceZoneId: null,
+          parentOutputId: null,
+        },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(outputList.updateOutputAsync.calledOnce);
+      assert.deepEqual(outputList.updateOutputAsync.firstCall.args[0], {
+        ...existingOutput,
+        deviceZoneId: null,
+        parentOutputId: null,
+      });
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -335,14 +345,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs",
         params: {},
@@ -356,8 +359,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs");
       assert.deepEqual(error.error["details"], ["Invalid or missing output ID."]);
-      assert.isTrue(sprootDB.updateOutputAsync.notCalled);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.updateOutputAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -377,14 +379,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs/-1",
         params: { outputId: -1 },
@@ -398,8 +393,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
       assert.deepEqual(error.error["details"], ["Output with ID -1 not found."]);
-      assert.isTrue(sprootDB.updateOutputAsync.notCalled);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.updateOutputAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -419,21 +413,14 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs/1",
         params: { outputId: 1 },
         body: updatedOutput,
       } as unknown as Request;
 
-      sprootDB.updateOutputAsync.rejects(new Error("DB Error"));
+      outputList.updateOutputAsync.rejects(new Error("DB Error"));
 
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -445,19 +432,15 @@ describe("OutputHandlers.ts tests", () => {
         "Failed to update output in database.",
         "DB Error",
       ]);
-      assert.isTrue(sprootDB.updateOutputAsync.calledOnce);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.updateOutputAsync.calledOnceWithExactly(updatedOutput[1]));
     });
   });
 
   describe("deleteAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let outputList: sinon.SinonStubbedInstance<OutputList>;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addSensorAsync.resolves();
       outputList = sinon.createStubInstance(OutputList);
-      outputList.regenerateAsync.resolves();
+      outputList.deleteOutputAsync.resolves();
     });
 
     afterEach(() => {
@@ -490,14 +473,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         params: { outputId: 1 },
       } as unknown as Request;
@@ -507,8 +483,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, "Output deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDB.deleteOutputAsync.calledOnce);
-      assert.isTrue(outputList.regenerateAsync.calledOnce);
+      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly("1"));
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -528,14 +503,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs",
         params: {},
@@ -548,8 +516,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/outputs");
       assert.deepEqual(error.error["details"], ["Invalid or missing output ID."]);
-      assert.isTrue(sprootDB.deleteOutputAsync.notCalled);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.deleteOutputAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -569,14 +536,7 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs/-1",
         params: { outputId: -1 },
@@ -589,8 +549,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/outputs/-1");
       assert.deepEqual(error.error["details"], ["Output with ID -1 not found."]);
-      assert.isTrue(sprootDB.deleteOutputAsync.notCalled);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.deleteOutputAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -610,20 +569,13 @@ describe("OutputHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "outputList":
-                return outputList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "outputList" ? outputList : undefined),
         },
         originalUrl: "/api/v2/outputs/1",
         params: { outputId: 1 },
       } as unknown as Request;
 
-      sprootDB.deleteOutputAsync.rejects(new Error("DB Error"));
+      outputList.deleteOutputAsync.rejects(new Error("DB Error"));
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -635,8 +587,7 @@ describe("OutputHandlers.ts tests", () => {
         "Failed to delete output from database.",
         "DB Error",
       ]);
-      assert.isTrue(sprootDB.deleteOutputAsync.calledOnce);
-      assert.isTrue(outputList.regenerateAsync.notCalled);
+      assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly("1"));
     });
   });
 });
