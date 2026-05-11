@@ -81,11 +81,11 @@ class SensorList {
 
     const sensorModifiedListener = async (_event: SensorModifiedEvent) => {
       await this.regenerateAsync();
-    }
+    };
 
     const sensorModifiedUnsubscribe = this.#eventBus.subscribe(
       Events.SENSOR_MODIFIED_EVENT,
-      sensorModifiedListener
+      sensorModifiedListener,
     );
 
     this.#listenerCleanupFunction = () => {
@@ -256,8 +256,9 @@ class SensorList {
             sensorListChanges = true;
           } catch (err) {
             this.#logger.error(
-              `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id
-              }}. ${err}`
+              `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${
+                this.#sensors[key]?.id
+              }}. ${err}`,
             );
           }
         }

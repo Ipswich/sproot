@@ -10,9 +10,8 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
-import { AutomationService } from "../../automation/AutomationService";
+import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 const mockSprootDB = new MockSprootDB();
-const mockAutomationService = sinon.createStubInstance(AutomationService);
 
 function stubPca9685DutyCycle() {
   return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
@@ -34,8 +33,9 @@ describe("PCA9685.ts tests", function () {
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -104,8 +104,9 @@ describe("PCA9685.ts tests", function () {
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -138,7 +139,8 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = stubPca9685DutyCycle();
-    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const eventBus = new MemoryEventBus(logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,

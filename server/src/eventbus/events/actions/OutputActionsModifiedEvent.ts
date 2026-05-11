@@ -1,7 +1,9 @@
 import { SprootEvent } from "../../IEventBus";
 import { Events } from "../Events";
 
-export class OutputActionsModifiedEvent implements SprootEvent<typeof Events.OUTPUT_ACTION_MODIFIED_EVENT> {
+export class OutputActionsModifiedEvent implements SprootEvent<
+  typeof Events.OUTPUT_ACTION_MODIFIED_EVENT
+> {
   readonly type = Events.OUTPUT_ACTION_MODIFIED_EVENT;
 
   constructor(
@@ -11,5 +13,4 @@ export class OutputActionsModifiedEvent implements SprootEvent<typeof Events.OUT
   ) {}
 }
 
-
-export type OutputActionsModifiedPayload = {}
+export type OutputActionsModifiedPayload = {};

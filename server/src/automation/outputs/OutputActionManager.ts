@@ -76,11 +76,11 @@ export class OutputActionManager implements Disposable {
 
     const outputActionUnsubscribe = this.#eventBus.subscribe(
       Events.OUTPUT_ACTION_MODIFIED_EVENT,
-      actionReloadListener
+      actionReloadListener,
     );
     const automationUnsubscribe = this.#eventBus.subscribe(
       Events.AUTOMATIONS_TRIGGERED_EVENT,
-      automationListener
+      automationListener,
     );
 
     this.#listenerCleanupFunction = () => {
@@ -120,7 +120,7 @@ export class OutputActionManager implements Disposable {
    */
   async #handleAutomationEvent(
     event: AutomationsTriggeredEvent,
-    now: Date = event.occurredAt
+    now: Date = event.occurredAt,
   ): Promise<number | undefined> {
     const nowTimestamp = now.getTime();
 

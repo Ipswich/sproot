@@ -19,18 +19,14 @@ export class NotificationActionManager implements Disposable {
   static async createInstanceAsync(
     sprootDB: ISprootDB,
     eventBus: IEventBus,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<NotificationActionManager> {
     const manager = new NotificationActionManager(sprootDB, eventBus, logger);
     await manager.#reloadActionsAsync();
     return manager;
   }
 
-  private constructor(
-    sprootDB: ISprootDB,
-    eventBus: IEventBus,
-    logger: winston.Logger
-  ) {
+  private constructor(sprootDB: ISprootDB, eventBus: IEventBus, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
     this.#eventBus = eventBus;
     this.#logger = logger;
@@ -47,8 +43,14 @@ export class NotificationActionManager implements Disposable {
       }
     };
 
-    const actionReloadUnsubscribe = this.#eventBus.subscribe(Events.NOTIFICATION_ACTION_MODIFIED_EVENT, actionReloadListener);
-    const automationUnsubscribe = this.#eventBus.subscribe(Events.AUTOMATIONS_TRIGGERED_EVENT, automationListener);
+    const actionReloadUnsubscribe = this.#eventBus.subscribe(
+      Events.NOTIFICATION_ACTION_MODIFIED_EVENT,
+      actionReloadListener,
+    );
+    const automationUnsubscribe = this.#eventBus.subscribe(
+      Events.AUTOMATIONS_TRIGGERED_EVENT,
+      automationListener,
+    );
 
     this.#listenerCleanupFunction = () => {
       actionReloadUnsubscribe();

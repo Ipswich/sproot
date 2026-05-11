@@ -1,14 +1,25 @@
 import { OutputActionManager } from "../OutputActionManager";
 import { OutputAction } from "../OutputAction";
-import { AutomationEvent } from "../../AutomationEvent";
 import { assert } from "chai";
 import sinon from "sinon";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
-import { AutomationService } from "../../AutomationService";
+import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
+import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
+import { OutputActionsModifiedEvent } from "../../../eventbus/events/actions/OutputActionsModifiedEvent";
 
 describe("OutputActionManager.ts tests", () => {
   let mockLogger: winston.Logger;
+
+  const publishAutomationEventAsync = async (
+    eventBus: MemoryEventBus,
+    triggeredAutomations: Map<number, any>,
+    occurredAt = new Date(),
+  ) => {
+    await eventBus.publishAsync(new AutomationsTriggeredEvent(triggeredAutomations, occurredAt));
+    await new Promise((resolve) => setImmediate(resolve));
+  };
+
   before(() => {
     sinon.stub(winston, "createLogger").callsFake(
       () =>
@@ -31,18 +42,7 @@ describe("OutputActionManager.ts tests", () => {
   describe("handleAutomationEvent", () => {
     it("should return the action value with a single automation trigger", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -55,7 +55,7 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         60, // 60 second timeout
@@ -70,27 +70,14 @@ describe("OutputActionManager.ts tests", () => {
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       });
 
-      const event = new AutomationEvent(triggeredAutomations);
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
 
       assert.equal(manager.lastResult, 75);
     });
 
     it("should return 0 (off) when no automations trigger", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -102,34 +89,21 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         60,
       );
 
       // Create event with no triggered automations
-      const event = new AutomationEvent(new Map());
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(eventBus, new Map());
 
       assert.equal(manager.lastResult, 0);
     });
 
     it("should return 0 (off) when collision detected (multiple values)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
 
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
@@ -149,7 +123,7 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         60,
@@ -170,27 +144,14 @@ describe("OutputActionManager.ts tests", () => {
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       });
 
-      const event = new AutomationEvent(triggeredAutomations);
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
 
       assert.equal(manager.lastResult, 0);
     });
 
     it("should return value when multiple automations trigger with same value", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -208,7 +169,7 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         60,
@@ -228,26 +189,14 @@ describe("OutputActionManager.ts tests", () => {
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       });
 
-      const event = new AutomationEvent(triggeredAutomations);
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
+
       assert.equal(manager.lastResult, 50);
     });
 
     it("should respect timeout (not process event too soon)", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -259,7 +208,7 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         60, // 60 second timeout
@@ -273,16 +222,20 @@ describe("OutputActionManager.ts tests", () => {
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       });
 
-      const event = new AutomationEvent(triggeredAutomations);
-
       // First call should succeed
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:00:00Z"),
+      );
       assert.equal(manager.lastResult, 75);
 
       // Second call immediately should be blocked by timeout
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(
+        eventBus,
+        triggeredAutomations,
+        new Date("2026-05-10T10:00:30Z"),
+      );
       assert.isUndefined(manager.lastResult);
     });
   });
@@ -290,18 +243,7 @@ describe("OutputActionManager.ts tests", () => {
   describe("reloadActionsAsync", () => {
     it("should load actions from database", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -313,7 +255,7 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         0,
@@ -327,28 +269,14 @@ describe("OutputActionManager.ts tests", () => {
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       });
 
-      const event = new AutomationEvent(triggeredAutomations);
-
       // Call with value 50
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
       assert.equal(manager.lastResult, 50);
     });
 
     it("should load actions from database on 'OutputActionsUpdated' event", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
           id: 1,
@@ -360,7 +288,7 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         0,
@@ -374,11 +302,8 @@ describe("OutputActionManager.ts tests", () => {
         conditions: { allOf: [], anyOf: [], oneOf: [] },
       });
 
-      const event = new AutomationEvent(triggeredAutomations);
-
       // First call with value 50
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
       assert.equal(manager.lastResult, 50);
 
       // Change the action value
@@ -392,10 +317,9 @@ describe("OutputActionManager.ts tests", () => {
       ]);
 
       // Second call should see updated value
-      mockAutomationService.emit("OutputActionsUpdated");
-      await new Promise((res) => setImmediate(res));
-      mockAutomationService.emit("AutomationsTriggered", event);
-      await new Promise((res) => setImmediate(res));
+      await eventBus.publishAsync(new OutputActionsModifiedEvent({}));
+      await new Promise((resolve) => setImmediate(resolve));
+      await publishAutomationEventAsync(eventBus, triggeredAutomations);
       assert.equal(manager.lastResult, 75);
     });
   });
@@ -403,18 +327,7 @@ describe("OutputActionManager.ts tests", () => {
   describe("createInstanceAsync", () => {
     it("should create manager and load actions", async () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([
-        {
-          id: 1,
-          name: "testAutomation",
-          operator: "or",
-          enabled: true,
-        },
-      ]);
-      const mockAutomationService = await AutomationService.createInstanceAsync(
-        sprootDB,
-        mockLogger,
-      );
+      const eventBus = new MemoryEventBus(mockLogger);
 
       sprootDB.getOutputActionsByOutputIdAsync.resolves([
         {
@@ -434,7 +347,7 @@ describe("OutputActionManager.ts tests", () => {
       using manager = await OutputActionManager.createInstanceAsync(
         1,
         async () => {},
-        mockAutomationService,
+        eventBus,
         sprootDB,
         mockLogger,
         60,

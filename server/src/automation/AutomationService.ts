@@ -31,7 +31,7 @@ class AutomationService {
   static async createInstanceAsync(
     sprootDB: ISprootDB,
     eventBus: IEventBus,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<AutomationService> {
     const service = new AutomationService(sprootDB, eventBus, logger);
     await service.loadAllAutomationsAsync();

@@ -3,8 +3,12 @@ import sinon from "sinon";
 import { SystemStatusMonitor } from "../StatusMonitor";
 import { CameraManager } from "../../camera/CameraManager";
 import winston from "winston";
+import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 describe("ServerStatsManager", () => {
+  const eventBus = new MemoryEventBus(
+    winston.createLogger({ transports: [new winston.transports.Console({ silent: true })] }),
+  );
   let sprootDBMock: any;
   let knexConnectionMock: any;
 
@@ -27,6 +31,7 @@ describe("ServerStatsManager", () => {
 
   it("should return stats with correct properties", async () => {
     await using manager = await CameraManager.createInstanceAsync(
+      eventBus,
       sprootDBMock,
       "test_key",
       winston.createLogger({
@@ -55,6 +60,7 @@ describe("ServerStatsManager", () => {
 
   it("should call getDatabaseSizeAsync", async () => {
     await using manager = await CameraManager.createInstanceAsync(
+      eventBus,
       sprootDBMock,
       "test_key",
       winston.createLogger({

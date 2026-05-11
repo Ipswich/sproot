@@ -16,7 +16,6 @@ import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { OutputModifiedEvent } from "../../eventbus/events/outputs/OutputModifiedEvent";
 
-
 class OutputList implements AsyncDisposable {
   #eventBus: MemoryEventBus;
   #sprootDB: ISprootDB;
@@ -105,14 +104,13 @@ class OutputList implements AsyncDisposable {
     this.chartDataPointInterval = chartDataPointInterval;
     this.#chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
 
-
     const outputModifiedListener = async (_event: OutputModifiedEvent) => {
       await this.regenerateAsync();
-    }
+    };
 
     const outputModifiedUnsubscribe = this.#eventBus.subscribe(
       Events.OUTPUT_MODIFIED_EVENT,
-      outputModifiedListener
+      outputModifiedListener,
     );
 
     this.#listenerCleanupFunction = () => {
@@ -185,8 +183,9 @@ class OutputList implements AsyncDisposable {
         await this.#deleteOutputAsync(this.#outputs[key]!);
       } catch (err) {
         this.#logger.error(
-          `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id
-          }}. ${err}`
+          `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${
+            this.#outputs[key]?.id
+          }}. ${err}`,
         );
       }
     }
@@ -284,8 +283,9 @@ class OutputList implements AsyncDisposable {
 
           if (changeList.length > 0) {
             this.#logger.info(
-              `Updating output { model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id
-              } }. Changes: ${changeList.join(", ")}`
+              `Updating output { model: ${this.#outputs[key]?.model}, id: ${
+                this.#outputs[key]?.id
+              } }. Changes: ${changeList.join(", ")}`,
             );
             outputListChanges = true;
           }
@@ -323,8 +323,9 @@ class OutputList implements AsyncDisposable {
             outputListChanges = true;
           } catch (err) {
             this.#logger.error(
-              `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id
-              }}. ${err}`
+              `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${
+                this.#outputs[key]?.id
+              }}. ${err}`,
             );
           }
         }
@@ -360,8 +361,9 @@ class OutputList implements AsyncDisposable {
         this.#chartData.loadChartData(data, "output");
         this.#chartData.loadChartSeries(series);
         this.#logger.info(
-          `Loaded aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length
-          }`
+          `Loaded aggregate output chart data. Data count: ${
+            Object.keys(this.#chartData.chartData.get()).length
+          }`,
         );
       }
 
@@ -386,8 +388,9 @@ class OutputList implements AsyncDisposable {
         "output",
       );
       this.#logger.info(
-        `Updated aggregate output chart data. Data count: ${Object.keys(this.#chartData.chartData.get()).length
-        }`
+        `Updated aggregate output chart data. Data count: ${
+          Object.keys(this.#chartData.chartData.get()).length
+        }`,
       );
     }
   }

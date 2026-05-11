@@ -57,7 +57,7 @@ export default async function setupAsync(): Promise<Express> {
   const notificationActionManager = await NotificationActionManager.createInstanceAsync(
     sprootDB,
     eventBus,
-    logger
+    logger,
   );
   app.set(DI_KEYS.NotificationActionManager, notificationActionManager);
 

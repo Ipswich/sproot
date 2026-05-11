@@ -36,7 +36,12 @@ class CameraManager {
     interserviceAuthenticationKey: string,
     logger: winston.Logger,
   ): Promise<CameraManager> {
-    const cameraManager = new CameraManager(eventBus, sprootDB, interserviceAuthenticationKey, logger);
+    const cameraManager = new CameraManager(
+      eventBus,
+      sprootDB,
+      interserviceAuthenticationKey,
+      logger,
+    );
     return cameraManager.regenerateAsync();
   }
 
@@ -72,14 +77,14 @@ class CameraManager {
       undefined, // waitForCompletion
       (err: unknown) => this.#logger.error(`Image capture cron error: ${err}`),
     );
-    
+
     const cameraSettingsModifiedListener = async (_event: CameraSettingsModifiedEvent) => {
       await this.regenerateAsync();
-    }
+    };
 
     const cameraSettingsModifiedUnsubscribe = this.#eventBus.subscribe(
       Events.CAMERA_SETTINGS_MODIFIED_EVENT,
-      cameraSettingsModifiedListener
+      cameraSettingsModifiedListener,
     );
 
     this.#listenerCleanupFunction = () => {

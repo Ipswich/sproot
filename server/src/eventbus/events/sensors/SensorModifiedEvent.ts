@@ -11,5 +11,4 @@ export class SensorModifiedEvent implements SprootEvent<typeof Events.SENSOR_MOD
   ) {}
 }
 
-
-export type SensorModifiedPayload = {}
+export type SensorModifiedPayload = {};

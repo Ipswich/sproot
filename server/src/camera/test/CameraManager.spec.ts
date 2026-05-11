@@ -8,6 +8,7 @@ import ImageCapture from "../ImageCapture";
 import StreamProxy from "../StreamProxy";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { TIMELAPSE_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 describe("CameraManager", () => {
   let sandbox: SinonSandbox;
@@ -45,7 +46,13 @@ describe("CameraManager", () => {
       ...overrides,
     };
 
-    const manager = await CameraManager.createInstanceAsync(sprootDB as any, "test-key", logger);
+    const eventBus = new MemoryEventBus(logger);
+    const manager = await CameraManager.createInstanceAsync(
+      eventBus,
+      sprootDB as any,
+      "test-key",
+      logger,
+    );
     createdManagers.push(manager);
     return { manager, sprootDB };
   };
@@ -244,7 +251,13 @@ describe("CameraManager", () => {
       .onSecondCall()
       .resolves([{ ...cameraSettings, enabled: false }]);
 
-    const manager = await CameraManager.createInstanceAsync(sprootDB as any, "test-key", logger);
+    const eventBus = new MemoryEventBus(logger);
+    const manager = await CameraManager.createInstanceAsync(
+      eventBus,
+      sprootDB as any,
+      "test-key",
+      logger,
+    );
     createdManagers.push(manager);
 
     assert.isTrue(startAsyncStub.calledOnce);

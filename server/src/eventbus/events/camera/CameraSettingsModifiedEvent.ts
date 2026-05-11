@@ -1,7 +1,9 @@
 import { SprootEvent } from "../../IEventBus";
 import { Events } from "../Events";
 
-export class CameraSettingsModifiedEvent implements SprootEvent<typeof Events.CAMERA_SETTINGS_MODIFIED_EVENT> {
+export class CameraSettingsModifiedEvent implements SprootEvent<
+  typeof Events.CAMERA_SETTINGS_MODIFIED_EVENT
+> {
   readonly type = Events.CAMERA_SETTINGS_MODIFIED_EVENT;
 
   constructor(
@@ -11,5 +13,4 @@ export class CameraSettingsModifiedEvent implements SprootEvent<typeof Events.CA
   ) {}
 }
 
-
-export type CameraSettingsModifiedPayload = { };
+export type CameraSettingsModifiedPayload = {};

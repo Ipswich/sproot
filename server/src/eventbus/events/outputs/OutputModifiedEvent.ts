@@ -11,5 +11,4 @@ export class OutputModifiedEvent implements SprootEvent<typeof Events.OUTPUT_MOD
   ) {}
 }
 
-
-export type OutputModifiedPayload = {}
+export type OutputModifiedPayload = {};

@@ -5,7 +5,7 @@ export interface IEventBus {
 
   subscribe<T extends keyof EventMap>(
     type: T,
-    handler: (event: SprootEvent<T>) => void
+    handler: (event: SprootEvent<T>) => void,
   ): Unsubscribe;
 }
 
