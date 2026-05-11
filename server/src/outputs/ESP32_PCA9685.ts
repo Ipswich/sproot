@@ -6,13 +6,13 @@ import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDev
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { MdnsService } from "../system/MdnsService";
-import { AutomationService } from "../automation/AutomationService";
+import { IEventBus } from "../eventbus/IEventBus";
 
 class ESP32_PCA9685 extends MultiOutputBase {
   #mdnsService: MdnsService;
 
   constructor(
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -23,7 +23,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
     logger: winston.Logger,
   ) {
     super(
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -61,7 +61,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
     this.outputs[output.id] = await ESP32_PCA9685Output.createInstanceAsync(
       output,
       subcontroller,
-      this.automationService,
+      this.eventBus,
       this.sprootDB,
       this.#mdnsService,
       this.maxCacheSize,
@@ -97,7 +97,7 @@ class ESP32_PCA9685Output extends OutputBase {
   static createInstanceAsync(
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -109,7 +109,7 @@ class ESP32_PCA9685Output extends OutputBase {
     const esp32PCA9685Output = new ESP32_PCA9685Output(
       output,
       subcontroller,
-      automationService,
+      eventBus,
       sprootDB,
       mdnsService,
       maxCacheSize,
@@ -124,7 +124,7 @@ class ESP32_PCA9685Output extends OutputBase {
   private constructor(
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -135,7 +135,7 @@ class ESP32_PCA9685Output extends OutputBase {
   ) {
     super(
       output,
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,

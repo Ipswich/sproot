@@ -6,13 +6,13 @@ import { SDBOutputState } from "@sproot/database/SDBOutputState";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
-import { AutomationService } from "../../automation/AutomationService";
+import { IEventBus } from "../../eventbus/IEventBus";
 
 export abstract class MultiOutputBase implements AsyncDisposable {
   readonly boardRecord: Record<string, any> = {};
   readonly outputs: Record<string, OutputBase> = {};
   readonly usedPins: Record<string, string[] | Record<string, string[]>> = {};
-  protected automationService: AutomationService;
+  protected eventBus: IEventBus;
   protected sprootDB: ISprootDB;
   protected frequency: number;
   protected maxCacheSize: number;
@@ -22,7 +22,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
   protected logger: winston.Logger;
 
   constructor(
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -31,7 +31,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     frequency: number = 800,
     logger: winston.Logger,
   ) {
-    this.automationService = automationService;
+    this.eventBus = eventBus;
     this.sprootDB = sprootDB;
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;

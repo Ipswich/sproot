@@ -1,11 +1,4 @@
-import { EventEmitter } from "events";
-import {
-  OUTPUT_ACTIONS_UPDATED_EVENT,
-  NOTIFICATION_ACTIONS_UPDATED_EVENT,
-  AUTOMATIONS_TRIGGERED_EVENT,
-} from "../utils/EventConstants";
 import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
-import { AutomationEvent } from "./AutomationEvent";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
@@ -20,28 +13,34 @@ import { MonthCondition } from "./conditions/MonthCondition";
 import { DateRangeCondition } from "./conditions/DateRangeCondition";
 import { SensorList } from "../sensors/list/SensorList";
 import winston from "winston";
+import { IEventBus } from "../eventbus/IEventBus";
+import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
+import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
+import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/NotificationActionsModifiedEvent";
 
 /**
  * Central automation evaluator and event emitter.
  * Loads all automations from the database, evaluates them, and emits events when they trigger.
  */
-class AutomationService extends EventEmitter {
+class AutomationService {
   #automations: Map<number, Automation>; // Key: automationId
   #sprootDB: ISprootDB;
+  #eventBus: IEventBus;
   #logger: winston.Logger;
 
   static async createInstanceAsync(
     sprootDB: ISprootDB,
-    logger: winston.Logger,
+    eventBus: IEventBus,
+    logger: winston.Logger
   ): Promise<AutomationService> {
-    const service = new AutomationService(sprootDB, logger);
+    const service = new AutomationService(sprootDB, eventBus, logger);
     await service.loadAllAutomationsAsync();
     return service;
   }
 
-  private constructor(sprootDB: ISprootDB, logger: winston.Logger) {
-    super();
+  private constructor(sprootDB: ISprootDB, eventBus: IEventBus, logger: winston.Logger) {
     this.#sprootDB = sprootDB;
+    this.#eventBus = eventBus;
     this.#automations = new Map();
     this.#logger = logger;
   }
@@ -108,7 +107,7 @@ class AutomationService extends EventEmitter {
       evaluatedAutomations.map((e) => [e.automation.id, e.payload]),
     );
 
-    this.emit(AUTOMATIONS_TRIGGERED_EVENT, new AutomationEvent(triggeredAutomationsMap, now));
+    await this.#eventBus.publishAsync(new AutomationsTriggeredEvent(triggeredAutomationsMap, now));
   }
 
   // CRUD methods
@@ -296,13 +295,13 @@ class AutomationService extends EventEmitter {
     content: string,
   ): Promise<number> {
     const result = await this.#sprootDB.addNotificationActionAsync(automationId, subject, content);
-    this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
+    this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
     return result;
   }
 
   async deleteNotificationActionAsync(notificationActionId: number) {
     await this.#sprootDB.deleteNotificationActionAsync(notificationActionId);
-    this.emit(NOTIFICATION_ACTIONS_UPDATED_EVENT);
+    this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
   }
 
   // Output actions
@@ -312,13 +311,13 @@ class AutomationService extends EventEmitter {
     value: number,
   ): Promise<number> {
     const result = await this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
-    this.emit(OUTPUT_ACTIONS_UPDATED_EVENT);
+    this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
     await this.#sprootDB.deleteOutputActionAsync(outputActionId);
-    this.emit(OUTPUT_ACTIONS_UPDATED_EVENT);
+    this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
   }
 
   #postAutomationChangeFunctionAsync() {

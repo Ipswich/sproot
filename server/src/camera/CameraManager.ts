@@ -8,8 +8,12 @@ import { CronJob } from "cron";
 import winston from "winston";
 import ImageCapture from "./ImageCapture";
 import StreamProxy from "./StreamProxy";
+import { IEventBus } from "../eventbus/IEventBus";
+import { CameraSettingsModifiedEvent } from "../eventbus/events/camera/CameraSettingsModifiedEvent";
+import { Events } from "../eventbus/events/Events";
 
 class CameraManager {
+  #eventBus: IEventBus;
   #sprootDB: ISprootDB;
   #interserviceAuthenticationKey: string;
   #logger: winston.Logger;
@@ -24,21 +28,25 @@ class CameraManager {
 
   #disposed: boolean = false;
   readonly #baseUrl: string = "http://localhost:3002";
+  #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     interserviceAuthenticationKey: string,
     logger: winston.Logger,
   ): Promise<CameraManager> {
-    const cameraManager = new CameraManager(sprootDB, interserviceAuthenticationKey, logger);
+    const cameraManager = new CameraManager(eventBus, sprootDB, interserviceAuthenticationKey, logger);
     return cameraManager.regenerateAsync();
   }
 
   private constructor(
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     interserviceAuthenticationKey: string,
     logger: winston.Logger,
   ) {
+    this.#eventBus = eventBus;
     this.#sprootDB = sprootDB;
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
@@ -64,6 +72,19 @@ class CameraManager {
       undefined, // waitForCompletion
       (err: unknown) => this.#logger.error(`Image capture cron error: ${err}`),
     );
+    
+    const cameraSettingsModifiedListener = async (_event: CameraSettingsModifiedEvent) => {
+      await this.regenerateAsync();
+    }
+
+    const cameraSettingsModifiedUnsubscribe = this.#eventBus.subscribe(
+      Events.CAMERA_SETTINGS_MODIFIED_EVENT,
+      cameraSettingsModifiedListener
+    );
+
+    this.#listenerCleanupFunction = () => {
+      cameraSettingsModifiedUnsubscribe();
+    };
   }
 
   get cameraSettings() {
@@ -209,6 +230,7 @@ class CameraManager {
 
   async [Symbol.asyncDispose](): Promise<void> {
     this.#disposed = true;
+    this.#listenerCleanupFunction();
     await this.#imageCaptureCronJob.stop();
     if (this.#streamProxy) {
       await this.#streamProxy.stopAsync();

@@ -17,8 +17,12 @@ import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { IEventBus } from "../../eventbus/IEventBus";
+import { Events } from "../../eventbus/events/Events";
+import { SensorModifiedEvent } from "../../eventbus/events/sensors/SensorModifiedEvent";
 
 class SensorList {
+  #eventBus: IEventBus;
   #sprootDB: ISprootDB;
   #mdnsService: MdnsService;
   #sensors: Record<string, SensorBase> = {};
@@ -30,8 +34,10 @@ class SensorList {
   #chartData: SensorListChartData;
   #isUpdating: boolean = false;
   #ds18b20UpdateSetInterval: NodeJS.Timeout | null = null;
+  #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -41,6 +47,7 @@ class SensorList {
     logger: winston.Logger,
   ): Promise<SensorList> {
     const sensorList = new SensorList(
+      eventBus,
       sprootDB,
       mdnsService,
       maxCacheSize,
@@ -53,6 +60,7 @@ class SensorList {
   }
 
   private constructor(
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -61,6 +69,7 @@ class SensorList {
     chartDataPointInterval: number,
     logger: winston.Logger,
   ) {
+    this.#eventBus = eventBus;
     this.#sprootDB = sprootDB;
     this.#mdnsService = mdnsService;
     this.#maxCacheSize = maxCacheSize;
@@ -69,6 +78,19 @@ class SensorList {
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
     this.#chartData = new SensorListChartData(maxChartDataSize, chartDataPointInterval);
+
+    const sensorModifiedListener = async (_event: SensorModifiedEvent) => {
+      await this.regenerateAsync();
+    }
+
+    const sensorModifiedUnsubscribe = this.#eventBus.subscribe(
+      Events.SENSOR_MODIFIED_EVENT,
+      sensorModifiedListener
+    );
+
+    this.#listenerCleanupFunction = () => {
+      sensorModifiedUnsubscribe();
+    };
   }
 
   get chartData(): SensorListChartData {
@@ -234,7 +256,8 @@ class SensorList {
             sensorListChanges = true;
           } catch (err) {
             this.#logger.error(
-              `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}. ${err}`,
+              `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id
+              }}. ${err}`
             );
           }
         }
@@ -265,6 +288,7 @@ class SensorList {
   };
 
   async [Symbol.asyncDispose]() {
+    this.#listenerCleanupFunction();
     if (this.#ds18b20UpdateSetInterval) {
       clearInterval(this.#ds18b20UpdateSetInterval);
     }
