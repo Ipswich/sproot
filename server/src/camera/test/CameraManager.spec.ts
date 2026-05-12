@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import type { ReadStream } from "fs";
+import { PassThrough, Readable } from "stream";
 import { describe, it, beforeEach, afterEach } from "mocha";
 import sinon, { type SinonSandbox } from "sinon";
 import winston from "winston";
@@ -219,8 +220,8 @@ describe("CameraManager", () => {
     assert.isTrue(cleanupCameraProcessStub.calledOnce);
   });
 
-  it("does not assign the stream proxy when startup fails", async () => {
-    const warnStub = sandbox.stub(logger, "warn");
+  it("assigns the stream proxy even when startup fails", async () => {
+    const infoStub = sandbox.stub(logger, "info");
     const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(false);
     const reconnectAsyncStub = sandbox.stub(StreamProxy.prototype, "reconnectAsync").resolves(true);
     const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
@@ -228,16 +229,46 @@ describe("CameraManager", () => {
     const manager = (await createManager([cameraSettings])).manager;
 
     assert.isTrue(startAsyncStub.calledOnce);
-    assert.isNull(manager.getFrameBuffer());
-    assert.isFalse(await manager.reconnectLivestreamAsync());
-    assert.isTrue(reconnectAsyncStub.notCalled);
+    assert.isNotNull(manager.getFrameBuffer());
+    assert.isTrue(await manager.reconnectLivestreamAsync());
+    assert.isTrue(reconnectAsyncStub.calledOnce);
 
     await disposeManager(manager);
 
-    assert.isTrue(stopAsyncStub.notCalled);
-    const warnings = warnStub.getCalls().map((call) => String(call.args[0]));
-    assert.isTrue(warnings.includes("CameraManager: stream proxy failed to connect to upstream"));
-    assert.isTrue(warnings.includes("CameraManager: stream proxy not initialized"));
+    assert.isTrue(stopAsyncStub.calledOnce);
+    const infoMessages = infoStub.getCalls().map((call) => String(call.args[0]));
+    assert.isTrue(
+      infoMessages.includes(
+        "CameraManager: stream proxy failed to connect to upstream, retrying...",
+      ),
+    );
+  });
+
+  it("eventually connects to upstream after retrying when initial connection fails", async () => {
+    const clock = sinon.useFakeTimers();
+    const secondUpstreamStream = new PassThrough();
+
+    const fetchStub = sinon.stub(globalThis, "fetch");
+    fetchStub.onFirstCall().rejects(new Error("Connection refused"));
+    fetchStub.onSecondCall().resolves(
+      new Response(Readable.toWeb(secondUpstreamStream) as ReadableStream, {
+        status: 200,
+      }),
+    );
+
+    const manager = (await createManager([cameraSettings])).manager;
+
+    assert.isNotNull(manager.getFrameBuffer());
+    assert.equal(fetchStub.callCount, 1);
+
+    await clock.tickAsync(3000);
+
+    assert.equal(fetchStub.callCount, 2);
+
+    await disposeManager(manager);
+    secondUpstreamStream.destroy();
+    fetchStub.restore();
+    clock.restore();
   });
 
   it("stops the existing stream proxy when the camera is disabled", async () => {

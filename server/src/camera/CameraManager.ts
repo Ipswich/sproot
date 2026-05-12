@@ -213,11 +213,13 @@ class CameraManager {
               upstreamHeaders: this.generateRequestHeaders.bind(this),
             });
             const streamProxyStarted = await streamProxy.startAsync();
+            this.#streamProxy = streamProxy;
             if (streamProxyStarted) {
-              this.#streamProxy = streamProxy;
               this.#logger.info("CameraManager: stream proxy created");
             } else {
-              this.#logger.warn("CameraManager: stream proxy failed to connect to upstream");
+              this.#logger.info(
+                "CameraManager: stream proxy failed to connect to upstream, retrying...",
+              );
             }
           }
 
