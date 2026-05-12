@@ -4,7 +4,6 @@ import { createSandbox, SinonSandbox } from "sinon";
 import { Request, Response } from "express";
 import { getCameraSettings, updateCameraSettingsAsync } from "../handlers/CameraSettingsHandlers";
 import { CameraManager } from "../../../../camera/CameraManager";
-import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
@@ -13,7 +12,6 @@ describe("CameraSettingsHandlers.ts tests", () => {
   let mockRequest: Request;
   let mockResponse: Response;
   let mockCameraManager: Partial<CameraManager>;
-  let mockSprootDB: Partial<ISprootDB>;
 
   beforeEach(() => {
     sandbox = createSandbox();
@@ -36,9 +34,6 @@ describe("CameraSettingsHandlers.ts tests", () => {
         timelapseEndTime: "20:00",
       } as SDBCameraSettings,
       regenerateAsync: sandbox.stub().resolves(),
-    };
-
-    mockSprootDB = {
       updateCameraSettingsAsync: sandbox.stub().resolves(),
     };
 
@@ -46,7 +41,6 @@ describe("CameraSettingsHandlers.ts tests", () => {
       app: {
         get: ((key: string) => {
           if (key === "cameraManager") return mockCameraManager;
-          if (key === "sprootDB") return mockSprootDB;
           return undefined;
         }) as any,
       },
@@ -107,7 +101,12 @@ describe("CameraSettingsHandlers.ts tests", () => {
       assert.equal(result.statusCode, 200);
       assert.equal(result.content!.data.id, 1);
       assert.equal(result.content!.data.name, "Updated Camera");
-      assert.isTrue((mockSprootDB.updateCameraSettingsAsync as any).calledOnce);
+      assert.isTrue(
+        (mockCameraManager.updateCameraSettingsAsync as any).calledOnceWithExactly({
+          ...validSettings,
+          id: 1,
+        }),
+      );
     });
 
     it("should return 200 on null for optional resolution fields", async () => {
@@ -165,6 +164,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
 
       assert.equal(result.statusCode, 400);
       assert.include(result.error.details, "name must be a string between 1 and 64 characters");
+      assert.isTrue((mockCameraManager.updateCameraSettingsAsync as any).notCalled);
     });
 
     it("should return 400 for name too long", async () => {
@@ -174,6 +174,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
 
       assert.equal(result.statusCode, 400);
       assert.include(result.error.details, "name must be a string between 1 and 64 characters");
+      assert.isTrue((mockCameraManager.updateCameraSettingsAsync as any).notCalled);
     });
 
     it("should return 400 for invalid video resolution", async () => {
@@ -254,7 +255,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
 
     it("should return 503 when database update fails", async () => {
       mockRequest.body = validSettings;
-      (mockSprootDB.updateCameraSettingsAsync as any).rejects(new Error("Database error"));
+      (mockCameraManager.updateCameraSettingsAsync as any).rejects(new Error("Database error"));
 
       const result = (await updateCameraSettingsAsync(mockRequest, mockResponse)) as ErrorResponse;
 

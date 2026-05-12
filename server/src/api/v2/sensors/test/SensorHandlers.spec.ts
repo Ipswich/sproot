@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/SensorHandlers";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
@@ -111,13 +110,10 @@ describe("SensorHandlers.ts tests", () => {
   });
 
   describe("addAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addSensorAsync.resolves();
       sensorList = sinon.createStubInstance(SensorList);
-      sensorList.regenerateAsync.resolves();
+      sensorList.addSensorAsync.resolves();
     });
 
     afterEach(() => {
@@ -138,14 +134,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         body: newSensor,
       } as unknown as Request;
@@ -156,8 +145,9 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, { ...newSensor, pin: undefined });
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDB.addSensorAsync.calledOnce);
-      assert.isTrue(sensorList.regenerateAsync.calledOnce);
+      assert.isTrue(sensorList.addSensorAsync.calledOnce);
+      assert.deepInclude(sensorList.addSensorAsync.firstCall.args[0], newSensor);
+      assert.isUndefined(sensorList.addSensorAsync.firstCall.args[0].pin);
 
       newSensor.model = "CAPACITIVE_MOISTURE_SENSOR";
       newSensor.pin = "4";
@@ -166,8 +156,8 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, newSensor);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDB.addSensorAsync.calledTwice);
-      assert.isTrue(sensorList.regenerateAsync.calledTwice);
+      assert.isTrue(sensorList.addSensorAsync.calledTwice);
+      assert.isTrue(sensorList.addSensorAsync.secondCall.calledWithExactly(newSensor));
     });
 
     it("should prefer validated create body data over raw request body", async () => {
@@ -185,8 +175,6 @@ describe("SensorHandlers.ts tests", () => {
         app: {
           get: (_dependency: string) => {
             switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
               case "sensorList":
                 return sensorList;
             }
@@ -222,14 +210,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors",
         body: newSensor,
@@ -242,7 +223,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], ["Missing required field: pin"]);
-      assert.isTrue(sprootDB.addSensorAsync.notCalled);
+      assert.isTrue(sensorList.addSensorAsync.notCalled);
       assert.isTrue(sensorList.regenerateAsync.notCalled);
 
       newSensor.model = "Not A Valid Model" as keyof typeof Models;
@@ -256,8 +237,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(error.error["details"], [
         `Invalid model: Not A Valid Model. Supported models are: ${Object.keys(Models).join(", ")}`,
       ]);
-      assert.isTrue(sprootDB.addSensorAsync.notCalled);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
+      assert.isTrue(sensorList.addSensorAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -270,20 +250,13 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors",
         body: newSensor,
       } as unknown as Request;
 
-      sprootDB.addSensorAsync.rejects(new Error("DB Error"));
+      sensorList.addSensorAsync.rejects(new Error("DB Error"));
 
       const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -296,13 +269,10 @@ describe("SensorHandlers.ts tests", () => {
   });
 
   describe("updateAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.updateSensorAsync.resolves();
       sensorList = sinon.createStubInstance(SensorList);
-      sensorList.regenerateAsync.resolves();
+      sensorList.updateSensorAsync.resolves();
     });
 
     afterEach(() => {
@@ -326,14 +296,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         params: { sensorId: 1 },
         body: updatedSensor,
@@ -344,8 +307,43 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, updatedSensor[1]);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDB.updateSensorAsync.calledOnce);
-      assert.isTrue(sensorList.regenerateAsync.calledOnce);
+      assert.isTrue(sensorList.updateSensorAsync.calledOnceWithExactly(updatedSensor[1]));
+    });
+
+    it("should preserve calibration when null is provided and update other fields", async () => {
+      const existingSensor = {
+        id: 1,
+        name: "test sensor 4",
+        model: "DS18B20",
+        address: "28-00002",
+        color: "#000000",
+        lowCalibrationPoint: 10,
+        highCalibrationPoint: 90,
+        deviceZoneId: 4,
+      } as SDBSensor;
+      sinon.stub(sensorList, "sensorData").value({ 1: existingSensor });
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
+        },
+        params: { sensorId: 1 },
+        body: {
+          lowCalibrationPoint: null,
+          highCalibrationPoint: 75,
+          deviceZoneId: 2,
+        },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sensorList.updateSensorAsync.calledOnce);
+      assert.deepEqual(sensorList.updateSensorAsync.firstCall.args[0], {
+        ...existingSensor,
+        highCalibrationPoint: 75,
+        deviceZoneId: 2,
+      });
     });
 
     it("should prefer validated update params and body over raw request data", async () => {
@@ -377,8 +375,51 @@ describe("SensorHandlers.ts tests", () => {
         app: {
           get: (_dependency: string) => {
             switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
+              case "sensorList":
+                return sensorList;
+            }
+          },
+        },
+        params: { sensorId: "1" },
+        body: { name: "raw update", color: "#123456" },
+      } as unknown as Request;
+
+      const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.equal((success.content?.data as SDBSensor).id, 2);
+      assert.equal((success.content?.data as SDBSensor).name, "validated update");
+      assert.equal((success.content?.data as SDBSensor).color, "#abcdef");
+    });
+
+    it("should prefer validated update params and body over raw request data", async () => {
+      const sensors = {
+        1: {
+          id: 1,
+          name: "original sensor",
+          model: "DS18B20",
+          address: "28-00002",
+          color: "#000000",
+          pin: "1",
+        } as SDBSensor,
+        2: {
+          id: 2,
+          name: "validated target",
+          model: "BME280",
+          address: "0x76",
+          color: "#111111",
+          pin: "2",
+        } as SDBSensor,
+      };
+      sinon.stub(sensorList, "sensorData").value(sensors);
+      const mockResponse = createMockResponse({
+        params: { sensorId: 2 },
+        body: { name: "validated update", color: "#abcdef" },
+      });
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
               case "sensorList":
                 return sensorList;
             }
@@ -409,14 +450,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors",
         params: {},
@@ -430,8 +464,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], ["Invalid or missing sensor ID."]);
-      assert.isTrue(sprootDB.updateSensorAsync.notCalled);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
+      assert.isTrue(sensorList.updateSensorAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -448,14 +481,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors/-1",
         params: { sensorId: -1 },
@@ -469,8 +495,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
       assert.deepEqual(error.error["details"], ["Sensor with ID -1 not found."]);
-      assert.isTrue(sprootDB.updateSensorAsync.notCalled);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
+      assert.isTrue(sensorList.updateSensorAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -487,21 +512,14 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors",
         params: { sensorId: 1 },
         body: updatedSensor,
       } as unknown as Request;
 
-      sprootDB.updateSensorAsync.rejects(new Error("DB Error"));
+      sensorList.updateSensorAsync.rejects(new Error("DB Error"));
 
       const error = (await updateAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -517,13 +535,10 @@ describe("SensorHandlers.ts tests", () => {
   });
 
   describe("deleteAsync", () => {
-    let sprootDB: sinon.SinonStubbedInstance<MockSprootDB>;
     let sensorList: sinon.SinonStubbedInstance<SensorList>;
     beforeEach(() => {
-      sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.deleteSensorAsync.resolves();
       sensorList = sinon.createStubInstance(SensorList);
-      sensorList.regenerateAsync.resolves();
+      sensorList.deleteSensorAsync.resolves();
     });
 
     afterEach(() => {
@@ -547,14 +562,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         params: { sensorId: 1 },
       } as unknown as Request;
@@ -564,8 +572,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(success.content?.data, "Sensor deleted successfully.");
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(sprootDB.deleteSensorAsync.calledOnce);
-      assert.isTrue(sensorList.regenerateAsync.calledOnce);
+      assert.isTrue(sensorList.deleteSensorAsync.calledOnceWithExactly(1));
     });
 
     it("should prefer validated delete params over raw request params", async () => {
@@ -592,8 +599,6 @@ describe("SensorHandlers.ts tests", () => {
         app: {
           get: (_dependency: string) => {
             switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
               case "sensorList":
                 return sensorList;
             }
@@ -604,7 +609,44 @@ describe("SensorHandlers.ts tests", () => {
 
       const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
-      assert.isTrue(sprootDB.deleteSensorAsync.calledOnceWith(2));
+      assert.isTrue(sensorList.deleteSensorAsync.calledOnceWith(2));
+    });
+
+    it("should prefer validated delete params over raw request params", async () => {
+      const deletedSensor = {
+        1: {
+          id: 1,
+          name: "raw target",
+          model: "DS18B20",
+          address: "28-00002",
+          color: "#000000",
+        } as SDBSensor,
+        2: {
+          id: 2,
+          name: "validated target",
+          model: "BME280",
+          address: "0x76",
+          color: "#ffffff",
+        } as SDBSensor,
+      };
+      sinon.stub(sensorList, "sensorData").value(deletedSensor);
+      const mockResponse = createMockResponse({ params: { sensorId: 2 } });
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sensorList":
+                return sensorList;
+            }
+          },
+        },
+        params: { sensorId: "1" },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sensorList.deleteSensorAsync.calledOnceWith(2));
     });
 
     it("should return a 400 and details for the invalid request", async () => {
@@ -621,14 +663,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors",
         params: {},
@@ -641,8 +676,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Bad Request");
       assert.equal(error.error.url, "/api/v2/sensors");
       assert.deepEqual(error.error["details"], ["Invalid or missing sensor ID."]);
-      assert.isTrue(sprootDB.deleteSensorAsync.notCalled);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
+      assert.isTrue(sensorList.deleteSensorAsync.notCalled);
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {
@@ -659,14 +693,7 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors/-1",
         params: { sensorId: -1 },
@@ -679,8 +706,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(error.error.name, "Not Found");
       assert.equal(error.error.url, "/api/v2/sensors/-1");
       assert.deepEqual(error.error["details"], ["Sensor with ID -1 not found."]);
-      assert.isTrue(sprootDB.deleteSensorAsync.notCalled);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
+      assert.isTrue(sensorList.deleteSensorAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {
@@ -697,20 +723,13 @@ describe("SensorHandlers.ts tests", () => {
 
       const mockRequest = {
         app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "sprootDB":
-                return sprootDB;
-              case "sensorList":
-                return sensorList;
-            }
-          },
+          get: (_dependency: string) => (_dependency === "sensorList" ? sensorList : undefined),
         },
         originalUrl: "/api/v2/sensors",
         params: { sensorId: 1 },
       } as unknown as Request;
 
-      sprootDB.deleteSensorAsync.rejects(new Error("DB Error"));
+      sensorList.deleteSensorAsync.rejects(new Error("DB Error"));
 
       const error = (await deleteAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error.statusCode, 503);
@@ -722,8 +741,7 @@ describe("SensorHandlers.ts tests", () => {
         "Failed to delete sensor from database.",
         "DB Error",
       ]);
-      assert.isTrue(sprootDB.deleteSensorAsync.calledOnce);
-      assert.isTrue(sensorList.regenerateAsync.notCalled);
+      assert.isTrue(sensorList.deleteSensorAsync.calledOnceWithExactly(1));
     });
   });
 });

@@ -9,6 +9,7 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../../system/MdnsService";
 import { ESP32_DS18B20 } from "../../ESP32_DS18B20";
+import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 
 const mockSprootDB = new MockSprootDB();
 
@@ -48,6 +49,7 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
     sinon
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor, { address: "28-00001" } as SDBSensor]);
@@ -55,6 +57,7 @@ describe("SensorList.ts tests", function () {
     const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
 
     await using sensorList = await SensorList.createInstanceAsync(
+      eventBus,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -112,12 +115,14 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
     sinon
       .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor]);
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
 
     await using sensorList = await SensorList.createInstanceAsync(
+      eventBus,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -168,12 +173,14 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
 
     const getSensorsStub = sinon
       .stub(MockSprootDB.prototype, "getSensorsAsync")
       .resolves([mockBME280Data]);
     const getAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     await using sensorList = await SensorList.createInstanceAsync(
+      eventBus,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -247,6 +254,7 @@ describe("SensorList.ts tests", function () {
         }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
     sinon.stub(MockSprootDB.prototype, "getSubcontrollersAsync").resolves([
       {
         id: 1,
@@ -265,6 +273,7 @@ describe("SensorList.ts tests", function () {
     const addSensorSpy = sinon.stub(mockSprootDB, "addSensorAsync");
     const ds18b20GetAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     await using sensorList = await SensorList.createInstanceAsync(
+      eventBus,
       mockSprootDB,
       mockMdnsService,
       5,

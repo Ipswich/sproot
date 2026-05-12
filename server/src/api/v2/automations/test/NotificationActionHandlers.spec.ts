@@ -15,10 +15,15 @@ import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
+import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
 import { setValidatedContractRequestData } from "../../../validation/validateRequest";
 
 describe("NotificationActionHandlers.ts tests", () => {
   let mockLogger: winston.Logger;
+
+  const createAutomationServiceAsync = (sprootDB: MockSprootDB) =>
+    AutomationService.createInstanceAsync(sprootDB, new MemoryEventBus(mockLogger), mockLogger);
+
   function createMockResponse(validatedRequestData: Record<string, unknown> = {}): Response {
     const response = {
       locals: {
@@ -430,7 +435,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       sprootDB.getAutomationAsync.resolves([
         { id: 1, name: "test", operator: "or" } as SDBAutomation,
       ]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
       sprootDB.addNotificationActionAsync.resolves(1);
 
@@ -513,7 +518,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -553,7 +558,7 @@ describe("NotificationActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = sinon.createStubInstance(MockSprootDB);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
       sprootDB.getAutomationAsync.rejects(new Error("Database unreachable"));
 
       const mockRequest = {
@@ -600,7 +605,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       sprootDB.getNotificationActionByIdAsync.resolves([
         { id: 1, automationId: 1, subject: "Test", content: "Test" } as SDBNotificationAction,
       ]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
         app: {

@@ -4,14 +4,14 @@ import { OutputBase } from "./base/OutputBase";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import winston from "winston";
-import { AutomationService } from "../automation/AutomationService";
+import { IEventBus } from "../eventbus/IEventBus";
 
 export class OutputGroup extends OutputBase {
   readonly outputs: { [outputId: number]: OutputBase } = {};
 
   static async createInstanceAsync(
     output: SDBOutput,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -21,7 +21,7 @@ export class OutputGroup extends OutputBase {
   ): Promise<OutputGroup> {
     const outputGroup = new OutputGroup(
       output,
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -37,7 +37,7 @@ export class OutputGroup extends OutputBase {
 
   private constructor(
     output: SDBOutput,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -47,7 +47,7 @@ export class OutputGroup extends OutputBase {
   ) {
     super(
       output,
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,

@@ -1,5 +1,4 @@
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
@@ -84,7 +83,6 @@ export async function addAsync(
   request: Request,
   response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const requestBody = (getValidatedContractRequestData<"createSensor">(response).body ??
     request.body) as CreateSensorRequestBody;
@@ -134,8 +132,7 @@ export async function addAsync(
   }
 
   try {
-    await sprootDB.addSensorAsync(newSensor);
-    await sensorList.regenerateAsync();
+    await sensorList.addSensorAsync(newSensor);
 
     addSensorResponse = {
       statusCode: 201,
@@ -168,7 +165,6 @@ export async function updateAsync(
   request: Request,
   response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const validatedRequest = getValidatedContractRequestData<"updateSensor">(response);
   const pathParams = (validatedRequest.params ?? request.params) as UpdateSensorPathParams;
@@ -221,8 +217,7 @@ export async function updateAsync(
   sensorData.deviceZoneId = requestBody["deviceZoneId"] ?? sensorData.deviceZoneId;
 
   try {
-    await sprootDB.updateSensorAsync(sensorData);
-    await sensorList.regenerateAsync();
+    await sensorList.updateSensorAsync(sensorData);
   } catch (error: any) {
     updateSensorResponse = {
       statusCode: 503,
@@ -256,7 +251,6 @@ export async function deleteAsync(
   request: Request,
   response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const pathParams = (getValidatedContractRequestData<"deleteSensor">(response).params ??
     request.params) as DeleteSensorPathParams;
@@ -293,8 +287,7 @@ export async function deleteAsync(
   }
 
   try {
-    await sprootDB.deleteSensorAsync(sensorId);
-    await sensorList.regenerateAsync();
+    await sensorList.deleteSensorAsync(sensorId);
 
     deleteSensorResponse = {
       statusCode: 200,

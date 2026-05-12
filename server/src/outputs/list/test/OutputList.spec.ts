@@ -9,9 +9,8 @@ import winston from "winston";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../../system/MdnsService";
 import { OutputGroup } from "../../OutputGroup";
-import { AutomationService } from "../../../automation/AutomationService";
+import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 const mockSprootDB = new MockSprootDB();
-const mockAutomationService = sinon.createStubInstance(AutomationService);
 
 describe("OutputList.ts tests", function () {
   afterEach(() => {
@@ -106,10 +105,11 @@ describe("OutputList.ts tests", function () {
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
+      const eventBus = new MemoryEventBus(logger);
 
       // Create
       await using outputList = await OutputList.createInstanceAsync(
-        mockAutomationService,
+        eventBus,
         mockSprootDB,
         mockMdnsService,
         5,
@@ -206,9 +206,10 @@ describe("OutputList.ts tests", function () {
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
+      const eventBus = new MemoryEventBus(logger);
 
       await using outputList = await OutputList.createInstanceAsync(
-        mockAutomationService,
+        eventBus,
         mockSprootDB,
         mockMdnsService,
         5,
@@ -343,8 +344,9 @@ describe("OutputList.ts tests", function () {
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
+      const eventBus = new MemoryEventBus(logger);
       await using outputList = await OutputList.createInstanceAsync(
-        mockAutomationService,
+        eventBus,
         mockSprootDB,
         mockMdnsService,
         5,

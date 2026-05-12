@@ -58,15 +58,20 @@ export class StreamProxy {
       this.#logger.info("StreamProxy: connecting to upstream...");
       const connected = await this.#upstreamConnection.connectAsync();
       if (!connected) {
-        this.#logger.error("StreamProxy: failed to connect to upstream camera server");
-        this.#upstreamConnection.disconnect();
+        const attempt = this.#upstreamConnection.getReconnectAttemptCount();
+        if (attempt === 1) {
+          this.#logger.info(
+            "StreamProxy: initial connection failed, will retry connecting to upstream",
+          );
+        } else {
+          this.#logger.info(`StreamProxy: reconnection attempt ${attempt} failed, will retry`);
+        }
         return false;
       }
 
       this.#logger.info("StreamProxy: fully started");
       return true;
     } catch (e) {
-      this.#upstreamConnection.disconnect();
       this.#logger.error(
         `StreamProxy: error starting: ${e instanceof Error ? e.message : String(e)}`
       );

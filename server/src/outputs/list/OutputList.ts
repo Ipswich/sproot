@@ -12,10 +12,12 @@ import { OutputListChartData } from "./OutputListChartData";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
-import { AutomationService } from "../../automation/AutomationService";
+import { IEventBus } from "../../eventbus/IEventBus";
+import { Events } from "../../eventbus/events/Events";
+import { OutputModifiedEvent } from "../../eventbus/events/outputs/OutputModifiedEvent";
 
 class OutputList implements AsyncDisposable {
-  #automationService: AutomationService;
+  #eventBus: IEventBus;
   #sprootDB: ISprootDB;
   #PCA9685: PCA9685;
   #ESP32_PCA9685: ESP32_PCA9685;
@@ -28,9 +30,10 @@ class OutputList implements AsyncDisposable {
   initialCacheLookback: number;
   maxChartDataSize: number;
   chartDataPointInterval: number;
+  #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -40,7 +43,7 @@ class OutputList implements AsyncDisposable {
     logger: winston.Logger
   ): Promise<OutputList> {
     const outputList = new OutputList(
-      automationService,
+      eventBus,
       sprootDB,
       mdnsService,
       maxCacheSize,
@@ -53,7 +56,7 @@ class OutputList implements AsyncDisposable {
   }
 
   private constructor(
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     mdnsService: MdnsService,
     maxCacheSize: number,
@@ -62,11 +65,11 @@ class OutputList implements AsyncDisposable {
     chartDataPointInterval: number,
     logger: winston.Logger
   ) {
-    this.#automationService = automationService;
+    this.#eventBus = eventBus;
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
-      this.#automationService,
+      this.#eventBus,
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -76,7 +79,7 @@ class OutputList implements AsyncDisposable {
       this.#logger
     );
     this.#ESP32_PCA9685 = new ESP32_PCA9685(
-      this.#automationService,
+      this.#eventBus,
       this.#sprootDB,
       mdnsService,
       maxCacheSize,
@@ -87,7 +90,7 @@ class OutputList implements AsyncDisposable {
       this.#logger
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
-      this.#automationService,
+      this.#eventBus,
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -100,6 +103,19 @@ class OutputList implements AsyncDisposable {
     this.maxChartDataSize = maxChartDataSize;
     this.chartDataPointInterval = chartDataPointInterval;
     this.#chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
+
+    const outputModifiedListener = async (_event: OutputModifiedEvent) => {
+      await this.regenerateAsync();
+    };
+
+    const outputModifiedUnsubscribe = this.#eventBus.subscribe(
+      Events.OUTPUT_MODIFIED_EVENT,
+      outputModifiedListener,
+    );
+
+    this.#listenerCleanupFunction = () => {
+      outputModifiedUnsubscribe();
+    };
   }
 
   get outputs(): Record<string, OutputBase> {
@@ -160,6 +176,7 @@ class OutputList implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
+    this.#listenerCleanupFunction();
     this.#logger.debug("Disposing of system OutputList");
     for (const key in this.#outputs) {
       try {
@@ -168,7 +185,7 @@ class OutputList implements AsyncDisposable {
         this.#logger.error(
           `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${
             this.#outputs[key]?.id
-          }}. ${err}`
+          }}. ${err}`,
         );
       }
     }
@@ -270,7 +287,7 @@ class OutputList implements AsyncDisposable {
             this.#logger.info(
               `Updating output { model: ${this.#outputs[key]?.model}, id: ${
                 this.#outputs[key]?.id
-              } }. Changes: ${changeList.join(", ")}`
+              } }. Changes: ${changeList.join(", ")}`,
             );
             outputListChanges = true;
           }
@@ -310,7 +327,7 @@ class OutputList implements AsyncDisposable {
             this.#logger.error(
               `Could not delete output {model: ${this.#outputs[key]?.model}, id: ${
                 this.#outputs[key]?.id
-              }}. ${err}`
+              }}. ${err}`,
             );
           }
         }
@@ -348,7 +365,7 @@ class OutputList implements AsyncDisposable {
         this.#logger.info(
           `Loaded aggregate output chart data. Data count: ${
             Object.keys(this.#chartData.chartData.get()).length
-          }`
+          }`,
         );
       }
 
@@ -375,9 +392,41 @@ class OutputList implements AsyncDisposable {
       this.#logger.info(
         `Updated aggregate output chart data. Data count: ${
           Object.keys(this.#chartData.chartData.get()).length
-        }`
+        }`,
       );
     }
+  }
+
+  async addOutputAsync(output: SDBOutput): Promise<number> {
+    const newOutputId = await this.#sprootDB.addOutputAsync(output);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+    return newOutputId;
+  }
+
+  async updateOutputAsync(output: SDBOutput): Promise<void> {
+    await this.#sprootDB.updateOutputAsync(output);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+  }
+
+  async deleteOutputAsync(outputId: number): Promise<void> {
+    await this.#sprootDB.deleteOutputAsync(outputId);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+  }
+
+  async addOutputAsync(output: SDBOutput): Promise<number> {
+    const newOutputId = await this.#sprootDB.addOutputAsync(output);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+    return newOutputId;
+  }
+
+  async updateOutputAsync(output: SDBOutput): Promise<void> {
+    await this.#sprootDB.updateOutputAsync(output);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
+  }
+
+  async deleteOutputAsync(outputId: number): Promise<void> {
+    await this.#sprootDB.deleteOutputAsync(outputId);
+    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {
@@ -411,7 +460,7 @@ class OutputList implements AsyncDisposable {
       case Models.OUTPUT_GROUP.toLowerCase(): {
         newOutput = await OutputGroup.createInstanceAsync(
           output,
-          this.#automationService,
+          this.#eventBus,
           this.#sprootDB,
           this.maxCacheSize,
           this.initialCacheLookback,

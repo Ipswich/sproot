@@ -7,10 +7,10 @@ import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
-import { AutomationService } from "../../automation/AutomationService";
 import { OutputActionManager } from "../../automation/outputs/OutputActionManager";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { toDbDate } from "../../utils/dateUtils";
+import { IEventBus } from "../../eventbus/IEventBus";
 
 export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly id: number;
@@ -26,7 +26,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   state: OutputState;
   color: string;
   automationTimeout: number;
-  readonly automationService: AutomationService;
+  readonly eventBus: IEventBus;
   readonly sprootDB: ISprootDB;
   readonly logger: winston.Logger;
   #cache: OutputCache;
@@ -39,7 +39,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
 
   constructor(
     sdbOutput: SDBOutput,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -60,7 +60,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.state = new OutputState(sdbOutput.id, sprootDB);
     this.color = sdbOutput.color;
     this.automationTimeout = sdbOutput.automationTimeout;
-    this.automationService = automationService;
+    this.eventBus = eventBus;
     this.sprootDB = sprootDB;
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
@@ -138,7 +138,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.#actionManager = await OutputActionManager.createInstanceAsync(
       this.parentOutputId ?? this.id,
       this.#actionFunctionWrapperAsync.bind(this),
-      this.automationService,
+      this.eventBus,
       this.sprootDB,
       this.logger,
       this.automationTimeout

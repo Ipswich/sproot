@@ -2,7 +2,6 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { Request, Response } from "express";
 import type { operations as OutputContractOperations } from "@sproot/sproot-common/dist/api/generated/outputs/types";
 import { getValidatedContractRequestData } from "../../../validation/validateRequest";
@@ -69,7 +68,6 @@ export async function addAsync(
   request: Request,
   response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const requestBody = getValidatedContractRequestData<"createOutput">(response)
     .body as unknown as CreateOutputRequestBody;
@@ -88,8 +86,7 @@ export async function addAsync(
   } as SDBOutput;
 
   try {
-    const newOutputId = await sprootDB.addOutputAsync(newOutput);
-    await outputList.regenerateAsync();
+    const newOutputId = await outputList.addOutputAsync(newOutput);
     addOutputResponse = {
       statusCode: 201,
       content: {
@@ -121,7 +118,6 @@ export async function updateAsync(
   request: Request,
   response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const pathParams = getValidatedContractRequestData<"updateOutput">(response)
     .params as UpdateOutputPathParams | undefined;
@@ -177,8 +173,7 @@ export async function updateAsync(
       : request.body["parentOutputId"] ?? outputData.parentOutputId;
 
   try {
-    await sprootDB.updateOutputAsync(outputData);
-    await outputList.regenerateAsync();
+    await outputList.updateOutputAsync(outputData);
   } catch (error: any) {
     updateOutputResponse = {
       statusCode: 503,
@@ -206,7 +201,6 @@ export async function deleteAsync(
   request: Request,
   response: Response
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const pathParams = getValidatedContractRequestData<"deleteOutput">(response)
     .params as DeleteOutputPathParams | undefined;
@@ -244,8 +238,7 @@ export async function deleteAsync(
   }
 
   try {
-    await sprootDB.deleteOutputAsync(outputId);
-    await outputList.regenerateAsync();
+    await outputList.deleteOutputAsync(outputId);
 
     deleteOutputResponse = {
       statusCode: 200,

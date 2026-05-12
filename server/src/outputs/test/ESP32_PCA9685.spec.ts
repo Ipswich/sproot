@@ -11,9 +11,8 @@ import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
-import { AutomationService } from "../../automation/AutomationService";
+import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 const mockSprootDB = new MockSprootDB();
-const mockAutomationService = sinon.createStubInstance(AutomationService);
 
 describe("ESP32_PCA9685.ts tests", function () {
   this.beforeEach(() => {
@@ -43,9 +42,10 @@ describe("ESP32_PCA9685.ts tests", function () {
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} } as unknown as winston.Logger));
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
 
     const pca9685 = new ESP32_PCA9685(
-      mockAutomationService,
+      eventBus,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -127,9 +127,10 @@ describe("ESP32_PCA9685.ts tests", function () {
       .stub(winston, "createLogger")
       .callsFake(() => ({ info: () => {}, error: () => {} } as unknown as winston.Logger));
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
 
     const pca9685 = new ESP32_PCA9685(
-      mockAutomationService,
+      eventBus,
       mockSprootDB,
       mockMdnsService,
       5,
@@ -172,6 +173,7 @@ describe("ESP32_PCA9685.ts tests", function () {
         } as unknown as winston.Logger)
     );
     const logger = winston.createLogger();
+    const eventBus = new MemoryEventBus(logger);
 
     let callCount = 0;
     let capturedBody: { value: number } | null = null;
@@ -190,7 +192,7 @@ describe("ESP32_PCA9685.ts tests", function () {
       });
 
     const pca9685 = new ESP32_PCA9685(
-      mockAutomationService,
+      eventBus,
       mockSprootDB,
       mockMdnsService,
       5,

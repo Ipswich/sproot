@@ -6,11 +6,11 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
-import { AutomationService } from "../automation/AutomationService";
+import { IEventBus } from "../eventbus/IEventBus";
 
 class PCA9685 extends MultiOutputBase {
   constructor(
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -20,7 +20,7 @@ class PCA9685 extends MultiOutputBase {
     logger: winston.Logger
   ) {
     super(
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -50,8 +50,8 @@ class PCA9685 extends MultiOutputBase {
     this.outputs[output.id] = await PCA9685Output.createInstanceAsync(
       pca9685Driver as Pca9685Driver, // Type assertion to ensure pca9685Driver is not undefined
       output,
+      this.eventBus,
       this.sprootDB,
-      this.automationService,
       this.maxCacheSize,
       this.initialCacheLookback,
       this.maxChartDataSize,
@@ -84,8 +84,8 @@ class PCA9685Output extends OutputBase {
   static createInstanceAsync(
     pca9685: Pca9685Driver,
     output: SDBOutput,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
-    automationService: AutomationService,
     maxCacheSize: number,
     initialCacheLookback: number,
     maxChartDataSize: number,
@@ -95,7 +95,7 @@ class PCA9685Output extends OutputBase {
     const pca9685Output = new PCA9685Output(
       pca9685,
       output,
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -109,7 +109,7 @@ class PCA9685Output extends OutputBase {
   private constructor(
     pca9685: Pca9685Driver,
     output: SDBOutput,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -119,7 +119,7 @@ class PCA9685Output extends OutputBase {
   ) {
     super(
       output,
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,

@@ -8,7 +8,7 @@ import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDev
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { EventEmitter } from "events";
 import { toDbDate } from "../utils/dateUtils";
-import { AutomationService } from "../automation/AutomationService";
+import { IEventBus } from "../eventbus/IEventBus";
 
 class TPLinkSmartPlugs extends MultiOutputBase {
   readonly plugRegistry = new PlugRegistry();
@@ -16,7 +16,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   #client: Client;
 
   constructor(
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -26,7 +26,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     connectionTimeout: number = 5000
   ) {
     super(
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -119,7 +119,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       this.outputs[output.id] = await TPLinkPlug.createInstanceAsync(
         this.plugRegistry,
         output,
-        this.automationService,
+        this.eventBus,
         this.sprootDB,
         this.maxCacheSize,
         this.initialCacheLookback,
@@ -160,7 +160,7 @@ class TPLinkPlug extends OutputBase {
   static createInstanceAsync(
     plugRegistry: PlugRegistry,
     output: SDBOutput,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -171,7 +171,7 @@ class TPLinkPlug extends OutputBase {
     const tplinkSmartPlug = new TPLinkPlug(
       plugRegistry,
       output,
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
@@ -185,7 +185,7 @@ class TPLinkPlug extends OutputBase {
   private constructor(
     plugRegistry: PlugRegistry,
     output: SDBOutput,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -195,7 +195,7 @@ class TPLinkPlug extends OutputBase {
   ) {
     super(
       output,
-      automationService,
+      eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,

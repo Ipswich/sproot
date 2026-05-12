@@ -1,55 +1,11 @@
 import { CronJob } from "cron";
 import winston from "winston";
-import { CameraManager } from "../camera/CameraManager";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
 import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
 import { Backups } from "./Backups";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { AutomationService } from "../automation/AutomationService";
-
-export function createUpdateDevicesCronJob(
-  cameraManager: CameraManager,
-  sensorList: SensorList,
-  outputList: OutputList,
-  logger: winston.Logger
-) {
-  let running = false;
-  return new CronJob(
-    Constants.CRON.EVERY_SECOND,
-    async function () {
-      if (running) {
-        logger.warn("Device update cron skipped: previous job still running.");
-        return;
-      }
-      running = true;
-      const profiler = logger.startTimer();
-      try {
-        await Promise.all([
-          cameraManager.regenerateAsync(),
-          sensorList.regenerateAsync(),
-          outputList.regenerateAsync(),
-        ]);
-      } catch (e) {
-        logger.error(`Exception in device update loop: ${e}`);
-      } finally {
-        profiler.done({ message: "Device update loop time", level: "debug" });
-        running = false;
-      }
-    },
-    () => {
-      logger.warn("Device update cron stopped.");
-    },
-    true,
-    null,
-    null,
-    null,
-    null,
-    null,
-    true,
-    (err) => logger.error(`Device update cron error: ${err}`)
-  );
-}
 
 export function createAutomationsCronJob(
   automationService: AutomationService,

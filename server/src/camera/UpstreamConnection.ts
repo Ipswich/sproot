@@ -59,6 +59,13 @@ export class UpstreamConnection {
   }
 
   /**
+   * Gets the current reconnect attempt count (0 = never connected, 1 = first attempt, 2+ = retry)
+   */
+  getReconnectAttemptCount(): number {
+    return this.#reconnectAttempt;
+  }
+
+  /**
    * Gets the current connection state
    */
   getState(): UpstreamConnectionState {

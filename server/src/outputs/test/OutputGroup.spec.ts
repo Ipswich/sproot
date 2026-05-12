@@ -10,7 +10,7 @@ import winston from "winston";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
 import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { AutomationService } from "../../automation/AutomationService";
+import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 function stubPca9685DutyCycle() {
   return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
@@ -23,7 +23,7 @@ function stubPca9685DutyCycle() {
 
 describe("OutputGroup.ts tests", function () {
   let logger: winston.Logger;
-  const mockAutomationService = sinon.createStubInstance(AutomationService);
+  let eventBus: MemoryEventBus;
 
   this.beforeEach(() => {
     sinon
@@ -32,6 +32,7 @@ describe("OutputGroup.ts tests", function () {
         () => ({ info: () => {}, error: () => {}, verbose: () => {} }) as unknown as winston.Logger,
       );
     logger = winston.createLogger({ silent: true });
+    eventBus = new MemoryEventBus(logger);
   });
   afterEach(() => {
     sinon.restore();
@@ -56,10 +57,10 @@ describe("OutputGroup.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     stubPca9685DutyCycle();
 
-    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
-      mockAutomationService,
+      eventBus,
       mockSprootDB,
       5,
       5,
@@ -155,10 +156,10 @@ describe("OutputGroup.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     stubPca9685DutyCycle();
 
-    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
-      mockAutomationService,
+      eventBus,
       mockSprootDB,
       5,
       5,
@@ -285,10 +286,10 @@ describe("OutputGroup.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     stubPca9685DutyCycle();
 
-    const pca9685 = new PCA9685(mockAutomationService, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
     await using outputGroup = await OutputGroup.createInstanceAsync(
       outputGroupSettings,
-      mockAutomationService,
+      eventBus,
       mockSprootDB,
       5,
       5,

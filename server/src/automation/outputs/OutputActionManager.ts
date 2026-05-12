@@ -1,18 +1,15 @@
 import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
-import { AutomationEvent } from "../AutomationEvent";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { AutomationService } from "../AutomationService";
 import { OutputAction } from "./OutputAction";
 import winston from "winston";
-import {
-  OUTPUT_ACTIONS_UPDATED_EVENT,
-  AUTOMATIONS_TRIGGERED_EVENT,
-} from "../../utils/EventConstants";
+import { IEventBus } from "../../eventbus/IEventBus";
+import { Events } from "../../eventbus/events/Events";
+import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
 
 export class OutputActionManager implements Disposable {
   #outputId: number;
-  #automationService: AutomationService;
   #sprootDB: ISprootDB;
+  #eventBus: IEventBus;
   #logger: winston.Logger;
   #lastRunAt: number | null = null;
   #lastActionValue: number | undefined = undefined;
@@ -25,7 +22,7 @@ export class OutputActionManager implements Disposable {
   static async createInstanceAsync(
     outputId: number,
     actionFunction: (result: number | undefined) => Promise<void>,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     logger: winston.Logger,
     automationTimeout: number
@@ -33,7 +30,7 @@ export class OutputActionManager implements Disposable {
     const manager = new OutputActionManager(
       outputId,
       actionFunction,
-      automationService,
+      eventBus,
       sprootDB,
       logger,
       automationTimeout
@@ -45,14 +42,14 @@ export class OutputActionManager implements Disposable {
   private constructor(
     outputId: number,
     actionFunction: (result: number | undefined) => Promise<void>,
-    automationService: AutomationService,
+    eventBus: IEventBus,
     sprootDB: ISprootDB,
     logger: winston.Logger,
     automationTimeout: number
   ) {
     this.#outputId = outputId;
     this.#triggeredActionFunction = actionFunction;
-    this.#automationService = automationService;
+    this.#eventBus = eventBus;
     this.#sprootDB = sprootDB;
     this.#logger = logger;
     this.#automationTimeout = automationTimeout;
@@ -61,7 +58,7 @@ export class OutputActionManager implements Disposable {
       await this.#reloadActionsAsync();
     };
 
-    const automationListener = async (event: AutomationEvent) => {
+    const automationListener = async (event: AutomationsTriggeredEvent) => {
       this.#pendingAction = this.#pendingAction
         .then(async () => {
           const result = await this.#handleAutomationEvent(event);
@@ -77,12 +74,18 @@ export class OutputActionManager implements Disposable {
         });
     };
 
-    this.#automationService.on(OUTPUT_ACTIONS_UPDATED_EVENT, actionReloadListener);
-    this.#automationService.on(AUTOMATIONS_TRIGGERED_EVENT, automationListener);
+    const outputActionUnsubscribe = this.#eventBus.subscribe(
+      Events.OUTPUT_ACTION_MODIFIED_EVENT,
+      actionReloadListener,
+    );
+    const automationUnsubscribe = this.#eventBus.subscribe(
+      Events.AUTOMATIONS_TRIGGERED_EVENT,
+      automationListener,
+    );
 
     this.#listenerCleanupFunction = () => {
-      this.#automationService.off(OUTPUT_ACTIONS_UPDATED_EVENT, actionReloadListener);
-      this.#automationService.off(AUTOMATIONS_TRIGGERED_EVENT, automationListener);
+      outputActionUnsubscribe();
+      automationUnsubscribe();
     };
   }
 
@@ -116,8 +119,8 @@ export class OutputActionManager implements Disposable {
    * @returns The value to set, or undefined if no action should be taken (collision, no action, or timeout)
    */
   async #handleAutomationEvent(
-    event: AutomationEvent,
-    now: Date = event.timestamp
+    event: AutomationsTriggeredEvent,
+    now: Date = event.occurredAt,
   ): Promise<number | undefined> {
     const nowTimestamp = now.getTime();
 
@@ -139,8 +142,8 @@ export class OutputActionManager implements Disposable {
 
     // Loop through all actions and check if their automation was triggered
     for (const action of this.#actionMap.values()) {
-      if (event.triggeredAutomations.has(action.automationId)) {
-        const payload = event.triggeredAutomations.get(action.automationId);
+      if (event.payload.has(action.automationId)) {
+        const payload = event.payload.get(action.automationId);
         if (!payload) {
           continue;
         }
