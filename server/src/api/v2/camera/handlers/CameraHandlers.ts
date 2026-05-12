@@ -58,7 +58,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
       }
 
       logger.warn(
-        `StreamHandler: client ${clientId} exceeded pending buffer limit (${pendingBytes} bytes), disconnecting`
+        `StreamHandler: client ${clientId} exceeded pending buffer limit (${pendingBytes} bytes), disconnecting`,
       );
       onClientDisconnect();
       return false;
@@ -175,7 +175,7 @@ export async function streamHandlerAsync(request: Request, response: Response): 
  */
 export async function clearAllImagesHandlerAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
@@ -246,7 +246,7 @@ export async function getLatestImageAsync(request: Request, response: Response):
  */
 export async function reconnectLivestreamAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
   const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
   const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;

@@ -6,7 +6,7 @@ const TIMESTAMP_REGEX = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
 function isBetweenTimeStamp(
   startTime?: string | null,
   endTime?: string | null,
-  now: Date = new Date()
+  now: Date = new Date(),
 ): boolean {
   if (!startTime || !endTime) {
     return false;
@@ -86,7 +86,7 @@ function isBetweenMonthDate(
   startDate: number,
   endMonth: number,
   endDate: number,
-  now: Date = new Date()
+  now: Date = new Date(),
 ): boolean {
   const current = normalize(now.getMonth() + 1, now.getDate());
   const start = normalize(startMonth, startDate);

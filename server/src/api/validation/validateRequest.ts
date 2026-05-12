@@ -34,14 +34,14 @@ export type ContractValidatedRequestData<OperationId extends ContractOperationId
 
 export default function validateRequest(
   operationId: ContractOperationId,
-  request: Request
+  request: Request,
 ): RawValidatedRequestData {
   return validateRequestAgainstContract(getOperationContract(operationId), request);
 }
 
 export function validateRequestAgainstContract(
   contract: OperationContract,
-  request: Request
+  request: Request,
 ): RawValidatedRequestData {
   const validated: RawValidatedRequestData = {};
 
@@ -54,7 +54,7 @@ export function validateRequestAgainstContract(
     contract,
     "query",
     contract.request.query,
-    request.query as Record<string, unknown>
+    request.query as Record<string, unknown>,
   );
   if (query) {
     validated.query = query;
@@ -68,7 +68,7 @@ export function validateRequestAgainstContract(
         contract.operationId,
         "request",
         "body",
-        bodyResult.error
+        bodyResult.error,
       );
     }
 
@@ -79,7 +79,7 @@ export function validateRequestAgainstContract(
     contract,
     "headers",
     contract.request.header,
-    request.headers as Record<string, unknown>
+    request.headers as Record<string, unknown>,
   );
   if (headers) {
     validated.headers = headers;
@@ -90,22 +90,23 @@ export function validateRequestAgainstContract(
 
 export function setValidatedContractRequestData(
   response: Response,
-  validatedRequestData: RawValidatedRequestData
+  validatedRequestData: RawValidatedRequestData,
 ): void {
   response.locals[VALIDATED_CONTRACT_REQUEST_DATA_KEY] = validatedRequestData;
 }
 
 export function getValidatedContractRequestData<OperationId extends ContractOperationId>(
-  response: Response
+  response: Response,
 ): ContractValidatedRequestData<OperationId> {
-  return (response.locals[VALIDATED_CONTRACT_REQUEST_DATA_KEY] ?? {}) as ContractValidatedRequestData<OperationId>;
+  return (response.locals[VALIDATED_CONTRACT_REQUEST_DATA_KEY] ??
+    {}) as ContractValidatedRequestData<OperationId>;
 }
 
 function validateParameterGroup(
   contract: OperationContract,
   source: "params" | "query" | "headers",
   schemas: readonly OperationParameterSchema[],
-  values: Record<string, unknown>
+  values: Record<string, unknown>,
 ): Record<string, unknown> | undefined {
   if (schemas.length === 0) {
     return undefined;
@@ -120,7 +121,7 @@ function validateParameterGroup(
       contract.operationId,
       "request",
       source === "params" ? "params" : source === "query" ? "query" : "headers",
-      parseResult.error
+      parseResult.error,
     );
   }
 
@@ -128,7 +129,7 @@ function validateParameterGroup(
 }
 
 function composeParameterGroupSchema(
-  schemas: readonly OperationParameterSchema[]
+  schemas: readonly OperationParameterSchema[],
 ): z.ZodObject<z.ZodRawShape> {
   const shape: z.ZodRawShape = {};
 
@@ -142,7 +143,7 @@ function composeParameterGroupSchema(
 function normalizeParameterGroupValues(
   schemas: readonly OperationParameterSchema[],
   values: Record<string, unknown>,
-  caseInsensitive: boolean
+  caseInsensitive: boolean,
 ): Record<string, unknown> {
   const normalizedValues: Record<string, unknown> = {};
 
@@ -157,7 +158,7 @@ function normalizeParameterGroupValues(
 function getNamedValue(
   values: Record<string, unknown>,
   key: string,
-  caseInsensitive: boolean
+  caseInsensitive: boolean,
 ): unknown {
   if (!caseInsensitive) {
     return values[key];

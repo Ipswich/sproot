@@ -131,7 +131,7 @@ export default function EditJournalModal({
       availableTags,
       tags ?? [],
       tagAdds,
-      tagRemoves
+      tagRemoves,
     );
     setLocalTags(newLocalTags);
     setTagAdds(newTagAdds);
@@ -141,15 +141,15 @@ export default function EditJournalModal({
   const save = async () => {
     setIsUpdating(true);
     const updated = await updateMutation.mutateAsync(
-      form.values as JournalForm
+      form.values as JournalForm,
     );
     // after journal update, apply staged tag changes
     try {
       const addPromises = tagAdds.map((tid) =>
-        addTagToJournalAsync(journal.id, tid)
+        addTagToJournalAsync(journal.id, tid),
       );
       const removePromises = tagRemoves.map((tid) =>
-        removeTagFromJournalAsync(journal.id, tid)
+        removeTagFromJournalAsync(journal.id, tid),
       );
       await Promise.allSettled([...addPromises, ...removePromises]);
       // ensure journals list is refreshed so parent and cards show latest tags
@@ -262,8 +262,8 @@ export default function EditJournalModal({
                       [...availableTags, ...(localTags ?? [])].map((t) => [
                         t.id,
                         t,
-                      ])
-                    ).values()
+                      ]),
+                    ).values(),
                   )
                 }
                 value={(localTags ?? []).map((t) => `tag:${t.id}`)}
@@ -299,7 +299,7 @@ export default function EditJournalModal({
                       ? (() => {
                           try {
                             return `Archived ${new Date(
-                              journal.archivedAt
+                              journal.archivedAt,
                             ).toLocaleString()}`;
                           } catch {
                             return "Archived";
@@ -307,8 +307,8 @@ export default function EditJournalModal({
                         })()
                       : "Will be archived on save"
                     : journal.archived
-                    ? "Will be unarchived on save"
-                    : "Currently active"}
+                      ? "Will be unarchived on save"
+                      : "Currently active"}
                 </Text>
               </div>
             </div>

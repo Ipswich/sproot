@@ -16,7 +16,7 @@ describe("SensorCondition.ts tests", () => {
         ReadingType.temperature,
         "equal",
         50,
-        null
+        null,
       );
       const sensorListMock = sinon.createStubInstance(SensorList);
       const sensorMock = sinon.createStubInstance(SensorBase);
@@ -131,7 +131,7 @@ describe("SensorCondition.ts tests", () => {
         ReadingType.temperature,
         "greater",
         50,
-        3
+        3,
       );
       const sensorListMock = sinon.createStubInstance(SensorList);
       const sensorMock = sinon.createStubInstance(SensorBase);

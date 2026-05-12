@@ -21,7 +21,7 @@ export default function Root() {
   };
 
   const readingTypes = Object.keys(
-    loaderData.readingTypes as Partial<Record<ReadingType, string>>
+    loaderData.readingTypes as Partial<Record<ReadingType, string>>,
   ) as ReadingType[];
   const outputs = Object.values(loaderData.outputs);
   const cameraSettings = loaderData.cameraSettings;

@@ -2,7 +2,13 @@
  * Source: api_spec/openapi_v2.yaml
  */
 
-import { makeApi, Zodios, type ZodiosEndpointDefinitions, type ZodiosInstance, type ZodiosOptions } from "@zodios/core";
+import {
+  makeApi,
+  Zodios,
+  type ZodiosEndpointDefinitions,
+  type ZodiosInstance,
+  type ZodiosOptions,
+} from "@zodios/core";
 import { z } from "zod";
 
 const ApiResponse = z
@@ -41,13 +47,8 @@ const ErrorResponse = z
   .passthrough()
   .and(ApiResponse);
 const DeviceZoneCreateRequest = z.object({ name: z.string() }).passthrough();
-const SDBDeviceZone = z
-  .object({ id: z.number().optional(), name: z.string() })
-  .passthrough();
-const DeviceZoneUpdateRequest = z
-  .object({ name: z.string() })
-  .partial()
-  .passthrough();
+const SDBDeviceZone = z.object({ id: z.number().optional(), name: z.string() }).passthrough();
+const DeviceZoneUpdateRequest = z.object({ name: z.string() }).partial().passthrough();
 
 export const schemas: Record<string, z.ZodTypeAny> = {
   ApiResponse,
@@ -73,7 +74,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
           content: z.object({ data: z.unknown() }).partial().passthrough(),
         })
         .partial()
-        .passthrough()
+        .passthrough(),
     ),
     errors: [
       {
@@ -93,7 +94,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -113,7 +114,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
     ],
@@ -145,7 +146,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
             .passthrough(),
         })
         .partial()
-        .passthrough()
+        .passthrough(),
     ),
     errors: [
       {
@@ -165,7 +166,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -185,7 +186,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -205,7 +206,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
     ],
@@ -242,7 +243,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
             .passthrough(),
         })
         .partial()
-        .passthrough()
+        .passthrough(),
     ),
     errors: [
       {
@@ -262,7 +263,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -282,7 +283,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -302,7 +303,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -322,7 +323,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
     ],
@@ -348,7 +349,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
           content: z.object({ data: z.unknown() }).partial().passthrough(),
         })
         .partial()
-        .passthrough()
+        .passthrough(),
     ),
     errors: [
       {
@@ -368,7 +369,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -388,7 +389,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -408,7 +409,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
       {
@@ -428,7 +429,7 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
                 .passthrough(),
             })
             .partial()
-            .passthrough()
+            .passthrough(),
         ),
       },
     ],
@@ -437,6 +438,9 @@ const endpoints: ZodiosEndpointDefinitions = makeApi([
 
 export const deviceZonesApi: ZodiosInstance<typeof endpoints> = new Zodios(endpoints);
 
-export function createApiClient(baseUrl: string, options?: ZodiosOptions): ZodiosInstance<typeof endpoints> {
+export function createApiClient(
+  baseUrl: string,
+  options?: ZodiosOptions,
+): ZodiosInstance<typeof endpoints> {
   return new Zodios(baseUrl, endpoints, options);
 }

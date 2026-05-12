@@ -122,7 +122,7 @@ function buildRegistry(): Record<ContractOperationId, OperationContract> {
 
       if (!endpoint) {
         throw new Error(
-          `Generated endpoint metadata for ${operationId} was not found in domain ${domain.exportName}.`
+          `Generated endpoint metadata for ${operationId} was not found in domain ${domain.exportName}.`,
         );
       }
 
@@ -155,7 +155,7 @@ function buildRegistry(): Record<ContractOperationId, OperationContract> {
 
   if (seenOperationIds.size !== generatedApiContractManifest.operationTotal) {
     throw new Error(
-      `Validation registry expected ${generatedApiContractManifest.operationTotal} operations, found ${seenOperationIds.size}.`
+      `Validation registry expected ${generatedApiContractManifest.operationTotal} operations, found ${seenOperationIds.size}.`,
     );
   }
 
@@ -169,7 +169,7 @@ function getBodySchema(endpoint: ZodiosEndpointDefinition): z.ZodTypeAny | undef
 
 function getParameterSchemas(
   endpoint: ZodiosEndpointDefinition,
-  source: OperationParameterSource
+  source: OperationParameterSource,
 ): readonly OperationParameterSchema[] {
   const targetType = sourceToZodiosType(source);
 
@@ -183,7 +183,7 @@ function getParameterSchemas(
 
 function getResponseValidationConfig(
   operationId: ContractOperationId,
-  endpoint: ZodiosEndpointDefinition
+  endpoint: ZodiosEndpointDefinition,
 ): OperationContract["response"] {
   const exclusionReason = responseValidationExclusions.get(operationId);
 
@@ -218,7 +218,7 @@ function getResponseValidationConfig(
 }
 
 function sourceToZodiosType(
-  source: OperationParameterSource
+  source: OperationParameterSource,
 ): "Body" | "Path" | "Query" | "Header" {
   switch (source) {
     case "body":

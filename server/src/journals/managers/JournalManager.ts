@@ -15,7 +15,7 @@ export default class JournalManager {
     description: string | null = null,
     icon: string | null = null,
     color: string | null = null,
-    startDate: Date | null = null
+    startDate: Date | null = null,
   ): Promise<number> {
     return this.#sprootDB.addJournalAsync(name, description, icon, color, toDbDate(startDate));
   }
@@ -41,7 +41,7 @@ export default class JournalManager {
   }
 
   async getJournalsAsync(
-    journalId?: number
+    journalId?: number,
   ): Promise<Array<{ journal: SDBJournal; tags: SDBJournalTag[] }>> {
     let journals: SDBJournal[] = [];
     if (journalId != null) {
@@ -57,7 +57,7 @@ export default class JournalManager {
     ]);
 
     const tagById = new Map<number, SDBJournalTag>(
-      (allTags as SDBJournalTag[]).map((t) => [t.id, t])
+      (allTags as SDBJournalTag[]).map((t) => [t.id, t]),
     );
     const lookupsByJournalId = new Map<number, SDBJournalTagLookup[]>();
     for (const l of tagLookups as SDBJournalTagLookup[]) {

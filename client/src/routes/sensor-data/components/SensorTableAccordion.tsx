@@ -51,7 +51,7 @@ export default function SensorTableAccordion({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
   const [sensors, setSensors] = useState({} as Record<number, ISensorBase[]>);
   const [deviceZones, setDeviceZones] = useState([] as SDBDeviceZone[]);
@@ -103,7 +103,7 @@ export default function SensorTableAccordion({
     try {
       const existingOrder = (
         JSON.parse(
-          localStorage.getItem(sensorAccordionOrderKey(readingType)) ?? "[]"
+          localStorage.getItem(sensorAccordionOrderKey(readingType)) ?? "[]",
         ) as SDBDeviceZone[]
       ).map((dg) => dg.id ?? -1);
 
@@ -111,12 +111,12 @@ export default function SensorTableAccordion({
         const updatedOrder: SDBDeviceZone[] = [];
 
         const newDeviceZones = deviceZones.filter(
-          (deviceZone) => !existingOrder.includes(deviceZone.id)
+          (deviceZone) => !existingOrder.includes(deviceZone.id),
         );
 
         existingOrder.forEach((deviceZoneId) => {
           const deviceZoneIndex = deviceZones.findIndex(
-            (dg) => dg.id == Number(deviceZoneId)
+            (dg) => dg.id == Number(deviceZoneId),
           );
           if (deviceZoneIndex != -1) {
             updatedOrder.push(deviceZones[deviceZoneIndex]!);
@@ -218,7 +218,7 @@ export default function SensorTableAccordion({
                 setDeviceZoneToggleStates(closed);
                 localStorage.setItem(
                   sensorToggledDeviceZonesKey(readingType),
-                  JSON.stringify(closed)
+                  JSON.stringify(closed),
                 );
               });
             }}
@@ -249,7 +249,7 @@ export default function SensorTableAccordion({
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
           sensorAccordionOrderKey(readingType),
-          JSON.stringify(updatedArray)
+          JSON.stringify(updatedArray),
         );
         return updatedArray;
       });

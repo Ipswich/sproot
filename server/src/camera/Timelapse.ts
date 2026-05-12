@@ -94,7 +94,7 @@ class Timelapse implements Disposable {
       this.#logger.error(
         `Failed to get latest timelapse archive: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
       return null;
     }
@@ -157,7 +157,7 @@ class Timelapse implements Disposable {
       this.#logger.error(
         `Failed to create timelapse archive: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
       this.#archiveProgressPercentage = -1;
     } finally {
@@ -199,7 +199,7 @@ class Timelapse implements Disposable {
 
   private async createArchiveAsync(
     imageData: { name: string; size: number }[],
-    archiveFile: string
+    archiveFile: string,
   ): Promise<void> {
     const unarchivedBytes = imageData.reduce((total, file) => total + file.size, 0);
 
@@ -232,7 +232,7 @@ class Timelapse implements Disposable {
         archivedBytes += chunkSize;
         this.#archiveProgressPercentage = Math.min(
           Math.round((archivedBytes / unarchivedBytes) * 100),
-          100
+          100,
         );
 
         const MB = 1024 * 1024;
@@ -243,7 +243,7 @@ class Timelapse implements Disposable {
           this.#logger.info(
             `Processed ${archivedBytes} of ${unarchivedBytes} bytes (${
               this.#archiveProgressPercentage
-            }%)`
+            }%)`,
           );
         }
       });
@@ -292,7 +292,7 @@ class Timelapse implements Disposable {
     this.#logger.info(
       `Timelapse started, adding image every ${this.#intervalMinutes} ${
         this.#intervalMinutes > 1 ? "minutes" : "minute"
-      }`
+      }`,
     );
   }
 
@@ -334,7 +334,7 @@ class Timelapse implements Disposable {
       this.#logger.info(`Added timelapse image ${fileName} to ${TIMELAPSE_DIRECTORY}`);
     } catch (error) {
       this.#logger.error(
-        `Failed to add timelapse image: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to add timelapse image: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }

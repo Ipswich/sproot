@@ -26,7 +26,7 @@ import { ConditionGroupType, ConditionOperator } from "@sproot/automation/Condit
  */
 export async function getAllAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getAllConditionsResponse: SuccessResponse | ErrorResponse;
@@ -132,7 +132,7 @@ export async function getAllAsync(
  */
 export async function getByTypeAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
@@ -237,7 +237,7 @@ export async function getByTypeAsync(
  */
 export async function getOneOfByTypeAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let getConditionResponse: SuccessResponse | ErrorResponse;
@@ -295,32 +295,32 @@ export async function getOneOfByTypeAsync(
     switch (type) {
       case "sensor":
         condition = (await sprootDB.getSensorConditionsAsync(automationId)).filter(
-          (conditions) => conditions.id == conditionId
+          (conditions) => conditions.id == conditionId,
         );
         break;
       case "output":
         condition = (await sprootDB.getOutputConditionsAsync(automationId)).filter(
-          (conditions) => conditions.id == conditionId
+          (conditions) => conditions.id == conditionId,
         );
         break;
       case "time":
         condition = (await sprootDB.getTimeConditionsAsync(automationId)).filter(
-          (conditions) => conditions.id == conditionId
+          (conditions) => conditions.id == conditionId,
         );
         break;
       case "weekday":
         condition = (await sprootDB.getWeekdayConditionsAsync(automationId)).filter(
-          (conditions) => conditions.id == conditionId
+          (conditions) => conditions.id == conditionId,
         );
         break;
       case "month":
         condition = (await sprootDB.getMonthConditionsAsync(automationId)).filter(
-          (conditions) => conditions.id == conditionId
+          (conditions) => conditions.id == conditionId,
         );
         break;
       case "date-range":
         condition = (await sprootDB.getDateRangeConditionsAsync(automationId)).filter(
-          (conditions) => conditions.id == conditionId
+          (conditions) => conditions.id == conditionId,
         );
     }
 
@@ -365,7 +365,7 @@ export async function getOneOfByTypeAsync(
  */
 export async function addAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
@@ -430,13 +430,13 @@ export async function addAsync(
       | undefined = undefined;
 
     if (
-      conditionType !== 'sensor' &&
-      conditionType !== 'output' &&
-      conditionType !== 'time' &&
-      conditionType !== 'weekday' &&
-      conditionType !== 'month' &&
-      conditionType !== 'date-range' &&
-      !['allOf', 'anyOf', 'oneOf'].includes(request.body.groupType)
+      conditionType !== "sensor" &&
+      conditionType !== "output" &&
+      conditionType !== "time" &&
+      conditionType !== "weekday" &&
+      conditionType !== "month" &&
+      conditionType !== "date-range" &&
+      !["allOf", "anyOf", "oneOf"].includes(request.body.groupType)
     ) {
       invalidFields.push("Invalid or missing condition groupType.");
     }
@@ -459,7 +459,7 @@ export async function addAsync(
           request.body.comparisonValue as number,
           (request.body.comparisonLookback as number | null | undefined) ?? null,
           request.body.sensorId as number,
-          request.body.readingType as ReadingType
+          request.body.readingType as ReadingType,
         );
         creationResult = new SensorCondition(
           resultId,
@@ -468,13 +468,11 @@ export async function addAsync(
           request.body.readingType as ReadingType,
           request.body.operator as ConditionOperator,
           request.body.comparisonValue as number,
-          (request.body.comparisonLookback as number | null | undefined) ?? null
+          (request.body.comparisonLookback as number | null | undefined) ?? null,
         );
         break;
       case "output":
-        if (
-          request.app.get(DI_KEYS.OutputList).outputs[request.body.outputId as number] == null
-        ) {
+        if (request.app.get(DI_KEYS.OutputList).outputs[request.body.outputId as number] == null) {
           invalidFields.push("Output does not exist.");
         }
         if (invalidFields.length > 0) {
@@ -486,7 +484,7 @@ export async function addAsync(
           request.body.operator as ConditionOperator,
           request.body.comparisonValue as number,
           (request.body.comparisonLookback as number | null | undefined) ?? null,
-          request.body.outputId as number
+          request.body.outputId as number,
         );
         creationResult = new OutputCondition(
           resultId,
@@ -494,7 +492,7 @@ export async function addAsync(
           request.body.outputId as number,
           request.body.operator as ConditionOperator,
           request.body.comparisonValue as number,
-          (request.body.comparisonLookback as number | null | undefined) ?? null
+          (request.body.comparisonLookback as number | null | undefined) ?? null,
         );
         break;
       case "time": {
@@ -512,13 +510,13 @@ export async function addAsync(
           automationId,
           request.body.groupType as ConditionGroupType,
           request.body.startTime ?? null,
-          request.body.endTime ?? null
+          request.body.endTime ?? null,
         );
         creationResult = new TimeCondition(
           resultId,
           request.body.groupType as ConditionGroupType,
           request.body.startTime ?? null,
-          request.body.endTime ?? null
+          request.body.endTime ?? null,
         );
         break;
       }
@@ -529,7 +527,7 @@ export async function addAsync(
           request.body.weekdays > 127
         ) {
           invalidFields.push(
-            "Invalid or missing weekdays. Weekdays should be a number between 0 and 127."
+            "Invalid or missing weekdays. Weekdays should be a number between 0 and 127.",
           );
         }
         if (invalidFields.length > 0) {
@@ -538,18 +536,18 @@ export async function addAsync(
         resultId = await automationService.addWeekdayConditionAsync(
           automationId,
           request.body.groupType as ConditionGroupType,
-          request.body.weekdays as number
+          request.body.weekdays as number,
         );
         creationResult = new WeekdayCondition(
           resultId,
           request.body.groupType as ConditionGroupType,
-          request.body.weekdays as number
+          request.body.weekdays as number,
         );
         break;
       case "month":
         if (request.body.months == null || request.body.months < 0 || request.body.months > 4095) {
           invalidFields.push(
-            "Invalid or missing months. Months should be a number between 0 and 4095."
+            "Invalid or missing months. Months should be a number between 0 and 4095.",
           );
         }
         if (invalidFields.length > 0) {
@@ -558,12 +556,12 @@ export async function addAsync(
         resultId = await automationService.addMonthConditionAsync(
           automationId,
           request.body.groupType as ConditionGroupType,
-          request.body.months as number
+          request.body.months as number,
         );
         creationResult = new MonthCondition(
           resultId,
           request.body.groupType as ConditionGroupType,
-          request.body.months as number
+          request.body.months as number,
         );
         break;
       case "date-range":
@@ -609,7 +607,7 @@ export async function addAsync(
           request.body.startMonth as number,
           request.body.startDate as number,
           request.body.endMonth as number,
-          request.body.endDate as number
+          request.body.endDate as number,
         );
         creationResult = new DateRangeCondition(
           resultId,
@@ -617,7 +615,7 @@ export async function addAsync(
           request.body.startMonth as number,
           request.body.startDate as number,
           request.body.endMonth as number,
-          request.body.endDate as number
+          request.body.endDate as number,
         );
         break;
     }
@@ -663,7 +661,7 @@ export async function addAsync(
  */
 export async function updateAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
@@ -778,23 +776,23 @@ export async function updateAsync(
       | DateRangeCondition
       | undefined = undefined;
     if (
-      conditionType !== 'sensor' &&
-      conditionType !== 'output' &&
-      conditionType !== 'time' &&
-      conditionType !== 'weekday' &&
-      conditionType !== 'month' &&
-      conditionType !== 'date-range'
+      conditionType !== "sensor" &&
+      conditionType !== "output" &&
+      conditionType !== "time" &&
+      conditionType !== "weekday" &&
+      conditionType !== "month" &&
+      conditionType !== "date-range"
     ) {
       sdbcondition.groupType = request.body.groupType ?? sdbcondition.groupType;
     }
     if (
-      conditionType !== 'sensor' &&
-      conditionType !== 'output' &&
-      conditionType !== 'time' &&
-      conditionType !== 'weekday' &&
-      conditionType !== 'month' &&
-      conditionType !== 'date-range' &&
-      !['allOf', 'anyOf', 'oneOf'].includes(sdbcondition.groupType)
+      conditionType !== "sensor" &&
+      conditionType !== "output" &&
+      conditionType !== "time" &&
+      conditionType !== "weekday" &&
+      conditionType !== "month" &&
+      conditionType !== "date-range" &&
+      !["allOf", "anyOf", "oneOf"].includes(sdbcondition.groupType)
     ) {
       invalidDetails.push("Invalid or missing condition groupType.");
     }
@@ -813,11 +811,11 @@ export async function updateAsync(
           (request.body.comparisonValue as number | undefined) ??
             sdbSensorCondition.comparisonValue,
           (request.body.comparisonLookback as number | null | undefined) ??
-            sdbSensorCondition.comparisonLookback
+            sdbSensorCondition.comparisonLookback,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
-            condition.operator
+            condition.operator,
           )
         ) {
           invalidDetails.push("Invalid operator.");
@@ -850,11 +848,11 @@ export async function updateAsync(
           (request.body.comparisonValue as number | undefined) ??
             sdbOutputCondition.comparisonValue,
           (request.body.comparisonLookback as number | null | undefined) ??
-            sdbOutputCondition.comparisonLookback
+            sdbOutputCondition.comparisonLookback,
         );
         if (
           !["equal", "notEqual", "greater", "less", "greaterOrEqual", "lessOrEqual"].includes(
-            condition.operator
+            condition.operator,
           )
         ) {
           invalidDetails.push("Invalid operator.");
@@ -879,7 +877,7 @@ export async function updateAsync(
           sdbTimeCondition.id,
           nextGroupType,
           sdbTimeCondition.startTime,
-          sdbTimeCondition.endTime
+          sdbTimeCondition.endTime,
         );
         if (request.body.startTime !== undefined) {
           condition.startTime = request.body.startTime;
@@ -910,7 +908,7 @@ export async function updateAsync(
         const weekdayCondition = new WeekdayCondition(
           sdbWeekdayCondition.id,
           nextGroupType,
-          (request.body.weekdays as number | undefined) ?? sdbWeekdayCondition.weekdays
+          (request.body.weekdays as number | undefined) ?? sdbWeekdayCondition.weekdays,
         );
         condition = weekdayCondition;
         if (weekdayCondition.weekdays < 0 || weekdayCondition.weekdays > 127) {
@@ -931,7 +929,7 @@ export async function updateAsync(
         const monthCondition = new MonthCondition(
           sdbMonthCondition.id,
           nextGroupType,
-          (request.body.months as number | undefined) ?? sdbMonthCondition.months
+          (request.body.months as number | undefined) ?? sdbMonthCondition.months,
         );
         condition = monthCondition;
         if (monthCondition.months < 0 || monthCondition.months > 4095) {
@@ -956,13 +954,10 @@ export async function updateAsync(
           (request.body.startMonth as number | undefined) ?? sdbDateRangeCondition.startMonth,
           (request.body.startDate as number | undefined) ?? sdbDateRangeCondition.startDate,
           (request.body.endMonth as number | undefined) ?? sdbDateRangeCondition.endMonth,
-          (request.body.endDate as number | undefined) ?? sdbDateRangeCondition.endDate
+          (request.body.endDate as number | undefined) ?? sdbDateRangeCondition.endDate,
         );
         condition = dateRangeCondition;
-        if (
-          dateRangeCondition.startMonth < 1 ||
-          dateRangeCondition.startMonth > 12
-        ) {
+        if (dateRangeCondition.startMonth < 1 || dateRangeCondition.startMonth > 12) {
           invalidDetails.push("Invalid start month.");
         }
         if (
@@ -975,10 +970,7 @@ export async function updateAsync(
         ) {
           invalidDetails.push("Invalid start date.");
         }
-        if (
-          dateRangeCondition.endMonth < 1 ||
-          dateRangeCondition.endMonth > 12
-        ) {
+        if (dateRangeCondition.endMonth < 1 || dateRangeCondition.endMonth > 12) {
           invalidDetails.push("Invalid end month.");
         }
         if (
@@ -1041,7 +1033,7 @@ export async function updateAsync(
  */
 export async function deleteAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;

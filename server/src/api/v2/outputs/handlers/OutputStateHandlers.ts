@@ -21,7 +21,7 @@ type SetOutputManualStateRequestBody =
  */
 export async function setControlModeAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const outputId = String(request.params["outputId"]);

@@ -29,10 +29,10 @@ export async function up(knex: Knex): Promise<void> {
   `);
 
   await knex.raw(
-    `ALTER TABLE \"${SENSOR_HISTORY_TABLE}\" ALTER COLUMN \"logTime\" SET DEFAULT NOW();`
+    `ALTER TABLE \"${SENSOR_HISTORY_TABLE}\" ALTER COLUMN \"logTime\" SET DEFAULT NOW();`,
   );
   await knex.raw(
-    `ALTER TABLE \"${OUTPUT_HISTORY_TABLE}\" ALTER COLUMN \"logTime\" SET DEFAULT NOW();`
+    `ALTER TABLE \"${OUTPUT_HISTORY_TABLE}\" ALTER COLUMN \"logTime\" SET DEFAULT NOW();`,
   );
   await knex.raw(`ALTER TABLE \"outputs\" ALTER COLUMN \"lastStateUpdate\" SET DEFAULT NOW();`);
 
@@ -41,10 +41,10 @@ export async function up(knex: Knex): Promise<void> {
   await knex.raw(`DROP INDEX IF EXISTS \"sensor_data_sensor_id_index\";`);
   await knex.raw(`DROP INDEX IF EXISTS \"output_data_output_id_index\";`);
   await knex.raw(
-    `ALTER TABLE \"${SENSOR_HISTORY_TABLE}\" DROP CONSTRAINT IF EXISTS \"sensor_data_pkey\";`
+    `ALTER TABLE \"${SENSOR_HISTORY_TABLE}\" DROP CONSTRAINT IF EXISTS \"sensor_data_pkey\";`,
   );
   await knex.raw(
-    `ALTER TABLE \"${OUTPUT_HISTORY_TABLE}\" DROP CONSTRAINT IF EXISTS \"output_data_pkey\";`
+    `ALTER TABLE \"${OUTPUT_HISTORY_TABLE}\" DROP CONSTRAINT IF EXISTS \"output_data_pkey\";`,
   );
 
   await knex.raw(`
@@ -57,14 +57,14 @@ export async function up(knex: Knex): Promise<void> {
   await knex.raw(`SELECT set_chunk_time_interval('${OUTPUT_HISTORY_TABLE}', INTERVAL '1 day');`);
 
   await knex.raw(
-    `CREATE INDEX IF NOT EXISTS \"idx_sensor_data_id\" ON \"${SENSOR_HISTORY_TABLE}\" (\"id\");`
+    `CREATE INDEX IF NOT EXISTS \"idx_sensor_data_id\" ON \"${SENSOR_HISTORY_TABLE}\" (\"id\");`,
   );
   await knex.raw(`
     CREATE INDEX IF NOT EXISTS \"idx_sensor_data_sensor_metric_logtime_desc\"
     ON \"${SENSOR_HISTORY_TABLE}\" (\"sensor_id\", \"metric\", \"logTime\" DESC);
   `);
   await knex.raw(
-    `CREATE INDEX IF NOT EXISTS \"idx_output_data_id\" ON \"${OUTPUT_HISTORY_TABLE}\" (\"id\");`
+    `CREATE INDEX IF NOT EXISTS \"idx_output_data_id\" ON \"${OUTPUT_HISTORY_TABLE}\" (\"id\");`,
   );
   await knex.raw(`
     CREATE INDEX IF NOT EXISTS \"idx_output_data_output_logtime_desc\"

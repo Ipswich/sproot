@@ -19,7 +19,7 @@ router.post(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -29,7 +29,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -39,7 +39,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -47,7 +47,7 @@ router.get(
   createContractRoute("downloadSystemBackup", async (req: Request, res: Response) => {
     await systemBackupDownloadHandlerAsync(req, res);
     return;
-  })
+  }),
 );
 
 router.post(
@@ -55,7 +55,7 @@ router.post(
   createContractRoute("restoreSystemBackup", async (req: Request, res: Response) => {
     await systemBackupRestoreHandlerAsync(req, res);
     return;
-  })
+  }),
 );
 
 router.post(
@@ -65,7 +65,7 @@ router.post(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -75,7 +75,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 export default router;

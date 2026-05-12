@@ -74,7 +74,7 @@ describe("SensorListChartData.ts tests", function () {
       sensorListChartData.loadChartData(
         [humidityDataSeriesRecord2.humidity, humidityDataSeriesRecord3.humidity],
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
 
       assert.equal(Object.keys(sensorListChartData.get().data).length, 1);
@@ -90,7 +90,7 @@ describe("SensorListChartData.ts tests", function () {
       sensorListChartData.loadChartData(
         [temperatureDataSeriesRecord.temperature],
         "Test",
-        ReadingType.temperature
+        ReadingType.temperature,
       );
       assert.equal(Object.keys(sensorListChartData.get().data).length, 2);
       assert.equal(sensorListChartData.get().data[ReadingType.temperature].length, 3);
@@ -122,7 +122,7 @@ describe("SensorListChartData.ts tests", function () {
       sensorListChartData.updateChartData(
         [dataSeriesRecordBase.humidity],
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
 
       dataSeriesRecordBase.humidity.push({
@@ -132,7 +132,7 @@ describe("SensorListChartData.ts tests", function () {
       sensorListChartData.updateChartData(
         [dataSeriesRecordBase.humidity],
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
 
       dataSeriesRecordBase.humidity.push({
@@ -142,14 +142,14 @@ describe("SensorListChartData.ts tests", function () {
       sensorListChartData.updateChartData(
         [dataSeriesRecordBase.humidity],
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
 
       //Double up, this one should be ignored.
       sensorListChartData.updateChartData(
         [dataSeriesRecordBase.humidity],
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
       //And this one is empty, and so should be ignored too.
       sensorListChartData.updateChartData([], "Test", ReadingType.humidity);
@@ -159,7 +159,7 @@ describe("SensorListChartData.ts tests", function () {
       sensorListChartData.updateChartData(
         [dataSeriesRecordBase.temperature],
         "Test",
-        ReadingType.temperature
+        ReadingType.temperature,
       );
 
       assert.equal(Object.keys(sensorListChartData.get().data).length, 2);

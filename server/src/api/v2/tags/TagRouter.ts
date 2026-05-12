@@ -12,7 +12,7 @@ router.get(
     const result = await JournalTagHandlers.getAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.post(
@@ -21,7 +21,7 @@ router.post(
     const result = await JournalTagHandlers.addAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.patch(
@@ -30,7 +30,7 @@ router.patch(
     const result = await JournalTagHandlers.updateAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.delete(
@@ -39,7 +39,7 @@ router.delete(
     const result = await JournalTagHandlers.deleteAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 // Journal Entry Tag Endpoints
@@ -49,7 +49,7 @@ router.get(
     const result = await JournalEntryTagHandlers.getAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.post(
@@ -58,7 +58,7 @@ router.post(
     const result = await JournalEntryTagHandlers.addAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.patch(
@@ -67,7 +67,7 @@ router.patch(
     const result = await JournalEntryTagHandlers.updateAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.delete(
@@ -76,7 +76,7 @@ router.delete(
     const result = await JournalEntryTagHandlers.deleteAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 export default router;

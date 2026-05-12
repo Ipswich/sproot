@@ -4,9 +4,7 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
-import type {
-  ContractOperationQueryParams,
-} from "@sproot/sproot-common/dist/api/contracts/operation-types";
+import type { ContractOperationQueryParams } from "@sproot/sproot-common/dist/api/contracts/operation-types";
 import type { operations as JournalContractOperations } from "@sproot/sproot-common/dist/api/generated/journals/types";
 import { toDbDate, isoToDb } from "../../../../utils/dateUtils";
 import { getValidatedContractRequestData } from "../../../validation/validateRequest";
@@ -25,7 +23,7 @@ type AttachTagToJournalEntryRequestBody =
  */
 export async function getByJournalIdAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -95,7 +93,7 @@ export async function getByJournalIdAsync(
  */
 export async function getByEntryIdAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -162,7 +160,7 @@ export async function getByEntryIdAsync(
 
 export async function addAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -219,7 +217,7 @@ export async function addAsync(
       journalId!,
       entryContent,
       title,
-      createdAt
+      createdAt,
     );
 
     response = {
@@ -253,7 +251,7 @@ export async function addAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function updateAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -305,8 +303,8 @@ export async function updateAsync(
       requestBody.title === undefined
         ? existingEntry[0]!.entry.title
         : requestBody.title === null
-        ? null
-        : requestBody.title;
+          ? null
+          : requestBody.title;
 
     const editedAt = new Date();
     await journalService.entryManager.updateAsync({
@@ -349,7 +347,7 @@ export async function updateAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -408,7 +406,7 @@ export async function deleteAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function addTagAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -508,7 +506,7 @@ export async function addTagAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function removeTagAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;

@@ -20,7 +20,7 @@ export class OutputCache {
   async loadFromDatabaseAsync(
     outputId: number,
     minutes: number,
-    bucketMinutes: number = 5
+    bucketMinutes: number = 5,
   ): Promise<void> {
     this.queueCache.clear();
     const chartStates = await this.sprootDB.getOutputChartStatesAsync(
@@ -28,7 +28,7 @@ export class OutputCache {
       new Date(),
       minutes,
       bucketMinutes,
-      true
+      true,
     );
     const sdbStates =
       chartStates ??

@@ -37,7 +37,7 @@ export default function setupLogger(app: Express): winston.Logger {
         },
       }),
       winston.format.colorize(),
-      winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`)
+      winston.format.printf((info) => `[${info["timestamp"]}] ${info.level}: ${info.message}`),
     ),
     transports: [
       new winston.transports.DailyRotateFile({
@@ -58,9 +58,9 @@ export default function setupLogger(app: Express): winston.Logger {
         format: winston.format.combine(
           winston.format.errors({ stack: true }),
           winston.format.colorize(),
-          winston.format.printf(formatForDebug)
+          winston.format.printf(formatForDebug),
         ),
-      })
+      }),
     );
     logger.add(
       new winston.transports.DailyRotateFile({
@@ -70,17 +70,17 @@ export default function setupLogger(app: Express): winston.Logger {
         format: winston.format.combine(
           winston.format.errors({ stack: true }),
           winston.format.colorize(),
-          winston.format.printf(formatForDebug)
+          winston.format.printf(formatForDebug),
         ),
         maxFiles: "30d",
-      })
+      }),
     );
     app.use(
       morgan("dev", {
         stream: {
           write: (message: string) => logger.http(message.trim()),
         },
-      })
+      }),
     );
   }
 

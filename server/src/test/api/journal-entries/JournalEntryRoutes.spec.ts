@@ -122,7 +122,7 @@ describe("Journal Entry Routes", () => {
         assert.equal(response.body["error"]["name"], "Bad Request");
         assert.equal(
           response.body["error"]["url"],
-          `/api/v2/journals/${journalId}/entries?withContent=not-a-boolean`
+          `/api/v2/journals/${journalId}/entries?withContent=not-a-boolean`,
         );
         assert.equal(response.body["error"]["request"]["query"]["withContent"], "not-a-boolean");
         assert.isArray(response.body["error"]["details"]);
@@ -168,7 +168,7 @@ describe("Journal Entry Routes", () => {
         assert.equal(response.body["error"]["name"], "Bad Request");
         assert.equal(
           response.body["error"]["url"],
-          `/api/v2/entries/${entryId}?withContent=not-a-boolean`
+          `/api/v2/entries/${entryId}?withContent=not-a-boolean`,
         );
         assert.equal(response.body["error"]["request"]["query"]["withContent"], "not-a-boolean");
         assert.isArray(response.body["error"]["details"]);
@@ -220,7 +220,9 @@ describe("Journal Entry Routes", () => {
         validateMiddlewareValues(response);
         assert.equal(response.body["error"]["name"], "Bad Request");
         assert.equal(response.body["error"]["url"], "/api/v2/entries/not-a-number");
-        assert.deepEqual(response.body["error"]["details"], ["Valid Journal Entry ID is required."]);
+        assert.deepEqual(response.body["error"]["details"], [
+          "Valid Journal Entry ID is required.",
+        ]);
       });
 
       it("should preserve omitted PATCH fields", async () => {
@@ -260,12 +262,10 @@ describe("Journal Entry Routes", () => {
         validateMiddlewareValues(deleteResponse);
         assert.equal(
           deleteResponse.body.content.data,
-          `Journal Entry with ID ${entryId} successfully deleted.`
+          `Journal Entry with ID ${entryId} successfully deleted.`,
         );
 
-        const resp = await request(server)
-          .get(`/api/v2/journals/${journalId}/entries`)
-          .expect(200);
+        const resp = await request(server).get(`/api/v2/journals/${journalId}/entries`).expect(200);
         validateMiddlewareValues(resp);
         const content = resp.body["content"];
         const found = content.data.find((e: any) => e.id === entryId);
@@ -308,7 +308,7 @@ describe("Journal Entry Routes", () => {
         validateMiddlewareValues(tagAddResponse);
         assert.equal(
           tagAddResponse.body.content.data,
-          `Tag with ID ${entryTagId} successfully added to Journal Entry with ID ${localEntryId}.`
+          `Tag with ID ${entryTagId} successfully added to Journal Entry with ID ${localEntryId}.`,
         );
 
         const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);
@@ -343,7 +343,7 @@ describe("Journal Entry Routes", () => {
         validateMiddlewareValues(deleteResponse);
         assert.equal(
           deleteResponse.body.content.data,
-          `Tag with ID ${entryTagId} successfully removed from Journal Entry with ID ${localEntryId}.`
+          `Tag with ID ${entryTagId} successfully removed from Journal Entry with ID ${localEntryId}.`,
         );
 
         const getResp = await request(server).get(`/api/v2/entries/${localEntryId}`).expect(200);

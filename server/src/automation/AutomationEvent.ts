@@ -6,7 +6,7 @@ export class AutomationEvent {
 
   constructor(
     triggeredAutomations: Map<number, IAutomationEventPayload>,
-    timestamp: Date = new Date()
+    timestamp: Date = new Date(),
   ) {
     this.triggeredAutomations = triggeredAutomations;
     this.timestamp = timestamp;

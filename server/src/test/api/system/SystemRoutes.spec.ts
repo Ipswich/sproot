@@ -9,11 +9,15 @@ describe("System Routes", async () => {
     describe("GET", async () => {
       it("should return 200 and system status", async () => {
         let retryCount = 0;
-        let timelapseCompletion = await request(server).get("/api/v2/camera/timelapse/archive/status");
+        let timelapseCompletion = await request(server).get(
+          "/api/v2/camera/timelapse/archive/status",
+        );
         while (timelapseCompletion.body["content"].data.isGenerating && retryCount < 5) {
           try {
             await new Promise((resolve) => setTimeout(resolve, 100));
-            timelapseCompletion = await request(server).get("/api/v2/camera/timelapse/archive/status");
+            timelapseCompletion = await request(server).get(
+              "/api/v2/camera/timelapse/archive/status",
+            );
           } catch (err) {
             console.error("Error checking timelapse status:", err);
             break;

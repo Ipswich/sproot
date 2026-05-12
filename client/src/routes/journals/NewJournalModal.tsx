@@ -111,10 +111,10 @@ export default function NewJournalModal({
             if (created) {
               try {
                 const tagIds = selectedTags.map((s) =>
-                  Number(String(s).replace(/^tag:/, ""))
+                  Number(String(s).replace(/^tag:/, "")),
                 );
                 const addPromises = tagIds.map((tid) =>
-                  addTagToJournalAsync(created.id, tid)
+                  addTagToJournalAsync(created.id, tid),
                 );
                 await Promise.allSettled(addPromises);
                 // ensure journals list is fresh before notifying parent

@@ -16,7 +16,7 @@ type DeleteDeviceZonePathParams =
 
 export async function getAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   let response: SuccessResponse | ErrorResponse;
@@ -45,7 +45,7 @@ export async function getAsync(
 
 export async function addAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   const deviceZoneData = (getValidatedContractRequestData<"createDeviceZone">(res).body ??
@@ -92,7 +92,7 @@ export async function addAsync(
 
 export async function updateAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   const validatedRequest = getValidatedContractRequestData<"updateDeviceZone">(res);
@@ -129,7 +129,7 @@ export async function updateAsync(
     }
 
     const existingDeviceZone = (await sprootDB.getDeviceZonesAsync()).find(
-      (dg) => dg.id === deviceZoneIdAsInt
+      (dg) => dg.id === deviceZoneIdAsInt,
     );
 
     if (existingDeviceZone == null) {
@@ -170,7 +170,7 @@ export async function updateAsync(
 
 export async function deleteAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB: ISprootDB = req.app.get(DI_KEYS.SprootDB);
   const pathParams = (getValidatedContractRequestData<"deleteDeviceZone">(res).params ??

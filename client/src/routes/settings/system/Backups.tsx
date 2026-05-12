@@ -94,7 +94,7 @@ export default function Backups() {
                 await backupsListQuery.refetch();
                 setUploadFile(null);
                 const input = document.getElementById(
-                  "backup-upload-input"
+                  "backup-upload-input",
                 ) as HTMLInputElement | null;
                 if (input) input.value = "";
               } catch (err) {

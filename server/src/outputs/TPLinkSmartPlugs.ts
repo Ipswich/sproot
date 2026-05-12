@@ -23,7 +23,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     maxChartDataSize: number,
     chartDataPointInterval: number,
     logger: winston.Logger,
-    connectionTimeout: number = 5000
+    connectionTimeout: number = 5000,
   ) {
     super(
       eventBus,
@@ -33,7 +33,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       maxChartDataSize,
       chartDataPointInterval,
       undefined,
-      logger
+      logger,
     );
     this.#client = new Client({
       defaultSendOptions: {
@@ -102,7 +102,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   async createOutputAsync(output: SDBOutput): Promise<OutputBase | undefined> {
     if (this.initializingPlugs[output.address]?.includes(output.pin)) {
       this.logger.warn(
-        `TPLink Smart Plug ${output.id} is already being initialized. Skipping creation.`
+        `TPLink Smart Plug ${output.id} is already being initialized. Skipping creation.`,
       );
       return undefined;
     }
@@ -125,18 +125,18 @@ class TPLinkSmartPlugs extends MultiOutputBase {
         this.initialCacheLookback,
         this.maxChartDataSize,
         this.chartDataPointInterval,
-        this.logger
+        this.logger,
       );
     } catch (error) {
       this.logger.error(
-        `Error creating TPLink Smart Plug output {id: ${output.id}, name: ${output.name}}: ${error}`
+        `Error creating TPLink Smart Plug output {id: ${output.id}, name: ${output.name}}: ${error}`,
       );
     } finally {
       if (Array.isArray(this.usedPins[output.address])) {
         (this.usedPins[output.address] as string[]).push(output.pin);
       }
       this.initializingPlugs[output.address] = this.initializingPlugs[output.address]!.filter(
-        (pin) => pin !== output.pin
+        (pin) => pin !== output.pin,
       );
     }
     return this.outputs[output.id];
@@ -166,7 +166,7 @@ class TPLinkPlug extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<TPLinkPlug> {
     const tplinkSmartPlug = new TPLinkPlug(
       plugRegistry,
@@ -177,7 +177,7 @@ class TPLinkPlug extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     return tplinkSmartPlug.initializeAsync();
   }
@@ -191,7 +191,7 @@ class TPLinkPlug extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     super(
       output,
@@ -201,7 +201,7 @@ class TPLinkPlug extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     this.plugRegistry = plugRegistry;
 
@@ -217,7 +217,7 @@ class TPLinkPlug extends OutputBase {
   async executeStateAsync(forceExecution: boolean = false): Promise<void> {
     if (!this.tplinkPlug) {
       this.logger.error(
-        `TPLink Smart Plug ${this.id} is not currently registered. Cannot execute state.`
+        `TPLink Smart Plug ${this.id} is not currently registered. Cannot execute state.`,
       );
       return;
     }
@@ -231,13 +231,13 @@ class TPLinkPlug extends OutputBase {
           result = await this.tplinkPlug!.setPowerState(targetState, { timeout: 800 });
         } catch (error) {
           this.logger.error(
-            `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying...`
+            `Error setting power state for TPLink Smart Plug ${this.id}: ${error}. Retrying...`,
           );
         }
       }
       if (!result) {
         throw new Error(
-          `Failed to set power state for TPLink Smart Plug ${this.id} after 3 attempts.`
+          `Failed to set power state for TPLink Smart Plug ${this.id} after 3 attempts.`,
         );
       }
     }, forceExecution);
@@ -296,7 +296,7 @@ class TPLinkPlug extends OutputBase {
     if (this.#powerUpdateEventRunning) {
       this.logger.debug(
         `TPLink Smart Plug {id: ${this.id}, pin: ${this.pin}} is already processing a power update event. ` +
-          `Ignoring duplicate event for state ${value ? 100 : 0}.`
+          `Ignoring duplicate event for state ${value ? 100 : 0}.`,
       );
       return;
     }
@@ -309,7 +309,7 @@ class TPLinkPlug extends OutputBase {
           this.logger.info(
             `TPLink Smart Plug {id: ${this.id}} state change detected. Updating manual state to ${
               value ? 100 : 0
-            } to reflect this.`
+            } to reflect this.`,
           );
           await this.state.setNewStateAsync({
             value: value ? 100 : 0,
@@ -324,21 +324,21 @@ class TPLinkPlug extends OutputBase {
               value ? 100 : 0
             } } with internal { state: ${
               this.value
-            } }. This may be redundant, but better safe than sorry.`
+            } }. This may be redundant, but better safe than sorry.`,
           );
           await this.executeStateAsync(true);
         }
         break;
       } catch (error) {
         this.logger.error(
-          `Error updating state for TPLink Smart Plug {id: ${this.id}}: ${error}. Retrying (${retryCount}). . .`
+          `Error updating state for TPLink Smart Plug {id: ${this.id}}: ${error}. Retrying (${retryCount}). . .`,
         );
       }
     }
     this.#powerUpdateEventRunning = false;
     if (retryCount >= 3) {
       this.logger.error(
-        `POTENTIAL STATE MISMATCH DETECTED! TPLink Smart Plug {id: ${this.id}} failed to update from power update event after 3 tries!`
+        `POTENTIAL STATE MISMATCH DETECTED! TPLink Smart Plug {id: ${this.id}} failed to update from power update event after 3 tries!`,
       );
     }
   }

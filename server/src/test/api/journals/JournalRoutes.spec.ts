@@ -203,7 +203,7 @@ describe("Journal Routes", () => {
       validateMiddlewareValues(deleteResponse);
       assert.equal(
         deleteResponse.body.content.data,
-        `Journal with ID ${journalId} successfully deleted.`
+        `Journal with ID ${journalId} successfully deleted.`,
       );
 
       const list = await request(server).get("/api/v2/journals").expect(200);
@@ -248,7 +248,7 @@ describe("Journal Routes", () => {
       validateMiddlewareValues(tagAddResponse);
       assert.equal(
         tagAddResponse.body.content.data,
-        `Tag with ID ${tagId} added to journal with ID ${taggedJournalId}.`
+        `Tag with ID ${tagId} added to journal with ID ${taggedJournalId}.`,
       );
 
       const getResp = await request(server).get(`/api/v2/journals/${taggedJournalId}`).expect(200);
@@ -284,7 +284,7 @@ describe("Journal Routes", () => {
       validateMiddlewareValues(deleteResponse);
       assert.equal(
         deleteResponse.body.content.data,
-        `Tag with ID ${tagId} removed from journal with ID ${taggedJournalId}.`
+        `Tag with ID ${tagId} removed from journal with ID ${taggedJournalId}.`,
       );
 
       const getResp = await request(server).get(`/api/v2/journals/${taggedJournalId}`).expect(200);

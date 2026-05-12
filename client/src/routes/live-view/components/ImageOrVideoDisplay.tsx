@@ -60,8 +60,8 @@ export default function ImageOrVideoDisplay() {
     showStream && typeof streamQuery.data === "string"
       ? streamQuery.data
       : typeof imageQuery.data === "string"
-      ? imageQuery.data
-      : undefined;
+        ? imageQuery.data
+        : undefined;
 
   return (
     <Fragment>

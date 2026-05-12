@@ -18,7 +18,7 @@ type AttachTagToJournalRequestBody =
  */
 export async function getAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -76,7 +76,7 @@ export async function getAsync(
 
 export async function addAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -115,7 +115,7 @@ export async function addAsync(
       description ?? null,
       icon ?? null,
       color ?? null,
-      startDate
+      startDate,
     );
 
     response = {
@@ -152,7 +152,7 @@ export async function addAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function updateAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -189,7 +189,9 @@ export async function updateAsync(
     }
 
     const archived: boolean =
-      requestBody.archived === undefined ? existingJournal[0]!.journal.archived : requestBody.archived;
+      requestBody.archived === undefined
+        ? existingJournal[0]!.journal.archived
+        : requestBody.archived;
 
     // If trying to make changes to an already archived journal,
     // or trying to archive a journal that is already archived, return an error
@@ -200,8 +202,8 @@ export async function updateAsync(
       requestBody.description === undefined
         ? existingJournal[0]!.journal.description
         : requestBody.description === null || requestBody.description === ""
-        ? null
-        : requestBody.description;
+          ? null
+          : requestBody.description;
     const badRequests: string[] = [];
     if (title === "" || title.length > 64) {
       badRequests.push("Journal title cannot be empty or exceed 64 characters.");
@@ -229,15 +231,15 @@ export async function updateAsync(
       requestBody.icon === undefined
         ? existingJournal[0]!.journal.icon
         : requestBody.icon === null || requestBody.icon === ""
-        ? null
-        : requestBody.icon;
+          ? null
+          : requestBody.icon;
 
     const color: string | null =
       requestBody.color === undefined
         ? existingJournal[0]!.journal.color
         : requestBody.color === null || requestBody.color === ""
-        ? null
-        : requestBody.color;
+          ? null
+          : requestBody.color;
 
     // existingJournal contains ISO formatted timestamps for responses
     const createdAtIso = existingJournal[0]!.journal.createdAt;
@@ -246,8 +248,8 @@ export async function updateAsync(
       archived === true && !existingJournal[0]!.journal.archived
         ? editedAtIso
         : archived === false && existingJournal[0]!.journal.archived
-        ? null
-        : existingJournal[0]!.journal.archivedAt;
+          ? null
+          : existingJournal[0]!.journal.archivedAt;
 
     await journalService.journalManager.updateJournalAsync({
       id: journalId,
@@ -295,7 +297,7 @@ export async function updateAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function deleteAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -354,7 +356,7 @@ export async function deleteAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function addTagAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
@@ -454,7 +456,7 @@ export async function addTagAsync(
 /** Possible statusCodes: 200, 400, 404, 503 */
 export async function removeTagAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;

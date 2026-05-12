@@ -28,7 +28,7 @@ describe("MonthCondition.ts tests", () => {
       monthCondition = new MonthCondition(1, "allOf", 3591);
       assert.isTrue(
         monthCondition.evaluate(now),
-        "January, February, March, October, November, December"
+        "January, February, March, October, November, December",
       );
 
       // remove January

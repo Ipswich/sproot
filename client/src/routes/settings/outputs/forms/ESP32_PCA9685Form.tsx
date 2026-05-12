@@ -36,7 +36,7 @@ export default function ESP32_PCA9685Form({
         onChange={(val) =>
           form.setFieldValue(
             "subcontrollerId",
-            val !== null ? parseInt(val, 10) : undefined
+            val !== null ? parseInt(val, 10) : undefined,
           )
         }
         required

@@ -16,7 +16,7 @@ type UpdateJournalTagRequestBody =
  */
 export async function getAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
@@ -46,7 +46,7 @@ export async function getAsync(
  */
 export async function addAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
@@ -102,7 +102,7 @@ export async function addAsync(
  */
 export async function updateAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
@@ -124,7 +124,7 @@ export async function updateAsync(
     }
 
     const existing = (await journalService.journalTagManager.getTagsAsync()).find(
-      (t) => t.id === tagId
+      (t) => t.id === tagId,
     );
     if (!existing) {
       response = {
@@ -170,7 +170,7 @@ export async function updateAsync(
  */
 export async function deleteAsync(
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
@@ -190,7 +190,7 @@ export async function deleteAsync(
     }
 
     const existing = (await journalService.journalTagManager.getTagsAsync()).find(
-      (t) => t.id === tagId
+      (t) => t.id === tagId,
     );
     if (!existing) {
       response = {

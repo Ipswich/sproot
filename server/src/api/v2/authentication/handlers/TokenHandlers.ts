@@ -14,7 +14,7 @@ export async function getTokenAsync(
   isAuthEnabled: string,
   jwtExpiration: number,
   jwtSecret: string,
-  withCsrfToken: boolean
+  withCsrfToken: boolean,
 ): Promise<SuccessResponse | ErrorResponse> {
   let authenticationResponse: SuccessResponse | ErrorResponse;
   if (isAuthEnabled.toLowerCase() != "true") {

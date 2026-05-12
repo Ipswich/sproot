@@ -131,7 +131,10 @@ describe("Output Routes", async () => {
             automationTimeout: 1,
           };
 
-          const response = await request(server).post("/api/v2/outputs").send(invalidBody).expect(400);
+          const response = await request(server)
+            .post("/api/v2/outputs")
+            .send(invalidBody)
+            .expect(400);
 
           assertContractBadRequest(response, "/api/v2/outputs", invalidBody);
         });
@@ -140,10 +143,7 @@ describe("Output Routes", async () => {
       describe("PATCH", async () => {
         it("should return 200", async () => {
           assert.isNumber(createdOutputId);
-          assert.equal(
-            app.get("outputList").outputs[String(createdOutputId)]?.name,
-            "Test Output"
-          );
+          assert.equal(app.get("outputList").outputs[String(createdOutputId)]?.name, "Test Output");
           const response = await request(server)
             .patch(`/api/v2/outputs/${createdOutputId}`)
             .send({
@@ -154,7 +154,7 @@ describe("Output Routes", async () => {
           validateMiddlewareValues(response);
           assert.equal(
             app.get("outputList").outputs[String(createdOutputId)]?.name,
-            "Test1 Output"
+            "Test1 Output",
           );
           assert.containsAllKeys(content.data, outputKeys);
         });
@@ -256,7 +256,7 @@ describe("Output Routes", async () => {
           assert.equal(response.body["error"]["name"], "Bad Request");
           assert.equal(
             response.body["error"]["url"],
-            "/api/v2/outputs/available-devices/TPLINK_SMART_PLUG?filterUsed=not-a-bool"
+            "/api/v2/outputs/available-devices/TPLINK_SMART_PLUG?filterUsed=not-a-bool",
           );
           assert.deepEqual(response.body["error"]["request"]["query"], {
             filterUsed: "not-a-bool",
@@ -269,9 +269,7 @@ describe("Output Routes", async () => {
 
     describe("GET", async () => {
       it("should return 200", async () => {
-        const response = await request(server)
-          .get("/api/v2/outputs/supported-models")
-          .expect(200);
+        const response = await request(server).get("/api/v2/outputs/supported-models").expect(200);
         const content = response.body["content"];
         validateMiddlewareValues(response);
         assert.deepEqual(content.data, {

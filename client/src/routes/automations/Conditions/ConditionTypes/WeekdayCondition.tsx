@@ -29,7 +29,7 @@ export default function WeekdayCondition({
       await addWeekdayConditionAsync(
         automationId,
         groupType,
-        weekdayCondition.weekdays
+        weekdayCondition.weekdays,
       );
     },
     onSettled: () => {
@@ -135,7 +135,7 @@ export default function WeekdayCondition({
             <Button
               type="submit"
               disabled={Object.values(weekdayConditionForm.values).every(
-                (day) => day == false
+                (day) => day == false,
               )}
             >
               Save

@@ -20,7 +20,7 @@ export class Backups {
     try {
       if (!this.#generationStartTime) {
         const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(
-          new Date()
+          new Date(),
         )}.sproot.gz`;
         this.#generationStartTime = Date.now();
         logger.info(`Creating backup at ${backupFilePath}...`);
@@ -30,7 +30,7 @@ export class Backups {
           parseInt(process.env["DATABASE_PORT"]!),
           process.env["DATABASE_USER"]!,
           process.env["DATABASE_PASSWORD"]!,
-          backupFilePath
+          backupFilePath,
         );
         this.#generationStartTime = null;
       }
@@ -44,7 +44,7 @@ export class Backups {
   static async restoreAsync(
     backupPath: string,
     sprootDB: ISprootDB,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<boolean> {
     try {
       await sprootDB.restoreDatabaseAsync(
@@ -52,7 +52,7 @@ export class Backups {
         parseInt(process.env["DATABASE_PORT"]!),
         process.env["DATABASE_USER"]!,
         process.env["DATABASE_PASSWORD"]!,
-        backupPath
+        backupPath,
       );
       return true;
     } catch (error) {
@@ -64,7 +64,7 @@ export class Backups {
   static async getByFileNameAsync(
     fileName: string,
     logger: winston.Logger,
-    directory: string = BACKUP_DIRECTORY
+    directory: string = BACKUP_DIRECTORY,
   ): Promise<{ stream: ReadStream; size: number; name: string } | null> {
     const path = `${directory}/${fileName}.sproot.gz`;
     try {
@@ -85,7 +85,7 @@ export class Backups {
       const files = await sortDirectoryByStatsAsync(
         directory,
         (a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime(),
-        new Set<string>()
+        new Set<string>(),
       );
 
       if (!files) {
@@ -97,7 +97,7 @@ export class Backups {
         .filter(
           (file) =>
             file.name.endsWith(suffix) &&
-            file.stats.mtimeMs < (this.#generationStartTime ?? Infinity)
+            file.stats.mtimeMs < (this.#generationStartTime ?? Infinity),
         )
         .map((f) => {
           const base = path.basename(f.name);
@@ -111,7 +111,7 @@ export class Backups {
   static async runRetentionPolicyAsync(
     logger: winston.Logger,
     retentionDirectory: string,
-    retentionDays: string
+    retentionDays: string,
   ): Promise<void> {
     try {
       const files = await fsPromises.readdir(retentionDirectory);

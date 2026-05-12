@@ -70,7 +70,7 @@ export default function SensorCondition({
         sensorCondition.comparisonValue,
         sensorCondition.comparisonLookback,
         sensorCondition.sensorId,
-        sensorCondition.readingType
+        sensorCondition.readingType,
       );
     },
     onSettled: () => {
@@ -120,7 +120,7 @@ export default function SensorCondition({
 
   function getSuffix() {
     let suffix = sensors.filter(
-      (sensor) => sensor.id == Number(sensorConditionForm.values.sensorId)
+      (sensor) => sensor.id == Number(sensorConditionForm.values.sensorId),
     )[0]!.units[sensorConditionForm.values.readingType as ReadingType]!;
 
     if (
@@ -156,14 +156,15 @@ export default function SensorCondition({
             onChange={(value) => {
               sensorConditionForm.setFieldValue("sensorId", value!);
               const readingTypes = Object.keys(
-                sensors.filter((sensor) => sensor.id == Number(value))[0]!.units
+                sensors.filter((sensor) => sensor.id == Number(value))[0]!
+                  .units,
               );
               if (
                 !readingTypes.includes(sensorConditionForm.values.readingType!)
               ) {
                 sensorConditionForm.setFieldValue(
                   "readingType",
-                  readingTypes[0]!
+                  readingTypes[0]!,
                 );
               }
             }}
@@ -176,8 +177,8 @@ export default function SensorCondition({
               data={Object.keys(
                 sensors.filter(
                   (sensor) =>
-                    sensor.id == Number(sensorConditionForm.values.sensorId)
-                )[0]!.units
+                    sensor.id == Number(sensorConditionForm.values.sensorId),
+                )[0]!.units,
               ).map((readingType) => {
                 return {
                   label:

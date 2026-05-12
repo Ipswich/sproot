@@ -15,7 +15,7 @@ describe("createContractRoute", () => {
 
       assert.equal(
         (validatedRequest.query as Record<string, unknown> | undefined)?.["withContent"],
-        true
+        true,
       );
     });
 
@@ -51,7 +51,7 @@ describe("createContractRoute", () => {
 
       assert.equal(
         (validatedRequest.params as Record<string, unknown> | undefined)?.["entryId"],
-        "7"
+        "7",
       );
       assert.deepEqual(validatedRequest.body as Record<string, unknown> | undefined, {
         title: "Updated Title",

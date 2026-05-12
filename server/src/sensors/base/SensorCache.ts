@@ -26,7 +26,7 @@ export class SensorCache {
   async loadFromDatabaseAsync(
     sensorId: number,
     minutes: number,
-    bucketMinutes: number = 5
+    bucketMinutes: number = 5,
   ): Promise<void> {
     this.clear();
     const chartReadings = await this.sprootDB.getSensorChartReadingsAsync(
@@ -34,7 +34,7 @@ export class SensorCache {
       new Date(),
       minutes,
       bucketMinutes,
-      true
+      true,
     );
     const sdbReadings =
       chartReadings ??

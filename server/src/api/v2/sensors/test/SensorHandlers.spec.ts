@@ -86,7 +86,7 @@ describe("SensorHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(
         (success.content?.data as Array<SDBSensor>).length,
-        Object.keys(sensorData).length
+        Object.keys(sensorData).length,
       );
       assert.deepEqual(success.content?.data, Object.values(sensorData));
     });

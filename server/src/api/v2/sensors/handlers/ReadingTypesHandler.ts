@@ -6,7 +6,7 @@ import { ReadingType } from "@sproot/sensors/ReadingType";
 
 export function readingTypesHandler(
   request: Request,
-  response: Response
+  response: Response,
 ): SuccessResponse | ErrorResponse {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const readingTypes: Partial<Record<ReadingType, string>> = {} as Partial<

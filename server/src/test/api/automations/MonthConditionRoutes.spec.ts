@@ -36,7 +36,7 @@ describe("Month Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/month"
+        "/api/v2/automations/not-a-number/conditions/month",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing automation Id."]);
     });
@@ -50,7 +50,7 @@ describe("Month Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/1/conditions/month/not-a-number"
+        "/api/v2/automations/1/conditions/month/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing condition Id."]);
     });
@@ -134,7 +134,7 @@ describe("Month Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/month"
+        "/api/v2/automations/not-a-number/conditions/month",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing automation Id."]);
     });
@@ -198,7 +198,7 @@ describe("Month Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/month/not-a-number"
+        "/api/v2/automations/not-a-number/conditions/month/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], [
         "Invalid or missing automation Id.",
@@ -227,7 +227,7 @@ describe("Month Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/month/not-a-number"
+        "/api/v2/automations/not-a-number/conditions/month/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], [
         "Invalid or missing automation Id.",

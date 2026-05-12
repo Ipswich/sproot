@@ -44,7 +44,7 @@ const poolConfig = {
 
 function getConfigForSuffix(
   databaseSuffix: string,
-  migrationExtension: ".js" | ".ts"
+  migrationExtension: ".js" | ".ts",
 ): Knex.Config {
   return {
     client: "pg",
@@ -63,7 +63,7 @@ function getConfigForSuffix(
 }
 
 export function getKnexConfigForEnvironment(
-  environmentName: string | undefined
+  environmentName: string | undefined,
 ): Knex.Config | undefined {
   switch (environmentName?.toLowerCase()) {
     case "development":

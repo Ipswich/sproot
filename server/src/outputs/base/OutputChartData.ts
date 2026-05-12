@@ -63,7 +63,7 @@ export class OutputChartData implements IChartable {
       lastCacheData &&
       lastChartData.name ==
         formatDateForChart(
-          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000)
+          new Date(new Date(lastCacheData.logTime).getTime() - this.intervalMinutes * 60000),
         )
     ) {
       return true;

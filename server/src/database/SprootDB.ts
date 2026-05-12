@@ -52,7 +52,7 @@ export class SprootDB implements ISprootDB {
   async getSensorsAsync(): Promise<SDBSensor[]> {
     const sensors = await this.#connection("sensors").select(
       "*",
-      "subcontroller_id as subcontrollerId"
+      "subcontroller_id as subcontrollerId",
     );
     return this.#normalizeSensors(sensors);
   }
@@ -101,7 +101,7 @@ export class SprootDB implements ISprootDB {
   async updateSensorCalibrationAsync(
     sensorId: number,
     lowCalibrationPoint: number | null,
-    highCalibrationPoint: number | null
+    highCalibrationPoint: number | null,
   ): Promise<void> {
     return this.#connection("sensors").where("id", sensorId).update({
       lowCalibrationPoint: lowCalibrationPoint,
@@ -152,7 +152,7 @@ export class SprootDB implements ISprootDB {
           data: sensor.lastReading[readingType as ReadingType],
           units: sensor.units[readingType as ReadingType],
           logTime: this.#getCurrentTimestampValue(),
-        })
+        }),
       );
     }
     await Promise.allSettled(promises);
@@ -161,7 +161,7 @@ export class SprootDB implements ISprootDB {
     sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
-    toIsoString: boolean = false
+    toIsoString: boolean = false,
   ): Promise<SDBReading[]> {
     const readings = await this.#connection("sensors as s")
       .join("sensor_data as d", "s.id", "d.sensor_id")
@@ -177,7 +177,7 @@ export class SprootDB implements ISprootDB {
     since: Date,
     minutes: number,
     bucketMinutes: number,
-    toIsoString: boolean = false
+    toIsoString: boolean = false,
   ): Promise<SDBReading[]> {
     const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
     const aggregateViewName = this.#getSensorAggregateViewName(bucketInterval);
@@ -204,7 +204,7 @@ export class SprootDB implements ISprootDB {
             AND a.bucket > ?
           ORDER BY a.bucket ASC, a.metric ASC
         `,
-        [sensor.id, lookbackDate]
+        [sensor.id, lookbackDate],
       ),
       this.#connection.raw(
         `
@@ -224,16 +224,16 @@ export class SprootDB implements ISprootDB {
             d.metric ASC,
             d."logTime" DESC
         `,
-        [sensor.id, tailStart]
+        [sensor.id, tailStart],
       ),
     ]);
 
     return this.#normalizeReadings(
       this.#mergeSensorChartReadings(
         this.#getRawRows<SDBReading>(aggregateResult),
-        this.#getRawRows<SDBReading>(tailResult)
+        this.#getRawRows<SDBReading>(tailResult),
       ),
-      toIsoString
+      toIsoString,
     );
   }
   async getOutputsAsync(): Promise<SDBOutput[]> {
@@ -332,7 +332,7 @@ export class SprootDB implements ISprootDB {
     description: string | null,
     icon: string | null,
     color: string | null,
-    createdAt?: string | null
+    createdAt?: string | null,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("journals", {
       title,
@@ -347,7 +347,7 @@ export class SprootDB implements ISprootDB {
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    const archivedAt = journal.archived ? isoToDb(journal.archivedAt) ?? toDbDate() : null;
+    const archivedAt = journal.archived ? (isoToDb(journal.archivedAt) ?? toDbDate()) : null;
     return this.#connection("journals")
       .where("id", journal.id)
       .update({
@@ -387,7 +387,7 @@ export class SprootDB implements ISprootDB {
     return this.#connection("journal_tag_lookup").select(
       "id",
       "journal_id as journalId",
-      "tag_id as tagId"
+      "tag_id as tagId",
     );
   }
   async addJournalTagLookupAsync(journalId: number, tagId: number): Promise<number> {
@@ -405,7 +405,7 @@ export class SprootDB implements ISprootDB {
 
   async getJournalEntriesAsync(
     journalId: number,
-    withContent?: boolean
+    withContent?: boolean,
   ): Promise<SDBJournalEntry[]> {
     let results: SDBJournalEntry[] = [];
     if (!withContent) {
@@ -446,7 +446,7 @@ export class SprootDB implements ISprootDB {
     journalId: number,
     title: string | null,
     content: string,
-    createdAt?: string | null
+    createdAt?: string | null,
   ): Promise<number> {
     //TODO prevent updates if Journal is archived??
     const journalEntryId = await this.#insertAndGetIdAsync("journal_entries", {
@@ -513,7 +513,7 @@ export class SprootDB implements ISprootDB {
     return this.#connection("journal_entry_tag_lookup").select(
       "id",
       "journal_entry_id as journalEntryId",
-      "tag_id as tagId"
+      "tag_id as tagId",
     );
   }
 
@@ -566,7 +566,7 @@ export class SprootDB implements ISprootDB {
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
-    toIsoString: boolean = false
+    toIsoString: boolean = false,
   ): Promise<SDBOutputState[]> {
     const states = await this.#connection("outputs as o")
       .join("output_data as d", "o.id", "d.output_id")
@@ -582,7 +582,7 @@ export class SprootDB implements ISprootDB {
     since: Date,
     minutes: number,
     bucketMinutes: number,
-    toIsoString: boolean = false
+    toIsoString: boolean = false,
   ): Promise<SDBOutputState[]> {
     const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
     const aggregateViewName = this.#getOutputAggregateViewName(bucketInterval);
@@ -607,7 +607,7 @@ export class SprootDB implements ISprootDB {
             AND a.bucket > ?
           ORDER BY a.bucket ASC
         `,
-        [output.id, lookbackDate]
+        [output.id, lookbackDate],
       ),
       this.#connection.raw(
         `
@@ -622,16 +622,16 @@ export class SprootDB implements ISprootDB {
             time_bucket(INTERVAL '${bucketInterval} minutes', d."logTime") ASC,
             d."logTime" DESC
         `,
-        [output.id, tailStart]
+        [output.id, tailStart],
       ),
     ]);
 
     return this.#normalizeOutputStates(
       this.#mergeOutputChartStates(
         this.#getRawRows<SDBOutputState>(aggregateResult),
-        this.#getRawRows<SDBOutputState>(tailResult)
+        this.#getRawRows<SDBOutputState>(tailResult),
       ),
-      toIsoString
+      toIsoString,
     );
   }
   async getAutomationsAsync(): Promise<SDBAutomation[]> {
@@ -647,7 +647,7 @@ export class SprootDB implements ISprootDB {
     name: string,
     operator: AutomationOperator,
     id: number,
-    enabled: boolean
+    enabled: boolean,
   ): Promise<void> {
     return this.#connection("automations").where("id", id).update({ name, operator, enabled });
   }
@@ -680,7 +680,7 @@ export class SprootDB implements ISprootDB {
   async addOutputActionAsync(
     automationId: number,
     outputId: number,
-    value: number
+    value: number,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("output_actions", {
       automation_id: automationId,
@@ -705,14 +705,14 @@ export class SprootDB implements ISprootDB {
     ]);
   }
   async getNotificationActionByIdAsync(
-    notificationActionId: number
+    notificationActionId: number,
   ): Promise<SDBNotificationAction[]> {
     return this.#connection("notification_actions")
       .where("id", notificationActionId)
       .select(["id", "automation_id as automationId", "subject", "content"]);
   }
   async getNotificationActionsByAutomationIdAsync(
-    automationId: number
+    automationId: number,
   ): Promise<SDBNotificationAction[]> {
     return this.#connection("notification_actions")
       .where("automation_id", automationId)
@@ -721,7 +721,7 @@ export class SprootDB implements ISprootDB {
   async addNotificationActionAsync(
     automationId: number,
     subject: string,
-    content: string
+    content: string,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("notification_actions", {
       automation_id: automationId,
@@ -760,7 +760,7 @@ export class SprootDB implements ISprootDB {
     comparisonValue: number,
     comparisonLookback: number | null,
     sensorId: number,
-    readingType: string
+    readingType: string,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("sensor_conditions", {
       automation_id: automationId,
@@ -774,7 +774,7 @@ export class SprootDB implements ISprootDB {
   }
   async updateSensorConditionAsync(
     automationId: number,
-    condition: ISensorCondition
+    condition: ISensorCondition,
   ): Promise<void> {
     return this.#connection("sensor_conditions")
       .where("automation_id", automationId)
@@ -817,7 +817,7 @@ export class SprootDB implements ISprootDB {
     operator: ConditionOperator,
     comparisonValue: number,
     comparisonLookback: number | null,
-    outputId: number
+    outputId: number,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("output_conditions", {
       automation_id: automationId,
@@ -830,7 +830,7 @@ export class SprootDB implements ISprootDB {
   }
   async updateOutputConditionAsync(
     automationId: number,
-    condition: IOutputCondition
+    condition: IOutputCondition,
   ): Promise<void> {
     return this.#connection("output_conditions")
       .where("automation_id", automationId)
@@ -855,7 +855,7 @@ export class SprootDB implements ISprootDB {
     automationId: number,
     type: ConditionGroupType,
     startTime: string | undefined | null,
-    endTime: string | undefined | null
+    endTime: string | undefined | null,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("time_conditions", {
       automation_id: automationId,
@@ -885,7 +885,7 @@ export class SprootDB implements ISprootDB {
   async addWeekdayConditionAsync(
     automationId: number,
     groupType: ConditionGroupType,
-    weekdays: number
+    weekdays: number,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("weekday_conditions", {
       automation_id: automationId,
@@ -895,7 +895,7 @@ export class SprootDB implements ISprootDB {
   }
   async updateWeekdayConditionAsync(
     automationId: number,
-    condition: IWeekdayCondition
+    condition: IWeekdayCondition,
   ): Promise<void> {
     return this.#connection("weekday_conditions")
       .where("automation_id", automationId)
@@ -917,7 +917,7 @@ export class SprootDB implements ISprootDB {
   async addMonthConditionAsync(
     automationId: number,
     groupType: ConditionGroupType,
-    months: number
+    months: number,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("month_conditions", {
       automation_id: automationId,
@@ -957,7 +957,7 @@ export class SprootDB implements ISprootDB {
     startMonth: number,
     startDate: number,
     endMonth: number,
-    endDate: number
+    endDate: number,
   ): Promise<number> {
     return this.#insertAndGetIdAsync("date_range_conditions", {
       automation_id: automationId,
@@ -970,7 +970,7 @@ export class SprootDB implements ISprootDB {
   }
   async updateDateRangeConditionAsync(
     automationId: number,
-    condition: IDateRangeCondition
+    condition: IDateRangeCondition,
   ): Promise<void> {
     return this.#connection("date_range_conditions")
       .where("automation_id", automationId)
@@ -1053,7 +1053,7 @@ export class SprootDB implements ISprootDB {
 
   async getDatabaseSizeAsync(): Promise<number> {
     const result = await this.#connection.raw(
-      "SELECT ROUND(pg_database_size(current_database()) / 1024.0 / 1024.0, 2) AS size"
+      "SELECT ROUND(pg_database_size(current_database()) / 1024.0 / 1024.0, 2) AS size",
     );
     return this.#parseSizeValue(this.#getFirstRawRow(result)?.["size"]);
   }
@@ -1063,7 +1063,7 @@ export class SprootDB implements ISprootDB {
     port: number,
     user: string,
     password: string,
-    outputFile: string
+    outputFile: string,
   ): Promise<void> {
     return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile);
   }
@@ -1073,7 +1073,7 @@ export class SprootDB implements ISprootDB {
     port: number,
     user: string,
     password: string,
-    inputFile: string
+    inputFile: string,
   ): Promise<void> {
     const dbName = this.#connection.client.database();
 
@@ -1179,7 +1179,7 @@ export class SprootDB implements ISprootDB {
 
   #mergeOutputChartStates(
     baseRows: SDBOutputState[],
-    tailRows: SDBOutputState[]
+    tailRows: SDBOutputState[],
   ): SDBOutputState[] {
     const mergedRows = new Map<string, SDBOutputState>();
     for (const row of baseRows) {
@@ -1190,7 +1190,7 @@ export class SprootDB implements ISprootDB {
     }
 
     return [...mergedRows.values()].sort(
-      (left, right) => new Date(left.logTime).getTime() - new Date(right.logTime).getTime()
+      (left, right) => new Date(left.logTime).getTime() - new Date(right.logTime).getTime(),
     );
   }
 
@@ -1238,7 +1238,7 @@ export class SprootDB implements ISprootDB {
     port: number,
     user: string,
     password: string,
-    outputFile: string
+    outputFile: string,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const stderrChunks: string[] = [];
@@ -1261,7 +1261,7 @@ export class SprootDB implements ISprootDB {
             LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
             LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
           },
-        }
+        },
       );
       const gzip = spawn("gzip", ["-c"]);
       const out = fs.createWriteStream(outputFile, { flags: "w" });
@@ -1283,7 +1283,7 @@ export class SprootDB implements ISprootDB {
       dump.on("exit", (code) => {
         if (code !== 0) {
           return reject(
-            new Error(this.#buildDatabaseDumpErrorMessage(code, stderrChunks.join("")))
+            new Error(this.#buildDatabaseDumpErrorMessage(code, stderrChunks.join(""))),
           );
         }
       });
@@ -1302,7 +1302,7 @@ export class SprootDB implements ISprootDB {
     user: string,
     password: string,
     inputFile: string,
-    databaseName: string
+    databaseName: string,
   ): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       const gunzip = spawn("gunzip", ["-c", inputFile]);
@@ -1324,7 +1324,7 @@ export class SprootDB implements ISprootDB {
             LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
             LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
           },
-        }
+        },
       );
 
       gunzip.stdout.pipe(psql.stdin);

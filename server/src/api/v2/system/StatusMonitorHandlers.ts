@@ -5,7 +5,7 @@ import { SystemStatusMonitor } from "../../../system/StatusMonitor";
 
 export async function systemStatusMonitorHandlerAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const systemStatusMonitor = request.app.get(DI_KEYS.SystemStatusMonitor) as SystemStatusMonitor;
 

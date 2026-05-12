@@ -27,13 +27,13 @@ export default function StatesChartContainer({
 }: StatesChartContainerProps) {
   const baseChartData = new ChartData(
     Constants.MAX_CHART_DATA_POINTS,
-    Constants.CHART_DATA_POINT_INTERVAL
+    Constants.CHART_DATA_POINT_INTERVAL,
   );
   const [timeSpans, setTimeSpans] = useState(
     ChartData.generateTimeSpansFromDataSeries(
       baseChartData.get(),
-      baseChartData.intervalMinutes
-    )
+      baseChartData.intervalMinutes,
+    ),
   );
   const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
 
@@ -54,13 +54,13 @@ export default function StatesChartContainer({
     const baseChartData = new ChartData(
       Constants.MAX_CHART_DATA_POINTS,
       Constants.CHART_DATA_POINT_INTERVAL,
-      newData.data
+      newData.data,
     );
     setTimeSpans(
       ChartData.generateTimeSpansFromDataSeries(
         baseChartData.get(),
-        baseChartData.intervalMinutes
-      )
+        baseChartData.intervalMinutes,
+      ),
     );
     setChartSeries(newData.series);
     setChartRendering(false);
@@ -81,7 +81,7 @@ export default function StatesChartContainer({
   )
     .filter((output) => {
       return toggledDeviceZones.includes(
-        (output.deviceZoneId ?? -1).toString()
+        (output.deviceZoneId ?? -1).toString(),
       );
     })
     .map((output) => output.name ?? "");
@@ -100,7 +100,7 @@ export default function StatesChartContainer({
       <StatesChart
         dataSeries={ChartData.filterChartData(
           timeSpans[parseInt(chartInterval)]!,
-          hiddenOutputs
+          hiddenOutputs,
         )}
         chartSeries={chartSeries}
         chartRendering={chartDataQuery.isPending || chartRendering}

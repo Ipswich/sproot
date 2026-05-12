@@ -19,7 +19,7 @@ type CreateOutputActionRequestBody =
  */
 export async function getAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const query = (getValidatedContractRequestData<"listOutputActions">(response).query ??
@@ -29,7 +29,9 @@ export async function getAsync(
 
   try {
     if (automationId != null && !isNaN(parseInt(automationId))) {
-      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(parseInt(automationId));
+      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(
+        parseInt(automationId),
+      );
       automationResponse = {
         statusCode: 200,
         content: {
@@ -70,7 +72,7 @@ export async function getAsync(
  */
 export async function getByIdAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
@@ -137,7 +139,7 @@ export async function getByIdAsync(
  */
 export async function addAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
@@ -227,7 +229,7 @@ export async function addAsync(
  */
 export async function deleteAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;

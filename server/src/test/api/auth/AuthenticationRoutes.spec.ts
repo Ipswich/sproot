@@ -1,10 +1,7 @@
 import { Express } from "express";
 import request from "supertest";
 
-import {
-  createAuthenticatedAppAsync,
-  disposeTestAppAsync,
-} from "../shared/authenticatedApp";
+import { createAuthenticatedAppAsync, disposeTestAppAsync } from "../shared/authenticatedApp";
 import { assertContractBadRequest } from "../shared/assertContractBadRequest";
 
 describe("Authentication Routes", () => {

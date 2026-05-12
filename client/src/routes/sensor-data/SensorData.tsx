@@ -22,25 +22,25 @@ export default function SensorData() {
   const readingTypeString = useLoaderData() as string;
 
   const [chartInterval, setChartInterval] = useState(
-    localStorage.getItem("sensorChartInterval") ?? "24"
+    localStorage.getItem("sensorChartInterval") ?? "24",
   );
   const [segmentedControlValue, setSegmentedControlValue] =
     useState(chartInterval);
   const [useAlternateUnits, setAlternateUnits] = useState(
-    localStorage.getItem(`${readingTypeString}-useAlternateUnits`) === "true"
+    localStorage.getItem(`${readingTypeString}-useAlternateUnits`) === "true",
   );
   const [chartRendering, setChartRendering] = useState(true);
 
   const [sensorToggleStates, setSensorToggleStates] = useState(
     JSON.parse(
-      localStorage.getItem(sensorsToggledKey(readingTypeString)) ?? "[]"
-    ) as string[]
+      localStorage.getItem(sensorsToggledKey(readingTypeString)) ?? "[]",
+    ) as string[],
   );
   const [deviceZoneToggleStates, setDeviceZoneToggleStates] = useState(
     JSON.parse(
       localStorage.getItem(sensorToggledDeviceZonesKey(readingTypeString)) ??
-        "[]"
-    ) as string[]
+        "[]",
+    ) as string[],
   );
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function SensorData() {
                 onChange={(event) => {
                   localStorage.setItem(
                     `${readingTypeString}-useAlternateUnits`,
-                    event.currentTarget.checked.valueOf().toString()
+                    event.currentTarget.checked.valueOf().toString(),
                   );
                   setAlternateUnits(!useAlternateUnits);
                 }}
@@ -123,7 +123,7 @@ export default function SensorData() {
           readingType={readingTypeString as ReadingType}
           sensorToggleStates={sensorToggleStates}
           setSensorToggleStates={(
-            newSensorToggleState: SetStateAction<string[]>
+            newSensorToggleState: SetStateAction<string[]>,
           ) => {
             setSensorToggleStates(newSensorToggleState);
           }}

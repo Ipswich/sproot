@@ -27,7 +27,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.post(
@@ -37,7 +37,7 @@ router.post(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.patch(
@@ -47,7 +47,7 @@ router.patch(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.delete(
@@ -57,7 +57,7 @@ router.delete(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -67,7 +67,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -75,35 +75,35 @@ router.get(
   createContractRoute("getEsp32FirmwareManifest", async (req: Request, res: Response) => {
     const response = await getESP32ManifestAsync(req, res);
     res.status(response.statusCode).json(response);
-  })
+  }),
 );
 
 router.get(
   "/firmware/esp32/binary",
   createContractRoute("downloadEsp32FirmwareBinary", async (req: Request, res: Response) => {
     await getESP32FirmwareBinaryAsync(req, res);
-  })
+  }),
 );
 
 router.get(
   "/firmware/esp32/bootloader",
   createContractRoute("downloadEsp32FirmwareBootloader", async (req: Request, res: Response) => {
     await getESP32BootloaderBinaryAsync(req, res);
-  })
+  }),
 );
 
 router.get(
   "/firmware/esp32/partitions",
   createContractRoute("downloadEsp32FirmwarePartitions", async (req: Request, res: Response) => {
     await getESP32PartitionsBinaryAsync(req, res);
-  })
+  }),
 );
 
 router.get(
   "/firmware/esp32/application",
   createContractRoute("downloadEsp32FirmwareApplication", async (req: Request, res: Response) => {
     await getESP32ApplicationBinaryAsync(req, res);
-  })
+  }),
 );
 
 router.post(
@@ -113,7 +113,7 @@ router.post(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 export default router;

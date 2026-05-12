@@ -34,7 +34,7 @@ export default function StatesAccordion({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
   const [orderedOutputs, setOutputOrder] = useState([] as IOutputBase[]);
 
@@ -85,7 +85,7 @@ export default function StatesAccordion({
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
           outputStateOrderKey(deviceZoneId),
-          JSON.stringify(updatedArray)
+          JSON.stringify(updatedArray),
         );
         return updatedArray;
       });
@@ -95,7 +95,7 @@ export default function StatesAccordion({
   function updateOutputOrderAsync() {
     const existingOrder = (
       JSON.parse(
-        localStorage.getItem(outputStateOrderKey(deviceZoneId)) ?? "[]"
+        localStorage.getItem(outputStateOrderKey(deviceZoneId)) ?? "[]",
       ) as IOutputBase[]
     ).map((o) => o.id);
     const retrievedOutputs = Object.values(outputs);
@@ -103,13 +103,13 @@ export default function StatesAccordion({
 
     //Get outputs that don't exist in last list
     const newOutputs = retrievedOutputs.filter(
-      (output) => !existingOrder.includes(output.id)
+      (output) => !existingOrder.includes(output.id),
     );
 
     //Add the outputs that do exist in the last list
     existingOrder.forEach((outputId) => {
       const outputIndex = retrievedOutputs.findIndex(
-        (o) => o.id == Number(outputId)
+        (o) => o.id == Number(outputId),
       );
       if (outputIndex != -1) {
         orderedOutputs.push(retrievedOutputs[outputIndex]!);

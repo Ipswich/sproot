@@ -44,7 +44,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        false
+        false,
       )) as SuccessResponse;
       assert.equal(result.statusCode, 200);
       const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
@@ -76,7 +76,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        true
+        true,
       )) as SuccessResponse;
       assert.equal(result.statusCode, 200);
       const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
@@ -108,7 +108,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        false
+        false,
       )) as ErrorResponse;
       assert.equal(result.statusCode, 401);
       assert.equal(result.error.name, "Unauthorized");
@@ -139,7 +139,7 @@ describe("TokenHandlers.ts tests", () => {
         "false",
         jwtExpiration,
         jwtSecret,
-        false
+        false,
       )) as ErrorResponse;
       assert.equal(result.statusCode, 501);
       assert.equal(result.error.name, "Not Implemented");
@@ -171,7 +171,7 @@ describe("TokenHandlers.ts tests", () => {
         "true",
         jwtExpiration,
         jwtSecret,
-        false
+        false,
       )) as ErrorResponse;
       assert.equal(result.statusCode, 503);
       assert.equal(result.error.name, "Service Unavailable");

@@ -9,16 +9,18 @@ import type {
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { getValidatedContractRequestData } from "../../../validation/validateRequest";
 
-type ListAvailableOutputDevicesPathParams = ContractOperationPathParams<"listAvailableOutputDevices">;
+type ListAvailableOutputDevicesPathParams =
+  ContractOperationPathParams<"listAvailableOutputDevices">;
 type ListAvailableOutputDevicesQuery = ContractOperationQueryParams<"listAvailableOutputDevices">;
 
 export async function getAvailableDevices(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const validatedRequest = getValidatedContractRequestData<"listAvailableOutputDevices">(response);
-  const pathParams = (validatedRequest.params ?? request.params) as ListAvailableOutputDevicesPathParams;
+  const pathParams = (validatedRequest.params ??
+    request.params) as ListAvailableOutputDevicesPathParams;
   const query = (validatedRequest.query ?? request.query) as ListAvailableOutputDevicesQuery;
   const model = pathParams["model"];
   const address = query["address"];
@@ -60,7 +62,7 @@ export async function getAvailableDevices(
           url: request.originalUrl,
           details: [
             `Model '${model}' not recognized, supported models are: ${Object.values(Models).join(
-              ", "
+              ", ",
             )}`,
           ],
         },

@@ -25,7 +25,7 @@ export class OutputActionManager implements Disposable {
     eventBus: IEventBus,
     sprootDB: ISprootDB,
     logger: winston.Logger,
-    automationTimeout: number
+    automationTimeout: number,
   ): Promise<OutputActionManager> {
     const manager = new OutputActionManager(
       outputId,
@@ -33,7 +33,7 @@ export class OutputActionManager implements Disposable {
       eventBus,
       sprootDB,
       logger,
-      automationTimeout
+      automationTimeout,
     );
     await manager.#reloadActionsAsync();
     return manager;
@@ -45,7 +45,7 @@ export class OutputActionManager implements Disposable {
     eventBus: IEventBus,
     sprootDB: ISprootDB,
     logger: winston.Logger,
-    automationTimeout: number
+    automationTimeout: number,
   ) {
     this.#outputId = outputId;
     this.#triggeredActionFunction = actionFunction;
@@ -63,13 +63,13 @@ export class OutputActionManager implements Disposable {
         .then(async () => {
           const result = await this.#handleAutomationEvent(event);
           this.#logger.debug(
-            `Received Automation event for output ${this.#outputId} - result: ${result}`
+            `Received Automation event for output ${this.#outputId} - result: ${result}`,
           );
           await this.#triggeredActionFunction(result);
         })
         .catch((error) => {
           this.#logger.error(
-            `Error handling automation event for output ${this.#outputId} - ${error}`
+            `Error handling automation event for output ${this.#outputId} - ${error}`,
           );
         });
     };
@@ -170,7 +170,7 @@ export class OutputActionManager implements Disposable {
     if (valueCounts.size > 1) {
       this.#logger.warn(
         `Collision detected on output ${this.#outputId}: ` +
-          `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`
+          `${triggeredActions.map((t) => `${t.payload.automationName}=${t.value}`).join(", ")}`,
       );
       this.#lastActionValue = 0;
       return this.#lastActionValue;

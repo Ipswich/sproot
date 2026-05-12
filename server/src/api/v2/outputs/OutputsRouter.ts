@@ -15,7 +15,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -25,7 +25,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -35,7 +35,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -45,7 +45,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.post(
@@ -55,7 +55,7 @@ router.post(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.patch(
@@ -65,7 +65,7 @@ router.patch(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.delete(
@@ -75,7 +75,7 @@ router.delete(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.put(
@@ -85,7 +85,7 @@ router.put(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.put(
@@ -95,7 +95,7 @@ router.put(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 router.get(
@@ -105,7 +105,7 @@ router.get(
 
     res.status(response.statusCode).json(response);
     return;
-  })
+  }),
 );
 
 export default router;

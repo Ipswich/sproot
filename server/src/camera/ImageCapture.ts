@@ -43,7 +43,7 @@ class ImageCapture {
       });
       if (!response?.ok || !response.body) {
         this.#logger.error(
-          `Image capture was unsuccessful (status: ${response?.status}).. Filename: ${IMAGE_DIRECTORY}/${fileName}`
+          `Image capture was unsuccessful (status: ${response?.status}).. Filename: ${IMAGE_DIRECTORY}/${fileName}`,
         );
         return;
       }
@@ -58,7 +58,7 @@ class ImageCapture {
       this.#logger.error(
         `Image capture failed for ${IMAGE_DIRECTORY}/${fileName}: ${
           e instanceof Error ? e.message : String(e)
-        }`
+        }`,
       );
       return;
     }
@@ -67,7 +67,7 @@ class ImageCapture {
   async getLatestImageAsync(): Promise<Buffer | null> {
     const imagePath = await getSortedFileAsync(
       IMAGE_DIRECTORY,
-      (a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime()
+      (a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime(),
     );
     if (imagePath) {
       return fs.promises.readFile(imagePath);
@@ -127,7 +127,7 @@ class ImageCapture {
         }
       } catch (e) {
         this.#logger.warn(
-          `Failed to remove ${targetPath}: ${e instanceof Error ? e.message : String(e)}`
+          `Failed to remove ${targetPath}: ${e instanceof Error ? e.message : String(e)}`,
         );
       }
     }
@@ -144,7 +144,7 @@ class ImageCapture {
     retentionSize: number = 0,
     retentionDays: number = 0,
     now = new Date(),
-    directory = TIMELAPSE_DIRECTORY
+    directory = TIMELAPSE_DIRECTORY,
   ): Promise<void> {
     if (this.#isRunningImageRetention || this.#timelapse.isGeneratingTimelapseArchive) {
       return;
@@ -173,7 +173,7 @@ class ImageCapture {
         this.#logger.warn(
           `Cannot access file for retention check: ${oldestFilePath}. Skipping. Error: ${
             e instanceof Error ? e.message : String(e)
-          }`
+          }`,
         );
         ignoreFiles.add(oldestFilePath);
         oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
@@ -202,7 +202,7 @@ class ImageCapture {
         this.#logger.warn(
           `Cannot delete file for retention check: ${oldestFilePath}. Skipping. Error: ${
             e instanceof Error ? e.message : String(e)
-          }`
+          }`,
         );
         ignoreFiles.add(oldestFilePath);
         oldestFilePath = await getOldestFilePathAsync(directory, ignoreFiles);
@@ -211,14 +211,14 @@ class ImageCapture {
       const reasons = [];
       if (oversizedStorage) {
         reasons.push(
-          `Size limit exceeded (${directorySizeMB.toFixed(2)} MB > ${maxRetentionSizeMB} MB)`
+          `Size limit exceeded (${directorySizeMB.toFixed(2)} MB > ${maxRetentionSizeMB} MB)`,
         );
       }
       if (exceededRetentionPeriod) {
         reasons.push(
           `Retention period exceeded (${new Date(oldestFileTime).toISOString()} < ${new Date(
-            cutoffTime
-          ).toISOString()})`
+            cutoffTime,
+          ).toISOString()})`,
         );
       }
       this.#logger.debug(`Removed old image: ${oldestFilePath}, ${reasons.join(", ")}`);

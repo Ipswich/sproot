@@ -185,7 +185,9 @@ describe("DeviceZoneHandlers.ts", function () {
       assert.equal(success.content!.data.id, 2);
       assert.equal(success.content!.data.name, "Validated Zone");
       assert.isTrue(mockSprootDb.updateDeviceZoneAsync.calledOnce);
-      assert.isTrue(mockSprootDb.updateDeviceZoneAsync.calledWithMatch({ id: 2, name: "Validated Zone" }));
+      assert.isTrue(
+        mockSprootDb.updateDeviceZoneAsync.calledWithMatch({ id: 2, name: "Validated Zone" }),
+      );
     });
 
     it("should return a 200 and the updated device zone", async function () {

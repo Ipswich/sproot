@@ -41,13 +41,13 @@ export default function ReadingsChartContainer({
 }: ReadingsChartContainerProps) {
   const baseChartData = new ChartData(
     Constants.MAX_CHART_DATA_POINTS,
-    Constants.CHART_DATA_POINT_INTERVAL
+    Constants.CHART_DATA_POINT_INTERVAL,
   );
   const [timeSpans, setTimeSpans] = useState(
     ChartData.generateTimeSpansFromDataSeries(
       baseChartData.get(),
-      baseChartData.intervalMinutes
-    )
+      baseChartData.intervalMinutes,
+    ),
   );
   const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
 
@@ -71,13 +71,13 @@ export default function ReadingsChartContainer({
     const baseChartData = new ChartData(
       Constants.MAX_CHART_DATA_POINTS,
       Constants.CHART_DATA_POINT_INTERVAL,
-      newData.data[readingType as ReadingType]
+      newData.data[readingType as ReadingType],
     );
     setTimeSpans(
       ChartData.generateTimeSpansFromDataSeries(
         baseChartData.get(),
-        baseChartData.intervalMinutes
-      )
+        baseChartData.intervalMinutes,
+      ),
     );
     setChartSeries(newData.series);
     setChartRendering(false);
@@ -152,7 +152,7 @@ export default function ReadingsChartContainer({
       <ReadingsChart
         dataSeries={ChartData.filterChartData(
           timeSpans[parseInt(chartInterval)]!,
-          hiddenSensors
+          hiddenSensors,
         )}
         chartSeries={chartSeries}
         readingType={readingType}

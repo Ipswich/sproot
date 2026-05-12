@@ -18,7 +18,7 @@ export default function conditionsRouter(router: Router): Router {
 
       res.status(response.statusCode).json(response);
       return;
-    })
+    }),
   );
 
   router.get(
@@ -28,7 +28,7 @@ export default function conditionsRouter(router: Router): Router {
 
       res.status(response.statusCode).json(response);
       return;
-    })
+    }),
   );
 
   router.get(
@@ -38,7 +38,7 @@ export default function conditionsRouter(router: Router): Router {
 
       res.status(response.statusCode).json(response);
       return;
-    })
+    }),
   );
 
   router.post(
@@ -48,7 +48,7 @@ export default function conditionsRouter(router: Router): Router {
 
       res.status(response.statusCode).json(response);
       return;
-    })
+    }),
   );
 
   router.patch(
@@ -58,7 +58,7 @@ export default function conditionsRouter(router: Router): Router {
 
       res.status(response.statusCode).json(response);
       return;
-    })
+    }),
   );
 
   router.delete(
@@ -68,7 +68,7 @@ export default function conditionsRouter(router: Router): Router {
 
       res.status(response.statusCode).json(response);
       return;
-    })
+    }),
   );
 
   return router;

@@ -22,7 +22,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<CapacitiveMoistureSensor | null> {
     const sensor = new CapacitiveMoistureSensor(
       sdbSensor,
@@ -31,7 +31,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     return sensor.initializeAsync(ADS1115.MAX_SENSOR_READ_TIME);
   }
@@ -43,7 +43,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     super(
       sdbSensor,
@@ -53,7 +53,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       maxChartDataSize,
       chartDataPointInterval,
       [ReadingType.moisture],
-      logger
+      logger,
     );
 
     this.lowCalibrationPoint = sdbSensor.lowCalibrationPoint;
@@ -65,14 +65,14 @@ export class CapacitiveMoistureSensor extends SensorBase {
       const rawReading = await Ads1115Device.getRawReadingAsync(
         this.pin,
         Number(this.address),
-        CapacitiveMoistureSensor.GAIN
+        CapacitiveMoistureSensor.GAIN,
       );
       await this.#recalibrateAsync(rawReading);
 
       const normalizedReading = this.#normalizeRawReading(rawReading);
       if (isNaN(normalizedReading)) {
         this.logger.error(
-          `${this.model} { id: ${this.id} } returned an invalid reading: { raw: ${rawReading}, normalized: ${normalizedReading} }`
+          `${this.model} { id: ${this.id} } returned an invalid reading: { raw: ${rawReading}, normalized: ${normalizedReading} }`,
         );
         return;
       }
@@ -106,7 +106,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
     const averageReading = (filteredSum + rawAsPercentMoisture) / (relevantReadings.length + 1);
     if (isNaN(averageReading)) {
       this.logger.error(
-        `Average reading is NaN - ${this.model} { id: ${this.id} }, raw: ${rawReading}, percent: ${rawAsPercentMoisture}, historical: ${historicalReadings}, relevant: ${relevantReadings}, filteredSum: ${filteredSum}, average: ${averageReading}`
+        `Average reading is NaN - ${this.model} { id: ${this.id} }, raw: ${rawReading}, percent: ${rawAsPercentMoisture}, historical: ${historicalReadings}, relevant: ${relevantReadings}, filteredSum: ${filteredSum}, average: ${averageReading}`,
       );
     }
     return averageReading;
@@ -142,12 +142,12 @@ export class CapacitiveMoistureSensor extends SensorBase {
 
     if (shouldUpdateCalibration) {
       this.logger.info(
-        `${this.model} { id: ${this.id} } recalibrated. New low: ${this.lowCalibrationPoint}, new high: ${this.highCalibrationPoint}`
+        `${this.model} { id: ${this.id} } recalibrated. New low: ${this.lowCalibrationPoint}, new high: ${this.highCalibrationPoint}`,
       );
       await this.sprootDB.updateSensorCalibrationAsync(
         this.id,
         this.lowCalibrationPoint,
-        this.highCalibrationPoint
+        this.highCalibrationPoint,
       );
     }
   }
@@ -161,7 +161,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
   #getPercentMoisture(rawReading: number): number {
     if (this.lowCalibrationPoint == null || this.highCalibrationPoint == null) {
       throw new Error(
-        `Calibration points not set for ${this.model} { id: ${this.id} }. Please calibrate the sensor first.`
+        `Calibration points not set for ${this.model} { id: ${this.id} }. Please calibrate the sensor first.`,
       );
     }
     if (
@@ -171,7 +171,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       throw new Error(
         `Invalid reading for ${this.model} { id: ${this.id} }: ${
           this.lastReading[ReadingType.moisture]
-        }`
+        }`,
       );
     }
 

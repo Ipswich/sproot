@@ -110,7 +110,7 @@ export type ContractOperationSuccessResponse<OperationId extends ContractOperati
   ZodiosResponseByAlias<ContractGeneratedApi<OperationId>, OperationId>;
 
 export const contractDomainExportNames = generatedApiContractManifest.domains.map(
-  (domain) => domain.exportName
+  (domain) => domain.exportName,
 ) as readonly ContractDomainExportName[];
 
 export const contractOperationIds = generatedApiContractManifest.domains.flatMap((domain) => [

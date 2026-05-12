@@ -10,7 +10,7 @@ export type KnexConnectionOptions = {
 };
 
 export async function getKnexConnectionAsync(
-  options: KnexConnectionOptions = {}
+  options: KnexConnectionOptions = {},
 ): Promise<Knex<any, unknown>> {
   const config = getKnexConfigForEnvironment(process.env["NODE_ENV"]);
   if (!config) {
@@ -92,7 +92,7 @@ async function reseedDatabaseSequencesAsync(connection: Knex): Promise<void> {
   for (const { table_name: tableName, column_name: columnName } of sequenceColumns) {
     const sequenceResult = await connection.raw(
       "SELECT pg_get_serial_sequence(?, ?) AS sequence_name",
-      [tableName, columnName]
+      [tableName, columnName],
     );
     const sequenceName = sequenceResult.rows?.[0]?.sequence_name as string | null | undefined;
 
@@ -101,7 +101,7 @@ async function reseedDatabaseSequencesAsync(connection: Knex): Promise<void> {
     }
 
     const maxValueResult = await connection(tableName).max<{ max: number | string | null }[]>(
-      `${columnName} as max`
+      `${columnName} as max`,
     );
     const maxValue = normalizeNullableNumber(maxValueResult[0]?.max);
 

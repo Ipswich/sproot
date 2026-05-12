@@ -56,7 +56,7 @@ export async function getReadingTypesAsync(): Promise<
 
 export async function getSensorChartDataAsync(
   readingType?: string,
-  latest?: boolean
+  latest?: boolean,
 ): Promise<{
   data: Partial<Record<ReadingType, DataSeries>>;
   series: ChartSeries[];
@@ -72,7 +72,7 @@ export async function getSensorChartDataAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching sensor chart data: ${response}`);
@@ -95,7 +95,7 @@ export async function getOutputChartDataAsync(latest?: boolean): Promise<{
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching output chart data: ${response}`);
@@ -128,7 +128,7 @@ export async function getSupportedSensorModelsAsync(): Promise<
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching supported sensor models: ${response}`);
@@ -219,7 +219,7 @@ export async function addDeviceZoneAsync(name: string): Promise<void> {
 }
 
 export async function updateDeviceZoneAsync(
-  group: SDBDeviceZone
+  group: SDBDeviceZone,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/device-zones/${group.id}`,
@@ -229,7 +229,7 @@ export async function updateDeviceZoneAsync(
       body: JSON.stringify({ name: group.name }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error updating device zone: ${response}`);
@@ -265,7 +265,7 @@ export async function getAutomationsAsync(): Promise<IAutomation[]> {
 
 export async function addAutomationAsync(
   name: string,
-  operator: AutomationOperator
+  operator: AutomationOperator,
 ): Promise<IAutomation> {
   const response = await fetch(`${SERVER_URL}/api/v2/automations`, {
     method: "POST",
@@ -284,7 +284,7 @@ export async function updateAutomationAsync(
   id: number,
   name?: string,
   operator?: AutomationOperator,
-  enabled?: boolean
+  enabled?: boolean,
 ): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/automations/${id}`, {
     method: "PATCH",
@@ -349,7 +349,7 @@ export async function getConditionsAsync(automationId: number): Promise<{
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching sensor conditions: ${response}`);
@@ -365,7 +365,7 @@ export async function addSensorConditionAsync(
   comparisonValue: number,
   comparisonLookback: number | null,
   sensorId: string,
-  readingType: ReadingType
+  readingType: ReadingType,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/sensor`,
@@ -382,7 +382,7 @@ export async function addSensorConditionAsync(
       }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -390,7 +390,7 @@ export async function addSensorConditionAsync(
 
 export async function deleteSensorConditionAsync(
   automationId: number,
-  id: number
+  id: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/sensor/${id}`,
@@ -399,7 +399,7 @@ export async function deleteSensorConditionAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error deleting sensor condition: ${response}`);
@@ -412,7 +412,7 @@ export async function addOutputConditionAsync(
   operator: ConditionOperator,
   comparisonValue: number,
   comparisonLookback: number | null,
-  outputId: string
+  outputId: string,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/output`,
@@ -428,7 +428,7 @@ export async function addOutputConditionAsync(
       }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -436,7 +436,7 @@ export async function addOutputConditionAsync(
 
 export async function deleteOutputConditionAsync(
   automationId: number,
-  id: number
+  id: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/output/${id}`,
@@ -445,7 +445,7 @@ export async function deleteOutputConditionAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error deleting output condition: ${response}`);
@@ -456,7 +456,7 @@ export async function addTimeConditionAsync(
   automationId: number,
   groupType: ConditionGroupType,
   startTime: string | null,
-  endTime: string | null
+  endTime: string | null,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/time`,
@@ -466,7 +466,7 @@ export async function addTimeConditionAsync(
       body: JSON.stringify({ groupType, startTime, endTime }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -474,7 +474,7 @@ export async function addTimeConditionAsync(
 
 export async function deleteTimeConditionAsync(
   automationId: number,
-  id: number
+  id: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/time/${id}`,
@@ -483,7 +483,7 @@ export async function deleteTimeConditionAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error deleting time condition: ${response}`);
@@ -493,7 +493,7 @@ export async function deleteTimeConditionAsync(
 export async function addWeekdayConditionAsync(
   automationId: number,
   groupType: ConditionGroupType,
-  weekdays: number
+  weekdays: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/weekday`,
@@ -503,7 +503,7 @@ export async function addWeekdayConditionAsync(
       body: JSON.stringify({ groupType, weekdays }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -511,7 +511,7 @@ export async function addWeekdayConditionAsync(
 
 export async function deleteWeekdayConditionAsync(
   automationId: number,
-  id: number
+  id: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/weekday/${id}`,
@@ -520,7 +520,7 @@ export async function deleteWeekdayConditionAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error deleting weekday condition: ${response}`);
@@ -530,7 +530,7 @@ export async function deleteWeekdayConditionAsync(
 export async function addMonthConditionAsync(
   automationId: number,
   groupType: ConditionGroupType,
-  months: number
+  months: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/month`,
@@ -540,7 +540,7 @@ export async function addMonthConditionAsync(
       body: JSON.stringify({ groupType, months }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -548,7 +548,7 @@ export async function addMonthConditionAsync(
 
 export async function deleteMonthConditionAsync(
   automationId: number,
-  id: number
+  id: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/month/${id}`,
@@ -557,7 +557,7 @@ export async function deleteMonthConditionAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error deleting month condition: ${response}`);
@@ -570,7 +570,7 @@ export async function addDateRangeConditionAsync(
   startMonth: number,
   startDate: number,
   endMonth: number,
-  endDate: number
+  endDate: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/date-range`,
@@ -586,7 +586,7 @@ export async function addDateRangeConditionAsync(
       }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -594,7 +594,7 @@ export async function addDateRangeConditionAsync(
 
 export async function deleteDateRangeConditionAsync(
   automationId: number,
-  id: number
+  id: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/automations/${automationId}/conditions/date-range/${id}`,
@@ -603,7 +603,7 @@ export async function deleteDateRangeConditionAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error deleting month condition: ${response}`);
@@ -611,7 +611,7 @@ export async function deleteDateRangeConditionAsync(
 }
 
 export async function getOutputActionsByAutomationIdAsync(
-  automationId: number
+  automationId: number,
 ): Promise<SDBOutputAction[]> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/output-actions?automationId=${automationId}`,
@@ -620,7 +620,7 @@ export async function getOutputActionsByAutomationIdAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching output actions: ${response}`);
@@ -632,7 +632,7 @@ export async function getOutputActionsByAutomationIdAsync(
 export async function addOutputActionAsync(
   automationId: number,
   outputId: number,
-  value: number
+  value: number,
 ) {
   const response = await fetch(`${SERVER_URL}/api/v2/output-actions`, {
     method: "POST",
@@ -659,7 +659,7 @@ export async function deleteOutputActionAsync(id: number): Promise<void> {
 }
 
 export async function getNotificationActionsByAutomationIdAsync(
-  automationId: number
+  automationId: number,
 ): Promise<SDBNotificationAction[]> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/notification-actions?automationId=${automationId}`,
@@ -668,7 +668,7 @@ export async function getNotificationActionsByAutomationIdAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching notification actions: ${response}`);
@@ -681,7 +681,7 @@ export async function getNotificationActionsByAutomationIdAsync(
 export async function addNotificationActionAsync(
   automationId: number,
   subject: string,
-  content: string
+  content: string,
 ): Promise<SDBNotificationAction | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/notification-actions`, {
     method: "POST",
@@ -708,7 +708,7 @@ export async function deleteNotificationActionAsync(id: number): Promise<void> {
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error deleting notification action: ${response}`);
@@ -723,7 +723,7 @@ export async function getActiveNotificationsAsync(): Promise<IActiveNotification
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     throw new Error(`Error fetching active notifications: ${response.status}`);
@@ -742,7 +742,7 @@ export async function getSupportedOutputModelsAsync(): Promise<
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching supported output models: ${response}`);
@@ -752,7 +752,7 @@ export async function getSupportedOutputModelsAsync(): Promise<
 }
 
 export async function addOutputAsync(
-  output: IOutputBase
+  output: IOutputBase,
 ): Promise<IOutputBase | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/outputs`, {
     method: "POST",
@@ -770,7 +770,7 @@ export async function addOutputAsync(
 }
 
 export async function updateOutputAsync(
-  output: IOutputBase
+  output: IOutputBase,
 ): Promise<IOutputBase | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/outputs/${output.id}`, {
     method: "PATCH",
@@ -801,7 +801,7 @@ export async function deleteOutputAsync(id: number): Promise<void> {
 
 export async function setOutputControlModeAsync(
   id: number,
-  controlMode: string = "manual"
+  controlMode: string = "manual",
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/outputs/${id}/control-mode`,
@@ -811,7 +811,7 @@ export async function setOutputControlModeAsync(
       body: JSON.stringify({ controlMode }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error setting control mode: ${response}`);
@@ -820,7 +820,7 @@ export async function setOutputControlModeAsync(
 
 export async function setOutputManualStateAsync(
   id: number,
-  value: number
+  value: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/outputs/${id}/manual-state`,
@@ -830,7 +830,7 @@ export async function setOutputManualStateAsync(
       body: JSON.stringify({ value }),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error setting manual state: ${response}`);
@@ -874,7 +874,7 @@ export async function getJournalTagsAsync(): Promise<SDBJournalTag[]> {
 
 export async function addJournalTagAsync(
   name: string,
-  color: string | null = null
+  color: string | null = null,
 ): Promise<SDBJournalTag | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/tags/journals`, {
     method: "POST",
@@ -892,7 +892,7 @@ export async function addJournalTagAsync(
 }
 
 export async function updateJournalTagAsync(
-  tag: SDBJournalTag
+  tag: SDBJournalTag,
 ): Promise<SDBJournalTag | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/tags/journals/${tag.id}`, {
     method: "PATCH",
@@ -928,7 +928,7 @@ export async function getJournalEntryTagsAsync(): Promise<
 
 export async function addJournalEntryTagAsync(
   name: string,
-  color: string | null = null
+  color: string | null = null,
 ): Promise<SDBJournalEntryTag | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/tags/entries`, {
     method: "POST",
@@ -946,7 +946,7 @@ export async function addJournalEntryTagAsync(
 }
 
 export async function updateJournalEntryTagAsync(
-  tag: SDBJournalEntryTag
+  tag: SDBJournalEntryTag,
 ): Promise<SDBJournalEntryTag | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/tags/entries/${tag.id}`, {
     method: "PATCH",
@@ -988,7 +988,7 @@ export async function deleteJournalTagAsync(id: number): Promise<void> {
 }
 
 export async function addJournalAsync(
-  journal: Partial<SDBJournal>
+  journal: Partial<SDBJournal>,
 ): Promise<SDBJournal | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/journals`, {
     method: "POST",
@@ -1006,7 +1006,7 @@ export async function addJournalAsync(
 }
 
 export async function updateJournalAsync(
-  journal: SDBJournal
+  journal: SDBJournal,
 ): Promise<SDBJournal | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/journals/${journal.id}`, {
     method: "PATCH",
@@ -1037,7 +1037,7 @@ export async function deleteJournalAsync(id: number): Promise<void> {
 
 export async function addTagToJournalEntryAsync(
   entryId: number,
-  tagId: number
+  tagId: number,
 ): Promise<void> {
   const response = await fetch(`${SERVER_URL}/api/v2/entries/${entryId}/tags`, {
     method: "PUT",
@@ -1052,7 +1052,7 @@ export async function addTagToJournalEntryAsync(
 
 export async function addTagToJournalAsync(
   journalId: number,
-  tagId: number
+  tagId: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/journals/${journalId}/tags`,
@@ -1061,7 +1061,7 @@ export async function addTagToJournalAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tagId: String(tagId) }),
       mode: "cors",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error adding tag to journal: ${response}`);
@@ -1070,7 +1070,7 @@ export async function addTagToJournalAsync(
 
 export async function removeTagFromJournalAsync(
   journalId: number,
-  tagId: number
+  tagId: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/journals/${journalId}/tags/${tagId}`,
@@ -1078,7 +1078,7 @@ export async function removeTagFromJournalAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error removing tag from journal: ${response}`);
@@ -1087,7 +1087,7 @@ export async function removeTagFromJournalAsync(
 
 export async function addJournalEntryAsync(
   journalId: number,
-  entry: Partial<SDBJournalEntry>
+  entry: Partial<SDBJournalEntry>,
 ): Promise<unknown | undefined> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/journals/${journalId}/entries`,
@@ -1096,7 +1096,7 @@ export async function addJournalEntryAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...entry }),
       mode: "cors",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error adding journal entry: ${response}`);
@@ -1108,7 +1108,7 @@ export async function addJournalEntryAsync(
 
 export async function getJournalEntryAsync(
   entryId: number,
-  withContent = true
+  withContent = true,
 ): Promise<
   { entry: Partial<SDBJournalEntry>; tags: SDBJournalEntryTag[] } | undefined
 > {
@@ -1119,7 +1119,7 @@ export async function getJournalEntryAsync(
       method: "GET",
       headers: {},
       mode: "cors",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching journal entry: ${response}`);
@@ -1131,7 +1131,7 @@ export async function getJournalEntryAsync(
 
 export async function getJournalEntriesAsync(
   journalId: number,
-  withContent = false
+  withContent = false,
 ): Promise<{ entry: Partial<SDBJournalEntry>; tags: SDBJournalEntryTag[] }[]> {
   const queryString = queryBuilder({ withContent });
   const response = await fetch(
@@ -1140,7 +1140,7 @@ export async function getJournalEntriesAsync(
       method: "GET",
       headers: {},
       mode: "cors",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching journal entries: ${response}`);
@@ -1151,7 +1151,7 @@ export async function getJournalEntriesAsync(
 }
 
 export async function updateJournalEntryAsync(
-  entry: Partial<SDBJournalEntry>
+  entry: Partial<SDBJournalEntry>,
 ): Promise<SDBJournalEntry | undefined> {
   const response = await fetch(`${SERVER_URL}/api/v2/entries/${entry.id}`, {
     method: "PATCH",
@@ -1180,7 +1180,7 @@ export async function deleteJournalEntryAsync(id: number): Promise<void> {
 
 export async function removeTagFromJournalEntryAsync(
   entryId: number,
-  tagId: number
+  tagId: number,
 ): Promise<void> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/entries/${entryId}/tags/${tagId}`,
@@ -1188,7 +1188,7 @@ export async function removeTagFromJournalEntryAsync(
       method: "DELETE",
       headers: {},
       mode: "cors",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error removing tag from journal entry: ${response}`);
@@ -1224,7 +1224,7 @@ export async function pingAsync(): Promise<boolean> {
 export async function getAvailableDevicesAsync(
   model: string,
   address?: string,
-  filterUsed = true
+  filterUsed = true,
 ): Promise<AvailableDevice[]> {
   const queryString = queryBuilder({ address, filterUsed });
   try {
@@ -1235,7 +1235,7 @@ export async function getAvailableDevicesAsync(
         headers: {},
         mode: "cors",
         // credentials: "include",
-      }
+      },
     );
     const deserializedResponse = (await response.json()) as SuccessResponse;
     return deserializedResponse.content?.data;
@@ -1301,7 +1301,7 @@ export async function getTimelapseArchiveStatusAsync(): Promise<{
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching timelapse archive status: ${response}`);
@@ -1318,7 +1318,7 @@ export async function regenerateTimelapseArchiveAsync(): Promise<void> {
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error regenerating timelapse archive: ${response}`);
@@ -1346,7 +1346,7 @@ export async function getCameraSettingsAsync(): Promise<SDBCameraSettings> {
 }
 
 export async function updateCameraSettingsAsync(
-  settings: SDBCameraSettings
+  settings: SDBCameraSettings,
 ): Promise<void> {
   settings.videoFps = null;
   settings.xImageResolution = null;
@@ -1428,7 +1428,7 @@ export async function getBackupsListAsync(): Promise<string[]> {
 }
 
 export async function downloadBackupAsync(
-  fileName: string
+  fileName: string,
 ): Promise<{ success: boolean }> {
   const downloadUrl = `${SERVER_URL}/api/v2/system/backups/download/${fileName}`;
   try {
@@ -1453,7 +1453,7 @@ export async function downloadBackupAsync(
 }
 
 export async function uploadAndRestoreBackupAsync(
-  file: File
+  file: File,
 ): Promise<SuccessResponse | ErrorResponse> {
   const response = await fetch(`${SERVER_URL}/api/v2/system/backups/restore`, {
     method: "POST",
@@ -1496,7 +1496,7 @@ export async function getBackupCreationStatusAsync(): Promise<{
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching backup creation status: ${response}`);
@@ -1506,7 +1506,7 @@ export async function getBackupCreationStatusAsync(): Promise<{
 }
 
 export async function getSubcontrollerConnectionStatusAsync(
-  id: number
+  id: number,
 ): Promise<{ online: boolean; version?: string }> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/subcontrollers/${id}/connection-status`,
@@ -1515,7 +1515,7 @@ export async function getSubcontrollerConnectionStatusAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error fetching subcontrollers: ${response}`);
@@ -1553,7 +1553,7 @@ export async function updateSubcontrollerAsync(device: {
       body: JSON.stringify(device),
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(`Error updating subcontroller: ${response}`);
@@ -1572,11 +1572,11 @@ export async function getFirmwareManifestAsync(): Promise<{
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(
-      `Error fetching subcontroller firmware manifest: ${response}`
+      `Error fetching subcontroller firmware manifest: ${response}`,
     );
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
@@ -1584,7 +1584,7 @@ export async function getFirmwareManifestAsync(): Promise<{
 }
 
 export async function triggerSubcontrollerFirmwareUpdateAsync(
-  id: number
+  id: number,
 ): Promise<{ status: number; message: string }> {
   const response = await fetch(
     `${SERVER_URL}/api/v2/subcontrollers/firmware/esp32/ota-update/${id}`,
@@ -1593,11 +1593,11 @@ export async function triggerSubcontrollerFirmwareUpdateAsync(
       headers: {},
       mode: "cors",
       // credentials: "include",
-    }
+    },
   );
   if (!response.ok) {
     console.error(
-      `Error triggering subcontroller firmware update: ${response}`
+      `Error triggering subcontroller firmware update: ${response}`,
     );
     const deserializedResponse = (await response.json()) as ErrorResponse;
     return {
@@ -1636,7 +1636,7 @@ export async function getSubcontrollerManifestAsync(model: string) {
             headers: {},
             mode: "cors",
             // credentials: "include",
-          }
+          },
         );
         break;
       default:
@@ -1645,7 +1645,7 @@ export async function getSubcontrollerManifestAsync(model: string) {
 
     if (!response.ok) {
       throw new Error(
-        `Error fetching esp32 manifest: ${response.status} ${response.statusText}`
+        `Error fetching esp32 manifest: ${response.status} ${response.statusText}`,
       );
     }
   } catch (e) {
@@ -1671,7 +1671,7 @@ export async function getSubcontrollerBinaryAsync(model: string) {
             headers: {},
             mode: "cors",
             // credentials: "include",
-          }
+          },
         );
         break;
       default:
@@ -1680,7 +1680,7 @@ export async function getSubcontrollerBinaryAsync(model: string) {
 
     if (!response.ok) {
       throw new Error(
-        `Error fetching esp32 binary: ${response.status} ${response.statusText}`
+        `Error fetching esp32 binary: ${response.status} ${response.statusText}`,
       );
     }
   } catch (e) {
@@ -1703,7 +1703,7 @@ export async function getSubControllerBootloaderAsync(model: string) {
             headers: {},
             mode: "cors",
             // credentials: "include",
-          }
+          },
         );
         break;
       default:
@@ -1712,7 +1712,7 @@ export async function getSubControllerBootloaderAsync(model: string) {
 
     if (!response.ok) {
       throw new Error(
-        `Error fetching esp32 bootloader: ${response.status} ${response.statusText}`
+        `Error fetching esp32 bootloader: ${response.status} ${response.statusText}`,
       );
     }
   } catch (e) {
@@ -1735,7 +1735,7 @@ export async function getSubControllerPartitionsAsync(model: string) {
             headers: {},
             mode: "cors",
             // credentials: "include",
-          }
+          },
         );
         break;
       default:
@@ -1744,7 +1744,7 @@ export async function getSubControllerPartitionsAsync(model: string) {
 
     if (!response.ok) {
       throw new Error(
-        `Error fetching esp32 partitions: ${response.status} ${response.statusText}`
+        `Error fetching esp32 partitions: ${response.status} ${response.statusText}`,
       );
     }
   } catch (e) {
@@ -1767,7 +1767,7 @@ export async function getSubControllerApplicationAsync(model: string) {
             headers: {},
             mode: "cors",
             // credentials: "include",
-          }
+          },
         );
         break;
       default:
@@ -1776,7 +1776,7 @@ export async function getSubControllerApplicationAsync(model: string) {
 
     if (!response.ok) {
       throw new Error(
-        `Error fetching esp32 application: ${response.status} ${response.statusText}`
+        `Error fetching esp32 application: ${response.status} ${response.statusText}`,
       );
     }
   } catch (e) {
@@ -1788,7 +1788,7 @@ export async function getSubControllerApplicationAsync(model: string) {
 }
 
 function queryBuilder(
-  params: Record<string, string | boolean | undefined>
+  params: Record<string, string | boolean | undefined>,
 ): string {
   return (
     Object.entries(params)

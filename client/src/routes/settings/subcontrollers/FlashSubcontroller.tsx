@@ -77,7 +77,7 @@ export default function FlashSubcontroller(): JSX.Element {
       const TransportCtor = Transport as unknown as new (
         port: unknown,
         tracing?: boolean,
-        enableSlipReader?: boolean
+        enableSlipReader?: boolean,
       ) => EsptTransportLike;
 
       const t = new TransportCtor(p as unknown, false, true);
@@ -85,7 +85,7 @@ export default function FlashSubcontroller(): JSX.Element {
 
       pushLog(
         "info",
-        "Transport created for selected port (ESPLoader will open it when needed)"
+        "Transport created for selected port (ESPLoader will open it when needed)",
       );
     } catch (err) {
       pushLog("error", `Failed to open serial port: ${(err as Error).message}`);
@@ -158,7 +158,7 @@ export default function FlashSubcontroller(): JSX.Element {
       if (!transportRef.current) {
         pushLog(
           "info",
-          "No transport available, attempting to connect port..."
+          "No transport available, attempting to connect port...",
         );
         await connectPort();
       }
@@ -180,7 +180,7 @@ export default function FlashSubcontroller(): JSX.Element {
 
       pushLog(
         "info",
-        "Starting flash process (attempting to initialize loader)..."
+        "Starting flash process (attempting to initialize loader)...",
       );
 
       for (const romBaud of romBaudRates) {
@@ -202,7 +202,7 @@ export default function FlashSubcontroller(): JSX.Element {
             "error",
             `Loader init failed at romBaudrate=${romBaud}: ${
               (err as Error).message
-            }`
+            }`,
           );
           try {
             if (transport && typeof transport.disconnect === "function") {

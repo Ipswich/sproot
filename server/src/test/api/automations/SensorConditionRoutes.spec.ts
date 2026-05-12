@@ -44,7 +44,7 @@ describe("Sensor Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/sensor"
+        "/api/v2/automations/not-a-number/conditions/sensor",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing automation Id."]);
     });
@@ -58,7 +58,7 @@ describe("Sensor Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/1/conditions/sensor/not-a-number"
+        "/api/v2/automations/1/conditions/sensor/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing condition Id."]);
     });
@@ -158,7 +158,7 @@ describe("Sensor Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/sensor"
+        "/api/v2/automations/not-a-number/conditions/sensor",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing automation Id."]);
     });
@@ -189,11 +189,7 @@ describe("Sensor Condition Routes", () => {
         .send(invalidBody)
         .expect(400);
 
-      assertContractBadRequest(
-        response,
-        "/api/v2/automations/1/conditions/sensor/3",
-        invalidBody
-      );
+      assertContractBadRequest(response, "/api/v2/automations/1/conditions/sensor/3", invalidBody);
     });
 
     it("should reject invalid enums through contract middleware", async () => {
@@ -203,11 +199,7 @@ describe("Sensor Condition Routes", () => {
         .send(invalidBody)
         .expect(400);
 
-      assertContractBadRequest(
-        response,
-        "/api/v2/automations/1/conditions/sensor/3",
-        invalidBody
-      );
+      assertContractBadRequest(response, "/api/v2/automations/1/conditions/sensor/3", invalidBody);
     });
 
     it("should reject malformed bodies through contract middleware", async () => {
@@ -217,11 +209,7 @@ describe("Sensor Condition Routes", () => {
         .send(invalidBody)
         .expect(400);
 
-      assertContractBadRequest(
-        response,
-        "/api/v2/automations/1/conditions/sensor/3",
-        invalidBody
-      );
+      assertContractBadRequest(response, "/api/v2/automations/1/conditions/sensor/3", invalidBody);
     });
 
     it("should reject invalid path parameters through remaining handler/domain validation", async () => {
@@ -234,7 +222,7 @@ describe("Sensor Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/sensor/not-a-number"
+        "/api/v2/automations/not-a-number/conditions/sensor/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], [
         "Invalid or missing automation Id.",
@@ -263,7 +251,7 @@ describe("Sensor Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/sensor/not-a-number"
+        "/api/v2/automations/not-a-number/conditions/sensor/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], [
         "Invalid or missing automation Id.",

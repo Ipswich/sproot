@@ -5,9 +5,7 @@ import { Request, Response } from "express";
 import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import type { operations as SensorContractOperations } from "@sproot/sproot-common/dist/api/generated/sensors/types";
-import {
-  ContractOperationPathParams,
-} from "@sproot/sproot-common/dist/api/contracts/operation-types";
+import { ContractOperationPathParams } from "@sproot/sproot-common/dist/api/contracts/operation-types";
 import { getValidatedContractRequestData } from "../../../validation/validateRequest";
 
 type CreateSensorRequestBody =
@@ -35,8 +33,9 @@ type SensorUpdateFallbackBody = {
 export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let getSensorResponse: SuccessResponse | ErrorResponse;
-  const validatedPathParams = getValidatedContractRequestData<"getSensorById">(response)
-    .params as GetSensorByIdPathParams | undefined;
+  const validatedPathParams = getValidatedContractRequestData<"getSensorById">(response).params as
+    | GetSensorByIdPathParams
+    | undefined;
   const sensorId = validatedPathParams?.["sensorId"] ?? request.params["sensorId"];
 
   if (sensorId !== undefined) {
@@ -81,7 +80,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
  */
 export async function addAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const requestBody = (getValidatedContractRequestData<"createSensor">(response).body ??
@@ -106,7 +105,7 @@ export async function addAsync(
       .includes(newSensor.model)
   ) {
     validationErrors.push(
-      `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(Models).join(", ")}`
+      `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(Models).join(", ")}`,
     );
   }
   if (
@@ -163,7 +162,7 @@ export async function addAsync(
  **/
 export async function updateAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const validatedRequest = getValidatedContractRequestData<"updateSensor">(response);
@@ -249,7 +248,7 @@ export async function updateAsync(
  */
 export async function deleteAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   const pathParams = (getValidatedContractRequestData<"deleteSensor">(response).params ??

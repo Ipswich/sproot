@@ -66,7 +66,7 @@ export default async function setupAsync(): Promise<Express> {
     eventBus,
     sprootDB,
     process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
-    logger
+    logger,
   );
   app.set(DI_KEYS.CameraManager, cameraManager);
 
@@ -79,7 +79,7 @@ export default async function setupAsync(): Promise<Express> {
     Constants.INITIAL_CACHE_LOOKBACK,
     Constants.MAX_CHART_DATA_POINTS,
     Constants.CHART_DATA_POINT_INTERVAL,
-    logger
+    logger,
   );
   app.set(DI_KEYS.SensorList, sensorList);
   const outputList = await OutputList.createInstanceAsync(
@@ -90,7 +90,7 @@ export default async function setupAsync(): Promise<Express> {
     Constants.INITIAL_CACHE_LOOKBACK,
     Constants.MAX_CHART_DATA_POINTS,
     Constants.CHART_DATA_POINT_INTERVAL,
-    logger
+    logger,
   );
   app.set(DI_KEYS.OutputList, outputList);
 
@@ -101,7 +101,7 @@ export default async function setupAsync(): Promise<Express> {
     automationService,
     sensorList,
     outputList,
-    logger
+    logger,
   );
   app.set(DI_KEYS.AutomationsCronJob, automationsCronJob);
 
@@ -129,7 +129,7 @@ export default async function setupAsync(): Promise<Express> {
 export async function gracefulHaltAsync(
   server: import("http").Server,
   app: Express,
-  afterHalt?: () => Promise<void>
+  afterHalt?: () => Promise<void>,
 ) {
   const logger = app.get(DI_KEYS.Logger);
   logger.info("Shutting down...");

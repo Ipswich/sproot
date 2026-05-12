@@ -440,7 +440,7 @@ describe("UpstreamConnection", () => {
     const fetchStub = sinon.stub(globalThis, "fetch").resolves(
       new Response(Readable.toWeb(upstreamStream) as ReadableStream, {
         status: 200,
-      })
+      }),
     );
 
     const upstream = new UpstreamConnection({
@@ -478,7 +478,7 @@ describe("UpstreamConnection", () => {
     const fetchStub = sinon.stub(globalThis, "fetch").resolves(
       new Response(Readable.toWeb(upstreamStream) as ReadableStream, {
         status: 200,
-      })
+      }),
     );
 
     const upstream = new UpstreamConnection({
@@ -523,12 +523,12 @@ describe("UpstreamConnection", () => {
     fetchStub.onFirstCall().resolves(
       new Response(Readable.toWeb(firstUpstreamStream) as ReadableStream, {
         status: 200,
-      })
+      }),
     );
     fetchStub.onSecondCall().resolves(
       new Response(Readable.toWeb(secondUpstreamStream) as ReadableStream, {
         status: 200,
-      })
+      }),
     );
 
     const upstream = new UpstreamConnection({

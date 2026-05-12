@@ -45,7 +45,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     this.id = sdbOutput.id;
     this.model = sdbOutput.model;
@@ -141,7 +141,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.eventBus,
       this.sprootDB,
       this.logger,
-      this.automationTimeout
+      this.automationTimeout,
     );
 
     return this;
@@ -218,7 +218,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       //If miss count exceeds 3 * N, force update (3 real tries, because intervals).
       if (this.#updateMissCount >= 3 * this.#chartDataPointInterval) {
         this.logger.warn(
-          `Chart data update miss count exceeded (3) for output {id: ${this.id}}. Forcing update to re-sync.`
+          `Chart data update miss count exceeded (3) for output {id: ${this.id}}. Forcing update to re-sync.`,
         );
         this.#updateChartData();
         this.#updateMissCount = 0;
@@ -240,7 +240,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   protected addCurrentStateToCache(): void {
     this.#cache.addData(this.state.get());
     this.logger.info(
-      `Updated cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`
+      `Updated cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`,
     );
   }
 
@@ -249,10 +249,10 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       await this.#cache.loadFromDatabaseAsync(
         this.id,
         this.#initialCacheLookback,
-        this.#chartDataPointInterval
+        this.#chartDataPointInterval,
       );
       this.logger.info(
-        `Loaded cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`
+        `Loaded cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`,
       );
     } catch (err) {
       this.logger.error(`Failed to load cached states for {id: ${this.id}}. ${err}`);
@@ -265,18 +265,18 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.logger.info(
       `Loaded chart data for output {id: ${this.id}}. Chart data size - ${
         this.#chartData.get().data.length
-      }`
+      }`,
     );
   }
 
   protected async executeStateHelperAsync(
     executionFnAsync: (value: number) => Promise<void>,
-    forceExecution: boolean
+    forceExecution: boolean,
   ): Promise<void> {
     if (!forceExecution) {
       if (this.#isExecuting) {
         this.logger.verbose(
-          `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`
+          `Output { Model: ${this.model}, id: ${this.id} } is already updating. Skipping state execution.`,
         );
         return;
       }
@@ -294,7 +294,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.logger.verbose(
         `Executing ${this.controlMode} state for ${this.model.toLowerCase()} id: ${this.id}, pin: ${
           this.pin
-        }. New value: ${validatedValue}`
+        }. New value: ${validatedValue}`,
       );
       this.state.updateLastState();
       await executionFnAsync(validatedValue);
@@ -336,7 +336,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.logger.info(
       `Updated chart data for output {id: ${this.id}}. Chart data size - ${
         this.#chartData.get().data.length
-      }`
+      }`,
     );
   }
 }

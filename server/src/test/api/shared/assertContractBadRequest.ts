@@ -6,7 +6,7 @@ import { validateMiddlewareValues } from "../../utils";
 export function assertContractBadRequest(
   response: request.Response,
   expectedUrl: string,
-  expectedBody: unknown
+  expectedBody: unknown,
 ) {
   validateMiddlewareValues(response);
   assert.equal(response.body["statusCode"], 400);

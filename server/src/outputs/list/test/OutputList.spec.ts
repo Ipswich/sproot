@@ -284,7 +284,9 @@ describe("OutputList.ts tests", function () {
       await Promise.all([firstRegenerate, secondRegenerate]);
 
       assert.equal(getOutputsAsyncStub.callCount, 1);
-      assert.isTrue(warn.calledWith("OutputList is already updating, skipping regenerateAsync call."));
+      assert.isTrue(
+        warn.calledWith("OutputList is already updating, skipping regenerateAsync call."),
+      );
     });
   });
 

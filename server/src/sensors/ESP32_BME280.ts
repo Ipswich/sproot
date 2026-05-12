@@ -20,7 +20,7 @@ class ESP32_BME280 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<ESP32_BME280 | null> {
     const sensor = new ESP32_BME280(
       sdbsensor,
@@ -31,7 +31,7 @@ class ESP32_BME280 extends SensorBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     return sensor.initializeAsync(ESP32_BME280.MAX_SENSOR_READ_TIME);
   }
@@ -45,7 +45,7 @@ class ESP32_BME280 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     super(
       sdbsensor,
@@ -55,7 +55,7 @@ class ESP32_BME280 extends SensorBase {
       maxChartDataSize,
       chartDataPointInterval,
       [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
-      logger
+      logger,
     );
 
     this.#mdnsService = mdnsService;
@@ -68,7 +68,7 @@ class ESP32_BME280 extends SensorBase {
       const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
       if (ipAddress == null) {
         throw new Error(
-          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`
+          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`,
         );
       }
       this.lastReadingTime = new Date();

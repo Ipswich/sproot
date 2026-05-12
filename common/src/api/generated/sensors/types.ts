@@ -8,901 +8,901 @@
  */
 
 export interface paths {
-    "/api/v2/sensors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get all sensors.
-         * @description Returns a list of all sensors. This includes basic information about each sensor, such as name, model, and address. Also contains the last reading and time of the last reading.
-         */
-        get: operations["listSensors"];
-        put?: never;
-        /**
-         * Add a new sensor.
-         * @description Adds a new sensor to the service, and regenerates the list of sensors. Returns the information used to create the sensor.
-         */
-        post: operations["createSensor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/api/v2/sensors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v2/sensors/{sensorId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get a sensor by Id.
-         * @description Returns data for the given sensor. This includes basic information, such as name, model,  and address. Also contains the last reading and time of the last reading.
-         */
-        get: operations["getSensorById"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete a sensor by Id.
-         * @description Deletes a sensor with the given ID. This operation is permanent and cannot be undone.
-         */
-        delete: operations["deleteSensor"];
-        options?: never;
-        head?: never;
-        /**
-         * Update a sensor by Id.
-         * @description Updates a sensor with the given ID. This operation changes only the fields provided.
-         */
-        patch: operations["updateSensor"];
-        trace?: never;
+    /**
+     * Get all sensors.
+     * @description Returns a list of all sensors. This includes basic information about each sensor, such as name, model, and address. Also contains the last reading and time of the last reading.
+     */
+    get: operations["listSensors"];
+    put?: never;
+    /**
+     * Add a new sensor.
+     * @description Adds a new sensor to the service, and regenerates the list of sensors. Returns the information used to create the sensor.
+     */
+    post: operations["createSensor"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/sensors/{sensorId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v2/sensors/chart-data": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get all chart data.
-         * @description Returns chart data for all sensors.
-         */
-        get: operations["getSensorChartData"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get a sensor by Id.
+     * @description Returns data for the given sensor. This includes basic information, such as name, model,  and address. Also contains the last reading and time of the last reading.
+     */
+    get: operations["getSensorById"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete a sensor by Id.
+     * @description Deletes a sensor with the given ID. This operation is permanent and cannot be undone.
+     */
+    delete: operations["deleteSensor"];
+    options?: never;
+    head?: never;
+    /**
+     * Update a sensor by Id.
+     * @description Updates a sensor with the given ID. This operation changes only the fields provided.
+     */
+    patch: operations["updateSensor"];
+    trace?: never;
+  };
+  "/api/v2/sensors/chart-data": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v2/sensors/supported-models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get supported models.
-         * @description Returns a list of supported sensor models, with the key as the actual model type and the value as the display type. Pass the key to the server where appropriate.
-         */
-        get: operations["listSupportedSensorModels"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get all chart data.
+     * @description Returns chart data for all sensors.
+     */
+    get: operations["getSensorChartData"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/sensors/supported-models": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v2/sensors/reading-types": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get active reading types and their units.
-         * @description Returns a list of active sensor reading types and their units. These are the ones currently  in use by the system.
-         */
-        get: operations["getSensorReadingTypes"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get supported models.
+     * @description Returns a list of supported sensor models, with the key as the actual model type and the value as the display type. Pass the key to the server where appropriate.
+     */
+    get: operations["listSupportedSensorModels"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/sensors/reading-types": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /**
+     * Get active reading types and their units.
+     * @description Returns a list of active sensor reading types and their units. These are the ones currently  in use by the system.
+     */
+    get: operations["getSensorReadingTypes"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
-        SuccessResponse: {
-            statusCode?: number;
-            content?: Record<string, never>;
-        } & components["schemas"]["ApiResponse"];
-        /** @description A basic sensor object that is returned by the API. This expands upon SDBSensor, including the last reading, last reading time, and units. This maps to what the app keeps in memory. */
-        SensorBase: components["schemas"]["SDBSensor"] & {
-            /** @example 1 */
-            id: number;
-            lastReading: {
-                /** @example 23.5 */
-                temperature?: string;
-            };
-            /**
-             * Format: date-time
-             * @example 2021-01-01T00:00:00.000Z
-             */
-            lastReadingTime: string | null;
-            units: {
-                /** @example C */
-                temperature?: string;
-            };
-        };
-        /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
-        ErrorResponse: {
-            statusCode?: number;
-            error: {
-                request?: {
-                    method?: string;
-                    url?: string;
-                    body?: Record<string, never>;
-                    query?: Record<string, never>;
-                };
-                name?: string;
-                url?: string;
-                details?: string[];
-            };
-        } & components["schemas"]["ApiResponse"];
-        /** @description Request body for creating a sensor. Contains only the fields consumed by the create sensor handler. */
-        SensorCreateRequest: {
-            /** @example Windowsill */
-            name: string;
-            /** @example DS18B20 */
-            model: string;
-            /** @example 1 */
-            subcontrollerId?: number | null;
-            /** @example 28-00000 */
-            address: string;
-            /** @example #ff0000 */
-            color?: string;
-            /** @example 0 */
-            pin?: string | null;
-        };
-        /** @description Transport shape returned by create sensor. This reflects the handler response before any follow-up read normalization. */
-        SensorCreateResponse: {
-            /** @example Windowsill */
-            name: string;
-            /** @example DS18B20 */
-            model: string;
-            /** @example 1 */
-            subcontrollerId?: number | null;
-            /** @example 28-00000 */
-            address: string;
-            /** @example #ff0000 */
-            color?: string;
-            /** @example 0 */
-            pin?: string | null;
-        };
-        /** @description Request body for updating a sensor. This operation changes only the declared transport fields provided. Other writable fields still remain handler-owned until the runtime behavior is fully represented in the contract. */
-        SensorUpdateRequest: {
-            /** @example Windowsill */
-            name?: string;
-            /** @example BME280 */
-            model?: string;
-            /** @example 0x76 */
-            address?: string;
-            /** @example #ff0000 */
-            color?: string;
-        };
-        /** @description A sensor object that is stored in the database. Contains all the information needed to  create a sensor, including name, model, address, and, color. */
-        SDBSensor: {
-            /** @example Windowsill */
-            name: string;
-            /** @example DS18B20 */
-            model: string;
-            /** @example 1 */
-            subcontrollerId?: number | null;
-            /** @example 28-00000 */
-            address: string;
-            /** @example #ff0000 */
-            color: string;
-            /** @example 0 */
-            pin?: string | null;
-            /** @example 0 */
-            lowCalibrationPoint?: number | null;
-            /** @example 100 */
-            highCalibrationPoint?: number | null;
-        };
-        /** @description A data point for recharts. */
-        DataPoint: {
-            name: string;
-            units?: string;
-        } & {
-            [key: string]: number | string;
-        };
-        /** @description An object containing both a name and a color. Used to add flair to a line on a chart. */
-        ChartSeries: {
-            name: string;
-            color: string;
-        };
-        /** @description A Record of supported device models, mapped to a presentable label. */
-        SupportedModels: {
-            type?: string;
-        };
-        /** @description An obejct of active sensor reading types and their units. */
-        ReadingTypes: Record<string, never>;
-        /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
-        ApiResponse: {
-            statusCode: number;
-            /** @example 2021-01-01T00:00:00.000Z */
-            timestamp: string;
-            /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
-            requestId: string;
-        };
+  schemas: {
+    /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
+    SuccessResponse: {
+      statusCode?: number;
+      content?: Record<string, never>;
+    } & components["schemas"]["ApiResponse"];
+    /** @description A basic sensor object that is returned by the API. This expands upon SDBSensor, including the last reading, last reading time, and units. This maps to what the app keeps in memory. */
+    SensorBase: components["schemas"]["SDBSensor"] & {
+      /** @example 1 */
+      id: number;
+      lastReading: {
+        /** @example 23.5 */
+        temperature?: string;
+      };
+      /**
+       * Format: date-time
+       * @example 2021-01-01T00:00:00.000Z
+       */
+      lastReadingTime: string | null;
+      units: {
+        /** @example C */
+        temperature?: string;
+      };
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
+    ErrorResponse: {
+      statusCode?: number;
+      error: {
+        request?: {
+          method?: string;
+          url?: string;
+          body?: Record<string, never>;
+          query?: Record<string, never>;
+        };
+        name?: string;
+        url?: string;
+        details?: string[];
+      };
+    } & components["schemas"]["ApiResponse"];
+    /** @description Request body for creating a sensor. Contains only the fields consumed by the create sensor handler. */
+    SensorCreateRequest: {
+      /** @example Windowsill */
+      name: string;
+      /** @example DS18B20 */
+      model: string;
+      /** @example 1 */
+      subcontrollerId?: number | null;
+      /** @example 28-00000 */
+      address: string;
+      /** @example #ff0000 */
+      color?: string;
+      /** @example 0 */
+      pin?: string | null;
+    };
+    /** @description Transport shape returned by create sensor. This reflects the handler response before any follow-up read normalization. */
+    SensorCreateResponse: {
+      /** @example Windowsill */
+      name: string;
+      /** @example DS18B20 */
+      model: string;
+      /** @example 1 */
+      subcontrollerId?: number | null;
+      /** @example 28-00000 */
+      address: string;
+      /** @example #ff0000 */
+      color?: string;
+      /** @example 0 */
+      pin?: string | null;
+    };
+    /** @description Request body for updating a sensor. This operation changes only the declared transport fields provided. Other writable fields still remain handler-owned until the runtime behavior is fully represented in the contract. */
+    SensorUpdateRequest: {
+      /** @example Windowsill */
+      name?: string;
+      /** @example BME280 */
+      model?: string;
+      /** @example 0x76 */
+      address?: string;
+      /** @example #ff0000 */
+      color?: string;
+    };
+    /** @description A sensor object that is stored in the database. Contains all the information needed to  create a sensor, including name, model, address, and, color. */
+    SDBSensor: {
+      /** @example Windowsill */
+      name: string;
+      /** @example DS18B20 */
+      model: string;
+      /** @example 1 */
+      subcontrollerId?: number | null;
+      /** @example 28-00000 */
+      address: string;
+      /** @example #ff0000 */
+      color: string;
+      /** @example 0 */
+      pin?: string | null;
+      /** @example 0 */
+      lowCalibrationPoint?: number | null;
+      /** @example 100 */
+      highCalibrationPoint?: number | null;
+    };
+    /** @description A data point for recharts. */
+    DataPoint: {
+      name: string;
+      units?: string;
+    } & {
+      [key: string]: number | string;
+    };
+    /** @description An object containing both a name and a color. Used to add flair to a line on a chart. */
+    ChartSeries: {
+      name: string;
+      color: string;
+    };
+    /** @description A Record of supported device models, mapped to a presentable label. */
+    SupportedModels: {
+      type?: string;
+    };
+    /** @description An obejct of active sensor reading types and their units. */
+    ReadingTypes: Record<string, never>;
+    /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
+    ApiResponse: {
+      statusCode: number;
+      /** @example 2021-01-01T00:00:00.000Z */
+      timestamp: string;
+      /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
+      requestId: string;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    listSensors: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 200 */
-                        statusCode?: unknown;
-                        content?: {
-                            data?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-        };
+  listSensors: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    createSensor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SensorCreateRequest"];
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 200 */
+            statusCode?: unknown;
+            content?: {
+              data?: unknown;
             };
+          };
         };
-        responses: {
-            /** @description Sensor created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 201 */
-                        statusCode?: unknown;
-                        content?: {
-                            data?: components["schemas"]["SensorCreateResponse"];
-                        };
-                    };
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 400 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Bad Request */
-                            name?: unknown;
-                            /** @example /api/v2/sensors */
-                            url?: unknown;
-                            /**
-                             * @example [
-                             *       "Missing required field: name",
-                             *       "Missing required field: model",
-                             *       "Missing required field: address"
-                             *     ]
-                             */
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Service unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 503 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Service Unavailable */
-                            name?: unknown;
-                            /** @example /api/v2/sensors */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
     };
-    getSensorById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
+  };
+  createSensor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SensorCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Sensor created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 201 */
+            statusCode?: unknown;
+            content?: {
+              data?: components["schemas"]["SensorCreateResponse"];
+            };
+          };
+        };
+      };
+      /** @description Bad request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 400 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Bad Request */
+              name?: unknown;
+              /** @example /api/v2/sensors */
+              url?: unknown;
+              /**
+               * @example [
+               *       "Missing required field: name",
+               *       "Missing required field: model",
+               *       "Missing required field: address"
+               *     ]
+               */
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Service unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 503 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Service Unavailable */
+              name?: unknown;
+              /** @example /api/v2/sensors */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+    };
+  };
+  getSensorById: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /**
+         * @description sensor Id
+         * @example 1
+         */
+        sensorId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 200 */
+            statusCode?: unknown;
+            content?: {
+              data?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors/1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Sensor not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 404 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Not Found */
+              name?: unknown;
+              /** @example /api/v2/sensors/-1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+    };
+  };
+  deleteSensor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /**
+         * @description sensor Id
+         * @example 1
+         */
+        sensorId: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sensor deleted */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 200 */
+            statusCode?: unknown;
+            content?: {
+              /** @example Sensor sucessfully deleted. */
+              data?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Bad request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 400 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Bad Request */
+              name?: unknown;
+              /** @example /api/v2/sensors/string */
+              url?: unknown;
+              /**
+               * @example [
+               *       "Invalid or missing sensor Id."
+               *     ]
+               */
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors/1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 404 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Not Found */
+              name?: unknown;
+              /** @example /api/v2/sensors/-1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Service unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 503 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Service Unavailable */
+              name?: unknown;
+              /** @example /api/v2/sensors/1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+    };
+  };
+  updateSensor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /**
+         * @description sensor Id
+         * @example 1
+         */
+        sensorId: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SensorUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Sensor updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 200 */
+            statusCode?: unknown;
+            content?: {
+              data?: components["schemas"]["SDBSensor"];
+            };
+          };
+        };
+      };
+      /** @description Bad request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 400 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Bad Request */
+              name?: unknown;
+              /** @example /api/v2/sensors/string */
+              url?: unknown;
+              /**
+               * @example [
+               *       "Invalid or missing sensor Id."
+               *     ]
+               */
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors/1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 404 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Not Found */
+              name?: unknown;
+              /** @example /api/v2/sensors/-1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+      /** @description Service unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 503 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Service Unavailable */
+              name?: unknown;
+              /** @example /api/v2/sensors/1 */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
+    };
+  };
+  getSensorChartData: {
+    parameters: {
+      query?: {
+        /**
+         * @description Reading type
+         * @example temperature
+         */
+        readingType?: string;
+        /**
+         * @description Return only the latest data point.
+         * @example true
+         */
+        latest?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 200 */
+            statusCode?: unknown;
+            content?: {
+              data?: {
                 /**
-                 * @description sensor Id
-                 * @example 1
+                 * @example {
+                 *       "temperature": [
+                 *         {
+                 *           "name": "1/24 12:00 am",
+                 *           "sensor1": 25,
+                 *           "sensor2": 25,
+                 *           "units": "°C"
+                 *         },
+                 *         {
+                 *           "name": "1/24 12:05 am",
+                 *           "sensor1": 25.625,
+                 *           "sensor2": 25.625,
+                 *           "units": "°C"
+                 *         }
+                 *       ],
+                 *       "humidity": [
+                 *         {
+                 *           "name": "1/24 12:00 am",
+                 *           "sensor1": 50,
+                 *           "sensor2": 50,
+                 *           "units": "%rH"
+                 *         },
+                 *         {
+                 *           "name": "1/24 12:05 am",
+                 *           "sensor1": 50.625,
+                 *           "sensor2": 50.625,
+                 *           "units": "%rH"
+                 *         }
+                 *       ]
+                 *     }
                  */
-                sensorId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
+                data?: {
+                  [key: string]: components["schemas"]["DataPoint"][];
                 };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 200 */
-                        statusCode?: unknown;
-                        content?: {
-                            data?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Sensor not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 404 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Not Found */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/-1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-        };
-    };
-    deleteSensor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
                 /**
-                 * @description sensor Id
-                 * @example 1
+                 * @example [
+                 *       {
+                 *         "name": "sensor1",
+                 *         "color": "lime"
+                 *       },
+                 *       {
+                 *         "name": "sensor2",
+                 *         "color": "blue"
+                 *       }
+                 *     ]
                  */
-                sensorId: number;
+                series?: components["schemas"]["ChartSeries"][];
+              };
             };
-            cookie?: never;
+          };
         };
-        requestBody?: never;
-        responses: {
-            /** @description Sensor deleted */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 200 */
-                        statusCode?: unknown;
-                        content?: {
-                            /** @example Sensor sucessfully deleted. */
-                            data?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 400 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Bad Request */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/string */
-                            url?: unknown;
-                            /**
-                             * @example [
-                             *       "Invalid or missing sensor Id."
-                             *     ]
-                             */
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 404 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Not Found */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/-1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Service unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 503 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Service Unavailable */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors/chart-data */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
     };
-    updateSensor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /**
-                 * @description sensor Id
-                 * @example 1
-                 */
-                sensorId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SensorUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Sensor updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 200 */
-                        statusCode?: unknown;
-                        content?: {
-                            data?: components["schemas"]["SDBSensor"];
-                        };
-                    };
-                };
-            };
-            /** @description Bad request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 400 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Bad Request */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/string */
-                            url?: unknown;
-                            /**
-                             * @example [
-                             *       "Invalid or missing sensor Id."
-                             *     ]
-                             */
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 404 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Not Found */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/-1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-            /** @description Service unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 503 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Service Unavailable */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/1 */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-        };
+  };
+  listSupportedSensorModels: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    getSensorChartData: {
-        parameters: {
-            query?: {
-                /**
-                 * @description Reading type
-                 * @example temperature
-                 */
-                readingType?: string;
-                /**
-                 * @description Return only the latest data point.
-                 * @example true
-                 */
-                latest?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 200 */
-                        statusCode?: unknown;
-                        content?: {
-                            data?: {
-                                /**
-                                 * @example {
-                                 *       "temperature": [
-                                 *         {
-                                 *           "name": "1/24 12:00 am",
-                                 *           "sensor1": 25,
-                                 *           "sensor2": 25,
-                                 *           "units": "°C"
-                                 *         },
-                                 *         {
-                                 *           "name": "1/24 12:05 am",
-                                 *           "sensor1": 25.625,
-                                 *           "sensor2": 25.625,
-                                 *           "units": "°C"
-                                 *         }
-                                 *       ],
-                                 *       "humidity": [
-                                 *         {
-                                 *           "name": "1/24 12:00 am",
-                                 *           "sensor1": 50,
-                                 *           "sensor2": 50,
-                                 *           "units": "%rH"
-                                 *         },
-                                 *         {
-                                 *           "name": "1/24 12:05 am",
-                                 *           "sensor1": 50.625,
-                                 *           "sensor2": 50.625,
-                                 *           "units": "%rH"
-                                 *         }
-                                 *       ]
-                                 *     }
-                                 */
-                                data?: {
-                                    [key: string]: components["schemas"]["DataPoint"][];
-                                };
-                                /**
-                                 * @example [
-                                 *       {
-                                 *         "name": "sensor1",
-                                 *         "color": "lime"
-                                 *       },
-                                 *       {
-                                 *         "name": "sensor2",
-                                 *         "color": "blue"
-                                 *       }
-                                 *     ]
-                                 */
-                                series?: components["schemas"]["ChartSeries"][];
-                            };
-                        };
-                    };
-                };
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 200 */
+            statusCode?: unknown;
+            content?: {
+              /**
+               * @example {
+               *       "object": {
+               *         "DS18B20": "DS18B20",
+               *         "BME280": "BME280",
+               *         "ADS1115": "ADS1115",
+               *         "CAPACITIVE_MOISTURE_SENSOR": "Capacitive Moisture Sensor"
+               *       }
+               *     }
+               */
+              data?: components["schemas"]["SupportedModels"];
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/chart-data */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
+          };
         };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors/supported-models */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
     };
-    listSupportedSensorModels: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 200 */
-                        statusCode?: unknown;
-                        content?: {
-                            /**
-                             * @example {
-                             *       "object": {
-                             *         "DS18B20": "DS18B20",
-                             *         "BME280": "BME280",
-                             *         "ADS1115": "ADS1115",
-                             *         "CAPACITIVE_MOISTURE_SENSOR": "Capacitive Moisture Sensor"
-                             *       }
-                             *     }
-                             */
-                            data?: components["schemas"]["SupportedModels"];
-                        };
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/supported-models */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
-        };
+  };
+  getSensorReadingTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    getSensorReadingTypes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuccessResponse"] & {
-                        /** @example 200 */
-                        statusCode?: unknown;
-                        content?: {
-                            data?: {
-                                temperature?: string;
-                                humidity?: string;
-                            } & components["schemas"]["ReadingTypes"];
-                        };
-                    };
-                };
+        content: {
+          "application/json": components["schemas"]["SuccessResponse"] & {
+            /** @example 200 */
+            statusCode?: unknown;
+            content?: {
+              data?: {
+                temperature?: string;
+                humidity?: string;
+              } & components["schemas"]["ReadingTypes"];
             };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"] & {
-                        /** @example 401 */
-                        statusCode?: unknown;
-                        error?: {
-                            /** @example Unauthorized */
-                            name?: unknown;
-                            /** @example /api/v2/sensors/reading-types */
-                            url?: unknown;
-                            details?: unknown;
-                        };
-                    };
-                };
-            };
+          };
         };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"] & {
+            /** @example 401 */
+            statusCode?: unknown;
+            error?: {
+              /** @example Unauthorized */
+              name?: unknown;
+              /** @example /api/v2/sensors/reading-types */
+              url?: unknown;
+              details?: unknown;
+            };
+          };
+        };
+      };
     };
+  };
 }

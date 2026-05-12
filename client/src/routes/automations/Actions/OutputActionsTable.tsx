@@ -41,13 +41,13 @@ export default function OutputActionsTable({
     .filter(
       (outputAction) =>
         outputs.find((output) => output.id == outputAction.outputId)
-          ?.parentOutputId === null
+          ?.parentOutputId === null,
     )
     .map((outputAction) => {
       return {
         displayLabel: OutputActionRow(
           outputAction,
-          outputs.find((output) => output.id == outputAction.outputId)!
+          outputs.find((output) => output.id == outputAction.outputId)!,
         ),
         id: outputAction.id,
         deleteFn: (id: number) => deleteOutputActionMutation.mutateAsync(id),
@@ -79,7 +79,7 @@ function OutputActionRow(outputAction: SDBOutputAction, output: IOutputBase) {
     <Group>
       {output?.isPwm
         ? `Set ${output?.name ?? `Output Id: ${output.id}`} to ${String(
-            outputAction.value
+            outputAction.value,
           )}%`
         : `Turn ${output?.name ?? `Output Id: ${output.id}`} ${
             outputAction.value == 100 ? "On" : "Off"

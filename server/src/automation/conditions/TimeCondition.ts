@@ -11,7 +11,7 @@ export class TimeCondition implements ITimeCondition {
     id: number,
     groupType: ConditionGroupType,
     startTime?: string | null,
-    endTime?: string | null
+    endTime?: string | null,
   ) {
     this.id = id;
     this.groupType = groupType;

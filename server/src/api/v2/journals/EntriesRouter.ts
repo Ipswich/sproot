@@ -16,7 +16,7 @@ router.get(
     const result = await JournalEntriesHandlers.getByEntryIdAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.patch(
@@ -25,7 +25,7 @@ router.patch(
     const result = await JournalEntriesHandlers.updateAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.delete(
@@ -34,7 +34,7 @@ router.delete(
     const result = await JournalEntriesHandlers.deleteAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 // Journal Entry Tag Endpoints
@@ -44,7 +44,7 @@ router.put(
     const result = await JournalEntriesHandlers.addTagAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 router.delete(
@@ -53,7 +53,7 @@ router.delete(
     const result = await JournalEntriesHandlers.removeTagAsync(req, res);
     res.status(result.statusCode).json(result);
     return;
-  })
+  }),
 );
 
 export default router;

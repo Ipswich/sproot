@@ -21,7 +21,7 @@ class ESP32_DS18B20 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<ESP32_DS18B20 | null> {
     const sensor = new ESP32_DS18B20(
       sdbSensor,
@@ -32,7 +32,7 @@ class ESP32_DS18B20 extends SensorBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     return sensor.initializeAsync(ESP32_DS18B20.MAX_SENSOR_READ_TIME);
   }
@@ -46,7 +46,7 @@ class ESP32_DS18B20 extends SensorBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     super(
       sdbSensor,
@@ -56,7 +56,7 @@ class ESP32_DS18B20 extends SensorBase {
       maxChartDataSize,
       chartDataPointInterval,
       [ReadingType.temperature],
-      logger
+      logger,
     );
     this.#mdnsService = mdnsService;
     this.subcontroller = subcontroller;
@@ -68,7 +68,7 @@ class ESP32_DS18B20 extends SensorBase {
       const ipAddress = this.#mdnsService.getIPAddressByHostName(this.subcontroller.hostName);
       if (!ipAddress) {
         throw new Error(
-          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`
+          `Could not resolve IP address for host name: ${this.subcontroller.hostName}`,
         );
       }
       const addr = this.address;
@@ -79,7 +79,7 @@ class ESP32_DS18B20 extends SensorBase {
       this.lastReadingTime = new Date();
     } catch (err) {
       this.logger.error(
-        `Failed to get reading for sensor {ESP32_DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`
+        `Failed to get reading for sensor {ESP32_DS18B20, id: ${this.id}, address: ${this.address}}. ${err}`,
       );
     }
     profiler.done({
@@ -91,7 +91,7 @@ class ESP32_DS18B20 extends SensorBase {
   static async getAddressesAsync(hostName: string): Promise<string[]> {
     try {
       const data = await fetchJson<ESP32_DS18B20AddressesResponse>(
-        `http://${hostName}/api/sensors/ds18b20/addresses`
+        `http://${hostName}/api/sensors/ds18b20/addresses`,
       );
       return data?.addresses ?? [];
     } catch (error) {
@@ -102,10 +102,10 @@ class ESP32_DS18B20 extends SensorBase {
 
 async function readTemperatureFromDeviceAsync(
   externalAddress: string,
-  address: string
+  address: string,
 ): Promise<number | false> {
   const data = await fetchJson<ESP32_DS18B20ReadingResponse>(
-    `http://${externalAddress}/api/sensors/ds18b20/${address}`
+    `http://${externalAddress}/api/sensors/ds18b20/${address}`,
   );
   return data?.temperature ?? false;
 }

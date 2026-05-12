@@ -121,7 +121,7 @@ export default function EditTable({
           updateSensorForm.values.model === Models.ESP32_DS18B20
         ) {
           return subcontrollersQuery.data?.recognized.some(
-            (dev) => dev.id === parseInt(String(value))
+            (dev) => dev.id === parseInt(String(value)),
           )
             ? null
             : "Must be a valid subcontroller";
@@ -149,14 +149,14 @@ export default function EditTable({
     updateSensorForm.setFieldValue("model", sensor.model);
     updateSensorForm.setFieldValue(
       "subcontrollerId",
-      sensor.subcontrollerId ?? undefined
+      sensor.subcontrollerId ?? undefined,
     );
     updateSensorForm.setFieldValue("address", sensor.address ?? "");
     updateSensorForm.setFieldValue("id", sensor.id);
     updateSensorForm.setFieldValue("pin", sensor.pin ?? null);
     updateSensorForm.setFieldValue(
       "deviceZoneId",
-      sensor.deviceZoneId ?? undefined
+      sensor.deviceZoneId ?? undefined,
     );
     openModal();
   };
@@ -246,7 +246,7 @@ export default function EditTable({
             onChange={(val) =>
               updateSensorForm.setFieldValue(
                 "deviceZoneId",
-                val !== null ? parseInt(val, 10) : undefined
+                val !== null ? parseInt(val, 10) : undefined,
               )
             }
           />
@@ -263,7 +263,7 @@ export default function EditTable({
                   (device: SDBSubcontroller) => ({
                     value: String(device.id),
                     label: device.name,
-                  })
+                  }),
                 ) ?? []
               }
               {...updateSensorForm.getInputProps("subcontrollerId")}
@@ -275,7 +275,7 @@ export default function EditTable({
               onChange={(val) =>
                 updateSensorForm.setFieldValue(
                   "subcontrollerId",
-                  val !== null ? parseInt(val, 10) : undefined
+                  val !== null ? parseInt(val, 10) : undefined,
                 )
               }
               required

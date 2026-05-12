@@ -53,7 +53,7 @@ export default function TimelapseDetails() {
                   } catch (error) {
                     console.error(
                       "Failed to download timelapse archive:",
-                      error
+                      error,
                     );
                   }
                 }}
@@ -68,7 +68,7 @@ export default function TimelapseDetails() {
                   } catch (error) {
                     console.error(
                       "Failed to regenerate timelapse archive:",
-                      error
+                      error,
                     );
                   }
                 }}

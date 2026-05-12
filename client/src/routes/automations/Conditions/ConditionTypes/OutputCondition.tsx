@@ -52,7 +52,7 @@ export default function OutputCondition({
         outputCondition.operator,
         outputCondition.comparisonValue,
         outputCondition.comparisonLookback,
-        outputCondition.outputId
+        outputCondition.outputId,
       );
     },
     onSettled: () => {

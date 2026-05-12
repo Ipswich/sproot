@@ -42,7 +42,7 @@ export default function ZoneAccordion({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
   const [outputs, setOutputs] = useState({} as Record<number, IOutputBase[]>);
   const [deviceZones, setDeviceZones] = useState([] as SDBDeviceZone[]);
@@ -81,7 +81,7 @@ export default function ZoneAccordion({
           }
           outputsByDeviceZone[output.deviceZoneId]!.push(output);
         }
-      }
+      },
     );
 
     if (
@@ -93,7 +93,7 @@ export default function ZoneAccordion({
     try {
       const existingOrder = (
         JSON.parse(
-          localStorage.getItem(outputZoneOrderKey()) ?? "[]"
+          localStorage.getItem(outputZoneOrderKey()) ?? "[]",
         ) as SDBDeviceZone[]
       ).map((dg) => dg.id ?? -1);
 
@@ -101,12 +101,12 @@ export default function ZoneAccordion({
         const updatedOrder: SDBDeviceZone[] = [];
 
         const newDeviceZones = deviceZones.filter(
-          (deviceZone) => !existingOrder.includes(deviceZone.id)
+          (deviceZone) => !existingOrder.includes(deviceZone.id),
         );
 
         existingOrder.forEach((deviceZoneId) => {
           const deviceZoneIndex = deviceZones.findIndex(
-            (dz) => dz.id == Number(deviceZoneId)
+            (dz) => dz.id == Number(deviceZoneId),
           );
           if (deviceZoneIndex != -1) {
             updatedOrder.push(deviceZones[deviceZoneIndex]!);
@@ -183,13 +183,13 @@ export default function ZoneAccordion({
               startTransition(() => {
                 const arr = Array.isArray(values) ? values : [values];
                 const all = deviceZones.map((g: SDBDeviceZone) =>
-                  g.id.toString()
+                  g.id.toString(),
                 );
                 const closed = all.filter((id) => !arr.includes(id));
                 setDeviceZoneToggleStates(closed);
                 localStorage.setItem(
                   outputStateToggledZonesKey(),
-                  JSON.stringify(closed)
+                  JSON.stringify(closed),
                 );
               });
             }}
@@ -220,7 +220,7 @@ export default function ZoneAccordion({
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
           outputZoneOrderKey(),
-          JSON.stringify(updatedArray)
+          JSON.stringify(updatedArray),
         );
         return updatedArray;
       });

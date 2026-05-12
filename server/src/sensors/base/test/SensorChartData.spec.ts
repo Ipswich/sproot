@@ -20,8 +20,8 @@ describe("SensorChartData.ts tests", function () {
         ({
           info: () => {},
           error: () => {},
-          startTimer: () => ({ done: () => {} } as winston.Profiler),
-        } as unknown as winston.Logger)
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
     );
     logger = winston.createLogger();
   });
@@ -41,10 +41,10 @@ describe("SensorChartData.ts tests", function () {
 
       assert.equal(sensorChartData.get().data[ReadingType.temperature].length, 2);
       assert.isTrue(
-        sensorChartData.get().data[ReadingType.temperature][0]?.name.includes("6:40 pm")
+        sensorChartData.get().data[ReadingType.temperature][0]?.name.includes("6:40 pm"),
       );
       assert.isTrue(
-        sensorChartData.get().data[ReadingType.temperature][1]?.name.includes("6:45 pm")
+        sensorChartData.get().data[ReadingType.temperature][1]?.name.includes("6:45 pm"),
       );
     });
   });
@@ -59,7 +59,7 @@ describe("SensorChartData.ts tests", function () {
           metric: ReadingType.humidity,
           data: "30",
         } as SDBReading,
-        new Date()
+        new Date(),
       );
       const temperatureCache = new SensorCache(4, mockSprootDB, logger);
       temperatureCache.addData(
@@ -69,7 +69,7 @@ describe("SensorChartData.ts tests", function () {
           metric: ReadingType.temperature,
           data: "100",
         } as SDBReading,
-        new Date("2024-03-03T18:40:01Z")
+        new Date("2024-03-03T18:40:01Z"),
       );
       temperatureCache.addData(
         {
@@ -78,7 +78,7 @@ describe("SensorChartData.ts tests", function () {
           metric: ReadingType.temperature,
           data: "30",
         } as SDBReading,
-        new Date("2024-03-03T18:45:01Z")
+        new Date("2024-03-03T18:45:01Z"),
       );
       temperatureCache.addData(
         {
@@ -87,7 +87,7 @@ describe("SensorChartData.ts tests", function () {
           metric: ReadingType.temperature,
           data: "100",
         } as SDBReading,
-        new Date("2022-03-03T18:47:01Z")
+        new Date("2022-03-03T18:47:01Z"),
       ); //should be ignored by chart data
       temperatureCache.addData(
         {
@@ -96,7 +96,7 @@ describe("SensorChartData.ts tests", function () {
           metric: ReadingType.temperature,
           data: "0",
         } as SDBReading,
-        new Date("2024-03-03T18:50:01Z")
+        new Date("2024-03-03T18:50:01Z"),
       );
 
       const dataSeriesRecord = {} as Record<ReadingType, DataSeries>;
@@ -110,12 +110,12 @@ describe("SensorChartData.ts tests", function () {
       sensorChartData.loadChartData(
         humidityCache.get(ReadingType.humidity),
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
       sensorChartData.loadChartData(
         temperatureCache.get(ReadingType.temperature),
         "Test",
-        ReadingType.temperature
+        ReadingType.temperature,
       );
       assert.equal(Object.keys(sensorChartData.get()).length, 2);
       assert.equal(sensorChartData.get().data[ReadingType.humidity].length, 4);
@@ -143,7 +143,7 @@ describe("SensorChartData.ts tests", function () {
           } as SDBReading,
         ],
         "Test",
-        ReadingType.temperature
+        ReadingType.temperature,
       );
       sensorChartData.updateChartData(
         [
@@ -155,7 +155,7 @@ describe("SensorChartData.ts tests", function () {
           } as SDBReading,
         ],
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
 
       //These two should be ignored (duplicate entry, and empty cache data)
@@ -169,7 +169,7 @@ describe("SensorChartData.ts tests", function () {
           } as SDBReading,
         ],
         "Test",
-        ReadingType.humidity
+        ReadingType.humidity,
       );
       sensorChartData.updateChartData([], "Test", ReadingType.temperature);
 
@@ -201,14 +201,14 @@ describe("SensorChartData.ts tests", function () {
           units: "°C",
           data: "100",
         } as SDBReading,
-        new Date("2024-03-03T18:50:01Z")
+        new Date("2024-03-03T18:50:01Z"),
       );
 
       assert.isTrue(
         sensorChartData.shouldUpdateChartData(
           ReadingType.temperature,
-          sensorCache.get(ReadingType.temperature).slice(-1)[0]
-        )
+          sensorCache.get(ReadingType.temperature).slice(-1)[0],
+        ),
       );
     });
 
@@ -227,13 +227,13 @@ describe("SensorChartData.ts tests", function () {
           units: "°C",
           data: "100",
         } as SDBReading,
-        new Date("2024-03-03T18:49:01Z")
+        new Date("2024-03-03T18:49:01Z"),
       );
       assert.isFalse(
         sensorChartData.shouldUpdateChartData(
           ReadingType.temperature,
-          sensorCache.get(ReadingType.temperature).slice(-1)[0]
-        )
+          sensorCache.get(ReadingType.temperature).slice(-1)[0],
+        ),
       );
     });
   });

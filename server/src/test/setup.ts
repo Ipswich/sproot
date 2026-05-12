@@ -23,21 +23,21 @@ before(async function () {
 
   await fs.promises.writeFile(
     "images/latest.jpg",
-    "This is a test image file for the latest image endpoint."
+    "This is a test image file for the latest image endpoint.",
   );
 
   await fs.promises.writeFile(
     "images/timelapse/test-1.jpg",
-    "This is a test image file for the archive regeneration endpoint."
+    "This is a test image file for the archive regeneration endpoint.",
   );
   await fs.promises.writeFile(
     "images/timelapse/test-2.jpg",
-    "This is a test image file for the archive regeneration endpoint."
+    "This is a test image file for the archive regeneration endpoint.",
   );
 
   await fs.promises.writeFile(
     "images/archive/timelapse.tar",
-    "This is a test tar file for the timelapse archive endpoint."
+    "This is a test tar file for the timelapse archive endpoint.",
   );
 
   await fs.promises.writeFile("backups/test-backup.sproot.gz", "This is a test backup file.");

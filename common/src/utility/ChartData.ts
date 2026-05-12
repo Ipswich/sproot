@@ -19,7 +19,7 @@ export class ChartData {
     limit: number,
     intervalMinutes: number,
     dataSeries?: DataSeries,
-    now: Date = new Date()
+    now: Date = new Date(),
   ) {
     this.limit = limit;
     this.intervalMinutes = intervalMinutes;
@@ -51,7 +51,7 @@ export class ChartData {
 
   static generateTimeSpansFromDataSeries(
     dataSeries: DataSeries,
-    interval: number
+    interval: number,
   ): Record<number, DataSeries> {
     const res: Record<number, DataSeries> = {};
 
@@ -64,7 +64,7 @@ export class ChartData {
   }
 
   static generateStatsForTimeSpans(
-    timeSpans: Record<number, DataSeries>
+    timeSpans: Record<number, DataSeries>,
   ): Record<number, DataSeriesStats> {
     const res: Record<number, DataSeriesStats> = {};
     Object.entries(timeSpans).forEach(([key, value]) => {
@@ -81,7 +81,7 @@ export class ChartData {
   static generateEmptyDataSeries(
     limit: number,
     intervalMinutes: number,
-    now: Date = new Date()
+    now: Date = new Date(),
   ): DataSeries {
     const intervalInMs = intervalMinutes * 60000;
     const newDataSeries: DataSeries = [];
@@ -103,15 +103,18 @@ export class ChartData {
 
   static combineDataSeries(data: DataSeries[]): DataSeries {
     const combinedInput = data.flat();
-    const grouped = combinedInput.reduce((acc, obj) => {
-      const key = obj.name;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      // Add object to list for given key's value
-      acc[key]?.push(obj);
-      return acc;
-    }, {} as Record<string, DataPoint[]>);
+    const grouped = combinedInput.reduce(
+      (acc, obj) => {
+        const key = obj.name;
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        // Add object to list for given key's value
+        acc[key]?.push(obj);
+        return acc;
+      },
+      {} as Record<string, DataPoint[]>,
+    );
 
     const result = Object.entries(grouped).map(([key, value]) => {
       const dataPoint: DataPoint = { name: key };
@@ -131,7 +134,7 @@ export class ChartData {
   static shouldUpdateByInterval(
     now: Date,
     intervalInMinutes: number,
-    current: Date = new Date()
+    current: Date = new Date(),
   ): boolean {
     const intervalInMs = intervalInMinutes * 60000;
     const NMinuteDate = new Date(Math.floor(current.getTime() / intervalInMs) * intervalInMs);

@@ -16,8 +16,8 @@ describe("OutputCache.ts", function () {
         ({
           info: () => {},
           error: () => {},
-          startTimer: () => ({ done: () => {} } as winston.Profiler),
-        } as unknown as winston.Logger)
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
     );
     logger = winston.createLogger();
   });
@@ -47,12 +47,12 @@ describe("OutputCache.ts", function () {
       assert.equal(outputCache.get()[0]!.controlMode, ControlMode.automatic);
       assert.equal(outputCache.get()[0]!.value, 100);
       assert.isTrue(
-        outputCache.get()[0]!.logTime.includes("Z") && outputCache.get()[0]!.logTime.includes("T")
+        outputCache.get()[0]!.logTime.includes("Z") && outputCache.get()[0]!.logTime.includes("T"),
       );
       assert.equal(outputCache.get()[1]!.controlMode, ControlMode.manual);
       assert.equal(outputCache.get()[1]!.value, 200);
       assert.isTrue(
-        outputCache.get()[1]!.logTime.includes("Z") && outputCache.get()[1]!.logTime.includes("T")
+        outputCache.get()[1]!.logTime.includes("Z") && outputCache.get()[1]!.logTime.includes("T"),
       );
     });
   });
@@ -73,7 +73,7 @@ describe("OutputCache.ts", function () {
       assert.equal(outputCache.get()[0]!.controlMode, ControlMode.automatic);
       assert.equal(outputCache.get()[0]!.value, 100);
       assert.isTrue(
-        outputCache.get()[0]!.logTime.includes("Z") && outputCache.get()[0]!.logTime.includes("T")
+        outputCache.get()[0]!.logTime.includes("Z") && outputCache.get()[0]!.logTime.includes("T"),
       );
     });
 

@@ -40,7 +40,7 @@ class OutputList implements AsyncDisposable {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<OutputList> {
     const outputList = new OutputList(
       eventBus,
@@ -50,7 +50,7 @@ class OutputList implements AsyncDisposable {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     return outputList.regenerateAsync();
   }
@@ -63,7 +63,7 @@ class OutputList implements AsyncDisposable {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
     this.#sprootDB = sprootDB;
@@ -76,7 +76,7 @@ class OutputList implements AsyncDisposable {
       maxChartDataSize,
       chartDataPointInterval,
       undefined,
-      this.#logger
+      this.#logger,
     );
     this.#ESP32_PCA9685 = new ESP32_PCA9685(
       this.#eventBus,
@@ -87,7 +87,7 @@ class OutputList implements AsyncDisposable {
       maxChartDataSize,
       chartDataPointInterval,
       undefined,
-      this.#logger
+      this.#logger,
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
       this.#eventBus,
@@ -96,7 +96,7 @@ class OutputList implements AsyncDisposable {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      this.#logger
+      this.#logger,
     );
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
@@ -161,7 +161,7 @@ class OutputList implements AsyncDisposable {
   getAvailableDevices(
     model: string,
     address?: string,
-    filterUsed?: boolean
+    filterUsed?: boolean,
   ): Record<string, string>[] {
     switch (model) {
       case Models.PCA9685:
@@ -222,7 +222,7 @@ class OutputList implements AsyncDisposable {
 
           if (this.#outputs[key] instanceof ESP32_PCA9685Output) {
             const subcontroller = subcontrollersFromDatabase.find(
-              (sub) => sub.id == output.subcontrollerId
+              (sub) => sub.id == output.subcontrollerId,
             );
 
             if (subcontroller != null) {
@@ -278,7 +278,7 @@ class OutputList implements AsyncDisposable {
             this.#outputs[key]!.updateParentOutputId(output.parentOutputId);
             if (output.parentOutputId) {
               await (this.#outputs[output.parentOutputId] as OutputGroup)?.setOutputAsync(
-                this.#outputs[key]!
+                this.#outputs[key]!,
               );
             }
           }
@@ -297,9 +297,9 @@ class OutputList implements AsyncDisposable {
           promises.push(
             this.#createOutputAsync(output).catch((err) =>
               this.#logger.error(
-                `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`
-              )
-            )
+                `Could not build output {model: ${output.model}, id: ${output.id}}. ${err}`,
+              ),
+            ),
           );
           outputListChanges = true;
         }
@@ -312,7 +312,7 @@ class OutputList implements AsyncDisposable {
         if (!outputIdsFromDatabase.includes(key)) {
           try {
             this.#logger.info(
-              `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`
+              `Deleting output {model: ${this.#outputs[key]?.model}, id: ${this.#outputs[key]?.id}}`,
             );
             // If this output is part of an output group, remove it from the group before deleting to avoid orphaned references
             if (this.#outputs[key]?.parentOutputId) {
@@ -387,7 +387,7 @@ class OutputList implements AsyncDisposable {
     if (ChartData.shouldUpdateByInterval(new Date(), this.chartDataPointInterval)) {
       this.#chartData.updateChartData(
         Object.values(this.outputs).map((output) => output.getChartData().data),
-        "output"
+        "output",
       );
       this.#logger.info(
         `Updated aggregate output chart data. Data count: ${
@@ -413,22 +413,6 @@ class OutputList implements AsyncDisposable {
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
-  async addOutputAsync(output: SDBOutput): Promise<number> {
-    const newOutputId = await this.#sprootDB.addOutputAsync(output);
-    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
-    return newOutputId;
-  }
-
-  async updateOutputAsync(output: SDBOutput): Promise<void> {
-    await this.#sprootDB.updateOutputAsync(output);
-    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
-  }
-
-  async deleteOutputAsync(outputId: number): Promise<void> {
-    await this.#sprootDB.deleteOutputAsync(outputId);
-    await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
-  }
-
   async #touchAllOutputsAsync(fn: (arg0: OutputBase) => Promise<void>): Promise<void> {
     const promises = [];
 
@@ -436,7 +420,7 @@ class OutputList implements AsyncDisposable {
       promises.push(
         fn(this.#outputs[key] as OutputBase).catch((err) => {
           this.#logger.error(err);
-        })
+        }),
       );
     }
     await Promise.allSettled(promises);
@@ -466,7 +450,7 @@ class OutputList implements AsyncDisposable {
           this.initialCacheLookback,
           this.maxChartDataSize,
           this.chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
       }

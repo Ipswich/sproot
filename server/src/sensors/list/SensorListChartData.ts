@@ -20,7 +20,7 @@ export class SensorListChartData implements IChartable {
       this.chartData[readingType as ReadingType] = new ChartData(
         limit,
         interval,
-        dataSeriesRecord[readingType as ReadingType]
+        dataSeriesRecord[readingType as ReadingType],
       );
     }
   }
@@ -43,7 +43,7 @@ export class SensorListChartData implements IChartable {
       this.chartData[key] = new ChartData(
         this.limit,
         this.intervalSeconds,
-        ChartData.combineDataSeries(cache)
+        ChartData.combineDataSeries(cache),
       );
       return;
     }

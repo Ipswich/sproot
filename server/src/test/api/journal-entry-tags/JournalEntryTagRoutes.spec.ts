@@ -159,7 +159,7 @@ describe("Entry Tag Routes", () => {
       validateMiddlewareValues(deleteResponse);
       assert.equal(
         deleteResponse.body.content.data,
-        `Journal entry tag with ID ${createdId} deleted.`
+        `Journal entry tag with ID ${createdId} deleted.`,
       );
 
       const list = await request(server).get("/api/v2/tags/entries").expect(200);

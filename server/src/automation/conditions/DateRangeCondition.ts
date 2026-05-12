@@ -15,7 +15,7 @@ export class DateRangeCondition implements IDateRangeCondition {
     startMonth: number,
     startDate: number,
     endMonth: number,
-    endDate: number
+    endDate: number,
   ) {
     this.id = id;
     this.groupType = groupType;

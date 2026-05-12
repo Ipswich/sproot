@@ -121,7 +121,7 @@ export async function addAsync(request: Request, response: Response) {
   try {
     const createdAutomationId = await automationService.addAutomationAsync(
       automationName,
-      automationOperator
+      automationOperator,
     );
     addAutomationResponse = {
       statusCode: 201,
@@ -197,7 +197,7 @@ export async function updateAsync(request: Request, response: Response) {
       parseInt(automationId),
       automation.name,
       automation.operator,
-      automation.enabled
+      automation.enabled,
     );
     updateAutomationResponse = {
       statusCode: 200,

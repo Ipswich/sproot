@@ -36,8 +36,8 @@ describe("AutomationService", () => {
           debug: () => {},
           warn: () => {},
           verbose: () => {},
-          startTimer: () => ({ done: () => {} } as winston.Profiler),
-        } as unknown as winston.Logger)
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
     );
     mockLogger = winston.createLogger();
   });

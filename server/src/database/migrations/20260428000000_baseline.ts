@@ -211,7 +211,7 @@ export async function up(knex: Knex): Promise<void> {
     table.check(
       '"weekdays" >= 0 AND "weekdays" <= 127',
       undefined,
-      "weekday_conditions_range_check"
+      "weekday_conditions_range_check",
     );
   });
 
@@ -248,22 +248,22 @@ export async function up(knex: Knex): Promise<void> {
     table.check(
       '"startMonth" >= 1 AND "startMonth" <= 12',
       undefined,
-      "date_range_conditions_start_month_check"
+      "date_range_conditions_start_month_check",
     );
     table.check(
       '"endMonth" >= 1 AND "endMonth" <= 12',
       undefined,
-      "date_range_conditions_end_month_check"
+      "date_range_conditions_end_month_check",
     );
     table.check(
       '"startDate" >= 1 AND "startDate" <= 31',
       undefined,
-      "date_range_conditions_start_date_check"
+      "date_range_conditions_start_date_check",
     );
     table.check(
       '"endDate" >= 1 AND "endDate" <= 31',
       undefined,
-      "date_range_conditions_end_date_check"
+      "date_range_conditions_end_date_check",
     );
   });
 

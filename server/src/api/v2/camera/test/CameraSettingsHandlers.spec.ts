@@ -95,7 +95,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
 
       const result = (await updateCameraSettingsAsync(
         mockRequest,
-        mockResponse
+        mockResponse,
       )) as SuccessResponse;
 
       assert.equal(result.statusCode, 200);
@@ -121,7 +121,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
 
       const result = (await updateCameraSettingsAsync(
         mockRequest,
-        mockResponse
+        mockResponse,
       )) as SuccessResponse;
 
       assert.equal(result.statusCode, 200);
@@ -132,7 +132,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
 
       const result = (await updateCameraSettingsAsync(
         mockRequest,
-        mockResponse
+        mockResponse,
       )) as SuccessResponse;
 
       assert.equal(result.statusCode, 200);
@@ -212,7 +212,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
       assert.equal(result.statusCode, 400);
       assert.include(
         result.error.details,
-        "timelapseStartTime must be a string in HH:MM format, or null"
+        "timelapseStartTime must be a string in HH:MM format, or null",
       );
     });
 
@@ -224,7 +224,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
       assert.equal(result.statusCode, 400);
       assert.include(
         result.error.details,
-        "timelapseEndTime must be a string in HH:MM format, or null"
+        "timelapseEndTime must be a string in HH:MM format, or null",
       );
     });
 
@@ -236,7 +236,7 @@ describe("CameraSettingsHandlers.ts tests", () => {
       assert.equal(result.statusCode, 400);
       assert.include(
         result.error.details,
-        "Both timelapseStartTime and timelapseEndTime must be provided or both must be null"
+        "Both timelapseStartTime and timelapseEndTime must be provided or both must be null",
       );
 
       mockRequest.body = { ...validSettings, timelapseStartTime: null, timelapseEndTime: "20:00" };

@@ -6,7 +6,7 @@ import { getOperationContract, type OperationContract } from "./operationRegistr
 export default function validateResponse(
   operationId: ContractOperationId,
   body: unknown,
-  statusCode: number
+  statusCode: number,
 ): void {
   validateResponseAgainstContract(getOperationContract(operationId), body, statusCode);
 }
@@ -14,7 +14,7 @@ export default function validateResponse(
 export function validateResponseAgainstContract(
   contract: OperationContract,
   body: unknown,
-  statusCode: number
+  statusCode: number,
 ): void {
   if (!contract.response.validate) {
     return;
@@ -62,7 +62,7 @@ export function validateResponseAgainstContract(
       contract.operationId,
       "response",
       "response",
-      parseResult.error
+      parseResult.error,
     );
   }
 }

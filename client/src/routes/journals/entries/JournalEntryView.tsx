@@ -57,7 +57,7 @@ export default function JournalEntryView() {
   const tags: SDBJournalEntryTag[] = row.tags ?? [];
 
   const journalRow = (journalsQuery.data ?? []).find(
-    (j) => String(j.journal.id) === String(journalId)
+    (j) => String(j.journal.id) === String(journalId),
   );
   const journalTitle = journalRow ? journalRow.journal.title : undefined;
 
@@ -169,7 +169,7 @@ export default function JournalEntryView() {
               {(() => {
                 try {
                   return `Created ${new Date(
-                    entry.createdAt
+                    entry.createdAt,
                   ).toLocaleString()}`;
                 } catch {
                   return "Created";

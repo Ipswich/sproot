@@ -97,7 +97,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.equal(success.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(
         (success.content?.data as Array<SDBOutput>).length,
-        Object.keys(outputData).length
+        Object.keys(outputData).length,
       );
       assert.deepEqual(success.content?.data, Object.values(outputData));
     });

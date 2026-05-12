@@ -76,7 +76,7 @@ export default function ReadingsChart({
             {
               y: stats.cumulativeAverage!,
               label: `Average: ${formatDecimalReadingForDisplay(
-                String(stats.cumulativeAverage!)
+                String(stats.cumulativeAverage!),
               )}${stats.units}`,
               color: "red",
               ifOverflow: "extendDomain",
@@ -85,7 +85,7 @@ export default function ReadingsChart({
             {
               y: stats.cumulativeMin!,
               label: `Min: ${formatDecimalReadingForDisplay(
-                String(stats.cumulativeMin!)
+                String(stats.cumulativeMin!),
               )}${stats.units}`,
               color: "blue",
               ifOverflow: "extendDomain",
@@ -94,7 +94,7 @@ export default function ReadingsChart({
             {
               y: stats.cumulativeMax!,
               label: `Max: ${formatDecimalReadingForDisplay(
-                String(stats.cumulativeMax!)
+                String(stats.cumulativeMax!),
               )}${stats.units}`,
               color: "green",
               ifOverflow: "extendDomain",
@@ -128,7 +128,7 @@ function ChartTooltip({
 
   const order = (
     JSON.parse(
-      localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]"
+      localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]",
     ) as ISensorBase[]
   ).map((s) => s.name);
   const orderNames = Array.isArray(order) ? order : [];

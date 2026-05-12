@@ -48,7 +48,7 @@ export default function NewOutputModal({
     mutationFn: async (newOutputValues: IOutputBase) => {
       if (newOutputValues.subcontrollerId != undefined) {
         newOutputValues.subcontrollerId = parseInt(
-          String(newOutputValues.subcontrollerId)
+          String(newOutputValues.subcontrollerId),
         );
       }
       if (newOutputValues.model !== Models.ESP32_PCA9685) {
@@ -113,7 +113,7 @@ export default function NewOutputModal({
       subcontrollerId: (value: number | undefined) => {
         if (newOutputForm.values.model === Models.ESP32_PCA9685) {
           return subcontrollersQuery.data?.recognized.some(
-            (dev) => dev.id === parseInt(String(value))
+            (dev) => dev.id === parseInt(String(value)),
           )
             ? null
             : "Must be a valid subcontroller";
@@ -171,7 +171,7 @@ export default function NewOutputModal({
         <form
           onSubmit={newOutputForm.onSubmit(async (values) => {
             const created = await addOutputMutation.mutateAsync(
-              values as IOutputBase
+              values as IOutputBase,
             );
             // If we created a group and the user selected children, update those outputs to point to the new group
             if (
@@ -185,8 +185,8 @@ export default function NewOutputModal({
                   updateOutputAsync({
                     id: childId,
                     parentOutputId: created.id,
-                  } as unknown as IOutputBase)
-                )
+                  } as unknown as IOutputBase),
+                ),
               );
             }
             closeModal();

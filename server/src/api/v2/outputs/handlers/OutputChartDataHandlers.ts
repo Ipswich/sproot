@@ -11,10 +11,11 @@ type GetOutputChartDataQuery = NonNullable<
 
 export function outputChartDataHandler(
   request: Request,
-  response: Response
+  response: Response,
 ): SuccessResponse | ErrorResponse {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-  const query = (getValidatedContractRequestData<"getOutputChartData">(response).query ?? {}) as Partial<GetOutputChartDataQuery>;
+  const query = (getValidatedContractRequestData<"getOutputChartData">(response).query ??
+    {}) as Partial<GetOutputChartDataQuery>;
   const chartData = outputList.chartData.get();
   if (String(query.latest).toLowerCase() == "true") {
     chartData.data = chartData.data.slice(-1);

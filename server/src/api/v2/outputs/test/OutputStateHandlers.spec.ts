@@ -74,7 +74,9 @@ describe("OutputStateHandlers.ts tests", () => {
       assert.deepEqual(success.content?.data, ["Control mode successfully updated."]);
 
       mockRequest.body["controlMode"] = ControlMode.automatic;
-      setValidatedContractRequestData(mockResponse, { body: { controlMode: ControlMode.automatic } });
+      setValidatedContractRequestData(mockResponse, {
+        body: { controlMode: ControlMode.automatic },
+      });
       success = (await setControlModeAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
       assert.equal(success.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
@@ -102,7 +104,9 @@ describe("OutputStateHandlers.ts tests", () => {
       const success = (await setControlModeAsync(mockRequest, mockResponse)) as SuccessResponse;
 
       assert.equal(success.statusCode, 200);
-      assert.isTrue(outputList.updateControlModeAsync.calledOnceWithExactly("1", ControlMode.automatic));
+      assert.isTrue(
+        outputList.updateControlModeAsync.calledOnceWithExactly("1", ControlMode.automatic),
+      );
     });
 
     it("should return a 404 and a 'Not Found' error", async () => {

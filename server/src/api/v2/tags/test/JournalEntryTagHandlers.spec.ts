@@ -142,7 +142,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
         color: "#abc",
       });
       assert.isTrue(
-        sprootDB.addJournalEntryTagAsync.calledOnceWithExactly("validated-entry-tag", "#abc")
+        sprootDB.addJournalEntryTagAsync.calledOnceWithExactly("validated-entry-tag", "#abc"),
       );
     });
 
@@ -276,7 +276,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
           id: 14,
           name: "validated-update",
           color: "#222",
-        })
+        }),
       );
     });
 

@@ -44,7 +44,7 @@ class SensorList {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<SensorList> {
     const sensorList = new SensorList(
       eventBus,
@@ -54,7 +54,7 @@ class SensorList {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     return sensorList.regenerateAsync();
   }
@@ -67,7 +67,7 @@ class SensorList {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
     this.#sprootDB = sprootDB;
@@ -187,7 +187,7 @@ class SensorList {
             this.#sensors[key] instanceof ESP32_CapacitiveMoistureSensor
           ) {
             const subcontroller = subcontrollersFromDatabase.find(
-              (sub) => sub.id == sensor.subcontrollerId
+              (sub) => sub.id == sensor.subcontrollerId,
             );
 
             if (subcontroller != null) {
@@ -225,7 +225,7 @@ class SensorList {
 
           if (sensorChanges) {
             this.#logger.info(
-              `Updating sensor {model: ${this.#sensors[key].model}, id: ${this.#sensors[key].id}}`
+              `Updating sensor {model: ${this.#sensors[key].model}, id: ${this.#sensors[key].id}}`,
             );
             sensorListChanges = true;
           }
@@ -235,9 +235,9 @@ class SensorList {
           promises.push(
             this.#createSensorAsync(sensor).catch((err) =>
               this.#logger.error(
-                `Could not build sensor {model: ${sensor.model}, id: ${sensor.id}}. ${err}`
-              )
-            )
+                `Could not build sensor {model: ${sensor.model}, id: ${sensor.id}}. ${err}`,
+              ),
+            ),
           );
           sensorListChanges = true;
         }
@@ -250,7 +250,7 @@ class SensorList {
         if (!sensorIdsFromDatabase.includes(key)) {
           try {
             this.#logger.info(
-              `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`
+              `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
             );
             this.#disposeSensorAsync(this.#sensors[key]!);
             sensorListChanges = true;
@@ -378,7 +378,7 @@ class SensorList {
       promises.push(
         fn(this.#sensors[key] as SensorBase).catch((err) => {
           this.#logger.error(err);
-        })
+        }),
       );
     }
     await Promise.allSettled(promises);
@@ -400,7 +400,7 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
 
@@ -412,11 +412,11 @@ class SensorList {
           throw new SensorListError("ESP32 BME280 sensor address cannot be null");
         }
         subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
-          (device) => device.id == sensor.subcontrollerId
+          (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
           throw new SensorListError(
-            `ESP32 BME280 references non-existent subcontrollerId ${sensor.subcontrollerId}.`
+            `ESP32 BME280 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
         newSensor = await ESP32_BME280.createInstanceAsync(
@@ -428,7 +428,7 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
 
@@ -443,7 +443,7 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
 
@@ -455,11 +455,11 @@ class SensorList {
           throw new SensorListError("ESP32 DS18B20 sensor address cannot be null");
         }
         subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
-          (device) => device.id == sensor.subcontrollerId
+          (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
           throw new SensorListError(
-            `ESP32 DS18B20 references non-existent subcontrollerId ${sensor.subcontrollerId}.`
+            `ESP32 DS18B20 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
         newSensor = await ESP32_DS18B20.createInstanceAsync(
@@ -471,7 +471,7 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
 
@@ -491,7 +491,7 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
 
@@ -506,11 +506,11 @@ class SensorList {
           throw new SensorListError("ESP32 ADS1115 sensor pin cannot be null");
         }
         subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
-          (device) => device.id == sensor.subcontrollerId
+          (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
           throw new SensorListError(
-            `ESP32 ADS1115 references non-existent subcontrollerId ${sensor.subcontrollerId}.`
+            `ESP32 ADS1115 references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
         newSensor = await ESP32_ADS1115.createInstanceAsync(
@@ -524,7 +524,7 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
 
@@ -542,14 +542,14 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
 
       case Models.ESP32_CAPACITIVE_MOISTURE_SENSOR.toLowerCase():
         if (!sensor.subcontrollerId) {
           throw new SensorListError(
-            "ESP32 Capacitive Moisture Sensor external address cannot be null"
+            "ESP32 Capacitive Moisture Sensor external address cannot be null",
           );
         }
         if (!sensor.address) {
@@ -559,11 +559,11 @@ class SensorList {
           throw new SensorListError("ESP32 Capacitive Moisture Sensor pin cannot be null");
         }
         subcontroller = (await this.#sprootDB.getSubcontrollersAsync()).find(
-          (device) => device.id == sensor.subcontrollerId
+          (device) => device.id == sensor.subcontrollerId,
         );
         if (!subcontroller) {
           throw new SensorListError(
-            `ESP32 Capacitive Moisture Sensor references non-existent subcontrollerId ${sensor.subcontrollerId}.`
+            `ESP32 Capacitive Moisture Sensor references non-existent subcontrollerId ${sensor.subcontrollerId}.`,
           );
         }
         newSensor = await ESP32_CapacitiveMoistureSensor.createInstanceAsync(
@@ -575,7 +575,7 @@ class SensorList {
           this.#initialCacheLookback,
           this.#maxChartDataSize,
           this.#chartDataPointInterval,
-          this.#logger
+          this.#logger,
         );
         break;
       default:
@@ -603,7 +603,7 @@ class SensorList {
         const ipAddress = this.#mdnsService.getIPAddressByHostName(subcontroller.hostName);
         if (!ipAddress) {
           this.#logger.warn(
-            `Could not find IP address for ESP32 DS18B20 device with hostName ${subcontroller.hostName}, skipping...`
+            `Could not find IP address for ESP32 DS18B20 device with hostName ${subcontroller.hostName}, skipping...`,
           );
           return;
         }
@@ -615,20 +615,20 @@ class SensorList {
             deviceId: address,
           });
         });
-      })
+      }),
     );
 
     // Filter remote devices
     for (const addresses of remoteDeviceAddresses) {
       if (
         sensorsFromDatabase.some(
-          (s) => s.subcontrollerId == addresses.subcontrollerId && s.address === addresses.deviceId
+          (s) => s.subcontrollerId == addresses.subcontrollerId && s.address === addresses.deviceId,
         )
       ) {
         continue;
       } else {
         this.#logger.info(
-          `Adding unrecognized ESP32_DS18B20 sensor {subcontrollerId: ${addresses.subcontrollerId}, deviceId: ${addresses.deviceId} to database}`
+          `Adding unrecognized ESP32_DS18B20 sensor {subcontrollerId: ${addresses.subcontrollerId}, deviceId: ${addresses.deviceId} to database}`,
         );
         addToDatabasePromises.push(
           this.#sprootDB.addSensorAsync({
@@ -637,7 +637,7 @@ class SensorList {
             address: addresses.deviceId,
             subcontrollerId: addresses.subcontrollerId,
             color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
-          } as SDBSensor)
+          } as SDBSensor),
         );
       }
     }
@@ -657,7 +657,7 @@ class SensorList {
             model: Models.DS18B20,
             address: address,
             color: DefaultColors[Math.floor(Math.random() * DefaultColors.length)],
-          } as SDBSensor)
+          } as SDBSensor),
         );
       }
     }
@@ -666,7 +666,7 @@ class SensorList {
     awaitedPromises.forEach((result) => {
       if (result.status === "rejected") {
         this.#logger.error(
-          `Could not add unrecognized (ESP) DS18B20 sensor to database ${result.reason}`
+          `Could not add unrecognized (ESP) DS18B20 sensor to database ${result.reason}`,
         );
       }
     });

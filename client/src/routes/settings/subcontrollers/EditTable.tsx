@@ -158,7 +158,7 @@ export default function EditTable({
               onConfirm={async () => {
                 setIsUpdating(true);
                 await deleteSubcontrollerMutation.mutateAsync(
-                  selectedDevice.id
+                  selectedDevice.id,
                 );
                 delete subcontrollers[selectedDevice.id];
                 setIsUpdating(false);
@@ -194,7 +194,7 @@ export default function EditTable({
                       return { online: false };
                     }
                     return await getSubcontrollerConnectionStatusAsync(
-                      device.id
+                      device.id,
                     );
                   },
                 });

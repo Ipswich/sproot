@@ -7,7 +7,7 @@ import {
 export function evaluateNumber(
   reading: number,
   operator: ConditionOperator,
-  comparisonValue: number
+  comparisonValue: number,
 ): boolean {
   switch (operator) {
     case "equal":
@@ -46,7 +46,7 @@ export function evaluateMonth(now: Date, activeMonthsAsDecimal: number): boolean
 export function evaluateTime(
   now: Date,
   startTime?: string | null,
-  endTime?: string | null
+  endTime?: string | null,
 ): boolean {
   const regex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
 
@@ -76,7 +76,7 @@ export function evaluateDateRange(
   startMonth: number,
   startDate: number,
   endMonth: number,
-  endDate: number
+  endDate: number,
 ): boolean {
   return isBetweenMonthDate(startMonth, startDate, endMonth, endDate, now);
 }

@@ -30,7 +30,7 @@ describe("Sensor Routes", async () => {
     await app
       .get(DI_KEYS.KnexConnection)
       .raw(
-        "SELECT setval(pg_get_serial_sequence('sensors', 'id'), COALESCE((SELECT MAX(id) FROM sensors), 0) + 1, false)"
+        "SELECT setval(pg_get_serial_sequence('sensors', 'id'), COALESCE((SELECT MAX(id) FROM sensors), 0) + 1, false)",
       );
     await app.get("sensorList").regenerateAsync();
   });
@@ -67,7 +67,7 @@ describe("Sensor Routes", async () => {
           await app
             .get(DI_KEYS.KnexConnection)
             .raw(
-              "SELECT setval(pg_get_serial_sequence('sensors', 'id'), COALESCE((SELECT MAX(id) FROM sensors), 0) + 1, false)"
+              "SELECT setval(pg_get_serial_sequence('sensors', 'id'), COALESCE((SELECT MAX(id) FROM sensors), 0) + 1, false)",
             );
           const sensorCountBefore = Object.keys(app.get("sensorList").sensors).length;
           const response = await request(server)
@@ -96,7 +96,10 @@ describe("Sensor Routes", async () => {
 
         it("should reject missing required fields through contract middleware", async () => {
           const invalidBody = { model: "BME280" };
-          const response = await request(server).post("/api/v2/sensors").send(invalidBody).expect(400);
+          const response = await request(server)
+            .post("/api/v2/sensors")
+            .send(invalidBody)
+            .expect(400);
 
           assertContractBadRequest(response, "/api/v2/sensors", invalidBody);
         });
@@ -109,7 +112,10 @@ describe("Sensor Routes", async () => {
             address: "0x76",
             color: "#82c91e",
           };
-          const response = await request(server).post("/api/v2/sensors").send(invalidBody).expect(400);
+          const response = await request(server)
+            .post("/api/v2/sensors")
+            .send(invalidBody)
+            .expect(400);
 
           assertContractBadRequest(response, "/api/v2/sensors", invalidBody);
         });
@@ -155,7 +161,10 @@ describe("Sensor Routes", async () => {
       describe("PATCH", async () => {
         it("should return 200", async () => {
           assert.isDefined(createdSensorId);
-          assert.equal(app.get("sensorList").sensors[String(createdSensorId)].name, createdSensorName);
+          assert.equal(
+            app.get("sensorList").sensors[String(createdSensorId)].name,
+            createdSensorName,
+          );
           const response = await request(server)
             .patch(`/api/v2/sensors/${createdSensorId}`)
             .send({
@@ -174,14 +183,20 @@ describe("Sensor Routes", async () => {
 
         it("should reject malformed bodies through contract middleware", async () => {
           const invalidBody: unknown[] = [];
-          const response = await request(server).patch("/api/v2/sensors/1").send(invalidBody).expect(400);
+          const response = await request(server)
+            .patch("/api/v2/sensors/1")
+            .send(invalidBody)
+            .expect(400);
 
           assertContractBadRequest(response, "/api/v2/sensors/1", invalidBody);
         });
 
         it("should reject invalid scalar types through contract middleware", async () => {
           const invalidBody = { name: 123 };
-          const response = await request(server).patch("/api/v2/sensors/1").send(invalidBody).expect(400);
+          const response = await request(server)
+            .patch("/api/v2/sensors/1")
+            .send(invalidBody)
+            .expect(400);
 
           assertContractBadRequest(response, "/api/v2/sensors/1", invalidBody);
         });

@@ -20,8 +20,9 @@ type DeleteOutputPathParams = OutputContractOperations["deleteOutput"]["paramete
  */
 export function get(request: Request, response: Response): SuccessResponse | ErrorResponse {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-  const pathParams = getValidatedContractRequestData<"getOutputById">(response)
-    .params as GetOutputByIdPathParams | undefined;
+  const pathParams = getValidatedContractRequestData<"getOutputById">(response).params as
+    | GetOutputByIdPathParams
+    | undefined;
   const outputId = pathParams?.outputId;
   let getOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -66,7 +67,7 @@ export function get(request: Request, response: Response): SuccessResponse | Err
  */
 export async function addAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const requestBody = getValidatedContractRequestData<"createOutput">(response)
@@ -116,11 +117,12 @@ export async function addAsync(
  */
 export async function updateAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-  const pathParams = getValidatedContractRequestData<"updateOutput">(response)
-    .params as UpdateOutputPathParams | undefined;
+  const pathParams = getValidatedContractRequestData<"updateOutput">(response).params as
+    | UpdateOutputPathParams
+    | undefined;
   const outputId = Number.parseInt(String(pathParams?.outputId ?? ""), 10);
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -166,11 +168,11 @@ export async function updateAsync(
   outputData.deviceZoneId =
     request.body["deviceZoneId"] === null
       ? null
-      : request.body["deviceZoneId"] ?? outputData.deviceZoneId;
+      : (request.body["deviceZoneId"] ?? outputData.deviceZoneId);
   outputData.parentOutputId =
     request.body["parentOutputId"] === null
       ? null
-      : request.body["parentOutputId"] ?? outputData.parentOutputId;
+      : (request.body["parentOutputId"] ?? outputData.parentOutputId);
 
   try {
     await outputList.updateOutputAsync(outputData);
@@ -199,11 +201,12 @@ export async function updateAsync(
 
 export async function deleteAsync(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-  const pathParams = getValidatedContractRequestData<"deleteOutput">(response)
-    .params as DeleteOutputPathParams | undefined;
+  const pathParams = getValidatedContractRequestData<"deleteOutput">(response).params as
+    | DeleteOutputPathParams
+    | undefined;
   const outputId = Number.parseInt(String(pathParams?.outputId ?? ""), 10);
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 

@@ -12,7 +12,7 @@ export default class EntryManager {
   async getAsync(
     journalId?: number,
     entryId?: number,
-    withContent?: boolean
+    withContent?: boolean,
   ): Promise<Array<{ entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }>> {
     let entries: SDBJournalEntry[] = [];
     if (journalId != null) {
@@ -31,7 +31,7 @@ export default class EntryManager {
     const allEntryTags = await this.#sprootDB.getJournalEntryTagsAsync();
 
     const tagById = new Map<number, SDBJournalEntryTag>(
-      (allEntryTags as SDBJournalEntryTag[]).map((t) => [t.id, t])
+      (allEntryTags as SDBJournalEntryTag[]).map((t) => [t.id, t]),
     );
     const lookupsByEntryId = new Map<number, { journalEntryId: number; tagId: number }[]>();
     for (const l of entryTagLookups as { journalEntryId: number; tagId: number }[]) {
@@ -56,13 +56,13 @@ export default class EntryManager {
     journalId: number,
     text: string,
     name?: string | null,
-    createdAt?: Date | null
+    createdAt?: Date | null,
   ): Promise<number> {
     return this.#sprootDB.addJournalEntryAsync(
       journalId,
       name ?? null,
       text,
-      createdAt ? toDbDate(createdAt) : null
+      createdAt ? toDbDate(createdAt) : null,
     );
   }
 

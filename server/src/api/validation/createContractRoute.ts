@@ -3,16 +3,13 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { ContractOperationId } from "@sproot/sproot-common/dist/api/contracts/operation-types";
 
 import { getOperationContract } from "./operationRegistry";
-import {
-  setValidatedContractRequestData,
-  validateRequestAgainstContract,
-} from "./validateRequest";
+import { setValidatedContractRequestData, validateRequestAgainstContract } from "./validateRequest";
 import { validateResponseAgainstContract } from "./validateResponse";
 
 export type ContractRouteHandler = (
   request: Request,
   response: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => void | Promise<void>;
 
 export type CreateContractRouteOptions = {
@@ -23,7 +20,7 @@ export type CreateContractRouteOptions = {
 export default function createContractRoute(
   operationId: ContractOperationId,
   handler: ContractRouteHandler,
-  options: CreateContractRouteOptions = {}
+  options: CreateContractRouteOptions = {},
 ): RequestHandler {
   const contract = getOperationContract(operationId);
   const shouldValidateRequest = options.validateRequest ?? true;

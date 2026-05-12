@@ -21,7 +21,7 @@ type Props = {
 function safeFormat(
   valueFormat: string | undefined,
   ignoreYear: boolean | undefined,
-  d: Date | null
+  d: Date | null,
 ) {
   if (!d) return "";
   const fmt = valueFormat ?? (ignoreYear ? "MMMM D, [xxxx]" : "MMMM D, YYYY");
@@ -79,7 +79,7 @@ export default function PopoverDatePickerInput({
       display = `${safeFormat(valueFormat, ignoreYear, start)} - ${safeFormat(
         valueFormat,
         ignoreYear,
-        end
+        end,
       )}`;
     else if (start) display = safeFormat(valueFormat, ignoreYear, start);
     else if (end) display = safeFormat(valueFormat, ignoreYear, end);

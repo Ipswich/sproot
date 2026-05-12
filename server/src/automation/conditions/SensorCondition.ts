@@ -20,7 +20,7 @@ export class SensorCondition implements ISensorCondition {
     readingType: ReadingType,
     operator: ConditionOperator,
     comparisonValue: number,
-    comparisonLookback: number | null
+    comparisonLookback: number | null,
   ) {
     this.id = id;
     this.groupType = groupType;
@@ -45,7 +45,7 @@ export class SensorCondition implements ISensorCondition {
       ?.filter(
         (lastReading) =>
           new Date(lastReading.logTime).getTime() >=
-          now.getTime() - this.comparisonLookback! * 60000
+          now.getTime() - this.comparisonLookback! * 60000,
       )
       ?.map((lastReading) => lastReading.data);
 

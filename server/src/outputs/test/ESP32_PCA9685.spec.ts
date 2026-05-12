@@ -40,7 +40,7 @@ describe("ESP32_PCA9685.ts tests", function () {
 
     sinon
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} } as unknown as winston.Logger));
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
@@ -53,7 +53,7 @@ describe("ESP32_PCA9685.ts tests", function () {
       5,
       5,
       undefined,
-      logger
+      logger,
     );
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
@@ -125,7 +125,7 @@ describe("ESP32_PCA9685.ts tests", function () {
     mockMdnsService.getIPAddressByHostName.returns("127.0.0.5");
     sinon
       .stub(winston, "createLogger")
-      .callsFake(() => ({ info: () => {}, error: () => {} } as unknown as winston.Logger));
+      .callsFake(() => ({ info: () => {}, error: () => {} }) as unknown as winston.Logger);
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
@@ -138,7 +138,7 @@ describe("ESP32_PCA9685.ts tests", function () {
       5,
       5,
       undefined,
-      logger
+      logger,
     );
     await pca9685.createOutputAsync({
       id: 1,
@@ -170,7 +170,7 @@ describe("ESP32_PCA9685.ts tests", function () {
           error: () => {},
           verbose: () => {},
           debug: () => {},
-        } as unknown as winston.Logger)
+        }) as unknown as winston.Logger,
     );
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
@@ -184,7 +184,7 @@ describe("ESP32_PCA9685.ts tests", function () {
         (body) => {
           capturedBody = body;
           return true;
-        }
+        },
       )
       .reply(200, () => {
         callCount++;
@@ -200,7 +200,7 @@ describe("ESP32_PCA9685.ts tests", function () {
       5,
       5,
       undefined,
-      logger
+      logger,
     );
     await pca9685.createOutputAsync({
       id: 1,

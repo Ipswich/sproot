@@ -70,7 +70,10 @@ describe("Device Zone Routes", async () => {
 
       describe("PATCH", async () => {
         it("should return 200", async () => {
-          assert.equal((await app.get("sprootDB").getDeviceZonesAsync())[2].name, "Test Device Group");
+          assert.equal(
+            (await app.get("sprootDB").getDeviceZonesAsync())[2].name,
+            "Test Device Group",
+          );
           const response = await request(server)
             .patch("/api/v2/device-zones/3")
             .send({
@@ -81,7 +84,10 @@ describe("Device Zone Routes", async () => {
           validateMiddlewareValues(response);
           const content = response.body["content"];
 
-          assert.equal((await app.get("sprootDB").getDeviceZonesAsync())[2].name, "Test1 Device Group");
+          assert.equal(
+            (await app.get("sprootDB").getDeviceZonesAsync())[2].name,
+            "Test1 Device Group",
+          );
           assert.containsAllKeys(content.data, ["id", "name"]);
         });
 
@@ -114,7 +120,9 @@ describe("Device Zone Routes", async () => {
           validateMiddlewareValues(response);
           assert.equal(response.body["error"]["name"], "Bad Request");
           assert.equal(response.body["error"]["url"], "/api/v2/device-zones/not-a-number");
-          assert.deepEqual(response.body["error"]["details"], ["Valid device zone ID is required."]);
+          assert.deepEqual(response.body["error"]["details"], [
+            "Valid device zone ID is required.",
+          ]);
         });
 
         it("should reject empty names through remaining handler/domain validation", async () => {

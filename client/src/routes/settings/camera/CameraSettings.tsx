@@ -202,7 +202,7 @@ export default function CameraSettings() {
                   onChange={(value) => {
                     newCameraForm.setFieldValue(
                       "timelapseStartTime",
-                      value.currentTarget.value ?? ""
+                      value.currentTarget.value ?? "",
                     );
                   }}
                 />
@@ -216,7 +216,7 @@ export default function CameraSettings() {
                   onChange={(value) => {
                     newCameraForm.setFieldValue(
                       "timelapseEndTime",
-                      value.currentTarget.value
+                      value.currentTarget.value,
                     );
                   }}
                 />

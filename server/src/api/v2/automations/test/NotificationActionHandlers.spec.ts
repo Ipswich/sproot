@@ -48,8 +48,8 @@ describe("NotificationActionHandlers.ts tests", () => {
           debug: () => {},
           warn: () => {},
           verbose: () => {},
-          startTimer: () => ({ done: () => {} } as winston.Profiler),
-        } as unknown as winston.Logger)
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
     );
     mockLogger = winston.createLogger();
   });
@@ -417,8 +417,8 @@ describe("NotificationActionHandlers.ts tests", () => {
         sprootDB.addNotificationActionAsync.calledOnceWith(
           2,
           "Validated Subject",
-          "Validated Content"
-        )
+          "Validated Content",
+        ),
       );
     });
 
@@ -786,7 +786,7 @@ describe("NotificationActionHandlers.ts tests", () => {
 
       const success = (await getActiveNotificationsAsync(
         mockRequest,
-        mockResponse
+        mockResponse,
       )) as SuccessResponse;
 
       assert.equal(success.statusCode, 200);
@@ -844,7 +844,7 @@ describe("NotificationActionHandlers.ts tests", () => {
 
       const success = (await getActiveNotificationsAsync(
         mockRequest,
-        mockResponse
+        mockResponse,
       )) as SuccessResponse;
 
       assert.equal(success.statusCode, 200);

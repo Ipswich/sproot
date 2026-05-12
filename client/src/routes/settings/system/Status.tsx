@@ -71,7 +71,7 @@ export default function SystemStatus() {
                             <Table.Th>Memory Usage</Table.Th>
                             <Table.Td>
                               {systemStatusQuery.data.process.memoryUsage.toFixed(
-                                2
+                                2,
                               )}{" "}
                               MB
                             </Table.Td>
@@ -80,7 +80,7 @@ export default function SystemStatus() {
                             <Table.Th>Heap Usage</Table.Th>
                             <Table.Td>
                               {systemStatusQuery.data.process.heapUsage.toFixed(
-                                2
+                                2,
                               )}{" "}
                               MB
                             </Table.Td>
@@ -89,7 +89,7 @@ export default function SystemStatus() {
                             <Table.Th>CPU Usage</Table.Th>
                             <Table.Td>
                               {systemStatusQuery.data.process.cpuUsage.toFixed(
-                                2
+                                2,
                               )}{" "}
                               %
                             </Table.Td>

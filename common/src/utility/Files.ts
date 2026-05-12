@@ -38,9 +38,9 @@ export async function sortDirectoryByStatsAsync(
     b: {
       file: string;
       stats: fs.Stats;
-    }
+    },
   ) => number,
-  ignoreFiles: Set<string> = new Set()
+  ignoreFiles: Set<string> = new Set(),
 ) {
   try {
     // Ensure the directory exists
@@ -50,7 +50,7 @@ export async function sortDirectoryByStatsAsync(
 
     // Get all files in the directory
     const files = (await fs.promises.readdir(directoryPath)).filter(
-      (file) => !ignoreFiles.has(path.join(directoryPath, file))
+      (file) => !ignoreFiles.has(path.join(directoryPath, file)),
     );
 
     if (files.length === 0) {
@@ -63,7 +63,7 @@ export async function sortDirectoryByStatsAsync(
         const filePath = path.join(directoryPath, file);
         const stats = await fs.promises.stat(filePath);
         return { file, stats };
-      })
+      }),
     );
     fileStats = fileStats.filter((file) => file.stats.isFile()).sort(sort);
 
@@ -85,24 +85,24 @@ export async function getSortedFileAsync(
     b: {
       file: string;
       stats: fs.Stats;
-    }
+    },
   ) => number,
-  ignoreFiles: Set<string> = new Set()
+  ignoreFiles: Set<string> = new Set(),
 ) {
   const sortedFiles = (await sortDirectoryByStatsAsync(directoryPath, sort, ignoreFiles))?.map(
-    (f) => f.name
+    (f) => f.name,
   );
   return sortedFiles && sortedFiles[0] ? sortedFiles[0] : null;
 }
 
 export async function getOldestFilePathAsync(
   directoryPath: string,
-  ignoreFiles: Set<string> = new Set()
+  ignoreFiles: Set<string> = new Set(),
 ): Promise<string | null> {
   return await getSortedFileAsync(
     directoryPath,
     (a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime(),
-    ignoreFiles
+    ignoreFiles,
   );
 }
 

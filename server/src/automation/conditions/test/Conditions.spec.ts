@@ -88,7 +88,7 @@ describe("Conditions.ts tests", () => {
               result: true,
             },
           ],
-        }
+        },
       );
       sensorConditions.push({
         automationId: 1,
@@ -130,7 +130,7 @@ describe("Conditions.ts tests", () => {
               result: true,
             },
           ],
-        }
+        },
       );
 
       //This one is false, but the previous one is true
@@ -186,7 +186,7 @@ describe("Conditions.ts tests", () => {
               result: false,
             },
           ],
-        }
+        },
       );
 
       // Clean up that last one
@@ -220,7 +220,7 @@ describe("Conditions.ts tests", () => {
               result: true,
             },
           ],
-        }
+        },
       );
       //This one is false, but the previous one is true
       outputConditions.push({
@@ -260,7 +260,7 @@ describe("Conditions.ts tests", () => {
               result: true,
             },
           ],
-        }
+        },
       );
 
       // Add some time Conditions
@@ -288,7 +288,7 @@ describe("Conditions.ts tests", () => {
               result: true,
             },
           ],
-        }
+        },
       );
       //This one is false, but the previous one is true
       timeConditions.push({
@@ -310,7 +310,7 @@ describe("Conditions.ts tests", () => {
               result: false,
             },
           ],
-        }
+        },
       );
       //This one is also true (and should make this all return false)
       timeConditions.push({
@@ -339,7 +339,7 @@ describe("Conditions.ts tests", () => {
               result: true,
             },
           ],
-        }
+        },
       );
     });
   });
@@ -600,7 +600,7 @@ describe("Conditions.ts tests", () => {
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.sensorId, 1);
       assert.equal(
         conditions.groupedConditions.sensor.allOf[0]?.readingType,
-        ReadingType.temperature
+        ReadingType.temperature,
       );
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.operator, "equal");
       assert.equal(conditions.groupedConditions.sensor.allOf[0]?.comparisonValue, 50);

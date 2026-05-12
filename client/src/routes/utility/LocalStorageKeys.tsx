@@ -8,7 +8,7 @@ export function sensorToggledDeviceZonesKey(readingType: string): string {
 
 export function sensorDataOrderKey(
   readingType: string,
-  deviceZone: number
+  deviceZone: number,
 ): string {
   return `${readingType}-${deviceZone}-sensorDataOrder`;
 }

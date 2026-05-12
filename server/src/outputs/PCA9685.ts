@@ -17,7 +17,7 @@ class PCA9685 extends MultiOutputBase {
     maxChartDataSize: number,
     chartDataPointInterval: number,
     frequency: number = 800,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     super(
       eventBus,
@@ -27,7 +27,7 @@ class PCA9685 extends MultiOutputBase {
       maxChartDataSize,
       chartDataPointInterval,
       frequency,
-      logger
+      logger,
     );
   }
 
@@ -41,7 +41,7 @@ class PCA9685 extends MultiOutputBase {
           frequency: this.frequency,
           debug: false,
         },
-        () => {}
+        () => {},
       );
       this.usedPins[output.address] = [];
     }
@@ -56,7 +56,7 @@ class PCA9685 extends MultiOutputBase {
       this.initialCacheLookback,
       this.maxChartDataSize,
       this.chartDataPointInterval,
-      this.logger
+      this.logger,
     );
     if (Array.isArray(this.usedPins[output.address])) {
       (this.usedPins[output.address] as string[]).push(output.pin);
@@ -90,7 +90,7 @@ class PCA9685Output extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ): Promise<PCA9685Output> {
     const pca9685Output = new PCA9685Output(
       pca9685,
@@ -101,7 +101,7 @@ class PCA9685Output extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     return pca9685Output.initializeAsync();
   }
@@ -115,7 +115,7 @@ class PCA9685Output extends OutputBase {
     initialCacheLookback: number,
     maxChartDataSize: number,
     chartDataPointInterval: number,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     super(
       output,
@@ -125,7 +125,7 @@ class PCA9685Output extends OutputBase {
       initialCacheLookback,
       maxChartDataSize,
       chartDataPointInterval,
-      logger
+      logger,
     );
     this.pca9685 = pca9685;
   }
@@ -143,7 +143,7 @@ class PCA9685Output extends OutputBase {
             }
           });
         }),
-      forceExecution
+      forceExecution,
     );
   }
 

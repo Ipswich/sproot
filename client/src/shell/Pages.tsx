@@ -31,7 +31,7 @@ export interface Page {
 export function getNavbarItems(
   readingTypes: ReadingType[],
   outputs: IOutputBase[],
-  cameraSettings: SDBCameraSettings
+  cameraSettings: SDBCameraSettings,
 ): Record<string, Page> {
   const pages = {} as Record<string, Page>;
 

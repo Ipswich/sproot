@@ -167,7 +167,9 @@ describe("Automation Routes", async () => {
       });
 
       it("should reject invalid path parameters through remaining handler/domain validation", async () => {
-        const response = await request(server).delete("/api/v2/automations/not-a-number").expect(400);
+        const response = await request(server)
+          .delete("/api/v2/automations/not-a-number")
+          .expect(400);
 
         validateMiddlewareValues(response);
         assert.equal(response.body["error"]["name"], "Bad Request");

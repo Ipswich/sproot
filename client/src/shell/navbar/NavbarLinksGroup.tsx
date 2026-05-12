@@ -51,7 +51,7 @@ export function LinksGroup({
       >
         {link.navLinkText}
       </Link>
-    )
+    ),
   );
 
   return (
@@ -97,7 +97,7 @@ export function LinksGroup({
             //If we have THIS link group opened, close it. Otherwise, open it.
             if (openedLinkGroups.includes(page.navLinkText)) {
               setOpenedLinkGroups(
-                openedLinkGroups.filter((item) => item !== page.navLinkText)
+                openedLinkGroups.filter((item) => item !== page.navLinkText),
               );
             } else {
               setOpenedLinkGroups([...openedLinkGroups, page.navLinkText]);

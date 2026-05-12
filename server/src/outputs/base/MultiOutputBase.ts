@@ -29,7 +29,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     maxChartDataSize: number,
     chartDataPointInterval: number,
     frequency: number = 800,
-    logger: winston.Logger
+    logger: winston.Logger,
   ) {
     this.eventBus = eventBus;
     this.sprootDB = sprootDB;

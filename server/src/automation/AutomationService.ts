@@ -59,7 +59,7 @@ class AutomationService {
           automation.name,
           automation.operator,
           automation.enabled,
-          this.#sprootDB
+          this.#sprootDB,
         );
         return [automation.id, automationInstance] as [number, Automation];
       });
@@ -77,7 +77,7 @@ class AutomationService {
   async evaluateAllAutomationsAsync(
     sensorList: SensorList,
     outputList: OutputList,
-    now: Date
+    now: Date,
   ): Promise<void> {
     // Evaluate each automation once
     const evaluatedAutomations: Array<{
@@ -104,7 +104,7 @@ class AutomationService {
 
     // Emit single AutomationEvent with all triggered automations
     const triggeredAutomationsMap = new Map(
-      evaluatedAutomations.map((e) => [e.automation.id, e.payload])
+      evaluatedAutomations.map((e) => [e.automation.id, e.payload]),
     );
 
     await this.#eventBus.publishAsync(new AutomationsTriggeredEvent(triggeredAutomationsMap, now));
@@ -126,7 +126,7 @@ class AutomationService {
     id: number,
     name: string,
     operator: AutomationOperator,
-    enabled: boolean
+    enabled: boolean,
   ) {
     await this.#sprootDB.updateAutomationAsync(name, operator, id, enabled);
     await this.#postAutomationChangeFunctionAsync();
@@ -139,7 +139,7 @@ class AutomationService {
     comparisonValue: number,
     comparisonLookback: number | null,
     sensorId: number,
-    readingType: ReadingType
+    readingType: ReadingType,
   ): Promise<number> {
     const resultId = await this.#sprootDB.addSensorConditionAsync(
       automationId,
@@ -148,7 +148,7 @@ class AutomationService {
       comparisonValue,
       comparisonLookback,
       sensorId,
-      readingType
+      readingType,
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -160,7 +160,7 @@ class AutomationService {
     operator: ConditionOperator,
     comparisonValue: number,
     comparisonLookback: number | null,
-    outputId: number
+    outputId: number,
   ): Promise<number> {
     const resultId = await this.#sprootDB.addOutputConditionAsync(
       automationId,
@@ -168,7 +168,7 @@ class AutomationService {
       operator,
       comparisonValue,
       comparisonLookback,
-      outputId
+      outputId,
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -178,13 +178,13 @@ class AutomationService {
     automationId: number,
     type: ConditionGroupType,
     startTime: string | null | undefined,
-    endTime: string | null | undefined
+    endTime: string | null | undefined,
   ): Promise<number> {
     const resultId = await this.#sprootDB.addTimeConditionAsync(
       automationId,
       type,
       startTime,
-      endTime
+      endTime,
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -193,7 +193,7 @@ class AutomationService {
   async addWeekdayConditionAsync(
     automationId: number,
     type: ConditionGroupType,
-    weekdays: number
+    weekdays: number,
   ): Promise<number> {
     const resultId = await this.#sprootDB.addWeekdayConditionAsync(automationId, type, weekdays);
     await this.#postAutomationChangeFunctionAsync();
@@ -203,7 +203,7 @@ class AutomationService {
   async addMonthConditionAsync(
     automationId: number,
     type: ConditionGroupType,
-    months: number
+    months: number,
   ): Promise<number> {
     const resultId = await this.#sprootDB.addMonthConditionAsync(automationId, type, months);
     await this.#postAutomationChangeFunctionAsync();
@@ -216,7 +216,7 @@ class AutomationService {
     startMonth: number,
     startDate: number,
     endMonth: number,
-    endDate: number
+    endDate: number,
   ): Promise<number> {
     const resultId = await this.#sprootDB.addDateRangeConditionAsync(
       automationId,
@@ -224,7 +224,7 @@ class AutomationService {
       startMonth,
       startDate,
       endMonth,
-      endDate
+      endDate,
     );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
@@ -238,7 +238,7 @@ class AutomationService {
       | TimeCondition
       | WeekdayCondition
       | MonthCondition
-      | DateRangeCondition
+      | DateRangeCondition,
   ) {
     if (condition instanceof SensorCondition) {
       await this.#sprootDB.updateSensorConditionAsync(automationId, condition);
@@ -292,7 +292,7 @@ class AutomationService {
   async addNotificationActionAsync(
     automationId: number,
     subject: string,
-    content: string
+    content: string,
   ): Promise<number> {
     const result = await this.#sprootDB.addNotificationActionAsync(automationId, subject, content);
     await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
@@ -308,7 +308,7 @@ class AutomationService {
   async addOutputActionAsync(
     automationId: number,
     outputId: number,
-    value: number
+    value: number,
   ): Promise<number> {
     const result = await this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));

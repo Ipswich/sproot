@@ -44,7 +44,7 @@ describe("ESP32Handlers.ts tests", function () {
 
       const result = (await getESP32ManifestAsync(
         req as Request,
-        res as unknown as Response
+        res as unknown as Response,
       )) as ErrorResponse;
 
       assert.isObject(result, "result should be an object");
@@ -73,7 +73,7 @@ describe("ESP32Handlers.ts tests", function () {
 
       const result = (await getESP32ManifestAsync(
         req as Request,
-        res as unknown as Response
+        res as unknown as Response,
       )) as ErrorResponse;
 
       assert.strictEqual(result.statusCode, 500, "statusCode should be 500");
@@ -130,7 +130,7 @@ describe("ESP32Handlers.ts tests", function () {
       assert.isTrue(setHeaderSpy.calledWith("Content-Type", "application/octet-stream"));
       assert.isTrue(setHeaderSpy.calledWith("Content-Length", "80"));
       assert.isTrue(
-        setHeaderSpy.calledWith("Content-Disposition", "attachment; filename=firmware.bin")
+        setHeaderSpy.calledWith("Content-Disposition", "attachment; filename=firmware.bin"),
       );
     });
 

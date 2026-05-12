@@ -42,7 +42,7 @@ export default function SensorTable({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
   const [orderedSensors, setSensorOrder] = useState([] as ISensorBase[]);
 
@@ -117,7 +117,7 @@ export default function SensorTable({
         const updatedArray = arrayMove(items, oldIndex, newIndex);
         localStorage.setItem(
           sensorDataOrderKey(readingType, deviceZone),
-          JSON.stringify(updatedArray)
+          JSON.stringify(updatedArray),
         );
         return updatedArray;
       });
@@ -130,22 +130,22 @@ export default function SensorTable({
     const existingOrder = (
       JSON.parse(
         localStorage.getItem(sensorDataOrderKey(readingType, deviceZone)) ??
-          "[]"
+          "[]",
       ) as ISensorBase[]
     ).map((s) => s.id);
     const retrievedSensors = Object.values(sensors).filter((sensor) =>
-      Object.keys(sensor.lastReading).includes(readingType)
+      Object.keys(sensor.lastReading).includes(readingType),
     );
 
     //Get sensors that don't exist in the last list
     const newSensors = retrievedSensors.filter(
-      (sensor) => !existingOrder.includes(sensor.id)
+      (sensor) => !existingOrder.includes(sensor.id),
     );
 
     //Add the sensors that do exist in the last list
     existingOrder.forEach((sensorId) => {
       const sensorIndex = retrievedSensors.findIndex(
-        (o) => o.id == Number(sensorId)
+        (o) => o.id == Number(sensorId),
       );
       if (sensorIndex != -1) {
         updatedOrder.push(retrievedSensors[sensorIndex]!);

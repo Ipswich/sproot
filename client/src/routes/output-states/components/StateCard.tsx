@@ -27,10 +27,10 @@ interface StateProps {
 export default function StateCard({ output, updateOutputsAsync }: StateProps) {
   const [controlMode, setControlMode] = useState(output.state.controlMode);
   const [manualValue, setManualValue] = useState<number>(
-    output.state.manual.value ?? 0
+    output.state.manual.value ?? 0,
   );
   const [pwmValue, setPwmValue] = useState<number>(
-    output.state.manual.value ?? 0
+    output.state.manual.value ?? 0,
   );
   const [isSegmentedControlDisabled, setSegmentedControlDisabled] =
     useState(false);
@@ -45,7 +45,7 @@ export default function StateCard({ output, updateOutputsAsync }: StateProps) {
     mutationFn: async (newControlMode: { id: number; controlMode: string }) => {
       await setOutputControlModeAsync(
         newControlMode.id,
-        newControlMode.controlMode
+        newControlMode.controlMode,
       );
     },
     onSettled: async () => {

@@ -30,7 +30,7 @@ export default function TPLinkSmartPlugForm({
         searchable
         defaultValue={
           (getDevices?.data ?? []).filter(
-            (device) => device.externalId == selectedOutput?.pin
+            (device) => device.externalId == selectedOutput?.pin,
           )[0]?.alias ?? ""
         }
         label="Plug ID"
@@ -41,7 +41,7 @@ export default function TPLinkSmartPlugForm({
         {...form.getInputProps("pin")}
         onChange={(event) => {
           const details = getDevices.data?.filter(
-            (d) => d.externalId === event
+            (d) => d.externalId === event,
           )[0];
           form.setFieldValue("pin", details!.externalId);
           form.setFieldValue("address", details!.address);

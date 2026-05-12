@@ -857,7 +857,7 @@ describe("JournalEntriesHandlers", () => {
       assert.equal(result.statusCode, 200);
       assert.equal(
         result.content?.data,
-        "Tag with ID 11 successfully added to Journal Entry with ID 5."
+        "Tag with ID 11 successfully added to Journal Entry with ID 5.",
       );
       assert.isTrue(sprootDB.addJournalEntryTagLookupAsync.calledOnceWithExactly(5, 11));
     });

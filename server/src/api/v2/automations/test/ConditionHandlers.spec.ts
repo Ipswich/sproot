@@ -40,8 +40,8 @@ describe("ConditionHandlers.ts", () => {
           debug: () => {},
           warn: () => {},
           verbose: () => {},
-          startTimer: () => ({ done: () => {} } as winston.Profiler),
-        } as unknown as winston.Logger)
+          startTimer: () => ({ done: () => {} }) as winston.Profiler,
+        }) as unknown as winston.Logger,
     );
     mockLogger = winston.createLogger();
   });
@@ -2473,10 +2473,7 @@ describe("ConditionHandlers.ts", () => {
       assert.equal(error.statusCode, 400);
       assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.deepEqual(error.error.details, [
-        "Invalid operator.",
-        "Invalid reading type.",
-      ]);
+      assert.deepEqual(error.error.details, ["Invalid operator.", "Invalid reading type."]);
     });
 
     it("should return a 400 and details for the invalid request (output)", async () => {

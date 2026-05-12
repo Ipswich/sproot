@@ -103,7 +103,7 @@ describe("Camera Routes", async function () {
                 assert.equal(res.statusCode, 200);
                 assert.equal(
                   res.headers["content-type"],
-                  "multipart/x-mixed-replace; boundary=FRAME"
+                  "multipart/x-mixed-replace; boundary=FRAME",
                 );
               } catch (error) {
                 clearTimeout(timeout);
@@ -203,7 +203,9 @@ describe("Camera Routes", async function () {
     describe("Archive", () => {
       describe("GET", () => {
         it("should return 200 and the archive file", async () => {
-          const response = await request(server).get("/api/v2/camera/timelapse/archive").expect(200);
+          const response = await request(server)
+            .get("/api/v2/camera/timelapse/archive")
+            .expect(200);
           validateMiddlewareValues(response);
           assert.equal(response.headers["content-type"], "application/x-tar");
           assert.isNotNull(response.body);
@@ -241,7 +243,8 @@ describe("Camera Routes", async function () {
         it("should return 200 and clear all timelapse images", async () => {
           let attempts = 0;
           while (
-            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress().isGenerating &&
+            (app.get("cameraManager") as CameraManager).getTimelapseArchiveProgress()
+              .isGenerating &&
             attempts < 5
           ) {
             attempts++;
@@ -250,7 +253,9 @@ describe("Camera Routes", async function () {
 
           let imageCount = await fs.promises.readdir("images/timelapse");
           assert.isAbove(imageCount.length, 0, "There should be images to clear for this test");
-          const response = await request(server).delete("/api/v2/camera/timelapse/images").expect(200);
+          const response = await request(server)
+            .delete("/api/v2/camera/timelapse/images")
+            .expect(200);
           validateMiddlewareValues(response);
           imageCount = await fs.promises.readdir("images/timelapse");
           assert.equal(imageCount.length, 0, "All images should be cleared");

@@ -267,7 +267,7 @@ describe("JournalTagHandlers.ts tests", () => {
           id: 8,
           name: "validated-update",
           color: "#222",
-        })
+        }),
       );
     });
 

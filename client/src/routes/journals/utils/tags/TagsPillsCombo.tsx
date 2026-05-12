@@ -46,7 +46,7 @@ export default function TagsPillsCombo({
 
   const handleValueSelect = (val: string) =>
     onChange(
-      value.includes(val) ? value.filter((v) => v !== val) : [...value, val]
+      value.includes(val) ? value.filter((v) => v !== val) : [...value, val],
     );
 
   const handleValueRemove = (val: string) =>

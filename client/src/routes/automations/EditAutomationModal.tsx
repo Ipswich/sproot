@@ -83,7 +83,7 @@ export default function EditAutomationModal({
     mutationFn: (newAutomationValues: IAutomation) => {
       return addAutomationAsync(
         newAutomationValues.name,
-        newAutomationValues.operator
+        newAutomationValues.operator,
       );
     },
     onSuccess: (data) => {
@@ -97,7 +97,7 @@ export default function EditAutomationModal({
       return updateAutomationAsync(
         updatedAutomationValues.id,
         updatedAutomationValues.name,
-        updatedAutomationValues.operator
+        updatedAutomationValues.operator,
       );
     },
     onSettled: () => {
@@ -226,7 +226,7 @@ export default function EditAutomationModal({
                                 { value: "and", label: "Match All Groups" },
                               ]}
                               {...mutateAutomationForm.getInputProps(
-                                "operator"
+                                "operator",
                               )}
                               onChange={(value) => {
                                 updateAutomationMutation.mutate({
@@ -237,7 +237,7 @@ export default function EditAutomationModal({
                                 });
                                 mutateAutomationForm.setFieldValue(
                                   "operator",
-                                  value as AutomationOperator
+                                  value as AutomationOperator,
                                 );
                               }}
                             />
@@ -294,7 +294,7 @@ export default function EditAutomationModal({
                             <AddActionWidget
                               automationId={targetAutomation.id}
                               outputs={Object.values(
-                                getOutputsQuery.data ?? {}
+                                getOutputsQuery.data ?? {},
                               ).map((output) => ({
                                 id: output.id,
                                 parentOutputId: output.parentOutputId,

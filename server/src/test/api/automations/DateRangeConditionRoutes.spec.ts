@@ -44,7 +44,7 @@ describe("DateRange Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/date-range"
+        "/api/v2/automations/not-a-number/conditions/date-range",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing automation Id."]);
     });
@@ -58,7 +58,7 @@ describe("DateRange Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/1/conditions/date-range/not-a-number"
+        "/api/v2/automations/1/conditions/date-range/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing condition Id."]);
     });
@@ -96,7 +96,11 @@ describe("DateRange Condition Routes", () => {
         .send(invalidBody)
         .expect(400);
 
-      assertContractBadRequest(response, "/api/v2/automations/1/conditions/date-range", invalidBody);
+      assertContractBadRequest(
+        response,
+        "/api/v2/automations/1/conditions/date-range",
+        invalidBody,
+      );
     });
 
     it("should reject invalid scalar types through contract middleware", async () => {
@@ -112,7 +116,11 @@ describe("DateRange Condition Routes", () => {
         .send(invalidBody)
         .expect(400);
 
-      assertContractBadRequest(response, "/api/v2/automations/1/conditions/date-range", invalidBody);
+      assertContractBadRequest(
+        response,
+        "/api/v2/automations/1/conditions/date-range",
+        invalidBody,
+      );
     });
 
     it("should reject invalid enums through contract middleware", async () => {
@@ -128,7 +136,11 @@ describe("DateRange Condition Routes", () => {
         .send(invalidBody)
         .expect(400);
 
-      assertContractBadRequest(response, "/api/v2/automations/1/conditions/date-range", invalidBody);
+      assertContractBadRequest(
+        response,
+        "/api/v2/automations/1/conditions/date-range",
+        invalidBody,
+      );
     });
 
     it("should reject malformed bodies through contract middleware", async () => {
@@ -138,7 +150,11 @@ describe("DateRange Condition Routes", () => {
         .send(invalidBody)
         .expect(400);
 
-      assertContractBadRequest(response, "/api/v2/automations/1/conditions/date-range", invalidBody);
+      assertContractBadRequest(
+        response,
+        "/api/v2/automations/1/conditions/date-range",
+        invalidBody,
+      );
     });
 
     it("should reject invalid path parameters through remaining handler/domain validation", async () => {
@@ -157,7 +173,7 @@ describe("DateRange Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/date-range"
+        "/api/v2/automations/not-a-number/conditions/date-range",
       );
       assert.deepEqual(response.body["error"]["details"], ["Invalid or missing automation Id."]);
     });
@@ -191,7 +207,7 @@ describe("DateRange Condition Routes", () => {
       assertContractBadRequest(
         response,
         "/api/v2/automations/1/conditions/date-range/3",
-        invalidBody
+        invalidBody,
       );
     });
 
@@ -205,7 +221,7 @@ describe("DateRange Condition Routes", () => {
       assertContractBadRequest(
         response,
         "/api/v2/automations/1/conditions/date-range/3",
-        invalidBody
+        invalidBody,
       );
     });
 
@@ -219,7 +235,7 @@ describe("DateRange Condition Routes", () => {
       assertContractBadRequest(
         response,
         "/api/v2/automations/1/conditions/date-range/3",
-        invalidBody
+        invalidBody,
       );
     });
 
@@ -233,7 +249,7 @@ describe("DateRange Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/date-range/not-a-number"
+        "/api/v2/automations/not-a-number/conditions/date-range/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], [
         "Invalid or missing automation Id.",
@@ -262,7 +278,7 @@ describe("DateRange Condition Routes", () => {
       assert.equal(response.body["error"]["name"], "Bad Request");
       assert.equal(
         response.body["error"]["url"],
-        "/api/v2/automations/not-a-number/conditions/date-range/not-a-number"
+        "/api/v2/automations/not-a-number/conditions/date-range/not-a-number",
       );
       assert.deepEqual(response.body["error"]["details"], [
         "Invalid or missing automation Id.",
