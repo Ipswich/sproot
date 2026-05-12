@@ -2,7 +2,6 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { SDBOutput } from "@sproot/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { Request, Response } from "express";
 
 /**
@@ -58,7 +57,6 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let addOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -111,8 +109,7 @@ export async function addAsync(
   }
 
   try {
-    const newOutputId = await sprootDB.addOutputAsync(newOutput);
-    await outputList.regenerateAsync();
+    const newOutputId = await outputList.addOutputAsync(newOutput);
     addOutputResponse = {
       statusCode: 201,
       content: {
@@ -144,7 +141,6 @@ export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -198,8 +194,7 @@ export async function updateAsync(
       : (request.body["parentOutputId"] ?? outputData.parentOutputId);
 
   try {
-    await sprootDB.updateOutputAsync(outputData);
-    await outputList.regenerateAsync();
+    await outputList.updateOutputAsync(outputData);
   } catch (error: any) {
     updateOutputResponse = {
       statusCode: 503,
@@ -227,7 +222,6 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   let deleteOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -263,8 +257,7 @@ export async function deleteAsync(
   }
 
   try {
-    await sprootDB.deleteOutputAsync(outputId);
-    await outputList.regenerateAsync();
+    await outputList.deleteOutputAsync(outputId);
 
     deleteOutputResponse = {
       statusCode: 200,

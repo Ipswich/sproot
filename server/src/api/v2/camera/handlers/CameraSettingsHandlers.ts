@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { CameraManager } from "../../../../camera/CameraManager";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
-import { ISprootDB } from "@sproot/database/ISprootDB";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 
 /**
@@ -32,7 +31,6 @@ export async function updateCameraSettingsAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const newSettings = request.body as SDBCameraSettings;
   // At this point, there is only 1.
   newSettings.id = 1;
@@ -132,9 +130,8 @@ export async function updateCameraSettingsAsync(
   }
 
   try {
-    await sprootDB.updateCameraSettingsAsync(newSettings);
     const cameraManager = request.app.get(DI_KEYS.CameraManager) as CameraManager;
-    await cameraManager.regenerateAsync();
+    await cameraManager.updateCameraSettingsAsync(newSettings);
     return {
       statusCode: 200,
       content: {

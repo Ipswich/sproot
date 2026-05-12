@@ -138,3 +138,4 @@ client/.env.development
 *.sproot.gz
 
 build
+.prompts/**

@@ -76,7 +76,6 @@ describe("StreamProxy", () => {
     const connectAsyncStub = sinon
       .stub(UpstreamConnection.prototype, "connectAsync")
       .resolves(false);
-    const disconnectStub = sinon.stub(UpstreamConnection.prototype, "disconnect");
 
     streamProxy = new StreamProxy({
       logger,
@@ -86,9 +85,8 @@ describe("StreamProxy", () => {
 
     assert.isFalse(await streamProxy.startAsync());
     assert.isTrue(connectAsyncStub.calledOnce);
-    assert.isTrue(disconnectStub.calledOnce);
+    assert.equal(streamProxy.getUpstreamConnection().getState().status, "disconnected");
     connectAsyncStub.restore();
-    disconnectStub.restore();
   });
 });
 

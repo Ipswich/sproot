@@ -192,7 +192,8 @@ describe("Timelapse.ts tests", function () {
   });
 
   it("should create filenames with correct format", async function () {
-    using timelapse = new Timelapse(testAddImageFunctionAsync, logger);
+    const addImageStub = sinon.stub().resolves();
+    using timelapse = new Timelapse(addImageStub, logger);
 
     timelapse.updateSettings({
       name: "testCamera",
@@ -202,13 +203,11 @@ describe("Timelapse.ts tests", function () {
       timelapseEndTime: null,
     } as SDBCameraSettings);
 
-    // Advance 5 minutes
+    // Advance 5 minutes.
     clock.tick(5 * 60 * 1000);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    // Verify filename format (date should be from our fixed clock time + 5 min)
-    const expectedFileName = "testCamera_2025-05-26-12-05.jpg";
-    assert.isTrue(fs.existsSync(path.join(tempDir, expectedFileName)));
+    assert.isTrue(addImageStub.calledOnceWithExactly("testCamera_2025-05-26-12-05.jpg", tempDir));
   });
 
   it("should stop capturing when disabled", async function () {

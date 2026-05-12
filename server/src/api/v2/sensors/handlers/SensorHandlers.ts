@@ -1,5 +1,4 @@
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
@@ -60,7 +59,6 @@ export async function addAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let addSensorResponse: SuccessResponse | ErrorResponse;
 
@@ -115,8 +113,7 @@ export async function addAsync(
   }
 
   try {
-    await sprootDB.addSensorAsync(newSensor);
-    await sensorList.regenerateAsync();
+    await sensorList.addSensorAsync(newSensor);
 
     addSensorResponse = {
       statusCode: 201,
@@ -149,7 +146,6 @@ export async function updateAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let updateSensorResponse: SuccessResponse | ErrorResponse;
 
@@ -197,8 +193,7 @@ export async function updateAsync(
     request.body["deviceZoneId"] ?? request.body["deviceZoneId"] ?? sensorData.deviceZoneId;
 
   try {
-    await sprootDB.updateSensorAsync(sensorData);
-    await sensorList.regenerateAsync();
+    await sensorList.updateSensorAsync(sensorData);
   } catch (error: any) {
     updateSensorResponse = {
       statusCode: 503,
@@ -232,7 +227,6 @@ export async function deleteAsync(
   request: Request,
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
-  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const sensorList = request.app.get(DI_KEYS.SensorList) as SensorList;
   let deleteSensorResponse: SuccessResponse | ErrorResponse;
 
@@ -265,8 +259,7 @@ export async function deleteAsync(
   }
 
   try {
-    await sprootDB.deleteSensorAsync(sensorId);
-    await sensorList.regenerateAsync();
+    await sensorList.deleteSensorAsync(sensorId);
 
     deleteSensorResponse = {
       statusCode: 200,

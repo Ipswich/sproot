@@ -1,6 +1,7 @@
 export const DI_KEYS = {
   // Services
   SprootDB: "sprootDB",
+  EventBus: "eventBus",
   SensorList: "sensorList",
   OutputList: "outputList",
   CameraManager: "cameraManager",
@@ -15,7 +16,6 @@ export const DI_KEYS = {
   Logger: "logger",
 
   // Cron Jobs
-  UpdateDevicesCronJob: "updateDevicesCronJob",
   AutomationsCronJob: "automationsCronJob",
   DatabaseUpdateCronJob: "updateDatabaseCronJob",
   BackupCronJob: "backupCronJob",
