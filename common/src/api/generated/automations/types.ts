@@ -8,2939 +8,2897 @@
  */
 
 export interface paths {
-  "/api/v2/automations": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/automations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all automations.
+         * @description Returns a list of all automations. This includes basic information about each automation, such as the name, the operator, and the conditions for each automation.
+         */
+        get: operations["listAutomations"];
+        put?: never;
+        /**
+         * Add a new automation.
+         * @description Adds a new automation to the service, and regenerates the list of automations. Returns the information used to create the automation.
+         */
+        post: operations["createAutomation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all automations.
-     * @description Returns a list of all automations. This includes basic information about each automation, such as the name, the operator, and the conditions for each automation.
-     */
-    get: operations["listAutomations"];
-    put?: never;
-    /**
-     * Add a new automation.
-     * @description Adds a new automation to the service, and regenerates the list of automations. Returns the information used to create the automation.
-     */
-    post: operations["createAutomation"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/automations/{automationId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/automations/{automationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an automation by Id.
+         * @description Returns the automation with the given ID. This includes the name, the operator, and the conditions for the automation.
+         */
+        get: operations["getAutomationById"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an automation by Id.
+         * @description Deletes an automation with the given ID. This operation is permanent and cannot be undone.
+         */
+        delete: operations["deleteAutomation"];
+        options?: never;
+        head?: never;
+        /**
+         * Update an automation by Id.
+         * @description Updates an automation with the given ID.
+         */
+        patch: operations["updateAutomation"];
+        trace?: never;
     };
-    /**
-     * Get an automation by Id.
-     * @description Returns the automation with the given ID. This includes the name, the operator, and the conditions for the automation.
-     */
-    get: operations["getAutomationById"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete an automation by Id.
-     * @description Deletes an automation with the given ID. This operation is permanent and cannot be undone.
-     */
-    delete: operations["deleteAutomation"];
-    options?: never;
-    head?: never;
-    /**
-     * Update an automation by Id.
-     * @description Updates an automation with the given ID.
-     */
-    patch: operations["updateAutomation"];
-    trace?: never;
-  };
-  "/api/v2/automations/{automationId}/conditions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/automations/{automationId}/conditions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all conditions for an automation.
+         * @description Returns a list of all conditions for the given automation. This includes basic information about each condition, such as the type, the operator, and the value.
+         */
+        get: operations["listAutomationConditions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all conditions for an automation.
-     * @description Returns a list of all conditions for the given automation. This includes basic information about each condition, such as the type, the operator, and the value.
-     */
-    get: operations["listAutomationConditions"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/automations/{automationId}/conditions/{type}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/automations/{automationId}/conditions/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all conditions for an automation.
+         * @description Returns a list of all conditions for the given automation. This includes basic information about each condition, such as the type, the operator, and the value.
+         */
+        get: operations["listAutomationConditionsByType"];
+        put?: never;
+        /**
+         * Add a new condition to an automation.
+         * @description Adds a new condition to the given automation. Returns the information used to create the condition.
+         */
+        post: operations["createAutomationConditionByType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all conditions for an automation.
-     * @description Returns a list of all conditions for the given automation. This includes basic information about each condition, such as the type, the operator, and the value.
-     */
-    get: operations["listAutomationConditionsByType"];
-    put?: never;
-    /**
-     * Add a new condition to an automation.
-     * @description Adds a new condition to the given automation. Returns the information used to create the condition.
-     */
-    post: operations["createAutomationConditionByType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/automations/{automationId}/conditions/{type}/{conditionId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/automations/{automationId}/conditions/{type}/{conditionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a condition by Id.
+         * @description Returns the condition with the given ID. This includes the type, the operator, and the value of the condition.
+         */
+        get: operations["getAutomationConditionById"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a condition by Id.
+         * @description Deletes a condition with the given ID. This operation is permanent and cannot be undone.
+         */
+        delete: operations["deleteAutomationCondition"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a condition by Id.
+         * @description Updates a condition with the given ID.
+         */
+        patch: operations["updateAutomationCondition"];
+        trace?: never;
     };
-    /**
-     * Get a condition by Id.
-     * @description Returns the condition with the given ID. This includes the type, the operator, and the value of the condition.
-     */
-    get: operations["getAutomationConditionById"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete a condition by Id.
-     * @description Deletes a condition with the given ID. This operation is permanent and cannot be undone.
-     */
-    delete: operations["deleteAutomationCondition"];
-    options?: never;
-    head?: never;
-    /**
-     * Update a condition by Id.
-     * @description Updates a condition with the given ID.
-     */
-    patch: operations["updateAutomationCondition"];
-    trace?: never;
-  };
-  "/api/v2/output-actions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/output-actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get output actions.
+         * @description Returns a list of output actions. This includes basic information about each action,  such as the Id, the output Id, and the value that will be set when the linked automation is triggered.
+         */
+        get: operations["listOutputActions"];
+        put?: never;
+        /**
+         * Create a new output based action.
+         * @description Creates a new output action. This will effect a change in the output when the linked automation triggers.
+         */
+        post: operations["createOutputAction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get output actions.
-     * @description Returns a list of output actions. This includes basic information about each action,  such as the Id, the output Id, and the value that will be set when the linked automation is triggered.
-     */
-    get: operations["listOutputActions"];
-    put?: never;
-    /**
-     * Create a new output based action.
-     * @description Creates a new output action. This will effect a change in the output when the linked automation triggers.
-     */
-    post: operations["createOutputAction"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/output-actions/{outputActionId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/output-actions/{outputActionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an output action by Id.
+         * @description Returns the output action with the given Id. This includes the Id, the output Id, and the value that will be set when the linked automation is triggered.
+         */
+        get: operations["getOutputActionById"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an output action by Id.
+         * @description Deletes an output action with the given Id. This operation is permanent and cannot be undone.
+         */
+        delete: operations["deleteOutputAction"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get an output action by Id.
-     * @description Returns the output action with the given Id. This includes the Id, the output Id, and the value that will be set when the linked automation is triggered.
-     */
-    get: operations["getOutputActionById"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete an output action by Id.
-     * @description Deletes an output action with the given Id. This operation is permanent and cannot be undone.
-     */
-    delete: operations["deleteOutputAction"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/notification-actions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/notification-actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get notification actions.
+         * @description Returns a list of notification actions. This includes basic information about each action, such as the Id, the automation Id, subject, and content.
+         */
+        get: operations["listNotificationActions"];
+        put?: never;
+        /**
+         * Create a new notification action.
+         * @description Creates a new notification action. This will send a notification when the linked automation triggers.
+         */
+        post: operations["createNotificationAction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get notification actions.
-     * @description Returns a list of notification actions. This includes basic information about each action, such as the Id, the automation Id, subject, and content.
-     */
-    get: operations["listNotificationActions"];
-    put?: never;
-    /**
-     * Create a new notification action.
-     * @description Creates a new notification action. This will send a notification when the linked automation triggers.
-     */
-    post: operations["createNotificationAction"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/notification-actions/{notificationActionId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/notification-actions/{notificationActionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a notification action by Id.
+         * @description Returns the notification action with the given Id. This includes the Id, the automation Id, subject, and content.
+         */
+        get: operations["getNotificationActionById"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a notification action by Id.
+         * @description Deletes a notification action with the given Id. This operation is permanent and cannot be undone.
+         */
+        delete: operations["deleteNotificationAction"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get a notification action by Id.
-     * @description Returns the notification action with the given Id. This includes the Id, the automation Id, subject, and content.
-     */
-    get: operations["getNotificationActionById"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete a notification action by Id.
-     * @description Deletes a notification action with the given Id. This operation is permanent and cannot be undone.
-     */
-    delete: operations["deleteNotificationAction"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/notification-actions/active": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/notification-actions/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get active notification actions.
+         * @description Returns a list of notification actions that are currently active, meaning their associated automations have been triggered. This endpoint returns the notification details along with the automation event payload and the timestamp of the last run.
+         */
+        get: operations["listActiveNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get active notification actions.
-     * @description Returns a list of notification actions that are currently active, meaning their associated automations have been triggered. This endpoint returns the notification details along with the automation event payload and the timestamp of the last run.
-     */
-    get: operations["listActiveNotifications"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
-    SuccessResponse: {
-      statusCode?: number;
-      content?: Record<string, never>;
-    } & components["schemas"]["ApiResponse"];
-    /** @description A generic automation object stored in the database. This is the base object that all automations are built from. Contains a just a name and an ID. */
-    Automation: {
-      /** @example 1 */
-      readonly id?: number;
-      /** @example Turn on light */
-      name?: string;
-      /** @example or */
-      operator?: string;
-      /** @example true */
-      enabled?: boolean;
-    };
-    /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
-    ErrorResponse: {
-      statusCode?: number;
-      error: {
-        request?: {
-          method?: string;
-          url?: string;
-          body?: Record<string, never>;
-          query?: Record<string, never>;
+    schemas: {
+        /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
+        SuccessResponse: {
+            statusCode?: number;
+            content?: Record<string, never>;
+        } & components["schemas"]["ApiResponse"];
+        /** @description A generic automation object stored in the database. This is the base object that all automations are built from. Contains a just a name and an ID. */
+        Automation: {
+            /** @example 1 */
+            readonly id?: number;
+            /** @example Turn on light */
+            name?: string;
+            /** @example or */
+            operator?: string;
+            /** @example true */
+            enabled?: boolean;
         };
-        name?: string;
-        url?: string;
-        details?: string[];
-      };
-    } & components["schemas"]["ApiResponse"];
-    /** @description Request body for creating an automation. */
-    AutomationCreateRequest: {
-      /** @example Turn on light */
-      name: string;
-      /**
-       * @example or
-       * @enum {string}
-       */
-      operator: "and" | "or";
+        /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
+        ErrorResponse: {
+            statusCode?: number;
+            error: {
+                request?: {
+                    method?: string;
+                    url?: string;
+                    body?: Record<string, never>;
+                    query?: Record<string, never>;
+                };
+                name?: string;
+                url?: string;
+                details?: string[];
+            };
+        } & components["schemas"]["ApiResponse"];
+        /** @description Request body for creating an automation. */
+        AutomationCreateRequest: {
+            /** @example Turn on light */
+            name: string;
+            /**
+             * @example or
+             * @enum {string}
+             */
+            operator: "and" | "or";
+        };
+        /** @description Request body for updating an automation. This operation changes only the fields provided. */
+        AutomationUpdateRequest: {
+            /** @example Turn on light */
+            name?: string;
+            /**
+             * @example or
+             * @enum {string}
+             */
+            operator?: "and" | "or";
+            /** @example true */
+            enabled?: boolean;
+        };
+        /** @description These conditions define when an automation will run. */
+        AutomationConditions: {
+            sensor: components["schemas"]["SensorConditionGroup"];
+            output: components["schemas"]["OutputConditionGroup"];
+            time: components["schemas"]["TimeConditionGroup"];
+            weekday: components["schemas"]["WeekdayConditionGroup"];
+            month: components["schemas"]["MonthConditionGroup"];
+            dateRange: components["schemas"]["DateRangeConditionGroup"];
+        };
+        /** @description Sensor conditions grouped by boolean operator. */
+        SensorConditionGroup: {
+            allOf: components["schemas"]["SensorCondition"][];
+            anyOf: components["schemas"]["SensorCondition"][];
+            oneOf: components["schemas"]["SensorCondition"][];
+        };
+        /** @description Output conditions grouped by boolean operator. */
+        OutputConditionGroup: {
+            allOf: components["schemas"]["OutputCondition"][];
+            anyOf: components["schemas"]["OutputCondition"][];
+            oneOf: components["schemas"]["OutputCondition"][];
+        };
+        /** @description Time conditions grouped by boolean operator. */
+        TimeConditionGroup: {
+            allOf: components["schemas"]["TimeCondition"][];
+            anyOf: components["schemas"]["TimeCondition"][];
+            oneOf: components["schemas"]["TimeCondition"][];
+        };
+        /** @description Weekday conditions grouped by boolean operator. */
+        WeekdayConditionGroup: {
+            allOf: components["schemas"]["WeekdayCondition"][];
+            anyOf: components["schemas"]["WeekdayCondition"][];
+            oneOf: components["schemas"]["WeekdayCondition"][];
+        };
+        /** @description Month conditions grouped by boolean operator. */
+        MonthConditionGroup: {
+            allOf: components["schemas"]["MonthCondition"][];
+            anyOf: components["schemas"]["MonthCondition"][];
+            oneOf: components["schemas"]["MonthCondition"][];
+        };
+        /** @description Date range conditions grouped by boolean operator. */
+        DateRangeConditionGroup: {
+            allOf: components["schemas"]["DateRangeCondition"][];
+            anyOf: components["schemas"]["DateRangeCondition"][];
+            oneOf: components["schemas"]["DateRangeCondition"][];
+        };
+        /** @description Request body for creating a sensor condition. */
+        SensorConditionCreateRequest: {
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /** @example greaterOrEqual */
+            operator: string;
+            /** @example 50 */
+            comparisonValue: number;
+            /** @example 3 */
+            comparisonLookback?: number | null;
+            /** @example 1 */
+            sensorId: number;
+            /** @example temperature */
+            readingType: string;
+        };
+        /** @description Request body for creating an output condition. */
+        OutputConditionCreateRequest: {
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /** @example greaterOrEqual */
+            operator: string;
+            /** @example 50 */
+            comparisonValue: number;
+            /** @example 3 */
+            comparisonLookback?: number | null;
+            /** @example 1 */
+            outputId: number;
+        };
+        /** @description Request body for creating a time condition. */
+        TimeConditionCreateRequest: {
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /** @example 12:00 */
+            startTime?: string | null;
+            /** @example 18:00 */
+            endTime?: string | null;
+        };
+        /** @description Request body for creating a weekday condition. */
+        WeekdayConditionCreateRequest: {
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc.
+             * @example 127
+             */
+            weekdays: number;
+        };
+        /** @description Request body for creating a month condition. */
+        MonthConditionCreateRequest: {
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc.
+             * @example 4095
+             */
+            months: number;
+        };
+        /** @description Request body for creating a date range condition. */
+        DateRangeConditionCreateRequest: {
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description The month the date range starts on, as a number from 1 to 12.
+             * @example 1
+             */
+            startMonth: number;
+            /**
+             * @description The day the date range starts on, with the first day of the month as 1 and the last day as 28-31.
+             * @example 1
+             */
+            startDate: number;
+            /**
+             * @description The month the date range ends on, as a number from 1 to 12.
+             * @example 12
+             */
+            endMonth: number;
+            /**
+             * @description The day the date range ends on, with the first day of the month as 1 and the last day as 28-31.
+             * @example 31
+             */
+            endDate: number;
+        };
+        /** @description Defines a condition based on a sensor value. */
+        SensorCondition: {
+            /** @example 1 */
+            readonly id: number;
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /** @example greaterOrEqual */
+            operator: string;
+            /** @example 50 */
+            comparisonValue: number;
+            /** @example 3 */
+            comparisonLookback?: number | null;
+            /** @example 1 */
+            sensorId: number;
+            /** @example temperature */
+            readingType: string;
+        };
+        /** @description Defines a condition based on an output value. */
+        OutputCondition: {
+            /** @example 1 */
+            readonly id: number;
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /** @example greaterOrEqual */
+            operator: string;
+            /** @example 50 */
+            comparisonValue: number;
+            /** @example 3 */
+            comparisonLookback?: number | null;
+            /** @example 1 */
+            outputId: number;
+        };
+        /** @description Defines a condition based on time. */
+        TimeCondition: {
+            /** @example 1 */
+            readonly id: number;
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /** @example 12:00 */
+            startTime?: string | null;
+            /** @example 18:00 */
+            endTime?: string | null;
+        };
+        /** @description Defines a condition based on the days of the week. */
+        WeekdayCondition: {
+            /** @example 1 */
+            readonly id: number;
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc.
+             * @example 127
+             */
+            weekdays: number;
+        };
+        /** @description Defines a condition based on the months of the year. */
+        MonthCondition: {
+            /** @example 1 */
+            readonly id: number;
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc.
+             * @example 4095
+             */
+            months: number;
+        };
+        /** @description Defines a condition for an interval of dates of the year. */
+        DateRangeCondition: {
+            /** @example 1 */
+            readonly id: number;
+            /** @enum {string} */
+            groupType: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description The month the date range starts on, as a number from 1 to 12.
+             * @example 1
+             */
+            startMonth: number;
+            /**
+             * @description The day the date range starts on, with the first day of the month as 1 and the last day as 28-31.
+             * @example 1
+             */
+            startDate: number;
+            /**
+             * @description The month the date range ends on, as a number from 1 to 12.
+             * @example 12
+             */
+            endMonth: number;
+            /**
+             * @description The day the date range ends on, with the first day of the month as 1 and the last day as 28-31.
+             * @example 31
+             */
+            endDate: number;
+        };
+        /** @description Request body for updating a sensor condition. */
+        SensorConditionUpdateRequest: {
+            /** @enum {string} */
+            groupType?: "allOf" | "anyOf" | "oneOf";
+            /** @example greaterOrEqual */
+            operator?: string;
+            /** @example 50 */
+            comparisonValue?: number;
+            /** @example 3 */
+            comparisonLookback?: number | null;
+            /** @example 1 */
+            sensorId?: number;
+            /** @example temperature */
+            readingType?: string;
+        };
+        /** @description Request body for updating an output condition. */
+        OutputConditionUpdateRequest: {
+            /** @enum {string} */
+            groupType?: "allOf" | "anyOf" | "oneOf";
+            /** @example greaterOrEqual */
+            operator?: string;
+            /** @example 50 */
+            comparisonValue?: number;
+            /** @example 3 */
+            comparisonLookback?: number | null;
+            /** @example 1 */
+            outputId?: number;
+        };
+        /** @description Request body for updating a time condition. */
+        TimeConditionUpdateRequest: {
+            /** @enum {string} */
+            groupType?: "allOf" | "anyOf" | "oneOf";
+            /** @example 12:00 */
+            startTime?: string | null;
+            /** @example 18:00 */
+            endTime?: string | null;
+        };
+        /** @description Request body for updating a weekday condition. */
+        WeekdayConditionUpdateRequest: {
+            /** @enum {string} */
+            groupType?: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc.
+             * @example 127
+             */
+            weekdays?: number;
+        };
+        /** @description Request body for updating a month condition. */
+        MonthConditionUpdateRequest: {
+            /** @enum {string} */
+            groupType?: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc.
+             * @example 4095
+             */
+            months?: number;
+        };
+        /** @description Request body for updating a date range condition. */
+        DateRangeConditionUpdateRequest: {
+            /** @enum {string} */
+            groupType?: "allOf" | "anyOf" | "oneOf";
+            /**
+             * @description The month the date range starts on, as a number from 1 to 12.
+             * @example 1
+             */
+            startMonth?: number;
+            /**
+             * @description The day the date range starts on, with the first day of the month as 1 and the last day as 28-31.
+             * @example 1
+             */
+            startDate?: number;
+            /**
+             * @description The month the date range ends on, as a number from 1 to 12.
+             * @example 12
+             */
+            endMonth?: number;
+            /**
+             * @description The day the date range ends on, with the first day of the month as 1 and the last day as 28-31.
+             * @example 31
+             */
+            endDate?: number;
+        };
+        /** @description An action object that is stored in the database. Contains the information needed to create an output action based on an existing automation. */
+        OutputAction: {
+            /** @example 1 */
+            readonly id?: number;
+            /** @example 1 */
+            automationId: number;
+            /** @example 1 */
+            outputId?: number;
+            /** @example 50 */
+            value: number;
+        };
+        /** @description Request body for creating an output action. */
+        OutputActionCreateRequest: {
+            /** @example 1 */
+            automationId: number;
+            /** @example 1 */
+            outputId: number;
+            /** @example 50 */
+            value: number;
+        };
+        /** @description An action object that is stored in the database. Contains the information needed to send a notification when an automation triggers. */
+        NotificationAction: {
+            /** @example 1 */
+            readonly id?: number;
+            /** @example 1 */
+            automationId: number;
+            /** @example Test Notification */
+            subject: string;
+            /** @example This is a test notification content. */
+            content: string;
+        };
+        /** @description Request body for creating a notification action. */
+        NotificationActionCreateRequest: {
+            /** @example 1 */
+            automationId: number;
+            /** @example Test Notification */
+            subject: string;
+            /** @example This is a test notification content. */
+            content: string;
+        };
+        /** @description Contains the active notification actions for triggered automations. */
+        ActiveNotifications: {
+            /**
+             * @description Timestamp in milliseconds of when the automations were last evaluated.
+             * @example 1713523200000
+             */
+            lastRunAt: number;
+            /** @description List of active notification actions. */
+            notifications: components["schemas"]["ActiveNotification"][];
+        };
+        /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
+        ApiResponse: {
+            statusCode: number;
+            /** @example 2021-01-01T00:00:00.000Z */
+            timestamp: string;
+            /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
+            requestId: string;
+        };
+        /** @description A notification action that is currently active due to its associated automation being triggered. */
+        ActiveNotification: {
+            /**
+             * @description The Id of the notification action.
+             * @example 1
+             */
+            notificationId: number;
+            /**
+             * @description The notification subject.
+             * @example Temperature Alert
+             */
+            subject: string;
+            /**
+             * @description The notification content.
+             * @example Temperature has exceeded threshold.
+             */
+            content: string;
+            /** @description The automation event payload containing triggered automation details. */
+            payload: components["schemas"]["AutomationEventPayload"];
+        };
+        /** @description Payload containing information about a triggered automation. */
+        AutomationEventPayload: {
+            /**
+             * @description The Id of the automation.
+             * @example 1
+             */
+            automationId: number;
+            /**
+             * @description The name of the automation.
+             * @example Temperature Threshold
+             */
+            automationName: string;
+            /**
+             * @description The logical operator for conditions (and/or).
+             * @example or
+             * @enum {string}
+             */
+            operator: "and" | "or";
+            /** @description The condition results for the automation. */
+            conditions: components["schemas"]["AutomationConditionEvaluationSummary"];
+        };
+        /** @description Summarized evaluation results for an automation, grouped by boolean operator. */
+        AutomationConditionEvaluationSummary: {
+            allOf: components["schemas"]["AutomationConditionEvaluationItem"][];
+            anyOf: components["schemas"]["AutomationConditionEvaluationItem"][];
+            oneOf: components["schemas"]["AutomationConditionEvaluationItem"][];
+        };
+        /** @description The evaluation result for a single automation condition. */
+        AutomationConditionEvaluationItem: {
+            condition: components["schemas"]["SensorConditionEvaluation"] | components["schemas"]["OutputConditionEvaluation"] | components["schemas"]["TimeConditionEvaluation"] | components["schemas"]["WeekdayConditionEvaluation"] | components["schemas"]["MonthConditionEvaluation"] | components["schemas"]["DateRangeConditionEvaluation"];
+            /** @example true */
+            result: boolean;
+        };
+        /** @description Serialized sensor condition details used in automation evaluation payloads. */
+        SensorConditionEvaluation: {
+            /** @enum {string} */
+            kind: "sensor";
+            /** @example 1 */
+            id: number;
+            /** @example 1 */
+            sensorId: number;
+            /** @example temperature */
+            readingType: string;
+            /** @example greaterOrEqual */
+            operator: string;
+            /** @example 50 */
+            comparisonValue: number;
+            /** @example 3 */
+            comparisonLookback: number | null;
+        };
+        /** @description Serialized output condition details used in automation evaluation payloads. */
+        OutputConditionEvaluation: {
+            /** @enum {string} */
+            kind: "output";
+            /** @example 1 */
+            id: number;
+            /** @example 1 */
+            outputId: number;
+            /** @example greaterOrEqual */
+            operator: string;
+            /** @example 50 */
+            comparisonValue: number;
+            /** @example 3 */
+            comparisonLookback: number | null;
+        };
+        /** @description Serialized time condition details used in automation evaluation payloads. */
+        TimeConditionEvaluation: {
+            /** @enum {string} */
+            kind: "time";
+            /** @example 1 */
+            id: number;
+            /** @example 12:00 */
+            startTime?: string | null;
+            /** @example 18:00 */
+            endTime?: string | null;
+        };
+        /** @description Serialized weekday condition details used in automation evaluation payloads. */
+        WeekdayConditionEvaluation: {
+            /** @enum {string} */
+            kind: "weekday";
+            /** @example 1 */
+            id: number;
+            /** @example 127 */
+            weekdays: number;
+        };
+        /** @description Serialized month condition details used in automation evaluation payloads. */
+        MonthConditionEvaluation: {
+            /** @enum {string} */
+            kind: "month";
+            /** @example 1 */
+            id: number;
+            /** @example 4095 */
+            months: number;
+        };
+        /** @description Serialized date range condition details used in automation evaluation payloads. */
+        DateRangeConditionEvaluation: {
+            /** @enum {string} */
+            kind: "dateRange";
+            /** @example 1 */
+            id: number;
+            /** @example 1 */
+            startMonth: number;
+            /** @example 1 */
+            startDate: number;
+            /** @example 12 */
+            endMonth: number;
+            /** @example 31 */
+            endDate: number;
+        };
     };
-    /** @description Request body for updating an automation. This operation changes only the fields provided. */
-    AutomationUpdateRequest: {
-      /** @example Turn on light */
-      name?: string;
-      /**
-       * @example or
-       * @enum {string}
-       */
-      operator?: "and" | "or";
-      /** @example true */
-      enabled?: boolean;
-    };
-    /** @description These conditions define when an automation will run. */
-    AutomationConditions: {
-      sensor: components["schemas"]["SensorConditionGroup"];
-      output: components["schemas"]["OutputConditionGroup"];
-      time: components["schemas"]["TimeConditionGroup"];
-      weekday: components["schemas"]["WeekdayConditionGroup"];
-      month: components["schemas"]["MonthConditionGroup"];
-      dateRange: components["schemas"]["DateRangeConditionGroup"];
-    };
-    /** @description Sensor conditions grouped by boolean operator. */
-    SensorConditionGroup: {
-      allOf: components["schemas"]["SensorCondition"][];
-      anyOf: components["schemas"]["SensorCondition"][];
-      oneOf: components["schemas"]["SensorCondition"][];
-    };
-    /** @description Output conditions grouped by boolean operator. */
-    OutputConditionGroup: {
-      allOf: components["schemas"]["OutputCondition"][];
-      anyOf: components["schemas"]["OutputCondition"][];
-      oneOf: components["schemas"]["OutputCondition"][];
-    };
-    /** @description Time conditions grouped by boolean operator. */
-    TimeConditionGroup: {
-      allOf: components["schemas"]["TimeCondition"][];
-      anyOf: components["schemas"]["TimeCondition"][];
-      oneOf: components["schemas"]["TimeCondition"][];
-    };
-    /** @description Weekday conditions grouped by boolean operator. */
-    WeekdayConditionGroup: {
-      allOf: components["schemas"]["WeekdayCondition"][];
-      anyOf: components["schemas"]["WeekdayCondition"][];
-      oneOf: components["schemas"]["WeekdayCondition"][];
-    };
-    /** @description Month conditions grouped by boolean operator. */
-    MonthConditionGroup: {
-      allOf: components["schemas"]["MonthCondition"][];
-      anyOf: components["schemas"]["MonthCondition"][];
-      oneOf: components["schemas"]["MonthCondition"][];
-    };
-    /** @description Date range conditions grouped by boolean operator. */
-    DateRangeConditionGroup: {
-      allOf: components["schemas"]["DateRangeCondition"][];
-      anyOf: components["schemas"]["DateRangeCondition"][];
-      oneOf: components["schemas"]["DateRangeCondition"][];
-    };
-    /** @description Request body for creating a sensor condition. */
-    SensorConditionCreateRequest: {
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /** @example greaterOrEqual */
-      operator: string;
-      /** @example 50 */
-      comparisonValue: number;
-      /** @example 3 */
-      comparisonLookback?: number | null;
-      /** @example 1 */
-      sensorId: number;
-      /** @example temperature */
-      readingType: string;
-    };
-    /** @description Request body for creating an output condition. */
-    OutputConditionCreateRequest: {
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /** @example greaterOrEqual */
-      operator: string;
-      /** @example 50 */
-      comparisonValue: number;
-      /** @example 3 */
-      comparisonLookback?: number | null;
-      /** @example 1 */
-      outputId: number;
-    };
-    /** @description Request body for creating a time condition. */
-    TimeConditionCreateRequest: {
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /** @example 12:00 */
-      startTime?: string | null;
-      /** @example 18:00 */
-      endTime?: string | null;
-    };
-    /** @description Request body for creating a weekday condition. */
-    WeekdayConditionCreateRequest: {
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc.
-       * @example 127
-       */
-      weekdays: number;
-    };
-    /** @description Request body for creating a month condition. */
-    MonthConditionCreateRequest: {
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc.
-       * @example 4095
-       */
-      months: number;
-    };
-    /** @description Request body for creating a date range condition. */
-    DateRangeConditionCreateRequest: {
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description The month the date range starts on, as a number from 1 to 12.
-       * @example 1
-       */
-      startMonth: number;
-      /**
-       * @description The day the date range starts on, with the first day of the month as 1 and the last day as 28-31.
-       * @example 1
-       */
-      startDate: number;
-      /**
-       * @description The month the date range ends on, as a number from 1 to 12.
-       * @example 12
-       */
-      endMonth: number;
-      /**
-       * @description The day the date range ends on, with the first day of the month as 1 and the last day as 28-31.
-       * @example 31
-       */
-      endDate: number;
-    };
-    /** @description Defines a condition based on a sensor value. */
-    SensorCondition: {
-      /** @example 1 */
-      readonly id: number;
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /** @example greaterOrEqual */
-      operator: string;
-      /** @example 50 */
-      comparisonValue: number;
-      /** @example 3 */
-      comparisonLookback?: number | null;
-      /** @example 1 */
-      sensorId: number;
-      /** @example temperature */
-      readingType: string;
-    };
-    /** @description Defines a condition based on an output value. */
-    OutputCondition: {
-      /** @example 1 */
-      readonly id: number;
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /** @example greaterOrEqual */
-      operator: string;
-      /** @example 50 */
-      comparisonValue: number;
-      /** @example 3 */
-      comparisonLookback?: number | null;
-      /** @example 1 */
-      outputId: number;
-    };
-    /** @description Defines a condition based on time. */
-    TimeCondition: {
-      /** @example 1 */
-      readonly id: number;
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /** @example 12:00 */
-      startTime?: string | null;
-      /** @example 18:00 */
-      endTime?: string | null;
-    };
-    /** @description Defines a condition based on the days of the week. */
-    WeekdayCondition: {
-      /** @example 1 */
-      readonly id: number;
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc.
-       * @example 127
-       */
-      weekdays: number;
-    };
-    /** @description Defines a condition based on the months of the year. */
-    MonthCondition: {
-      /** @example 1 */
-      readonly id: number;
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc.
-       * @example 4095
-       */
-      months: number;
-    };
-    /** @description Defines a condition for an interval of dates of the year. */
-    DateRangeCondition: {
-      /** @example 1 */
-      readonly id: number;
-      /** @enum {string} */
-      groupType: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description The month the date range starts on, as a number from 1 to 12.
-       * @example 1
-       */
-      startMonth: number;
-      /**
-       * @description The day the date range starts on, with the first day of the month as 1 and the last day as 28-31.
-       * @example 1
-       */
-      startDate: number;
-      /**
-       * @description The month the date range ends on, as a number from 1 to 12.
-       * @example 12
-       */
-      endMonth: number;
-      /**
-       * @description The day the date range ends on, with the first day of the month as 1 and the last day as 28-31.
-       * @example 31
-       */
-      endDate: number;
-    };
-    /** @description Request body for updating a sensor condition. */
-    SensorConditionUpdateRequest: {
-      /** @enum {string} */
-      groupType?: "allOf" | "anyOf" | "oneOf";
-      /** @example greaterOrEqual */
-      operator?: string;
-      /** @example 50 */
-      comparisonValue?: number;
-      /** @example 3 */
-      comparisonLookback?: number | null;
-      /** @example 1 */
-      sensorId?: number;
-      /** @example temperature */
-      readingType?: string;
-    };
-    /** @description Request body for updating an output condition. */
-    OutputConditionUpdateRequest: {
-      /** @enum {string} */
-      groupType?: "allOf" | "anyOf" | "oneOf";
-      /** @example greaterOrEqual */
-      operator?: string;
-      /** @example 50 */
-      comparisonValue?: number;
-      /** @example 3 */
-      comparisonLookback?: number | null;
-      /** @example 1 */
-      outputId?: number;
-    };
-    /** @description Request body for updating a time condition. */
-    TimeConditionUpdateRequest: {
-      /** @enum {string} */
-      groupType?: "allOf" | "anyOf" | "oneOf";
-      /** @example 12:00 */
-      startTime?: string | null;
-      /** @example 18:00 */
-      endTime?: string | null;
-    };
-    /** @description Request body for updating a weekday condition. */
-    WeekdayConditionUpdateRequest: {
-      /** @enum {string} */
-      groupType?: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description A decimal conversion of a bitmask representing the days of the week: Sunday = 1, Monday = 2, Tuesday = 4, etc.
-       * @example 127
-       */
-      weekdays?: number;
-    };
-    /** @description Request body for updating a month condition. */
-    MonthConditionUpdateRequest: {
-      /** @enum {string} */
-      groupType?: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description A decimal conversion of a bitmask representing the months of the year: January = 1, February = 2, March = 4, etc.
-       * @example 4095
-       */
-      months?: number;
-    };
-    /** @description Request body for updating a date range condition. */
-    DateRangeConditionUpdateRequest: {
-      /** @enum {string} */
-      groupType?: "allOf" | "anyOf" | "oneOf";
-      /**
-       * @description The month the date range starts on, as a number from 1 to 12.
-       * @example 1
-       */
-      startMonth?: number;
-      /**
-       * @description The day the date range starts on, with the first day of the month as 1 and the last day as 28-31.
-       * @example 1
-       */
-      startDate?: number;
-      /**
-       * @description The month the date range ends on, as a number from 1 to 12.
-       * @example 12
-       */
-      endMonth?: number;
-      /**
-       * @description The day the date range ends on, with the first day of the month as 1 and the last day as 28-31.
-       * @example 31
-       */
-      endDate?: number;
-    };
-    /** @description An action object that is stored in the database. Contains the information needed to create an output action based on an existing automation. */
-    OutputAction: {
-      /** @example 1 */
-      readonly id?: number;
-      /** @example 1 */
-      automationId: number;
-      /** @example 1 */
-      outputId?: number;
-      /** @example 50 */
-      value: number;
-    };
-    /** @description Request body for creating an output action. */
-    OutputActionCreateRequest: {
-      /** @example 1 */
-      automationId: number;
-      /** @example 1 */
-      outputId: number;
-      /** @example 50 */
-      value: number;
-    };
-    /** @description An action object that is stored in the database. Contains the information needed to send a notification when an automation triggers. */
-    NotificationAction: {
-      /** @example 1 */
-      readonly id?: number;
-      /** @example 1 */
-      automationId: number;
-      /** @example Test Notification */
-      subject: string;
-      /** @example This is a test notification content. */
-      content: string;
-    };
-    /** @description Request body for creating a notification action. */
-    NotificationActionCreateRequest: {
-      /** @example 1 */
-      automationId: number;
-      /** @example Test Notification */
-      subject: string;
-      /** @example This is a test notification content. */
-      content: string;
-    };
-    /** @description Contains the active notification actions for triggered automations. */
-    ActiveNotifications: {
-      /**
-       * @description Timestamp in milliseconds of when the automations were last evaluated.
-       * @example 1713523200000
-       */
-      lastRunAt: number;
-      /** @description List of active notification actions. */
-      notifications: components["schemas"]["ActiveNotification"][];
-    };
-    /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
-    ApiResponse: {
-      statusCode: number;
-      /** @example 2021-01-01T00:00:00.000Z */
-      timestamp: string;
-      /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
-      requestId: string;
-    };
-    /** @description A notification action that is currently active due to its associated automation being triggered. */
-    ActiveNotification: {
-      /**
-       * @description The Id of the notification action.
-       * @example 1
-       */
-      notificationId: number;
-      /**
-       * @description The notification subject.
-       * @example Temperature Alert
-       */
-      subject: string;
-      /**
-       * @description The notification content.
-       * @example Temperature has exceeded threshold.
-       */
-      content: string;
-      /** @description The automation event payload containing triggered automation details. */
-      payload: components["schemas"]["AutomationEventPayload"];
-    };
-    /** @description Payload containing information about a triggered automation. */
-    AutomationEventPayload: {
-      /**
-       * @description The Id of the automation.
-       * @example 1
-       */
-      automationId: number;
-      /**
-       * @description The name of the automation.
-       * @example Temperature Threshold
-       */
-      automationName: string;
-      /**
-       * @description The logical operator for conditions (and/or).
-       * @example or
-       * @enum {string}
-       */
-      operator: "and" | "or";
-      /** @description The condition results for the automation. */
-      conditions: components["schemas"]["AutomationConditionEvaluationSummary"];
-    };
-    /** @description Summarized evaluation results for an automation, grouped by boolean operator. */
-    AutomationConditionEvaluationSummary: {
-      allOf: components["schemas"]["AutomationConditionEvaluationItem"][];
-      anyOf: components["schemas"]["AutomationConditionEvaluationItem"][];
-      oneOf: components["schemas"]["AutomationConditionEvaluationItem"][];
-    };
-    /** @description The evaluation result for a single automation condition. */
-    AutomationConditionEvaluationItem: {
-      condition:
-        | components["schemas"]["SensorConditionEvaluation"]
-        | components["schemas"]["OutputConditionEvaluation"]
-        | components["schemas"]["TimeConditionEvaluation"]
-        | components["schemas"]["WeekdayConditionEvaluation"]
-        | components["schemas"]["MonthConditionEvaluation"]
-        | components["schemas"]["DateRangeConditionEvaluation"];
-      /** @example true */
-      result: boolean;
-    };
-    /** @description Serialized sensor condition details used in automation evaluation payloads. */
-    SensorConditionEvaluation: {
-      /** @enum {string} */
-      kind: "sensor";
-      /** @example 1 */
-      id: number;
-      /** @example 1 */
-      sensorId: number;
-      /** @example temperature */
-      readingType: string;
-      /** @example greaterOrEqual */
-      operator: string;
-      /** @example 50 */
-      comparisonValue: number;
-      /** @example 3 */
-      comparisonLookback: number | null;
-    };
-    /** @description Serialized output condition details used in automation evaluation payloads. */
-    OutputConditionEvaluation: {
-      /** @enum {string} */
-      kind: "output";
-      /** @example 1 */
-      id: number;
-      /** @example 1 */
-      outputId: number;
-      /** @example greaterOrEqual */
-      operator: string;
-      /** @example 50 */
-      comparisonValue: number;
-      /** @example 3 */
-      comparisonLookback: number | null;
-    };
-    /** @description Serialized time condition details used in automation evaluation payloads. */
-    TimeConditionEvaluation: {
-      /** @enum {string} */
-      kind: "time";
-      /** @example 1 */
-      id: number;
-      /** @example 12:00 */
-      startTime?: string | null;
-      /** @example 18:00 */
-      endTime?: string | null;
-    };
-    /** @description Serialized weekday condition details used in automation evaluation payloads. */
-    WeekdayConditionEvaluation: {
-      /** @enum {string} */
-      kind: "weekday";
-      /** @example 1 */
-      id: number;
-      /** @example 127 */
-      weekdays: number;
-    };
-    /** @description Serialized month condition details used in automation evaluation payloads. */
-    MonthConditionEvaluation: {
-      /** @enum {string} */
-      kind: "month";
-      /** @example 1 */
-      id: number;
-      /** @example 4095 */
-      months: number;
-    };
-    /** @description Serialized date range condition details used in automation evaluation payloads. */
-    DateRangeConditionEvaluation: {
-      /** @enum {string} */
-      kind: "dateRange";
-      /** @example 1 */
-      id: number;
-      /** @example 1 */
-      startMonth: number;
-      /** @example 1 */
-      startDate: number;
-      /** @example 12 */
-      endMonth: number;
-      /** @example 31 */
-      endDate: number;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  listAutomations: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    listAutomations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    createAutomation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: unknown;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutomationCreateRequest"];
             };
-          };
         };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations */
-              url?: unknown;
-              details?: unknown;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 201 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["Automation"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations */
-              url?: unknown;
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid name"
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  createAutomation: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    getAutomationById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["Automation"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/invalid-id */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AutomationCreateRequest"];
-      };
+    deleteAutomation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Automation sucessfully deleted. */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 201 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["Automation"];
+    updateAutomation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid name"
-               *     ]
-               */
-              details?: unknown;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutomationUpdateRequest"];
             };
-          };
         };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations */
-              url?: unknown;
-              details?: unknown;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["Automation"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations */
-              url?: unknown;
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  getAutomationById: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-      };
-      cookie?: never;
+    listAutomationConditions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["AutomationConditions"];
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["Automation"];
+    listAutomationConditionsByType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+                /** @description Condition Type */
+                type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/invalid-id */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id."
-               *     ]
-               */
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SensorConditionGroup"] | components["schemas"]["OutputConditionGroup"] | components["schemas"]["TimeConditionGroup"] | components["schemas"]["WeekdayConditionGroup"] | components["schemas"]["MonthConditionGroup"] | components["schemas"]["DateRangeConditionGroup"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Invalid or missing condition type."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/-1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  deleteAutomation: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-      };
-      cookie?: never;
+    createAutomationConditionByType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+                /** @description Condition Type */
+                type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SensorConditionCreateRequest"] | components["schemas"]["OutputConditionCreateRequest"] | components["schemas"]["TimeConditionCreateRequest"] | components["schemas"]["WeekdayConditionCreateRequest"] | components["schemas"]["MonthConditionCreateRequest"] | components["schemas"]["DateRangeConditionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 201 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SensorCondition"] | components["schemas"]["OutputCondition"] | components["schemas"]["TimeCondition"] | components["schemas"]["WeekdayCondition"] | components["schemas"]["MonthCondition"] | components["schemas"]["DateRangeCondition"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Invalid or missing condition type."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/-1/conditions/sensor */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Automation sucessfully deleted. */
-              data?: unknown;
+    getAutomationConditionById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+                /** @description Condition Type */
+                type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
+                /**
+                 * @description Condition Id
+                 * @example 1
+                 */
+                conditionId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id."
-               *     ]
-               */
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SensorCondition"] | components["schemas"]["OutputCondition"] | components["schemas"]["TimeCondition"] | components["schemas"]["WeekdayCondition"] | components["schemas"]["MonthCondition"] | components["schemas"]["DateRangeCondition"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Invalid or missing condition type.",
+                             *       "Invalid or missing condition Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/-1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  updateAutomation: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-      };
-      cookie?: never;
+    deleteAutomationCondition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+                /** @description Condition Type */
+                type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
+                /**
+                 * @description Condition Id
+                 * @example 1
+                 */
+                conditionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Condition sucessfully deleted. */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Invalid or missing condition type.",
+                             *       "Invalid or missing condition Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AutomationUpdateRequest"];
-      };
+    updateAutomationCondition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId: string;
+                /** @description Condition Type */
+                type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
+                /**
+                 * @description Condition Id
+                 * @example 1
+                 */
+                conditionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SensorConditionUpdateRequest"] | components["schemas"]["OutputConditionUpdateRequest"] | components["schemas"]["TimeConditionUpdateRequest"] | components["schemas"]["WeekdayConditionUpdateRequest"] | components["schemas"]["MonthConditionUpdateRequest"] | components["schemas"]["DateRangeConditionUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SensorCondition"] | components["schemas"]["OutputCondition"] | components["schemas"]["TimeCondition"] | components["schemas"]["WeekdayCondition"] | components["schemas"]["MonthCondition"] | components["schemas"]["DateRangeCondition"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Invalid or missing condition type.",
+                             *       "Invalid or missing condition Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/automations/1/conditions/sensor/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["Automation"];
+    listOutputActions: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId?: string;
             };
-          };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id."
-               *     ]
-               */
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/-1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
     };
-  };
-  listAutomationConditions: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-      };
-      cookie?: never;
+    createOutputAction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutputActionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 201 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["OutputAction"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/actions/ */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Invalid or missing output value."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/output-automations */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["AutomationConditions"];
+    getOutputActionById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Output Action Id
+                 * @example 1
+                 */
+                outputActionId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["OutputAction"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions */
-              url?: unknown;
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/not-a-number */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing outputAction Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions */
-              url?: unknown;
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  listAutomationConditionsByType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-        /** @description Condition Type */
-        type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
-      };
-      cookie?: never;
+    deleteOutputAction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Output Action Id
+                 * @example 1
+                 */
+                outputActionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Output action successfully deleted. */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing output action Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/output-actions/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?:
-                | components["schemas"]["SensorConditionGroup"]
-                | components["schemas"]["OutputConditionGroup"]
-                | components["schemas"]["TimeConditionGroup"]
-                | components["schemas"]["WeekdayConditionGroup"]
-                | components["schemas"]["MonthConditionGroup"]
-                | components["schemas"]["DateRangeConditionGroup"];
+    listNotificationActions: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Automation Id
+                 * @example 1
+                 */
+                automationId?: string;
             };
-          };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id.",
-               *       "Invalid or missing condition type."
-               *     ]
-               */
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor */
-              url?: unknown;
-              details?: unknown;
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
     };
-  };
-  createAutomationConditionByType: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-        /** @description Condition Type */
-        type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
-      };
-      cookie?: never;
+    createNotificationAction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationActionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 201 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["NotificationAction"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing automation Id.",
+                             *       "Subject is required.",
+                             *       "Content is required."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json":
-          | components["schemas"]["SensorConditionCreateRequest"]
-          | components["schemas"]["OutputConditionCreateRequest"]
-          | components["schemas"]["TimeConditionCreateRequest"]
-          | components["schemas"]["WeekdayConditionCreateRequest"]
-          | components["schemas"]["MonthConditionCreateRequest"]
-          | components["schemas"]["DateRangeConditionCreateRequest"];
-      };
+    getNotificationActionById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Notification Action Id
+                 * @example 1
+                 */
+                notificationActionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["NotificationAction"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/not-a-number */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing notification action Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 201 */
-            statusCode?: unknown;
-            content?: {
-              data?:
-                | components["schemas"]["SensorCondition"]
-                | components["schemas"]["OutputCondition"]
-                | components["schemas"]["TimeCondition"]
-                | components["schemas"]["WeekdayCondition"]
-                | components["schemas"]["MonthCondition"]
-                | components["schemas"]["DateRangeCondition"];
+    deleteNotificationAction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Notification Action Id
+                 * @example 1
+                 */
+                notificationActionId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id.",
-               *       "Invalid or missing condition type."
-               *     ]
-               */
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Notification action deleted successfully. */
+                            data?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing notification action Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/-1/conditions/sensor */
-              url?: unknown;
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/1 */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor */
-              url?: unknown;
-              details?: unknown;
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  getAutomationConditionById: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-        /** @description Condition Type */
-        type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
-        /**
-         * @description Condition Id
-         * @example 1
-         */
-        conditionId: string;
-      };
-      cookie?: never;
+    listActiveNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["ActiveNotifications"];
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/active */
+                            url?: unknown;
+                            /** @example Invalid or Missing JWT. */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/notification-actions/active */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?:
-                | components["schemas"]["SensorCondition"]
-                | components["schemas"]["OutputCondition"]
-                | components["schemas"]["TimeCondition"]
-                | components["schemas"]["WeekdayCondition"]
-                | components["schemas"]["MonthCondition"]
-                | components["schemas"]["DateRangeCondition"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id.",
-               *       "Invalid or missing condition type.",
-               *       "Invalid or missing condition Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  deleteAutomationCondition: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-        /** @description Condition Type */
-        type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
-        /**
-         * @description Condition Id
-         * @example 1
-         */
-        conditionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Condition sucessfully deleted. */
-              data?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id.",
-               *       "Invalid or missing condition type.",
-               *       "Invalid or missing condition Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  updateAutomationCondition: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId: string;
-        /** @description Condition Type */
-        type: "sensor" | "output" | "time" | "weekday" | "month" | "date-range";
-        /**
-         * @description Condition Id
-         * @example 1
-         */
-        conditionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json":
-          | components["schemas"]["SensorConditionUpdateRequest"]
-          | components["schemas"]["OutputConditionUpdateRequest"]
-          | components["schemas"]["TimeConditionUpdateRequest"]
-          | components["schemas"]["WeekdayConditionUpdateRequest"]
-          | components["schemas"]["MonthConditionUpdateRequest"]
-          | components["schemas"]["DateRangeConditionUpdateRequest"];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?:
-                | components["schemas"]["SensorCondition"]
-                | components["schemas"]["OutputCondition"]
-                | components["schemas"]["TimeCondition"]
-                | components["schemas"]["WeekdayCondition"]
-                | components["schemas"]["MonthCondition"]
-                | components["schemas"]["DateRangeCondition"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id.",
-               *       "Invalid or missing condition type.",
-               *       "Invalid or missing condition Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/automations/1/conditions/sensor/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  listOutputActions: {
-    parameters: {
-      query?: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/output-actions */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/output-actions */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  createOutputAction: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["OutputActionCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 201 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["OutputAction"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/actions/ */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id.",
-               *       "Invalid or missing output value."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/output-actions */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/output-automations */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/output-actions */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  getOutputActionById: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Output Action Id
-         * @example 1
-         */
-        outputActionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["OutputAction"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/output-actions/not-a-number */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing outputAction Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/output-actions/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/output-actions/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/output-actions/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  deleteOutputAction: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Output Action Id
-         * @example 1
-         */
-        outputActionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Output action successfully deleted. */
-              data?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/output-actions/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing output action Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/output-actions/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/output-actions/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/output-actions/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  listNotificationActions: {
-    parameters: {
-      query?: {
-        /**
-         * @description Automation Id
-         * @example 1
-         */
-        automationId?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/notification-actions */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/notification-actions */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  createNotificationAction: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["NotificationActionCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 201 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["NotificationAction"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/notification-actions */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing automation Id.",
-               *       "Subject is required.",
-               *       "Content is required."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/notification-actions */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/notification-actions */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/notification-actions */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  getNotificationActionById: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Notification Action Id
-         * @example 1
-         */
-        notificationActionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["NotificationAction"];
-            };
-          };
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/not-a-number */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing notification action Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  deleteNotificationAction: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Notification Action Id
-         * @example 1
-         */
-        notificationActionId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Notification action deleted successfully. */
-              data?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing notification action Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/1 */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  listActiveNotifications: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["ActiveNotifications"];
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/active */
-              url?: unknown;
-              /** @example Invalid or Missing JWT. */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/notification-actions/active */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
 }

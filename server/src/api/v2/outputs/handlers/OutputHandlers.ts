@@ -10,7 +10,16 @@ type GetOutputByIdPathParams = OutputContractOperations["getOutputById"]["parame
 type CreateOutputRequestBody =
   OutputContractOperations["createOutput"]["requestBody"]["content"]["application/json"];
 type UpdateOutputPathParams = OutputContractOperations["updateOutput"]["parameters"]["path"];
+type UpdateOutputRequestBody =
+  OutputContractOperations["updateOutput"]["requestBody"]["content"]["application/json"];
 type DeleteOutputPathParams = OutputContractOperations["deleteOutput"]["parameters"]["path"];
+
+type UpdateOutputFallbackBody = {
+  subcontrollerId?: number | null;
+  automationTimeout?: number;
+  deviceZoneId?: number | null;
+  parentOutputId?: number | null;
+};
 
 /**
  * Possible statusCodes: 200, 404
@@ -120,9 +129,12 @@ export async function updateAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-  const pathParams = getValidatedContractRequestData<"updateOutput">(response).params as
+  const validatedRequest = getValidatedContractRequestData<"updateOutput">(response);
+  const pathParams = validatedRequest.params as
     | UpdateOutputPathParams
     | undefined;
+  const requestBody = (validatedRequest.body ?? request.body) as UpdateOutputRequestBody;
+  const fallbackBody = request.body as UpdateOutputFallbackBody;
   const outputId = Number.parseInt(String(pathParams?.outputId ?? ""), 10);
   let updateOutputResponse: SuccessResponse | ErrorResponse;
 
@@ -156,23 +168,23 @@ export async function updateAsync(
     return updateOutputResponse;
   }
 
-  outputData.model = request.body["model"] ?? outputData.model;
-  outputData.subcontrollerId = request.body["subcontrollerId"] ?? outputData.subcontrollerId;
-  outputData.address = request.body["address"] ?? outputData.address;
-  outputData.name = request.body["name"] ?? outputData.name;
-  outputData.pin = request.body["pin"] ?? outputData.pin;
-  outputData.isPwm = request.body["isPwm"] ?? outputData.isPwm;
-  outputData.isInvertedPwm = request.body["isInvertedPwm"] ?? outputData.isInvertedPwm;
-  outputData.color = request.body["color"] ?? outputData.color;
-  outputData.automationTimeout = request.body["automationTimeout"] ?? outputData.automationTimeout;
+  outputData.model = (requestBody["model"] as SDBOutput["model"] | undefined) ?? outputData.model;
+  outputData.subcontrollerId = fallbackBody["subcontrollerId"] ?? outputData.subcontrollerId;
+  outputData.address = requestBody["address"] ?? outputData.address;
+  outputData.name = requestBody["name"] ?? outputData.name;
+  outputData.pin = requestBody["pin"] ?? outputData.pin;
+  outputData.isPwm = requestBody["isPwm"] ?? outputData.isPwm;
+  outputData.isInvertedPwm = requestBody["isInvertedPwm"] ?? outputData.isInvertedPwm;
+  outputData.color = requestBody["color"] ?? outputData.color;
+  outputData.automationTimeout = fallbackBody["automationTimeout"] ?? outputData.automationTimeout;
   outputData.deviceZoneId =
-    request.body["deviceZoneId"] === null
+    fallbackBody["deviceZoneId"] === null
       ? null
-      : (request.body["deviceZoneId"] ?? outputData.deviceZoneId);
+      : (fallbackBody["deviceZoneId"] ?? outputData.deviceZoneId);
   outputData.parentOutputId =
-    request.body["parentOutputId"] === null
+    fallbackBody["parentOutputId"] === null
       ? null
-      : (request.body["parentOutputId"] ?? outputData.parentOutputId);
+      : (fallbackBody["parentOutputId"] ?? outputData.parentOutputId);
 
   try {
     await outputList.updateOutputAsync(outputData);

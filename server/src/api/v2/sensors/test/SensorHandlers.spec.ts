@@ -200,7 +200,7 @@ describe("SensorHandlers.ts tests", () => {
       });
     });
 
-    it("should return a 400 for remaining model validation errors", async () => {
+    it("should return a 400 for remaining create-time pin validation", async () => {
       const newSensor = {
         name: "test sensor 4",
         model: Models.ADS1115,
@@ -225,19 +225,6 @@ describe("SensorHandlers.ts tests", () => {
       assert.deepEqual(error.error["details"], ["Missing required field: pin"]);
       assert.isTrue(sensorList.addSensorAsync.notCalled);
       assert.isTrue(sensorList.regenerateAsync.notCalled);
-
-      newSensor.model = "Not A Valid Model" as keyof typeof Models;
-      newSensor.pin = "4";
-      error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.equal(error.error.url, "/api/v2/sensors");
-      assert.deepEqual(error.error["details"], [
-        `Invalid model: Not A Valid Model. Supported models are: ${Object.keys(Models).join(", ")}`,
-      ]);
-      assert.isTrue(sensorList.addSensorAsync.notCalled);
     });
 
     it("should return a 503 if the database is unreachable", async () => {

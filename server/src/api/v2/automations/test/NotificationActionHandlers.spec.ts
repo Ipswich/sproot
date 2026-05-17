@@ -220,6 +220,38 @@ describe("NotificationActionHandlers.ts tests", () => {
   });
 
   describe("getByIdAsync", () => {
+    it("should consume validated notification-action params instead of raw Express params", async () => {
+      const mockResponse = createMockResponse({ params: { notificationActionId: "2" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getNotificationActionByIdAsync.resolves([
+        {
+          id: 2,
+          automationId: 2,
+          subject: "Validated Subject",
+          content: "Validated Content",
+        } as SDBNotificationAction,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "sprootDB") {
+              return sprootDB;
+            }
+          },
+        },
+        params: {
+          notificationActionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await getByIdAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content?.data.id, 2);
+      assert.isTrue(sprootDB.getNotificationActionByIdAsync.calledOnceWithExactly(2));
+    });
+
     it("should return a 200 and the requested notification action", async () => {
       const mockResponse = {
         locals: {
@@ -384,7 +416,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       ]);
       sprootDB.getAutomationsAsync.resolves([]);
       sprootDB.addNotificationActionAsync.resolves(42);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -469,7 +501,7 @@ describe("NotificationActionHandlers.ts tests", () => {
       });
     });
 
-    it("should return a 400 and details for the invalid request", async () => {
+    it("should preserve nonblank notification text exactly after contract validation", async () => {
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -478,33 +510,48 @@ describe("NotificationActionHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { id: 1, name: "test", operator: "or" } as SDBAutomation,
+      ]);
+      const automationService = await createAutomationServiceAsync(sprootDB);
+      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.addNotificationActionAsync.resolves(7);
 
       const mockRequest = {
         app: {
           get: (key: string) => {
             switch (key) {
               case "sprootDB":
-                return {};
+                return sprootDB;
               case "automationService":
-                return {};
+                return automationService;
             }
           },
         },
         body: {
           automationId: 1,
-          subject: "",
-          content: "   ",
+          subject: "  Test Subject  ",
+          content: "  Test Content  ",
         },
-        originalUrl: "/api/v2/notification-actions",
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Subject is required.", "Content is required."]);
-      assert.equal(error.error.url, mockRequest.originalUrl);
+      const success = (await addAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 201);
+      assert.deepEqual(success.content?.data, {
+        id: 7,
+        automationId: 1,
+        subject: "  Test Subject  ",
+        content: "  Test Content  ",
+      });
+      assert.isTrue(
+        sprootDB.addNotificationActionAsync.calledOnceWith(
+          1,
+          "  Test Subject  ",
+          "  Test Content  ",
+        ),
+      );
     });
 
     it("should return a 404 if the automation does not exist", async () => {
@@ -591,6 +638,38 @@ describe("NotificationActionHandlers.ts tests", () => {
   });
 
   describe("deleteAsync", () => {
+    it("should consume validated notification-action params instead of raw Express params", async () => {
+      const mockResponse = createMockResponse({ params: { notificationActionId: "2" } });
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getNotificationActionByIdAsync.resolves([
+        { id: 2, automationId: 2, subject: "Test", content: "Test" } as SDBNotificationAction,
+      ]);
+      const automationService = await createAutomationServiceAsync(sprootDB);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            switch (key) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationService":
+                return automationService;
+            }
+          },
+        },
+        params: {
+          notificationActionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sprootDB.getNotificationActionByIdAsync.calledOnceWithExactly(2));
+      assert.isTrue(sprootDB.deleteNotificationActionAsync.calledOnceWithExactly(2));
+    });
+
     it("should return a 200 if the notification action was deleted successfully", async () => {
       const mockResponse = {
         locals: {

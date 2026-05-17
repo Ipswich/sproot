@@ -1,5 +1,4 @@
 import { assert } from "chai";
-import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 import request from "supertest";
 
 import { app, server } from "../../setup";
@@ -120,24 +119,19 @@ describe("Sensor Routes", async () => {
           assertContractBadRequest(response, "/api/v2/sensors", invalidBody);
         });
 
-        it("should reject unsupported models through remaining handler/domain validation", async () => {
-          const supportedModels = Object.keys(Models).join(", ");
+        it("should reject unsupported models through contract middleware", async () => {
+          const invalidBody = {
+            name: "Unsupported Sensor",
+            model: "NOT_A_REAL_MODEL",
+            address: "0x76",
+            color: "#82c91e",
+          };
           const response = await request(server)
             .post("/api/v2/sensors")
-            .send({
-              name: "Unsupported Sensor",
-              model: "NOT_A_REAL_MODEL",
-              address: "0x76",
-              color: "#82c91e",
-            })
+            .send(invalidBody)
             .expect(400);
 
-          validateMiddlewareValues(response);
-          assert.equal(response.body["error"]["name"], "Bad Request");
-          assert.equal(response.body["error"]["url"], "/api/v2/sensors");
-          assert.deepEqual(response.body["error"]["details"], [
-            `Invalid model: NOT_A_REAL_MODEL. Supported models are: ${supportedModels}`,
-          ]);
+          assertContractBadRequest(response, "/api/v2/sensors", invalidBody);
         });
 
         it("should reject model-dependent missing pin values through remaining handler/domain validation", async () => {

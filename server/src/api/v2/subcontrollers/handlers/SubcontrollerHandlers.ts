@@ -16,6 +16,8 @@ type UpdateSubcontrollerPathParams =
   SubcontrollerContractOperations["updateSubcontroller"]["parameters"]["path"];
 type UpdateSubcontrollerRequestBody =
   SubcontrollerContractOperations["updateSubcontroller"]["requestBody"]["content"]["application/json"];
+type GetSubcontrollerConnectionStatusPathParams =
+  SubcontrollerContractOperations["getSubcontrollerConnectionStatus"]["parameters"]["path"];
 type DeleteSubcontrollerPathParams =
   SubcontrollerContractOperations["deleteSubcontroller"]["parameters"]["path"];
 
@@ -64,7 +66,9 @@ export async function getSubcontrollerOnlineAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const mdnsService = request.app.get(DI_KEYS.MdnsService) as MdnsService;
-  const { deviceId } = request.params;
+  const { deviceId } = (getValidatedContractRequestData<"getSubcontrollerConnectionStatus">(
+    response,
+  ).params ?? request.params) as GetSubcontrollerConnectionStatusPathParams;
 
   let hostName: string | undefined;
   try {

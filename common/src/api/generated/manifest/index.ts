@@ -25,70 +25,84 @@ export type GeneratedApiContractManifest = {
 };
 
 export const generatedApiContractManifest = {
-  sourceSpec: "api_spec/openapi_v2.yaml",
-  operationTotal: 94,
-  domains: [
+  "sourceSpec": "api_spec/openapi_v2.yaml",
+  "operationTotal": 94,
+  "domains": [
     {
-      name: "auth",
-      exportName: "auth",
-      apiClientName: "authApi",
-      prefixes: ["/api/v2/authenticate/"],
-      pathCount: 2,
-      operationCount: 2,
-      operationIds: ["authenticateToken", "authenticateLogin"],
-      files: {
-        openapi: "auth/openapi.yaml",
-        types: "auth/types.ts",
-        client: "auth/client.ts",
-        index: "auth/index.ts",
-      },
+      "name": "auth",
+      "exportName": "auth",
+      "apiClientName": "authApi",
+      "prefixes": [
+        "/api/v2/authenticate/"
+      ],
+      "pathCount": 2,
+      "operationCount": 2,
+      "operationIds": [
+        "authenticateToken",
+        "authenticateLogin"
+      ],
+      "files": {
+        "openapi": "auth/openapi.yaml",
+        "types": "auth/types.ts",
+        "client": "auth/client.ts",
+        "index": "auth/index.ts"
+      }
     },
     {
-      name: "ping",
-      exportName: "ping",
-      apiClientName: "pingApi",
-      prefixes: ["/api/v2/ping"],
-      pathCount: 1,
-      operationCount: 1,
-      operationIds: ["ping"],
-      files: {
-        openapi: "ping/openapi.yaml",
-        types: "ping/types.ts",
-        client: "ping/client.ts",
-        index: "ping/index.ts",
-      },
+      "name": "ping",
+      "exportName": "ping",
+      "apiClientName": "pingApi",
+      "prefixes": [
+        "/api/v2/ping"
+      ],
+      "pathCount": 1,
+      "operationCount": 1,
+      "operationIds": [
+        "ping"
+      ],
+      "files": {
+        "openapi": "ping/openapi.yaml",
+        "types": "ping/types.ts",
+        "client": "ping/client.ts",
+        "index": "ping/index.ts"
+      }
     },
     {
-      name: "system",
-      exportName: "system",
-      apiClientName: "systemApi",
-      prefixes: ["/api/v2/system/"],
-      pathCount: 7,
-      operationCount: 7,
-      operationIds: [
+      "name": "system",
+      "exportName": "system",
+      "apiClientName": "systemApi",
+      "prefixes": [
+        "/api/v2/system/"
+      ],
+      "pathCount": 7,
+      "operationCount": 7,
+      "operationIds": [
         "powerOffSystem",
         "getSystemStatus",
         "listSystemBackups",
         "downloadSystemBackup",
         "restoreSystemBackup",
         "createSystemBackup",
-        "getSystemBackupCreateStatus",
+        "getSystemBackupCreateStatus"
       ],
-      files: {
-        openapi: "system/openapi.yaml",
-        types: "system/types.ts",
-        client: "system/client.ts",
-        index: "system/index.ts",
-      },
+      "files": {
+        "openapi": "system/openapi.yaml",
+        "types": "system/types.ts",
+        "client": "system/client.ts",
+        "index": "system/index.ts"
+      }
     },
     {
-      name: "subcontrollers",
-      exportName: "subcontrollers",
-      apiClientName: "subcontrollersApi",
-      prefixes: ["/api/v2/subcontrollers", "/api/v2/subcontrollers/"],
-      pathCount: 9,
-      operationCount: 11,
-      operationIds: [
+      "name": "subcontrollers",
+      "exportName": "subcontrollers",
+      "apiClientName": "subcontrollersApi",
+      "prefixes": [
+        "/api/v2/subcontrollers",
+        "/api/v2/subcontrollers/"
+      ],
+      "pathCount": 9,
+      "operationCount": 11,
+      "operationIds": [
         "listSubcontrollers",
         "createSubcontroller",
         "updateSubcontroller",
@@ -99,23 +113,26 @@ export const generatedApiContractManifest = {
         "downloadEsp32FirmwareBootloader",
         "downloadEsp32FirmwarePartitions",
         "downloadEsp32FirmwareApplication",
-        "runEsp32OtaUpdate",
+        "runEsp32OtaUpdate"
       ],
-      files: {
-        openapi: "subcontrollers/openapi.yaml",
-        types: "subcontrollers/types.ts",
-        client: "subcontrollers/client.ts",
-        index: "subcontrollers/index.ts",
-      },
+      "files": {
+        "openapi": "subcontrollers/openapi.yaml",
+        "types": "subcontrollers/types.ts",
+        "client": "subcontrollers/client.ts",
+        "index": "subcontrollers/index.ts"
+      }
     },
     {
-      name: "outputs",
-      exportName: "outputs",
-      apiClientName: "outputsApi",
-      prefixes: ["/api/v2/outputs", "/api/v2/outputs/"],
-      pathCount: 7,
-      operationCount: 10,
-      operationIds: [
+      "name": "outputs",
+      "exportName": "outputs",
+      "apiClientName": "outputsApi",
+      "prefixes": [
+        "/api/v2/outputs",
+        "/api/v2/outputs/"
+      ],
+      "pathCount": 7,
+      "operationCount": 10,
+      "operationIds": [
         "listOutputs",
         "createOutput",
         "getOutputById",
@@ -125,30 +142,30 @@ export const generatedApiContractManifest = {
         "listSupportedOutputModels",
         "listAvailableOutputDevices",
         "setOutputControlMode",
-        "setOutputManualState",
+        "setOutputManualState"
       ],
-      files: {
-        openapi: "outputs/openapi.yaml",
-        types: "outputs/types.ts",
-        client: "outputs/client.ts",
-        index: "outputs/index.ts",
-      },
+      "files": {
+        "openapi": "outputs/openapi.yaml",
+        "types": "outputs/types.ts",
+        "client": "outputs/client.ts",
+        "index": "outputs/index.ts"
+      }
     },
     {
-      name: "automations",
-      exportName: "automations",
-      apiClientName: "automationsApi",
-      prefixes: [
+      "name": "automations",
+      "exportName": "automations",
+      "apiClientName": "automationsApi",
+      "prefixes": [
         "/api/v2/automations",
         "/api/v2/automations/",
         "/api/v2/output-actions",
         "/api/v2/output-actions/",
         "/api/v2/notification-actions",
-        "/api/v2/notification-actions/",
+        "/api/v2/notification-actions/"
       ],
-      pathCount: 10,
-      operationCount: 20,
-      operationIds: [
+      "pathCount": 10,
+      "operationCount": 20,
+      "operationIds": [
         "listAutomations",
         "createAutomation",
         "getAutomationById",
@@ -168,23 +185,26 @@ export const generatedApiContractManifest = {
         "createNotificationAction",
         "getNotificationActionById",
         "deleteNotificationAction",
-        "listActiveNotifications",
+        "listActiveNotifications"
       ],
-      files: {
-        openapi: "automations/openapi.yaml",
-        types: "automations/types.ts",
-        client: "automations/client.ts",
-        index: "automations/index.ts",
-      },
+      "files": {
+        "openapi": "automations/openapi.yaml",
+        "types": "automations/types.ts",
+        "client": "automations/client.ts",
+        "index": "automations/index.ts"
+      }
     },
     {
-      name: "sensors",
-      exportName: "sensors",
-      apiClientName: "sensorsApi",
-      prefixes: ["/api/v2/sensors", "/api/v2/sensors/"],
-      pathCount: 5,
-      operationCount: 8,
-      operationIds: [
+      "name": "sensors",
+      "exportName": "sensors",
+      "apiClientName": "sensorsApi",
+      "prefixes": [
+        "/api/v2/sensors",
+        "/api/v2/sensors/"
+      ],
+      "pathCount": 5,
+      "operationCount": 8,
+      "operationIds": [
         "listSensors",
         "createSensor",
         "getSensorById",
@@ -192,38 +212,48 @@ export const generatedApiContractManifest = {
         "deleteSensor",
         "getSensorChartData",
         "listSupportedSensorModels",
-        "getSensorReadingTypes",
+        "getSensorReadingTypes"
       ],
-      files: {
-        openapi: "sensors/openapi.yaml",
-        types: "sensors/types.ts",
-        client: "sensors/client.ts",
-        index: "sensors/index.ts",
-      },
+      "files": {
+        "openapi": "sensors/openapi.yaml",
+        "types": "sensors/types.ts",
+        "client": "sensors/client.ts",
+        "index": "sensors/index.ts"
+      }
     },
     {
-      name: "device-zones",
-      exportName: "deviceZones",
-      apiClientName: "deviceZonesApi",
-      prefixes: ["/api/v2/device-zones", "/api/v2/device-zones/"],
-      pathCount: 2,
-      operationCount: 4,
-      operationIds: ["listDeviceZones", "createDeviceZone", "updateDeviceZone", "deleteDeviceZone"],
-      files: {
-        openapi: "device-zones/openapi.yaml",
-        types: "device-zones/types.ts",
-        client: "device-zones/client.ts",
-        index: "device-zones/index.ts",
-      },
+      "name": "device-zones",
+      "exportName": "deviceZones",
+      "apiClientName": "deviceZonesApi",
+      "prefixes": [
+        "/api/v2/device-zones",
+        "/api/v2/device-zones/"
+      ],
+      "pathCount": 2,
+      "operationCount": 4,
+      "operationIds": [
+        "listDeviceZones",
+        "createDeviceZone",
+        "updateDeviceZone",
+        "deleteDeviceZone"
+      ],
+      "files": {
+        "openapi": "device-zones/openapi.yaml",
+        "types": "device-zones/types.ts",
+        "client": "device-zones/client.ts",
+        "index": "device-zones/index.ts"
+      }
     },
     {
-      name: "camera",
-      exportName: "camera",
-      apiClientName: "cameraApi",
-      prefixes: ["/api/v2/camera/"],
-      pathCount: 8,
-      operationCount: 9,
-      operationIds: [
+      "name": "camera",
+      "exportName": "camera",
+      "apiClientName": "cameraApi",
+      "prefixes": [
+        "/api/v2/camera/"
+      ],
+      "pathCount": 8,
+      "operationCount": 9,
+      "operationIds": [
         "getCameraSettings",
         "updateCameraSettings",
         "getCameraStream",
@@ -232,23 +262,25 @@ export const generatedApiContractManifest = {
         "clearTimelapseImages",
         "downloadTimelapseArchive",
         "regenerateTimelapseArchive",
-        "getTimelapseArchiveStatus",
+        "getTimelapseArchiveStatus"
       ],
-      files: {
-        openapi: "camera/openapi.yaml",
-        types: "camera/types.ts",
-        client: "camera/client.ts",
-        index: "camera/index.ts",
-      },
+      "files": {
+        "openapi": "camera/openapi.yaml",
+        "types": "camera/types.ts",
+        "client": "camera/client.ts",
+        "index": "camera/index.ts"
+      }
     },
     {
-      name: "tags",
-      exportName: "tags",
-      apiClientName: "tagsApi",
-      prefixes: ["/api/v2/tags/"],
-      pathCount: 4,
-      operationCount: 8,
-      operationIds: [
+      "name": "tags",
+      "exportName": "tags",
+      "apiClientName": "tagsApi",
+      "prefixes": [
+        "/api/v2/tags/"
+      ],
+      "pathCount": 4,
+      "operationCount": 8,
+      "operationIds": [
         "listJournalTags",
         "createJournalTag",
         "updateJournalTag",
@@ -256,23 +288,28 @@ export const generatedApiContractManifest = {
         "listJournalEntryTags",
         "createJournalEntryTag",
         "updateJournalEntryTag",
-        "deleteJournalEntryTag",
+        "deleteJournalEntryTag"
       ],
-      files: {
-        openapi: "tags/openapi.yaml",
-        types: "tags/types.ts",
-        client: "tags/client.ts",
-        index: "tags/index.ts",
-      },
+      "files": {
+        "openapi": "tags/openapi.yaml",
+        "types": "tags/types.ts",
+        "client": "tags/client.ts",
+        "index": "tags/index.ts"
+      }
     },
     {
-      name: "journals",
-      exportName: "journals",
-      apiClientName: "journalsApi",
-      prefixes: ["/api/v2/journals", "/api/v2/journals/", "/api/v2/entries", "/api/v2/entries/"],
-      pathCount: 8,
-      operationCount: 14,
-      operationIds: [
+      "name": "journals",
+      "exportName": "journals",
+      "apiClientName": "journalsApi",
+      "prefixes": [
+        "/api/v2/journals",
+        "/api/v2/journals/",
+        "/api/v2/entries",
+        "/api/v2/entries/"
+      ],
+      "pathCount": 8,
+      "operationCount": 14,
+      "operationIds": [
         "listJournals",
         "createJournal",
         "getJournalById",
@@ -286,14 +323,14 @@ export const generatedApiContractManifest = {
         "updateJournalEntry",
         "deleteJournalEntry",
         "attachTagToJournalEntry",
-        "detachTagFromJournalEntry",
+        "detachTagFromJournalEntry"
       ],
-      files: {
-        openapi: "journals/openapi.yaml",
-        types: "journals/types.ts",
-        client: "journals/client.ts",
-        index: "journals/index.ts",
-      },
-    },
-  ],
+      "files": {
+        "openapi": "journals/openapi.yaml",
+        "types": "journals/types.ts",
+        "client": "journals/client.ts",
+        "index": "journals/index.ts"
+      }
+    }
+  ]
 } as const satisfies GeneratedApiContractManifest;

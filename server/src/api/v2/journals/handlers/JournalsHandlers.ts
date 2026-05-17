@@ -3,6 +3,7 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournal } from "@sproot/database/SDBJournal";
+import type { ContractOperationPathParams } from "@sproot/sproot-common/dist/api/contracts/operation-types";
 import type { operations as JournalContractOperations } from "@sproot/sproot-common/dist/api/generated/journals/types";
 import { getValidatedContractRequestData } from "../../../validation/validateRequest";
 
@@ -12,6 +13,11 @@ type UpdateJournalRequestBody =
   JournalContractOperations["updateJournal"]["requestBody"]["content"]["application/json"];
 type AttachTagToJournalRequestBody =
   JournalContractOperations["attachTagToJournal"]["requestBody"]["content"]["application/json"];
+type GetJournalByIdPathParams = ContractOperationPathParams<"getJournalById">;
+type UpdateJournalPathParams = ContractOperationPathParams<"updateJournal">;
+type DeleteJournalPathParams = ContractOperationPathParams<"deleteJournal">;
+type AttachTagToJournalPathParams = ContractOperationPathParams<"attachTagToJournal">;
+type DetachTagFromJournalPathParams = ContractOperationPathParams<"detachTagFromJournal">;
 
 /**
  * Possible statusCodes 200, 400, 404, 503
@@ -23,8 +29,10 @@ export async function getAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let journalId: number | undefined = undefined;
-  if (req.params["journalId"]) {
-    journalId = parseInt(req.params["journalId"], 10);
+  const pathParams = (getValidatedContractRequestData<"getJournalById">(res).params ??
+    req.params) as GetJournalByIdPathParams;
+  if (pathParams["journalId"]) {
+    journalId = parseInt(pathParams["journalId"], 10);
     if (isNaN(journalId) || journalId <= 0) {
       response = {
         statusCode: 400,
@@ -156,10 +164,12 @@ export async function updateAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const pathParams = (getValidatedContractRequestData<"updateJournal">(res).params ??
+    req.params) as UpdateJournalPathParams;
   const requestBody = (getValidatedContractRequestData<"updateJournal">(res).body ??
     {}) as UpdateJournalRequestBody;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const journalId = parseInt(pathParams["journalId"] ?? "", 10);
   if (isNaN(journalId)) {
     response = {
       statusCode: 400,
@@ -301,8 +311,10 @@ export async function deleteAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const pathParams = (getValidatedContractRequestData<"deleteJournal">(res).params ??
+    req.params) as DeleteJournalPathParams;
 
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const journalId = parseInt(pathParams["journalId"] ?? "", 10);
   if (isNaN(journalId)) {
     response = {
       statusCode: 400,
@@ -360,7 +372,9 @@ export async function addTagAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const pathParams = (getValidatedContractRequestData<"attachTagToJournal">(res).params ??
+    req.params) as AttachTagToJournalPathParams;
+  const journalId = parseInt(pathParams["journalId"] ?? "", 10);
   const requestBody = getValidatedContractRequestData<"attachTagToJournal">(res)
     .body as unknown as AttachTagToJournalRequestBody;
   const tagId = parseInt(requestBody.tagId ?? "", 10);
@@ -460,8 +474,10 @@ export async function removeTagAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
-  const tagId = parseInt(req.params["tagId"] ?? "", 10);
+  const pathParams = (getValidatedContractRequestData<"detachTagFromJournal">(res).params ??
+    req.params) as DetachTagFromJournalPathParams;
+  const journalId = parseInt(pathParams["journalId"] ?? "", 10);
+  const tagId = parseInt(pathParams["tagId"] ?? "", 10);
 
   const badRequests: string[] = [];
   if (isNaN(journalId)) {

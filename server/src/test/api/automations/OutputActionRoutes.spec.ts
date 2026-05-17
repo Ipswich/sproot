@@ -114,7 +114,7 @@ describe("Output Action Routes", async () => {
       assertContractBadRequest(response, "/api/v2/output-actions", invalidBody);
     });
 
-    it("should reject out-of-range values through remaining handler/domain validation", async () => {
+    it("should reject out-of-range values through contract middleware", async () => {
       const response = await request(server)
         .post("/api/v2/output-actions")
         .send({
@@ -124,10 +124,25 @@ describe("Output Action Routes", async () => {
         })
         .expect(400);
 
-      validateMiddlewareValues(response);
-      assert.equal(response.body["error"]["name"], "Bad Request");
-      assert.equal(response.body["error"]["url"], "/api/v2/output-actions");
-      assert.deepEqual(response.body["error"]["details"], ["Value must be between 0 and 100."]);
+      assertContractBadRequest(response, "/api/v2/output-actions", {
+        automationId: 1,
+        outputId: 1,
+        value: -1,
+      });
+    });
+
+    it("should reject values above the supported range through contract middleware", async () => {
+      const invalidBody = {
+        automationId: 1,
+        outputId: 1,
+        value: 101,
+      };
+      const response = await request(server)
+        .post("/api/v2/output-actions")
+        .send(invalidBody)
+        .expect(400);
+
+      assertContractBadRequest(response, "/api/v2/output-actions", invalidBody);
     });
 
     it("should reject missing outputs through remaining handler/domain validation", async () => {

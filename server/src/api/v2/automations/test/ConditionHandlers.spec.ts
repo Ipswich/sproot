@@ -1608,7 +1608,7 @@ describe("ConditionHandlers.ts", () => {
       ]);
       const sensorList = sinon.createStubInstance(SensorList);
       sinon.stub(sensorList, "sensors").value({});
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
       const mockResponse = {
         locals: {
           defaultProperties: {

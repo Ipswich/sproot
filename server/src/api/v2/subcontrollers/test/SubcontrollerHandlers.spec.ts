@@ -7,6 +7,7 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 import {
   deleteSubcontrollerAsync,
+  getSubcontrollerOnlineAsync,
   patchSubcontrollerHandlerAsync,
   postSubcontrollerHandlerAsync,
 } from "../handlers/SubcontrollerHandlers";
@@ -176,6 +177,45 @@ describe("SubcontrollerHandlers.ts", () => {
       assert.isTrue(
         sprootDB.updateSubcontrollerAsync.calledWithMatch({ id: 2, name: "Validated Device" }),
       );
+    });
+  });
+
+  describe("getSubcontrollerOnlineAsync", () => {
+    it("should consume validated subcontroller params instead of raw Express data", async () => {
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getSubcontrollersAsync.resolves([
+        { id: 2, name: "Validated Device", hostName: "validated.local", type: "ESP32" } as any,
+      ]);
+      const mdnsService = { getIPAddressByHostName: sinon.stub().returns(undefined) };
+      const mockRequest = {
+        app: {
+          get: (dependency: string) => {
+            switch (dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "mdnsService":
+                return mdnsService;
+              default:
+                return undefined;
+            }
+          },
+        },
+        params: {
+          deviceId: "1",
+        },
+        originalUrl: "/api/v2/subcontrollers/2/connection-status",
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ params: { deviceId: "2" } });
+
+      const success = (await getSubcontrollerOnlineAsync(
+        mockRequest,
+        mockResponse,
+      )) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.deepEqual(success.content?.data, { online: false });
+      assert.isTrue(sprootDB.getSubcontrollersAsync.calledOnce);
+      assert.isTrue(mdnsService.getIPAddressByHostName.calledOnceWithExactly("validated.local"));
     });
   });
 

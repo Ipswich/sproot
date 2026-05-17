@@ -12,6 +12,10 @@ type SetOutputControlModeRequestBody =
   OutputContractOperations["setOutputControlMode"]["requestBody"]["content"]["application/json"];
 type SetOutputManualStateRequestBody =
   OutputContractOperations["setOutputManualState"]["requestBody"]["content"]["application/json"];
+type SetOutputControlModePathParams =
+  OutputContractOperations["setOutputControlMode"]["parameters"]["path"];
+type SetOutputManualStatePathParams =
+  OutputContractOperations["setOutputManualState"]["parameters"]["path"];
 
 /**
  * Possible statusCodes: 200, 400, 404, 409
@@ -24,7 +28,9 @@ export async function setControlModeAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-  const outputId = String(request.params["outputId"]);
+  const pathParams = (getValidatedContractRequestData<"setOutputControlMode">(response).params ??
+    request.params) as SetOutputControlModePathParams;
+  const outputId = String(pathParams["outputId"]);
   const requestBody = getValidatedContractRequestData<"setOutputControlMode">(response)
     .body as unknown as SetOutputControlModeRequestBody;
   const controlMode = requestBody["controlMode"] as ControlMode;
@@ -79,7 +85,9 @@ export async function setControlModeAsync(
  */
 export async function setManualStateAsync(request: Request, response: Response) {
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
-  const outputId = String(request.params["outputId"]);
+  const pathParams = (getValidatedContractRequestData<"setOutputManualState">(response).params ??
+    request.params) as SetOutputManualStatePathParams;
+  const outputId = String(pathParams["outputId"]);
   const requestBody = (getValidatedContractRequestData<"setOutputManualState">(response).body ??
     {}) as SetOutputManualStateRequestBody;
   const value = requestBody.value as number;

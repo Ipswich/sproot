@@ -8615,6 +8615,8 @@ components:
           example: 1
         value:
           type: number
+          minimum: 0
+          maximum: 100
           example: 50
 
     NotificationAction:
@@ -8655,9 +8657,11 @@ components:
           example: 1
         subject:
           type: string
+          pattern: ".*\\S.*"
           example: "Test Notification"
         content:
           type: string
+          pattern: ".*\\S.*"
           example: "This is a test notification content."
 
     ActiveNotifications:
@@ -9632,6 +9636,15 @@ components:
           example: "Windowsill"
         model:
           type: string
+          enum:
+            - "BME280"
+            - "CAPACITIVE_MOISTURE_SENSOR"
+            - "DS18B20"
+            - "ADS1115"
+            - "ESP32_BME280"
+            - "ESP32_CAPACITIVE_MOISTURE_SENSOR"
+            - "ESP32_DS18B20"
+            - "ESP32_ADS1115"
           example: "DS18B20"
         subcontrollerId:
           nullable: true
@@ -9663,6 +9676,15 @@ components:
           example: "Windowsill"
         model:
           type: string
+          enum:
+            - "BME280"
+            - "CAPACITIVE_MOISTURE_SENSOR"
+            - "DS18B20"
+            - "ADS1115"
+            - "ESP32_BME280"
+            - "ESP32_CAPACITIVE_MOISTURE_SENSOR"
+            - "ESP32_DS18B20"
+            - "ESP32_ADS1115"
           example: "DS18B20"
         subcontrollerId:
           nullable: true

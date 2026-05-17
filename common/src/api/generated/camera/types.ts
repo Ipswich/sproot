@@ -8,681 +8,681 @@
  */
 
 export interface paths {
-  "/api/v2/camera/settings": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get camera settings.
+         * @description Returns the current camera settings.
+         */
+        get: operations["getCameraSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update camera settings.
+         * @description Updates the camera settings. This operation changes only the fields provided.
+         */
+        patch: operations["updateCameraSettings"];
+        trace?: never;
     };
-    /**
-     * Get camera settings.
-     * @description Returns the current camera settings.
-     */
-    get: operations["getCameraSettings"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update camera settings.
-     * @description Updates the camera settings. This operation changes only the fields provided.
-     */
-    patch: operations["updateCameraSettings"];
-    trace?: never;
-  };
-  "/api/v2/camera/stream": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a live MJPEG camera stream.
+         * @description Returns a live MJPEG stream from the camera.
+         */
+        get: operations["getCameraStream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get a live MJPEG camera stream.
-     * @description Returns a live MJPEG stream from the camera.
-     */
-    get: operations["getCameraStream"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/camera/reconnect": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/reconnect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reconnect to the camera.
+         * @description Attempts to reconnect to the camera. This is useful if the camera has lost connection or  is not responding.
+         */
+        post: operations["reconnectCamera"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Reconnect to the camera.
-     * @description Attempts to reconnect to the camera. This is useful if the camera has lost connection or  is not responding.
-     */
-    post: operations["reconnectCamera"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/camera/latest-image": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/latest-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the latest image.
+         * @description Returns the most recently taken image.
+         */
+        get: operations["getLatestCameraImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get the latest image.
-     * @description Returns the most recently taken image.
-     */
-    get: operations["getLatestCameraImage"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/camera/timelapse/images": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/timelapse/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Clear all timelapse images.
+         * @description Removes all images from the timelapse directory.
+         */
+        delete: operations["clearTimelapseImages"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Clear all timelapse images.
-     * @description Removes all images from the timelapse directory.
-     */
-    delete: operations["clearTimelapseImages"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/camera/timelapse/archive": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/timelapse/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the timelapse archive.
+         * @description Returns a tar file containing all timelapse images.
+         */
+        get: operations["downloadTimelapseArchive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get the timelapse archive.
-     * @description Returns a tar file containing all timelapse images.
-     */
-    get: operations["downloadTimelapseArchive"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/camera/timelapse/archive/regenerate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/timelapse/archive/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Regenerate the timelapse archive.
+         * @description Regenerates the timelapse archive. Useful if you want to regenerate it to now, instead of waiting for the usual interval.
+         */
+        post: operations["regenerateTimelapseArchive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Regenerate the timelapse archive.
-     * @description Regenerates the timelapse archive. Useful if you want to regenerate it to now, instead of waiting for the usual interval.
-     */
-    post: operations["regenerateTimelapseArchive"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/camera/timelapse/archive/status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/camera/timelapse/archive/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the status of the timelapse archive regeneration.
+         * @description Returns the status of the timelapse archive regeneration. This is useful to check if the regeneration is still in progress.
+         */
+        get: operations["getTimelapseArchiveStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get the status of the timelapse archive regeneration.
-     * @description Returns the status of the timelapse archive regeneration. This is useful to check if the regeneration is still in progress.
-     */
-    get: operations["getTimelapseArchiveStatus"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
-    SuccessResponse: {
-      statusCode?: number;
-      content?: Record<string, never>;
-    } & components["schemas"]["ApiResponse"];
-    /** @description An object containing the current camera settings. */
-    CameraSettings: {
-      /** @example 1 */
-      id?: number;
-      /** @example true */
-      enabled: boolean;
-      /** @example Camera 1 */
-      name: string;
-      /** @example 1920 */
-      xVideoResolution: number | null;
-      /** @example 1080 */
-      yVideoResolution: number | null;
-      /** @example 30 */
-      videoFps: number | null;
-      /** @example 1920 */
-      xImageResolution: number | null;
-      /** @example 1080 */
-      yImageResolution: number | null;
-      /** @example true */
-      timelapseEnabled: boolean;
-      /** @example 30 */
-      imageRetentionDays: number;
-      /** @example 1000 */
-      imageRetentionSize: number;
-      /** @example 60 */
-      timelapseInterval: number | null;
-      /** @example 00:00 */
-      timelapseStartTime: string | null;
-      /** @example 23:59 */
-      timelapseEndTime: string | null;
-    };
-    /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
-    ErrorResponse: {
-      statusCode?: number;
-      error: {
-        request?: {
-          method?: string;
-          url?: string;
-          body?: Record<string, never>;
-          query?: Record<string, never>;
+    schemas: {
+        /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
+        SuccessResponse: {
+            statusCode?: number;
+            content?: Record<string, never>;
+        } & components["schemas"]["ApiResponse"];
+        /** @description An object containing the current camera settings. */
+        CameraSettings: {
+            /** @example 1 */
+            id?: number;
+            /** @example true */
+            enabled: boolean;
+            /** @example Camera 1 */
+            name: string;
+            /** @example 1920 */
+            xVideoResolution: number | null;
+            /** @example 1080 */
+            yVideoResolution: number | null;
+            /** @example 30 */
+            videoFps: number | null;
+            /** @example 1920 */
+            xImageResolution: number | null;
+            /** @example 1080 */
+            yImageResolution: number | null;
+            /** @example true */
+            timelapseEnabled: boolean;
+            /** @example 30 */
+            imageRetentionDays: number;
+            /** @example 1000 */
+            imageRetentionSize: number;
+            /** @example 60 */
+            timelapseInterval: number | null;
+            /** @example 00:00 */
+            timelapseStartTime: string | null;
+            /** @example 23:59 */
+            timelapseEndTime: string | null;
         };
-        name?: string;
-        url?: string;
-        details?: string[];
-      };
-    } & components["schemas"]["ApiResponse"];
-    /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
-    ApiResponse: {
-      statusCode: number;
-      /** @example 2021-01-01T00:00:00.000Z */
-      timestamp: string;
-      /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
-      requestId: string;
+        /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
+        ErrorResponse: {
+            statusCode?: number;
+            error: {
+                request?: {
+                    method?: string;
+                    url?: string;
+                    body?: Record<string, never>;
+                    query?: Record<string, never>;
+                };
+                name?: string;
+                url?: string;
+                details?: string[];
+            };
+        } & components["schemas"]["ApiResponse"];
+        /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
+        ApiResponse: {
+            statusCode: number;
+            /** @example 2021-01-01T00:00:00.000Z */
+            timestamp: string;
+            /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
+            requestId: string;
+        };
     };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  getCameraSettings: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getCameraSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["CameraSettings"];
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["CameraSettings"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/camera/settings */
-              url?: unknown;
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/camera/settings */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
     };
-  };
-  updateCameraSettings: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CameraSettings"];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    updateCameraSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["CameraSettings"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CameraSettings"];
             };
-          };
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/camera/settings */
-              url?: unknown;
-              details?: unknown;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["CameraSettings"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/camera/settings */
-              url?: unknown;
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/camera/settings */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service unavailable */
-              name?: unknown;
-              /** @example /api/v2/camera/settings */
-              url?: unknown;
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/camera/settings */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-    };
-  };
-  getCameraStream: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "multipart/x-mixed-replace": string;
-        };
-      };
-      /** @description Bad Gateway */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 502 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Gateway */
-              name?: unknown;
-              /** @example /api/v2/camera/stream */
-              url?: unknown;
-              details?: unknown;
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/camera/settings */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
     };
-  };
-  reconnectCamera: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getCameraStream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Livestream successfully reconnected */
-              data?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "multipart/x-mixed-replace": string;
+                };
             };
-          };
-        };
-      };
-      /** @description Bad Gateway */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 502 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Gateway */
-              name?: unknown;
-              /** @example /api/v2/camera/reconnect */
-              url?: unknown;
-              details?: unknown;
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 502 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Gateway */
+                            name?: unknown;
+                            /** @example /api/v2/camera/stream */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
     };
-  };
-  getLatestCameraImage: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    reconnectCamera: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "image/jpeg": string;
-        };
-      };
-      /** @description Image not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/camera/latest-image */
-              url?: unknown;
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Livestream successfully reconnected */
+                            data?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-    };
-  };
-  clearTimelapseImages: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: number;
-            content?: {
-              /** @example All images cleared successfully */
-              data?: string;
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 502 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Gateway */
+                            name?: unknown;
+                            /** @example /api/v2/camera/reconnect */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown;
+    };
+    getLatestCameraImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 409 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Conflict */
-              name?: unknown;
-              /** @example /api/v2/camera/timelapse/images */
-              url?: unknown;
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
             };
-          };
-        };
-      };
-      /** @description Internal Server Error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 500 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Internal Server Error */
-              name?: unknown;
-              /** @example /api/v2/camera/timelapse/images */
-              url?: unknown;
-              details?: unknown;
+            /** @description Image not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/camera/latest-image */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
     };
-  };
-  downloadTimelapseArchive: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          /** @description The size of the content in bytes. */
-          "Content-Length"?: string;
-          /** @description Indicates that the content is a file attachment. */
-          "Content-Disposition"?: string;
-          [name: string]: unknown;
+    clearTimelapseImages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/x-tar": string;
-        };
-      };
-      /** @description Archive not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/camera/timelapse/archive */
-              url?: unknown;
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: number;
+                        content?: {
+                            /** @example All images cleared successfully */
+                            data?: string;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 500 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Internal Server Error */
-              name?: unknown;
-              /** @example /api/v2/camera/timelapse/archive */
-              url?: unknown;
-              details?: unknown;
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 409 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Conflict */
+                            name?: unknown;
+                            /** @example /api/v2/camera/timelapse/images */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-    };
-  };
-  regenerateTimelapseArchive: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 202 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Timelapse archive regeneration queued. */
-              data?: unknown;
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 500 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Internal Server Error */
+                            name?: unknown;
+                            /** @example /api/v2/camera/timelapse/images */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
     };
-  };
-  getTimelapseArchiveStatus: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    downloadTimelapseArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: {
-                /** @example true */
-                isGenerating?: boolean;
-                /** @example 75 */
-                archiveProgress?: number;
-              };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    /** @description The size of the content in bytes. */
+                    "Content-Length"?: string;
+                    /** @description Indicates that the content is a file attachment. */
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/x-tar": string;
+                };
             };
-          };
+            /** @description Archive not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/camera/timelapse/archive */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 500 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Internal Server Error */
+                            name?: unknown;
+                            /** @example /api/v2/camera/timelapse/archive */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
+    regenerateTimelapseArchive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 202 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Timelapse archive regeneration queued. */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    getTimelapseArchiveStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: {
+                                /** @example true */
+                                isGenerating?: boolean;
+                                /** @example 75 */
+                                archiveProgress?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+    };
 }

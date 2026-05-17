@@ -2,7 +2,7 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { ModelList, Models } from "@sproot/sproot-common/dist/sensors/Models";
+import { ModelList } from "@sproot/sproot-common/dist/sensors/Models";
 import { SensorList } from "../../../../sensors/list/SensorList";
 import type { operations as SensorContractOperations } from "@sproot/sproot-common/dist/api/generated/sensors/types";
 import { ContractOperationPathParams } from "@sproot/sproot-common/dist/api/contracts/operation-types";
@@ -97,17 +97,6 @@ export async function addAsync(
   } as SDBSensor;
 
   const validationErrors: Array<string> = [];
-  if (
-    newSensor.model !== undefined &&
-    newSensor.model !== null &&
-    !Object.keys(Models)
-      .map((key) => key)
-      .includes(newSensor.model)
-  ) {
-    validationErrors.push(
-      `Invalid model: ${newSensor.model}. Supported models are: ${Object.keys(Models).join(", ")}`,
-    );
-  }
   if (
     newSensor.model == ModelList.ADS1115 ||
     newSensor.model == ModelList.CAPACITIVE_MOISTURE_SENSOR

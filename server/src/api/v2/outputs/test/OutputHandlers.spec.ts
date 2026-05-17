@@ -505,7 +505,7 @@ describe("OutputHandlers.ts tests", () => {
       assert.isTrue(outputList.updateOutputAsync.calledOnce);
     });
 
-    it("should consume validated outputId instead of raw req.params", async () => {
+    it("should consume validated output update fields instead of raw req.body", async () => {
       const updatedOutput = {
         1: {
           id: 1,
@@ -531,13 +531,50 @@ describe("OutputHandlers.ts tests", () => {
           },
         },
         params: { outputId: "not-a-number" },
-        body: updatedOutput,
+        body: {
+          name: "Ignored Output",
+          model: Models.TPLINK_SMART_PLUG,
+          address: "ignored-address",
+          pin: "ignored-pin",
+          isPwm: false,
+          isInvertedPwm: false,
+          color: "#000000",
+          automationTimeout: 120,
+          deviceZoneId: null,
+        },
       } as unknown as Request;
-      const mockResponse = createMockResponse({ params: { outputId: "1" } });
+      const mockResponse = createMockResponse({
+        params: { outputId: "1" },
+        body: {
+          name: "Validated Output",
+          model: Models.PCA9685,
+          address: "validated-address",
+          pin: "validated-pin",
+          isPwm: true,
+          isInvertedPwm: true,
+          color: "#ffffff",
+        },
+      });
 
       const success = (await updateAsync(mockRequest, mockResponse)) as SuccessResponse;
       assert.equal(success.statusCode, 200);
-      assert.isTrue(outputList.updateOutputAsync.calledOnce);
+      assert.deepEqual(success.content?.data, {
+        id: 1,
+        model: Models.PCA9685,
+        address: "validated-address",
+        name: "Validated Output",
+        pin: "validated-pin",
+        subcontrollerId: undefined,
+        isPwm: true,
+        isInvertedPwm: true,
+        color: "#ffffff",
+        automationTimeout: 120,
+        deviceZoneId: null,
+        parentOutputId: undefined,
+      });
+      assert.isTrue(
+        outputList.updateOutputAsync.calledOnceWithExactly(success.content?.data as SDBOutput),
+      );
     });
   });
 
@@ -688,39 +725,6 @@ describe("OutputHandlers.ts tests", () => {
         "DB Error",
       ]);
       assert.isTrue(outputList.deleteOutputAsync.calledOnceWithExactly(1));
-    });
-
-    it("should consume validated outputId instead of raw req.params", async () => {
-      const deletedOutput = {
-        1: {
-          id: 1,
-          model: Models.PCA9685,
-          address: "0x40",
-          name: "test output",
-          pin: "0",
-          isPwm: true,
-          isInvertedPwm: true,
-          color: "#FF0000",
-        } as SDBOutput,
-      };
-      sinon.stub(outputList, "outputData").value(deletedOutput);
-
-      const mockRequest = {
-        app: {
-          get: (_dependency: string) => {
-            switch (_dependency) {
-              case "outputList":
-                return outputList;
-            }
-          },
-        },
-        params: { outputId: "not-a-number" },
-      } as unknown as Request;
-      const mockResponse = createMockResponse({ params: { outputId: "1" } });
-
-      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
-      assert.equal(success.statusCode, 200);
-      assert.isTrue(outputList.deleteOutputAsync.calledOnceWith(1));
     });
 
     it("should consume validated outputId instead of raw req.params", async () => {

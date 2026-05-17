@@ -264,9 +264,10 @@ describe("OutputList.ts tests", function () {
           }) as unknown as winston.Logger,
       );
       const logger = winston.createLogger();
+      const eventBus = new MemoryEventBus(logger);
 
       await using outputList = await OutputList.createInstanceAsync(
-        mockAutomationService,
+        eventBus,
         mockSprootDB,
         mockMdnsService,
         5,

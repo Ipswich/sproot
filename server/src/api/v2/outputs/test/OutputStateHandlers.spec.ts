@@ -109,6 +109,32 @@ describe("OutputStateHandlers.ts tests", () => {
       );
     });
 
+    it("should consume validated outputId instead of raw req.params", async () => {
+      const mockRequest = {
+        app: {
+          get: () => outputList,
+        },
+        params: {
+          outputId: "1",
+        },
+        body: {
+          controlMode: ControlMode.manual,
+        },
+      } as unknown as Request;
+
+      const mockResponse = makeResponse({
+        params: { outputId: "2" },
+        body: { controlMode: ControlMode.automatic },
+      });
+
+      const success = (await setControlModeAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(
+        outputList.updateControlModeAsync.calledOnceWithExactly("2", ControlMode.automatic),
+      );
+    });
+
     it("should return a 404 and a 'Not Found' error", async () => {
       const mockRequest = {
         app: {
@@ -264,6 +290,29 @@ describe("OutputStateHandlers.ts tests", () => {
 
       assert.equal(success.statusCode, 200);
       assert.isTrue(outputList.setStateAsync.calledOnce);
+      assert.equal(outputList.setStateAsync.firstCall.args[1]?.value, 75);
+    });
+
+    it("should consume validated outputId instead of raw req.params", async () => {
+      const mockRequest = {
+        app: {
+          get: () => outputList,
+        },
+        params: {
+          outputId: "1",
+        },
+        body: {
+          value: 5,
+        },
+      } as unknown as Request;
+
+      const mockResponse = makeResponse({ params: { outputId: "2" }, body: { value: 75 } });
+
+      const success = (await setManualStateAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(outputList.setStateAsync.calledOnce);
+      assert.equal(outputList.setStateAsync.firstCall.args[0], "2");
       assert.equal(outputList.setStateAsync.firstCall.args[1]?.value, 75);
     });
 

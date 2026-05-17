@@ -8,963 +8,963 @@
  */
 
 export interface paths {
-  "/api/v2/tags/journals": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/tags/journals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all journal tags.
+         * @description Returns a list of all journal tags. This includes basic information about each tag, such as name and id.
+         */
+        get: operations["listJournalTags"];
+        put?: never;
+        /**
+         * Add a new journal tag.
+         * @description Adds a new journal tag to the service. Returns the information used to create the journal tag.
+         */
+        post: operations["createJournalTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all journal tags.
-     * @description Returns a list of all journal tags. This includes basic information about each tag, such as name and id.
-     */
-    get: operations["listJournalTags"];
-    put?: never;
-    /**
-     * Add a new journal tag.
-     * @description Adds a new journal tag to the service. Returns the information used to create the journal tag.
-     */
-    post: operations["createJournalTag"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/tags/journals/{tagId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/tags/journals/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a journal tag.
+         * @description Deletes a journal tag. This operation is permanent and cannot be undone.
+         */
+        delete: operations["deleteJournalTag"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a journal tag.
+         * @description Updates a journal tag. This operation changes only the fields provided.
+         */
+        patch: operations["updateJournalTag"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete a journal tag.
-     * @description Deletes a journal tag. This operation is permanent and cannot be undone.
-     */
-    delete: operations["deleteJournalTag"];
-    options?: never;
-    head?: never;
-    /**
-     * Update a journal tag.
-     * @description Updates a journal tag. This operation changes only the fields provided.
-     */
-    patch: operations["updateJournalTag"];
-    trace?: never;
-  };
-  "/api/v2/tags/entries": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/tags/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all journal entry tags.
+         * @description Returns a list of all journal entry tags. This includes basic information about each tag, such as name and id.
+         */
+        get: operations["listJournalEntryTags"];
+        put?: never;
+        /**
+         * Add a new journal entry tag.
+         * @description Adds a new journal entry tag to the service. Returns the information used to create the journal entry tag.
+         */
+        post: operations["createJournalEntryTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all journal entry tags.
-     * @description Returns a list of all journal entry tags. This includes basic information about each tag, such as name and id.
-     */
-    get: operations["listJournalEntryTags"];
-    put?: never;
-    /**
-     * Add a new journal entry tag.
-     * @description Adds a new journal entry tag to the service. Returns the information used to create the journal entry tag.
-     */
-    post: operations["createJournalEntryTag"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/tags/entries/{tagId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/tags/entries/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a journal entry tag.
+         * @description Deletes a journal entry tag. This operation is permanent and cannot be undone.
+         */
+        delete: operations["deleteJournalEntryTag"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a journal entry tag.
+         * @description Updates a journal entry tag. This operation changes only the fields provided.
+         */
+        patch: operations["updateJournalEntryTag"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete a journal entry tag.
-     * @description Deletes a journal entry tag. This operation is permanent and cannot be undone.
-     */
-    delete: operations["deleteJournalEntryTag"];
-    options?: never;
-    head?: never;
-    /**
-     * Update a journal entry tag.
-     * @description Updates a journal entry tag. This operation changes only the fields provided.
-     */
-    patch: operations["updateJournalEntryTag"];
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
-    SuccessResponse: {
-      statusCode?: number;
-      content?: Record<string, never>;
-    } & components["schemas"]["ApiResponse"];
-    /** @description A journal tag object that is stored in the database. Contains all the information needed to  create a journal tag, including name and color of the tag. */
-    SDBJournalTag: {
-      /** @example 1 */
-      readonly id?: number;
-      /** @example Shelf #1 */
-      name: string;
-      /** @example #0000ff */
-      color?: string | null;
-    };
-    /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
-    ErrorResponse: {
-      statusCode?: number;
-      error: {
-        request?: {
-          method?: string;
-          url?: string;
-          body?: Record<string, never>;
-          query?: Record<string, never>;
+    schemas: {
+        /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
+        SuccessResponse: {
+            statusCode?: number;
+            content?: Record<string, never>;
+        } & components["schemas"]["ApiResponse"];
+        /** @description A journal tag object that is stored in the database. Contains all the information needed to  create a journal tag, including name and color of the tag. */
+        SDBJournalTag: {
+            /** @example 1 */
+            readonly id?: number;
+            /** @example Shelf #1 */
+            name: string;
+            /** @example #0000ff */
+            color?: string | null;
         };
-        name?: string;
-        url?: string;
-        details?: string[];
-      };
-    } & components["schemas"]["ApiResponse"];
-    /** @description Request body for creating a journal tag. */
-    JournalTagCreateRequest: {
-      /** @example Shelf #1 */
-      name: string;
-      /** @example #0000ff */
-      color?: string | null;
+        /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
+        ErrorResponse: {
+            statusCode?: number;
+            error: {
+                request?: {
+                    method?: string;
+                    url?: string;
+                    body?: Record<string, never>;
+                    query?: Record<string, never>;
+                };
+                name?: string;
+                url?: string;
+                details?: string[];
+            };
+        } & components["schemas"]["ApiResponse"];
+        /** @description Request body for creating a journal tag. */
+        JournalTagCreateRequest: {
+            /** @example Shelf #1 */
+            name: string;
+            /** @example #0000ff */
+            color?: string | null;
+        };
+        /** @description Request body for updating a journal tag. This operation changes only the fields provided. */
+        JournalTagUpdateRequest: {
+            /** @example Shelf #1 */
+            name?: string;
+            /** @example #0000ff */
+            color?: string | null;
+        };
+        /** @description A journal entry tag object that is stored in the database. Contains all the information needed to  tag a journal entry, including the name and color of the tag. */
+        SDBJournalEntryTag: {
+            /** @example 1 */
+            readonly id?: number;
+            /** @example Watering */
+            name: string;
+            /** @example #0000ff */
+            color?: string | null;
+        };
+        /** @description Request body for creating a journal entry tag. */
+        JournalEntryTagCreateRequest: {
+            /** @example Watering */
+            name: string;
+            /** @example #0000ff */
+            color?: string | null;
+        };
+        /** @description Request body for updating a journal entry tag. This operation changes only the fields provided. */
+        JournalEntryTagUpdateRequest: {
+            /** @example Watering */
+            name?: string;
+            /** @example #0000ff */
+            color?: string | null;
+        };
+        /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
+        ApiResponse: {
+            statusCode: number;
+            /** @example 2021-01-01T00:00:00.000Z */
+            timestamp: string;
+            /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
+            requestId: string;
+        };
     };
-    /** @description Request body for updating a journal tag. This operation changes only the fields provided. */
-    JournalTagUpdateRequest: {
-      /** @example Shelf #1 */
-      name?: string;
-      /** @example #0000ff */
-      color?: string | null;
-    };
-    /** @description A journal entry tag object that is stored in the database. Contains all the information needed to  tag a journal entry, including the name and color of the tag. */
-    SDBJournalEntryTag: {
-      /** @example 1 */
-      readonly id?: number;
-      /** @example Watering */
-      name: string;
-      /** @example #0000ff */
-      color?: string | null;
-    };
-    /** @description Request body for creating a journal entry tag. */
-    JournalEntryTagCreateRequest: {
-      /** @example Watering */
-      name: string;
-      /** @example #0000ff */
-      color?: string | null;
-    };
-    /** @description Request body for updating a journal entry tag. This operation changes only the fields provided. */
-    JournalEntryTagUpdateRequest: {
-      /** @example Watering */
-      name?: string;
-      /** @example #0000ff */
-      color?: string | null;
-    };
-    /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
-    ApiResponse: {
-      statusCode: number;
-      /** @example 2021-01-01T00:00:00.000Z */
-      timestamp: string;
-      /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
-      requestId: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  listJournalTags: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    listJournalTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    createJournalTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: unknown;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalTagCreateRequest"];
             };
-          };
         };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journals */
-              url?: unknown;
-              details?: unknown;
+        responses: {
+            /** @description Journal tag created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 201 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SDBJournalTag"];
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journals */
-              url?: unknown;
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Missing required field: name"
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  createJournalTag: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    deleteJournalTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Journal tag Id
+                 * @example 1
+                 */
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Journal tag deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Journal tag with ID 1 successfully deleted. */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing journal tag Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JournalTagCreateRequest"];
-      };
+    updateJournalTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Journal tag Id
+                 * @example 1
+                 */
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalTagUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Journal tag updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SDBJournalTag"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Missing required field: id",
+                             *       "Missing required field: name"
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journals/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Journal tag created */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    listJournalEntryTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 201 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["SDBJournalTag"];
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/tags/journals */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Missing required field: name"
-               *     ]
-               */
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journals */
-              url?: unknown;
-              details?: unknown;
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journals */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
     };
-  };
-  deleteJournalTag: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Journal tag Id
-         * @example 1
-         */
-        tagId: string;
-      };
-      cookie?: never;
+    createJournalEntryTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalEntryTagCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Journal entry tag created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 201 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SDBJournalEntryTag"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Missing required field: name"
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Journal tag deleted */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Journal tag with ID 1 successfully deleted. */
-              data?: unknown;
+    deleteJournalEntryTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Journal entry tag Id
+                 * @example 1
+                 */
+                tagId: string;
             };
-          };
+            cookie?: never;
         };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing journal tag Id."
-               *     ]
-               */
-              details?: unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Journal entry tag deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            /** @example Journal entry tag with ID 1 successfully deleted. */
+                            data?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Invalid or missing journal entry tag Id."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/-1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/1 */
-              url?: unknown;
-              details?: unknown;
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
             };
-          };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  updateJournalTag: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Journal tag Id
-         * @example 1
-         */
-        tagId: string;
-      };
-      cookie?: never;
+    updateJournalEntryTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description Journal entry tag Id
+                 * @example 1
+                 */
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalEntryTagUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Journal entry tag updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: components["schemas"]["SDBJournalEntryTag"];
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/1 */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Missing required field: id",
+                             *       "Missing required field: name"
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 404 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Found */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/-1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/tags/journal-entries/1 */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JournalTagUpdateRequest"];
-      };
-    };
-    responses: {
-      /** @description Journal tag updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["SDBJournalTag"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Missing required field: id",
-               *       "Missing required field: name"
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journals/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  listJournalEntryTags: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  createJournalEntryTag: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JournalEntryTagCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Journal entry tag created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 201 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["SDBJournalEntryTag"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Missing required field: name"
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  deleteJournalEntryTag: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Journal entry tag Id
-         * @example 1
-         */
-        tagId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Journal entry tag deleted */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              /** @example Journal entry tag with ID 1 successfully deleted. */
-              data?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Invalid or missing journal entry tag Id."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  updateJournalEntryTag: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /**
-         * @description Journal entry tag Id
-         * @example 1
-         */
-        tagId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JournalEntryTagUpdateRequest"];
-      };
-    };
-    responses: {
-      /** @description Journal entry tag updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: components["schemas"]["SDBJournalEntryTag"];
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/1 */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Missing required field: id",
-               *       "Missing required field: name"
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 404 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Found */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/-1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/tags/journal-entries/1 */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
 }

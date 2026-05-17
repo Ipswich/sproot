@@ -8,6 +8,24 @@ import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { getTokenAsync } from "../handlers/TokenHandlers";
 import { SDBUser } from "@sproot/database/SDBUser";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { setValidatedContractRequestData } from "../../../validation/validateRequest";
+
+function createResponse(validatedRequestData?: Record<string, unknown>): Response {
+  const response = {
+    locals: {
+      defaultProperties: {
+        timestamp: new Date().toISOString(),
+        requestId: "1234",
+      },
+    },
+  } as unknown as Response;
+
+  if (validatedRequestData) {
+    setValidatedContractRequestData(response, validatedRequestData);
+  }
+
+  return response;
+}
 
 describe("TokenHandlers.ts tests", () => {
   describe("getTokenAsync", async () => {
@@ -29,14 +47,7 @@ describe("TokenHandlers.ts tests", () => {
           get: (_dependency: string) => sprootDB,
         },
       } as unknown as Request;
-      const response = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const response = createResponse();
 
       const result = (await getTokenAsync(
         request,
@@ -61,14 +72,7 @@ describe("TokenHandlers.ts tests", () => {
           get: (_dependency: string) => sprootDB,
         },
       } as unknown as Request;
-      const response = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const response = createResponse();
 
       const result = (await getTokenAsync(
         request,
@@ -93,14 +97,7 @@ describe("TokenHandlers.ts tests", () => {
           get: (_dependency: string) => sprootDB,
         },
       } as unknown as Request;
-      const response = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const response = createResponse();
 
       const result = (await getTokenAsync(
         request,
@@ -124,14 +121,7 @@ describe("TokenHandlers.ts tests", () => {
           get: (_dependency: string) => sprootDB,
         },
       } as unknown as Request;
-      const response = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const response = createResponse();
 
       const result = (await getTokenAsync(
         request,
@@ -155,14 +145,7 @@ describe("TokenHandlers.ts tests", () => {
           get: (_dependency: string) => sprootDB,
         },
       } as unknown as Request;
-      const response = {
-        locals: {
-          defaultProperties: {
-            timestamp: new Date().toISOString(),
-            requestId: "1234",
-          },
-        },
-      } as unknown as Response;
+      const response = createResponse();
       sprootDB.getUserAsync.rejects(new Error("Database error"));
 
       const result = (await getTokenAsync(
@@ -178,6 +161,38 @@ describe("TokenHandlers.ts tests", () => {
       assert.deepEqual(result.error.details, ["Database error."]);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
+    });
+
+    it("should consume validated auth body instead of raw req.body", async () => {
+      const localSprootDB = sinon.createStubInstance(MockSprootDB);
+      localSprootDB.getUserAsync.resolves([
+        {
+          username: "dev-test",
+          hash: "$2b$10$LyJ6YjLoT/FKyG8n1Puu7Oo8kEnh9mMSR0beiETYd5qLw7qIZYqIW",
+          email: "dev-test@example.com",
+        } as SDBUser,
+      ]);
+      const request = {
+        body: { username: "ignored-user", password: "wrong-password" },
+        app: {
+          get: (_dependency: string) => localSprootDB,
+        },
+      } as unknown as Request;
+      const response = createResponse({ body: { username: "dev-test", password: "password" } });
+
+      const result = (await getTokenAsync(
+        request,
+        response,
+        "true",
+        jwtExpiration,
+        jwtSecret,
+        false,
+      )) as SuccessResponse;
+
+      assert.equal(result.statusCode, 200);
+      assert.isTrue(localSprootDB.getUserAsync.calledOnceWithExactly("dev-test"));
+      const jwtPayload = jwt.verify(result.content?.data?.token, jwtSecret) as JwtPayload;
+      assert.equal("dev-test", jwtPayload["username"]);
     });
   });
 });

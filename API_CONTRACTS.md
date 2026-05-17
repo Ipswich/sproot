@@ -162,6 +162,84 @@ The API v2 error middleware logs contract validation failures with:
 
 Request failures log at warning level. Response failures log at error level.
 
+## Validation Responsibility Map
+
+The current pipeline is easiest to reason about when split into five responsibility classes.
+
+### 1. Transport Validation
+
+Transport validation answers whether an HTTP request or response matches the public contract shape.
+
+Owned primarily by:
+
+- `server/src/api/validation/createContractRoute.ts`
+- `server/src/api/validation/validateRequest.ts`
+- `server/src/api/validation/validateResponse.ts`
+- `server/src/api/validation/operationRegistry.ts`
+- generated domain schemas in `common/src/api/generated/*/client.ts`
+
+Examples:
+
+- required request body fields
+- query/header/path presence and scalar parsing
+- success response body structure
+- response `statusCode` field matching the emitted HTTP status
+
+### 2. Schema Validation
+
+Schema validation is the concrete Zod parse step driven by generated artifacts.
+
+Owned by:
+
+- Zod schemas emitted by `openapi-zod-client` in `common/src/api/generated/*/client.ts`
+- request/response parsing in `validateRequest.ts` and `validateResponse.ts`
+- endpoint metadata extraction in `operationRegistry.ts`
+
+Examples:
+
+- enum membership enforced by generated Zod enums
+- request-body object shape validation
+- query boolean and number coercion before Zod parsing
+
+### 3. Domain / Business Validation
+
+Domain validation is intentionally still handler-owned where the rule depends on runtime semantics rather than transport shape.
+
+Representative examples:
+
+- sensor create pin requirements that depend on sensor model in `server/src/api/v2/sensors/handlers/SensorHandlers.ts`
+- condition-specific automation rules in `server/src/api/v2/automations/handlers/ConditionHandlers.ts`
+- journal and tag lifecycle rules in journal and tag handlers
+- output-device existence checks and PWM normalization in automation action handlers
+
+This remains in handlers by design. The contract layer should reject malformed transport data, not recreate the entire runtime rule engine.
+
+### 4. Persistence / Runtime Validation
+
+Persistence and runtime validation answers whether the system can actually perform the requested action after the request is transport-valid.
+
+Representative examples:
+
+- database reachability failures
+- hardware availability and device lookup failures
+- camera stream and firmware download behavior
+- backup file existence and archive generation state
+
+These remain handler- and service-owned. They are not contract debt.
+
+### 5. Compatibility-Preservation Behavior
+
+Compatibility-preservation behavior is the deliberate set of semantics that remain looser than the strictest possible schema because the live API already behaves that way and the migration did not aim to redesign it.
+
+Representative examples:
+
+- parseInt-based ID handling and mixed string-or-number path semantics in multiple handlers
+- `latest` query behavior remaining string-driven in chart-data handlers
+- output and sensor PATCH fallback reads from raw `request.body` for undeclared writable fields
+- legacy validator bridge still running alongside generated validation in `server/src/api/v2/ApiRootV2.ts`
+
+These behaviors are intentional stop-points, not unfinished cleanup.
+
 ## Generation Flow And CI Enforcement
 
 ### Canonical Regeneration Workflow
@@ -285,6 +363,257 @@ The migration is operational, but these items remain deliberately unresolved:
 - Error-response validation is still intentionally excluded from the generated runtime path.
 - Negative-path tests around contract validation are thinner than the positive-path API coverage.
 - `validateRequest.ts` and `validateResponse.ts` still expose default exports that appear to be compatibility leftovers rather than the dominant runtime entry points.
+
+### Exact Intentional Stop-Points
+
+These are the remaining places where human reviewers should read the code as intentionally deferred rather than partially migrated:
+
+- `server/src/api/v2/outputs/handlers/OutputHandlers.ts`
+	- schema-owned PATCH fields consume validated data first
+	- `subcontrollerId`, `automationTimeout`, `deviceZoneId`, and `parentOutputId` still intentionally fall back to raw body input to preserve current runtime behavior
+- `server/src/api/v2/sensors/handlers/SensorHandlers.ts`
+	- create-time model membership is now contract-owned
+	- create-time pin requirements remain handler-owned because they are model-dependent runtime rules
+	- update still mixes validated and fallback body reads because the contract intentionally does not claim full PATCH parity
+- `server/src/api/v2/automations/handlers/ConditionHandlers.ts`
+	- this remains the largest intentionally handler-owned domain surface
+	- it still relies heavily on raw path/body parsing and condition-specific business rules
+- `server/src/api/v2/system/BackupHandlers.ts`, `server/src/api/v2/camera/handlers/*`, and `server/src/api/v2/subcontrollers/handlers/ESP32Handlers.ts`
+	- these continue to own transport-adjacent runtime behavior that was not worth broadening in this migration phase
+
+These stop-points are acceptable because the migration goal was contract-first boundary hardening, not total handler normalization.
+
+## Zodios And openapi-zod-client Coupling Inventory
+
+### Runtime dependencies on Zodios-derived types or metadata
+
+The committed runtime depends on Zodios in three concrete ways:
+
+1. `common/src/api/contracts/operation-types.ts`
+	 - imports `ZodiosBodyByAlias`, `ZodiosPathParamByAlias`, `ZodiosQueryParamsByAlias`, `ZodiosHeaderParamsByAlias`, and `ZodiosResponseByAlias`
+	 - uses them to derive per-operation request and response aliases from generated domain APIs
+2. `server/src/api/validation/operationRegistry.ts`
+	 - imports generated domain clients and reads each domain's `.api` endpoint definition array
+	 - depends on endpoint alias, parameter metadata, `endpoint.response`, and optional `endpoint.status`
+3. generated `common/src/api/generated/*/client.ts` files
+	 - import `@zodios/core`
+	 - emit `makeApi(...)`, `ZodiosEndpointDefinitions`, `ZodiosInstance`, and `new Zodios(...)`
+
+### Where openapi-zod-client artifacts are consumed
+
+`openapi-zod-client` output is consumed in these places:
+
+- directly by `server/src/api/validation/operationRegistry.ts` via generated domain `.api` endpoint metadata
+- directly by `common/src/api/contracts/operation-types.ts` via generated domain API types used by Zodios alias generics
+- indirectly by `server/src/api/validation/validateRequest.ts` and `validateResponse.ts` through the normalized contracts built by `operationRegistry.ts`
+- indirectly by handlers through `getValidatedContractRequestData<T>()`, which returns types derived from `operation-types.ts`
+
+### Where generated endpoint metadata is required
+
+Generated endpoint metadata is required only in one runtime place:
+
+- `server/src/api/validation/operationRegistry.ts`
+
+That file requires these generated endpoint properties:
+
+- `alias`
+- `parameters`
+- `response`
+- optional `status`
+
+No handler reads generated endpoint metadata directly.
+
+### Where generated TypeScript aliases are used
+
+Generated TypeScript aliases are consumed in two patterns:
+
+1. centralized aliases in `common/src/api/contracts/operation-types.ts`
+2. handler-local aliases that import generated `operations` types from `common/src/api/generated/*/types.ts`
+
+Representative handler-local usage exists in:
+
+- `server/src/api/v2/authentication/handlers/TokenHandlers.ts`
+- `server/src/api/v2/outputs/handlers/OutputHandlers.ts`
+- `server/src/api/v2/outputs/handlers/OutputStateHandlers.ts`
+- `server/src/api/v2/outputs/handlers/OutputChartDataHandlers.ts`
+- `server/src/api/v2/sensors/handlers/SensorHandlers.ts`
+- `server/src/api/v2/journals/handlers/JournalsHandlers.ts`
+- `server/src/api/v2/journals/handlers/JournalEntriesHandlers.ts`
+- `server/src/api/v2/tags/handlers/*.ts`
+- `server/src/api/v2/subcontrollers/handlers/SubcontrollerHandlers.ts`
+- `server/src/api/v2/automations/handlers/*.ts`
+
+### Why `openapi-typescript` still matters
+
+`openapi-typescript` provides the generated `operations` and schema types under `common/src/api/generated/*/types.ts`. These are still the most useful source for handler-local compile-time request and response aliases, even when runtime validation is driven by Zod schemas from `openapi-zod-client`.
+
+## Future Decoupling Roadmap
+
+This section is analysis only. It does not recommend immediate implementation.
+
+### What can stay exactly the same
+
+If Zodios runtime coupling is removed later, these pieces can remain conceptually unchanged:
+
+- `api_spec/openapi_v2.yaml` stays the single source of truth
+- domain slicing in `scripts/generate-api-contracts.mjs` can stay
+- generated Zod request and response schemas remain the runtime validation mechanism
+- handwritten Express routers and handlers remain the execution model
+- `createContractRoute.ts` can remain essentially unchanged
+- most of `validateRequest.ts` can remain unchanged
+- most of `validateResponse.ts` can remain unchanged
+
+### What would need to replace Zodios-derived metadata
+
+To decouple from Zodios runtime metadata cleanly, generation would need to emit a plain registry shape per operation containing at least:
+
+- `operationId`
+- method
+- path
+- request body schema
+- path/query/header parameter schema list
+- success response schema
+- optional canonical success status
+
+That would let `operationRegistry.ts` consume plain generated metadata without reading `.api` arrays from Zodios endpoint definitions.
+
+### What would need to change in `operation-types.ts`
+
+`common/src/api/contracts/operation-types.ts` would need the largest type-level rewrite.
+
+Today it derives request and response aliases through Zodios alias helpers. Without Zodios it would instead need to derive those aliases from a plain generated manifest or per-operation generated type map. In practice that means:
+
+- removing all imports from `@zodios/core`
+- replacing `ContractGeneratedApi<OperationId>`-based derivation with direct generated operation maps
+- keeping `ContractOperationId` and domain lookup behavior intact if possible
+
+### What would need to change in `operationRegistry.ts`
+
+`server/src/api/validation/operationRegistry.ts` would need to stop importing domain `.api` arrays and instead import the new plain generated registry. The rest of the file could stay structurally similar:
+
+- iterate manifest domains and operation ids
+- look up generated operation metadata
+- normalize request parameter groups
+- build `OperationContract`
+- keep the response exclusion map
+
+### Can `createContractRoute.ts` and `validateRequest.ts` remain essentially unchanged?
+
+Yes.
+
+As long as `operationRegistry.ts` continues to return the same normalized `OperationContract` shape, both `createContractRoute.ts` and `validateRequest.ts` can remain essentially unchanged. Their current design is already decoupled from direct generator format details.
+
+### Recommended decoupling sequence if it is ever pursued
+
+1. Extend generation to emit a plain per-operation registry alongside current artifacts.
+2. Teach `operationRegistry.ts` to read the plain registry while keeping the existing public `OperationContract` shape unchanged.
+3. Rewrite `operation-types.ts` to use the plain generated operation maps instead of Zodios alias helpers.
+4. Only after parity is proven, remove Zodios-specific generation output from the runtime path.
+5. Keep `openapi-typescript` and generated Zod schemas; do not couple decoupling to a broader framework rewrite.
+
+### Is the architecture already good enough to stop here?
+
+Yes.
+
+The current architecture is already good enough to stop here for the intended migration scope because:
+
+- the runtime validation path is centralized and deterministic
+- handlers consume typed validated data through one shared boundary API
+- remaining debt is explicit and mostly compatibility-driven rather than accidental
+- future decoupling can be done behind `operationRegistry.ts` and `operation-types.ts` without reopening every route handler
+
+## Review Preparation
+
+### Major architectural improvements achieved
+
+- OpenAPI is now the authoritative contract source for the migrated boundary path.
+- Generated request and response validation is centralized under `server/src/api/validation` instead of being scattered across handlers.
+- Route wiring is now operation-id driven through `createContractRoute(...)`.
+- Validated request data is stored once on `response.locals` and consumed consistently by handlers.
+- Contract generation is deterministic and CI-verifiable through `verify:api-contracts`.
+
+### What became contract-owned
+
+- request transport shape validation for wrapped routes
+- query/header/path coercion and validation
+- success response JSON validation for non-excluded operations
+- enum precision where the OpenAPI contract was tightened, including the sensor create model surface
+
+### What became materially more type-safe
+
+- handler-local request aliases sourced from generated `operations` types
+- shared `ContractOperation*` aliases in `common/src/api/contracts/operation-types.ts`
+- validated request access through `getValidatedContractRequestData<T>()`
+- output PATCH precedence for schema-owned fields
+
+### What materially improved in generated Zod validation
+
+- runtime request parsing is now driven by generated schemas instead of hand-maintained transport checks for the migrated slices
+- response validation can now detect contract/runtime drift on JSON success paths
+- sensor create model validation and other tightened schema surfaces now fail at the boundary instead of inside handlers
+
+### What intentionally remained handler-owned
+
+- model-dependent sensor rules
+- automation condition business rules
+- hardware existence and runtime availability checks
+- database and service failure handling
+- compatibility-preserving PATCH behavior for undeclared writable fields
+
+### What intentionally remained permissive
+
+- parseInt-compatible path semantics
+- chart-data `latest` string behavior
+- output and sensor PATCH fallback handling for fields the contract does not yet own
+- non-JSON response exclusions
+- legacy validator bridge
+
+### Highest-value migrations
+
+- introducing `createContractRoute(...)` as the single route-level integration point
+- centralizing runtime contract lookup in `operationRegistry.ts`
+- deriving typed validated request data from generated artifacts
+- tightening sensor create enums and similar safe schema-precision improvements
+- fixing the output chart-data shared-state mutation uncovered during stabilization
+
+### Intentionally abandoned as low value
+
+- forcing full PATCH parity where runtime behavior is still broader than the contract
+- broad normalization of condition handlers during this migration
+- redesigning permissive ID semantics into stricter transport rules
+- removing legacy validation and Zodios coupling in the same change stream
+
+### Highest-risk files for reviewer attention
+
+- `server/src/api/validation/operationRegistry.ts`
+- `server/src/api/validation/createContractRoute.ts`
+- `server/src/api/validation/validateRequest.ts`
+- `server/src/api/v2/outputs/handlers/OutputHandlers.ts`
+- `server/src/api/v2/sensors/handlers/SensorHandlers.ts`
+- `server/src/api/v2/automations/handlers/ConditionHandlers.ts`
+- `scripts/generate-api-contracts.mjs`
+
+### Areas most likely to contain subtle regressions
+
+- request precedence between validated values and raw Express values
+- response validation on large JSON payloads
+- generator post-processing via `stabilizeZodClientTypes(...)`
+- mixed validated and fallback PATCH logic in sensors and outputs
+
+### Areas with the strongest test coverage
+
+- route-level contract behavior across sensors, outputs, automations, journals, tags, subcontrollers, and system endpoints
+- direct handler precedence tests that prove validated request data wins over raw Express inputs on migrated slices
+- contract-route wrapper behavior in `server/src/api/validation/createContractRoute.spec.ts`
+- output chart-data regression coverage around non-mutation behavior
+
+### Areas intentionally relying on backward-compatibility semantics
+
+- automation condition handlers
+- output PATCH fallback fields
+- sensor update fallback fields
+- chart-data `latest` string handling
+- path parameter parseInt behavior across multiple handlers
 
 ## Operational Risks And Monitoring Recommendations
 

@@ -3,6 +3,7 @@ import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import type { ContractOperationPathParams } from "@sproot/sproot-common/dist/api/contracts/operation-types";
 import type { operations as TagContractOperations } from "@sproot/sproot-common/dist/api/generated/tags/types";
 import { getValidatedContractRequestData } from "../../../validation/validateRequest";
 
@@ -10,6 +11,8 @@ type CreateJournalEntryTagRequestBody =
   TagContractOperations["createJournalEntryTag"]["requestBody"]["content"]["application/json"];
 type UpdateJournalEntryTagRequestBody =
   TagContractOperations["updateJournalEntryTag"]["requestBody"]["content"]["application/json"];
+type UpdateJournalEntryTagPathParams = ContractOperationPathParams<"updateJournalEntryTag">;
+type DeleteJournalEntryTagPathParams = ContractOperationPathParams<"deleteJournalEntryTag">;
 
 /**
  * Possible statusCodes: 200, 503
@@ -107,7 +110,9 @@ export async function updateAsync(
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const tagId = parseInt(req.params["tagId"] ?? "", 10);
+    const pathParams = (getValidatedContractRequestData<"updateJournalEntryTag">(res).params ??
+      req.params) as UpdateJournalEntryTagPathParams;
+    const tagId = parseInt(pathParams["tagId"] ?? "", 10);
     const tag = (getValidatedContractRequestData<"updateJournalEntryTag">(res).body ??
       {}) as UpdateJournalEntryTagRequestBody;
     if (isNaN(tagId) || tagId <= 0) {
@@ -175,7 +180,9 @@ export async function deleteAsync(
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let response: SuccessResponse | ErrorResponse;
   try {
-    const tagId = parseInt(req.params["tagId"] ?? "", 10);
+    const pathParams = (getValidatedContractRequestData<"deleteJournalEntryTag">(res).params ??
+      req.params) as DeleteJournalEntryTagPathParams;
+    const tagId = parseInt(pathParams["tagId"] ?? "", 10);
     if (isNaN(tagId) || tagId <= 0) {
       response = {
         statusCode: 400,

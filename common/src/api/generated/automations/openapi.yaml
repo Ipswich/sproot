@@ -2911,6 +2911,8 @@ components:
           example: 1
         value:
           type: number
+          minimum: 0
+          maximum: 100
           example: 50
     NotificationAction:
       description: |
@@ -2948,9 +2950,11 @@ components:
           example: 1
         subject:
           type: string
+          pattern: .*\S.*
           example: Test Notification
         content:
           type: string
+          pattern: .*\S.*
           example: This is a test notification content.
     ActiveNotifications:
       description: |

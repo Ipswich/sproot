@@ -119,23 +119,32 @@ describe("Notification Action Routes", async () => {
       assertContractBadRequest(response, "/api/v2/notification-actions", invalidBody);
     });
 
-    it("should reject empty subject and content through remaining handler/domain validation", async () => {
+    it("should reject empty subject and content through contract middleware", async () => {
+      const invalidBody = {
+        automationId: 1,
+        subject: "",
+        content: "   ",
+      };
       const response = await request(server)
         .post("/api/v2/notification-actions")
-        .send({
-          automationId: 1,
-          subject: "",
-          content: "   ",
-        })
+        .send(invalidBody)
         .expect(400);
 
-      validateMiddlewareValues(response);
-      assert.equal(response.body["error"]["name"], "Bad Request");
-      assert.equal(response.body["error"]["url"], "/api/v2/notification-actions");
-      assert.deepEqual(response.body["error"]["details"], [
-        "Subject is required.",
-        "Content is required.",
-      ]);
+      assertContractBadRequest(response, "/api/v2/notification-actions", invalidBody);
+    });
+
+    it("should reject whitespace-only subject through contract middleware", async () => {
+      const invalidBody = {
+        automationId: 1,
+        subject: "   ",
+        content: "Has content",
+      };
+      const response = await request(server)
+        .post("/api/v2/notification-actions")
+        .send(invalidBody)
+        .expect(400);
+
+      assertContractBadRequest(response, "/api/v2/notification-actions", invalidBody);
     });
   });
 

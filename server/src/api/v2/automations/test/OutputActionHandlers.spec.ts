@@ -210,6 +210,38 @@ describe("OutputActionHandlers.ts tests", () => {
   });
 
   describe("getByIdAsync", () => {
+    it("should consume validated output-action params instead of raw Express params", async () => {
+      const mockResponse = createMockResponse({ params: { outputActionId: "2" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionAsync.resolves([
+        {
+          id: 2,
+          automationId: 2,
+          outputId: 2,
+          value: 50,
+        } as SDBOutputAction,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            if (key === "sprootDB") {
+              return sprootDB;
+            }
+          },
+        },
+        params: {
+          outputActionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await getByIdAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content?.data.id, 2);
+      assert.isTrue(sprootDB.getOutputActionAsync.calledOnceWithExactly(2));
+    });
+
     it("should return a 200 and the requested OutputAction", async () => {
       const mockResponse = {
         locals: {
@@ -379,7 +411,7 @@ describe("OutputActionHandlers.ts tests", () => {
         1: { id: 1, name: "raw", type: "test", isPwm: true },
         2: { id: 2, name: "validated", type: "test", isPwm: false },
       });
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -480,7 +512,7 @@ describe("OutputActionHandlers.ts tests", () => {
       });
     });
 
-    it("should return a 400 for remaining output-action domain validation", async () => {
+    it("should return a 404 for remaining output-action domain validation", async () => {
       const outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputs").value({
         1: { id: 1, name: "test", type: "test", isPwm: true },
@@ -509,22 +541,12 @@ describe("OutputActionHandlers.ts tests", () => {
         },
         body: {
           automationId: 1,
-          outputId: 1,
-          value: -1,
+          outputId: 999,
+          value: 50,
         },
         originalUrl: "/api/v2/output-action",
       } as unknown as Request;
 
-      const error = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
-      assert.equal(error.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.equal(error.error.name, "Bad Request");
-      assert.deepEqual(error.error.details, ["Value must be between 0 and 100."]);
-      assert.equal(error.error.url, mockRequest.originalUrl);
-
-      mockRequest.body.outputId = 999;
-      mockRequest.body.value = 50;
       const error2 = (await addAsync(mockRequest, mockResponse)) as ErrorResponse;
       assert.equal(error2.statusCode, 404);
       assert.deepEqual(error2.error.details, ["Output not found."]);
@@ -579,6 +601,39 @@ describe("OutputActionHandlers.ts tests", () => {
   });
 
   describe("deleteAsync", () => {
+    it("should consume validated output-action params instead of raw Express params", async () => {
+      const mockResponse = createMockResponse({ params: { outputActionId: "2" } });
+
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getOutputActionAsync.resolves([
+        { id: 2, automationId: 2, outputId: 2, value: 50 } as SDBOutputAction,
+      ]);
+      sprootDB.deleteOutputActionAsync.resolves();
+      const automationService = await createAutomationServiceAsync(sprootDB);
+
+      const mockRequest = {
+        app: {
+          get: (key: string) => {
+            switch (key) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationService":
+                return automationService;
+            }
+          },
+        },
+        params: {
+          outputActionId: "1",
+        },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.isTrue(sprootDB.getOutputActionAsync.calledOnceWithExactly(2));
+      assert.isTrue(sprootDB.deleteOutputActionAsync.calledOnceWithExactly(2));
+    });
+
     it("should return a 200 if the outputAction was deleted successfully", async () => {
       const mockResponse = {
         locals: {

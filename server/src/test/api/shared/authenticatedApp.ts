@@ -11,7 +11,6 @@ export async function disposeTestAppAsync(app: Express): Promise<void> {
   app.get(DI_KEYS.MdnsService)[Symbol.dispose]();
   await app.get(DI_KEYS.DatabaseUpdateCronJob).stop();
   await app.get(DI_KEYS.AutomationsCronJob).stop();
-  await app.get(DI_KEYS.UpdateDevicesCronJob).stop();
   await app.get(DI_KEYS.BackupCronJob).stop();
   await app.get(DI_KEYS.CameraManager)[Symbol.asyncDispose]();
   await app.get(DI_KEYS.SensorList)[Symbol.asyncDispose]();

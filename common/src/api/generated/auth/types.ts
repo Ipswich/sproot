@@ -8,336 +8,336 @@
  */
 
 export interface paths {
-  "/api/v2/authenticate/token": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/authenticate/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get an authentication token for authorization header.
+         * @description Authenticates a user and returns a JWT token to be used as a Bearer Authorization header. This is intended to be used for API access.
+         */
+        post: operations["authenticateToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Get an authentication token for authorization header.
-     * @description Authenticates a user and returns a JWT token to be used as a Bearer Authorization header. This is intended to be used for API access.
-     */
-    post: operations["authenticateToken"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/authenticate/login": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v2/authenticate/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get an authentication token set as a cookie.
+         * @description Authenticates a user and sets a JWT token as an httponly cookie, and returns a csrf token in the response body. This is intended to be used for web-based front-ends. The csrf token should be included in the x-csrf-token header for all subsequent requests.
+         */
+        post: operations["authenticateLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Get an authentication token set as a cookie.
-     * @description Authenticates a user and sets a JWT token as an httponly cookie, and returns a csrf token in the response body. This is intended to be used for web-based front-ends. The csrf token should be included in the x-csrf-token header for all subsequent requests.
-     */
-    post: operations["authenticateLogin"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
-    SuccessResponse: {
-      statusCode?: number;
-      content?: Record<string, never>;
-    } & components["schemas"]["ApiResponse"];
-    /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
-    ErrorResponse: {
-      statusCode?: number;
-      error: {
-        request?: {
-          method?: string;
-          url?: string;
-          body?: Record<string, never>;
-          query?: Record<string, never>;
+    schemas: {
+        /** @description A success response object that is returned by all successful API requests.  Contains a status code, timestamp, a unique request Id, and, optionally, some content. */
+        SuccessResponse: {
+            statusCode?: number;
+            content?: Record<string, never>;
+        } & components["schemas"]["ApiResponse"];
+        /** @description An error response object that is returned by all unsuccessful API requests.  Contains a status code, timestamp, a unique request Id, and an error object. This error object may contain the name of the error, and an array of details (if relevant). */
+        ErrorResponse: {
+            statusCode?: number;
+            error: {
+                request?: {
+                    method?: string;
+                    url?: string;
+                    body?: Record<string, never>;
+                    query?: Record<string, never>;
+                };
+                name?: string;
+                url?: string;
+                details?: string[];
+            };
+        } & components["schemas"]["ApiResponse"];
+        /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
+        ApiResponse: {
+            statusCode: number;
+            /** @example 2021-01-01T00:00:00.000Z */
+            timestamp: string;
+            /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
+            requestId: string;
         };
-        name?: string;
-        url?: string;
-        details?: string[];
-      };
-    } & components["schemas"]["ApiResponse"];
-    /** @description A generic response object that is returned by all API endpoints. Contains a status code,  timestamp, and a unique request Id. */
-    ApiResponse: {
-      statusCode: number;
-      /** @example 2021-01-01T00:00:00.000Z */
-      timestamp: string;
-      /** @example 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d */
-      requestId: string;
     };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  authenticateToken: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    authenticateToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example username */
+                    username: string;
+                    /** @example password */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: {
+                                /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c */
+                                token?: string;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/token */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Missing username",
+                             *       "Missing password"
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/token */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 501 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Implemented */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/token */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Authentication is not enabled."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/token */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @example username */
-          username: string;
-          /** @example password */
-          password: string;
+    authenticateLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @example username */
+                    username: string;
+                    /** @example password */
+                    password: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"] & {
+                        /** @example 200 */
+                        statusCode?: unknown;
+                        content?: {
+                            data?: {
+                                /** @example 9a2eada2-4e6a-4a41-ae9e-fefaa2475175 */
+                                "csrf-token"?: string;
+                            };
+                        };
+                    };
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 400 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Bad Request */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/login */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Missing username",
+                             *       "Missing password"
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 401 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Unauthorized */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/login */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Not Implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 501 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Not Implemented */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/login */
+                            url?: unknown;
+                            /**
+                             * @example [
+                             *       "Authentication is not enabled."
+                             *     ]
+                             */
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"] & {
+                        /** @example 503 */
+                        statusCode?: unknown;
+                        error?: {
+                            /** @example Service Unavailable */
+                            name?: unknown;
+                            /** @example /api/v2/authenticate/login */
+                            url?: unknown;
+                            details?: unknown;
+                        };
+                    };
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: {
-                /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c */
-                token?: string;
-              };
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/authenticate/token */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Missing username",
-               *       "Missing password"
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/authenticate/token */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Implemented */
-      501: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 501 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Implemented */
-              name?: unknown;
-              /** @example /api/v2/authenticate/token */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Authentication is not enabled."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/authenticate/token */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
-  authenticateLogin: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          /** @example username */
-          username: string;
-          /** @example password */
-          password: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          "Set-Cookie"?: string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SuccessResponse"] & {
-            /** @example 200 */
-            statusCode?: unknown;
-            content?: {
-              data?: {
-                /** @example 9a2eada2-4e6a-4a41-ae9e-fefaa2475175 */
-                "csrf-token"?: string;
-              };
-            };
-          };
-        };
-      };
-      /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 400 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Bad Request */
-              name?: unknown;
-              /** @example /api/v2/authenticate/login */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Missing username",
-               *       "Missing password"
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Unauthorized */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 401 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Unauthorized */
-              name?: unknown;
-              /** @example /api/v2/authenticate/login */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Not Implemented */
-      501: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 501 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Not Implemented */
-              name?: unknown;
-              /** @example /api/v2/authenticate/login */
-              url?: unknown;
-              /**
-               * @example [
-               *       "Authentication is not enabled."
-               *     ]
-               */
-              details?: unknown;
-            };
-          };
-        };
-      };
-      /** @description Service unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"] & {
-            /** @example 503 */
-            statusCode?: unknown;
-            error?: {
-              /** @example Service Unavailable */
-              name?: unknown;
-              /** @example /api/v2/authenticate/login */
-              url?: unknown;
-              details?: unknown;
-            };
-          };
-        };
-      };
-    };
-  };
 }

@@ -381,7 +381,7 @@ class OutputList implements AsyncDisposable {
 
   async updateDataStoresAsync(): Promise<void> {
     await this.#touchAllOutputsAsync(async (output) => {
-      output.updateDataStoresAsync();
+      await output.updateDataStoresAsync();
     });
 
     if (ChartData.shouldUpdateByInterval(new Date(), this.chartDataPointInterval)) {

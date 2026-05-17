@@ -55,6 +55,28 @@ describe("OutputCache.ts", function () {
         outputCache.get()[1]!.logTime.includes("Z") && outputCache.get()[1]!.logTime.includes("T"),
       );
     });
+
+    it("should skip chart-state rows with null values", async function () {
+      sinon.stub(mockSprootDB, "getOutputChartStatesAsync").resolves([
+        {
+          controlMode: ControlMode.automatic,
+          value: null,
+          logTime: "2024-03-03T03:29:01Z",
+        } as unknown as SDBOutputState,
+        {
+          controlMode: ControlMode.manual,
+          value: 200,
+          logTime: "2024-03-03T03:30:01Z",
+        } as SDBOutputState,
+      ]);
+      const outputCache = new OutputCache(2, mockSprootDB, logger);
+
+      await outputCache.loadFromDatabaseAsync(1, 9000);
+
+      assert.equal(outputCache.get().length, 1);
+      assert.equal(outputCache.get()[0]!.controlMode, ControlMode.manual);
+      assert.equal(outputCache.get()[0]!.value, 200);
+    });
   });
 
   describe("addData", function () {

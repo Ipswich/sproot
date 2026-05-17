@@ -11,6 +11,10 @@ type ListOutputActionsQuery =
   AutomationContractOperations["listOutputActions"]["parameters"]["query"];
 type CreateOutputActionRequestBody =
   AutomationContractOperations["createOutputAction"]["requestBody"]["content"]["application/json"];
+type GetOutputActionPathParams =
+  AutomationContractOperations["getOutputActionById"]["parameters"]["path"];
+type DeleteOutputActionPathParams =
+  AutomationContractOperations["deleteOutputAction"]["parameters"]["path"];
 
 /**
  * Possible statusCodes: 200, 401, 503
@@ -76,11 +80,11 @@ export async function getByIdAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
+  const pathParams = (getValidatedContractRequestData<"getOutputActionById">(response).params ??
+    request.params) as GetOutputActionPathParams;
+  const outputActionIdValue = pathParams["outputActionId"];
 
-  if (
-    request.params["outputActionId"] == null ||
-    isNaN(parseInt(request.params["outputActionId"]))
-  ) {
+  if (outputActionIdValue == null || isNaN(parseInt(String(outputActionIdValue)))) {
     automationResponse = {
       statusCode: 400,
       error: {
@@ -94,7 +98,7 @@ export async function getByIdAsync(
   }
 
   try {
-    const outputActionId = parseInt(request.params["outputActionId"] ?? "");
+    const outputActionId = parseInt(String(outputActionIdValue));
     const automation = (await sprootDB.getOutputActionAsync(outputActionId))[0];
     if (automation == null) {
       automationResponse = {
@@ -102,7 +106,7 @@ export async function getByIdAsync(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`OutputAction with Id ${request.params["outputActionId"]} not found.`],
+          details: [`OutputAction with Id ${String(outputActionIdValue)} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -152,7 +156,6 @@ export async function addAsync(
   const outputId = requestBody["outputId"];
   let value = requestBody["value"];
 
-  const invalidFields = [];
   if (outputList.outputs[outputId] == null) {
     automationResponse = {
       statusCode: 404,
@@ -165,24 +168,9 @@ export async function addAsync(
     };
     return automationResponse;
   }
-  if (value < 0 || value > 100) {
-    invalidFields.push("Value must be between 0 and 100.");
-  }
   if (!outputList.outputs[outputId]?.isPwm && value != 0 && value != 100) {
     // Value should be set to 100 if it's greater than 0 since non-PWM outputs only support on/off states
     value = value > 0 ? 100 : 0;
-  }
-  if (invalidFields.length > 0) {
-    automationResponse = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: invalidFields,
-      },
-      ...response.locals["defaultProperties"],
-    };
-    return automationResponse;
   }
 
   try {
@@ -234,11 +222,11 @@ export async function deleteAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let automationResponse: SuccessResponse | ErrorResponse;
+  const pathParams = (getValidatedContractRequestData<"deleteOutputAction">(response).params ??
+    request.params) as DeleteOutputActionPathParams;
+  const outputActionIdValue = pathParams["outputActionId"];
 
-  if (
-    request.params["outputActionId"] == null ||
-    isNaN(parseInt(request.params["outputActionId"]))
-  ) {
+  if (outputActionIdValue == null || isNaN(parseInt(String(outputActionIdValue)))) {
     automationResponse = {
       statusCode: 400,
       error: {
@@ -252,7 +240,7 @@ export async function deleteAsync(
   }
 
   try {
-    const outputActionId = parseInt(request.params["outputActionId"] ?? "");
+    const outputActionId = parseInt(String(outputActionIdValue));
     const action = (await sprootDB.getOutputActionAsync(outputActionId))[0];
     if (action == null) {
       automationResponse = {
@@ -260,7 +248,7 @@ export async function deleteAsync(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [`OutputAction with Id ${request.params["outputActionId"]} not found.`],
+          details: [`OutputAction with Id ${String(outputActionIdValue)} not found.`],
         },
         ...response.locals["defaultProperties"],
       };

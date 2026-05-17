@@ -74,6 +74,7 @@ describe("OutputChartDataHandlers.ts tests", () => {
         data: chartData.data.slice(-1),
         series: chartData.series,
       });
+      assert.lengthOf(chartData.data, 2);
     });
 
     it("should consume validated latest query instead of raw req.query", () => {
@@ -88,6 +89,24 @@ describe("OutputChartDataHandlers.ts tests", () => {
       const response = outputChartDataHandler(request, mockResponse) as SuccessResponse;
       assert.equal(response.statusCode, 200);
       assert.deepEqual(response.content?.data, chartData);
+    });
+
+    it("should not mutate cached chart data when latest is requested", () => {
+      const request = {
+        app: {
+          get: (_dependency: string) => outputList,
+        },
+        query: { latest: "true" },
+      } as unknown as Request;
+      const mockResponse = createMockResponse({ latest: true });
+
+      outputChartDataHandler(request, mockResponse);
+
+      assert.lengthOf(chartData.data, 2);
+      assert.deepEqual(chartData.series, [
+        { name: "output1", color: "lime" },
+        { name: "output2", color: "green" },
+      ]);
     });
   });
 });

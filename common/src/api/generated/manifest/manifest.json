@@ -6,10 +6,15 @@
       "name": "auth",
       "exportName": "auth",
       "apiClientName": "authApi",
-      "prefixes": ["/api/v2/authenticate/"],
+      "prefixes": [
+        "/api/v2/authenticate/"
+      ],
       "pathCount": 2,
       "operationCount": 2,
-      "operationIds": ["authenticateToken", "authenticateLogin"],
+      "operationIds": [
+        "authenticateToken",
+        "authenticateLogin"
+      ],
       "files": {
         "openapi": "auth/openapi.yaml",
         "types": "auth/types.ts",
@@ -21,10 +26,14 @@
       "name": "ping",
       "exportName": "ping",
       "apiClientName": "pingApi",
-      "prefixes": ["/api/v2/ping"],
+      "prefixes": [
+        "/api/v2/ping"
+      ],
       "pathCount": 1,
       "operationCount": 1,
-      "operationIds": ["ping"],
+      "operationIds": [
+        "ping"
+      ],
       "files": {
         "openapi": "ping/openapi.yaml",
         "types": "ping/types.ts",
@@ -36,7 +45,9 @@
       "name": "system",
       "exportName": "system",
       "apiClientName": "systemApi",
-      "prefixes": ["/api/v2/system/"],
+      "prefixes": [
+        "/api/v2/system/"
+      ],
       "pathCount": 7,
       "operationCount": 7,
       "operationIds": [
@@ -59,7 +70,10 @@
       "name": "subcontrollers",
       "exportName": "subcontrollers",
       "apiClientName": "subcontrollersApi",
-      "prefixes": ["/api/v2/subcontrollers", "/api/v2/subcontrollers/"],
+      "prefixes": [
+        "/api/v2/subcontrollers",
+        "/api/v2/subcontrollers/"
+      ],
       "pathCount": 9,
       "operationCount": 11,
       "operationIds": [
@@ -86,7 +100,10 @@
       "name": "outputs",
       "exportName": "outputs",
       "apiClientName": "outputsApi",
-      "prefixes": ["/api/v2/outputs", "/api/v2/outputs/"],
+      "prefixes": [
+        "/api/v2/outputs",
+        "/api/v2/outputs/"
+      ],
       "pathCount": 7,
       "operationCount": 10,
       "operationIds": [
@@ -155,7 +172,10 @@
       "name": "sensors",
       "exportName": "sensors",
       "apiClientName": "sensorsApi",
-      "prefixes": ["/api/v2/sensors", "/api/v2/sensors/"],
+      "prefixes": [
+        "/api/v2/sensors",
+        "/api/v2/sensors/"
+      ],
       "pathCount": 5,
       "operationCount": 8,
       "operationIds": [
@@ -179,7 +199,10 @@
       "name": "device-zones",
       "exportName": "deviceZones",
       "apiClientName": "deviceZonesApi",
-      "prefixes": ["/api/v2/device-zones", "/api/v2/device-zones/"],
+      "prefixes": [
+        "/api/v2/device-zones",
+        "/api/v2/device-zones/"
+      ],
       "pathCount": 2,
       "operationCount": 4,
       "operationIds": [
@@ -199,7 +222,9 @@
       "name": "camera",
       "exportName": "camera",
       "apiClientName": "cameraApi",
-      "prefixes": ["/api/v2/camera/"],
+      "prefixes": [
+        "/api/v2/camera/"
+      ],
       "pathCount": 8,
       "operationCount": 9,
       "operationIds": [
@@ -224,7 +249,9 @@
       "name": "tags",
       "exportName": "tags",
       "apiClientName": "tagsApi",
-      "prefixes": ["/api/v2/tags/"],
+      "prefixes": [
+        "/api/v2/tags/"
+      ],
       "pathCount": 4,
       "operationCount": 8,
       "operationIds": [
@@ -248,7 +275,12 @@
       "name": "journals",
       "exportName": "journals",
       "apiClientName": "journalsApi",
-      "prefixes": ["/api/v2/journals", "/api/v2/journals/", "/api/v2/entries", "/api/v2/entries/"],
+      "prefixes": [
+        "/api/v2/journals",
+        "/api/v2/journals/",
+        "/api/v2/entries",
+        "/api/v2/entries/"
+      ],
       "pathCount": 8,
       "operationCount": 14,
       "operationIds": [

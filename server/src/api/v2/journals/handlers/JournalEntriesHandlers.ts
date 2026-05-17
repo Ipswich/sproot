@@ -5,6 +5,7 @@ import { JournalService } from "../../../../journals/JournalService";
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import type { ContractOperationQueryParams } from "@sproot/sproot-common/dist/api/contracts/operation-types";
+import type { ContractOperationPathParams } from "@sproot/sproot-common/dist/api/contracts/operation-types";
 import type { operations as JournalContractOperations } from "@sproot/sproot-common/dist/api/generated/journals/types";
 import { toDbDate, isoToDb } from "../../../../utils/dateUtils";
 import { getValidatedContractRequestData } from "../../../validation/validateRequest";
@@ -17,6 +18,13 @@ type UpdateJournalEntryRequestBody =
   JournalContractOperations["updateJournalEntry"]["requestBody"]["content"]["application/json"];
 type AttachTagToJournalEntryRequestBody =
   JournalContractOperations["attachTagToJournalEntry"]["requestBody"]["content"]["application/json"];
+type ListJournalEntriesPathParams = ContractOperationPathParams<"listJournalEntries">;
+type GetJournalEntryByIdPathParams = ContractOperationPathParams<"getJournalEntryById">;
+type CreateJournalEntryPathParams = ContractOperationPathParams<"createJournalEntry">;
+type UpdateJournalEntryPathParams = ContractOperationPathParams<"updateJournalEntry">;
+type DeleteJournalEntryPathParams = ContractOperationPathParams<"deleteJournalEntry">;
+type AttachTagToJournalEntryPathParams = ContractOperationPathParams<"attachTagToJournalEntry">;
+type DetachTagFromJournalEntryPathParams = ContractOperationPathParams<"detachTagFromJournalEntry">;
 
 /**
  * Possible statusCodes 200, 400, 404, 503
@@ -28,11 +36,13 @@ export async function getByJournalIdAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let journalId: number | undefined = undefined;
+  const pathParams = (getValidatedContractRequestData<"listJournalEntries">(res).params ??
+    req.params) as ListJournalEntriesPathParams;
   const query = (getValidatedContractRequestData<"listJournalEntries">(res).query ??
     {}) as ListJournalEntriesQuery;
   const withContent = query["withContent"] ?? true;
 
-  journalId = parseInt(req.params["journalId"] ?? "", 10);
+  journalId = parseInt(pathParams["journalId"] ?? "", 10);
   const badRequests: string[] = [];
   if (isNaN(journalId) || journalId <= 0) {
     badRequests.push("Valid Journal ID is required.");
@@ -98,13 +108,15 @@ export async function getByEntryIdAsync(
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
   let entryId: number | undefined = undefined;
+  const pathParams = (getValidatedContractRequestData<"getJournalEntryById">(res).params ??
+    req.params) as GetJournalEntryByIdPathParams;
   const query = (getValidatedContractRequestData<"getJournalEntryById">(res).query ??
     {}) as GetJournalEntryByIdQuery;
   const withContent = query["withContent"] ?? true;
   const badRequests: string[] = [];
 
-  if (req.params["entryId"]) {
-    entryId = parseInt(req.params["entryId"] ?? "", 10);
+  if (pathParams["entryId"]) {
+    entryId = parseInt(pathParams["entryId"] ?? "", 10);
     if (isNaN(entryId) || entryId <= 0) {
       badRequests.push("Valid Journal Entry ID is required.");
     }
@@ -164,7 +176,9 @@ export async function addAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
-  const journalId = parseInt(req.params["journalId"] ?? "", 10);
+  const pathParams = (getValidatedContractRequestData<"createJournalEntry">(res).params ??
+    req.params) as CreateJournalEntryPathParams;
+  const journalId = parseInt(pathParams["journalId"] ?? "", 10);
   const requestBody = getValidatedContractRequestData<"createJournalEntry">(res)
     .body as unknown as CreateJournalEntryRequestBody;
   const { content, title } = requestBody;
@@ -255,10 +269,12 @@ export async function updateAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const pathParams = (getValidatedContractRequestData<"updateJournalEntry">(res).params ??
+    req.params) as UpdateJournalEntryPathParams;
   const requestBody = (getValidatedContractRequestData<"updateJournalEntry">(res).body ??
     {}) as UpdateJournalEntryRequestBody;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
+  const entryId = parseInt(pathParams["entryId"] ?? "", 10);
 
   const badRequests: string[] = [];
   if (isNaN(entryId)) {
@@ -351,8 +367,10 @@ export async function deleteAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const pathParams = (getValidatedContractRequestData<"deleteJournalEntry">(res).params ??
+    req.params) as DeleteJournalEntryPathParams;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
+  const entryId = parseInt(pathParams["entryId"] ?? "", 10);
 
   if (isNaN(entryId)) {
     response = {
@@ -410,8 +428,10 @@ export async function addTagAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const pathParams = (getValidatedContractRequestData<"attachTagToJournalEntry">(res).params ??
+    req.params) as AttachTagToJournalEntryPathParams;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
+  const entryId = parseInt(pathParams["entryId"] ?? "", 10);
   const requestBody = getValidatedContractRequestData<"attachTagToJournalEntry">(res)
     .body as unknown as AttachTagToJournalEntryRequestBody;
   const tagId = parseInt(requestBody.tagId ?? "", 10);
@@ -510,9 +530,11 @@ export async function removeTagAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   let response: SuccessResponse | ErrorResponse;
   const journalService = req.app.get(DI_KEYS.JournalService) as JournalService;
+  const pathParams = (getValidatedContractRequestData<"detachTagFromJournalEntry">(res).params ??
+    req.params) as DetachTagFromJournalEntryPathParams;
 
-  const entryId = parseInt(req.params["entryId"] ?? "", 10);
-  const tagId = parseInt(req.params["tagId"] ?? "", 10);
+  const entryId = parseInt(pathParams["entryId"] ?? "", 10);
+  const tagId = parseInt(pathParams["tagId"] ?? "", 10);
 
   const badRequests: string[] = [];
   if (isNaN(entryId)) {

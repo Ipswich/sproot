@@ -11,6 +11,10 @@ type ListNotificationActionsQuery =
   AutomationContractOperations["listNotificationActions"]["parameters"]["query"];
 type CreateNotificationActionRequestBody =
   AutomationContractOperations["createNotificationAction"]["requestBody"]["content"]["application/json"];
+type GetNotificationActionPathParams =
+  AutomationContractOperations["getNotificationActionById"]["parameters"]["path"];
+type DeleteNotificationActionPathParams =
+  AutomationContractOperations["deleteNotificationAction"]["parameters"]["path"];
 
 /**
  * Possible statusCodes: 200, 400, 401, 404, 503
@@ -76,11 +80,11 @@ export async function getByIdAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
+  const pathParams = (getValidatedContractRequestData<"getNotificationActionById">(response)
+    .params ?? request.params) as GetNotificationActionPathParams;
+  const notificationActionIdValue = pathParams["notificationActionId"];
 
-  if (
-    request.params["notificationActionId"] == null ||
-    isNaN(parseInt(request.params["notificationActionId"]))
-  ) {
+  if (notificationActionIdValue == null || isNaN(parseInt(String(notificationActionIdValue)))) {
     automationResponse = {
       statusCode: 400,
       error: {
@@ -94,7 +98,7 @@ export async function getByIdAsync(
   }
 
   try {
-    const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
+    const notificationActionId = parseInt(String(notificationActionIdValue));
     const notification = (await sprootDB.getNotificationActionByIdAsync(notificationActionId))[0];
     if (notification == null) {
       automationResponse = {
@@ -102,9 +106,7 @@ export async function getByIdAsync(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [
-            `Notification action with Id ${request.params["notificationActionId"]} not found.`,
-          ],
+          details: [`Notification action with Id ${String(notificationActionIdValue)} not found.`],
         },
         ...response.locals["defaultProperties"],
       };
@@ -152,27 +154,6 @@ export async function addAsync(
   const automationId = requestBody["automationId"];
   const subject = requestBody["subject"];
   const content = requestBody["content"];
-
-  const invalidFields = [];
-  if (subject.trim() === "") {
-    invalidFields.push("Subject is required.");
-  }
-  if (content.trim() === "") {
-    invalidFields.push("Content is required.");
-  }
-
-  if (invalidFields.length > 0) {
-    automationResponse = {
-      statusCode: 400,
-      error: {
-        name: "Bad Request",
-        url: request.originalUrl,
-        details: invalidFields,
-      },
-      ...response.locals["defaultProperties"],
-    };
-    return automationResponse;
-  }
 
   try {
     if ((await sprootDB.getAutomationAsync(automationId)).length == 0) {
@@ -232,11 +213,11 @@ export async function deleteAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   const automationService = request.app.get(DI_KEYS.AutomationService) as AutomationService;
   let automationResponse: SuccessResponse | ErrorResponse;
+  const pathParams = (getValidatedContractRequestData<"deleteNotificationAction">(response)
+    .params ?? request.params) as DeleteNotificationActionPathParams;
+  const notificationActionIdValue = pathParams["notificationActionId"];
 
-  if (
-    request.params["notificationActionId"] == null ||
-    isNaN(parseInt(request.params["notificationActionId"]))
-  ) {
+  if (notificationActionIdValue == null || isNaN(parseInt(String(notificationActionIdValue)))) {
     automationResponse = {
       statusCode: 400,
       error: {
@@ -250,7 +231,7 @@ export async function deleteAsync(
   }
 
   try {
-    const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
+    const notificationActionId = parseInt(String(notificationActionIdValue));
     const notificationAction = (
       await sprootDB.getNotificationActionByIdAsync(notificationActionId)
     )[0];
@@ -260,9 +241,7 @@ export async function deleteAsync(
         error: {
           name: "Not Found",
           url: request.originalUrl,
-          details: [
-            `Notification action with Id ${request.params["notificationActionId"]} not found.`,
-          ],
+          details: [`Notification action with Id ${String(notificationActionIdValue)} not found.`],
         },
         ...response.locals["defaultProperties"],
       };

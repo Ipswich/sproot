@@ -34,6 +34,10 @@ export class OutputCache {
       chartStates ??
       (await this.sprootDB.getOutputStatesAsync({ id: outputId }, new Date(), minutes, true));
     for (const sdbState of sdbStates) {
+      if (sdbState.value == null) {
+        continue;
+      }
+
       const newState = {
         controlMode: sdbState.controlMode,
         value: sdbState.value,

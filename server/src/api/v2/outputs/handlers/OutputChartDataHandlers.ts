@@ -16,7 +16,11 @@ export function outputChartDataHandler(
   const outputList = request.app.get(DI_KEYS.OutputList) as OutputList;
   const query = (getValidatedContractRequestData<"getOutputChartData">(response).query ??
     {}) as Partial<GetOutputChartDataQuery>;
-  const chartData = outputList.chartData.get();
+  const rawChartData = outputList.chartData.get();
+  const chartData = {
+    data: rawChartData.data.slice(),
+    series: rawChartData.series.slice(),
+  };
   if (String(query.latest).toLowerCase() == "true") {
     chartData.data = chartData.data.slice(-1);
   }

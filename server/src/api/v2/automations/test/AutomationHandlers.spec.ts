@@ -134,6 +134,36 @@ describe("AutomationHandlers", () => {
       sinon.restore();
     });
 
+    it("should consume validated automation params instead of raw Express params", async () => {
+      const mockResponse = createMockResponse({ params: { automationId: "2" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationAsync.resolves([
+        { id: 2, name: "automation2", operator: "and" } as SDBAutomation,
+      ]);
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              default:
+                return null;
+            }
+          },
+        },
+        params: {
+          automationId: "not-a-number",
+        },
+      } as unknown as Request;
+
+      const success = (await getByIdAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content?.data.id, 2);
+      assert.isTrue(sprootDB.getAutomationAsync.calledOnceWithExactly(2));
+    });
+
     it("should return a 200 and an automation", async () => {
       const mockResponse = {
         locals: {
@@ -283,7 +313,7 @@ describe("AutomationHandlers", () => {
       const sprootDB = sinon.createStubInstance(MockSprootDB);
       sprootDB.getAutomationsAsync.resolves([]);
       sprootDB.addAutomationAsync.resolves(7);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -407,7 +437,7 @@ describe("AutomationHandlers", () => {
         return [];
       });
       sprootDB.getAutomationsAsync.resolves([]);
-      const automationService = await AutomationService.createInstanceAsync(sprootDB, mockLogger);
+      const automationService = await createAutomationServiceAsync(sprootDB);
 
       const mockRequest = {
         app: {
@@ -596,6 +626,42 @@ describe("AutomationHandlers", () => {
   });
 
   describe("deleteAsync", () => {
+    it("should consume validated automation params instead of raw Express params", async () => {
+      const mockResponse = createMockResponse({ params: { automationId: "2" } });
+      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      sprootDB.getAutomationsAsync.resolves([]);
+      sprootDB.getAutomationAsync.resolves([
+        { id: 2, name: "automation2", operator: "and" } as SDBAutomation,
+      ]);
+      const automationService = await createAutomationServiceAsync(sprootDB);
+      const deleteAutomationSpy = sinon.spy(automationService, "deleteAutomationAsync");
+
+      const mockRequest = {
+        app: {
+          get: (_dependency: string) => {
+            switch (_dependency) {
+              case "sprootDB":
+                return sprootDB;
+              case "automationService":
+                return automationService;
+              default:
+                return null;
+            }
+          },
+        },
+        params: {
+          automationId: "not-a-number",
+        },
+      } as unknown as Request;
+
+      const success = (await deleteAsync(mockRequest, mockResponse)) as SuccessResponse;
+
+      assert.equal(success.statusCode, 200);
+      assert.equal(success.content?.data, "Automation deleted successfully.");
+      assert.isTrue(sprootDB.getAutomationAsync.calledOnceWithExactly(2));
+      assert.isTrue(deleteAutomationSpy.calledOnceWithExactly(2));
+    });
+
     it("should return a 200 and a success message", async () => {
       const mockResponse = {
         locals: {
