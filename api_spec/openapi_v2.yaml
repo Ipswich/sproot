@@ -1827,6 +1827,106 @@ paths:
                               example:
                                 - "Failed to delete output from database."
                                 - "Database connection failed."
+
+  /api/v2/outputs/data:
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Outputs"
+      summary: Query historical output data.
+      description: >
+        Returns historical output data with optional downsampling and aggregation. Uses TimescaleDB
+        continuous aggregates when a matching downsample interval is requested, otherwise queries
+        the raw hypertable. Supports cursor-based pagination for large datasets.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OutputDataQueryRequest"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            description: "Keyed by outputId"
+                            additionalProperties:
+                              $ref: "#/components/schemas/OutputReadingGroup"
+                          nextCursor:
+                            type: string
+                            description: "base64-encoded ISO 8601 timestamp for next page"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Validation Error"
+                          url:
+                            example: "/api/v2/outputs/data"
+                          details:
+                            items:
+                              example:
+                                - "timeRange.start is required and must be a string"
+                                - "downsample must be one of: 5m, 1h, 1d"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/outputs/data"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/outputs/data"
+                          details:
+                            items:
+                              example: "Failed to query output data: database error"
+
   /api/v2/outputs/chart-data:
     get:
       security:
@@ -4771,6 +4871,107 @@ paths:
                               example:
                                 - "Failed to delete sensor from database."
                                 - "Database connection failed."
+
+  /api/v2/sensors/data:
+    post:
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      tags:
+        - "Sensors"
+      summary: Query historical sensor data.
+      description: >
+        Returns historical sensor data with optional downsampling and aggregation. Uses TimescaleDB
+        continuous aggregates when a matching downsample interval is requested, otherwise queries
+        the raw hypertable. Supports cursor-based pagination for large datasets.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensorDataQueryRequest"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      statusCode:
+                        example: 200
+                      content:
+                        properties:
+                          data:
+                            type: object
+                            description: "Keyed by sensorId, then by readingType"
+                            additionalProperties:
+                              type: object
+                              additionalProperties:
+                                $ref: "#/components/schemas/SensorReadingGroup"
+                          nextCursor:
+                             type: string
+                             description: "base64-encoded ISO 8601 timestamp for next page"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
+                        properties:
+                          name:
+                            example: "Validation Error"
+                          url:
+                            example: "/api/v2/sensors/data"
+                          details:
+                            items:
+                              example:
+                                - "timeRange.start is required and must be a string"
+                                - "downsample must be one of: 5m, 1h, 1d"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 401
+                      error:
+                        properties:
+                          name:
+                            example: "Unauthorized"
+                          url:
+                            example: "/api/v2/sensors/data"
+                          details:
+                            items:
+                              example: "Invalid or Missing JWT."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/sensors/data"
+                          details:
+                            items:
+                              example: "Failed to query sensor data: database error"
 
   /api/v2/sensors/chart-data:
     get:
@@ -8115,7 +8316,7 @@ components:
 
     SuccessResponse:
       description: >
-        A success response object that is returned by all successful API requests. 
+        A success response object that is returned by all successful API requests.
         Contains a status code, timestamp, a unique request Id, and, optionally, some content.
       allOf:
         - type: object
@@ -8126,6 +8327,11 @@ components:
               type: object
               required:
                 - "data"
+              properties:
+                data: {}
+                nextCursor:
+                  type: string
+                  description: "base64-encoded ISO 8601 timestamp for next page"
         - $ref: "#/components/schemas/ApiResponse"
 
     ErrorResponse:
@@ -8161,6 +8367,187 @@ components:
                 details:
                   type: array
         - $ref: "#/components/schemas/ApiResponse"
+
+    DataQueryTimeRange:
+      type: object
+      required:
+        - "start"
+        - "end"
+      properties:
+        start:
+          type: string
+          format: date-time
+          description: "ISO 8601 start timestamp"
+          example: "2024-01-01T00:00:00.000Z"
+        end:
+          type: string
+          format: date-time
+          description: "ISO 8601 end timestamp"
+          example: "2024-01-02T00:00:00.000Z"
+
+    DataQueryRequestBase:
+      type: object
+      required:
+        - "timeRange"
+      properties:
+        timeRange:
+          $ref: "#/components/schemas/DataQueryTimeRange"
+        downsample:
+          type: string
+          enum:
+            - "5m"
+            - "1h"
+            - "1d"
+          description: "Downsample interval matching continuous aggregate resolution"
+        cursor:
+          type: string
+          description: "Base64-encoded ISO 8601 timestamp for pagination"
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 500
+          description: "Maximum number of data points per sensor/output"
+
+    SensorDataQueryRequest:
+      allOf:
+        - $ref: "#/components/schemas/DataQueryRequestBase"
+        - properties:
+            ids:
+              type: array
+              items:
+                type: integer
+              description: "Filter by sensor IDs"
+            readingTypes:
+              type: array
+              items:
+                type: string
+              description: "Filter by reading type (metric name)"
+            aggregates:
+              type: array
+              items:
+                type: string
+                enum:
+                  - "min"
+                  - "max"
+                  - "avg"
+                  - "count"
+                  - "sum"
+                  - "stddev"
+                  - "percentile"
+                  - "first"
+                  - "last"
+              description: "Aggregate functions to compute"
+            percentile:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+              description: "Percentile value for percentile aggregate (0-1)"
+
+    OutputDataQueryRequest:
+      allOf:
+        - $ref: "#/components/schemas/DataQueryRequestBase"
+        - properties:
+            ids:
+              type: array
+              items:
+                type: integer
+              description: "Filter by output IDs"
+            aggregates:
+              type: array
+              items:
+                type: string
+                enum:
+                  - "min"
+                  - "max"
+                  - "avg"
+                  - "count"
+                  - "sum"
+                  - "stddev"
+                  - "percentile"
+                  - "first"
+                  - "last"
+              description: "Aggregate functions to compute"
+
+    DataQueryValue:
+      type: object
+      properties:
+        time:
+          type: string
+          format: date-time
+          description: "ISO 8601 bucket timestamp"
+        min:
+          type: number
+          nullable: true
+        max:
+          type: number
+          nullable: true
+        avg:
+          type: number
+          nullable: true
+        count:
+          type: integer
+          nullable: true
+        sum:
+          type: number
+          nullable: true
+        stddev:
+          type: number
+          nullable: true
+        percentile:
+          type: number
+          nullable: true
+        first:
+          type: number
+          nullable: true
+        last:
+          type: number
+          nullable: true
+
+    SensorReadingGroup:
+      type: object
+      properties:
+        units:
+          type: string
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataQueryValue"
+
+    SensorDataQueryResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          description: "Keyed by sensorId, then by readingType"
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: "#/components/schemas/SensorReadingGroup"
+        nextCursor:
+          type: string
+          description: "base64-encoded ISO 8601 timestamp for next page"
+
+    OutputReadingGroup:
+      type: object
+      properties:
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataQueryValue"
+
+    OutputDataQueryResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          description: "Keyed by outputId"
+          additionalProperties:
+            $ref: "#/components/schemas/OutputReadingGroup"
+        nextCursor:
+          type: string
+          description: "base64-encoded ISO 8601 timestamp for next page"
 
     SDBOutput:
       description: >

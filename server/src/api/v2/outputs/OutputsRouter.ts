@@ -3,6 +3,7 @@ import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 import { setControlModeAsync, setManualStateAsync } from "./handlers/OutputStateHandlers";
 import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
+import { outputDataQueryHandlerAsync } from "./handlers/OutputDataQueryHandler";
 import { getAvailableDevices } from "./handlers/AvailableDevicesHandlers";
 
 const router = express.Router();
@@ -37,6 +38,13 @@ router.get("/:outputId", (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   const response = await addAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
+router.post("/data", async (req: Request, res: Response) => {
+  const response = await outputDataQueryHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;

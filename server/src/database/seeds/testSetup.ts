@@ -23,12 +23,9 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 2, name: "Zone 2" },
   ]);
 
-  await knex("outputs").where("id", 1).update({ deviceZoneId: 1 });
-  await knex("sensors").where("id", 1).update({ deviceZoneId: 1 });
-
   await knex("outputs").insert([
     {
-      id: "1",
+      id: 1,
       model: Models.PCA9685,
       address: "0x40",
       name: "Relay #1",
@@ -40,12 +37,13 @@ export async function seed(knex: Knex): Promise<void> {
       automationTimeout: 1,
     },
     {
-      id: "5",
+      id: 5,
       model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #1",
       color: "#228be6",
       pin: "4",
+      deviceZoneId: 2,
       isPwm: true,
       isInvertedPwm: false,
       automationTimeout: 1,
@@ -69,6 +67,7 @@ export async function seed(knex: Knex): Promise<void> {
       model: "DS18B20",
       address: "28-583bd446df61",
       color: "#40c057",
+      deviceZoneId: 2,
       lowCalibrationPoint: null,
       highCalibrationPoint: null,
     },
@@ -79,6 +78,7 @@ export async function seed(knex: Knex): Promise<void> {
       address: "0x48",
       color: "#228be6",
       pin: "0",
+      deviceZoneId: 1,
       lowCalibrationPoint: 0,
       highCalibrationPoint: 100,
     },
@@ -89,6 +89,7 @@ export async function seed(knex: Knex): Promise<void> {
       address: "0x48",
       color: "#ff8787",
       pin: "1",
+      deviceZoneId: 2,
       lowCalibrationPoint: null,
       highCalibrationPoint: null,
     },
@@ -226,6 +227,80 @@ export async function seed(knex: Knex): Promise<void> {
       logTime: nowSql,
     },
   ]);
+
+  // Data-query test rows: sensor and output data in 2024-01-01 window for existing tests
+  const dataQueryStart = "2024-01-01 00:05:00";
+  const dataQueryEnd = "2024-01-01 23:55:00";
+
+  await knex("sensor_data").insert([
+    { sensor_id: 1, metric: "temperature", data: 22.5, units: "°C", logTime: dataQueryStart },
+    { sensor_id: 1, metric: "humidity", data: 50.0, units: "%", logTime: dataQueryStart },
+    { sensor_id: 2, metric: "temperature", data: 21.0, units: "°C", logTime: dataQueryStart },
+    { sensor_id: 1, metric: "temperature", data: 23.0, units: "°C", logTime: dataQueryEnd },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 23.5,
+      units: "°C",
+      logTime: "2024-01-01 12:00:00",
+    },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 24.0,
+      units: "°C",
+      logTime: "2024-01-01 18:00:00",
+    },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 24.5,
+      units: "°C",
+      logTime: "2024-01-01 20:00:00",
+    },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 25.0,
+      units: "°C",
+      logTime: "2024-01-01 22:00:00",
+    },
+  ]);
+
+  await knex("output_data").insert([
+    { output_id: 1, value: 100, controlMode: "manual", logTime: dataQueryStart },
+    { output_id: 1, value: 75, controlMode: "manual", logTime: dataQueryEnd },
+    { output_id: 1, value: 50, controlMode: "manual", logTime: "2024-01-01 12:00:00" },
+    { output_id: 1, value: 25, controlMode: "manual", logTime: "2024-01-01 18:00:00" },
+    { output_id: 5, value: 50, controlMode: "manual", logTime: dataQueryStart },
+  ]);
+
+  // Data-query test rows: sensor data at 10/8/5 min ago for aggregate path tests
+  const tenMinAgo = toDbDate(new Date(Date.now() - 10 * 60 * 1000));
+  const eightMinAgo = toDbDate(new Date(Date.now() - 8 * 60 * 1000));
+  const fiveMinAgo = toDbDate(new Date(Date.now() - 5 * 60 * 1000));
+
+  await knex("sensor_data").insert([
+    { sensor_id: 1, metric: "temperature", data: 23.5, units: "°C", logTime: tenMinAgo },
+    { sensor_id: 1, metric: "temperature", data: 23.8, units: "°C", logTime: eightMinAgo },
+    { sensor_id: 1, metric: "temperature", data: 24.0, units: "°C", logTime: fiveMinAgo },
+    { sensor_id: 1, metric: "humidity", data: 55.0, units: "%", logTime: tenMinAgo },
+    { sensor_id: 2, metric: "temperature", data: 21.0, units: "°C", logTime: tenMinAgo },
+  ]);
+
+  await knex("output_data").insert([
+    { output_id: 1, value: 100, controlMode: "manual", logTime: tenMinAgo },
+    { output_id: 1, value: 75, controlMode: "manual", logTime: eightMinAgo },
+    { output_id: 5, value: 50, controlMode: "manual", logTime: tenMinAgo },
+  ]);
+
+  // Refresh continuous aggregates so downsample: "1h"/"1d" sees seeded data
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_5m', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_1h', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_1d', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_5m', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_1h', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_1d', NULL, NULL);`);
 
   console.log("Seeding complete.");
 }

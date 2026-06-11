@@ -7,7 +7,7 @@ type ApiResponseBase = {
 type SuccessResponse = ApiResponseBase & {
   content?: {
     data: any;
-    moreDataAvailable?: boolean;
+    nextCursor?: string;
   };
 };
 

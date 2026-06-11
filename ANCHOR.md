@@ -1,0 +1,25 @@
+
+## Critical Context
+- **sensor_data hypertable**: id, sensor_id, metric, data (numeric(12,7)), units, logTime (timestamptz); index (sensor_id, metric, logTime DESC)
+- **output_data hypertable**: id, output_id, value (integer), controlMode, logTime (timestamptz); index (output_id, logTime DESC)
+- **Existing aggregates**: sensor_data_5m, output_data_5m (start_offset 8d, end_offset 10m, refresh 1m)
+- **New aggregates**: sensor_data_1h, sensor_data_1d, output_data_1h, output_data_1d (created via migration)
+- **Raw query aggregates**: MIN, MAX, AVG, COUNT, STDDEV_SAMP, PERCENTILE_CONT, FIRST_VALUE, LAST_VALUE
+- **TimescaleDB functions**: time_bucket(), PERCENTILE_CONT(x) WITHIN GROUP (ORDER BY ...), FIRST_VALUE/LAST_VALUE window functions, percentile_agg()
+- **Existing API response format**: { statusCode, content: { data, nextCursor? }, timestamp, requestId }
+- express-openapi-validator validates request/response against openapi_v2.yaml
+- Common module types: SDBReading (metric, data, units, logTime), SDBOutputState (controlMode, value, logTime)
+- DI_KEYS: KnexConnection, Logger, SprootDB, SensorList, OutputList, QueryService (new)
+- Router pattern: handler function returns SuccessResponse|ErrorResponse, router calls res.status().json()
+- Logger: winston with DailyRotateFile transport, test mode writes to /dev/null
+- QueryService constructor: `constructor(knex: Knex, logger: winston.Logger)` — injected via app.get(DI_KEYS.KnexConnection) and app.get(DI_KEYS.Logger)
+- TypeScript strict mode: bracket notation required for index signature access (`obj["key"]` not `obj.key`)
+- `VALID_AGGREGATES` is readonly array — must spread with `[...(request.aggregates ?? VALID_AGGREGATES)]` for mutation
+- **Value imports from common must use direct relative paths** (`../../../../common/dist/api/v2/QueryTypes`) not path aliases (`@sproot/*`) — ts-node NodeNext module resolution doesn't support path aliases at runtime for value imports
+- **Test pattern**: mocha + chai + sinon, tests in `src/**/*.spec.ts`, server tests run via `npm run test`
+- **knex-mock not installed** — tests must use sinon stubs on Knex query builder objects
+- **ts-node + module: "NodeNext" limitation**: Path aliases (`@sproot/*`) only work for type-only imports (erased at compile time); value imports require direct relative paths to `dist/`
+- **Raw path groups data into 5-minute buckets** via `#groupRowsByBucket()` / `#truncateToBucket()` — `values.length` reflects bucket count, not raw row count
+- **Cursor pagination**: `#formatSensorAggregateRows` and `#formatOutputAggregateRows` accept `nextCursor` parameter; database layer computes it from oldest row timestamp when `hasMoreRows` is true
+- `DOWNSAMPLE_TO_BUCKET_MINUTES` consolidated in `QueryTypes.ts` (common) — SprootDB imports from there, not from databaseQueryUtils
+- All tests passing (649 server, 1 pre-existing TPLink failure)

@@ -35,6 +35,12 @@ import { SDBJournalTagLookup } from "./SDBJournalTagLookup";
 import { SDBJournalEntry } from "./SDBJournalEntry";
 import { SDBJournalEntryTag } from "./SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "./SDBJournalEntryTagLookup";
+import {
+  SensorDataQueryRequest,
+  OutputDataQueryRequest,
+  SensorDataQueryResponse,
+  OutputDataQueryResponse,
+} from "@sproot/api/v2/QueryTypes";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -267,6 +273,10 @@ interface ISprootDB {
   getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]>;
   addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number>;
   deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
+
+  // Raw data query endpoints (for client-side formatting, not Recharts consumption)
+  querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse>;
+  queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -773,6 +783,15 @@ class MockSprootDB implements ISprootDB {
     _inputFile: string,
   ): Promise<void> {
     return Promise.resolve();
+  }
+
+  // Raw data query mocks
+  async querySensorDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
+    return { data: {} };
+  }
+
+  async queryOutputDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
+    return { data: {} };
   }
 }
 

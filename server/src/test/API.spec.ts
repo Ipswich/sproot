@@ -2200,6 +2200,299 @@ describe("API Tests", async function () {
       });
     });
   });
+
+  describe("Sensor Data Routes", () => {
+    describe("POST /data", () => {
+      it("should return 200 and sensor data with default aggregates", async () => {
+        const response = await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.property(content.data, "1");
+        assert.property(content.data[1], "temperature");
+        assert.property(content.data[1].temperature, "units");
+        assert.property(content.data[1].temperature, "values");
+        assert.isArray(content.data[1].temperature.values);
+        assert.property(content.data[1].temperature.values[0], "time");
+        assert.property(content.data[1].temperature.values[0], "avg");
+      });
+
+      it("should return 200 and sensor data filtered by ids", async () => {
+        const response = await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            ids: [1],
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.containsAllKeys(content.data, [1]);
+        assert.notProperty(content.data, "2");
+      });
+
+      it("should return 200 and sensor data with custom aggregates", async () => {
+        const response = await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            aggregates: ["min", "max", "count"],
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.property(content.data[1].temperature.values[0], "min");
+        assert.property(content.data[1].temperature.values[0], "max");
+        assert.property(content.data[1].temperature.values[0], "count");
+        assert.notProperty(content.data[1].temperature.values[0], "avg");
+      });
+
+      it("should return 200 and sensor data with downsample", async () => {
+        const response = await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            downsample: "1h",
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.property(content.data, "1");
+        assert.isArray(content.data[1].temperature.values);
+      });
+
+      it("should return 400 for missing timeRange", async () => {
+        await request(server).post("/api/v2/sensors/data").send({}).expect(400);
+      });
+
+      it("should return 400 for invalid downsample", async () => {
+        await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            downsample: "invalid",
+          })
+          .expect(400);
+      });
+
+      it("should return 200 and filter sensor data by readingTypes", async () => {
+        const response = await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            readingTypes: ["temperature"],
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.property(content.data[1], "temperature");
+        assert.notProperty(content.data[1], "humidity");
+      });
+
+      it("should return nextCursor when limit is small", async () => {
+        const response = await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            limit: 1,
+          })
+          .expect(200);
+        assert.isString(response.body.content.nextCursor);
+        const decoded = Buffer.from(response.body.content.nextCursor, "base64").toString();
+        assert.match(decoded, /^\d{4}-\d{2}-\d{2}T/);
+      });
+
+      it("should not return nextCursor when all results fit in limit", async () => {
+        const response = await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            limit: 100,
+          })
+          .expect(200);
+        assert.notProperty(response.body.content, "nextCursor");
+      });
+
+      it("should return 400 for invalid aggregates", async () => {
+        await request(server)
+          .post("/api/v2/sensors/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            aggregates: ["invalid"],
+          })
+          .expect(400);
+      });
+    });
+  });
+
+  describe("Output Data Routes", () => {
+    describe("POST /data", () => {
+      it("should return 200 and output data with default aggregates", async () => {
+        const response = await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.property(content.data, "1");
+        assert.property(content.data[1], "values");
+        assert.isArray(content.data[1].values);
+        assert.property(content.data[1].values[0], "time");
+        assert.property(content.data[1].values[0], "avg");
+      });
+
+      it("should return 200 and output data filtered by ids", async () => {
+        const response = await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            ids: [1],
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.containsAllKeys(content.data, [1]);
+      });
+
+      it("should return 200 and output data with custom aggregates", async () => {
+        const response = await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            aggregates: ["min", "max", "count"],
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.property(content.data[1].values[0], "min");
+        assert.property(content.data[1].values[0], "max");
+        assert.property(content.data[1].values[0], "count");
+        assert.notProperty(content.data[1].values[0], "avg");
+      });
+
+      it("should return 200 and output data with downsample", async () => {
+        const response = await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            downsample: "1h",
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.property(content.data, "1");
+        assert.isArray(content.data[1].values);
+      });
+
+      it("should return 400 for missing timeRange", async () => {
+        await request(server).post("/api/v2/outputs/data").send({}).expect(400);
+      });
+
+      it("should return 400 for invalid downsample", async () => {
+        await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            downsample: "1m",
+          })
+          .expect(400);
+      });
+
+      it("should return 200 and output data filtered by specific ids", async () => {
+        const response = await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            ids: [5],
+          })
+          .expect(200);
+        const content = response.body["content"];
+        validateMiddlewareValues(response);
+        assert.containsAllKeys(content.data, [5]);
+        assert.notProperty(content.data, "1");
+      });
+
+      it("should return nextCursor when limit is small", async () => {
+        const response = await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            limit: 1,
+          })
+          .expect(200);
+        assert.isString(response.body.content.nextCursor);
+        const decoded = Buffer.from(response.body.content.nextCursor, "base64").toString();
+        assert.match(decoded, /^\d{4}-\d{2}-\d{2}T/);
+      });
+
+      it("should return 400 for invalid aggregates", async () => {
+        await request(server)
+          .post("/api/v2/outputs/data")
+          .send({
+            timeRange: {
+              start: "2024-01-01T00:00:00.000Z",
+              end: "2024-01-02T00:00:00.000Z",
+            },
+            aggregates: ["invalid"],
+          })
+          .expect(400);
+      });
+    });
+  });
 });
 
 function countLeafProperties(obj: unknown): number {

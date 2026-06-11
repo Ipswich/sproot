@@ -194,3 +194,7 @@ VITE_API_SERVER_URL=<your server URL>
 - `client/src/components/*` - Shareable, reusable, components
 - `client/src/requests/*` - API request utilities
 - `client/src/shell/*` - Header/navbar layout
+
+## Instructions For Any Changes
+- ALWAYS ask before making a commit. Never make a commit without asking first.
+- ALWAYS ask before reverting or rolling back changes to a previous commit. This is potentially extremely destructive, and should not be done without asking first.
