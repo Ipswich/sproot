@@ -29,13 +29,11 @@ export const DOWNSAMPLE_TO_BUCKET_MINUTES: Record<Downsample, number> = {
 export const DEFAULT_LIMIT = 500;
 export const MAX_LIMIT = 10000;
 export const MAX_ARRAY_SIZE = 1000;
+export const DEFAULT_AGGREGATES: Aggregate[] = ["avg", "min", "max"];
 
 // ---------------------------------------------------------------------------
 // Table name mappings for TimescaleDB continuous aggregates
 // ---------------------------------------------------------------------------
-
-export const SENSOR_HISTORY_TABLE = "sensor_data";
-export const OUTPUT_HISTORY_TABLE = "output_data";
 
 export const SENSOR_AGGREGATE_TABLES: Record<string, string> = {
   "5m": "sensor_data_5m",
@@ -247,7 +245,7 @@ function validateIds(ids: unknown): { valid: true } | { valid: false; errors: st
     return { valid: false, errors: ["ids must be an array"] };
   }
   for (const id of ids) {
-    if (typeof id !== "number") {
+    if (typeof id !== "number" || !Number.isFinite(id)) {
       return { valid: false, errors: ["ids must contain only numbers"] };
     }
   }
@@ -316,7 +314,7 @@ function validatePercentile(
   if (percentile === undefined) {
     return { valid: true };
   }
-  if (typeof percentile !== "number") {
+  if (typeof percentile !== "number" || Number.isNaN(percentile)) {
     return { valid: false, errors: ["percentile must be a number"] };
   }
   if (percentile < 0 || percentile > 1) {
@@ -422,7 +420,7 @@ function buildValidationData(
     cursor: req["cursor"] as string | undefined,
     limit: (req["limit"] as number) ?? DEFAULT_LIMIT,
     ids: req["ids"] as number[] | undefined,
-    aggregates: (req["aggregates"] as Aggregate[] | undefined) ?? [...VALID_AGGREGATES],
+    aggregates: (req["aggregates"] as Aggregate[] | undefined) ?? [...DEFAULT_AGGREGATES],
     percentile: (req["percentile"] as number) ?? 0.5,
   };
 
@@ -436,28 +434,14 @@ function buildValidationData(
   return data;
 }
 
-export function validateSensorDataQueryRequest(body: unknown): ValidationResultType {
-  const errors: string[] = [];
+type ValidatorConfig = {
+  allowedFields: string[];
+  validationFields: ValidationField[];
+  castType: "sensor" | "output";
+};
 
-  if (!body || typeof body !== "object") {
-    return { valid: false, errors: ["Request body must be an object"] };
-  }
-
-  const req = body as Record<string, unknown>;
-
-  const validationErrors = runValidationChecks(req, [
-    { name: "timeRange", required: true },
-    { name: "downsample", required: false },
-    { name: "cursor", required: false },
-    { name: "limit", required: false },
-    { name: "ids", required: false, arraySizeValidator: true },
-    { name: "readingTypes", required: false, arraySizeValidator: true },
-    { name: "aggregates", required: false },
-    { name: "percentile", required: false },
-  ]);
-  errors.push(...validationErrors);
-
-  const allowedFields = new Set([
+const SENSOR_VALIDATOR_CONFIG: ValidatorConfig = {
+  allowedFields: [
     "timeRange",
     "downsample",
     "cursor",
@@ -466,41 +450,23 @@ export function validateSensorDataQueryRequest(body: unknown): ValidationResultT
     "readingTypes",
     "aggregates",
     "percentile",
-  ]);
-  const unknownFields = Object.keys(req).filter((k) => !allowedFields.has(k));
-  if (unknownFields.length > 0) {
-    errors.push(`Unknown fields: ${unknownFields.join(", ")}`);
-  }
+  ],
+  validationFields: [
+    { name: "timeRange", required: true },
+    { name: "downsample", required: false },
+    { name: "cursor", required: false },
+    { name: "limit", required: false },
+    { name: "ids", required: false, arraySizeValidator: true },
+    { name: "readingTypes", required: false, arraySizeValidator: true },
+    { name: "aggregates", required: false },
+    { name: "percentile", required: false },
+  ],
+  castType: "sensor",
+};
 
-  if (errors.length > 0) {
-    return { valid: false, errors };
-  }
-
-  return {
-    valid: true,
-    data: buildValidationData(req, [
-      { name: "timeRange", required: true },
-      { name: "downsample", required: false },
-      { name: "cursor", required: false },
-      { name: "limit", required: false },
-      { name: "ids", required: false, arraySizeValidator: true },
-      { name: "readingTypes", required: false, arraySizeValidator: true },
-      { name: "aggregates", required: false },
-      { name: "percentile", required: false },
-    ]) as SensorDataQueryRequest,
-  };
-}
-
-export function validateOutputDataQueryRequest(body: unknown): ValidationResultType {
-  const errors: string[] = [];
-
-  if (!body || typeof body !== "object") {
-    return { valid: false, errors: ["Request body must be an object"] };
-  }
-
-  const req = body as Record<string, unknown>;
-
-  const validationErrors = runValidationChecks(req, [
+const OUTPUT_VALIDATOR_CONFIG: ValidatorConfig = {
+  allowedFields: ["timeRange", "downsample", "cursor", "limit", "ids", "aggregates", "percentile"],
+  validationFields: [
     { name: "timeRange", required: true },
     { name: "downsample", required: false },
     { name: "cursor", required: false },
@@ -508,37 +474,41 @@ export function validateOutputDataQueryRequest(body: unknown): ValidationResultT
     { name: "ids", required: false, arraySizeValidator: true },
     { name: "aggregates", required: false },
     { name: "percentile", required: false },
-  ]);
-  errors.push(...validationErrors);
+  ],
+  castType: "output",
+};
 
-  const allowedFields = new Set([
-    "timeRange",
-    "downsample",
-    "cursor",
-    "limit",
-    "ids",
-    "aggregates",
-    "percentile",
-  ]);
-  const unknownFields = Object.keys(req).filter((k) => !allowedFields.has(k));
-  if (unknownFields.length > 0) {
-    errors.push(`Unknown fields: ${unknownFields.join(", ")}`);
-  }
+function createDataQueryValidator(config: ValidatorConfig) {
+  return function validateDataQueryRequest(body: unknown): ValidationResultType {
+    const errors: string[] = [];
 
-  if (errors.length > 0) {
-    return { valid: false, errors };
-  }
+    if (!body || typeof body !== "object") {
+      return { valid: false, errors: ["Request body must be an object"] };
+    }
 
-  return {
-    valid: true,
-    data: buildValidationData(req, [
-      { name: "timeRange", required: true },
-      { name: "downsample", required: false },
-      { name: "cursor", required: false },
-      { name: "limit", required: false },
-      { name: "ids", required: false, arraySizeValidator: true },
-      { name: "aggregates", required: false },
-      { name: "percentile", required: false },
-    ]) as OutputDataQueryRequest,
+    const req = body as Record<string, unknown>;
+
+    const validationErrors = runValidationChecks(req, config.validationFields);
+    errors.push(...validationErrors);
+
+    const allowedFields = new Set(config.allowedFields);
+    const unknownFields = Object.keys(req).filter((k) => !allowedFields.has(k));
+    if (unknownFields.length > 0) {
+      errors.push(`Unknown fields: ${unknownFields.join(", ")}`);
+    }
+
+    if (errors.length > 0) {
+      return { valid: false, errors };
+    }
+
+    return {
+      valid: true,
+      data: buildValidationData(req, config.validationFields) as
+        | SensorDataQueryRequest
+        | OutputDataQueryRequest,
+    };
   };
 }
+
+export const validateSensorDataQueryRequest = createDataQueryValidator(SENSOR_VALIDATOR_CONFIG);
+export const validateOutputDataQueryRequest = createDataQueryValidator(OUTPUT_VALIDATOR_CONFIG);

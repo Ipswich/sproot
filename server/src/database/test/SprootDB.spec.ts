@@ -73,60 +73,15 @@ function createKnexStub(rows: unknown[]): any {
   return knex;
 }
 
-function createKnexStubWithContext(tableRows: Record<string, unknown[]>): any {
-  const builders: Record<string, any> = {};
-  for (const [table, rows] of Object.entries(tableRows)) {
-    builders[table] = createQueryBuilderStub(rows);
-  }
-
-  const knex: any = function (tableName: string) {
-    return builders[tableName] ?? createQueryBuilderStub([]);
-  };
-  knex.raw = function (sql: string) {
-    const rawObj: any = function () {
-      return rawObj;
-    };
-    rawObj.toQuery = function () {
-      return sql;
-    };
-    rawObj.then = (onfulfilled: (value: unknown) => unknown) => {
-      let resolvedValue: unknown;
-      if (sql.includes("pg_tables") && sql.includes("tablename IN")) {
-        resolvedValue = {
-          rows: [
-            { tablename: "sensor_data_5m" },
-            { tablename: "sensor_data_1h" },
-            { tablename: "sensor_data_1d" },
-            { tablename: "output_data_5m" },
-            { tablename: "output_data_1h" },
-            { tablename: "output_data_1d" },
-          ],
-        };
-      } else {
-        resolvedValue = { rows: [{ exists: true }] };
-      }
-      return Promise.resolve(resolvedValue).then(onfulfilled);
-    };
-    return rawObj;
-  };
-  knex.builders = builders;
-  return knex;
-}
-
-function createKnexStubWithAggregateFallback(
-  rows: unknown[],
-  aggregatesExist: boolean,
-): any {
+function createKnexStubWithCapture(rows: unknown[]): any {
   const builder = createQueryBuilderStub(rows);
+  const rawCalls: string[] = [];
   const knex: any = function (_tableName?: string) {
     return builder;
   };
-
-  const rawSpy = sinon.spy();
+  knex.rawCalls = rawCalls;
   knex.raw = function (sql: string) {
-    if (aggregatesExist === false && sql.includes("pg_tables")) {
-      return Promise.resolve({ rows: [] });
-    }
+    rawCalls.push(sql);
     const rawObj: any = function () {
       return rawObj;
     };
@@ -153,8 +108,6 @@ function createKnexStubWithAggregateFallback(
     };
     return rawObj;
   };
-
-  knex.rawSpy = rawSpy;
   return knex;
 }
 
@@ -321,129 +274,6 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
     });
   });
 
-  // ---- raw path: sensors ----
-
-  describe("querySensorDataAsync — raw path", () => {
-    it("should query only specified sensor IDs", async () => {
-      const rows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 25,
-          minimum_data: 20,
-          maximum_data: 30,
-          sample_count: 60,
-          stddev_data: 3,
-          percentile_data: { percentile: 25 },
-          first_data: 22,
-          last_data: 28,
-        },
-      ];
-      const knex = createKnexStub(rows);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.isDefined((result.data as any)[1]);
-      assert.equal(Object.keys(result.data).length, 1);
-    });
-
-    it("should handle sensors with no data", async () => {
-      const knex = createKnexStub([]);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.deepEqual(result.data, {});
-      assert.notProperty(result, "nextCursor");
-    });
-
-    it("should group data by reading type (metric)", async () => {
-      const rows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 25,
-          minimum_data: 20,
-          maximum_data: 30,
-          sample_count: 60,
-          stddev_data: 3,
-          percentile_data: { percentile: 25 },
-          first_data: 22,
-          last_data: 28,
-        },
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          sensor_id: 1,
-          metric: "humidity",
-          units: "%",
-          average_data: 60,
-          minimum_data: 50,
-          maximum_data: 70,
-          sample_count: 60,
-          stddev_data: 5,
-          percentile_data: { percentile: 60 },
-          first_data: 55,
-          last_data: 65,
-        },
-      ];
-      const knex = createKnexStub(rows);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.isDefined((result.data as any)[1]["temperature"]);
-      assert.isDefined((result.data as any)[1]["humidity"]);
-    });
-
-    it("should set nextCursor when a sensor exceeds limit", async () => {
-      const rows: unknown[] = [];
-      for (let i = 0; i < 11; i++) {
-        rows.push({
-          bucket: `2024-01-01T${String(i).padStart(2, "0")}:00:00.000Z`,
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 25,
-          minimum_data: 20,
-          maximum_data: 30,
-          sample_count: 60,
-          stddev_data: 3,
-          percentile_data: { percentile: 25 },
-          first_data: 22,
-          last_data: 28,
-        });
-      }
-      const knex = createKnexStub(rows);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.isString(result.nextCursor);
-      assert.equal((result.data as any)[1]["temperature"].values.length, 10);
-    });
-  });
-
   // ---- aggregate path: outputs ----
 
   describe("queryOutputDataAsync — aggregate path", () => {
@@ -510,369 +340,68 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       assert.isDefined((result.data as any)[3]);
       assert.equal(Object.keys(result.data).length, 1);
     });
-  });
 
-  // ---- raw path: outputs ----
-
-  describe("queryOutputDataAsync — raw path", () => {
-    it("should query only specified output IDs", async () => {
-      const rows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          output_id: 1,
-          average_value: 100,
-          minimum_value: 50,
-          maximum_value: 150,
-          sample_count: 60,
-          stddev_value: 10,
-          percentile_value: { percentile: 100 },
-        },
-      ];
+    it("should use default limit when none provided", async () => {
+      const rows = makeOutputRows(1, 501);
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        limit: 10,
+        downsample: "5m",
       } as OutputDataQueryRequest);
 
-      assert.isDefined((result.data as any)[1]);
-      assert.equal(Object.keys(result.data).length, 1);
+      assert.equal((result.data as any)[1].values.length, DEFAULT_LIMIT);
+      assert.isString(result.nextCursor);
     });
 
-    it("should handle outputs with no data", async () => {
-      const knex = createKnexStub([]);
+    it("should cap limit at MAX_LIMIT", async () => {
+      const rows = makeOutputRows(1, 10001);
+      const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        limit: 10,
+        downsample: "5m",
+        limit: 20000,
       } as OutputDataQueryRequest);
 
-      assert.deepEqual(result.data, {});
-      assert.notProperty(result, "nextCursor");
-    });
-  });
-
-  // ---- aggregate fallback path: sensors ----
-
-  describe("querySensorDataAsync — fallback to raw when aggregates missing", () => {
-    it("should fall back to raw GROUP BY when aggregate tables do not exist", async () => {
-      const rows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 25,
-          minimum_data: 20,
-          maximum_data: 30,
-          sample_count: 60,
-          stddev_data: 3,
-          percentile_data: { percentile: 25 },
-          first_data: 22,
-          last_data: 28,
-        },
-      ];
-      const knex = createKnexStubWithAggregateFallback(rows, false);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        downsample: "5m",
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.isNotEmpty(result.data);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1]["temperature"].values.length, 1);
+      assert.equal((result.data as any)[1].values.length, MAX_LIMIT);
+      assert.isString(result.nextCursor);
     });
 
-    it("should fall back to raw GROUP BY when no downsample is specified and aggregates are missing", async () => {
-      const rows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 25,
-          minimum_data: 20,
-          maximum_data: 30,
-          sample_count: 60,
-          stddev_data: 3,
-          percentile_data: { percentile: 25 },
-          first_data: 22,
-          last_data: 28,
-        },
-      ];
-      const knex = createKnexStubWithAggregateFallback(rows, false);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.isNotEmpty(result.data);
-      assert.isDefined((result.data as any)[1]);
-    });
-
-    it("should return empty data when no aggregate tables exist and no data rows", async () => {
-      const knex = createKnexStubWithAggregateFallback([], false);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        downsample: "5m",
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.deepEqual(result.data, {});
-      assert.notProperty(result, "nextCursor");
-    });
-  });
-
-  // ---- aggregate fallback path: outputs ----
-
-  describe("queryOutputDataAsync — fallback to raw when aggregates missing", () => {
-    it("should fall back to raw GROUP BY when aggregate tables do not exist", async () => {
-      const rows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          output_id: 1,
-          average_value: 100,
-          minimum_value: 50,
-          maximum_value: 150,
-          sample_count: 60,
-          stddev_value: 10,
-          percentile_value: { percentile: 100 },
-        },
-      ];
-      const knex = createKnexStubWithAggregateFallback(rows, false);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.queryOutputDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        downsample: "5m",
-        limit: 10,
-      } as OutputDataQueryRequest);
-
-      assert.isNotEmpty(result.data);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1].values.length, 1);
-    });
-
-    it("should return empty data when no aggregate tables exist and no data rows", async () => {
-      const knex = createKnexStubWithAggregateFallback([], false);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.queryOutputDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        downsample: "5m",
-        limit: 10,
-      } as OutputDataQueryRequest);
-
-      assert.deepEqual(result.data, {});
-      assert.notProperty(result, "nextCursor");
-    });
-  });
-
-  // ---- aggregate path verification ----
-
-  describe("querySensorDataAsync — aggregate path with aggregates available", () => {
-    function makeRows(sensorId: number, metric: string, count: number) {
-      const r: unknown[] = [];
-      for (let i = 0; i < count; i++) {
-        r.push({
-          bucket: `2024-01-01T${String(i).padStart(2, "0")}:00:00.000Z`,
-          sensor_id: sensorId,
-          metric,
-          units: metric === "humidity" ? "%" : "°C",
-          average_data: 25,
-          minimum_data: 20,
-          maximum_data: 30,
-          sample_count: 60,
-          stddev_data: 3,
-          percentile_data: { percentile: 25 },
-          first_data: 22,
-          last_data: 28,
-        });
-      }
-      return r;
-    }
-
-    it("should use aggregate tables when they exist", async () => {
-      const rows = makeRows(1, "temperature", 1);
-      const knex = createKnexStubWithAggregateFallback(rows, true);
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        downsample: "5m",
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.isNotEmpty(result.data);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1]["temperature"].values.length, 1);
-    });
-  });
-
-  // ---- aggregate path verification: outputs ----
-
-  describe("queryOutputDataAsync — aggregate path with aggregates available", () => {
-    function makeOutputRows(outputId: number, count: number) {
-      const r: unknown[] = [];
-      for (let i = 0; i < count; i++) {
-        r.push({
-          bucket: `2024-01-01T${String(i).padStart(2, "0")}:00:00.000Z`,
-          output_id: outputId,
-          average_value: 100,
-          minimum_value: 50,
-          maximum_value: 150,
-          sample_count: 60,
-          stddev_value: 10,
-          percentile_value: { percentile: 100 },
-        });
-      }
-      return r;
-    }
-
-    it("should use aggregate tables when they exist", async () => {
+    it("should handle limit=1 correctly", async () => {
       const rows = makeOutputRows(1, 1);
-      const knex = createKnexStubWithAggregateFallback(rows, true);
+      const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
+        limit: 1,
+      } as OutputDataQueryRequest);
+
+      assert.equal((result.data as any)[1].values.length, 1);
+      assert.notProperty(result, "nextCursor");
+    });
+
+    it("should use custom percentile in output aggregate query", async () => {
+      const knex = createKnexStub([]);
+      const rawSpy = sinon.spy(knex, "raw");
+      const db = new SprootDB(knex as any);
+
+      await db.queryOutputDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
+        downsample: "5m",
+        percentile: 0.95,
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.isNotEmpty(result.data);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1].values.length, 1);
-    });
-  });
-
-  // ---- deleted_at filter (bug fix: sensors) ----
-
-  describe("getAllSensorIdsAsync — deleted sensor filter", () => {
-    it("should NOT return deleted sensors (only whereNull deleted_at)", async () => {
-      const activeSensors = [{ id: 1 }];
-      const dataRows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 25,
-          minimum_data: 20,
-          maximum_data: 30,
-          sample_count: 60,
-          stddev_data: 3,
-          percentile_data: { percentile: 25 },
-          first_data: 22,
-          last_data: 28,
-        },
-      ];
-      const knex = createKnexStubWithContext({
-        sensors: activeSensors,
-        sensor_data_5m: dataRows,
-      });
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        limit: 10,
-      } as SensorDataQueryRequest);
-
-      assert.notProperty(result.data as Record<string, unknown>, "99");
-      assert.property(result.data, "1");
-    });
-  });
-
-  // ---- bucket size ----
-
-  describe("bucket size — raw path should use configurable bucket size", () => {
-    it("should group raw data into 5-minute buckets by default (no downsample)", async () => {
-      const rows = [
-        {
-          bucket: "2024-01-01T00:00:00.000Z",
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 20,
-          minimum_data: 18,
-          maximum_data: 22,
-          sample_count: 1,
-          stddev_data: 0,
-          percentile_data: { percentile: 20 },
-          first_data: 20,
-          last_data: 20,
-        },
-        {
-          bucket: "2024-01-01T00:05:00.000Z",
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          average_data: 10,
-          minimum_data: 8,
-          maximum_data: 12,
-          sample_count: 1,
-          stddev_data: 0,
-          percentile_data: { percentile: 10 },
-          first_data: 10,
-          last_data: 10,
-        },
-      ];
-      const knex = createKnexStubWithContext({
-        sensors: [{ id: 1 }],
-        sensor_data_5m: rows,
-      });
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        aggregates: ["count"],
-        limit: 100,
-      } as SensorDataQueryRequest);
-
-      assert.equal((result.data as any)[1]["temperature"].values.length, 2);
-      assert.equal((result.data as any)[1]["temperature"].values[0]["count"], 1);
-      assert.equal((result.data as any)[1]["temperature"].values[1]["count"], 1);
-    });
-
-    it("should group raw data into matching buckets when downsample is set", async () => {
-      const aggRows = [
-        {
-          sensor_id: 1,
-          metric: "temperature",
-          units: "°C",
-          bucket: "2024-01-01T00:00:00.000Z",
-          sample_count: 2,
-          average_data: 15,
-        },
-      ];
-      const knex = createKnexStubWithContext({
-        sensors: [{ id: 1 }],
-        sensor_data_1h: aggRows,
-      });
-      const db = new SprootDB(knex as any);
-
-      const result = await db.querySensorDataAsync({
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-        ids: [1],
-        aggregates: ["count"],
-        downsample: "1h",
-        limit: 100,
-      } as SensorDataQueryRequest);
-
-      const value = (result.data as any)[1]["temperature"].values[0];
-      assert.equal(value["count"], 2, "1h bucket should have count=2");
+      const percentileCalls = rawSpy
+        .getCalls()
+        .filter((c) => c.args[0]?.includes("approx_percentile"));
+      assert.isAtLeast(percentileCalls.length, 1);
+      assert.equal(percentileCalls[0]!.args[1]?.[0], 0.95);
     });
   });
 
@@ -987,6 +516,96 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         "cursor Date should be valid (not Invalid Date)",
       );
       assert.equal(cursorParam.toISOString(), "2024-01-01T00:30:00.000Z");
+    });
+  });
+
+  // ---- SQL generation verification ----
+
+  describe("aggregate filter SQL generation", () => {
+    it("should generate correct sensor_id filter SQL", async () => {
+      const knex = createKnexStubWithCapture([]);
+      const db = new SprootDB(knex as any);
+
+      await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
+        downsample: "5m",
+        ids: [1, 2],
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      const rawCalls = (knex as any).rawCalls || [];
+      const idFilterSql = rawCalls.find((s: string) => s.includes("sensor_id") && s.includes("IN"));
+      assert.isDefined(idFilterSql, "Should have a sensor_id IN filter");
+      assert.include(idFilterSql!, "?");
+      assert.include(idFilterSql!, "sensor_id");
+    });
+
+    it("should generate correct metric filter SQL when readingTypes provided", async () => {
+      const knex = createKnexStubWithCapture([]);
+      const db = new SprootDB(knex as any);
+
+      await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
+        downsample: "5m",
+        readingTypes: ["temperature", "humidity"],
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      const rawCalls = (knex as any).rawCalls || [];
+      const metricFilterSql = rawCalls.find((s: string) => s.includes('"metric"') && s.includes("IN"));
+      assert.isDefined(metricFilterSql, "Should have a metric IN filter");
+      assert.include(metricFilterSql!, "?");
+      assert.include(metricFilterSql!, "metric");
+    });
+
+    it("should generate correct output_id filter SQL", async () => {
+      const knex = createKnexStubWithCapture([]);
+      const db = new SprootDB(knex as any);
+
+      await db.queryOutputDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
+        downsample: "5m",
+        ids: [5, 6],
+        limit: 10,
+      } as OutputDataQueryRequest);
+
+      const rawCalls = (knex as any).rawCalls || [];
+      const idFilterSql = rawCalls.find((s: string) => s.includes("output_id") && s.includes("IN"));
+      assert.isDefined(idFilterSql, "Should have an output_id IN filter");
+      assert.include(idFilterSql!, "?");
+      assert.include(idFilterSql!, "output_id");
+    });
+
+    it("should use cursor filter when cursor provided", async () => {
+      const base64Cursor = Buffer.from("2024-01-01T00:30:00.000Z").toString("base64");
+      const knex = createKnexStubWithCapture([]);
+      const db = new SprootDB(knex as any);
+
+      await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
+        downsample: "5m",
+        cursor: base64Cursor,
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      const rawCalls = (knex as any).rawCalls || [];
+      const cursorFilterSql = rawCalls.find((s: string) => s.includes("bucket") && s.includes(">"));
+      assert.isDefined(cursorFilterSql, "Should have a cursor-based bucket > filter");
+    });
+
+    it("should use BETWEEN filter when no cursor", async () => {
+      const knex = createKnexStubWithCapture([]);
+      const db = new SprootDB(knex as any);
+
+      await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
+        downsample: "5m",
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      const rawCalls = (knex as any).rawCalls || [];
+      const timeFilterSql = rawCalls.find((s: string) => s.includes("bucket") && s.includes("BETWEEN"));
+      assert.isDefined(timeFilterSql, "Should have a BETWEEN filter for time range");
     });
   });
 
@@ -1118,6 +737,11 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       assert.isUndefined((db as any).parseCursor(undefined));
     });
 
+    it("should return undefined for empty string cursor", () => {
+      const db = new SprootDB(createKnexStub([]) as any);
+      assert.isUndefined((db as any).parseCursor(""));
+    });
+
     it("should return valid Date for valid base64-encoded ISO timestamp", () => {
       const db = new SprootDB(createKnexStub([]) as any);
       const validISO = new Date("2024-01-01T12:00:00.000Z").toISOString();
@@ -1185,10 +809,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
     it("should return only zone 1 sensors when querying zone 1 data", async () => {
       // Zone 1 has sensors 1 (BME280) and 3 (Capacitive Moisture Sensor)
       // Zone 2 has sensors 2 (DS18B20) and 4 (ADS1115)
-      const rows = [
-        ...makeZoneSensorRows(1, 1),
-        ...makeZoneSensorRows(3, 1),
-      ];
+      const rows = [...makeZoneSensorRows(1, 1), ...makeZoneSensorRows(3, 1)];
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
@@ -1206,10 +827,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
 
     it("should return only zone 2 sensors when querying zone 2 data", async () => {
       // Zone 2 has sensors 2 (DS18B20) and 4 (ADS1115)
-      const rows = [
-        ...makeZoneSensorRows(2, 2),
-        ...makeZoneSensorRows(4, 2),
-      ];
+      const rows = [...makeZoneSensorRows(2, 2), ...makeZoneSensorRows(4, 2)];
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 

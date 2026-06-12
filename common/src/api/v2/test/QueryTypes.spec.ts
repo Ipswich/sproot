@@ -1,7 +1,7 @@
 import {
   validateSensorDataQueryRequest,
   validateOutputDataQueryRequest,
-  VALID_AGGREGATES,
+  DEFAULT_AGGREGATES,
   DEFAULT_LIMIT,
   MAX_LIMIT,
   MAX_ARRAY_SIZE,
@@ -57,6 +57,16 @@ describe("QueryTypes validation — sensor data", () => {
     }
   });
 
+  it("should reject equal start and end dates", () => {
+    const result = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T00:00:00.000Z" },
+    });
+    assert.isFalse(result.valid);
+    if (!result.valid) {
+      assert.include(result.errors[0], "timeRange.end must be after timeRange.start");
+    }
+  });
+
   it("should reject invalid downsample value", () => {
     const result = validateSensorDataQueryRequest({
       timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
@@ -83,6 +93,17 @@ describe("QueryTypes validation — sensor data", () => {
     const result = validateSensorDataQueryRequest({
       timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
       cursor: Buffer.from("not-a-date").toString("base64"),
+    });
+    assert.isFalse(result.valid);
+    if (!result.valid) {
+      assert.include(result.errors[0], "invalid timestamp");
+    }
+  });
+
+  it("should reject cursor with empty string", () => {
+    const result = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      cursor: "",
     });
     assert.isFalse(result.valid);
     if (!result.valid) {
@@ -134,6 +155,28 @@ describe("QueryTypes validation — sensor data", () => {
     }
   });
 
+  it("should reject ids array with NaN elements", () => {
+    const result = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      ids: [1, NaN, 3],
+    });
+    assert.isFalse(result.valid);
+    if (!result.valid) {
+      assert.include(result.errors[0], "contain only numbers");
+    }
+  });
+
+  it("should reject ids array with Infinity elements", () => {
+    const result = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      ids: [1, Infinity, 3],
+    });
+    assert.isFalse(result.valid);
+    if (!result.valid) {
+      assert.include(result.errors[0], "contain only numbers");
+    }
+  });
+
   it("should reject invalid aggregates", () => {
     const result = validateSensorDataQueryRequest({
       timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
@@ -156,6 +199,41 @@ describe("QueryTypes validation — sensor data", () => {
     }
   });
 
+  it("should reject NaN percentile", () => {
+    const result = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      percentile: NaN,
+    });
+    assert.isFalse(result.valid);
+    if (!result.valid) {
+      assert.include(result.errors[0], "must be a number");
+    }
+  });
+
+  it("should accept percentile boundary values 0 and 1", () => {
+    const result0 = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      percentile: 0,
+    });
+    assert.isTrue(result0.valid);
+    const result1 = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      percentile: 1,
+    });
+    assert.isTrue(result1.valid);
+  });
+
+  it("should reject negative percentile", () => {
+    const result = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      percentile: -0.1,
+    });
+    assert.isFalse(result.valid);
+    if (!result.valid) {
+      assert.include(result.errors[0], "between 0 and 1");
+    }
+  });
+
   it("should use defaults when optional fields omitted", () => {
     const body = {
       timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
@@ -165,7 +243,7 @@ describe("QueryTypes validation — sensor data", () => {
     if (result.valid) {
       const d = result.data as Record<string, unknown>;
       assert.strictEqual(d["limit"], DEFAULT_LIMIT);
-      assert.deepStrictEqual(d["aggregates"], VALID_AGGREGATES);
+      assert.deepStrictEqual(d["aggregates"], DEFAULT_AGGREGATES);
       assert.strictEqual(d["percentile"], 0.5);
     }
   });

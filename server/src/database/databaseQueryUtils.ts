@@ -5,8 +5,6 @@ import {
   Aggregate,
   SensorDataValue,
   OutputDataValue,
-  Downsample,
-  DOWNSAMPLE_TO_BUCKET_MINUTES,
 } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 
 // ---------------------------------------------------------------------------
@@ -18,10 +16,6 @@ export function normalizeBucketMinutes(bucketMinutes: number): number {
     throw new Error(`Invalid bucketMinutes value: ${bucketMinutes}`);
   }
   return bucketMinutes;
-}
-
-export function resolveBucketMinutes(downsample: Downsample | undefined): number {
-  return DOWNSAMPLE_TO_BUCKET_MINUTES[downsample ?? "5m"];
 }
 
 export function getLookbackDate(since: Date, minutes: number): Date {
@@ -62,11 +56,10 @@ export function extractPercentile(percentileData: unknown): number | null {
   return null;
 }
 
-export function extractAggregateValue(
-  row: Record<string, unknown>,
-  requestedAggregates: Aggregate[],
-): Record<string, unknown> {
-  return extractRowAggregates(row, requestedAggregates, "_data");
+function safeNumber(val: unknown): number | null {
+  if (val == null) return null;
+  const num = Number(val);
+  return Number.isNaN(num) ? null : num;
 }
 
 export function extractRowAggregates(
@@ -74,9 +67,14 @@ export function extractRowAggregates(
   requestedAggregates: Aggregate[],
   columnSuffix: "_data" | "_value" = "_data",
 ): Record<string, unknown> {
-  const bucket = row["bucket"] as string | Date;
+  const bucket = row["bucket"];
+  if (bucket == null) {
+    throw new Error("Row missing required 'bucket' column");
+  }
+  const bucketValue =
+    typeof bucket === "string" || bucket instanceof Date ? bucket : String(bucket);
   const value: Record<string, unknown> = {
-    time: dbToIso(bucket) ?? String(bucket),
+    time: dbToIso(bucketValue) ?? String(bucketValue),
   };
 
   const rawAvg = row[`average${columnSuffix}`];
@@ -91,32 +89,34 @@ export function extractRowAggregates(
   for (const agg of requestedAggregates) {
     switch (agg) {
       case "min":
-        value["min"] = rawMin != null ? Number(rawMin) : null;
+        value["min"] = safeNumber(rawMin);
         break;
       case "max":
-        value["max"] = rawMax != null ? Number(rawMax) : null;
+        value["max"] = safeNumber(rawMax);
         break;
       case "avg":
-        value["avg"] = rawAvg != null ? Number(rawAvg) : null;
+        value["avg"] = safeNumber(rawAvg);
         break;
       case "count":
-        value["count"] = rawCount != null ? Number(rawCount) : null;
+        value["count"] = safeNumber(rawCount);
         break;
-      case "sum":
-        value["sum"] =
-          rawAvg != null && rawCount != null ? Number(rawAvg) * Number(rawCount) : null;
+      case "sum": {
+        const avg = safeNumber(rawAvg);
+        const count = safeNumber(rawCount);
+        value["sum"] = avg != null && count != null ? avg * count : null;
         break;
+      }
       case "stddev":
-        value["stddev"] = rawStddev != null ? Number(rawStddev) : null;
+        value["stddev"] = safeNumber(rawStddev);
         break;
       case "percentile":
         value["percentile"] = extractPercentile(rawPercentile);
         break;
       case "first":
-        value["first"] = rawFirst != null ? Number(rawFirst) : null;
+        value["first"] = safeNumber(rawFirst);
         break;
       case "last":
-        value["last"] = rawLast != null ? Number(rawLast) : null;
+        value["last"] = safeNumber(rawLast);
         break;
     }
   }
@@ -136,6 +136,9 @@ export function formatSensorAggregateRows(
 
   for (const row of rows) {
     const sensorId = row["sensor_id"] as number;
+    if (sensorId == null) {
+      throw new Error("Row missing sensor_id in aggregate query result");
+    }
     const metric = row["metric"] as string;
     const units = row["units"] as string;
 
@@ -146,7 +149,7 @@ export function formatSensorAggregateRows(
       response.data[sensorId][metric] = { units, values: [] };
     }
 
-    const value = extractAggregateValue(row, aggregates);
+    const value = extractRowAggregates(row, aggregates, "_data");
     response.data[sensorId][metric].values.push(value as SensorDataValue);
   }
 
@@ -165,6 +168,9 @@ export function formatOutputAggregateRows(
 
   for (const row of rows) {
     const outputId = row["output_id"] as number;
+    if (outputId == null) {
+      throw new Error("Row missing output_id in aggregate query result");
+    }
 
     if (!response.data[outputId]) {
       response.data[outputId] = { values: [] };

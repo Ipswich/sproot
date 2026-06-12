@@ -1,6 +1,4 @@
 import {
-  SENSOR_HISTORY_TABLE,
-  OUTPUT_HISTORY_TABLE,
   SENSOR_AGGREGATE_TABLES,
   OUTPUT_AGGREGATE_TABLES,
   BUCKET_MINUTES_TO_SENSOR_TABLE,
@@ -12,7 +10,6 @@ import {
   getLookbackDate,
   getRecentTailStart,
   extractPercentile,
-  extractAggregateValue,
   extractRowAggregates,
   formatSensorAggregateRows,
   formatOutputAggregateRows,
@@ -24,11 +21,6 @@ import { assert } from "chai";
 // ---------------------------------------------------------------------------
 
 describe("databaseQueryUtils constants", () => {
-  it("should export correct table names", () => {
-    assert.strictEqual(SENSOR_HISTORY_TABLE, "sensor_data");
-    assert.strictEqual(OUTPUT_HISTORY_TABLE, "output_data");
-  });
-
   it("should export correct aggregate table mappings", () => {
     assert.deepStrictEqual(SENSOR_AGGREGATE_TABLES, {
       "5m": "sensor_data_5m",
@@ -166,10 +158,10 @@ describe("extractPercentile", () => {
 });
 
 // ---------------------------------------------------------------------------
-// extractAggregateValue
+// extractRowAggregates
 // ---------------------------------------------------------------------------
 
-describe("extractAggregateValue", () => {
+describe("extractRowAggregates", () => {
   it("should extract all sensor aggregate fields", () => {
     const row = {
       bucket: "2024-01-15T10:00:00.000Z",
@@ -182,7 +174,7 @@ describe("extractAggregateValue", () => {
       first_data: 20,
       last_data: 24,
     };
-    const result = extractAggregateValue(row, [
+    const result = extractRowAggregates(row, [
       "min",
       "max",
       "avg",
@@ -212,7 +204,7 @@ describe("extractAggregateValue", () => {
       minimum_data: 20,
       maximum_data: 24,
     };
-    const result = extractAggregateValue(row, ["avg"]);
+    const result = extractRowAggregates(row, ["avg"]);
     const v = result as Record<string, number | null>;
     assert.strictEqual(v["avg"], 22);
     assert.isUndefined(v["min"]);
@@ -226,16 +218,61 @@ describe("extractAggregateValue", () => {
       maximum_data: null,
       sample_count: null,
     };
-    const result = extractAggregateValue(row, ["min", "max", "count"]);
+    const result = extractRowAggregates(row, ["min", "max", "count"]);
     const v = result as Record<string, number | null>;
     assert.isNull(v["min"]);
     assert.isNull(v["max"]);
     assert.isNull(v["count"]);
   });
+
+  it("should throw when row is missing bucket column", () => {
+    const row = {
+      average_data: 22,
+      minimum_data: 20,
+      maximum_data: 24,
+      sample_count: 3,
+    };
+    assert.throws(
+      () => extractRowAggregates(row, ["min", "max", "avg"]),
+      /missing required 'bucket'/,
+    );
+  });
+
+  it("should return null for non-numeric string inputs", () => {
+    const row = {
+      bucket: "2024-01-15T10:00:00.000Z",
+      average_data: "abc",
+      minimum_data: "xyz",
+      maximum_data: "123",
+      sample_count: "not_a_number",
+      stddev_data: "not_a_number",
+    };
+    const result = extractRowAggregates(row, ["min", "max", "avg", "count", "sum", "stddev"]);
+    const v = result as Record<string, number | null>;
+    assert.strictEqual(v["min"], null);
+    assert.strictEqual(v["max"], 123);
+    assert.strictEqual(v["avg"], null);
+    assert.strictEqual(v["count"], null);
+    assert.strictEqual(v["sum"], null);
+    assert.strictEqual(v["stddev"], null);
+  });
+
+  it("should return null for sum when avg or count is NaN", () => {
+    const row = {
+      bucket: "2024-01-15T10:00:00.000Z",
+      average_data: "invalid",
+      minimum_data: 20,
+      maximum_data: 24,
+      sample_count: 5,
+    };
+    const result = extractRowAggregates(row, ["sum"]);
+    const v = result as Record<string, number | null>;
+    assert.strictEqual(v["sum"], null);
+  });
 });
 
 // ---------------------------------------------------------------------------
-// extractOutputAggregateValue (inline helper — tests extractRowAggregates with "_value" suffix)
+// extractRowAggregates with "_value" suffix (output aggregates)
 // ---------------------------------------------------------------------------
 
 describe("extractOutputAggregateValue (via extractRowAggregates)", () => {
@@ -293,6 +330,7 @@ describe("formatSensorAggregateRows", () => {
   it("should format sensor aggregate rows into response structure", () => {
     const rows = [
       {
+        bucket: "2024-01-15T10:00:00.000Z",
         sensor_id: 1,
         metric: "temperature",
         units: "°C",
@@ -302,6 +340,7 @@ describe("formatSensorAggregateRows", () => {
         sample_count: 3,
       },
       {
+        bucket: "2024-01-15T10:05:00.000Z",
         sensor_id: 1,
         metric: "humidity",
         units: "%",
@@ -311,6 +350,7 @@ describe("formatSensorAggregateRows", () => {
         sample_count: 3,
       },
       {
+        bucket: "2024-01-15T10:10:00.000Z",
         sensor_id: 2,
         metric: "temperature",
         units: "°C",
@@ -330,6 +370,12 @@ describe("formatSensorAggregateRows", () => {
     assert.strictEqual(temp1.values.length, 1);
     assert.strictEqual(temp1.values[0]!["min"], 20);
   });
+
+  it("should return empty data object when rows array is empty", () => {
+    const result = formatSensorAggregateRows([], ["min", "max", "avg"]);
+    assert.deepEqual(result.data, {});
+    assert.notProperty(result, "nextCursor");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -339,8 +385,22 @@ describe("formatSensorAggregateRows", () => {
 describe("formatOutputAggregateRows", () => {
   it("should format output aggregate rows into response structure", () => {
     const rows = [
-      { output_id: 1, average_value: 0.5, minimum_value: 0, maximum_value: 1, sample_count: 10 },
-      { output_id: 2, average_value: 1, minimum_value: 1, maximum_value: 1, sample_count: 5 },
+      {
+        bucket: "2024-01-15T10:00:00.000Z",
+        output_id: 1,
+        average_value: 0.5,
+        minimum_value: 0,
+        maximum_value: 1,
+        sample_count: 10,
+      },
+      {
+        bucket: "2024-01-15T10:05:00.000Z",
+        output_id: 2,
+        average_value: 1,
+        minimum_value: 1,
+        maximum_value: 1,
+        sample_count: 5,
+      },
     ];
     const result = formatOutputAggregateRows(rows, ["min", "max", "avg"], "some-cursor");
     assert.strictEqual(result.nextCursor, "some-cursor");
@@ -348,5 +408,11 @@ describe("formatOutputAggregateRows", () => {
     assert.strictEqual(result.data[1]!.values.length, 1);
     assert.strictEqual(result.data[1]!.values[0]!["min"], 0);
     assert.strictEqual(result.data[2]!.values[0]!["max"], 1);
+  });
+
+  it("should return empty data object when rows array is empty", () => {
+    const result = formatOutputAggregateRows([], ["min", "max", "avg"]);
+    assert.deepEqual(result.data, {});
+    assert.notProperty(result, "nextCursor");
   });
 });

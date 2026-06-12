@@ -48,7 +48,7 @@ import {
   OutputDataQueryResponse,
   DEFAULT_LIMIT,
   MAX_LIMIT,
-  VALID_AGGREGATES,
+  DEFAULT_AGGREGATES,
   Aggregate,
   SENSOR_AGGREGATE_TABLES,
   OUTPUT_AGGREGATE_TABLES,
@@ -68,7 +68,7 @@ import {
 // Generic data query configuration
 // ---------------------------------------------------------------------------
 
- interface DataQueryConfig<T> {
+interface DataQueryConfig<T> {
   tableName: string;
   selectColumns: (string | Knex.Raw)[];
   whereRaw: Knex.Raw;
@@ -1135,27 +1135,8 @@ export class SprootDB implements ISprootDB {
     aggregateTableName: string,
   ): Promise<SensorDataQueryResponse> {
     const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
-    const { start, end } = request.timeRange;
-    const cursor = this.parseCursor(request.cursor);
-    const ids = request.ids;
     const readingTypes = request.readingTypes;
-
-    const timeFilter = cursor
-      ? this.#connection.raw('"bucket" > ?', [cursor])
-      : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
-
-    const sensorIdFilter = ids
-      ? this.#connection.raw('"sensor_id" IN (' + ids.map(() => "?").join(", ") + ")", ids)
-      : this.#connection.raw("1=1");
-
-    const metricFilter = readingTypes
-      ? this.#connection.raw('"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")", readingTypes)
-      : this.#connection.raw("1=1");
-
-    const whereRaw = this.#connection.raw(
-      "? AND ? AND ?",
-      [timeFilter, sensorIdFilter, metricFilter],
-    );
+    const whereRaw = this.#buildAggregateFilters(request, "sensor_id", readingTypes);
 
     const selectColumns: (string | Knex.Raw)[] = [
       "bucket",
@@ -1178,7 +1159,7 @@ export class SprootDB implements ISprootDB {
       whereRaw,
       limit,
       cursorColumn: "bucket",
-      aggregates: [...(request.aggregates ?? VALID_AGGREGATES)],
+      aggregates: [...(request.aggregates ?? DEFAULT_AGGREGATES)],
       formatRows: formatSensorAggregateRows,
     });
   }
@@ -1192,20 +1173,7 @@ export class SprootDB implements ISprootDB {
     aggregateTableName: string,
   ): Promise<OutputDataQueryResponse> {
     const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
-    const { start, end } = request.timeRange;
-    const ids = request.ids;
-
-    const cursor = this.parseCursor(request.cursor);
-
-    const timeFilter = cursor
-      ? this.#connection.raw('"bucket" > ?', [cursor])
-      : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
-
-    const outputIdFilter = ids
-      ? this.#connection.raw('"output_id" IN (' + ids.map(() => "?").join(", ") + ")", ids)
-      : this.#connection.raw("1=1");
-
-    const whereRaw = this.#connection.raw("? AND ?", [timeFilter, outputIdFilter]);
+    const whereRaw = this.#buildAggregateFilters(request, "output_id", undefined);
 
     const selectColumns: (string | Knex.Raw)[] = [
       "bucket",
@@ -1226,7 +1194,7 @@ export class SprootDB implements ISprootDB {
       whereRaw,
       limit,
       cursorColumn: "bucket",
-      aggregates: [...(request.aggregates ?? VALID_AGGREGATES)],
+      aggregates: [...(request.aggregates ?? DEFAULT_AGGREGATES)],
       formatRows: formatOutputAggregateRows,
     });
   }
@@ -1264,6 +1232,32 @@ export class SprootDB implements ISprootDB {
   // ---------------------------------------------------------------------------
   // Metadata helpers
   // ---------------------------------------------------------------------------
+
+  #buildAggregateFilters(
+    request: SensorDataQueryRequest | OutputDataQueryRequest,
+    idColumnName: "sensor_id" | "output_id",
+    readingTypes: string[] | undefined,
+  ) {
+    const cursor = this.parseCursor(request.cursor);
+    const { start, end } = request.timeRange;
+    const ids = request.ids;
+
+    const timeFilter = cursor
+      ? this.#connection.raw('"bucket" > ?', [cursor])
+      : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
+
+    const idFilter =
+      ids && ids.length > 0
+        ? this.#connection.raw(`"${idColumnName}" IN (${ids.map(() => "?").join(", ")})`, ids)
+        : this.#connection.raw("1=1");
+
+    const metricFilter =
+      readingTypes && readingTypes.length > 0
+        ? this.#connection.raw('"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")", readingTypes)
+        : this.#connection.raw("1=1");
+
+    return this.#connection.raw("? AND ? AND ?", [timeFilter, idFilter, metricFilter]);
+  }
 
   async [Symbol.asyncDispose](): Promise<void> {
     await this.#connection.destroy();
