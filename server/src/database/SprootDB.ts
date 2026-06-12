@@ -49,10 +49,7 @@ import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
   VALID_AGGREGATES,
-  Downsample,
   Aggregate,
-  SENSOR_HISTORY_TABLE,
-  OUTPUT_HISTORY_TABLE,
   SENSOR_AGGREGATE_TABLES,
   OUTPUT_AGGREGATE_TABLES,
   BUCKET_MINUTES_TO_SENSOR_TABLE,
@@ -63,7 +60,6 @@ import {
   normalizeBucketMinutes,
   getLookbackDate,
   getRecentTailStart,
-  resolveBucketMinutes,
   formatSensorAggregateRows,
   formatOutputAggregateRows,
 } from "./databaseQueryUtils";
@@ -72,11 +68,10 @@ import {
 // Generic data query configuration
 // ---------------------------------------------------------------------------
 
-interface DataQueryConfig<T> {
+ interface DataQueryConfig<T> {
   tableName: string;
   selectColumns: (string | Knex.Raw)[];
-  whereClause: string;
-  whereValues: unknown[];
+  whereRaw: Knex.Raw;
   limit: number;
   cursorColumn: string;
   aggregates: Aggregate[];
@@ -91,7 +86,6 @@ interface DataQueryConfig<T> {
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
-  #_aggregateTablesExistCache: boolean | null = null;
 
   constructor(connection: Knex) {
     this.#connection = connection;
@@ -1123,59 +1117,13 @@ export class SprootDB implements ISprootDB {
   // ---------------------------------------------------------------------------
 
   async querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
-    return this.#queryDataWithRoutingAsync(
-      request.downsample,
-      SENSOR_AGGREGATE_TABLES,
-      BUCKET_MINUTES_TO_SENSOR_TABLE,
-      async (bucketMinutes) => this.#querySensorDataRawAsync(request, bucketMinutes),
-      async (aggregateTableName) =>
-        this.#querySensorDataAggregateAsync(request, aggregateTableName),
-    );
+    const tableName = SENSOR_AGGREGATE_TABLES[request.downsample ?? "5m"]!;
+    return this.#querySensorDataAggregateAsync(request, tableName);
   }
 
   async queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
-    return this.#queryDataWithRoutingAsync(
-      request.downsample,
-      OUTPUT_AGGREGATE_TABLES,
-      BUCKET_MINUTES_TO_OUTPUT_TABLE,
-      async (bucketMinutes) => this.#queryOutputDataRawAsync(request, bucketMinutes),
-      async (aggregateTableName) =>
-        this.#queryOutputDataAggregateAsync(request, aggregateTableName),
-    );
-  }
-
-  async #queryDataWithRoutingAsync<T>(
-    downsample: Downsample | undefined,
-    aggregateTableMap: Record<string, string>,
-    bucketMinutesMap: Record<number, string | undefined>,
-    rawQuery: (bucketMinutes: number) => Promise<T>,
-    aggregateQuery: (aggregateTableName: string) => Promise<T>,
-  ): Promise<T> {
-    let aggregateTableName: string | undefined;
-
-    if (downsample) {
-      aggregateTableName = aggregateTableMap[downsample];
-    }
-
-    const aggregatesExist = await this.#aggregateTablesExistAsync();
-    const bucketMinutes = resolveBucketMinutes(downsample);
-
-    if (aggregateTableName) {
-      if (!aggregatesExist) {
-        return rawQuery(bucketMinutes);
-      }
-      return aggregateQuery(aggregateTableName);
-    }
-
-    const tableFromBucketMinutes = bucketMinutesMap[bucketMinutes];
-    if (tableFromBucketMinutes) {
-      if (!aggregatesExist) {
-        return rawQuery(bucketMinutes);
-      }
-      return aggregateQuery(tableFromBucketMinutes);
-    }
-
-    return rawQuery(bucketMinutes);
+    const tableName = OUTPUT_AGGREGATE_TABLES[request.downsample ?? "5m"]!;
+    return this.#queryOutputDataAggregateAsync(request, tableName);
   }
 
   // ---------------------------------------------------------------------------
@@ -1192,27 +1140,22 @@ export class SprootDB implements ISprootDB {
     const ids = request.ids;
     const readingTypes = request.readingTypes;
 
-    const { whereClause: timeWhere, whereValues: timeValues } = this.#buildTimeFilter(
-      "bucket",
-      cursor,
-      start,
-      end,
-    );
+    const timeFilter = cursor
+      ? this.#connection.raw('"bucket" > ?', [cursor])
+      : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
 
     const sensorIdFilter = ids
-      ? this.#connection.raw('"sensor_id" IN (?)', [ids])
+      ? this.#connection.raw('"sensor_id" IN (' + ids.map(() => "?").join(", ") + ")", ids)
       : this.#connection.raw("1=1");
 
     const metricFilter = readingTypes
-      ? this.#connection.raw('"metric" IN (?)', [readingTypes])
+      ? this.#connection.raw('"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")", readingTypes)
       : this.#connection.raw("1=1");
 
-    const whereClause = `${timeWhere} AND ${sensorIdFilter.toQuery()} AND ${metricFilter.toQuery()}`;
-    const whereValues = [
-      ...timeValues,
-      ...((sensorIdFilter as any).bindings ?? []),
-      ...((metricFilter as any).bindings ?? []),
-    ];
+    const whereRaw = this.#connection.raw(
+      "? AND ? AND ?",
+      [timeFilter, sensorIdFilter, metricFilter],
+    );
 
     const selectColumns: (string | Knex.Raw)[] = [
       "bucket",
@@ -1224,7 +1167,6 @@ export class SprootDB implements ISprootDB {
       "minimum_data",
       "maximum_data",
       "stddev_data",
-      "last_log_time",
       this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_data", [
         request.percentile ?? 0.5,
       ]),
@@ -1233,84 +1175,10 @@ export class SprootDB implements ISprootDB {
     return this.#queryDataAsync({
       tableName: aggregateTableName,
       selectColumns,
-      whereClause,
-      whereValues,
+      whereRaw,
       limit,
       cursorColumn: "bucket",
       aggregates: [...(request.aggregates ?? VALID_AGGREGATES)],
-      formatRows: formatSensorAggregateRows,
-    });
-  }
-
-  // ---------------------------------------------------------------------------
-  // Sensor raw path — SQL aggregation via time_bucket
-  // Requires TimescaleDB extension (FIRST/LAST functions, time_bucket)
-  // ---------------------------------------------------------------------------
-
-  async #querySensorDataRawAsync(
-    request: SensorDataQueryRequest,
-    bucketMinutes: number,
-  ): Promise<SensorDataQueryResponse> {
-    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
-    const { start, end } = request.timeRange;
-    const cursor = this.parseCursor(request.cursor);
-    const ids = request.ids;
-    const readingTypes = request.readingTypes;
-
-    const timeBucketCol = `time_bucket(INTERVAL '${bucketMinutes} minutes', "logTime")`;
-    const { whereClause: timeWhere, whereValues: timeValues } = this.#buildTimeFilter(
-      timeBucketCol,
-      cursor,
-      start,
-      end,
-    );
-
-    const sensorIdFilter = ids
-      ? this.#connection.raw('"sensor_id" IN (?)', [ids])
-      : this.#connection.raw("1=1");
-
-    const metricFilter = readingTypes
-      ? this.#connection.raw('"metric" IN (?)', [readingTypes])
-      : this.#connection.raw("1=1");
-
-    const whereClause = `${timeWhere} AND ${sensorIdFilter.toQuery()} AND ${metricFilter.toQuery()}`;
-    const whereValues = [
-      ...timeValues,
-      ...((sensorIdFilter as any).bindings ?? []),
-      ...((metricFilter as any).bindings ?? []),
-    ];
-
-    const selectColumns: (string | Knex.Raw)[] = [
-      this.#connection.raw('time_bucket(INTERVAL \'? minutes\', "logTime") AS "bucket"', [
-        bucketMinutes,
-      ]),
-      "sensor_id",
-      "metric",
-      "units",
-      this.#connection.raw('COUNT(*) AS "sample_count"'),
-      this.#connection.raw('AVG("data") AS "average_data"'),
-      this.#connection.raw('MIN("data") AS "minimum_data"'),
-      this.#connection.raw('MAX("data") AS "maximum_data"'),
-      this.#connection.raw('STDDEV_SAMP("data") AS "stddev_data"'),
-      this.#connection.raw(
-        'PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY "data") AS "percentile_data"',
-        [request.percentile ?? 0.5],
-      ),
-      this.#connection.raw('FIRST("data", "logTime" ORDER BY "logTime" ASC) AS "first_data"'),
-      this.#connection.raw('LAST("data", "logTime" ORDER BY "logTime" DESC) AS "last_data"'),
-      this.#connection.raw('MAX("logTime") AS "last_log_time"'),
-    ];
-
-    return this.#queryDataAsync({
-      tableName: SENSOR_HISTORY_TABLE,
-      selectColumns,
-      whereClause,
-      whereValues,
-      limit,
-      cursorColumn: "bucket",
-      aggregates: [...(request.aggregates ?? VALID_AGGREGATES)],
-      groupByRaw: 'time_bucket(INTERVAL \'? minutes\', "logTime"), "sensor_id", "metric", "units"',
-      groupByValues: [bucketMinutes],
       formatRows: formatSensorAggregateRows,
     });
   }
@@ -1329,19 +1197,15 @@ export class SprootDB implements ISprootDB {
 
     const cursor = this.parseCursor(request.cursor);
 
-    const { whereClause: timeWhere, whereValues: timeValues } = this.#buildTimeFilter(
-      "bucket",
-      cursor,
-      start,
-      end,
-    );
+    const timeFilter = cursor
+      ? this.#connection.raw('"bucket" > ?', [cursor])
+      : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
 
     const outputIdFilter = ids
-      ? this.#connection.raw('"output_id" IN (?)', [ids])
+      ? this.#connection.raw('"output_id" IN (' + ids.map(() => "?").join(", ") + ")", ids)
       : this.#connection.raw("1=1");
 
-    const whereClause = `${timeWhere} AND ${outputIdFilter.toQuery()}`;
-    const whereValues = [...timeValues, ...((outputIdFilter as any).bindings ?? [])];
+    const whereRaw = this.#connection.raw("? AND ?", [timeFilter, outputIdFilter]);
 
     const selectColumns: (string | Knex.Raw)[] = [
       "bucket",
@@ -1351,7 +1215,6 @@ export class SprootDB implements ISprootDB {
       "minimum_value",
       "maximum_value",
       "stddev_value",
-      "last_log_time",
       this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_value", [
         request.percentile ?? 0.5,
       ]),
@@ -1360,73 +1223,10 @@ export class SprootDB implements ISprootDB {
     return this.#queryDataAsync({
       tableName: aggregateTableName,
       selectColumns,
-      whereClause,
-      whereValues,
+      whereRaw,
       limit,
       cursorColumn: "bucket",
       aggregates: [...(request.aggregates ?? VALID_AGGREGATES)],
-      formatRows: formatOutputAggregateRows,
-    });
-  }
-
-  // ---------------------------------------------------------------------------
-  // Output raw path — SQL aggregation via time_bucket
-  // Requires TimescaleDB extension (FIRST/LAST functions, time_bucket)
-  // ---------------------------------------------------------------------------
-
-  async #queryOutputDataRawAsync(
-    request: OutputDataQueryRequest,
-    bucketMinutes: number,
-  ): Promise<OutputDataQueryResponse> {
-    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
-    const { start, end } = request.timeRange;
-    const cursor = this.parseCursor(request.cursor);
-    const ids = request.ids;
-
-    const timeBucketCol = `time_bucket(INTERVAL '${bucketMinutes} minutes', "logTime")`;
-    const { whereClause: timeWhere, whereValues: timeValues } = this.#buildTimeFilter(
-      timeBucketCol,
-      cursor,
-      start,
-      end,
-    );
-
-    const outputIdFilter = ids
-      ? this.#connection.raw('"output_id" IN (?)', [ids])
-      : this.#connection.raw("1=1");
-
-    const whereClause = `${timeWhere} AND ${outputIdFilter.toQuery()}`;
-    const whereValues = [...timeValues, ...((outputIdFilter as any).bindings ?? [])];
-
-    const selectColumns: (string | Knex.Raw)[] = [
-      this.#connection.raw('time_bucket(INTERVAL \'? minutes\', "logTime") AS "bucket"', [
-        bucketMinutes,
-      ]),
-      "output_id",
-      this.#connection.raw('COUNT(*) AS "sample_count"'),
-      this.#connection.raw('AVG("value") AS "average_value"'),
-      this.#connection.raw('MIN("value") AS "minimum_value"'),
-      this.#connection.raw('MAX("value") AS "maximum_value"'),
-      this.#connection.raw('STDDEV_SAMP("value") AS "stddev_value"'),
-      this.#connection.raw(
-        'PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY "value") AS "percentile_value"',
-        [request.percentile ?? 0.5],
-      ),
-      this.#connection.raw('FIRST("value", "logTime" ORDER BY "logTime" ASC) AS "first_value"'),
-      this.#connection.raw('LAST("value", "logTime" ORDER BY "logTime" DESC) AS "last_value"'),
-      this.#connection.raw('MAX("logTime") AS "last_log_time"'),
-    ];
-
-    return this.#queryDataAsync({
-      tableName: OUTPUT_HISTORY_TABLE,
-      selectColumns,
-      whereClause,
-      whereValues,
-      limit,
-      cursorColumn: "bucket",
-      aggregates: [...(request.aggregates ?? VALID_AGGREGATES)],
-      groupByRaw: 'time_bucket(INTERVAL \'? minutes\', "logTime"), "output_id"',
-      groupByValues: [bucketMinutes],
       formatRows: formatOutputAggregateRows,
     });
   }
@@ -1438,7 +1238,7 @@ export class SprootDB implements ISprootDB {
   async #queryDataAsync<T>(config: DataQueryConfig<T>): Promise<T> {
     const query = this.#connection(config.tableName)
       .select(...config.selectColumns)
-      .whereRaw(config.whereClause, config.whereValues as any);
+      .where(config.whereRaw);
 
     if (config.groupByRaw) {
       query.groupByRaw(config.groupByRaw, ...((config.groupByValues as Knex.RawBinding[]) ?? []));
@@ -1459,49 +1259,6 @@ export class SprootDB implements ISprootDB {
     }
 
     return config.formatRows(truncated, config.aggregates, nextCursor);
-  }
-
-  #buildTimeFilter(
-    column: string | Knex.Raw,
-    cursor: Date | string | undefined,
-    start: string,
-    end: string,
-  ): { whereClause: string; whereValues: unknown[] } {
-    const timeFilter = cursor
-      ? this.#connection.raw(`${column} > ?`, [cursor])
-      : this.#connection.raw(`${column} BETWEEN ? AND ?`, [start, end]);
-
-    return {
-      whereClause: timeFilter.toQuery(),
-      whereValues: [...((timeFilter as any).bindings ?? [])],
-    };
-  }
-
-  // ---------------------------------------------------------------------------
-  // Aggregate table existence check
-  // ---------------------------------------------------------------------------
-
-  async #aggregateTablesExistAsync(): Promise<boolean> {
-    if (this.#_aggregateTablesExistCache !== null) {
-      return this.#_aggregateTablesExistCache;
-    }
-
-    const tableNames = [
-      ...Object.values(SENSOR_AGGREGATE_TABLES),
-      ...Object.values(OUTPUT_AGGREGATE_TABLES),
-    ];
-
-    const result = await this.#connection.raw(
-      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN (?)`,
-      [tableNames],
-    );
-
-    const existingTables = new Set(
-      (result as { rows: { tablename: string }[] })?.rows?.map((r) => r.tablename) ?? [],
-    );
-
-    this.#_aggregateTablesExistCache = tableNames.every((t) => existingTables.has(t));
-    return this.#_aggregateTablesExistCache;
   }
 
   // ---------------------------------------------------------------------------
