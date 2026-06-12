@@ -139,4 +139,7 @@ client/.env.development
 *.sproot.gz
 
 build
-.prompts/**
+.prompts/**.superpowers
+.opencode
+.superpowers
+ANCHOR.md
