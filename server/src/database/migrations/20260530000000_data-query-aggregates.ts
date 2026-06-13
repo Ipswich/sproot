@@ -234,7 +234,9 @@ export async function up(knex: Knex): Promise<void> {
     WITH (timescaledb.continuous) AS
     SELECT
       time_bucket(INTERVAL '5 minutes', "logTime") AS bucket,
-      sensor_id, metric, units,
+      sensor_id,
+      metric,
+      first(units, "logTime" ORDER BY "logTime" ASC) AS units,
       COUNT(*) AS sample_count,
       AVG(data)::numeric(12, 7) AS average_data,
       MIN(data) AS minimum_data,
@@ -244,7 +246,7 @@ export async function up(knex: Knex): Promise<void> {
       last(data, "logTime" ORDER BY "logTime" DESC) AS last_data,
       percentile_agg(data) AS percentile_sketch
     FROM "sensor_data"
-    GROUP BY bucket, sensor_id, metric, units
+    GROUP BY bucket, sensor_id, metric
     WITH NO DATA;
   `);
   await knex.raw(`
