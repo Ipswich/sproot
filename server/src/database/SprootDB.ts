@@ -1248,7 +1248,7 @@ export class SprootDB implements ISprootDB {
     idColumnName: "sensor_id" | "output_id",
     readingTypes: string[] | undefined,
   ) {
-    const cursor = this.parseCursor(request.cursor);
+    const cursor = this.#parseCursor(request.cursor);
     const { start, end } = request.timeRange;
     const ids = request.ids;
 
@@ -1276,7 +1276,7 @@ export class SprootDB implements ISprootDB {
     await this.#connection.destroy();
   }
 
-  protected parseCursor(cursor: string | undefined): Date | undefined {
+  #parseCursor(cursor: string | undefined): Date | undefined {
     if (!cursor) return undefined;
     try {
       const decoded = Buffer.from(cursor, "base64").toString();

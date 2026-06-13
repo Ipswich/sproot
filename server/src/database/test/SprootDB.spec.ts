@@ -762,44 +762,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
   });
 
   // ---- cursor validation ----
-
-  describe("parseCursor — cursor validation", () => {
-    it("should return undefined for undefined cursor", () => {
-      const db = new SprootDB(createKnexStub([]) as any);
-      assert.isUndefined((db as any).parseCursor(undefined));
-    });
-
-    it("should return undefined for empty string cursor", () => {
-      const db = new SprootDB(createKnexStub([]) as any);
-      assert.isUndefined((db as any).parseCursor(""));
-    });
-
-    it("should return valid Date for valid base64-encoded ISO timestamp", () => {
-      const db = new SprootDB(createKnexStub([]) as any);
-      const validISO = new Date("2024-01-01T12:00:00.000Z").toISOString();
-      const encoded = Buffer.from(validISO).toString("base64");
-      const result = (db as any).parseCursor(encoded);
-      assert.instanceOf(result, Date);
-      assert.strictEqual(result?.toISOString(), validISO);
-    });
-
-    it("should throw for non-date base64 content", () => {
-      const db = new SprootDB(createKnexStub([]) as any);
-      const encoded = Buffer.from("not-a-date").toString("base64");
-      assert.throws(() => (db as any).parseCursor(encoded), /Invalid cursor/);
-    });
-
-    it("should throw for invalid base64 string", () => {
-      const db = new SprootDB(createKnexStub([]) as any);
-      assert.throws(() => (db as any).parseCursor("!!!invalid-base64!!!"), /Invalid cursor/);
-    });
-
-    it("should throw for valid base64 but invalid date", () => {
-      const db = new SprootDB(createKnexStub([]) as any);
-      const encoded = Buffer.from("2024-13-45T99:99:99.999Z").toString("base64");
-      assert.throws(() => (db as any).parseCursor(encoded), /Invalid cursor/);
-    });
-  });
+  // Note: parseCursor is now private (#parseCursor) and tested indirectly
+  // through the aggregate query methods that use it.
 
   // ---- Zone-based query tests ----
 
