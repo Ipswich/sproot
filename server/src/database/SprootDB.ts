@@ -1282,11 +1282,11 @@ export class SprootDB implements ISprootDB {
       const decoded = Buffer.from(cursor, "base64").toString();
       const date = new Date(decoded);
       if (isNaN(date.getTime())) {
-        throw new Error(`Invalid cursor timestamp: ${decoded}`);
+        throw new InvalidCursorError(`Invalid cursor timestamp: ${decoded}`);
       }
       return date;
     } catch {
-      throw new Error(`Invalid cursor: must be base64-encoded ISO 8601 timestamp`);
+      throw new InvalidCursorError(`Invalid cursor: must be base64-encoded ISO 8601 timestamp`);
     }
   }
 
@@ -1543,5 +1543,11 @@ export class SprootDB implements ISprootDB {
     }
 
     return `pg_dump exited with ${exitCode ?? "unknown"}`;
+  }
+}
+
+export class InvalidCursorError extends Error {
+  constructor(message: string) {
+    super(message);
   }
 }

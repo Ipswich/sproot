@@ -1,7 +1,7 @@
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { DI_KEYS } from "../../../utils/DependencyInjectionConstants";
-import { SprootDB } from "../../../database/SprootDB";
+import { SprootDB, InvalidCursorError } from "../../../database/SprootDB";
 import { safeErrorMessage, GENERIC_ERROR_MESSAGE } from "../../../utils/errorSanitizer";
 import { ValidationResultType } from "@sproot/api/v2/QueryTypes";
 
@@ -45,6 +45,17 @@ export function createDataQueryHandler<T, R extends { data: unknown; nextCursor?
         ...response.locals["defaultProperties"],
       };
     } catch (error: unknown) {
+      if (error instanceof InvalidCursorError) {
+        return {
+          statusCode: 400,
+          error: {
+            name: "Validation Error",
+            url: request.originalUrl,
+            details: [error.message],
+          },
+          ...response.locals["defaultProperties"],
+        };
+      }
       const message = safeErrorMessage(error);
       return {
         statusCode: 500,
