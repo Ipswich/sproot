@@ -64,7 +64,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
       assert.equal(result.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
       assert.isTrue(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).calledOnce,
+        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub)
+          .calledOnce,
       );
     });
 

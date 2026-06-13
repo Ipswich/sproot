@@ -57,11 +57,11 @@ import {
 } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 
 import {
+  formatSensorAggregateRows,
+  formatOutputAggregateRows,
   normalizeBucketMinutes,
   getLookbackDate,
   getRecentTailStart,
-  formatSensorAggregateRows,
-  formatOutputAggregateRows,
 } from "./databaseQueryUtils";
 
 // ---------------------------------------------------------------------------
@@ -1117,12 +1117,18 @@ export class SprootDB implements ISprootDB {
   // ---------------------------------------------------------------------------
 
   async querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
-    const tableName = SENSOR_AGGREGATE_TABLES[request.downsample ?? "5m"]!;
+    const tableName = SENSOR_AGGREGATE_TABLES[request.downsample ?? "5m"];
+    if (!tableName) {
+      throw new Error(`Unknown downsample interval: ${request.downsample ?? "5m"}`);
+    }
     return this.#querySensorDataAggregateAsync(request, tableName);
   }
 
   async queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
-    const tableName = OUTPUT_AGGREGATE_TABLES[request.downsample ?? "5m"]!;
+    const tableName = OUTPUT_AGGREGATE_TABLES[request.downsample ?? "5m"];
+    if (!tableName) {
+      throw new Error(`Unknown downsample interval: ${request.downsample ?? "5m"}`);
+    }
     return this.#queryOutputDataAggregateAsync(request, tableName);
   }
 
@@ -1148,6 +1154,8 @@ export class SprootDB implements ISprootDB {
       "minimum_data",
       "maximum_data",
       "stddev_data",
+      "first_data",
+      "last_data",
       this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_data", [
         request.percentile ?? 0.5,
       ]),
@@ -1183,6 +1191,8 @@ export class SprootDB implements ISprootDB {
       "minimum_value",
       "maximum_value",
       "stddev_value",
+      "first_value",
+      "last_value",
       this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_value", [
         request.percentile ?? 0.5,
       ]),
@@ -1253,7 +1263,10 @@ export class SprootDB implements ISprootDB {
 
     const metricFilter =
       readingTypes && readingTypes.length > 0
-        ? this.#connection.raw('"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")", readingTypes)
+        ? this.#connection.raw(
+            '"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")",
+            readingTypes,
+          )
         : this.#connection.raw("1=1");
 
     return this.#connection.raw("? AND ? AND ?", [timeFilter, idFilter, metricFilter]);

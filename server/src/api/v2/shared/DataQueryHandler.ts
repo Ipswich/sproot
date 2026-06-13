@@ -10,13 +10,13 @@ type ValidatorFn = (body: unknown) => ValidationResultType;
 type QueryFn<T, R> = (db: SprootDB, params: T) => Promise<R>;
 
 export function createDataQueryHandler<T, R extends { data: unknown; nextCursor?: string }>(
-  _validate: ValidatorFn,
+  validate: ValidatorFn,
   queryMethod: QueryFn<T, R>,
 ) {
   return async (request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> => {
     const sprootDB = request.app.get(DI_KEYS.SprootDB) as SprootDB;
 
-    const validation = _validate(request.body);
+    const validation = validate(request.body);
     if (!validation.valid) {
       return {
         statusCode: 400,

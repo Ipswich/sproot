@@ -552,7 +552,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       const rawCalls = (knex as any).rawCalls || [];
-      const metricFilterSql = rawCalls.find((s: string) => s.includes('"metric"') && s.includes("IN"));
+      const metricFilterSql = rawCalls.find(
+        (s: string) => s.includes('"metric"') && s.includes("IN"),
+      );
       assert.isDefined(metricFilterSql, "Should have a metric IN filter");
       assert.include(metricFilterSql!, "?");
       assert.include(metricFilterSql!, "metric");
@@ -604,7 +606,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       const rawCalls = (knex as any).rawCalls || [];
-      const timeFilterSql = rawCalls.find((s: string) => s.includes("bucket") && s.includes("BETWEEN"));
+      const timeFilterSql = rawCalls.find(
+        (s: string) => s.includes("bucket") && s.includes("BETWEEN"),
+      );
       assert.isDefined(timeFilterSql, "Should have a BETWEEN filter for time range");
     });
   });
@@ -726,6 +730,34 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         .filter((c) => c.args[0]?.includes("approx_percentile"));
       assert.isAtLeast(percentileCalls.length, 1);
       assert.equal(percentileCalls[0]!.args[1]?.[0], 0.95);
+    });
+
+    it("should throw descriptive error for unknown downsample interval", async () => {
+      const knex = createKnexStub([]);
+      const db = new SprootDB(knex as any);
+
+      await assert.isRejected(
+        db.querySensorDataAsync({
+          timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
+          downsample: "3m" as any,
+          limit: 10,
+        } as SensorDataQueryRequest),
+        /Unknown downsample interval: 3m/,
+      );
+    });
+
+    it("should throw descriptive error for unknown output downsample interval", async () => {
+      const knex = createKnexStub([]);
+      const db = new SprootDB(knex as any);
+
+      await assert.isRejected(
+        db.queryOutputDataAsync({
+          timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
+          downsample: "3m" as any,
+          limit: 10,
+        } as OutputDataQueryRequest),
+        /Unknown downsample interval: 3m/,
+      );
     });
   });
 

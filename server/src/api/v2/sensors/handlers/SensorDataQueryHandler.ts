@@ -1,7 +1,7 @@
 import {
   SensorDataQueryRequest,
   validateSensorDataQueryRequest,
-} from "../../../../../../common/dist/api/v2/QueryTypes";
+} from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 import { createDataQueryHandler } from "../../shared/DataQueryHandler";
 
 export const sensorDataQueryHandlerAsync = createDataQueryHandler<
