@@ -165,7 +165,7 @@ VITE_API_SERVER_URL=<your server URL>
 
 **Server:** `ghcr.io/ipswich/sproot-server:latest`
 **Client:** `ghcr.io/ipswich/sproot-client:latest` (nginx + React)
-**DB:** `timescale/timescaledb-ha:pg18-ts2.27-oss`
+**DB:** `timescale/timescaledb-ha:pg18-ts2.27`
 **pgAdmin:** `dpage/pgadmin4:9.14.0`
 
 ## Key Directories

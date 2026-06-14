@@ -53,7 +53,7 @@ services:
       - "80"
 
   postgres:
-    image: timescale/timescaledb-ha:pg18-ts2.27-oss
+    image: timescale/timescaledb-ha:pg18-ts2.27
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
