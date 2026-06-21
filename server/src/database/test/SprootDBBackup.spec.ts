@@ -1,6 +1,8 @@
 import { assert } from "chai";
 import { readFileSync } from "fs";
 import path from "path";
+import { Knex } from "knex";
+import { SprootDB } from "../SprootDB";
 
 describe("SprootDB pg_dump format", () => {
   const sourcePath = path.resolve(process.cwd(), "src/database/SprootDB.ts");
@@ -221,6 +223,32 @@ describe("SprootDB pg_dump format", () => {
         '#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")',
         "psql hook should use #buildRestoreErrorMessage with 'psql' tool name",
       );
+    });
+  });
+
+  describe("public backup/restore API surface", () => {
+    let mockKnex: Knex;
+
+    beforeEach(() => {
+      mockKnex = {
+        client: {
+          database: () => "test_db",
+        },
+      } as unknown as Knex;
+    });
+
+    describe("backupDatabaseAsync", () => {
+      it("should exist and be a function", () => {
+        const db = new SprootDB(mockKnex);
+        assert.isFunction(db.backupDatabaseAsync);
+      });
+    });
+
+    describe("restoreDatabaseAsync", () => {
+      it("should exist and be a function", () => {
+        const db = new SprootDB(mockKnex);
+        assert.isFunction(db.restoreDatabaseAsync);
+      });
     });
   });
 });
