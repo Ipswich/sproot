@@ -20,17 +20,15 @@ describe("SprootDB pg_dump format", () => {
   it("should use --compress=9 for maximum compression", () => {
     const source = readFileSync(sourcePath, "utf-8");
 
-    assert.include(
-      source,
-      "--compress=9",
-      "pg_dump should use maximum compression level",
-    );
+    assert.include(source, "--compress=9", "pg_dump should use maximum compression level");
   });
 
   it("should not use --format=plain in backupDatabaseArchiveAsync", () => {
     const source = readFileSync(sourcePath, "utf-8");
 
-    const methodMatch = source.match(/async #backupDatabaseArchiveAsync[\s\S]*?#restoreDatabaseArchiveAsync/);
+    const methodMatch = source.match(
+      /async #backupDatabaseArchiveAsync[\s\S]*?#restoreDatabaseArchiveAsync/,
+    );
 
     assert.isDefined(methodMatch, "backupDatabaseArchiveAsync method should exist in source");
 
@@ -45,16 +43,23 @@ describe("SprootDB pg_dump format", () => {
     it("should use pg_restore instead of psql for restore", () => {
       const source = readFileSync(sourcePath, "utf-8");
 
+      // Capture from restoreDatabaseArchiveAsync through the pg_restore helper method
       const restoreMatch = source.match(
-        /async #restoreDatabaseArchiveAsync[\s\S]*?(?:#buildDatabaseDumpErrorMessage|}$)/,
+        /async #restoreDatabaseArchiveAsync[\s\S]*?async #runTimescaleHookAsync/,
       );
 
-      assert.isDefined(restoreMatch, "restoreDatabaseArchiveAsync method should exist in source");
+      assert.isDefined(restoreMatch, "restore flow should exist in source");
 
-      const restoreMethod = restoreMatch![0];
-      assert.include(restoreMethod, "pg_restore", "restore should use pg_restore instead of psql");
+      const restoreFlow = restoreMatch![0];
+      assert.include(restoreFlow, "PgRestore", "restore should use pg_restore instead of psql");
+
+      // The restore method body itself should not spawn psql directly; it delegates to helpers.
+      // #runTimescaleHookAsync does use psql for TimescaleDB hooks, so we check that
+      // #restoreDatabaseArchiveAsync does not directly call spawn("psql")
+      const restoreBody = source.match(/async #restoreDatabaseArchiveAsync[\s\S]*?\n  \}\n\n/);
+      assert.isDefined(restoreBody, "restore method body should exist");
       assert.isFalse(
-        restoreMethod.includes('spawn("psql"'),
+        restoreBody![0].includes('spawn("psql"'),
         "restore should not use psql directly",
       );
     });
@@ -63,7 +68,7 @@ describe("SprootDB pg_dump format", () => {
       const source = readFileSync(sourcePath, "utf-8");
 
       const restoreMatch = source.match(
-        /async #restoreDatabaseArchiveAsync[\s\S]*?(?:#buildDatabaseDumpErrorMessage|}$)/,
+        /async #restoreDatabaseArchiveAsync[\s\S]*?(?=async #runTimescaleHookAsync|async #restoreViaPgRestoreAsync|\n  \})/,
       );
 
       assert.isDefined(restoreMatch, "restoreDatabaseArchiveAsync method should exist in source");
@@ -79,7 +84,7 @@ describe("SprootDB pg_dump format", () => {
       const source = readFileSync(sourcePath, "utf-8");
 
       const restoreMatch = source.match(
-        /async #restoreDatabaseArchiveAsync[\s\S]*?(?:#buildDatabaseDumpErrorMessage|}$)/,
+        /async #restoreDatabaseArchiveAsync[\s\S]*?(?=async #runTimescaleHookAsync|async #restoreViaPgRestoreAsync|\n  \})/,
       );
 
       assert.isDefined(restoreMatch, "restoreDatabaseArchiveAsync method should exist in source");
@@ -116,7 +121,11 @@ describe("SprootDB pg_dump format", () => {
 
       assert.include(source, "--clean", "pg_restore should use --clean flag");
       assert.include(source, "--if-exists", "pg_restore should use --if-exists flag");
-      assert.include(source, "--single-transaction", "pg_restore should use --single-transaction flag");
+      assert.include(
+        source,
+        "--single-transaction",
+        "pg_restore should use --single-transaction flag",
+      );
     });
   });
 
@@ -138,41 +147,17 @@ describe("SprootDB pg_dump format", () => {
     it("#buildRestoreErrorMessage should accept toolName parameter with union type", () => {
       const source = readFileSync(sourcePath, "utf-8");
 
-      assert.include(
-        source,
-        "#buildRestoreErrorMessage",
-        "method should exist",
-      );
-      assert.include(
-        source,
-        "toolName",
-        "method should accept toolName parameter",
-      );
-      assert.include(
-        source,
-        '"pg_dump"',
-        "toolName should accept 'pg_dump' as a value",
-      );
-      assert.include(
-        source,
-        '"pg_restore"',
-        "toolName should accept 'pg_restore' as a value",
-      );
-      assert.include(
-        source,
-        '"psql"',
-        "toolName should accept 'psql' as a value",
-      );
+      assert.include(source, "#buildRestoreErrorMessage", "method should exist");
+      assert.include(source, "toolName", "method should accept toolName parameter");
+      assert.include(source, '"pg_dump"', "toolName should accept 'pg_dump' as a value");
+      assert.include(source, '"pg_restore"', "toolName should accept 'pg_restore' as a value");
+      assert.include(source, '"psql"', "toolName should accept 'psql' as a value");
     });
 
     it("#buildRestoreErrorMessage should handle server version mismatch", () => {
       const source = readFileSync(sourcePath, "utf-8");
 
-      assert.include(
-        source,
-        "#buildRestoreErrorMessage",
-        "method should exist",
-      );
+      assert.include(source, "#buildRestoreErrorMessage", "method should exist");
       assert.include(
         source,
         "server version mismatch",

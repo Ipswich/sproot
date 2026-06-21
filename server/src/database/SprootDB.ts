@@ -1355,11 +1355,7 @@ export class SprootDB implements ISprootDB {
 
       psql.on("exit", (code) => {
         if (code !== 0) {
-          reject(
-            new Error(
-              this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql"),
-            ),
-          );
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
         } else {
           resolve();
         }
@@ -1419,7 +1415,9 @@ export class SprootDB implements ISprootDB {
 
       pgRestore.on("exit", (code) => {
         if (code !== 0) {
-          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")));
+          reject(
+            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")),
+          );
         } else {
           resolve();
         }
