@@ -1295,8 +1295,34 @@ export class SprootDB implements ISprootDB {
     inputFile: string,
     databaseName: string,
   ): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-      const gunzip = spawn("gunzip", ["-c", inputFile]);
+    await this.#runTimescaleHookAsync(
+      host,
+      port,
+      user,
+      password,
+      databaseName,
+      "timescaledb_pre_restore",
+    );
+    await this.#restoreViaPgRestoreAsync(host, port, user, password, inputFile, databaseName);
+    await this.#runTimescaleHookAsync(
+      host,
+      port,
+      user,
+      password,
+      databaseName,
+      "timescaledb_post_restore",
+    );
+  }
+
+  async #runTimescaleHookAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+    functionName: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
       const psql = spawn(
         "psql",
         [
@@ -1304,6 +1330,62 @@ export class SprootDB implements ISprootDB {
           `--port=${port}`,
           `--username=${user}`,
           `--dbname=${databaseName}`,
+          "-c",
+          `SELECT ${functionName}();`,
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+
+      let stderrChunks: string[] = [];
+      psql.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("psql:", chunk);
+      });
+
+      psql.on("error", (err) => reject(err));
+
+      psql.on("exit", (code) => {
+        if (code !== 0) {
+          reject(
+            new Error(
+              `timescaledb hook ${functionName} failed with code ${code}: ${stderrChunks.join("")}`,
+            ),
+          );
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  async #restoreViaPgRestoreAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    inputFile: string,
+    databaseName: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const gunzip = spawn("gunzip", ["-c", inputFile]);
+      const pgRestore = spawn(
+        "pg_restore",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          `--dbname=${databaseName}`,
+          "--clean",
+          "--if-exists",
           "--single-transaction",
           "--set=ON_ERROR_STOP=on",
         ],
@@ -1318,21 +1400,29 @@ export class SprootDB implements ISprootDB {
         },
       );
 
-      gunzip.stdout.pipe(psql.stdin);
+      gunzip.stdout.pipe(pgRestore.stdin);
 
+      let stderrChunks: string[] = [];
       gunzip.stderr.on("data", (d) => console.error("gunzip:", d.toString()));
-      psql.stderr.on("data", (d) => console.error("psql:", d.toString()));
+      pgRestore.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("pg_restore:", chunk);
+      });
 
       gunzip.on("error", (err) => reject(err));
-      psql.on("error", (err) => reject(err));
+      pgRestore.on("error", (err) => reject(err));
 
       gunzip.on("exit", (code) => {
         if (code !== 0) return reject(new Error(`gunzip exited with ${code}`));
       });
 
-      psql.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`psql exited with ${code}`));
-        resolve();
+      pgRestore.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(`pg_restore exited with ${code}: ${stderrChunks.join("")}`));
+        } else {
+          resolve();
+        }
       });
     });
   }
