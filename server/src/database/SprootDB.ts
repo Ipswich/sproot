@@ -1274,7 +1274,7 @@ export class SprootDB implements ISprootDB {
       dump.on("exit", (code) => {
         if (code !== 0) {
           return reject(
-            new Error(this.#buildDatabaseDumpErrorMessage(code, stderrChunks.join(""))),
+            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_dump")),
           );
         }
       });
@@ -1357,7 +1357,7 @@ export class SprootDB implements ISprootDB {
         if (code !== 0) {
           reject(
             new Error(
-              `timescaledb hook ${functionName} failed with code ${code}: ${stderrChunks.join("")}`,
+              this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql"),
             ),
           );
         } else {
@@ -1419,7 +1419,7 @@ export class SprootDB implements ISprootDB {
 
       pgRestore.on("exit", (code) => {
         if (code !== 0) {
-          reject(new Error(`pg_restore exited with ${code}: ${stderrChunks.join("")}`));
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")));
         } else {
           resolve();
         }
@@ -1427,21 +1427,25 @@ export class SprootDB implements ISprootDB {
     });
   }
 
-  #buildDatabaseDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
+  #buildRestoreErrorMessage(
+    exitCode: number | null,
+    stderrOutput: string,
+    toolName: "pg_dump" | "pg_restore" | "psql",
+  ): string {
     const normalizedStderr = stderrOutput.trim();
     if (normalizedStderr.includes("server version mismatch")) {
       return [
-        `pg_dump exited with ${exitCode ?? "unknown"}.`,
-        "PostgreSQL backup requires client tools that match the server major version.",
-        "Install a PostgreSQL 18 client or run backups from an environment that provides a matching pg_dump binary.",
+        `${toolName} exited with ${exitCode ?? "unknown"}.`,
+        "PostgreSQL backup/restore requires client tools that match the server major version.",
+        "Install a PostgreSQL 18 client or run backups from an environment that provides a matching binary.",
         normalizedStderr,
       ].join(" ");
     }
 
     if (normalizedStderr.length > 0) {
-      return `pg_dump exited with ${exitCode ?? "unknown"}: ${normalizedStderr}`;
+      return `${toolName} exited with ${exitCode ?? "unknown"}: ${normalizedStderr}`;
     }
 
-    return `pg_dump exited with ${exitCode ?? "unknown"}`;
+    return `${toolName} exited with ${exitCode ?? "unknown"}`;
   }
 }
