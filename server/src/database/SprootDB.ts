@@ -1254,21 +1254,17 @@ export class SprootDB implements ISprootDB {
           },
         },
       );
-      const gzip = spawn("gzip", ["-c"]);
       const out = fs.createWriteStream(outputFile, { flags: "w" });
 
-      dump.stdout.pipe(gzip.stdin);
-      gzip.stdout.pipe(out);
+      dump.stdout.pipe(out);
 
       dump.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
         console.error("pg_dump:", chunk);
       });
-      gzip.stderr.on("data", (d) => console.error("gzip:", d.toString()));
 
       dump.on("error", (err) => reject(err));
-      gzip.on("error", (err) => reject(err));
       out.on("error", (err) => reject(err));
 
       dump.on("exit", (code) => {
@@ -1277,10 +1273,7 @@ export class SprootDB implements ISprootDB {
             new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_dump")),
           );
         }
-      });
-
-      gzip.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`gzip exited with ${code}`));
+        out.end();
       });
 
       out.on("close", () => resolve());
@@ -1383,7 +1376,7 @@ export class SprootDB implements ISprootDB {
           "--clean",
           "--if-exists",
           "--single-transaction",
-          "--set=ON_ERROR_STOP=on",
+          "--exit-on-error",
         ],
         {
           env: {
