@@ -19,13 +19,6 @@ To download a backup, navigate to `Settings -> System` and expand the `Backups` 
 
 To restore from a backup, navigate to `Settings -> System` and expand the `Backups` section. Towards the bottom of the section, there's an input labeled `Restore`. Click this input, and locate your backup. Once you've located it, click `Upload`. Please note that this process will result in downtime - Sproot will halt and process the backup before restarting.
 
-Backups use the TimescaleDB-compatible custom format (`-Fc`), and the `timescaledb_pre_restore()` and `timescaledb_post_restore()` hooks are called automatically during restore to ensure hypertables are handled correctly.
-
-:::caution
-
-Old plain-SQL backups (`.sproot.gz` files created with the previous version) cannot be restored via the backup upload feature — `pg_restore` only accepts custom, directory, or tar format dumps. If you need to restore an old backup, manually decompress the `.gz` file and use `psql` to apply it to your database.
-:::
-
 ## Creating a backup
 
-While backups are automatically created nightly, you may want to make an unscheduled one. Navigate to `Settings -> System` and expand the `Backups` section. You'll notice a `Create` button; click this button and Sproot will create a new backup in the background, and update the backup list when its complete. Backups are stored in TimescaleDB-compatible custom format (`-Fc`).
+While backups are automatically created nightly, you may want to make an unscheduled one. Navigate to `Settings -> System` and expand the `Backups` section. You'll notice a `Create` button; click this button and Sproot will create a new backup in the background, and update the backup list when its complete.
