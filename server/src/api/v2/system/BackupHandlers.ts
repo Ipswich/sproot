@@ -68,7 +68,7 @@ export async function systemBackupRestoreHandlerAsync(
   // Generate a temp file path
   const tempFile =
     (await fs.promises.mkdtemp(path.join(tmpdir(), "sproot-backup-"))) +
-    "/uploaded-backup.sproot.gz";
+    "/uploaded-backup.sproot";
   const writeStream = fs.createWriteStream(tempFile, { flags: "w" });
   let uploadError: string | null = null;
 
@@ -97,15 +97,6 @@ export async function systemBackupRestoreHandlerAsync(
   }
 
   try {
-    // Check gzip header (first 2 bytes: 0x1f, 0x8b)
-    const fd = fs.openSync(tempFile, "r");
-    const buffer = new Uint8Array(2);
-    fs.readSync(fd, buffer, 0, 2, 0);
-    fs.closeSync(fd);
-    if (buffer[0] !== 0x1f || buffer[1] !== 0x8b) {
-      throw new Error("Uploaded file is not valid gzip");
-    }
-
     request.app.get("gracefulHaltAsync")(async (): Promise<void> => {
       request.app.get(DI_KEYS.Logger).info(`Restoring from backup file ${tempFile}`);
       await Backups.restoreAsync(

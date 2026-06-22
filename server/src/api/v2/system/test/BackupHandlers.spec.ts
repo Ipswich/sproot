@@ -225,7 +225,7 @@ describe("BackupHandlers.ts", () => {
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
 
-    it("should return a 400 with an invalid backup file", async () => {
+    it("should return a 202 when restoring with any file content", async () => {
       const sprootDBMock = {
         restoreDatabaseAsync: sinon.stub().resolves(false),
       };
@@ -255,11 +255,18 @@ describe("BackupHandlers.ts", () => {
           return dest;
         }),
         app: {
-          get: (_dependency: string) => sprootDBMock,
+          get: (dependency: string) => {
+            if (dependency === "gracefulHaltAsync") {
+              return async (fn: () => Promise<void>) => {
+                await fn();
+              };
+            }
+            return sprootDBMock;
+          },
         },
       } as unknown as Request;
       const result = (await systemBackupRestoreHandlerAsync(request, response)) as SuccessResponse;
-      assert.equal(result.statusCode, 400);
+      assert.equal(result.statusCode, 202);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
