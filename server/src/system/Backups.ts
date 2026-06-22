@@ -19,7 +19,7 @@ export class Backups {
   static async createAsync(sprootDB: ISprootDB, logger: winston.Logger): Promise<void> {
     try {
       if (!this.#generationStartTime) {
-        const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(new Date())}.sproot.gz`;
+        const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(new Date())}.sproot`;
         this.#generationStartTime = Date.now();
         logger.info(`Creating backup at ${backupFilePath}...`);
         await fsPromises.mkdir(BACKUP_DIRECTORY, { recursive: true });
