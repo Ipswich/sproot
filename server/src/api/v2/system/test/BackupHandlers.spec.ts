@@ -51,7 +51,7 @@ describe("BackupHandlers.ts", () => {
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
       }
-      const tempFileName = "test-backup-file.sproot.gz";
+      const tempFileName = "test-backup-file.sproot";
       const tempFilePath = path.join(tempDir, tempFileName);
       fs.writeFileSync(tempFilePath, "test data");
 

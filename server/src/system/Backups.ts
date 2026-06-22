@@ -64,13 +64,13 @@ export class Backups {
     logger: winston.Logger,
     directory: string = BACKUP_DIRECTORY,
   ): Promise<{ stream: ReadStream; size: number; name: string } | null> {
-    const path = `${directory}/${fileName}.sproot.gz`;
+    const path = `${directory}/${fileName}.sproot`;
     try {
       await fsPromises.access(path);
       return {
         stream: createReadStream(path),
         size: (await fsPromises.stat(path)).size,
-        name: `${fileName}.sproot.gz`,
+        name: `${fileName}.sproot`,
       };
     } catch (error) {
       logger.error(`Failed to get backup file ${fileName}: ${(error as Error).message}`);
@@ -90,7 +90,7 @@ export class Backups {
         return [];
       }
 
-      const suffix = ".sproot.gz";
+      const suffix = ".sproot";
       return files
         .filter(
           (file) =>
