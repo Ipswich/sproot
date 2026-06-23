@@ -193,7 +193,7 @@ describe("BackupHandlers.ts", () => {
       } as unknown as Response;
 
       const request = {
-        params: { fileName: "test-backup-file.sproot.gz" },
+        params: { fileName: "test-backup-file.sproot" },
         // Add stream event handlers so piping to this mocked response works
         on: sinon.stub().returnsThis(),
         once: sinon.stub().returnsThis(),
@@ -202,8 +202,7 @@ describe("BackupHandlers.ts", () => {
         end: sinon.stub().returnsThis(),
         error: sinon.stub().returnsThis(),
         pipe: sinon.stub().callsFake((dest: any) => {
-          if (typeof dest.write === "function")
-            dest.write(Buffer.from(Uint8Array.from([0x1f, 0x8b, 0x08, 0x00]))); // gzip header
+          if (typeof dest.write === "function") dest.write(Buffer.from("test backup data"));
           if (typeof dest.end === "function") dest.end();
           setImmediate(() => {
             if (typeof dest.emit === "function") dest.emit("finish");
@@ -282,7 +281,7 @@ describe("BackupHandlers.ts", () => {
       } as unknown as Response;
 
       const request = {
-        params: { fileName: "test-backup-file.sproot.gz" },
+        params: { fileName: "test-backup-file.sproot" },
         // Add stream event handlers so piping to this mocked response works
         on: sinon.stub().returnsThis(),
         once: sinon.stub().returnsThis(),
@@ -291,8 +290,7 @@ describe("BackupHandlers.ts", () => {
         end: sinon.stub().returnsThis(),
         error: sinon.stub().returnsThis(),
         pipe: sinon.stub().callsFake((dest: any) => {
-          if (typeof dest.write === "function")
-            dest.write(Buffer.from(Uint8Array.from([0x1f, 0x8b, 0x08, 0x00]))); // gzip header
+          if (typeof dest.write === "function") dest.write(Buffer.from("test backup data"));
           if (typeof dest.end === "function") dest.end();
           setImmediate(() => {
             if (typeof dest.emit === "function") dest.emit("error", "SOMETHING BROKE");

@@ -26,26 +26,26 @@ describe("Backups.ts", () => {
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
       }
-      const tempFile = tempDir + "/test-backup-file.sproot.gz";
+      const tempFile = tempDir + "/test-backup-file.sproot";
       fs.writeFileSync(tempFile, "test data");
 
       const result = await Backups.getByFileNameAsync("test-backup-file", logger, tempDir);
       assert.isNotNull(result);
-      assert.equal(result!.name, "test-backup-file.sproot.gz");
+      assert.equal(result!.name, "test-backup-file.sproot");
       assert.equal(result!.size, fs.statSync(tempFile).size);
     });
   });
 
   describe("getCompletedFileNamesAsync", () => {
-    it("should return an array of file names with the suffix `sproot.gz`", async () => {
+    it("should return an array of file names with the suffix `.sproot`", async () => {
       const tempDir = await mkdtemp(path.join(tmpdir(), "test-backup-"));
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
       }
-      fs.writeFileSync(tempDir + "/backup1.sproot.gz", "data1");
-      fs.writeFileSync(tempDir + "/backup2.sproot.gz", "data2");
-      fs.writeFileSync(tempDir + "/backup3.gz", "data3");
-      fs.writeFileSync(tempDir + "/backup4.sql.gz", "data4");
+      fs.writeFileSync(tempDir + "/backup1.sproot", "data1");
+      fs.writeFileSync(tempDir + "/backup2.sproot", "data2");
+      fs.writeFileSync(tempDir + "/backup3", "data3");
+      fs.writeFileSync(tempDir + "/backup4.sql", "data4");
 
       const result = await Backups.getCompletedFileNamesAsync(tempDir);
       assert.isArray(result);
@@ -76,12 +76,12 @@ describe("Backups.ts", () => {
     //     .stub(sprootDBMock, "backupDatabaseAsync")
     //     .callsFake(async () => {
     //       await Promise.resolve();
-    //       fs.writeFileSync(tempDir + "/new-file.sproot.gz", "test data");
+    //       fs.writeFileSync(tempDir + "/new-file.sproot", "test data");
 
     //       return backupDeferred.promise;
     //     });
 
-    //   const existingFile = tempDir + "/started-here.sproot.gz";
+    //   const existingFile = tempDir + "/started-here.sproot";
     //   fs.writeFileSync(existingFile, "test data");
 
     //   // Start the backup process
@@ -107,9 +107,9 @@ describe("Backups.ts", () => {
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
       }
-      const file1 = tempDir + "/backup1.sproot.gz";
-      const file2 = tempDir + "/backup2.sproot.gz";
-      const file3 = tempDir + "/backup3.sproot.gz";
+      const file1 = tempDir + "/backup1.sproot";
+      const file2 = tempDir + "/backup2.sproot";
+      const file3 = tempDir + "/backup3.sproot";
 
       fs.writeFileSync(file1, "data1");
       await new Promise((r) => setTimeout(r, 10)); // Ensure different mtime
@@ -147,8 +147,8 @@ describe("Backups.ts", () => {
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
       }
-      const oldFile = tempDir + "/old-backup.sproot.gz";
-      const newFile = tempDir + "/new-backup.sproot.gz";
+      const oldFile = tempDir + "/old-backup.sproot";
+      const newFile = tempDir + "/new-backup.sproot";
       fs.writeFileSync(oldFile, "old data");
       fs.writeFileSync(newFile, "new data");
 

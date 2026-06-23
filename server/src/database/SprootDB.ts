@@ -1323,6 +1323,7 @@ export class SprootDB implements ISprootDB {
           `--port=${port}`,
           `--username=${user}`,
           `--dbname=${databaseName}`,
+          "--set=ON_ERROR_STOP=on",
           "-c",
           `SELECT ${functionName}();`,
         ],
@@ -1361,11 +1362,10 @@ export class SprootDB implements ISprootDB {
     port: number,
     user: string,
     password: string,
-    inputFile: string,
+    archiveFile: string,
     databaseName: string,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const gunzip = spawn("gunzip", ["-c", inputFile]);
       const pgRestore = spawn(
         "pg_restore",
         [
@@ -1389,22 +1389,18 @@ export class SprootDB implements ISprootDB {
         },
       );
 
-      gunzip.stdout.pipe(pgRestore.stdin);
+      const archiveStream = fs.createReadStream(archiveFile);
+      archiveStream.pipe(pgRestore.stdin);
 
       let stderrChunks: string[] = [];
-      gunzip.stderr.on("data", (d) => console.error("gunzip:", d.toString()));
       pgRestore.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
         console.error("pg_restore:", chunk);
       });
 
-      gunzip.on("error", (err) => reject(err));
+      archiveStream.on("error", (err) => reject(err));
       pgRestore.on("error", (err) => reject(err));
-
-      gunzip.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`gunzip exited with ${code}`));
-      });
 
       pgRestore.on("exit", (code) => {
         if (code !== 0) {

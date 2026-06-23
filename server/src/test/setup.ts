@@ -40,7 +40,7 @@ before(async function () {
     "This is a test tar file for the timelapse archive endpoint.",
   );
 
-  await fs.promises.writeFile("backups/test-backup.sproot.gz", "This is a test backup file.");
+  await fs.promises.writeFile("backups/test-backup.sproot", "This is a test backup file.");
 
   app = await mainAsync();
   server = app.listen(3000);

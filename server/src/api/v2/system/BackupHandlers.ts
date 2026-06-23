@@ -67,8 +67,7 @@ export async function systemBackupRestoreHandlerAsync(
 ): Promise<SuccessResponse | ErrorResponse> {
   // Generate a temp file path
   const tempFile =
-    (await fs.promises.mkdtemp(path.join(tmpdir(), "sproot-backup-"))) +
-    "/uploaded-backup.sproot";
+    (await fs.promises.mkdtemp(path.join(tmpdir(), "sproot-backup-"))) + "/uploaded-backup.sproot";
   const writeStream = fs.createWriteStream(tempFile, { flags: "w" });
   let uploadError: string | null = null;
 
