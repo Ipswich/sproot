@@ -35,6 +35,7 @@ import { SDBJournalTagLookup } from "./SDBJournalTagLookup";
 import { SDBJournalEntry } from "./SDBJournalEntry";
 import { SDBJournalEntryTag } from "./SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "./SDBJournalEntryTagLookup";
+import * as winston from "winston";
 
 interface ISprootDB {
   getSensorsAsync(): Promise<SDBSensor[]>;
@@ -216,6 +217,7 @@ interface ISprootDB {
     user: string,
     password: string,
     outputFile: string,
+    logger: winston.Logger,
   ): Promise<void>;
 
   swapRestoreDatabaseAsync(
@@ -224,9 +226,10 @@ interface ISprootDB {
     user: string,
     password: string,
     inputFile: string,
+    logger: winston.Logger,
   ): Promise<void>;
 
-  deleteOldDatabaseAsync(): Promise<void>;
+  deleteOldDatabaseAsync(logger: winston.Logger): Promise<void>;
 
   /* Journals */
   getJournalsAsync(): Promise<SDBJournal[]>;
@@ -763,6 +766,7 @@ class MockSprootDB implements ISprootDB {
     _user: string,
     _password: string,
     _outputFile: string,
+    _logger: winston.Logger,
   ): Promise<void> {
     return;
   }
@@ -773,11 +777,12 @@ class MockSprootDB implements ISprootDB {
     _user: string,
     _password: string,
     _inputFile: string,
+    _logger: winston.Logger,
   ): Promise<void> {
     return Promise.resolve();
   }
 
-  async deleteOldDatabaseAsync(): Promise<void> {
+  async deleteOldDatabaseAsync(_logger: winston.Logger): Promise<void> {
     return Promise.resolve();
   }
 }

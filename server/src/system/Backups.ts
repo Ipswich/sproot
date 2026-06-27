@@ -29,6 +29,7 @@ export class Backups {
           process.env["DATABASE_USER"]!,
           process.env["DATABASE_PASSWORD"]!,
           backupFilePath,
+          logger,
         );
         this.#generationStartTime = null;
       }
@@ -51,6 +52,7 @@ export class Backups {
         process.env["DATABASE_USER"]!,
         process.env["DATABASE_PASSWORD"]!,
         backupPath,
+        logger,
       );
       return true;
     } catch (error) {

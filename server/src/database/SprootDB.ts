@@ -41,6 +41,7 @@ import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalE
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
 import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
+import * as winston from "winston";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -1054,8 +1055,9 @@ export class SprootDB implements ISprootDB {
     user: string,
     password: string,
     outputFile: string,
+    logger: winston.Logger,
   ): Promise<void> {
-    return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile);
+    return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile, logger);
   }
 
   async swapRestoreDatabaseAsync(
@@ -1064,19 +1066,20 @@ export class SprootDB implements ISprootDB {
     user: string,
     password: string,
     inputFile: string,
+    logger: winston.Logger,
   ): Promise<void> {
     const dbName = this.#connection.client.database();
     const restoreDbName = `${dbName}-restore`;
     const oldDbName = `${dbName}-old`;
 
-    await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName);
-    await this.#createDatabaseAsync(host, port, user, password, restoreDbName);
-    await this.#restoreDatabaseArchiveAsync(host, port, user, password, inputFile, restoreDbName);
-    await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName);
-    await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName);
+    await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+    await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
+    await this.#restoreDatabaseArchiveAsync(host, port, user, password, inputFile, restoreDbName, logger);
+    await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName, logger);
+    await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName, logger);
   }
 
-  async deleteOldDatabaseAsync(): Promise<void> {
+  async deleteOldDatabaseAsync(logger: winston.Logger): Promise<void> {
     const dbName = this.#connection.client.database();
     const oldDbName = `${dbName}-old`;
     const host = process.env["DATABASE_HOST"]!;
@@ -1085,10 +1088,10 @@ export class SprootDB implements ISprootDB {
     const password = process.env["DATABASE_PASSWORD"]!;
 
     try {
-      await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName);
-      console.log(`Deleted old database: ${oldDbName}`);
+      await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+      logger.info(`Deleted old database: ${oldDbName}`);
     } catch (err) {
-      console.error(`Failed to delete old database ${oldDbName}:`, err);
+      logger.error(`Failed to delete old database ${oldDbName}:`, err);
     }
   }
 
@@ -1251,6 +1254,7 @@ export class SprootDB implements ISprootDB {
     user: string,
     password: string,
     outputFile: string,
+    logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const stderrChunks: string[] = [];
@@ -1283,7 +1287,7 @@ export class SprootDB implements ISprootDB {
       dump.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
-        console.error("pg_dump:", chunk);
+        logger.debug("pg_dump:", chunk);
       });
 
       dump.on("error", (err) => reject(err));
@@ -1309,6 +1313,7 @@ export class SprootDB implements ISprootDB {
     password: string,
     inputFile: string,
     databaseName: string,
+    logger: winston.Logger,
   ): Promise<void> {
     await this.#runTimescaleHookAsync(
       host,
@@ -1317,8 +1322,9 @@ export class SprootDB implements ISprootDB {
       password,
       databaseName,
       "timescaledb_pre_restore",
+      logger,
     );
-    await this.#restoreViaPgRestoreAsync(host, port, user, password, inputFile, databaseName);
+    await this.#restoreViaPgRestoreAsync(host, port, user, password, inputFile, databaseName, logger);
     await this.#runTimescaleHookAsync(
       host,
       port,
@@ -1326,16 +1332,18 @@ export class SprootDB implements ISprootDB {
       password,
       databaseName,
       "timescaledb_post_restore",
+      logger,
     );
   }
 
-  async #runTimescaleHookAsync(
+async #runTimescaleHookAsync(
     host: string,
     port: number,
     user: string,
     password: string,
     databaseName: string,
     functionName: string,
+    logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const psql = spawn(
@@ -1364,7 +1372,7 @@ export class SprootDB implements ISprootDB {
       psql.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
-        console.error("psql:", chunk);
+        logger.debug("psql:", chunk);
       });
 
       psql.on("error", (err) => reject(err));
@@ -1386,6 +1394,7 @@ export class SprootDB implements ISprootDB {
     password: string,
     archiveFile: string,
     databaseName: string,
+    logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const pgRestore = spawn(
@@ -1418,7 +1427,7 @@ export class SprootDB implements ISprootDB {
       pgRestore.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
-        console.error("pg_restore:", chunk);
+        logger.debug("pg_restore:", chunk);
       });
 
       archiveStream.on("error", (err) => reject(err));
@@ -1464,6 +1473,7 @@ export class SprootDB implements ISprootDB {
     user: string,
     password: string,
     databaseName: string,
+    logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const psql = spawn("psql", [
@@ -1488,7 +1498,7 @@ export class SprootDB implements ISprootDB {
       psql.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
-        console.error("psql:", chunk);
+        logger.debug("psql:", chunk);
       });
 
       psql.on("error", (err) => reject(err));
@@ -1510,6 +1520,7 @@ export class SprootDB implements ISprootDB {
     password: string,
     fromName: string,
     toName: string,
+    logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const psql = spawn("psql", [
@@ -1534,7 +1545,7 @@ export class SprootDB implements ISprootDB {
       psql.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
-        console.error("psql:", chunk);
+        logger.debug("psql:", chunk);
       });
 
       psql.on("error", (err) => reject(err));
@@ -1555,6 +1566,7 @@ export class SprootDB implements ISprootDB {
     user: string,
     password: string,
     databaseName: string,
+    logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const psql = spawn("psql", [
@@ -1579,7 +1591,7 @@ export class SprootDB implements ISprootDB {
       psql.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
-        console.error("psql:", chunk);
+        logger.debug("psql:", chunk);
       });
 
       psql.on("error", (err) => reject(err));
