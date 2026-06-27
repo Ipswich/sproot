@@ -226,7 +226,7 @@ describe("BackupHandlers.ts", () => {
 
     it("should return a 202 when restoring with any file content", async () => {
       const sprootDBMock = {
-        restoreDatabaseAsync: sinon.stub().resolves(false),
+        swapRestoreDatabaseAsync: sinon.stub().resolves(),
       };
       const response = {
         locals: {

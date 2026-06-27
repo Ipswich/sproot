@@ -218,13 +218,15 @@ interface ISprootDB {
     outputFile: string,
   ): Promise<void>;
 
-  restoreDatabaseAsync(
+  swapRestoreDatabaseAsync(
     host: string,
     port: number,
     user: string,
     password: string,
     inputFile: string,
   ): Promise<void>;
+
+  deleteOldDatabaseAsync(): Promise<void>;
 
   /* Journals */
   getJournalsAsync(): Promise<SDBJournal[]>;
@@ -765,13 +767,17 @@ class MockSprootDB implements ISprootDB {
     return;
   }
 
-  async restoreDatabaseAsync(
+  async swapRestoreDatabaseAsync(
     _host: string,
     _port: number,
     _user: string,
     _password: string,
     _inputFile: string,
   ): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async deleteOldDatabaseAsync(): Promise<void> {
     return Promise.resolve();
   }
 }

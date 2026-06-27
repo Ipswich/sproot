@@ -1058,7 +1058,7 @@ export class SprootDB implements ISprootDB {
     return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile);
   }
 
-  async restoreDatabaseAsync(
+  async swapRestoreDatabaseAsync(
     host: string,
     port: number,
     user: string,
@@ -1066,8 +1066,30 @@ export class SprootDB implements ISprootDB {
     inputFile: string,
   ): Promise<void> {
     const dbName = this.#connection.client.database();
+    const restoreDbName = `${dbName}-restore`;
+    const oldDbName = `${dbName}-old`;
 
-    return this.#restoreDatabaseArchiveAsync(host, port, user, password, inputFile, dbName);
+    await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName);
+    await this.#createDatabaseAsync(host, port, user, password, restoreDbName);
+    await this.#restoreDatabaseArchiveAsync(host, port, user, password, inputFile, restoreDbName);
+    await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName);
+    await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName);
+  }
+
+  async deleteOldDatabaseAsync(): Promise<void> {
+    const dbName = this.#connection.client.database();
+    const oldDbName = `${dbName}-old`;
+    const host = process.env["DATABASE_HOST"]!;
+    const port = parseInt(process.env["DATABASE_PORT"]!);
+    const user = process.env["DATABASE_USER"]!;
+    const password = process.env["DATABASE_PASSWORD"]!;
+
+    try {
+      await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName);
+      console.log(`Deleted old database: ${oldDbName}`);
+    } catch (err) {
+      console.error(`Failed to delete old database ${oldDbName}:`, err);
+    }
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
@@ -1434,5 +1456,141 @@ export class SprootDB implements ISprootDB {
     }
 
     return `${toolName} exited with ${exitCode ?? "unknown"}`;
+  }
+
+  async #dropDatabaseIfExistsAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const psql = spawn("psql", [
+        `--host=${host}`,
+        `--port=${port}`,
+        `--username=${user}`,
+        "--dbname=postgres",
+        "--set=ON_ERROR_STOP=on",
+        "-c",
+        `DROP DATABASE IF EXISTS "${databaseName}";`,
+      ], {
+        env: {
+          ...process.env,
+          PGPASSWORD: password,
+          LANG: process.env["LANG"] ?? "C.UTF-8",
+          LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+          LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+        },
+      });
+
+      let stderrChunks: string[] = [];
+      psql.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("psql:", chunk);
+      });
+
+      psql.on("error", (err) => reject(err));
+
+      psql.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  async #renameDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    fromName: string,
+    toName: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const psql = spawn("psql", [
+        `--host=${host}`,
+        `--port=${port}`,
+        `--username=${user}`,
+        "--dbname=postgres",
+        "--set=ON_ERROR_STOP=on",
+        "-c",
+        `ALTER DATABASE "${fromName}" RENAME TO "${toName}";`,
+      ], {
+        env: {
+          ...process.env,
+          PGPASSWORD: password,
+          LANG: process.env["LANG"] ?? "C.UTF-8",
+          LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+          LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+        },
+      });
+
+      let stderrChunks: string[] = [];
+      psql.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("psql:", chunk);
+      });
+
+      psql.on("error", (err) => reject(err));
+
+      psql.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  async #createDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const psql = spawn("psql", [
+        `--host=${host}`,
+        `--port=${port}`,
+        `--username=${user}`,
+        "--dbname=postgres",
+        "--set=ON_ERROR_STOP=on",
+        "-c",
+        `CREATE DATABASE "${databaseName}";`,
+      ], {
+        env: {
+          ...process.env,
+          PGPASSWORD: password,
+          LANG: process.env["LANG"] ?? "C.UTF-8",
+          LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+          LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+        },
+      });
+
+      let stderrChunks: string[] = [];
+      psql.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        console.error("psql:", chunk);
+      });
+
+      psql.on("error", (err) => reject(err));
+
+      psql.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 }

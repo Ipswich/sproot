@@ -45,7 +45,7 @@ export class Backups {
     logger: winston.Logger,
   ): Promise<boolean> {
     try {
-      await sprootDB.restoreDatabaseAsync(
+      await sprootDB.swapRestoreDatabaseAsync(
         process.env["DATABASE_HOST"]!,
         parseInt(process.env["DATABASE_PORT"]!),
         process.env["DATABASE_USER"]!,
