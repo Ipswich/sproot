@@ -1074,7 +1074,15 @@ export class SprootDB implements ISprootDB {
 
     await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
     await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
-    await this.#restoreDatabaseArchiveAsync(host, port, user, password, inputFile, restoreDbName, logger);
+    await this.#restoreDatabaseArchiveAsync(
+      host,
+      port,
+      user,
+      password,
+      inputFile,
+      restoreDbName,
+      logger,
+    );
     await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName, logger);
     await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName, logger);
   }
@@ -1324,7 +1332,15 @@ export class SprootDB implements ISprootDB {
       "timescaledb_pre_restore",
       logger,
     );
-    await this.#restoreViaPgRestoreAsync(host, port, user, password, inputFile, databaseName, logger);
+    await this.#restoreViaPgRestoreAsync(
+      host,
+      port,
+      user,
+      password,
+      inputFile,
+      databaseName,
+      logger,
+    );
     await this.#runTimescaleHookAsync(
       host,
       port,
@@ -1336,7 +1352,7 @@ export class SprootDB implements ISprootDB {
     );
   }
 
-async #runTimescaleHookAsync(
+  async #runTimescaleHookAsync(
     host: string,
     port: number,
     user: string,
@@ -1476,23 +1492,27 @@ async #runTimescaleHookAsync(
     logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const psql = spawn("psql", [
-        `--host=${host}`,
-        `--port=${port}`,
-        `--username=${user}`,
-        "--dbname=postgres",
-        "--set=ON_ERROR_STOP=on",
-        "-c",
-        `DROP DATABASE IF EXISTS "${databaseName}";`,
-      ], {
-        env: {
-          ...process.env,
-          PGPASSWORD: password,
-          LANG: process.env["LANG"] ?? "C.UTF-8",
-          LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-          LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          "--dbname=postgres",
+          "--set=ON_ERROR_STOP=on",
+          "-c",
+          `DROP DATABASE IF EXISTS "${databaseName}";`,
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
         },
-      });
+      );
 
       let stderrChunks: string[] = [];
       psql.stderr.on("data", (d) => {
@@ -1523,23 +1543,27 @@ async #runTimescaleHookAsync(
     logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const psql = spawn("psql", [
-        `--host=${host}`,
-        `--port=${port}`,
-        `--username=${user}`,
-        "--dbname=postgres",
-        "--set=ON_ERROR_STOP=on",
-        "-c",
-        `ALTER DATABASE "${fromName}" RENAME TO "${toName}";`,
-      ], {
-        env: {
-          ...process.env,
-          PGPASSWORD: password,
-          LANG: process.env["LANG"] ?? "C.UTF-8",
-          LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-          LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          "--dbname=postgres",
+          "--set=ON_ERROR_STOP=on",
+          "-c",
+          `ALTER DATABASE "${fromName}" RENAME TO "${toName}";`,
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
         },
-      });
+      );
 
       let stderrChunks: string[] = [];
       psql.stderr.on("data", (d) => {
@@ -1569,23 +1593,27 @@ async #runTimescaleHookAsync(
     logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const psql = spawn("psql", [
-        `--host=${host}`,
-        `--port=${port}`,
-        `--username=${user}`,
-        "--dbname=postgres",
-        "--set=ON_ERROR_STOP=on",
-        "-c",
-        `CREATE DATABASE "${databaseName}";`,
-      ], {
-        env: {
-          ...process.env,
-          PGPASSWORD: password,
-          LANG: process.env["LANG"] ?? "C.UTF-8",
-          LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-          LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          "--dbname=postgres",
+          "--set=ON_ERROR_STOP=on",
+          "-c",
+          `CREATE DATABASE "${databaseName}";`,
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
         },
-      });
+      );
 
       let stderrChunks: string[] = [];
       psql.stderr.on("data", (d) => {

@@ -121,14 +121,7 @@ export class Ads1115Device {
     }
 
     const mux = `${pin}+GND` as
-      | "0+1"
-      | "0+3"
-      | "1+3"
-      | "2+3"
-      | "0+GND"
-      | "1+GND"
-      | "2+GND"
-      | "3+GND";
+      "0+1" | "0+3" | "1+3" | "2+3" | "0+GND" | "1+GND" | "2+GND" | "3+GND";
     const calculatedGain = (gain as "2/3" | "1" | "2" | "4" | "8" | "16") ?? undefined;
 
     await using device = await Ads1115Device.openAsync(1, address);
