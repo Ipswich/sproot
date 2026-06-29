@@ -1073,6 +1073,7 @@ export class SprootDB implements ISprootDB {
     const oldDbName = `${dbName}-old`;
 
     await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+    await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
     await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
     await this.#restoreDatabaseArchiveAsync(
       host,
@@ -1083,6 +1084,7 @@ export class SprootDB implements ISprootDB {
       restoreDbName,
       logger,
     );
+    await this.#terminateOtherConnectionsAsync(host, port, user, password, dbName, logger);
     await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName, logger);
     await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName, logger);
   }
@@ -1502,6 +1504,56 @@ export class SprootDB implements ISprootDB {
           "--set=ON_ERROR_STOP=on",
           "-c",
           `DROP DATABASE IF EXISTS "${databaseName}";`,
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+
+      let stderrChunks: string[] = [];
+      psql.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        logger.debug("psql:", chunk);
+      });
+
+      psql.on("error", (err) => reject(err));
+
+      psql.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  async #terminateOtherConnectionsAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          "--dbname=postgres",
+          "--set=ON_ERROR_STOP=on",
+          "-c",
+          `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${databaseName}' AND pid <> pg_backend_pid();`,
         ],
         {
           env: {
