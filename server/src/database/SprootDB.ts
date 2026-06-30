@@ -1072,21 +1072,39 @@ export class SprootDB implements ISprootDB {
     const restoreDbName = `${dbName}-restore`;
     const oldDbName = `${dbName}-old`;
 
-    await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
-    await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
-    await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
-    await this.#restoreDatabaseArchiveAsync(
-      host,
-      port,
-      user,
-      password,
-      inputFile,
-      restoreDbName,
-      logger,
-    );
-    await this.#terminateOtherConnectionsAsync(host, port, user, password, dbName, logger);
-    await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName, logger);
-    await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName, logger);
+    let cleanupNeeded = false;
+
+    try {
+      await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+      await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
+      await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
+      cleanupNeeded = true;
+
+      await this.#restoreDatabaseArchiveAsync(
+        host,
+        port,
+        user,
+        password,
+        inputFile,
+        restoreDbName,
+        logger,
+      );
+
+      await this.#terminateOtherConnectionsAsync(host, port, user, password, dbName, logger);
+      await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName, logger);
+      await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName, logger);
+    } catch (error) {
+      if (cleanupNeeded) {
+        try {
+          await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
+          await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+          logger.warn(`Cleaned up orphaned databases after failed restore`);
+        } catch (cleanupError) {
+          logger.error(`Failed to clean up orphaned databases: ${(cleanupError as Error).message}`);
+        }
+      }
+      throw error;
+    }
   }
 
   async deleteOldDatabaseAsync(logger: winston.Logger): Promise<void> {
