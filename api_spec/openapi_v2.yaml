@@ -426,7 +426,7 @@ paths:
                 type: string
                 example: 'attachment; filename="sproot-backup-2023-10-01-12-00-00.sproot"'
           content:
-            application/gzip:
+            application/octet-stream:
               schema:
                 type: string
                 format: binary
