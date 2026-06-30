@@ -1258,6 +1258,66 @@ export class SprootDB implements ISprootDB {
     return Number.isFinite(normalizedValue) ? normalizedValue : null;
   }
 
+  async #psqlWithParamsAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    sqlTemplate: string,
+    params: Record<string, string>,
+    logger: winston.Logger,
+    targetDatabase?: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const psqlInput = Object.entries(params)
+        .map(([name, value]) => `\\set ${name} '${value}'`)
+        .join("\n") + "\n" + sqlTemplate;
+
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          targetDatabase ? `--dbname=${targetDatabase}` : "--dbname=postgres",
+          "--set=ON_ERROR_STOP=on",
+          "--no-psqlrc",
+          "-f",
+          "-",
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+
+      let stderrChunks: string[] = [];
+      psql.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        logger.debug("psql:", chunk);
+      });
+
+      psql.on("error", (err) => reject(err));
+
+      psql.stdin.write(psqlInput);
+      psql.stdin.end();
+
+      psql.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
   async #backupDatabaseArchiveAsync(
     host: string,
     port: number,
@@ -1363,46 +1423,13 @@ export class SprootDB implements ISprootDB {
     functionName: string,
     logger: winston.Logger,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const psql = spawn(
-        "psql",
-        [
-          `--host=${host}`,
-          `--port=${port}`,
-          `--username=${user}`,
-          `--dbname=${databaseName}`,
-          "--set=ON_ERROR_STOP=on",
-          "-c",
-          `SELECT ${functionName}();`,
-        ],
-        {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
-        },
-      );
-
-      let stderrChunks: string[] = [];
-      psql.stderr.on("data", (d) => {
-        const chunk = d.toString();
-        stderrChunks.push(chunk);
-        logger.debug("psql:", chunk);
-      });
-
-      psql.on("error", (err) => reject(err));
-
-      psql.on("exit", (code) => {
-        if (code !== 0) {
-          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
-        } else {
-          resolve();
-        }
-      });
-    });
+    return this.#psqlWithParamsAsync(
+      host, port, user, password,
+      `SELECT :"functionName"();`,
+      { functionName },
+      logger,
+      databaseName,
+    );
   }
 
   async #restoreViaPgRestoreAsync(
@@ -1493,46 +1520,12 @@ export class SprootDB implements ISprootDB {
     databaseName: string,
     logger: winston.Logger,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const psql = spawn(
-        "psql",
-        [
-          `--host=${host}`,
-          `--port=${port}`,
-          `--username=${user}`,
-          "--dbname=postgres",
-          "--set=ON_ERROR_STOP=on",
-          "-c",
-          `DROP DATABASE IF EXISTS "${databaseName}";`,
-        ],
-        {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
-        },
-      );
-
-      let stderrChunks: string[] = [];
-      psql.stderr.on("data", (d) => {
-        const chunk = d.toString();
-        stderrChunks.push(chunk);
-        logger.debug("psql:", chunk);
-      });
-
-      psql.on("error", (err) => reject(err));
-
-      psql.on("exit", (code) => {
-        if (code !== 0) {
-          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
-        } else {
-          resolve();
-        }
-      });
-    });
+    return this.#psqlWithParamsAsync(
+      host, port, user, password,
+      `DROP DATABASE IF EXISTS :"databaseName";`,
+      { databaseName },
+      logger,
+    );
   }
 
   async #terminateOtherConnectionsAsync(
@@ -1543,46 +1536,12 @@ export class SprootDB implements ISprootDB {
     databaseName: string,
     logger: winston.Logger,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const psql = spawn(
-        "psql",
-        [
-          `--host=${host}`,
-          `--port=${port}`,
-          `--username=${user}`,
-          "--dbname=postgres",
-          "--set=ON_ERROR_STOP=on",
-          "-c",
-          `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${databaseName}' AND pid <> pg_backend_pid();`,
-        ],
-        {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
-        },
-      );
-
-      let stderrChunks: string[] = [];
-      psql.stderr.on("data", (d) => {
-        const chunk = d.toString();
-        stderrChunks.push(chunk);
-        logger.debug("psql:", chunk);
-      });
-
-      psql.on("error", (err) => reject(err));
-
-      psql.on("exit", (code) => {
-        if (code !== 0) {
-          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
-        } else {
-          resolve();
-        }
-      });
-    });
+    return this.#psqlWithParamsAsync(
+      host, port, user, password,
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :"databaseName" AND pid <> pg_backend_pid();`,
+      { databaseName },
+      logger,
+    );
   }
 
   async #renameDatabaseAsync(
@@ -1594,46 +1553,12 @@ export class SprootDB implements ISprootDB {
     toName: string,
     logger: winston.Logger,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const psql = spawn(
-        "psql",
-        [
-          `--host=${host}`,
-          `--port=${port}`,
-          `--username=${user}`,
-          "--dbname=postgres",
-          "--set=ON_ERROR_STOP=on",
-          "-c",
-          `ALTER DATABASE "${fromName}" RENAME TO "${toName}";`,
-        ],
-        {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
-        },
-      );
-
-      let stderrChunks: string[] = [];
-      psql.stderr.on("data", (d) => {
-        const chunk = d.toString();
-        stderrChunks.push(chunk);
-        logger.debug("psql:", chunk);
-      });
-
-      psql.on("error", (err) => reject(err));
-
-      psql.on("exit", (code) => {
-        if (code !== 0) {
-          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
-        } else {
-          resolve();
-        }
-      });
-    });
+    return this.#psqlWithParamsAsync(
+      host, port, user, password,
+      `ALTER DATABASE :"fromName" RENAME TO :"toName";`,
+      { fromName, toName },
+      logger,
+    );
   }
 
   async #createDatabaseAsync(
@@ -1644,45 +1569,11 @@ export class SprootDB implements ISprootDB {
     databaseName: string,
     logger: winston.Logger,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const psql = spawn(
-        "psql",
-        [
-          `--host=${host}`,
-          `--port=${port}`,
-          `--username=${user}`,
-          "--dbname=postgres",
-          "--set=ON_ERROR_STOP=on",
-          "-c",
-          `CREATE DATABASE "${databaseName}";`,
-        ],
-        {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
-        },
-      );
-
-      let stderrChunks: string[] = [];
-      psql.stderr.on("data", (d) => {
-        const chunk = d.toString();
-        stderrChunks.push(chunk);
-        logger.debug("psql:", chunk);
-      });
-
-      psql.on("error", (err) => reject(err));
-
-      psql.on("exit", (code) => {
-        if (code !== 0) {
-          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
-        } else {
-          resolve();
-        }
-      });
-    });
+    return this.#psqlWithParamsAsync(
+      host, port, user, password,
+      `CREATE DATABASE :"databaseName";`,
+      { databaseName },
+      logger,
+    );
   }
 }
