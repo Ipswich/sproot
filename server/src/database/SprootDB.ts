@@ -1100,7 +1100,9 @@ export class SprootDB implements ISprootDB {
           await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
           logger.warn(`Cleaned up orphaned databases after failed restore`);
         } catch (cleanupError) {
-          logger.error(`Failed to clean up orphaned databases: ${(cleanupError as Error).message}`);
+          logger.error(
+            `Failed to clean up orphaned databases after restore error: ${(cleanupError as Error).message}`,
+          );
         }
       }
       throw error;
@@ -1287,9 +1289,12 @@ export class SprootDB implements ISprootDB {
     targetDatabase?: string,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const psqlInput = Object.entries(params)
-        .map(([name, value]) => `\\set ${name} '${value}'`)
-        .join("\n") + "\n" + sqlTemplate;
+      const psqlInput =
+        Object.entries(params)
+          .map(([name, value]) => `\\set ${name} '${value}'`)
+          .join("\n") +
+        "\n" +
+        sqlTemplate;
 
       const psql = spawn(
         "psql",
@@ -1442,7 +1447,10 @@ export class SprootDB implements ISprootDB {
     logger: winston.Logger,
   ): Promise<void> {
     return this.#psqlWithParamsAsync(
-      host, port, user, password,
+      host,
+      port,
+      user,
+      password,
       `SELECT :"functionName"();`,
       { functionName },
       logger,
@@ -1539,7 +1547,10 @@ export class SprootDB implements ISprootDB {
     logger: winston.Logger,
   ): Promise<void> {
     return this.#psqlWithParamsAsync(
-      host, port, user, password,
+      host,
+      port,
+      user,
+      password,
       `DROP DATABASE IF EXISTS :"databaseName";`,
       { databaseName },
       logger,
@@ -1555,7 +1566,10 @@ export class SprootDB implements ISprootDB {
     logger: winston.Logger,
   ): Promise<void> {
     return this.#psqlWithParamsAsync(
-      host, port, user, password,
+      host,
+      port,
+      user,
+      password,
       `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :"databaseName" AND pid <> pg_backend_pid();`,
       { databaseName },
       logger,
@@ -1572,7 +1586,10 @@ export class SprootDB implements ISprootDB {
     logger: winston.Logger,
   ): Promise<void> {
     return this.#psqlWithParamsAsync(
-      host, port, user, password,
+      host,
+      port,
+      user,
+      password,
       `ALTER DATABASE :"fromName" RENAME TO :"toName";`,
       { fromName, toName },
       logger,
@@ -1588,7 +1605,10 @@ export class SprootDB implements ISprootDB {
     logger: winston.Logger,
   ): Promise<void> {
     return this.#psqlWithParamsAsync(
-      host, port, user, password,
+      host,
+      port,
+      user,
+      password,
       `CREATE DATABASE :"databaseName";`,
       { databaseName },
       logger,
