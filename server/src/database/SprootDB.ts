@@ -41,6 +41,7 @@ import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalE
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
 import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
+import * as winston from "winston";
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -1054,20 +1055,74 @@ export class SprootDB implements ISprootDB {
     user: string,
     password: string,
     outputFile: string,
+    logger: winston.Logger,
   ): Promise<void> {
-    return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile);
+    return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile, logger);
   }
 
-  async restoreDatabaseAsync(
+  async swapRestoreDatabaseAsync(
     host: string,
     port: number,
     user: string,
     password: string,
     inputFile: string,
+    logger: winston.Logger,
   ): Promise<void> {
     const dbName = this.#connection.client.database();
+    const restoreDbName = `${dbName}-restore`;
+    const oldDbName = `${dbName}-old`;
 
-    return this.#restoreDatabaseArchiveAsync(host, port, user, password, inputFile, dbName);
+    let cleanupNeeded = false;
+
+    try {
+      await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+      await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
+      await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
+      cleanupNeeded = true;
+
+      await this.#restoreDatabaseArchiveAsync(
+        host,
+        port,
+        user,
+        password,
+        inputFile,
+        restoreDbName,
+        logger,
+      );
+
+      await this.#terminateOtherConnectionsAsync(host, port, user, password, dbName, logger);
+      await this.#renameDatabaseAsync(host, port, user, password, dbName, oldDbName, logger);
+      await this.#renameDatabaseAsync(host, port, user, password, restoreDbName, dbName, logger);
+    } catch (error) {
+      if (cleanupNeeded) {
+        try {
+          await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
+          await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+          logger.warn(`Cleaned up orphaned databases after failed restore`);
+        } catch (cleanupError) {
+          logger.error(
+            `Failed to clean up orphaned databases after restore error: ${(cleanupError as Error).message}`,
+          );
+        }
+      }
+      throw error;
+    }
+  }
+
+  async deleteOldDatabaseAsync(logger: winston.Logger): Promise<void> {
+    const dbName = this.#connection.client.database();
+    const oldDbName = `${dbName}-old`;
+    const host = process.env["DATABASE_HOST"]!;
+    const port = parseInt(process.env["DATABASE_PORT"]!);
+    const user = process.env["DATABASE_USER"]!;
+    const password = process.env["DATABASE_PASSWORD"]!;
+
+    try {
+      await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
+      logger.info(`Deleted old database: ${oldDbName}`);
+    } catch (err) {
+      logger.error(`Failed to delete old database ${oldDbName}:`, err);
+    }
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
@@ -1223,12 +1278,76 @@ export class SprootDB implements ISprootDB {
     return Number.isFinite(normalizedValue) ? normalizedValue : null;
   }
 
+  async #psqlWithParamsAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    sqlTemplate: string,
+    params: Record<string, string>,
+    logger: winston.Logger,
+    targetDatabase?: string,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const psqlInput =
+        Object.entries(params)
+          .map(([name, value]) => `\\set ${name} '${value}'`)
+          .join("\n") +
+        "\n" +
+        sqlTemplate;
+
+      const psql = spawn(
+        "psql",
+        [
+          `--host=${host}`,
+          `--port=${port}`,
+          `--username=${user}`,
+          targetDatabase ? `--dbname=${targetDatabase}` : "--dbname=postgres",
+          "--set=ON_ERROR_STOP=on",
+          "--no-psqlrc",
+          "-f",
+          "-",
+        ],
+        {
+          env: {
+            ...process.env,
+            PGPASSWORD: password,
+            LANG: process.env["LANG"] ?? "C.UTF-8",
+            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+          },
+        },
+      );
+
+      let stderrChunks: string[] = [];
+      psql.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        logger.debug("psql:", chunk);
+      });
+
+      psql.on("error", (err) => reject(err));
+
+      psql.stdin.write(psqlInput);
+      psql.stdin.end();
+
+      psql.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
   async #backupDatabaseArchiveAsync(
     host: string,
     port: number,
     user: string,
     password: string,
     outputFile: string,
+    logger: winston.Logger,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const stderrChunks: string[] = [];
@@ -1238,7 +1357,8 @@ export class SprootDB implements ISprootDB {
           `--host=${host}`,
           `--port=${port}`,
           `--username=${user}`,
-          "--format=plain",
+          "--format=custom",
+          "--compress=9",
           "--no-owner",
           "--no-privileges",
           this.#connection.client.database(),
@@ -1253,33 +1373,26 @@ export class SprootDB implements ISprootDB {
           },
         },
       );
-      const gzip = spawn("gzip", ["-c"]);
       const out = fs.createWriteStream(outputFile, { flags: "w" });
 
-      dump.stdout.pipe(gzip.stdin);
-      gzip.stdout.pipe(out);
+      dump.stdout.pipe(out);
 
       dump.stderr.on("data", (d) => {
         const chunk = d.toString();
         stderrChunks.push(chunk);
-        console.error("pg_dump:", chunk);
+        logger.debug("pg_dump:", chunk);
       });
-      gzip.stderr.on("data", (d) => console.error("gzip:", d.toString()));
 
       dump.on("error", (err) => reject(err));
-      gzip.on("error", (err) => reject(err));
       out.on("error", (err) => reject(err));
 
       dump.on("exit", (code) => {
         if (code !== 0) {
           return reject(
-            new Error(this.#buildDatabaseDumpErrorMessage(code, stderrChunks.join(""))),
+            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_dump")),
           );
         }
-      });
-
-      gzip.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`gzip exited with ${code}`));
+        out.end();
       });
 
       out.on("close", () => resolve());
@@ -1293,18 +1406,79 @@ export class SprootDB implements ISprootDB {
     password: string,
     inputFile: string,
     databaseName: string,
+    logger: winston.Logger,
   ): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-      const gunzip = spawn("gunzip", ["-c", inputFile]);
-      const psql = spawn(
-        "psql",
+    await this.#runTimescaleHookAsync(
+      host,
+      port,
+      user,
+      password,
+      databaseName,
+      "timescaledb_pre_restore",
+      logger,
+    );
+    await this.#restoreViaPgRestoreAsync(
+      host,
+      port,
+      user,
+      password,
+      inputFile,
+      databaseName,
+      logger,
+    );
+    await this.#runTimescaleHookAsync(
+      host,
+      port,
+      user,
+      password,
+      databaseName,
+      "timescaledb_post_restore",
+      logger,
+    );
+  }
+
+  async #runTimescaleHookAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+    functionName: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    return this.#psqlWithParamsAsync(
+      host,
+      port,
+      user,
+      password,
+      `SELECT :"functionName"();`,
+      { functionName },
+      logger,
+      databaseName,
+    );
+  }
+
+  async #restoreViaPgRestoreAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    archiveFile: string,
+    databaseName: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const pgRestore = spawn(
+        "pg_restore",
         [
           `--host=${host}`,
           `--port=${port}`,
           `--username=${user}`,
           `--dbname=${databaseName}`,
+          "--clean",
+          "--if-exists",
           "--single-transaction",
-          "--set=ON_ERROR_STOP=on",
+          "--exit-on-error",
         ],
         {
           env: {
@@ -1317,40 +1491,127 @@ export class SprootDB implements ISprootDB {
         },
       );
 
-      gunzip.stdout.pipe(psql.stdin);
+      const archiveStream = fs.createReadStream(archiveFile);
+      archiveStream.pipe(pgRestore.stdin);
 
-      gunzip.stderr.on("data", (d) => console.error("gunzip:", d.toString()));
-      psql.stderr.on("data", (d) => console.error("psql:", d.toString()));
-
-      gunzip.on("error", (err) => reject(err));
-      psql.on("error", (err) => reject(err));
-
-      gunzip.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`gunzip exited with ${code}`));
+      let stderrChunks: string[] = [];
+      pgRestore.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        logger.debug("pg_restore:", chunk);
       });
 
-      psql.on("exit", (code) => {
-        if (code !== 0) return reject(new Error(`psql exited with ${code}`));
-        resolve();
+      archiveStream.on("error", (err) => reject(err));
+      pgRestore.on("error", (err) => reject(err));
+
+      pgRestore.on("exit", (code) => {
+        if (code !== 0) {
+          reject(
+            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")),
+          );
+        } else {
+          resolve();
+        }
       });
     });
   }
 
-  #buildDatabaseDumpErrorMessage(exitCode: number | null, stderrOutput: string): string {
+  #buildRestoreErrorMessage(
+    exitCode: number | null,
+    stderrOutput: string,
+    toolName: "pg_dump" | "pg_restore" | "psql",
+  ): string {
     const normalizedStderr = stderrOutput.trim();
     if (normalizedStderr.includes("server version mismatch")) {
       return [
-        `pg_dump exited with ${exitCode ?? "unknown"}.`,
-        "PostgreSQL backup requires client tools that match the server major version.",
-        "Install a PostgreSQL 18 client or run backups from an environment that provides a matching pg_dump binary.",
+        `${toolName} exited with ${exitCode ?? "unknown"}.`,
+        "PostgreSQL backup/restore requires client tools that match the server major version.",
+        "Install a PostgreSQL 18 client or run backups from an environment that provides a matching binary.",
         normalizedStderr,
       ].join(" ");
     }
 
     if (normalizedStderr.length > 0) {
-      return `pg_dump exited with ${exitCode ?? "unknown"}: ${normalizedStderr}`;
+      return `${toolName} exited with ${exitCode ?? "unknown"}: ${normalizedStderr}`;
     }
 
-    return `pg_dump exited with ${exitCode ?? "unknown"}`;
+    return `${toolName} exited with ${exitCode ?? "unknown"}`;
+  }
+
+  async #dropDatabaseIfExistsAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    return this.#psqlWithParamsAsync(
+      host,
+      port,
+      user,
+      password,
+      `DROP DATABASE IF EXISTS :"databaseName";`,
+      { databaseName },
+      logger,
+    );
+  }
+
+  async #terminateOtherConnectionsAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    return this.#psqlWithParamsAsync(
+      host,
+      port,
+      user,
+      password,
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'databaseName' AND pid <> pg_backend_pid();`,
+      { databaseName },
+      logger,
+    );
+  }
+
+  async #renameDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    fromName: string,
+    toName: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    return this.#psqlWithParamsAsync(
+      host,
+      port,
+      user,
+      password,
+      `ALTER DATABASE :"fromName" RENAME TO :"toName";`,
+      { fromName, toName },
+      logger,
+    );
+  }
+
+  async #createDatabaseAsync(
+    host: string,
+    port: number,
+    user: string,
+    password: string,
+    databaseName: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    return this.#psqlWithParamsAsync(
+      host,
+      port,
+      user,
+      password,
+      `CREATE DATABASE :"databaseName";`,
+      { databaseName },
+      logger,
+    );
   }
 }

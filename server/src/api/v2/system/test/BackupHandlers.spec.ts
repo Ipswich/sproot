@@ -51,7 +51,7 @@ describe("BackupHandlers.ts", () => {
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
       }
-      const tempFileName = "test-backup-file.sproot.gz";
+      const tempFileName = "test-backup-file.sproot";
       const tempFilePath = path.join(tempDir, tempFileName);
       fs.writeFileSync(tempFilePath, "test data");
 
@@ -193,7 +193,7 @@ describe("BackupHandlers.ts", () => {
       } as unknown as Response;
 
       const request = {
-        params: { fileName: "test-backup-file.sproot.gz" },
+        params: { fileName: "test-backup-file.sproot" },
         // Add stream event handlers so piping to this mocked response works
         on: sinon.stub().returnsThis(),
         once: sinon.stub().returnsThis(),
@@ -202,8 +202,7 @@ describe("BackupHandlers.ts", () => {
         end: sinon.stub().returnsThis(),
         error: sinon.stub().returnsThis(),
         pipe: sinon.stub().callsFake((dest: any) => {
-          if (typeof dest.write === "function")
-            dest.write(Buffer.from(Uint8Array.from([0x1f, 0x8b, 0x08, 0x00]))); // gzip header
+          if (typeof dest.write === "function") dest.write(Buffer.from("test backup data"));
           if (typeof dest.end === "function") dest.end();
           setImmediate(() => {
             if (typeof dest.emit === "function") dest.emit("finish");
@@ -225,9 +224,9 @@ describe("BackupHandlers.ts", () => {
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
 
-    it("should return a 400 with an invalid backup file", async () => {
+    it("should return a 202 when restoring with any file content", async () => {
       const sprootDBMock = {
-        restoreDatabaseAsync: sinon.stub().resolves(false),
+        swapRestoreDatabaseAsync: sinon.stub().resolves(),
       };
       const response = {
         locals: {
@@ -255,11 +254,18 @@ describe("BackupHandlers.ts", () => {
           return dest;
         }),
         app: {
-          get: (_dependency: string) => sprootDBMock,
+          get: (dependency: string) => {
+            if (dependency === "gracefulHaltAsync") {
+              return async (fn: () => Promise<void>) => {
+                await fn();
+              };
+            }
+            return sprootDBMock;
+          },
         },
       } as unknown as Request;
       const result = (await systemBackupRestoreHandlerAsync(request, response)) as SuccessResponse;
-      assert.equal(result.statusCode, 400);
+      assert.equal(result.statusCode, 202);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
     });
@@ -275,7 +281,7 @@ describe("BackupHandlers.ts", () => {
       } as unknown as Response;
 
       const request = {
-        params: { fileName: "test-backup-file.sproot.gz" },
+        params: { fileName: "test-backup-file.sproot" },
         // Add stream event handlers so piping to this mocked response works
         on: sinon.stub().returnsThis(),
         once: sinon.stub().returnsThis(),
@@ -284,8 +290,7 @@ describe("BackupHandlers.ts", () => {
         end: sinon.stub().returnsThis(),
         error: sinon.stub().returnsThis(),
         pipe: sinon.stub().callsFake((dest: any) => {
-          if (typeof dest.write === "function")
-            dest.write(Buffer.from(Uint8Array.from([0x1f, 0x8b, 0x08, 0x00]))); // gzip header
+          if (typeof dest.write === "function") dest.write(Buffer.from("test backup data"));
           if (typeof dest.end === "function") dest.end();
           setImmediate(() => {
             if (typeof dest.emit === "function") dest.emit("error", "SOMETHING BROKE");

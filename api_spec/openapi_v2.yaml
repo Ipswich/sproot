@@ -376,7 +376,7 @@ paths:
                             type: array
                             items:
                               type: string
-                              example: "sproot-backup-2023-10-01-12-00-00.sproot.gz"
+                              example: "sproot-backup-2023-10-01-12-00-00.sproot"
         500:
           description: "Internal server error"
           content:
@@ -410,7 +410,7 @@ paths:
           description: "The name of the backup file to download."
           schema:
             type: string
-          example: "sproot-backup-2023-10-01-12-00-00.sproot.gz"
+          example: "sproot-backup-2023-10-01-12-00-00.sproot"
       responses:
         200:
           description: "Success"
@@ -424,9 +424,9 @@ paths:
               description: "Indicates that the content is a file attachment."
               schema:
                 type: string
-                example: 'attachment; filename="sproot-backup-2023-10-01-12-00-00.sproot.gz"'
+                example: 'attachment; filename="sproot-backup-2023-10-01-12-00-00.sproot"'
           content:
-            application/gzip:
+            application/octet-stream:
               schema:
                 type: string
                 format: binary
@@ -445,7 +445,7 @@ paths:
                           name:
                             example: "Bad Request"
                           url:
-                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
+                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot"
                           details:
                             items:
                               example: "Invalid backup file name."
@@ -464,10 +464,10 @@ paths:
                           name:
                             example: "Not Found"
                           url:
-                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
+                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot"
                           details:
                             items:
-                              example: "Backup file sproot-backup-2023-10-01-12-00-00.sproot.gz not found."
+                              example: "Backup file sproot-backup-2023-10-01-12-00-00.sproot not found."
         500:
           description: "Internal server error"
           content:
@@ -483,7 +483,7 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot.gz"
+                            example: "/api/v2/system/backups/download/sproot-backup-2023-10-01-12-00-00.sproot"
                           details:
                             items:
                               example: "Failed to download backup."
