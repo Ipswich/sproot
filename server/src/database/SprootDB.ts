@@ -1570,7 +1570,7 @@ export class SprootDB implements ISprootDB {
       port,
       user,
       password,
-      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :"databaseName" AND pid <> pg_backend_pid();`,
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'databaseName' AND pid <> pg_backend_pid();`,
       { databaseName },
       logger,
     );
