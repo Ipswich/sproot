@@ -82,6 +82,7 @@ export async function up(knex: Knex): Promise<void> {
       MIN(data) AS minimum_data,
       MAX(data) AS maximum_data,
       STDDEV_SAMP(data) AS stddev_data,
+      MAX("logTime") AS last_log_time,
       percentile_agg(data) AS percentile_sketch,
       first(data, "logTime" ORDER BY "logTime" ASC) AS first_data,
       last(data, "logTime" ORDER BY "logTime" DESC) AS last_data
@@ -123,6 +124,7 @@ export async function up(knex: Knex): Promise<void> {
       MIN(data) AS minimum_data,
       MAX(data) AS maximum_data,
       STDDEV_SAMP(data) AS stddev_data,
+      MAX("logTime") AS last_log_time,
       percentile_agg(data) AS percentile_sketch,
       first(data, "logTime" ORDER BY "logTime" ASC) AS first_data,
       last(data, "logTime" ORDER BY "logTime" DESC) AS last_data
@@ -162,6 +164,7 @@ export async function up(knex: Knex): Promise<void> {
       MIN(value) AS minimum_value,
       MAX(value) AS maximum_value,
       STDDEV_SAMP(value) AS stddev_value,
+      MAX("logTime") AS last_log_time,
       percentile_agg(value) AS percentile_sketch,
       first(value, "logTime" ORDER BY "logTime" ASC) AS first_value,
       last(value, "logTime" ORDER BY "logTime" DESC) AS last_value
@@ -201,6 +204,7 @@ export async function up(knex: Knex): Promise<void> {
       MIN(value) AS minimum_value,
       MAX(value) AS maximum_value,
       STDDEV_SAMP(value) AS stddev_value,
+      MAX("logTime") AS last_log_time,
       percentile_agg(value) AS percentile_sketch,
       first(value, "logTime" ORDER BY "logTime" ASC) AS first_value,
       last(value, "logTime" ORDER BY "logTime" DESC) AS last_value
@@ -242,6 +246,7 @@ export async function up(knex: Knex): Promise<void> {
       MIN(data) AS minimum_data,
       MAX(data) AS maximum_data,
       STDDEV_SAMP(data) AS stddev_data,
+      MAX("logTime") AS last_log_time,
       first(data, "logTime" ORDER BY "logTime" ASC) AS first_data,
       last(data, "logTime" ORDER BY "logTime" DESC) AS last_data,
       percentile_agg(data) AS percentile_sketch
@@ -269,6 +274,7 @@ export async function up(knex: Knex): Promise<void> {
       MIN(value) AS minimum_value,
       MAX(value) AS maximum_value,
       STDDEV_SAMP(value) AS stddev_value,
+      MAX("logTime") AS last_log_time,
       first(value, "logTime" ORDER BY "logTime" ASC) AS first_value,
       last(value, "logTime" ORDER BY "logTime" DESC) AS last_value,
       percentile_agg(value) AS percentile_sketch

@@ -137,7 +137,7 @@ docker_volumes/
 
 *.local
 client/.env.development
-*.sproot.gz
+*.sproot
 
 build
 .prompts/**.superpowers

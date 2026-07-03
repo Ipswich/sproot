@@ -19,7 +19,7 @@ export class Backups {
   static async createAsync(sprootDB: ISprootDB, logger: winston.Logger): Promise<void> {
     try {
       if (!this.#generationStartTime) {
-        const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(new Date())}.sproot.gz`;
+        const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(new Date())}.sproot`;
         this.#generationStartTime = Date.now();
         logger.info(`Creating backup at ${backupFilePath}...`);
         await fsPromises.mkdir(BACKUP_DIRECTORY, { recursive: true });
@@ -29,6 +29,7 @@ export class Backups {
           process.env["DATABASE_USER"]!,
           process.env["DATABASE_PASSWORD"]!,
           backupFilePath,
+          logger,
         );
         this.#generationStartTime = null;
       }
@@ -45,12 +46,13 @@ export class Backups {
     logger: winston.Logger,
   ): Promise<boolean> {
     try {
-      await sprootDB.restoreDatabaseAsync(
+      await sprootDB.swapRestoreDatabaseAsync(
         process.env["DATABASE_HOST"]!,
         parseInt(process.env["DATABASE_PORT"]!),
         process.env["DATABASE_USER"]!,
         process.env["DATABASE_PASSWORD"]!,
         backupPath,
+        logger,
       );
       return true;
     } catch (error) {
@@ -64,13 +66,13 @@ export class Backups {
     logger: winston.Logger,
     directory: string = BACKUP_DIRECTORY,
   ): Promise<{ stream: ReadStream; size: number; name: string } | null> {
-    const path = `${directory}/${fileName}.sproot.gz`;
+    const path = `${directory}/${fileName}.sproot`;
     try {
       await fsPromises.access(path);
       return {
         stream: createReadStream(path),
         size: (await fsPromises.stat(path)).size,
-        name: `${fileName}.sproot.gz`,
+        name: `${fileName}.sproot`,
       };
     } catch (error) {
       logger.error(`Failed to get backup file ${fileName}: ${(error as Error).message}`);
@@ -90,7 +92,7 @@ export class Backups {
         return [];
       }
 
-      const suffix = ".sproot.gz";
+      const suffix = ".sproot";
       return files
         .filter(
           (file) =>
