@@ -64,7 +64,7 @@ jobs:
           #   experimental: true
     services:
       postgres:
-        image: timescale/timescaledb-ha:pg18-ts2.27
+        image: timescale/timescaledb-ha:pg18-ts2.26
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

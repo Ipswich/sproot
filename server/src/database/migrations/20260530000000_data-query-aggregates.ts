@@ -10,7 +10,7 @@
  * Extension requirement:
  *   This migration creates the `timescaledb_toolkit` extension (via CREATE EXTENSION
  *   IF NOT EXISTS). The toolkit is included in the official TimescaleDB OSS Docker
- *   image (`timescale/timescaledb-ha:pg18-ts2.27`). The toolkit provides
+ *   image (`timescale/timescaledb-ha:pg18-ts2.26`). The toolkit provides
  *   `percentile_agg()`, a hyperloglog-based approximation function used to compute
  *   P1, P5, P10, P25, P50, P75, P90, P95, P99 percentiles in constant space.
  *
