@@ -64,10 +64,7 @@ import {
   getRecentTailStart,
 } from "./databaseQueryUtils";
 
-import {
-  buildSensorRawQuery,
-  buildOutputRawQuery,
-} from "./rawDataQueryHelpers";
+import { buildSensorRawQuery, buildOutputRawQuery } from "./rawDataQueryHelpers";
 
 import * as winston from "winston";
 
@@ -1298,7 +1295,11 @@ export class SprootDB implements ISprootDB {
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
     }
 
-    return formatSensorAggregateRows(truncated, [...(request.aggregates ?? DEFAULT_AGGREGATES)], nextCursor);
+    return formatSensorAggregateRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1326,7 +1327,11 @@ export class SprootDB implements ISprootDB {
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
     }
 
-    return formatOutputAggregateRows(truncated, [...(request.aggregates ?? DEFAULT_AGGREGATES)], nextCursor);
+    return formatOutputAggregateRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
   }
 
   // ---------------------------------------------------------------------------

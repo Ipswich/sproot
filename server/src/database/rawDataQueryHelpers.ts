@@ -75,15 +75,9 @@ export function buildSensorRawQuery(
       knex.raw("MAX(data) AS maximum_data"),
       knex.raw("STDDEV_SAMP(data) AS stddev_data"),
       knex.raw("approx_percentile(0.5, percentile_agg(data)) AS percentile_data"),
-      knex.raw(
-        "first(data, \"logTime\" ORDER BY \"logTime\" ASC) AS first_data",
-      ),
-      knex.raw(
-        "first(units, \"logTime\" ORDER BY \"logTime\" ASC) AS units",
-      ),
-      knex.raw(
-        "last(data, \"logTime\" ORDER BY \"logTime\" DESC) AS last_data",
-      ),
+      knex.raw('first(data, "logTime" ORDER BY "logTime" ASC) AS first_data'),
+      knex.raw('first(units, "logTime" ORDER BY "logTime" ASC) AS units'),
+      knex.raw('last(data, "logTime" ORDER BY "logTime" DESC) AS last_data'),
     )
     .where(whereRaw)
     .groupByRaw('"sensor_id", "metric", "bucket"')
@@ -113,12 +107,8 @@ export function buildOutputRawQuery(
       knex.raw("MAX(value) AS maximum_value"),
       knex.raw("STDDEV_SAMP(value) AS stddev_value"),
       knex.raw("approx_percentile(0.5, percentile_agg(value)) AS percentile_value"),
-      knex.raw(
-        "first(value, \"logTime\" ORDER BY \"logTime\" ASC) AS first_value",
-      ),
-      knex.raw(
-        "last(value, \"logTime\" ORDER BY \"logTime\" DESC) AS last_value",
-      ),
+      knex.raw('first(value, "logTime" ORDER BY "logTime" ASC) AS first_value'),
+      knex.raw('last(value, "logTime" ORDER BY "logTime" DESC) AS last_value'),
     )
     .where(whereRaw)
     .groupByRaw('"output_id", "bucket"')

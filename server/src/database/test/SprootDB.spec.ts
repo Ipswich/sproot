@@ -888,7 +888,6 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       assert.isAtLeast(percentileCalls.length, 1);
       assert.equal(percentileCalls[0]!.args[1]?.[0], 0.95);
     });
-
   });
 
   // ---- cursor validation ----

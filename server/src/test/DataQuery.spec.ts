@@ -798,7 +798,17 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
         .send({
           readingTypes: ["voltage"],
           downsample: "1m",
-          aggregates: ["min", "max", "avg", "count", "sum", "stddev", "percentile", "first", "last"],
+          aggregates: [
+            "min",
+            "max",
+            "avg",
+            "count",
+            "sum",
+            "stddev",
+            "percentile",
+            "first",
+            "last",
+          ],
           percentile: 0.5,
           ids: [4],
           timeRange: {
