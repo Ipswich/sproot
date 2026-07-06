@@ -437,6 +437,163 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
     });
   });
 
+  // ---- raw path: sensors ----
+
+  describe("querySensorDataAsync — raw path (arbitrary interval)", () => {
+    function makeRows(sensorId: number, metric: string, count: number) {
+      const r: unknown[] = [];
+      for (let i = 0; i < count; i++) {
+        r.push({
+          bucket: `2024-01-01T${String(i * 15).padStart(2, "0")}:00:00.000Z`,
+          sensor_id: sensorId,
+          metric,
+          units: metric === "humidity" ? "%" : "°C",
+          average_data: 22 + i,
+          minimum_data: 18 + i,
+          maximum_data: 28 + i,
+          sample_count: 3,
+          stddev_data: 2.5,
+          percentile_data: { percentile: 23 },
+          first_data: 20 + i,
+          last_data: 26 + i,
+        });
+      }
+      return r;
+    }
+
+    it("should query raw sensor_data for 15 minutes interval", async () => {
+      const rows = makeRows(1, "temperature", 1);
+      const knex = createKnexStub(rows);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T04:00:00.000Z" },
+        downsample: "15 minutes",
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      assert.isNotEmpty(result.data);
+      assert.isDefined((result.data as any)[1]);
+      assert.equal((result.data as any)[1]["temperature"].units, "°C");
+      assert.equal((result.data as any)[1]["temperature"].values.length, 1);
+    });
+
+    it("should query raw sensor_data for 4 hours interval", async () => {
+      const rows = makeRows(1, "humidity", 1);
+      const knex = createKnexStub(rows);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+        downsample: "4 hours",
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      assert.isNotEmpty(result.data);
+      assert.equal((result.data as any)[1]["humidity"].values.length, 1);
+    });
+
+    it("should filter by reading types in raw path", async () => {
+      const rows = makeRows(1, "temperature", 2);
+      const knex = createKnexStub(rows);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T04:00:00.000Z" },
+        downsample: "15 minutes",
+        readingTypes: ["temperature"],
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      assert.equal(Object.keys((result.data as any)[1]).length, 1);
+      assert.equal((result.data as any)[1]["temperature"].values.length, 2);
+    });
+
+    it("should return nextCursor when rows exceed limit in raw path", async () => {
+      const rows = makeRows(1, "temperature", 11);
+      const knex = createKnexStub(rows);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+        downsample: "15 minutes",
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      assert.isString(result.nextCursor);
+      assert.equal((result.data as any)[1]["temperature"].values.length, 10);
+    });
+  });
+
+  // ---- raw path: outputs ----
+
+  describe("queryOutputDataAsync — raw path (arbitrary interval)", () => {
+    function makeRows(outputId: number, count: number) {
+      const r: unknown[] = [];
+      for (let i = 0; i < count; i++) {
+        r.push({
+          bucket: `2024-01-01T${String(i * 15).padStart(2, "0")}:00:00.000Z`,
+          output_id: outputId,
+          average_value: 100 + i,
+          minimum_value: 50 + i,
+          maximum_value: 150 + i,
+          sample_count: 3,
+          stddev_value: 15,
+          percentile_value: { percentile: 100 },
+          first_value: 80 + i,
+          last_value: 120 + i,
+        });
+      }
+      return r;
+    }
+
+    it("should query raw output_data for 15 minutes interval", async () => {
+      const rows = makeRows(1, 1);
+      const knex = createKnexStub(rows);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.queryOutputDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T04:00:00.000Z" },
+        downsample: "15 minutes",
+        limit: 10,
+      } as OutputDataQueryRequest);
+
+      assert.isNotEmpty(result.data);
+      assert.isDefined((result.data as any)[1]);
+      assert.equal((result.data as any)[1].values.length, 1);
+    });
+
+    it("should query raw output_data for 4 hours interval", async () => {
+      const rows = makeRows(2, 1);
+      const knex = createKnexStub(rows);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.queryOutputDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+        downsample: "4 hours",
+        limit: 10,
+      } as OutputDataQueryRequest);
+
+      assert.isNotEmpty(result.data);
+      assert.equal((result.data as any)[2].values.length, 1);
+    });
+
+    it("should return nextCursor when rows exceed limit in raw output path", async () => {
+      const rows = makeRows(1, 11);
+      const knex = createKnexStub(rows);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.queryOutputDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+        downsample: "15 minutes",
+        limit: 10,
+      } as OutputDataQueryRequest);
+
+      assert.isString(result.nextCursor);
+      assert.equal((result.data as any)[1].values.length, 10);
+    });
+  });
+
   // ---- cursor base64 decoding ----
 
   describe("cursor decoding — base64 cursor decoded before Date()", () => {

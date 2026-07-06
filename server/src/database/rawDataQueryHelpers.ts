@@ -62,14 +62,13 @@ export function buildSensorRawQuery(
   whereRaw: Knex.Raw,
   limit: number,
 ) {
-  const bucketExpr = knex.raw('time_bucket(INTERVAL ?, "logTime") AS bucket', [interval]);
+  const bucketExpr = knex.raw(`time_bucket(INTERVAL '${interval}', "logTime") AS bucket`);
 
   return knex("sensor_data")
     .select(
       bucketExpr,
       "sensor_id",
       "metric",
-      "units",
       knex.raw("COUNT(*) AS sample_count"),
       knex.raw("AVG(data)::numeric(12, 7) AS average_data"),
       knex.raw("MIN(data) AS minimum_data"),
@@ -102,7 +101,7 @@ export function buildOutputRawQuery(
   whereRaw: Knex.Raw,
   limit: number,
 ) {
-  const bucketExpr = knex.raw('time_bucket(INTERVAL ?, "logTime") AS bucket', [interval]);
+  const bucketExpr = knex.raw(`time_bucket(INTERVAL '${interval}', "logTime") AS bucket`);
 
   return knex("output_data")
     .select(

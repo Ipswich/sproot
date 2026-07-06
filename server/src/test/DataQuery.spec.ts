@@ -711,6 +711,160 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       new Date(lastTimeFirstPage).getTime(),
     );
   });
+
+  describe("arbitrary downsample intervals (raw path)", () => {
+    it("GET /sensors/data with downsample 1m returns raw-path results", async () => {
+      const response = await request(server)
+        .post("/api/v2/sensors/data")
+        .send({
+          readingTypes: ["temperature"],
+          downsample: "1m",
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T01:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const content = response.body["content"];
+      assert.isArray(content.data[1]["temperature"].values);
+      assert.isAbove(content.data[1]["temperature"].values.length, 0);
+      assert.property(content.data[1]["temperature"].values[0], "time");
+    });
+
+    it("GET /sensors/data with downsample 15 minutes returns raw-path results", async () => {
+      const response = await request(server)
+        .post("/api/v2/sensors/data")
+        .send({
+          readingTypes: ["temperature"],
+          downsample: "15 minutes",
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const content = response.body["content"];
+      assert.isArray(content.data[1]["temperature"].values);
+      assert.isAbove(content.data[1]["temperature"].values.length, 0);
+      assert.isBelow(content.data[1]["temperature"].values.length, 25);
+    });
+
+    it("GET /sensors/data with downsample 4 hours returns raw-path results", async () => {
+      const response = await request(server)
+        .post("/api/v2/sensors/data")
+        .send({
+          readingTypes: ["temperature"],
+          downsample: "4 hours",
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const content = response.body["content"];
+      assert.isArray(content.data[1]["temperature"].values);
+      assert.isAbove(content.data[1]["temperature"].values.length, 0);
+      assert.isAtMost(content.data[1]["temperature"].values.length, 2);
+    });
+
+    it("GET /sensors/data with raw-path downsample and percentile returns percentile data", async () => {
+      const response = await request(server)
+        .post("/api/v2/sensors/data")
+        .send({
+          readingTypes: ["moisture"],
+          downsample: "15 minutes",
+          aggregates: ["percentile"],
+          percentile: 0.9,
+          ids: [3],
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const content = response.body["content"];
+      assert.isArray(content.data[3]["moisture"].values);
+      assert.isAbove(content.data[3]["moisture"].values.length, 0);
+      assert.property(content.data[3]["moisture"].values[0], "percentile");
+    });
+
+    it("GET /sensors/data with raw-path downsample and all aggregates returns all fields", async () => {
+      const response = await request(server)
+        .post("/api/v2/sensors/data")
+        .send({
+          readingTypes: ["voltage"],
+          downsample: "1m",
+          aggregates: ["min", "max", "avg", "count", "sum", "stddev", "percentile", "first", "last"],
+          percentile: 0.5,
+          ids: [4],
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T01:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const content = response.body["content"];
+      const value = content.data[4]["voltage"].values[0];
+      assert.property(value, "min");
+      assert.property(value, "max");
+      assert.property(value, "avg");
+      assert.property(value, "count");
+      assert.property(value, "sum");
+      assert.property(value, "stddev");
+      assert.property(value, "percentile");
+      assert.property(value, "first");
+      assert.property(value, "last");
+    });
+
+    it("GET /sensors/data cursor pagination works with raw-path downsample", async () => {
+      const firstResponse = await request(server)
+        .post("/api/v2/sensors/data")
+        .send({
+          readingTypes: ["temperature"],
+          downsample: "15 minutes",
+          limit: 5,
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const firstContent = firstResponse.body["content"];
+      const nextCursor = firstContent.nextCursor as string;
+      const lastTimeFirstPage =
+        firstContent.data[1]["temperature"].values[
+          firstContent.data[1]["temperature"].values.length - 1
+        ].time;
+
+      const secondResponse = await request(server)
+        .post("/api/v2/sensors/data")
+        .send({
+          readingTypes: ["temperature"],
+          downsample: "15 minutes",
+          limit: 5,
+          cursor: nextCursor,
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const secondContent = secondResponse.body["content"];
+      assert.isArray(secondContent.data[1]["temperature"].values);
+      assert.isAbove(secondContent.data[1]["temperature"].values.length, 0);
+      assert.isAtLeast(
+        new Date(secondContent.data[1]["temperature"].values[0].time).getTime(),
+        new Date(lastTimeFirstPage).getTime(),
+      );
+    });
+  });
 });
 
 describe("DataQuery API - Output Data Query", function () {
@@ -906,19 +1060,112 @@ describe("DataQuery API - Output Data Query", function () {
     assert.exists(response.body["error"]);
   });
 
-  it("GET /outputs/data returns 400 for invalid downsample", async () => {
-    const response = await request(server)
-      .post("/api/v2/outputs/data")
-      .send({
-        timeRange: {
-          start: "2024-01-01T00:00:00.000Z",
-          end: "2024-01-02T00:00:00.000Z",
-        },
-        downsample: "1m",
-      })
-      .expect(400);
+  describe("arbitrary downsample intervals (raw path)", () => {
+    it("GET /outputs/data with downsample 1m returns raw-path results", async () => {
+      const response = await request(server)
+        .post("/api/v2/outputs/data")
+        .send({
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-02T00:00:00.000Z",
+          },
+          downsample: "1m",
+        })
+        .expect(200);
 
-    assert.exists(response.body["error"]);
+      const content = response.body["content"];
+      assert.isArray(content.data[1].values);
+      assert.isAbove(content.data[1].values.length, 0);
+      assert.property(content.data[1].values[0], "time");
+      assert.property(content.data[1].values[0], "avg");
+      assert.property(content.data[1].values[0], "min");
+      assert.property(content.data[1].values[0], "max");
+    });
+
+    it("GET /outputs/data with downsample 15 minutes returns raw-path results", async () => {
+      const response = await request(server)
+        .post("/api/v2/outputs/data")
+        .send({
+          downsample: "15 minutes",
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const content = response.body["content"];
+      assert.isArray(content.data[1].values);
+      assert.isAbove(content.data[1].values.length, 0);
+      assert.isBelow(content.data[1].values.length, 25);
+    });
+
+    it("GET /outputs/data with raw-path downsample and all aggregates returns all fields", async () => {
+      const response = await request(server)
+        .post("/api/v2/outputs/data")
+        .send({
+          downsample: "1m",
+          ids: [1],
+          aggregates: ["avg", "count", "sum", "stddev", "percentile", "first", "last"],
+          percentile: 0.95,
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T02:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const value = response.body["content"].data[1].values[0];
+      assert.property(value, "avg");
+      assert.property(value, "count");
+      assert.property(value, "sum");
+      assert.property(value, "stddev");
+      assert.property(value, "percentile");
+      assert.property(value, "first");
+      assert.property(value, "last");
+    });
+
+    it("GET /outputs/data cursor pagination works with raw-path downsample", async () => {
+      const firstResponse = await request(server)
+        .post("/api/v2/outputs/data")
+        .send({
+          downsample: "15 minutes",
+          ids: [1],
+          limit: 5,
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const firstContent = firstResponse.body["content"];
+      const nextCursor = firstContent.nextCursor as string;
+      const lastTimeFirstPage =
+        firstContent.data[1].values[firstContent.data[1].values.length - 1].time;
+
+      const secondResponse = await request(server)
+        .post("/api/v2/outputs/data")
+        .send({
+          downsample: "15 minutes",
+          ids: [1],
+          limit: 5,
+          cursor: nextCursor,
+          timeRange: {
+            start: "2024-01-01T00:00:00.000Z",
+            end: "2024-01-01T06:00:00.000Z",
+          },
+        })
+        .expect(200);
+
+      const secondContent = secondResponse.body["content"];
+      assert.isArray(secondContent.data[1].values);
+      assert.isAbove(secondContent.data[1].values.length, 0);
+      assert.isAtLeast(
+        new Date(secondContent.data[1].values[0].time).getTime(),
+        new Date(lastTimeFirstPage).getTime(),
+      );
+    });
   });
 
   it("GET /outputs/data filters by specific ids", async () => {
