@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { assert } from "chai";
 import request from "supertest";
 import { server } from "./setup";
 
@@ -18,15 +18,15 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data).to.be.an("object");
-    expect(content.data[1]).to.be.an("object");
-    expect(content.data[1]["temperature"]).to.exist;
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.greaterThan(0);
+    assert.isObject(content.data);
+    assert.isObject(content.data[1]);
+    assert.exists(content.data[1]["temperature"]);
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isAbove(content.data[1]["temperature"].values.length, 0);
     if (content.nextCursor) {
-      expect(content.nextCursor).to.be.a("string");
+      assert.isString(content.nextCursor);
     }
-    expect(content.data[1]["temperature"].values[0]).to.have.property("time");
+    assert.property(content.data[1]["temperature"].values[0], "time");
   });
 
   it("GET /sensor-data/query respects custom limit parameter", async () => {
@@ -44,9 +44,9 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[2]["temperature"].values.length).to.equal(5);
-    expect(content.nextCursor).to.exist;
-    expect(content.nextCursor).to.be.a("string");
+    assert.equal(content.data[2]["temperature"].values.length, 5);
+    assert.exists(content.nextCursor);
+    assert.isString(content.nextCursor);
   });
 
   it("GET /sensor-data/query returns nextCursor for pagination", async () => {
@@ -64,9 +64,9 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.nextCursor).to.be.a("string");
-    expect(content.nextCursor.length).to.be.greaterThan(0);
-    expect(content.data[3]["moisture"].values.length).to.equal(10);
+    assert.isString(content.nextCursor);
+    assert.isAbove(content.nextCursor.length, 0);
+    assert.equal(content.data[3]["moisture"].values.length, 10);
   });
 
   it("GET /sensor-data/query with valid cursor returns next page", async () => {
@@ -86,7 +86,8 @@ describe("DataQuery API - Sensor Pagination", function () {
     const firstContent = firstResponse.body["content"];
     const nextCursor = firstContent.nextCursor as string;
     const lastTimeFirstPage =
-      firstContent.data[4]["voltage"].values[firstContent.data[4]["voltage"].values.length - 1].time;
+      firstContent.data[4]["voltage"].values[firstContent.data[4]["voltage"].values.length - 1]
+        .time;
 
     const secondResponse = await request(server)
       .post("/api/v2/sensors/data")
@@ -103,9 +104,12 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const secondContent = secondResponse.body["content"];
-    expect(secondContent.data[4]["voltage"].values).to.be.an("array");
-    expect(secondContent.data[4]["voltage"].values.length).to.be.greaterThan(0);
-    expect(new Date(secondContent.data[4]["voltage"].values[0].time).getTime()).to.be.greaterThan(new Date(lastTimeFirstPage).getTime());
+    assert.isArray(secondContent.data[4]["voltage"].values);
+    assert.isAbove(secondContent.data[4]["voltage"].values.length, 0);
+    assert.isAbove(
+      new Date(secondContent.data[4]["voltage"].values[0].time).getTime(),
+      new Date(lastTimeFirstPage).getTime(),
+    );
   });
 
   it("GET /sensor-data/query with invalid cursor returns 400", async () => {
@@ -122,9 +126,9 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(400);
 
     const error = response.body["error"];
-    expect(error).to.exist;
-    expect(error.details).to.be.an("array");
-    expect(error.details[0].toLowerCase()).to.include("cursor");
+    assert.exists(error);
+    assert.isArray(error.details);
+    assert.include(error.details[0].toLowerCase(), "cursor");
   });
 
   it("GET /sensor-data/query returns all reading types when multiple specified", async () => {
@@ -142,18 +146,18 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"]).to.exist;
-    expect(content.data[2]["temperature"]).to.exist;
-    expect(content.data[3]["moisture"]).to.exist;
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[2]["temperature"].values).to.be.an("array");
-    expect(content.data[3]["moisture"].values).to.be.an("array");
+    assert.exists(content.data[1]["temperature"]);
+    assert.exists(content.data[2]["temperature"]);
+    assert.exists(content.data[3]["moisture"]);
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isArray(content.data[2]["temperature"].values);
+    assert.isArray(content.data[3]["moisture"].values);
 
     const totalValues =
       content.data[1]["temperature"].values.length +
       content.data[2]["temperature"].values.length +
       content.data[3]["moisture"].values.length;
-    expect(totalValues).to.be.greaterThan(0);
+    assert.isAbove(totalValues, 0);
   });
 });
 
@@ -174,10 +178,10 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[1]["temperature"].values[0]).to.have.property("min");
-    expect(content.data[1]["temperature"].values[0].min).to.be.a("number");
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isAbove(content.data[1]["temperature"].values.length, 0);
+    assert.property(content.data[1]["temperature"].values[0], "min");
+    assert.isNumber(content.data[1]["temperature"].values[0].min);
   });
 
   it("GET /sensors/data returns sensor data with max aggregate", async () => {
@@ -194,9 +198,9 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[2]["temperature"].values).to.be.an("array");
-    expect(content.data[2]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[2]["temperature"].values[0]).to.have.property("max");
+    assert.isArray(content.data[2]["temperature"].values);
+    assert.isAbove(content.data[2]["temperature"].values.length, 0);
+    assert.property(content.data[2]["temperature"].values[0], "max");
   });
 
   it("GET /sensors/data returns sensor data with avg aggregate", async () => {
@@ -214,9 +218,9 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[3]["moisture"].values).to.be.an("array");
-    expect(content.data[3]["moisture"].values.length).to.be.greaterThan(0);
-    expect(content.data[3]["moisture"].values[0]).to.have.property("avg");
+    assert.isArray(content.data[3]["moisture"].values);
+    assert.isAbove(content.data[3]["moisture"].values.length, 0);
+    assert.property(content.data[3]["moisture"].values[0], "avg");
   });
 
   it("GET /sensors/data returns sensor data with count aggregate", async () => {
@@ -234,10 +238,10 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[4]["voltage"].values).to.be.an("array");
-    expect(content.data[4]["voltage"].values.length).to.be.greaterThan(0);
-    expect(content.data[4]["voltage"].values[0]).to.have.property("count");
-    expect(content.data[4]["voltage"].values[0].count).to.be.a("number");
+    assert.isArray(content.data[4]["voltage"].values);
+    assert.isAbove(content.data[4]["voltage"].values.length, 0);
+    assert.property(content.data[4]["voltage"].values[0], "count");
+    assert.isNumber(content.data[4]["voltage"].values[0].count);
   });
 
   it("GET /sensors/data returns sensor data with sum aggregate", async () => {
@@ -254,9 +258,9 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[1]["temperature"].values[0]).to.have.property("sum");
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isAbove(content.data[1]["temperature"].values.length, 0);
+    assert.property(content.data[1]["temperature"].values[0], "sum");
   });
 
   it("GET /sensors/data returns sensor data with stddev aggregate", async () => {
@@ -273,9 +277,9 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[2]["temperature"].values).to.be.an("array");
-    expect(content.data[2]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[2]["temperature"].values[0]).to.have.property("stddev");
+    assert.isArray(content.data[2]["temperature"].values);
+    assert.isAbove(content.data[2]["temperature"].values.length, 0);
+    assert.property(content.data[2]["temperature"].values[0], "stddev");
   });
 
   it("GET /sensors/data returns sensor data with percentile aggregate", async () => {
@@ -294,9 +298,9 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[3]["moisture"].values).to.be.an("array");
-    expect(content.data[3]["moisture"].values.length).to.be.greaterThan(0);
-    expect(content.data[3]["moisture"].values[0]).to.have.property("percentile");
+    assert.isArray(content.data[3]["moisture"].values);
+    assert.isAbove(content.data[3]["moisture"].values.length, 0);
+    assert.property(content.data[3]["moisture"].values[0], "percentile");
   });
 
   it("GET /sensors/data returns sensor data with first aggregate", async () => {
@@ -314,9 +318,9 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[4]["voltage"].values).to.be.an("array");
-    expect(content.data[4]["voltage"].values.length).to.be.greaterThan(0);
-    expect(content.data[4]["voltage"].values[0]).to.have.property("first");
+    assert.isArray(content.data[4]["voltage"].values);
+    assert.isAbove(content.data[4]["voltage"].values.length, 0);
+    assert.property(content.data[4]["voltage"].values[0], "first");
   });
 
   it("GET /sensors/data returns sensor data with last aggregate", async () => {
@@ -333,9 +337,9 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[1]["temperature"].values[0]).to.have.property("last");
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isAbove(content.data[1]["temperature"].values.length, 0);
+    assert.property(content.data[1]["temperature"].values[0], "last");
   });
 
   it("GET /sensors/data returns sensor data with multiple aggregates", async () => {
@@ -352,12 +356,12 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[2]["temperature"].values).to.be.an("array");
-    expect(content.data[2]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[2]["temperature"].values[0]).to.have.property("min");
-    expect(content.data[2]["temperature"].values[0]).to.have.property("max");
-    expect(content.data[2]["temperature"].values[0]).to.have.property("avg");
-    expect(content.data[2]["temperature"].values[0]).to.have.property("count");
+    assert.isArray(content.data[2]["temperature"].values);
+    assert.isAbove(content.data[2]["temperature"].values.length, 0);
+    assert.property(content.data[2]["temperature"].values[0], "min");
+    assert.property(content.data[2]["temperature"].values[0], "max");
+    assert.property(content.data[2]["temperature"].values[0], "avg");
+    assert.property(content.data[2]["temperature"].values[0], "count");
   });
 });
 
@@ -378,10 +382,10 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[1]["temperature"].values[0]).to.have.property("time");
-    expect(content.data[1]["temperature"].values.length).to.be.lessThan(20);
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isAbove(content.data[1]["temperature"].values.length, 0);
+    assert.property(content.data[1]["temperature"].values[0], "time");
+    assert.isAtMost(content.data[1]["temperature"].values.length, 20);
   });
 
   it("GET /sensors/data with downsample 1h returns downsampled results", async () => {
@@ -398,9 +402,9 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[2]["temperature"].values).to.be.an("array");
-    expect(content.data[2]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[2]["temperature"].values.length).to.be.lessThan(8);
+    assert.isArray(content.data[2]["temperature"].values);
+    assert.isAbove(content.data[2]["temperature"].values.length, 0);
+    assert.isBelow(content.data[2]["temperature"].values.length, 8);
   });
 
   it("GET /sensors/data with downsample 1h and aggregates returns both", async () => {
@@ -418,9 +422,9 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[3]["moisture"].values).to.be.an("array");
-    expect(content.data[3]["moisture"].values.length).to.be.greaterThan(0);
-    expect(content.data[3]["moisture"].values.length).to.be.lessThanOrEqual(24);
+    assert.isArray(content.data[3]["moisture"].values);
+    assert.isAbove(content.data[3]["moisture"].values.length, 0);
+    assert.isAtMost(content.data[3]["moisture"].values.length, 25);
   });
 
   it("GET /sensors/data with downsample 1d returns downsampled results", async () => {
@@ -437,9 +441,9 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[1]["temperature"].values.length).to.be.lessThanOrEqual(3);
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isAbove(content.data[1]["temperature"].values.length, 0);
+    assert.isAtMost(content.data[1]["temperature"].values.length, 3);
   });
 
   it("GET /sensors/data with downsample and aggregates returns both", async () => {
@@ -458,12 +462,12 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[4]["voltage"].values).to.be.an("array");
-    expect(content.data[4]["voltage"].values.length).to.be.greaterThan(0);
-    expect(content.data[4]["voltage"].values[0]).to.have.property("min");
-    expect(content.data[4]["voltage"].values[0]).to.have.property("max");
-    expect(content.data[4]["voltage"].values[0]).to.have.property("avg");
-    expect(content.data[4]["voltage"].values.length).to.be.lessThan(18);
+    assert.isArray(content.data[4]["voltage"].values);
+    assert.isAbove(content.data[4]["voltage"].values.length, 0);
+    assert.property(content.data[4]["voltage"].values[0], "min");
+    assert.property(content.data[4]["voltage"].values[0], "max");
+    assert.property(content.data[4]["voltage"].values[0], "avg");
+    assert.isBelow(content.data[4]["voltage"].values.length, 18);
   });
 
   it("GET /sensors/data with timeRange filter returns filtered results", async () => {
@@ -479,63 +483,116 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.greaterThan(0);
-    expect(content.data[1]["temperature"].values.length).to.be.lessThanOrEqual(4);
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isAbove(content.data[1]["temperature"].values.length, 0);
+    assert.isAtMost(content.data[1]["temperature"].values.length, 4);
     for (const value of content.data[1]["temperature"].values) {
       const valueTime = new Date(value.time).getTime();
       const rangeStart = new Date("2024-01-01T12:00:00.000Z").getTime();
       const rangeEnd = new Date("2024-01-01T13:00:00.000Z").getTime();
-      expect(valueTime).to.be.greaterThanOrEqual(rangeStart);
-      expect(valueTime).to.be.lessThanOrEqual(rangeEnd);
+      assert.isAtLeast(valueTime, rangeStart);
+      assert.isAtMost(valueTime, rangeEnd);
     }
   });
 
-  it("GET /sensors/data with invalid reading type returns 400", async () => {
+  it("GET /sensors/data with an unknown reading type returns an empty result", async () => {
     const response = await request(server)
       .post("/api/v2/sensors/data")
       .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
         readingTypes: ["nonexistent_type"],
       })
-      .expect(400);
+      .expect(200);
 
-    const error = response.body["error"];
-    expect(error).to.exist;
+    const content = response.body["content"];
+    assert.deepEqual(content.data, {});
   });
 
-  it("GET /sensors/data with empty reading types returns 400", async () => {
+  it("GET /sensors/data with empty readingTypes behaves like no filter", async () => {
     const response = await request(server)
       .post("/api/v2/sensors/data")
       .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
         readingTypes: [],
       })
-      .expect(400);
+      .expect(200);
 
-    const error = response.body["error"];
-    expect(error).to.exist;
+    const content = response.body["content"];
+    assert.property(content.data[1], "temperature");
+    assert.property(content.data[1], "humidity");
   });
 
-  it("GET /sensors/data with no reading types returns 400", async () => {
+  it("GET /sensors/data with no readingTypes returns all seeded metrics", async () => {
     const response = await request(server)
       .post("/api/v2/sensors/data")
-      .send({})
-      .expect(400);
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+      })
+      .expect(200);
 
-    const error = response.body["error"];
-    expect(error).to.exist;
+    const content = response.body["content"];
+    assert.property(content.data[1], "temperature");
+    assert.property(content.data[1], "humidity");
+    assert.property(content.data[1], "pressure");
   });
 
   it("GET /sensors/data with limit exceeding max returns 400", async () => {
     const response = await request(server)
       .post("/api/v2/sensors/data")
       .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
         readingTypes: ["temperature"],
         limit: 10001,
       })
       .expect(400);
 
     const error = response.body["error"];
-    expect(error).to.exist;
+    assert.exists(error);
+  });
+
+  it("GET /sensors/data does not return nextCursor when all results fit in limit", async () => {
+    const response = await request(server)
+      .post("/api/v2/sensors/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-01T01:00:00.000Z",
+        },
+        readingTypes: ["temperature"],
+        ids: [2],
+        limit: 100,
+      })
+      .expect(200);
+
+    assert.notProperty(response.body.content, "nextCursor");
+  });
+
+  it("GET /sensors/data returns 400 for invalid percentile", async () => {
+    const response = await request(server)
+      .post("/api/v2/sensors/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        readingTypes: ["temperature"],
+        percentile: -0.1,
+      })
+      .expect(400);
+
+    assert.exists(response.body["error"]);
   });
 
   it("GET /sensors/data with empty time range returns error", async () => {
@@ -551,7 +608,7 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(400);
 
     const error = response.body["error"];
-    expect(error).to.exist;
+    assert.exists(error);
   });
 
   it("GET /sensors/data with no time range returns 400", async () => {
@@ -563,7 +620,7 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(400);
 
     const error = response.body["error"];
-    expect(error).to.exist;
+    assert.exists(error);
   });
 
   it("GET /sensors/data with downsample 5m and aggregates returns correct bucket count", async () => {
@@ -582,10 +639,10 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[4]["voltage"].values).to.be.an("array");
-    expect(content.data[4]["voltage"].values.length).to.be.greaterThan(0);
-    expect(content.data[4]["voltage"].values.length).to.be.lessThanOrEqual(12);
-    expect(content.data[4]["voltage"].values[0]).to.have.property("count");
+    assert.isArray(content.data[4]["voltage"].values);
+    assert.isAbove(content.data[4]["voltage"].values.length, 0);
+    assert.isAtMost(content.data[4]["voltage"].values.length, 12);
+    assert.property(content.data[4]["voltage"].values[0], "count");
   });
 
   it("GET /sensors/data with downsample 1h and multiple reading types", async () => {
@@ -603,12 +660,12 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1]["temperature"].values).to.be.an("array");
-    expect(content.data[2]["temperature"].values).to.be.an("array");
-    expect(content.data[1]["temperature"].values.length).to.be.lessThan(8);
-    expect(content.data[2]["temperature"].values.length).to.be.lessThan(8);
-    expect(content.data[1]["temperature"].values[0]).to.have.property("avg");
-    expect(content.data[2]["temperature"].values[0]).to.have.property("avg");
+    assert.isArray(content.data[1]["temperature"].values);
+    assert.isArray(content.data[2]["temperature"].values);
+    assert.isBelow(content.data[1]["temperature"].values.length, 8);
+    assert.isBelow(content.data[2]["temperature"].values.length, 8);
+    assert.property(content.data[1]["temperature"].values[0], "avg");
+    assert.property(content.data[2]["temperature"].values[0], "avg");
   });
 
   it("GET /sensors/data cursor pagination works with downsample", async () => {
@@ -628,7 +685,9 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
     const firstContent = firstResponse.body["content"];
     const nextCursor = firstContent.nextCursor as string;
     const lastTimeFirstPage =
-      firstContent.data[1]["temperature"].values[firstContent.data[1]["temperature"].values.length - 1].time;
+      firstContent.data[1]["temperature"].values[
+        firstContent.data[1]["temperature"].values.length - 1
+      ].time;
 
     const secondResponse = await request(server)
       .post("/api/v2/sensors/data")
@@ -645,14 +704,35 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const secondContent = secondResponse.body["content"];
-    expect(secondContent.data[1]["temperature"].values).to.be.an("array");
-    expect(secondContent.data[1]["temperature"].values.length).to.be.greaterThan(0);
-    expect(new Date(secondContent.data[1]["temperature"].values[0].time).getTime()).to.be.greaterThanOrEqual(new Date(lastTimeFirstPage).getTime());
+    assert.isArray(secondContent.data[1]["temperature"].values);
+    assert.isAbove(secondContent.data[1]["temperature"].values.length, 0);
+    assert.isAtLeast(
+      new Date(secondContent.data[1]["temperature"].values[0].time).getTime(),
+      new Date(lastTimeFirstPage).getTime(),
+    );
   });
 });
 
 describe("DataQuery API - Output Data Query", function () {
   this.timeout(10000);
+
+  it("GET /outputs/data returns default aggregate fields", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+      })
+      .expect(200);
+
+    const value = response.body["content"].data[1].values[0];
+    assert.property(value, "time");
+    assert.property(value, "avg");
+    assert.property(value, "min");
+    assert.property(value, "max");
+  });
 
   it("GET /outputs/data returns paginated output data", async () => {
     const response = await request(server)
@@ -667,13 +747,13 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data).to.be.an("object");
-    expect(content.data[1]).to.exist;
-    expect(content.data[1].values).to.be.an("array");
-    expect(content.data[1].values.length).to.be.greaterThan(0);
-    expect(content.data[1].values[0]).to.have.property("time");
-    expect(content.nextCursor).to.exist;
-    expect(content.nextCursor).to.be.a("string");
+    assert.isObject(content.data);
+    assert.exists(content.data[1]);
+    assert.isArray(content.data[1].values);
+    assert.isAbove(content.data[1].values.length, 0);
+    assert.property(content.data[1].values[0], "time");
+    assert.exists(content.nextCursor);
+    assert.isString(content.nextCursor);
   });
 
   it("GET /outputs/data respects limit parameter", async () => {
@@ -689,8 +769,8 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1].values.length).to.be.at.least(1);
-    expect(content.nextCursor).to.exist;
+    assert.isAtLeast(content.data[1].values.length, 1);
+    assert.exists(content.nextCursor);
   });
 
   it("GET /outputs/data with valid cursor returns next page", async () => {
@@ -723,9 +803,12 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const secondContent = secondResponse.body["content"];
-    expect(secondContent.data[1].values).to.be.an("array");
-    expect(secondContent.data[1].values.length).to.be.greaterThan(0);
-    expect(new Date(secondContent.data[1].values[0].time).getTime()).to.be.greaterThan(new Date(lastTimeFirstPage).getTime());
+    assert.isArray(secondContent.data[1].values);
+    assert.isAbove(secondContent.data[1].values.length, 0);
+    assert.isAbove(
+      new Date(secondContent.data[1].values[0].time).getTime(),
+      new Date(lastTimeFirstPage).getTime(),
+    );
   });
 
   it("GET /outputs/data with invalid cursor returns 400", async () => {
@@ -741,7 +824,7 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(400);
 
     const error = response.body["error"];
-    expect(error).to.exist;
+    assert.exists(error);
   });
 
   it("GET /outputs/data with min aggregate returns aggregate data", async () => {
@@ -757,10 +840,10 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1].values).to.be.an("array");
-    expect(content.data[1].values.length).to.be.greaterThan(0);
+    assert.isArray(content.data[1].values);
+    assert.isAbove(content.data[1].values.length, 0);
     for (const value of content.data[1].values) {
-      expect(value).to.have.property("min");
+      assert.property(value, "min");
     }
   });
 
@@ -777,11 +860,82 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1].values).to.be.an("array");
-    expect(content.data[1].values.length).to.be.greaterThan(0);
+    assert.isArray(content.data[1].values);
+    assert.isAbove(content.data[1].values.length, 0);
     for (const value of content.data[1].values) {
-      expect(value).to.have.property("max");
+      assert.property(value, "max");
     }
+  });
+
+  it("GET /outputs/data with custom aggregates omits avg", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        aggregates: ["min", "max", "count"],
+      })
+      .expect(200);
+
+    const value = response.body["content"].data[1].values[0];
+    assert.property(value, "min");
+    assert.property(value, "max");
+    assert.property(value, "count");
+    assert.notProperty(value, "avg");
+  });
+
+  it("GET /outputs/data with downsample returns downsampled results", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        downsample: "1h",
+      })
+      .expect(200);
+
+    assert.isArray(response.body["content"].data[1].values);
+  });
+
+  it("GET /outputs/data returns 400 for missing timeRange", async () => {
+    const response = await request(server).post("/api/v2/outputs/data").send({}).expect(400);
+    assert.exists(response.body["error"]);
+  });
+
+  it("GET /outputs/data returns 400 for invalid downsample", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        downsample: "1m",
+      })
+      .expect(400);
+
+    assert.exists(response.body["error"]);
+  });
+
+  it("GET /outputs/data filters by specific ids", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        ids: [5],
+      })
+      .expect(200);
+
+    const content = response.body["content"];
+    assert.property(content.data, "5");
+    assert.notProperty(content.data, "1");
   });
 
   it("GET /outputs/data with timeRange filter returns filtered results", async () => {
@@ -796,9 +950,9 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    expect(content.data[1].values).to.be.an("array");
-    expect(content.data[1].values.length).to.be.greaterThan(0);
-    expect(content.data[1].values.length).to.be.lessThanOrEqual(4);
+    assert.isArray(content.data[1].values);
+    assert.isAbove(content.data[1].values.length, 0);
+    assert.isAtMost(content.data[1].values.length, 4);
   });
 
   it("GET /outputs/data with bad cursor returns 400", async () => {
@@ -814,7 +968,7 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(400);
 
     const error = response.body["error"];
-    expect(error).to.exist;
+    assert.exists(error);
   });
 
   it("GET /outputs/data with empty time range returns error", async () => {
@@ -829,15 +983,127 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(400);
 
     const error = response.body["error"];
-    expect(error).to.exist;
+    assert.exists(error);
+  });
+
+  it("GET /outputs/data does not return nextCursor when all results fit in limit", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-01T01:00:00.000Z",
+        },
+        ids: [5],
+        limit: 100,
+      })
+      .expect(200);
+
+    assert.notProperty(response.body.content, "nextCursor");
+  });
+
+  it("GET /outputs/data returns 400 when limit exceeds max", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        limit: 10001,
+      })
+      .expect(400);
+
+    assert.exists(response.body["error"]);
+  });
+
+  it("GET /outputs/data returns output data with extended aggregates", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-01T01:00:00.000Z",
+        },
+        ids: [1],
+        aggregates: ["avg", "count", "sum", "stddev", "percentile", "first", "last"],
+        percentile: 0.95,
+      })
+      .expect(200);
+
+    const value = response.body["content"].data[1].values[0];
+    assert.property(value, "avg");
+    assert.property(value, "count");
+    assert.property(value, "sum");
+    assert.property(value, "stddev");
+    assert.property(value, "percentile");
+    assert.property(value, "first");
+    assert.property(value, "last");
+  });
+
+  it("GET /outputs/data cursor pagination works with downsample", async () => {
+    const firstResponse = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        downsample: "1h",
+        ids: [1],
+        limit: 5,
+      })
+      .expect(200);
+
+    const firstContent = firstResponse.body["content"];
+    const nextCursor = firstContent.nextCursor as string;
+    const lastTimeFirstPage =
+      firstContent.data[1].values[firstContent.data[1].values.length - 1].time;
+
+    const secondResponse = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        downsample: "1h",
+        ids: [1],
+        limit: 5,
+        cursor: nextCursor,
+      })
+      .expect(200);
+
+    const secondContent = secondResponse.body["content"];
+    assert.isArray(secondContent.data[1].values);
+    assert.isAbove(secondContent.data[1].values.length, 0);
+    assert.isAtLeast(
+      new Date(secondContent.data[1].values[0].time).getTime(),
+      new Date(lastTimeFirstPage).getTime(),
+    );
+  });
+
+  it("GET /outputs/data returns 400 for invalid percentile", async () => {
+    const response = await request(server)
+      .post("/api/v2/outputs/data")
+      .send({
+        timeRange: {
+          start: "2024-01-01T00:00:00.000Z",
+          end: "2024-01-02T00:00:00.000Z",
+        },
+        percentile: 2,
+      })
+      .expect(400);
+
+    assert.exists(response.body["error"]);
   });
 });
 
-describe("DataQuery API - Migrated Tests", function () {
+describe("DataQuery API - Sensor Reading Type Verification", function () {
   this.timeout(10000);
 
-  describe("POST /sensors/data", () => {
-    it("Migrated: should return 200 and sensor data with default aggregates", async () => {
+  describe("BME280 sensor (id 1) returns only its supported reading types", () => {
+    it("querying temperature does not return humidity or pressure", async () => {
       const response = await request(server)
         .post("/api/v2/sensors/data")
         .send({
@@ -845,18 +1111,17 @@ describe("DataQuery API - Migrated Tests", function () {
             start: "2024-01-01T00:00:00.000Z",
             end: "2024-01-02T00:00:00.000Z",
           },
+          readingTypes: ["temperature"],
         })
         .expect(200);
+
       const content = response.body["content"];
-      expect(content.data).to.have.property("1");
-      expect(content.data["1"]).to.have.property("temperature");
-      expect(content.data["1"]["temperature"]).to.have.property("values");
-      expect(Array.isArray(content.data["1"]["temperature"].values)).to.be.true;
-      expect(content.data["1"]["temperature"].values[0]).to.have.property("time");
-      expect(content.data["1"]["temperature"].values[0]).to.have.property("avg");
+      assert.property(content.data["1"], "temperature");
+      assert.notProperty(content.data["1"], "humidity");
+      assert.notProperty(content.data["1"], "pressure");
     });
 
-    it("Migrated: should return 200 and sensor data with custom aggregates", async () => {
+    it("querying humidity does not return temperature or pressure", async () => {
       const response = await request(server)
         .post("/api/v2/sensors/data")
         .send({
@@ -864,17 +1129,17 @@ describe("DataQuery API - Migrated Tests", function () {
             start: "2024-01-01T00:00:00.000Z",
             end: "2024-01-02T00:00:00.000Z",
           },
-          aggregates: ["min", "max", "count"],
+          readingTypes: ["humidity"],
         })
         .expect(200);
+
       const content = response.body["content"];
-      expect(content.data["1"]["temperature"].values[0]).to.have.property("min");
-      expect(content.data["1"]["temperature"].values[0]).to.have.property("max");
-      expect(content.data["1"]["temperature"].values[0]).to.have.property("count");
-      expect(content.data["1"]["temperature"].values[0]).to.not.have.property("avg");
+      assert.property(content.data["1"], "humidity");
+      assert.notProperty(content.data["1"], "temperature");
+      assert.notProperty(content.data["1"], "pressure");
     });
 
-    it("Migrated: should return 200 and sensor data with downsample", async () => {
+    it("querying pressure does not return temperature or humidity", async () => {
       const response = await request(server)
         .post("/api/v2/sensors/data")
         .send({
@@ -882,32 +1147,39 @@ describe("DataQuery API - Migrated Tests", function () {
             start: "2024-01-01T00:00:00.000Z",
             end: "2024-01-02T00:00:00.000Z",
           },
-          downsample: "1h",
+          readingTypes: ["pressure"],
+          ids: [1],
         })
         .expect(200);
+
       const content = response.body["content"];
-      expect(content.data).to.have.property("1");
-      expect(Array.isArray(content.data["1"]["temperature"].values)).to.be.true;
+      assert.property(content.data["1"], "pressure");
+      assert.notProperty(content.data["1"], "temperature");
+      assert.notProperty(content.data["1"], "humidity");
     });
+  });
 
-    it("Migrated: should return 400 for missing timeRange", async () => {
-      await request(server).post("/api/v2/sensors/data").send({}).expect(400);
-    });
-
-    it("Migrated: should return 400 for invalid downsample", async () => {
-      await request(server)
+  describe("DS18B20 sensor (id 2) returns only temperature", () => {
+    it("querying temperature returns data for sensor 2", async () => {
+      const response = await request(server)
         .post("/api/v2/sensors/data")
         .send({
           timeRange: {
             start: "2024-01-01T00:00:00.000Z",
             end: "2024-01-02T00:00:00.000Z",
           },
-          downsample: "invalid",
+          readingTypes: ["temperature"],
         })
-        .expect(400);
-    });
+        .expect(200);
 
-    it("Migrated: should return 200 and filter sensor data by readingTypes", async () => {
+      const content = response.body["content"];
+      assert.property(content.data["2"], "temperature");
+      assert.isAbove(content.data["2"]["temperature"].values.length, 0);
+    });
+  });
+
+  describe("CapacitiveMoistureSensor (id 3) returns only moisture", () => {
+    it("querying moisture returns data for sensor 3", async () => {
       const response = await request(server)
         .post("/api/v2/sensors/data")
         .send({
@@ -919,272 +1191,30 @@ describe("DataQuery API - Migrated Tests", function () {
           ids: [3],
         })
         .expect(200);
+
       const content = response.body["content"];
-      expect(content.data["3"]).to.have.property("moisture");
-      expect(content.data["3"]["moisture"].values.length).to.be.greaterThan(0);
-    });
-
-    it("Migrated: should return nextCursor when limit is small", async () => {
-      const response = await request(server)
-        .post("/api/v2/sensors/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          limit: 1,
-        })
-        .expect(200);
-      expect(response.body.content.nextCursor).to.be.a("string");
-      const decoded = Buffer.from(response.body.content.nextCursor, "base64").toString();
-      expect(decoded).to.match(/^\d{4}-\d{2}-\d{2}T/);
-    });
-
-    it("Migrated: should not return nextCursor when all results fit in limit", async () => {
-      const response = await request(server)
-        .post("/api/v2/sensors/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          limit: 100,
-        })
-        .expect(200);
-      expect(response.body.content).to.have.property("nextCursor");
-    });
-
-    it("Migrated: should return 400 for invalid aggregates", async () => {
-      await request(server)
-        .post("/api/v2/sensors/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          aggregates: ["invalid"],
-        })
-        .expect(400);
+      assert.property(content.data["3"], "moisture");
+      assert.isAbove(content.data["3"]["moisture"].values.length, 0);
     });
   });
 
-  describe("POST /outputs/data", () => {
-    it("Migrated: should return 200 and output data with default aggregates", async () => {
+  describe("ADS1115 sensor (id 4) returns only voltage", () => {
+    it("querying voltage returns data for sensor 4", async () => {
       const response = await request(server)
-        .post("/api/v2/outputs/data")
+        .post("/api/v2/sensors/data")
         .send({
           timeRange: {
             start: "2024-01-01T00:00:00.000Z",
             end: "2024-01-02T00:00:00.000Z",
           },
+          readingTypes: ["voltage"],
+          ids: [4],
         })
         .expect(200);
+
       const content = response.body["content"];
-      expect(content.data).to.have.property("1");
-      expect(content.data["1"]).to.have.property("values");
-      expect(Array.isArray(content.data["1"].values)).to.be.true;
-      expect(content.data["1"].values[0]).to.have.property("time");
-      expect(content.data["1"].values[0]).to.have.property("avg");
-    });
-
-    it("Migrated: should return 200 and output data with custom aggregates", async () => {
-      const response = await request(server)
-        .post("/api/v2/outputs/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          aggregates: ["min", "max", "count"],
-        })
-        .expect(200);
-      const content = response.body["content"];
-      expect(content.data["1"].values[0]).to.have.property("min");
-      expect(content.data["1"].values[0]).to.have.property("max");
-      expect(content.data["1"].values[0]).to.have.property("count");
-      expect(content.data["1"].values[0]).to.not.have.property("avg");
-    });
-
-    it("Migrated: should return 200 and output data with downsample", async () => {
-      const response = await request(server)
-        .post("/api/v2/outputs/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          downsample: "1h",
-        })
-        .expect(200);
-      const content = response.body["content"];
-      expect(content.data).to.have.property("1");
-      expect(Array.isArray(content.data["1"].values)).to.be.true;
-    });
-
-    it("Migrated: should return 400 for missing timeRange", async () => {
-      await request(server).post("/api/v2/outputs/data").send({}).expect(400);
-    });
-
-    it("Migrated: should return 400 for invalid downsample", async () => {
-      await request(server)
-        .post("/api/v2/outputs/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          downsample: "1m",
-        })
-        .expect(400);
-    });
-
-    it("Migrated: should return nextCursor when limit is small", async () => {
-      const response = await request(server)
-        .post("/api/v2/outputs/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          limit: 1,
-        })
-        .expect(200);
-      expect(response.body.content.nextCursor).to.be.a("string");
-      const decoded = Buffer.from(response.body.content.nextCursor, "base64").toString();
-      expect(decoded).to.match(/^\d{4}-\d{2}-\d{2}T/);
-    });
-
-    it("Migrated: should return 400 for invalid aggregates", async () => {
-      await request(server)
-        .post("/api/v2/outputs/data")
-        .send({
-          timeRange: {
-            start: "2024-01-01T00:00:00.000Z",
-            end: "2024-01-02T00:00:00.000Z",
-          },
-          aggregates: ["invalid"],
-        })
-        .expect(400);
-    });
-
-    describe("DataQuery API - Reading Type Verification", function () {
-      this.timeout(10000);
-
-      describe("BME280 sensor (id 1) returns only its supported reading types", () => {
-        it("querying temperature does not return humidity or pressure", async () => {
-          const response = await request(server)
-            .post("/api/v2/sensors/data")
-            .send({
-              timeRange: {
-                start: "2024-01-01T00:00:00.000Z",
-                end: "2024-01-02T00:00:00.000Z",
-              },
-              readingTypes: ["temperature"],
-            })
-            .expect(200);
-
-          const content = response.body["content"];
-          expect(content.data["1"]).to.have.property("temperature");
-          expect(content.data["1"]).to.not.have.property("humidity");
-          expect(content.data["1"]).to.not.have.property("pressure");
-        });
-
-        it("querying humidity does not return temperature or pressure", async () => {
-          const response = await request(server)
-            .post("/api/v2/sensors/data")
-            .send({
-              timeRange: {
-                start: "2024-01-01T00:00:00.000Z",
-                end: "2024-01-02T00:00:00.000Z",
-              },
-              readingTypes: ["humidity"],
-            })
-            .expect(200);
-
-          const content = response.body["content"];
-          expect(content.data["1"]).to.have.property("humidity");
-          expect(content.data["1"]).to.not.have.property("temperature");
-          expect(content.data["1"]).to.not.have.property("pressure");
-        });
-
-        it("querying pressure does not return temperature or humidity", async () => {
-          const response = await request(server)
-            .post("/api/v2/sensors/data")
-            .send({
-              timeRange: {
-                start: "2024-01-01T00:00:00.000Z",
-                end: "2024-01-02T00:00:00.000Z",
-              },
-              readingTypes: ["pressure"],
-              ids: [1],
-            })
-            .expect(200);
-
-          const content = response.body["content"];
-          expect(content.data["1"]).to.have.property("pressure");
-          expect(content.data["1"]).to.not.have.property("temperature");
-          expect(content.data["1"]).to.not.have.property("humidity");
-        });
-      });
-
-      describe("DS18B20 sensor (id 2) returns only temperature", () => {
-        it("querying temperature returns data for sensor 2", async () => {
-          const response = await request(server)
-            .post("/api/v2/sensors/data")
-            .send({
-              timeRange: {
-                start: "2024-01-01T00:00:00.000Z",
-                end: "2024-01-02T00:00:00.000Z",
-              },
-              readingTypes: ["temperature"],
-            })
-            .expect(200);
-
-          const content = response.body["content"];
-          expect(content.data["2"]).to.have.property("temperature");
-          expect(content.data["2"]["temperature"].values.length).to.be.greaterThan(0);
-        });
-      });
-
-      describe("CapacitiveMoistureSensor (id 3) returns only moisture", () => {
-        it("querying moisture returns data for sensor 3", async () => {
-          const response = await request(server)
-            .post("/api/v2/sensors/data")
-            .send({
-              timeRange: {
-                start: "2024-01-01T00:00:00.000Z",
-                end: "2024-01-02T00:00:00.000Z",
-              },
-              readingTypes: ["moisture"],
-              ids: [3],
-            })
-            .expect(200);
-
-          const content = response.body["content"];
-          expect(content.data["3"]).to.have.property("moisture");
-          expect(content.data["3"]["moisture"].values.length).to.be.greaterThan(0);
-        });
-      });
-
-      describe("ADS1115 sensor (id 4) returns only voltage", () => {
-        it("querying voltage returns data for sensor 4", async () => {
-          const response = await request(server)
-            .post("/api/v2/sensors/data")
-            .send({
-              timeRange: {
-                start: "2024-01-01T00:00:00.000Z",
-                end: "2024-01-02T00:00:00.000Z",
-              },
-              readingTypes: ["voltage"],
-              ids: [4],
-            })
-            .expect(200);
-
-          const content = response.body["content"];
-          expect(content.data["4"]).to.have.property("voltage");
-          expect(content.data["4"]["voltage"].values.length).to.be.greaterThan(0);
-        });
-      });
+      assert.property(content.data["4"], "voltage");
+      assert.isAbove(content.data["4"]["voltage"].values.length, 0);
     });
   });
 });

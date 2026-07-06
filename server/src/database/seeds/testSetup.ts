@@ -344,16 +344,7 @@ export async function generateDataQuerySeedData(
   outputIds: number[];
   zoneId: number;
 }> {
-  const existingZone = await knex("device_zones").where({ name: "Data Query Test Zone" }).first();
-  let zoneId: number;
-  if (existingZone) {
-    zoneId = existingZone.id;
-  } else {
-    const maxResult = await knex("device_zones").max("id as max_id");
-    const nextId = (Number((maxResult as any)[0]?.max_id) ?? 0) + 1;
-    await knex("device_zones").insert({ id: nextId, name: "Data Query Test Zone" });
-    zoneId = nextId;
-  }
+  const zoneId = 1;
 
   // Ensure device zones exist
   const existingZones = await knex("device_zones").select("id").whereIn("id", [1, 2]);
@@ -370,10 +361,29 @@ export async function generateDataQuerySeedData(
   const existingSensorIds = existingSensors.map((s) => s.id);
   const missingSensors = [1, 2, 3, 4].filter((id) => !existingSensorIds.includes(id));
   if (missingSensors.length > 0) {
-    const sensorDefs: Record<number, { name: string; model: string; address: string; color: string; pin?: string; lowCalibrationPoint?: number | null; highCalibrationPoint?: number | null }> = {
+    const sensorDefs: Record<
+      number,
+      {
+        name: string;
+        model: string;
+        address: string;
+        color: string;
+        pin?: string;
+        lowCalibrationPoint?: number | null;
+        highCalibrationPoint?: number | null;
+      }
+    > = {
       1: { name: "BME280", model: "BME280", address: "0x76", color: "#82c91e" },
       2: { name: "DS18B20", model: "DS18B20", address: "28-583bd446df61", color: "#40c057" },
-      3: { name: "Capacitive Moisture Sensor", model: "CAPACITIVE_MOISTURE_SENSOR", address: "0x48", color: "#228be6", pin: "0", lowCalibrationPoint: 0, highCalibrationPoint: 100 },
+      3: {
+        name: "Capacitive Moisture Sensor",
+        model: "CAPACITIVE_MOISTURE_SENSOR",
+        address: "0x48",
+        color: "#228be6",
+        pin: "0",
+        lowCalibrationPoint: 0,
+        highCalibrationPoint: 100,
+      },
       4: { name: "ADS1115", model: "ADS1115", address: "0x48", color: "#ff8787", pin: "1" },
     };
     await knex("sensors").insert(
