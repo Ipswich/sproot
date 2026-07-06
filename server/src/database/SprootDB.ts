@@ -64,6 +64,11 @@ import {
   getRecentTailStart,
 } from "./databaseQueryUtils";
 
+import {
+  buildSensorRawQuery,
+  buildOutputRawQuery,
+} from "./rawDataQueryHelpers";
+
 import * as winston from "winston";
 
 // ---------------------------------------------------------------------------
@@ -1174,18 +1179,20 @@ export class SprootDB implements ISprootDB {
 
   async querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
     const tableName = SENSOR_AGGREGATE_TABLES[request.downsample ?? "5m"];
-    if (!tableName) {
-      throw new Error(`Unknown downsample interval: ${request.downsample ?? "5m"}`);
+    if (tableName) {
+      return this.#querySensorDataAggregateAsync(request, tableName);
     }
-    return this.#querySensorDataAggregateAsync(request, tableName);
+    // Unknown downsample interval — compute on-the-fly from raw data
+    return this.#querySensorDataRawAsync(request, request.downsample ?? "5m");
   }
 
   async queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
     const tableName = OUTPUT_AGGREGATE_TABLES[request.downsample ?? "5m"];
-    if (!tableName) {
-      throw new Error(`Unknown downsample interval: ${request.downsample ?? "5m"}`);
+    if (tableName) {
+      return this.#queryOutputDataAggregateAsync(request, tableName);
     }
-    return this.#queryOutputDataAggregateAsync(request, tableName);
+    // Unknown downsample interval — compute on-the-fly from raw data
+    return this.#queryOutputDataRawAsync(request, request.downsample ?? "5m");
   }
 
   // ---------------------------------------------------------------------------
@@ -1266,6 +1273,63 @@ export class SprootDB implements ISprootDB {
   }
 
   // ---------------------------------------------------------------------------
+  // Sensor raw path — computes time_bucket on-the-fly from raw hypertable
+  // ---------------------------------------------------------------------------
+
+  async #querySensorDataRawAsync(
+    request: SensorDataQueryRequest,
+    interval: string,
+  ): Promise<SensorDataQueryResponse> {
+    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const readingTypes = request.readingTypes;
+    const whereRaw = this.#buildRawFilters(request, "sensor_id", readingTypes);
+
+    const query = buildSensorRawQuery(this.#connection, interval, whereRaw, limit);
+
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (hasMoreRows && truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatSensorAggregateRows(truncated, [...(request.aggregates ?? DEFAULT_AGGREGATES)], nextCursor);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Output raw path — computes time_bucket on-the-fly from raw hypertable
+  // ---------------------------------------------------------------------------
+
+  async #queryOutputDataRawAsync(
+    request: OutputDataQueryRequest,
+    interval: string,
+  ): Promise<OutputDataQueryResponse> {
+    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const whereRaw = this.#buildRawFilters(request, "output_id", undefined);
+
+    const query = buildOutputRawQuery(this.#connection, interval, whereRaw, limit);
+
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (hasMoreRows && truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatOutputAggregateRows(truncated, [...(request.aggregates ?? DEFAULT_AGGREGATES)], nextCursor);
+  }
+
+  // ---------------------------------------------------------------------------
   // Generic data query — shared logic for aggregate and raw paths
   // ---------------------------------------------------------------------------
 
@@ -1311,6 +1375,35 @@ export class SprootDB implements ISprootDB {
     const timeFilter = cursor
       ? this.#connection.raw('"bucket" > ?', [cursor])
       : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
+
+    const idFilter =
+      ids && ids.length > 0
+        ? this.#connection.raw(`"${idColumnName}" IN (${ids.map(() => "?").join(", ")})`, ids)
+        : this.#connection.raw("1=1");
+
+    const metricFilter =
+      readingTypes && readingTypes.length > 0
+        ? this.#connection.raw(
+            '"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")",
+            readingTypes,
+          )
+        : this.#connection.raw("1=1");
+
+    return this.#connection.raw("? AND ? AND ?", [timeFilter, idFilter, metricFilter]);
+  }
+
+  #buildRawFilters(
+    request: SensorDataQueryRequest | OutputDataQueryRequest,
+    idColumnName: "sensor_id" | "output_id",
+    readingTypes: string[] | undefined,
+  ) {
+    const cursor = this.#parseCursor(request.cursor);
+    const { start, end } = request.timeRange;
+    const ids = (request as any).ids;
+
+    const timeFilter = cursor
+      ? this.#connection.raw('"logTime" > ?', [cursor])
+      : this.#connection.raw('"logTime" BETWEEN ? AND ?', [start, end]);
 
     const idFilter =
       ids && ids.length > 0

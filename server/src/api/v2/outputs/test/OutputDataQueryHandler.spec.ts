@@ -27,13 +27,5 @@ testDataQueryHandlerTests<OutputDataQueryRequest, OutputDataQueryResponse>({
   queryMethod: "queryOutputDataAsync",
   validBody,
   responseData,
-  extraValidationTests: [
-    {
-      name: "invalid downsample",
-      body: {
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        downsample: "30m" as any,
-      },
-    },
-  ],
+  extraValidationTests: [],
 });

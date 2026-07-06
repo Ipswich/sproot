@@ -67,14 +67,30 @@ describe("QueryTypes validation — sensor data", () => {
     }
   });
 
-  it("should reject invalid downsample value", () => {
+  it("should accept any non-empty downsample string", () => {
     const result = validateSensorDataQueryRequest({
       timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
       downsample: "30m",
     });
-    assert.isFalse(result.valid);
-    if (!result.valid) {
-      assert.include(result.errors[0], "downsample must be one of");
+    assert.isTrue(result.valid);
+  });
+
+  it("should reject empty or whitespace-only downsample", () => {
+    const resultEmpty = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      downsample: "",
+    });
+    assert.isFalse(resultEmpty.valid);
+    if (!resultEmpty.valid) {
+      assert.include(resultEmpty.errors[0], "downsample must not be empty");
+    }
+    const resultWhitespace = validateSensorDataQueryRequest({
+      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
+      downsample: "   ",
+    });
+    assert.isFalse(resultWhitespace.valid);
+    if (!resultWhitespace.valid) {
+      assert.include(resultWhitespace.errors[0], "downsample must not be empty");
     }
   });
 

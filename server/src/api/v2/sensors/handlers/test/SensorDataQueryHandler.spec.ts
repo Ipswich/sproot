@@ -36,16 +36,6 @@ describe("SensorDataQueryHandler", () => {
     assert.equal(result.statusCode, 400);
   });
 
-  it("should return 400 for invalid downsample", async () => {
-    const req = createMockRequest({
-      timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
-      downsample: "invalid",
-    });
-    const res = createMockResponse();
-    const result = await sensorDataQueryHandlerAsync(req, res);
-    assert.equal(result.statusCode, 400);
-  });
-
   it("should return 200 with data when DB query succeeds", async () => {
     const mockDb = {
       querySensorDataAsync: sinon.stub().resolves({

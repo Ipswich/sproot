@@ -16,11 +16,15 @@ export const VALID_AGGREGATES = [
 ] as const;
 export type Aggregate = (typeof VALID_AGGREGATES)[number];
 
-// Downsample intervals that match continuous aggregates
-export const VALID_DOWNSAMPLES = ["5m", "1h", "1d"] as const;
-export type Downsample = (typeof VALID_DOWNSAMPLES)[number];
+// Downsample intervals — supports any PostgreSQL INTERVAL string.
+// Known intervals (5m, 1h, 1d) map to continuous aggregate tables for best performance.
+// Other intervals (1m, 15 minutes, 4 hours, etc.) compute on-the-fly from raw data.
+export const KNOWN_DOWNSAMPLES = ["5m", "1h", "1d"] as const;
+export type KnownDownsample = (typeof KNOWN_DOWNSAMPLES)[number];
 
-export const DOWNSAMPLE_TO_BUCKET_MINUTES: Record<Downsample, number> = {
+export type Downsample = string; // accepts any PostgreSQL INTERVAL string
+
+export const DOWNSAMPLE_TO_BUCKET_MINUTES: Record<string, number> = {
   "5m": 5,
   "1h": 60,
   "1d": 1440,
@@ -193,11 +197,9 @@ function validateDownsample(
   if (typeof downsample !== "string") {
     return { valid: false, errors: ["downsample must be a string"] };
   }
-  if (!VALID_DOWNSAMPLES.includes(downsample as Downsample)) {
-    return {
-      valid: false,
-      errors: [`downsample must be one of: ${VALID_DOWNSAMPLES.join(", ")}`],
-    };
+  // Accept any non-empty string — PostgreSQL will validate the INTERVAL at query time
+  if (downsample.trim() === "") {
+    return { valid: false, errors: ["downsample must not be empty"] };
   }
   return { valid: true };
 }

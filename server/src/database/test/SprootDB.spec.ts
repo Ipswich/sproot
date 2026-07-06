@@ -732,33 +732,6 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       assert.equal(percentileCalls[0]!.args[1]?.[0], 0.95);
     });
 
-    it("should throw descriptive error for unknown downsample interval", async () => {
-      const knex = createKnexStub([]);
-      const db = new SprootDB(knex as any);
-
-      await assert.isRejected(
-        db.querySensorDataAsync({
-          timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-          downsample: "3m" as any,
-          limit: 10,
-        } as SensorDataQueryRequest),
-        /Unknown downsample interval: 3m/,
-      );
-    });
-
-    it("should throw descriptive error for unknown output downsample interval", async () => {
-      const knex = createKnexStub([]);
-      const db = new SprootDB(knex as any);
-
-      await assert.isRejected(
-        db.queryOutputDataAsync({
-          timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-          downsample: "3m" as any,
-          limit: 10,
-        } as OutputDataQueryRequest),
-        /Unknown downsample interval: 3m/,
-      );
-    });
   });
 
   // ---- cursor validation ----

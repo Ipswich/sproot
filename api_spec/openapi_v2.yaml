@@ -1838,8 +1838,8 @@ paths:
       summary: Query historical output data.
       description: >
         Returns historical output data with optional downsampling and aggregation. Uses TimescaleDB
-        continuous aggregates when a matching downsample interval is requested, otherwise queries
-        the raw hypertable. Supports cursor-based pagination for large datasets.
+        continuous aggregates for known intervals (5m, 1h, 1d). Other intervals compute on-the-fly
+        from the raw hypertable. Supports cursor-based pagination for large datasets.
       requestBody:
         required: true
         content:
@@ -4882,8 +4882,8 @@ paths:
       summary: Query historical sensor data.
       description: >
         Returns historical sensor data with optional downsampling and aggregation. Uses TimescaleDB
-        continuous aggregates when a matching downsample interval is requested, otherwise queries
-        the raw hypertable. Supports cursor-based pagination for large datasets.
+        continuous aggregates for known intervals (5m, 1h, 1d). Other intervals compute on-the-fly
+        from the raw hypertable. Supports cursor-based pagination for large datasets.
       requestBody:
         required: true
         content:
@@ -8394,11 +8394,7 @@ components:
           $ref: "#/components/schemas/DataQueryTimeRange"
         downsample:
           type: string
-          enum:
-            - "5m"
-            - "1h"
-            - "1d"
-          description: "Downsample interval matching continuous aggregate resolution"
+          description: "Downsample interval (PostgreSQL INTERVAL format, e.g. '15 minutes', '4 hours'). Known intervals 5m, 1h, 1d use pre-computed continuous aggregates; other intervals compute on-the-fly from raw data."
         cursor:
           type: string
           description: "Base64-encoded ISO 8601 timestamp for pagination"

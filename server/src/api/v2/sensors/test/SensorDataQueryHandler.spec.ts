@@ -32,13 +32,6 @@ testDataQueryHandlerTests<SensorDataQueryRequest, SensorDataQueryResponse>({
   responseData,
   extraValidationTests: [
     {
-      name: "invalid downsample",
-      body: {
-        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-        downsample: "10m" as any,
-      },
-    },
-    {
       name: "invalid readingTypes",
       body: {
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
