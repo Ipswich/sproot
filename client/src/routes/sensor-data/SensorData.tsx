@@ -5,7 +5,8 @@ import {
   useState,
   useTransition,
 } from "react";
-import { Card, Flex, Group, SegmentedControl, Switch } from "@mantine/core";
+import { Card, Flex, Group, SegmentedControl, Switch, Checkbox } from "@mantine/core";
+import { DatePicker } from "@mantine/dates";
 import {
   ReadingType,
   Units,
@@ -30,6 +31,8 @@ export default function SensorData() {
     localStorage.getItem(`${readingTypeString}-useAlternateUnits`) === "true",
   );
   const [chartRendering, setChartRendering] = useState(true);
+  const [useCustomRange, setUseCustomRange] = useState(false);
+  const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null);
 
   const [sensorToggleStates, setSensorToggleStates] = useState(
     JSON.parse(
@@ -85,6 +88,59 @@ export default function SensorData() {
             </Flex>
           ) : null}
         </Group>
+        <Checkbox
+          checked={useCustomRange}
+          onChange={(e) => {
+            setUseCustomRange(e.currentTarget.checked);
+            if (!e.currentTarget.checked) {
+              setCustomRange(null);
+            }
+          }}
+          label="Custom range"
+          size="xs"
+          mb="xs"
+        />
+
+        {useCustomRange ? (
+          <DatePicker
+            type="range"
+            value={customRange ? [customRange.start, customRange.end] : [null, null]}
+            onChange={(dates) => {
+              if (dates && dates[0] && dates[1]) {
+                setCustomRange({ start: dates[0], end: dates[1] });
+              }
+            }}
+            size="xs"
+            mb="xs"
+          />
+        ) : (
+          <div style={{ height: "40px", marginTop: "8px" }}>
+            <SegmentedControl
+              defaultValue={segmentedControlValue}
+              value={segmentedControlValue}
+              onChange={(value) => {
+                localStorage.setItem("sensorChartInterval", value);
+                setSegmentedControlValue(value);
+                setChartRendering(true);
+                startTransition(() => {
+                  setChartInterval(value);
+                });
+              }}
+              color="blue"
+              fullWidth
+              size="xs"
+              radius="md"
+              data={[
+                { label: "6 Hours", value: "6" },
+                { label: "12 Hours", value: "12" },
+                { label: "1 Day", value: "24" },
+                { label: "3 Days", value: "72" },
+                { label: "1 Week", value: "0" },
+              ]}
+            ></SegmentedControl>
+          </div>
+        )}
+
         <ReadingsChartContainer
           readingType={readingTypeString}
           chartInterval={chartInterval}
@@ -93,32 +149,8 @@ export default function SensorData() {
           chartRendering={chartRendering}
           setChartRendering={setChartRendering}
           useAlternateUnits={useAlternateUnits}
+          customTimeRange={useCustomRange ? customRange : null}
         />
-        <div style={{ height: "40px", marginTop: "8px" }}>
-          <SegmentedControl
-            defaultValue={segmentedControlValue}
-            value={segmentedControlValue}
-            onChange={(value) => {
-              localStorage.setItem("sensorChartInterval", value);
-              setSegmentedControlValue(value);
-              setChartRendering(true);
-              startTransition(() => {
-                setChartInterval(value);
-              });
-            }}
-            color="blue"
-            fullWidth
-            size="xs"
-            radius="md"
-            data={[
-              { label: "6 Hours", value: "6" },
-              { label: "12 Hours", value: "12" },
-              { label: "1 Day", value: "24" },
-              { label: "3 Days", value: "72" },
-              { label: "1 Week", value: "0" },
-            ]}
-          ></SegmentedControl>
-        </div>
         <SensorTableAccordion
           readingType={readingTypeString as ReadingType}
           sensorToggleStates={sensorToggleStates}

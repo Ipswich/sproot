@@ -7,8 +7,6 @@ import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
-import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
-import { OutputListChartData } from "./OutputListChartData";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
@@ -24,7 +22,6 @@ class OutputList implements AsyncDisposable {
   #TPLinkSmartPlugs: TPLinkSmartPlugs;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
-  #chartData: OutputListChartData;
   #isUpdating: boolean = false;
   maxCacheSize: number;
   initialCacheLookback: number;
@@ -102,7 +99,6 @@ class OutputList implements AsyncDisposable {
     this.initialCacheLookback = initialCacheLookback;
     this.maxChartDataSize = maxChartDataSize;
     this.chartDataPointInterval = chartDataPointInterval;
-    this.#chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
 
     const outputModifiedListener = async (_event: OutputModifiedEvent) => {
       await this.regenerateAsync();
@@ -130,10 +126,6 @@ class OutputList implements AsyncDisposable {
       }
     }
     return cleanObject;
-  }
-
-  get chartData(): OutputListChartData {
-    return this.#chartData;
   }
 
   async updateControlModeAsync(outputId: string, controlMode: ControlMode): Promise<void> {
@@ -351,20 +343,6 @@ class OutputList implements AsyncDisposable {
             (output as OutputGroup)?.updateShouldBePwmAsync();
           }
         }
-        // Chart data should only include data for outputs that don't have a parent
-        const data = Object.values(this.outputs)
-          .filter((output) => output.parentOutputId == null)
-          .map((output) => output.getChartData().data);
-        const series = Object.values(this.outputs)
-          .filter((output) => output.parentOutputId == null)
-          .map((output) => output.getChartData().series);
-        this.#chartData.loadChartData(data, "output");
-        this.#chartData.loadChartSeries(series);
-        this.#logger.info(
-          `Loaded aggregate output chart data. Data count: ${
-            Object.keys(this.#chartData.chartData.get()).length
-          }`,
-        );
       }
 
       profiler.done({
@@ -381,18 +359,6 @@ class OutputList implements AsyncDisposable {
     await this.#touchAllOutputsAsync(async (output) => {
       output.updateDataStoresAsync();
     });
-
-    if (ChartData.shouldUpdateByInterval(new Date(), this.chartDataPointInterval)) {
-      this.#chartData.updateChartData(
-        Object.values(this.outputs).map((output) => output.getChartData().data),
-        "output",
-      );
-      this.#logger.info(
-        `Updated aggregate output chart data. Data count: ${
-          Object.keys(this.#chartData.chartData.get()).length
-        }`,
-      );
-    }
   }
 
   async addOutputAsync(output: SDBOutput): Promise<number> {

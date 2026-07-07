@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/OutputHandlers";
 import { setControlModeAsync, setManualStateAsync } from "./handlers/OutputStateHandlers";
-import { outputChartDataHandler } from "./handlers/OutputChartDataHandlers";
 import { outputDataQueryHandlerAsync } from "./handlers/OutputDataQueryHandler";
 import { getAvailableDevices } from "./handlers/AvailableDevicesHandlers";
 
@@ -10,13 +9,6 @@ const router = express.Router();
 
 router.get("/supported-models", (_req: Request, res: Response) => {
   const response = supportedModelsHandler(res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.get("/chart-data", (req: Request, res: Response) => {
-  const response = outputChartDataHandler(req, res);
 
   res.status(response.statusCode).json(response);
   return;

@@ -212,3 +212,7 @@ This module provides shared functionality:
 
 - `server/` - Implements `SprootDB` class satisfying `ISprootDB`
 - `client/` - Imports type definitions directly from source
+
+## Plans and Specs
+- NEVER write plans, specs, or implementation documents to the `docs/` directory. The `docs/` directory is a Docusaurus project that produces the project's public-facing documentation, and must only contain end-user or API documentation.
+- Plans and specs should be written to `.opencode/` instead.

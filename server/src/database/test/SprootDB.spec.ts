@@ -152,7 +152,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.notProperty(result, "nextCursor");
+      assert.isString(result.nextCursor);
       assert.isDefined((result.data as any)[1]);
       assert.equal((result.data as any)[1]["temperature"].units, "°C");
       assert.equal((result.data as any)[1]["temperature"].values.length, 1);
@@ -305,8 +305,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.isNotEmpty(result.data);
-      assert.notProperty(result, "nextCursor");
+     assert.isNotEmpty(result.data);
+      assert.isString(result.nextCursor);
       assert.isDefined((result.data as any)[1]);
       assert.equal((result.data as any)[1].values.length, 1);
     });
@@ -382,7 +382,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.equal((result.data as any)[1].values.length, 1);
-      assert.notProperty(result, "nextCursor");
+      assert.isString(result.nextCursor);
     });
 
     it("should use custom percentile in output aggregate query", async () => {
@@ -830,7 +830,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.equal((result.data as any)[1]["temperature"].values.length, 1);
-      assert.notProperty(result, "nextCursor");
+      assert.isString(result.nextCursor);
     });
 
     it("should use custom percentile in sensor aggregate query", async () => {

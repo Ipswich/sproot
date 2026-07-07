@@ -1,20 +1,18 @@
-import * as Constants from "@sproot/sproot-common/src/utility/Constants";
-import {
-  ChartSeries,
-  ChartData,
-  DataSeries,
-} from "@sproot/sproot-common/src/utility/ChartData";
+import { ChartData, DataSeries } from "@sproot/sproot-common/src/utility/ChartData";
 import {
   ReadingType,
   Units,
 } from "@sproot/sproot-common/src/sensors/ReadingType";
-import { Fragment, useEffect, useState } from "react";
+import type { ISensorBase } from "@sproot/sensors/ISensorBase";
+import type { SensorDataQueryRequest } from "@sproot/requests/queryTypes";
+import { useMemo, useState } from "react";
 import {
   getSensorsAsync,
-  getSensorChartDataAsync,
+  fetchSensorDataAsync,
 } from "../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import ReadingsChart from "./ReadingsChart";
+import { transformSensorData } from "./ChartDataTransformer";
 import {
   convertCelsiusToFahrenheit,
   convertFahrenheitToCelsius,
@@ -28,6 +26,7 @@ export interface ReadingsChartContainerProps {
   chartRendering: boolean;
   setChartRendering: (value: boolean) => void;
   useAlternateUnits: boolean;
+  customTimeRange?: { start: Date; end: Date } | null;
 }
 
 export default function ReadingsChartContainer({
@@ -38,24 +37,9 @@ export default function ReadingsChartContainer({
   chartRendering,
   setChartRendering,
   useAlternateUnits,
+  customTimeRange,
 }: ReadingsChartContainerProps) {
-  const baseChartData = new ChartData(
-    Constants.MAX_CHART_DATA_POINTS,
-    Constants.CHART_DATA_POINT_INTERVAL,
-  );
-  const [timeSpans, setTimeSpans] = useState(
-    ChartData.generateTimeSpansFromDataSeries(
-      baseChartData.get(),
-      baseChartData.intervalMinutes,
-    ),
-  );
-  const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
-
-  const chartDataQuery = useQuery({
-    queryKey: ["sensor-data-chart"],
-    queryFn: () => getSensorChartDataAsync(readingType),
-    refetchInterval: 300000,
-  });
+  const [isFetching, setIsFetching] = useState(false);
 
   const sensorsQuery = useQuery({
     queryKey: ["sensor-data-sensors"],
@@ -63,101 +47,126 @@ export default function ReadingsChartContainer({
     refetchInterval: 60000,
   });
 
-  const updateDataAsync = async () => {
-    const newData = (await chartDataQuery.refetch()).data!;
-    if (readingType == ReadingType.temperature) {
-      updateUnits(newData["data"][readingType as ReadingType]);
+  const timeRange = useMemo(() => {
+    if (customTimeRange) {
+      return {
+        start: customTimeRange.start.toISOString(),
+        end: customTimeRange.end.toISOString(),
+      };
     }
-    const baseChartData = new ChartData(
-      Constants.MAX_CHART_DATA_POINTS,
-      Constants.CHART_DATA_POINT_INTERVAL,
-      newData.data[readingType as ReadingType],
-    );
-    setTimeSpans(
-      ChartData.generateTimeSpansFromDataSeries(
-        baseChartData.get(),
-        baseChartData.intervalMinutes,
-      ),
-    );
-    setChartSeries(newData.series);
-    setChartRendering(false);
-  };
+    const hours = parseInt(chartInterval) || 24;
+    const end = new Date();
+    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+    return { start: start.toISOString(), end: end.toISOString() };
+  }, [customTimeRange, chartInterval]);
 
-  const updateUnits = (dataSeries: DataSeries | undefined) => {
-    if (dataSeries === undefined) {
-      return;
+  const downsample = useMemo(() => {
+    if (customTimeRange) {
+      const durationMs = customTimeRange.end.getTime() - customTimeRange.start.getTime();
+      const durationHours = durationMs / (1000 * 60 * 60);
+      if (durationHours <= 72) return "5m";
+      if (durationHours <= 168) return "1h";
+      return "1d";
     }
-    if (readingType == ReadingType.temperature) {
-      if (useAlternateUnits) {
-        for (const dataPoint of dataSeries) {
-          if (dataPoint.units === "°F") {
-            continue;
-          }
-          dataPoint.units = "°F";
-          for (const key of Object.keys(dataPoint)) {
-            if (key === "units" || key === "name") {
-              continue;
-            }
-            dataPoint[key] = convertCelsiusToFahrenheit(dataPoint[key])!;
-          }
-        }
-      } else {
-        for (const dataPoint of dataSeries) {
-          if (dataPoint.units === Units.temperature) {
-            continue;
-          }
-          dataPoint.units = Units.temperature;
-          for (const key of Object.keys(dataPoint)) {
-            if (key === "units" || key === "name") {
-              continue;
-            }
-            dataPoint[key] = convertFahrenheitToCelsius(dataPoint[key])!;
-          }
-        }
-      }
+    const hours = parseInt(chartInterval) || 24;
+    if (hours <= 72) return "5m";
+    return "1h";
+  }, [customTimeRange, chartInterval]);
+
+  const chartDataQuery = useQuery({
+    queryKey: ["sensor-data-chart", readingType, timeRange.start, timeRange.end, downsample],
+    queryFn: async () => {
+      setIsFetching(true);
+      const request: SensorDataQueryRequest = {
+        timeRange,
+        readingTypes: [readingType],
+        downsample,
+        limit: 2000,
+        aggregates: ["avg", "min", "max"],
+      };
+      const response = await fetchSensorDataAsync(request);
+      setChartRendering(false);
+      setIsFetching(false);
+      return response;
+    },
+    refetchInterval: 300000,
+    enabled: !!sensorsQuery.data,
+  });
+
+  const sensorObjects = useMemo(() => {
+    if (!sensorsQuery.data) return {};
+    const result: Record<number, ISensorBase> = {};
+    for (const key of Object.keys(sensorsQuery.data)) {
+      const sensor = sensorsQuery.data[key]!;
+      result[sensor.id] = sensor;
     }
-  };
+    return result;
+  }, [sensorsQuery.data]);
 
-  useEffect(() => {
-    updateDataAsync();
+  const transformedData = useMemo(() => {
+    if (!chartDataQuery.data) return null;
+    return transformSensorData(chartDataQuery.data, sensorObjects);
+  }, [chartDataQuery.data, sensorObjects]);
 
-    const interval = setInterval(() => {
-      updateDataAsync();
-    }, 60000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType]);
-
-  if (readingType == ReadingType.temperature) {
-    updateUnits(timeSpans[parseInt(chartInterval)]!);
+  // Temperature unit conversion
+  if (readingType === ReadingType.temperature && chartInterval !== "0" && transformedData) {
+    convertTemperatureUnits(transformedData.dataSeries, useAlternateUnits);
   }
 
+  // Build hidden sensor list
   const hiddenSensorsFromDeviceZones = (
-    Object.values(sensorsQuery.data ?? {}) ?? []
+    Object.values(sensorsQuery.data ?? {})
   )
-    .filter((sensor) => {
+    .filter((sensor: any) => {
       return (
         toggledDeviceZones.includes((sensor.deviceZoneId ?? -1).toString()) ||
         !Object.keys(sensor.lastReading).includes(readingType)
       );
     })
-    .map((sensor) => sensor.name);
+    .map((sensor: any) => sensor.name);
+
   const hiddenSensors =
-    hiddenSensorsFromDeviceZones.length ==
-    Object.values(sensorsQuery.data ?? {}).length
+    hiddenSensorsFromDeviceZones.length === Object.values(sensorsQuery.data ?? {}).length
       ? []
       : toggledSensors.concat(hiddenSensorsFromDeviceZones);
+
+  const filteredData = transformedData
+    ? ChartData.filterChartData(transformedData.dataSeries, hiddenSensors)
+    : [];
+
   return (
-    <Fragment>
-      <ReadingsChart
-        dataSeries={ChartData.filterChartData(
-          timeSpans[parseInt(chartInterval)]!,
-          hiddenSensors,
-        )}
-        chartSeries={chartSeries}
-        readingType={readingType}
-        chartRendering={chartDataQuery.isPending || chartRendering}
-      />
-    </Fragment>
+    <ReadingsChart
+      dataSeries={filteredData}
+      chartSeries={transformedData?.chartSeries ?? []}
+      readingType={readingType}
+      chartRendering={isFetching || chartDataQuery.isPending || chartRendering}
+      showEmptyState={filteredData.length === 0}
+    />
   );
+}
+
+function convertTemperatureUnits(dataSeries: DataSeries, useFahrenheit: boolean) {
+  for (const dataPoint of dataSeries) {
+    if (useFahrenheit) {
+      if (dataPoint.units === "\u00b0F") continue;
+      dataPoint.units = "\u00b0F";
+      for (const key of Object.keys(dataPoint)) {
+        if (key === "units" || key === "name") continue;
+        const val = dataPoint[key];
+        if (typeof val === "number") {
+          dataPoint[key] = convertCelsiusToFahrenheit(val)!;
+        }
+      }
+    } else {
+      if (dataPoint.units === Units.temperature) continue;
+      dataPoint.units = Units.temperature;
+      for (const key of Object.keys(dataPoint)) {
+        if (key === "units" || key === "name") continue;
+        const val = dataPoint[key];
+        if (typeof val === "number") {
+          dataPoint[key] = convertFahrenheitToCelsius(val)!;
+        }
+      }
+    }
+  }
 }

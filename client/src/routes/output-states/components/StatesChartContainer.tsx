@@ -1,22 +1,22 @@
-import * as Constants from "@sproot/sproot-common/src/utility/Constants";
-import {
-  ChartData,
-  ChartSeries,
-} from "@sproot/sproot-common/src/utility/ChartData";
+import { ChartData } from "@sproot/sproot-common/src/utility/ChartData";
+import type { OutputDataQueryRequest } from "@sproot/requests/queryTypes";
 import { useQuery } from "@tanstack/react-query";
 import {
-  getOutputChartDataAsync,
   getOutputsAsync,
+  fetchOutputDataAsync,
 } from "../../../requests/requests_v2";
-import { Fragment, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Flex } from "@mantine/core";
 import StatesChart from "./StatesChart";
+import { transformOutputData } from "./OutputDataTransformer";
+import type { IOutputBase } from "@sproot/outputs/IOutputBase";
 
 interface StatesChartContainerProps {
   chartInterval: string;
   chartRendering: boolean;
   setChartRendering: (value: boolean) => void;
   toggledDeviceZones: string[];
+  customTimeRange?: { start: Date; end: Date } | null;
 }
 
 export default function StatesChartContainer({
@@ -24,24 +24,9 @@ export default function StatesChartContainer({
   chartRendering,
   setChartRendering,
   toggledDeviceZones,
+  customTimeRange,
 }: StatesChartContainerProps) {
-  const baseChartData = new ChartData(
-    Constants.MAX_CHART_DATA_POINTS,
-    Constants.CHART_DATA_POINT_INTERVAL,
-  );
-  const [timeSpans, setTimeSpans] = useState(
-    ChartData.generateTimeSpansFromDataSeries(
-      baseChartData.get(),
-      baseChartData.intervalMinutes,
-    ),
-  );
-  const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
-
-  const chartDataQuery = useQuery({
-    queryKey: ["output-states-chart"],
-    queryFn: () => getOutputChartDataAsync(),
-    refetchInterval: 300000,
-  });
+  const [isFetching, setIsFetching] = useState(false);
 
   const outputsQuery = useQuery({
     queryKey: ["outputs"],
@@ -49,62 +34,105 @@ export default function StatesChartContainer({
     refetchInterval: 60000,
   });
 
-  const updateAsync = async () => {
-    const newData = (await chartDataQuery.refetch()).data!;
-    const baseChartData = new ChartData(
-      Constants.MAX_CHART_DATA_POINTS,
-      Constants.CHART_DATA_POINT_INTERVAL,
-      newData.data,
-    );
-    setTimeSpans(
-      ChartData.generateTimeSpansFromDataSeries(
-        baseChartData.get(),
-        baseChartData.intervalMinutes,
-      ),
-    );
-    setChartSeries(newData.series);
-    setChartRendering(false);
-  };
+  const timeRange = useMemo(() => {
+    if (customTimeRange) {
+      return {
+        start: customTimeRange.start.toISOString(),
+        end: customTimeRange.end.toISOString(),
+      };
+    }
+    const hours = parseInt(chartInterval) || 24;
+    const end = new Date();
+    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+    return { start: start.toISOString(), end: end.toISOString() };
+  }, [customTimeRange, chartInterval]);
 
-  useEffect(() => {
-    updateAsync();
+  const downsample = useMemo(() => {
+    if (customTimeRange) {
+      const durationMs =
+        customTimeRange.end.getTime() - customTimeRange.start.getTime();
+      const durationHours = durationMs / (1000 * 60 * 60);
+      if (durationHours <= 72) return "5m";
+      if (durationHours <= 168) return "1h";
+      return "1d";
+    }
+    const hours = parseInt(chartInterval) || 24;
+    if (hours <= 72) return "5m";
+    return "1h";
+  }, [customTimeRange, chartInterval]);
 
-    const interval = setInterval(() => {
-      updateAsync();
-    }, 60000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const chartDataQuery = useQuery({
+    queryKey: [
+      "output-states-chart",
+      timeRange.start,
+      timeRange.end,
+      downsample,
+    ],
+    queryFn: async () => {
+      setIsFetching(true);
+      const request: OutputDataQueryRequest = {
+        timeRange,
+        downsample,
+        limit: 2000,
+        aggregates: ["avg", "min", "max"],
+      };
+      const response = await fetchOutputDataAsync(request);
+      setChartRendering(false);
+      setIsFetching(false);
+      return response;
+    },
+    refetchInterval: 300000,
+    enabled: !!outputsQuery.data,
+  });
 
-  const hiddenOutputsFromDeviceZones = (
-    Object.values(outputsQuery.data ?? {}) ?? []
-  )
-    .filter((output) => {
+  const outputObjects = useMemo(() => {
+    if (!outputsQuery.data) return {};
+    const result: Record<number, IOutputBase> = {};
+    for (const key of Object.keys(outputsQuery.data)) {
+      const output = outputsQuery.data[key]!;
+      result[output.id] = output;
+    }
+    return result;
+  }, [outputsQuery.data]);
+
+  const transformedData = useMemo(() => {
+    if (!chartDataQuery.data) return null;
+    return transformOutputData(chartDataQuery.data, outputObjects);
+  }, [chartDataQuery.data, outputObjects]);
+
+  // Build hidden output list
+  const hiddenOutputsFromDeviceZones = Object.values(outputsQuery.data ?? {})
+    .filter((output: any) => {
       return toggledDeviceZones.includes(
         (output.deviceZoneId ?? -1).toString(),
       );
     })
-    .map((output) => output.name ?? "");
+    .map((output: any) => output.name ?? "");
 
   const hiddenOutputs =
-    hiddenOutputsFromDeviceZones.length ==
+    hiddenOutputsFromDeviceZones.length ===
     Object.values(outputsQuery.data ?? {}).length
       ? []
       : hiddenOutputsFromDeviceZones;
+
+  const filteredData = transformedData
+    ? ChartData.filterChartData(transformedData.dataSeries, hiddenOutputs)
+    : [];
+
   return (
-    <Fragment>
+    <>
       <Flex my={-12}>
         <h2>History</h2>
         <h5>{"%"}</h5>
       </Flex>
       <StatesChart
-        dataSeries={ChartData.filterChartData(
-          timeSpans[parseInt(chartInterval)]!,
-          hiddenOutputs,
-        )}
-        chartSeries={chartSeries}
-        chartRendering={chartDataQuery.isPending || chartRendering}
+        dataSeries={filteredData}
+        chartSeries={transformedData?.chartSeries ?? []}
+        chartRendering={
+          isFetching || chartDataQuery.isPending || chartRendering
+        }
+        showEmptyState={filteredData.length === 0}
       />
-    </Fragment>
+    </>
   );
 }

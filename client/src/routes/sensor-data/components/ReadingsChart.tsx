@@ -14,6 +14,7 @@ export interface ReadingsChartProps {
   chartSeries: ChartSeries[];
   readingType: string;
   chartRendering: boolean;
+  showEmptyState?: boolean;
 }
 
 export default function ReadingsChart({
@@ -21,6 +22,7 @@ export default function ReadingsChart({
   chartSeries,
   readingType,
   chartRendering,
+  showEmptyState,
 }: ReadingsChartProps) {
   const stats = ChartData.generateStatsForDataSeries(dataSeries);
   const data = dataSeries.map((data) => {
@@ -37,7 +39,21 @@ export default function ReadingsChart({
         zIndex={1000}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
-      <ResponsiveContainer height="300">
+      {showEmptyState ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: 300,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 8,
+          }}
+        >
+          <Text c="dimmed">No data found for this interval</Text>
+        </div>
+      ) : (
+        <ResponsiveContainer height="300">
         <LineChart
           tooltipProps={{
             position: {},
@@ -98,7 +114,8 @@ export default function ReadingsChart({
           dataKey="sensorName"
           series={chartSeries ?? []}
         ></LineChart>
-      </ResponsiveContainer>
+        </ResponsiveContainer>
+      )}
     </Box>
   );
 }

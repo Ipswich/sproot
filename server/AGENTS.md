@@ -185,3 +185,7 @@ When using `docker-compose.yaml.development`:
 **Logging:** Winston logger is configured in `src/logger.ts`.
 
 **API Versioning:** All routes under `/api/v2/` with version documented in OpenAPI spec.
+
+## Plans and Specs
+- NEVER write plans, specs, or implementation documents to the `docs/` directory. The `docs/` directory is a Docusaurus project that produces the project's public-facing documentation, and must only contain end-user or API documentation.
+- Plans and specs should be written to `.opencode/` instead.

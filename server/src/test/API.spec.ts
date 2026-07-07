@@ -151,30 +151,6 @@ describe("API Tests", async function () {
       });
     });
 
-    describe("ChartData", async () => {
-      describe("GET", async () => {
-        it("should return 200", async () => {
-          const response = await request(server).get("/api/v2/outputs/chart-data").expect(200);
-          const content = response.body["content"];
-          validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, ["data", "series"]);
-          assert.containsAllKeys(content.data.series[0], ["name", "color"]);
-          assert.lengthOf(content.data.data, 2016);
-        });
-
-        it("should return 200 and the latest data", async () => {
-          const response = await request(server)
-            .get("/api/v2/outputs/chart-data?latest=true")
-            .expect(200);
-          const content = response.body["content"];
-          validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, ["data", "series"]);
-          assert.containsAllKeys(content.data.series[0], ["name", "color"]);
-          assert.lengthOf(content.data.data, 1);
-        });
-      });
-    });
-
     describe("SupportedModels", async () => {
       describe("GET", async () => {
         it("should return 200", async () => {
@@ -927,64 +903,6 @@ describe("API Tests", async function () {
             validateMiddlewareValues(response);
             assert.lengthOf(Object.keys(app.get("sensorList").sensors), 4);
           });
-        });
-      });
-    });
-
-    describe("ChartData", async () => {
-      describe("GET", async () => {
-        it("should return 200", async () => {
-          const response = await request(server).get("/api/v2/sensors/chart-data").expect(200);
-          const content = response.body["content"];
-          validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, ["data", "series"]);
-          assert.containsAllKeys(content.data.data, ["humidity", "pressure", "temperature"]);
-          assert.containsAllKeys(content.data.series[0], ["name", "color"]);
-
-          assert.lengthOf(content.data.data.humidity, 2016);
-          assert.lengthOf(content.data.data.pressure, 2016);
-          assert.lengthOf(content.data.data.temperature, 2016);
-        });
-
-        it("should return 200 and the latest data", async () => {
-          const response = await request(server)
-            .get("/api/v2/sensors/chart-data?latest=true")
-            .expect(200);
-          const content = response.body["content"];
-          validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, ["data", "series"]);
-          assert.containsAllKeys(content.data.data, ["humidity", "pressure", "temperature"]);
-          assert.containsAllKeys(content.data.series[0], ["name", "color"]);
-
-          assert.lengthOf(content.data.data.humidity, 1);
-          assert.lengthOf(content.data.data.pressure, 1);
-          assert.lengthOf(content.data.data.temperature, 1);
-        });
-
-        it("should return 200 and the data for a single readingType", async () => {
-          const response = await request(server)
-            .get("/api/v2/sensors/chart-data?readingType=temperature")
-            .expect(200);
-          const content = response.body["content"];
-          validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, ["data", "series"]);
-          assert.containsAllKeys(content.data.data, ["temperature"]);
-          assert.containsAllKeys(content.data.series[0], ["name", "color"]);
-
-          assert.lengthOf(content.data.data.temperature, 2016);
-        });
-
-        it("should return 200 and the latest data for a single readingType", async () => {
-          const response = await request(server)
-            .get("/api/v2/sensors/chart-data?readingType=temperature&latest=true")
-            .expect(200);
-          const content = response.body["content"];
-          validateMiddlewareValues(response);
-          assert.containsAllKeys(content.data, ["data", "series"]);
-          assert.containsAllKeys(content.data.data, ["temperature"]);
-          assert.containsAllKeys(content.data.series[0], ["name", "color"]);
-
-          assert.lengthOf(content.data.data.temperature, 1);
         });
       });
     });

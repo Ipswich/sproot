@@ -1289,7 +1289,7 @@ export class SprootDB implements ISprootDB {
     const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
 
     let nextCursor: string | undefined;
-    if (hasMoreRows && truncated.length > 0) {
+    if (truncated.length > 0) {
       const lastRow = truncated[truncated.length - 1]!;
       const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
@@ -1321,7 +1321,7 @@ export class SprootDB implements ISprootDB {
     const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
 
     let nextCursor: string | undefined;
-    if (hasMoreRows && truncated.length > 0) {
+    if (truncated.length > 0) {
       const lastRow = truncated[truncated.length - 1]!;
       const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
@@ -1355,7 +1355,7 @@ export class SprootDB implements ISprootDB {
     const truncated = hasMoreRows ? rows.slice(0, config.limit) : rows;
 
     let nextCursor: string | undefined;
-    if (hasMoreRows && truncated.length > 0) {
+    if (truncated.length > 0) {
       const lastRow = truncated[truncated.length - 1]!;
       const bucketValue = lastRow[config.cursorColumn] as string | Date | null | undefined;
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");

@@ -1929,6 +1929,7 @@ paths:
 
   /api/v2/outputs/chart-data:
     get:
+      deprecated: true
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4975,6 +4976,7 @@ paths:
 
   /api/v2/sensors/chart-data:
     get:
+      deprecated: true
       security:
         - bearerAuth: []
         - cookieAuth: []

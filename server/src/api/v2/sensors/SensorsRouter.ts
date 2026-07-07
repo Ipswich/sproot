@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import { addAsync, deleteAsync, get, updateAsync } from "./handlers/SensorHandlers";
 import { supportedModelsHandler } from "./handlers/SupportedModelsHandlers";
 import { readingTypesHandler } from "./handlers/ReadingTypesHandler";
-import { sensorChartDataHandler } from "./handlers/SensorChartDataHandlers";
 import { sensorDataQueryHandlerAsync } from "./handlers/SensorDataQueryHandler";
 
 const router = express.Router();
@@ -16,13 +15,6 @@ router.get("/reading-types", (req: Request, res: Response) => {
 
 router.get("/supported-models", (_req: Request, res: Response) => {
   const response = supportedModelsHandler(res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.get("/chart-data", (req: Request, res: Response) => {
-  const response = sensorChartDataHandler(req, res);
 
   res.status(response.statusCode).json(response);
   return;

@@ -21,10 +21,6 @@ import {
   ErrorResponse,
 } from "@sproot/sproot-common/src/api/v2/Responses";
 import {
-  ChartSeries,
-  DataSeries,
-} from "@sproot/sproot-common/src/utility/ChartData";
-import {
   ConditionGroupType,
   ConditionOperator,
 } from "@sproot/automation/ConditionTypes";
@@ -35,6 +31,12 @@ import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import { SDBJournalEntryTag } from "@sproot/database/SDBJournalEntryTag";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
+import type {
+  SensorDataQueryRequest,
+  OutputDataQueryRequest,
+  SensorDataQueryResponse,
+  OutputDataQueryResponse,
+} from "./queryTypes";
 
 const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
 
@@ -49,56 +51,6 @@ export async function getReadingTypesAsync(): Promise<
   });
   if (!response.ok) {
     console.error(`Error fetching reading types: ${response}`);
-  }
-  const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data;
-}
-
-export async function getSensorChartDataAsync(
-  readingType?: string,
-  latest?: boolean,
-): Promise<{
-  data: Partial<Record<ReadingType, DataSeries>>;
-  series: ChartSeries[];
-}> {
-  const queryString = queryBuilder({
-    readingType,
-    latest,
-  });
-  const response = await fetch(
-    `${SERVER_URL}/api/v2/sensors/chart-data?${queryString}`,
-    {
-      method: "GET",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    },
-  );
-  if (!response.ok) {
-    console.error(`Error fetching sensor chart data: ${response}`);
-  }
-  const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data;
-}
-
-export async function getOutputChartDataAsync(latest?: boolean): Promise<{
-  data: DataSeries;
-  series: ChartSeries[];
-}> {
-  const queryString = queryBuilder({
-    latest,
-  });
-  const response = await fetch(
-    `${SERVER_URL}/api/v2/outputs/chart-data?${queryString}`,
-    {
-      method: "GET",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    },
-  );
-  if (!response.ok) {
-    console.error(`Error fetching output chart data: ${response}`);
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -696,7 +648,8 @@ export async function addNotificationActionAsync(
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data as
-    SDBNotificationAction | undefined;
+    | SDBNotificationAction
+    | undefined;
 }
 
 export async function deleteNotificationActionAsync(id: number): Promise<void> {
@@ -1784,6 +1737,46 @@ export async function getSubControllerApplicationAsync(model: string) {
   }
 
   return new Uint8Array(await response.arrayBuffer());
+}
+
+// ---------------------------------------------------------------------------
+// Direct DB query functions — replace chart-data endpoints
+// ---------------------------------------------------------------------------
+
+export async function fetchSensorDataAsync(
+  request: SensorDataQueryRequest,
+): Promise<SensorDataQueryResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v2/sensors/data`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    mode: "cors",
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) {
+    console.error(
+      `Error fetching sensor data: ${response.status} ${response.statusText}`,
+    );
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
+}
+
+export async function fetchOutputDataAsync(
+  request: OutputDataQueryRequest,
+): Promise<OutputDataQueryResponse> {
+  const response = await fetch(`${SERVER_URL}/api/v2/outputs/data`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    mode: "cors",
+    body: JSON.stringify(request),
+  });
+  if (!response.ok) {
+    console.error(
+      `Error fetching output data: ${response.status} ${response.statusText}`,
+    );
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content?.data;
 }
 
 function queryBuilder(

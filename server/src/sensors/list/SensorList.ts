@@ -9,10 +9,9 @@ import { ESP32_CapacitiveMoistureSensor } from "../ESP32_CapacitiveMoistureSenso
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ChartData, DataSeries, DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
-import { SensorListChartData } from "./SensorListChartData";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 import { MdnsService } from "../../system/MdnsService";
@@ -31,7 +30,6 @@ class SensorList {
   #initialCacheLookback: number;
   #maxChartDataSize: number;
   #chartDataPointInterval: number;
-  #chartData: SensorListChartData;
   #isUpdating: boolean = false;
   #ds18b20UpdateSetInterval: NodeJS.Timeout | null = null;
   #listenerCleanupFunction: () => void;
@@ -77,7 +75,6 @@ class SensorList {
     this.#maxChartDataSize = maxChartDataSize;
     this.#chartDataPointInterval = chartDataPointInterval;
     this.#logger = logger;
-    this.#chartData = new SensorListChartData(maxChartDataSize, chartDataPointInterval);
 
     const sensorModifiedListener = async (_event: SensorModifiedEvent) => {
       await this.regenerateAsync();
@@ -91,10 +88,6 @@ class SensorList {
     this.#listenerCleanupFunction = () => {
       sensorModifiedUnsubscribe();
     };
-  }
-
-  get chartData(): SensorListChartData {
-    return this.#chartData;
   }
 
   get sensors(): Record<string, SensorBase> {
@@ -163,8 +156,7 @@ class SensorList {
     this.#isUpdating = true;
 
     try {
-      let sensorListChanges = false;
-      const profiler = this.#logger.startTimer();
+       const profiler = this.#logger.startTimer();
       const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
       const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
 
@@ -176,7 +168,6 @@ class SensorList {
         if (key && this.#sensors[key]) {
           // Check for Subcontroller changes
           if (this.#sensors[key]?.subcontrollerId != sensor.subcontrollerId) {
-            sensorListChanges = true;
             this.#sensors[key]!.subcontrollerId = sensor.subcontrollerId;
           }
 
@@ -195,7 +186,6 @@ class SensorList {
                 this.#sensors[key]?.subcontroller!.name != subcontroller?.name ||
                 this.#sensors[key]?.subcontroller!.hostName != subcontroller?.hostName
               ) {
-                sensorListChanges = true;
                 this.#sensors[key].subcontroller = subcontroller;
               }
             }
@@ -227,7 +217,6 @@ class SensorList {
             this.#logger.info(
               `Updating sensor {model: ${this.#sensors[key].model}, id: ${this.#sensors[key].id}}`,
             );
-            sensorListChanges = true;
           }
         } else {
           //Create if it doesn't
@@ -239,7 +228,6 @@ class SensorList {
               ),
             ),
           );
-          sensorListChanges = true;
         }
       }
       await Promise.allSettled(promises);
@@ -253,7 +241,6 @@ class SensorList {
               `Deleting sensor {model: ${this.#sensors[key]?.model}, id: ${this.#sensors[key]?.id}}`,
             );
             this.#disposeSensorAsync(this.#sensors[key]!);
-            sensorListChanges = true;
           } catch (err) {
             this.#logger.error(
               `Could not delete sensor {model: ${this.#sensors[key]?.model}, id: ${
@@ -264,10 +251,6 @@ class SensorList {
         }
       }
 
-      if (sensorListChanges) {
-        this.loadChartData();
-        this.loadChartSeries();
-      }
       profiler.done({
         message: "SensorList regenerate time",
         level: "debug",
@@ -282,10 +265,6 @@ class SensorList {
     await this.#touchAllSensorsAsync(async (sensor) => {
       sensor.updateDataStoresAsync();
     });
-
-    if (ChartData.shouldUpdateByInterval(new Date(), this.#chartDataPointInterval)) {
-      this.updateChartData();
-    }
   };
 
   async [Symbol.asyncDispose]() {
@@ -294,66 +273,6 @@ class SensorList {
       clearInterval(this.#ds18b20UpdateSetInterval);
     }
     await this.#touchAllSensorsAsync(async (sensor) => this.#disposeSensorAsync(sensor));
-  }
-
-  loadChartData() {
-    //Format cached readings for recharts
-    const profiler = this.#logger.startTimer();
-
-    for (const readingType in ReadingType) {
-      const dataSeriesMap = Object.keys(this.#sensors)
-        .map((key) => {
-          return this.#sensors[key]?.getChartData().data[readingType as ReadingType];
-        })
-        .filter((x) => x != undefined) as DataSeries[];
-      this.#chartData.loadChartData(dataSeriesMap, "", readingType as ReadingType);
-    }
-
-    // Log changes
-    let logMessage = "";
-    const chartData = this.#chartData.get().data;
-    for (const readingType of Object.keys(chartData)) {
-      if (chartData[readingType as ReadingType].length > 0) {
-        logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;
-      }
-    }
-    this.#logger.info(`Loaded sensor chart data. ${logMessage}`);
-    profiler.done({
-      message: "SensorList loadChartDataFromCachedReadings time",
-      level: "debug",
-    });
-  }
-
-  loadChartSeries() {
-    const series = Object.values(this.#sensors).map((sensor) => sensor.getChartData().series);
-    this.#chartData.loadChartSeries(series);
-  }
-
-  updateChartData() {
-    const profiler = this.#logger.startTimer();
-    for (const readingType in ReadingType) {
-      const dataSeriesMap = Object.keys(this.#sensors)
-        .map((key) => {
-          return this.#sensors[key]?.getChartData().data[readingType as ReadingType];
-        })
-        .filter((dataSeries) => dataSeries != undefined) as DataSeries[];
-
-      this.#chartData.updateChartData(dataSeriesMap, "", readingType as ReadingType);
-    }
-
-    // Log changes
-    let logMessage = "";
-    const chartData = this.#chartData.get().data;
-    for (const readingType of Object.keys(chartData)) {
-      if (chartData[readingType as ReadingType].length > 0) {
-        logMessage += `{${readingType}: ${chartData[readingType as ReadingType].length}} `;
-      }
-    }
-    this.#logger.info(`Updated sensor list chart data. Data counts: ${logMessage}`);
-    profiler.done({
-      message: "SensorList updateChartData time",
-      level: "debug",
-    });
   }
 
   async addSensorAsync(sensor: SDBSensor): Promise<void> {
