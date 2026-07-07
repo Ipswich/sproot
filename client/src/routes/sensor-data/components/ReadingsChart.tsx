@@ -54,66 +54,69 @@ export default function ReadingsChart({
         </div>
       ) : (
         <ResponsiveContainer height="300">
-        <LineChart
-          tooltipProps={{
-            position: {},
-            content: ({ label, payload }) => (
-              <ChartTooltip
-                label={label}
-                payload={
-                  (payload || []) as Record<
-                    string,
-                    { name: string; color: string; value: string }
-                  >[]
-                }
-                units={stats.units}
-                readingType={readingType}
-              />
-            ),
-          }}
-          mt={12}
-          ml={-28}
-          curveType="linear"
-          h={300}
-          dotProps={{ r: 0 }}
-          data={data}
-          withLegend={false}
-          withXAxis
-          withYAxis
-          tickLine="xy"
-          xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
-          yAxisProps={{
-            allowDataOverflow: true,
-            padding: { top: 5 },
-            type: "number",
-            domain: ["auto", "auto"],
-          }}
-          referenceLines={[
-            {
-              y: stats.cumulativeAverage!,
-              label: `Average: ${formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
-              color: "red",
-              ifOverflow: "extendDomain",
-              labelPosition: "insideTopLeft",
-            },
-            {
-              y: stats.cumulativeMin!,
-              label: `Min: ${formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
-              color: "blue",
-              ifOverflow: "extendDomain",
-              labelPosition: "insideBottomLeft",
-            },
-            {
-              y: stats.cumulativeMax!,
-              label: `Max: ${formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
-              color: "green",
-              ifOverflow: "extendDomain",
-              labelPosition: "insideTopLeft",
-            },
-          ]}
-          dataKey="sensorName"
-          series={chartSeries ?? []}
-        ></LineChart>
+          <LineChart
+            tooltipProps={{
+              position: {},
+              content: ({ label, payload }) => (
+                <ChartTooltip
+                  label={label}
+                  payload={
+                    (payload || []) as Record<
+                      string,
+                      { name: string; color: string; value: string }
+                    >[]
+                  }
+                  units={stats.units}
+                  readingType={readingType}
+                />
+              ),
+            }}
+            mt={12}
+            ml={-28}
+            curveType="linear"
+            h={300}
+            dotProps={{ r: 0 }}
+            data={data}
+            withLegend={false}
+            withXAxis
+            withYAxis
+            tickLine="xy"
+            xAxisProps={{
+              dataKey: "name",
+              interval: "equidistantPreserveStart",
+            }}
+            yAxisProps={{
+              allowDataOverflow: true,
+              padding: { top: 5 },
+              type: "number",
+              domain: ["auto", "auto"],
+            }}
+            referenceLines={[
+              {
+                y: stats.cumulativeAverage!,
+                label: `Average: ${formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
+                color: "red",
+                ifOverflow: "extendDomain",
+                labelPosition: "insideTopLeft",
+              },
+              {
+                y: stats.cumulativeMin!,
+                label: `Min: ${formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
+                color: "blue",
+                ifOverflow: "extendDomain",
+                labelPosition: "insideBottomLeft",
+              },
+              {
+                y: stats.cumulativeMax!,
+                label: `Max: ${formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
+                color: "green",
+                ifOverflow: "extendDomain",
+                labelPosition: "insideTopLeft",
+              },
+            ]}
+            dataKey="sensorName"
+            series={chartSeries ?? []}
+          ></LineChart>
         </ResponsiveContainer>
       )}
     </Box>

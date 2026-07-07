@@ -506,8 +506,7 @@ function createDataQueryValidator(config: ValidatorConfig) {
     return {
       valid: true,
       data: buildValidationData(req, config.validationFields) as
-        | SensorDataQueryRequest
-        | OutputDataQueryRequest,
+        SensorDataQueryRequest | OutputDataQueryRequest,
     };
   };
 }

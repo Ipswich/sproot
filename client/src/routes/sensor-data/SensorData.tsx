@@ -1,19 +1,14 @@
-import {
-  Fragment,
-  SetStateAction,
-  useEffect,
-  useState,
-  useTransition,
-} from "react";
-import { Card, Flex, Group, SegmentedControl, Switch, Checkbox } from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
+import { Fragment, useState, useTransition } from "react";
+import { Card, Flex, Group, Switch } from "@mantine/core";
 import {
   ReadingType,
   Units,
 } from "@sproot/sproot-common/src/sensors/ReadingType";
+import type { Aggregate } from "../../requests/queryTypes";
 import { useLoaderData } from "react-router-dom";
 import ReadingsChartContainer from "./components/ReadingsChartContainer";
 import SensorTableAccordion from "./components/SensorTableAccordion";
+import ChartQueryControls from "../common/ChartQueryControls";
 import {
   sensorsToggledKey,
   sensorToggledDeviceZonesKey,
@@ -30,9 +25,20 @@ export default function SensorData() {
   const [useAlternateUnits, setAlternateUnits] = useState(
     localStorage.getItem(`${readingTypeString}-useAlternateUnits`) === "true",
   );
-  const [chartRendering, setChartRendering] = useState(true);
   const [useCustomRange, setUseCustomRange] = useState(false);
-  const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [customRange, setCustomRange] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
+  const [aggregate, setAggregate] = useState(
+    (localStorage.getItem("sensorChartAggregate") ?? "avg") as Aggregate,
+  );
+  const [downsample, setDownsample] = useState(
+    localStorage.getItem("sensorChartDownsample") ?? "auto",
+  );
+  const [percentile, setPercentile] = useState(
+    Number(localStorage.getItem("sensorChartPercentile") ?? "95"),
+  );
 
   const [sensorToggleStates, setSensorToggleStates] = useState(
     JSON.parse(
@@ -45,10 +51,6 @@ export default function SensorData() {
         "[]",
     ) as string[],
   );
-
-  useEffect(() => {
-    setChartRendering(false);
-  }, [chartInterval, readingTypeString]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, startTransition] = useTransition();
@@ -88,77 +90,68 @@ export default function SensorData() {
             </Flex>
           ) : null}
         </Group>
-        <Checkbox
-          checked={useCustomRange}
-          onChange={(e) => {
-            setUseCustomRange(e.currentTarget.checked);
-            if (!e.currentTarget.checked) {
-              setCustomRange(null);
-            }
+        <ChartQueryControls
+          chartInterval={segmentedControlValue}
+          onChartIntervalChange={(value) => {
+            startTransition(() => {
+              localStorage.setItem("sensorChartInterval", value);
+              setSegmentedControlValue(value);
+              setChartInterval(value);
+            });
           }}
-          label="Custom range"
-          size="xs"
-          mb="xs"
-        />
-
-        {useCustomRange ? (
-          <DatePicker
-            type="range"
-            value={customRange ? [customRange.start, customRange.end] : [null, null]}
-            onChange={(dates) => {
-              if (dates && dates[0] && dates[1]) {
-                setCustomRange({ start: dates[0], end: dates[1] });
+          useCustomRange={useCustomRange}
+          onUseCustomRangeChange={(value) => {
+            startTransition(() => {
+              setUseCustomRange(value);
+              if (!value) {
+                setCustomRange(null);
               }
-            }}
-            size="xs"
-            mb="xs"
-          />
-        ) : (
-          <div style={{ height: "40px", marginTop: "8px" }}>
-            <SegmentedControl
-              defaultValue={segmentedControlValue}
-              value={segmentedControlValue}
-              onChange={(value) => {
-                localStorage.setItem("sensorChartInterval", value);
-                setSegmentedControlValue(value);
-                setChartRendering(true);
-                startTransition(() => {
-                  setChartInterval(value);
-                });
-              }}
-              color="blue"
-              fullWidth
-              size="xs"
-              radius="md"
-              data={[
-                { label: "6 Hours", value: "6" },
-                { label: "12 Hours", value: "12" },
-                { label: "1 Day", value: "24" },
-                { label: "3 Days", value: "72" },
-                { label: "1 Week", value: "0" },
-              ]}
-            ></SegmentedControl>
-          </div>
-        )}
+            });
+          }}
+          customRange={customRange}
+          onCustomRangeChange={(value) => {
+            startTransition(() => {
+              setCustomRange(value);
+            });
+          }}
+          aggregate={aggregate}
+          onAggregateChange={(value) => {
+            startTransition(() => {
+              localStorage.setItem("sensorChartAggregate", value);
+              setAggregate(value);
+            });
+          }}
+          downsample={downsample}
+          onDownsampleChange={(value) => {
+            startTransition(() => {
+              localStorage.setItem("sensorChartDownsample", value);
+              setDownsample(value);
+            });
+          }}
+          percentile={percentile}
+          onPercentileChange={(value) => {
+            startTransition(() => {
+              localStorage.setItem("sensorChartPercentile", value.toString());
+              setPercentile(value);
+            });
+          }}
+        />
 
         <ReadingsChartContainer
           readingType={readingTypeString}
           chartInterval={chartInterval}
           toggledSensors={sensorToggleStates}
           toggledDeviceZones={deviceZoneToggleStates}
-          chartRendering={chartRendering}
-          setChartRendering={setChartRendering}
           useAlternateUnits={useAlternateUnits}
           customTimeRange={useCustomRange ? customRange : null}
+          aggregate={aggregate}
+          downsampleSelection={downsample}
+          percentile={percentile}
         />
         <SensorTableAccordion
           readingType={readingTypeString as ReadingType}
           sensorToggleStates={sensorToggleStates}
-          setSensorToggleStates={(
-            newSensorToggleState: SetStateAction<string[]>,
-          ) => {
-            setSensorToggleStates(newSensorToggleState);
-          }}
+          setSensorToggleStates={setSensorToggleStates}
           deviceZoneToggleStates={deviceZoneToggleStates}
           setDeviceZoneToggleStates={setDeviceZoneToggleStates}
           useAlternateUnits={useAlternateUnits}

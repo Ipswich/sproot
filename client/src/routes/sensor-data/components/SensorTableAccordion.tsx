@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { Accordion, Center } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { Fragment, startTransition, useEffect, useState } from "react";
+import { Fragment, memo, startTransition, useEffect, useState } from "react";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -39,7 +39,7 @@ interface SensorTableAccordionProps {
   useAlternateUnits: boolean;
 }
 
-export default function SensorTableAccordion({
+function SensorTableAccordion({
   readingType,
   sensorToggleStates,
   setSensorToggleStates,
@@ -250,3 +250,5 @@ export default function SensorTableAccordion({
     }
   }
 }
+
+export default memo(SensorTableAccordion);

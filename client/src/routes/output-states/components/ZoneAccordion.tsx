@@ -14,7 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Accordion, Center } from "@mantine/core";
-import { Fragment, startTransition, useEffect, useState } from "react";
+import { Fragment, memo, startTransition, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getOutputsAsync,
@@ -34,7 +34,7 @@ interface ZoneAccordionProps {
   setDeviceZoneToggleStates: (deviceZoneNames: string[]) => void;
 }
 
-export default function ZoneAccordion({
+function ZoneAccordion({
   deviceZoneToggleStates,
   setDeviceZoneToggleStates,
 }: ZoneAccordionProps) {
@@ -227,3 +227,5 @@ export default function ZoneAccordion({
     }
   }
 }
+
+export default memo(ZoneAccordion);

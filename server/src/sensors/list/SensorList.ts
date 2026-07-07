@@ -156,7 +156,7 @@ class SensorList {
     this.#isUpdating = true;
 
     try {
-       const profiler = this.#logger.startTimer();
+      const profiler = this.#logger.startTimer();
       const sensorsFromDatabase = await this.#sprootDB.getSensorsAsync();
       const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
 

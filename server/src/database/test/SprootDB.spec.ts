@@ -305,7 +305,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-     assert.isNotEmpty(result.data);
+      assert.isNotEmpty(result.data);
       assert.isString(result.nextCursor);
       assert.isDefined((result.data as any)[1]);
       assert.equal((result.data as any)[1].values.length, 1);

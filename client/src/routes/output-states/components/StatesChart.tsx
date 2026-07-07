@@ -12,6 +12,7 @@ export interface StatesChartProps {
   chartSeries: ChartSeries[];
   chartRendering: boolean;
   showEmptyState?: boolean;
+  valueSuffix?: string;
 }
 
 export default function StatesChart({
@@ -19,6 +20,7 @@ export default function StatesChart({
   chartSeries,
   chartRendering,
   showEmptyState,
+  valueSuffix = "%",
 }: StatesChartProps) {
   const data = dataSeries.map((data) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -61,6 +63,7 @@ export default function StatesChart({
                       { name: string; color: string; value: string }
                     >[]
                   }
+                  valueSuffix={valueSuffix}
                 />
               ),
             }}
@@ -98,9 +101,10 @@ interface ChartTooltipProps {
   payload:
     | Record<string, { name: string; color: string; value: string }>[]
     | undefined;
+  valueSuffix: string;
 }
 
-function ChartTooltip({ label, payload }: ChartTooltipProps) {
+function ChartTooltip({ label, payload, valueSuffix }: ChartTooltipProps) {
   if (!payload) return null;
 
   const order = (
@@ -132,7 +136,8 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
       </Text>
       {payload.map((item) => (
         <Text key={String(item["name"])} c={item["color"]!} fz="sm">
-          {String(item["name"])}: {String(item["value"] + "%")}
+          {String(item["name"])}: {String(item["value"])}
+          {valueSuffix}
         </Text>
       ))}
     </Paper>

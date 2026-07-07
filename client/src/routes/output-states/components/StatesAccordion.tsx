@@ -52,6 +52,7 @@ export default function StatesAccordion({
     .filter((output) => output.parentOutputId == null)
     .map((output) => (
       <StateAccordionItem
+        key={output.id}
         output={output}
         updateOutputsAsync={updateOutputsAsync}
       />
@@ -64,7 +65,10 @@ export default function StatesAccordion({
       onDragEnd={handleDragEnd}
     >
       <Accordion>
-        <SortableContext items={outputs} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={orderedOutputs.map((output) => output.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {sortableItems}
         </SortableContext>
       </Accordion>

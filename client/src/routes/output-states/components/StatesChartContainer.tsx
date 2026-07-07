@@ -1,37 +1,47 @@
+import * as Constants from "@sproot/sproot-common/src/utility/Constants";
 import { ChartData } from "@sproot/sproot-common/src/utility/ChartData";
-import type { OutputDataQueryRequest } from "@sproot/requests/queryTypes";
+import {
+  getQueryPointLimit,
+  getChartIntervalHours,
+  getDownsampleMinutes,
+  resolveSelectedDownsample,
+  type Aggregate,
+  type OutputDataQueryRequest,
+} from "../../../requests/queryTypes";
 import { useQuery } from "@tanstack/react-query";
 import {
   getOutputsAsync,
   fetchOutputDataAsync,
 } from "../../../requests/requests_v2";
-import { useMemo, useState } from "react";
-import { Flex } from "@mantine/core";
+import { useMemo } from "react";
 import StatesChart from "./StatesChart";
 import { transformOutputData } from "./OutputDataTransformer";
 import type { IOutputBase } from "@sproot/outputs/IOutputBase";
 
 interface StatesChartContainerProps {
   chartInterval: string;
-  chartRendering: boolean;
-  setChartRendering: (value: boolean) => void;
   toggledDeviceZones: string[];
   customTimeRange?: { start: Date; end: Date } | null;
+  aggregate: Aggregate;
+  downsampleSelection: string;
+  percentile: number;
+  valueSuffix: string;
 }
 
 export default function StatesChartContainer({
   chartInterval,
-  chartRendering,
-  setChartRendering,
   toggledDeviceZones,
   customTimeRange,
+  aggregate,
+  downsampleSelection,
+  percentile,
+  valueSuffix,
 }: StatesChartContainerProps) {
-  const [isFetching, setIsFetching] = useState(false);
-
   const outputsQuery = useQuery({
     queryKey: ["outputs"],
     queryFn: () => getOutputsAsync(),
     refetchInterval: 60000,
+    staleTime: 60000,
   });
 
   const timeRange = useMemo(() => {
@@ -41,25 +51,34 @@ export default function StatesChartContainer({
         end: customTimeRange.end.toISOString(),
       };
     }
-    const hours = parseInt(chartInterval) || 24;
     const end = new Date();
-    const start = new Date(end.getTime() - hours * 60 * 60 * 1000);
+    const start = new Date(
+      end.getTime() -
+        Constants.MAX_CHART_DATA_POINTS *
+          Constants.CHART_DATA_POINT_INTERVAL *
+          60 *
+          1000,
+    );
     return { start: start.toISOString(), end: end.toISOString() };
-  }, [customTimeRange, chartInterval]);
+  }, [customTimeRange]);
+
+  const durationMs = useMemo(() => {
+    return (
+      new Date(timeRange.end).getTime() - new Date(timeRange.start).getTime()
+    );
+  }, [timeRange.end, timeRange.start]);
 
   const downsample = useMemo(() => {
-    if (customTimeRange) {
-      const durationMs =
-        customTimeRange.end.getTime() - customTimeRange.start.getTime();
-      const durationHours = durationMs / (1000 * 60 * 60);
-      if (durationHours <= 72) return "5m";
-      if (durationHours <= 168) return "1h";
-      return "1d";
-    }
-    const hours = parseInt(chartInterval) || 24;
-    if (hours <= 72) return "5m";
-    return "1h";
-  }, [customTimeRange, chartInterval]);
+    return resolveSelectedDownsample(
+      downsampleSelection,
+      durationMs,
+      !customTimeRange,
+    );
+  }, [customTimeRange, downsampleSelection, durationMs]);
+
+  const queryLimit = useMemo(() => {
+    return getQueryPointLimit(durationMs, downsample);
+  }, [downsample, durationMs]);
 
   const chartDataQuery = useQuery({
     queryKey: [
@@ -67,22 +86,24 @@ export default function StatesChartContainer({
       timeRange.start,
       timeRange.end,
       downsample,
+      aggregate,
+      percentile,
     ],
     queryFn: async () => {
-      setIsFetching(true);
       const request: OutputDataQueryRequest = {
         timeRange,
         downsample,
-        limit: 2000,
-        aggregates: ["avg", "min", "max"],
+        limit: queryLimit,
+        aggregates: [aggregate],
       };
-      const response = await fetchOutputDataAsync(request);
-      setChartRendering(false);
-      setIsFetching(false);
-      return response;
+      if (aggregate === "percentile") {
+        request.percentile = percentile;
+      }
+      return fetchOutputDataAsync(request);
     },
     refetchInterval: 300000,
     enabled: !!outputsQuery.data,
+    placeholderData: (previousData) => previousData,
   });
 
   const outputObjects = useMemo(() => {
@@ -97,8 +118,50 @@ export default function StatesChartContainer({
 
   const transformedData = useMemo(() => {
     if (!chartDataQuery.data) return null;
-    return transformOutputData(chartDataQuery.data, outputObjects);
-  }, [chartDataQuery.data, outputObjects]);
+    return transformOutputData(chartDataQuery.data, outputObjects, aggregate);
+  }, [aggregate, chartDataQuery.data, outputObjects]);
+
+  const displayDataSeries = useMemo(() => {
+    if (!transformedData) {
+      return [];
+    }
+
+    const intervalMinutes = getDownsampleMinutes(downsample);
+    const end = new Date(timeRange.end);
+    const baseSeries = new ChartData(
+      Math.max(1, Math.ceil(durationMs / (intervalMinutes * 60 * 1000))),
+      intervalMinutes,
+      undefined,
+      end,
+    ).get();
+
+    const valuesByTime = new Map(
+      transformedData.dataSeries.map((dataPoint) => [
+        dataPoint.name,
+        dataPoint,
+      ]),
+    );
+
+    return baseSeries.map((dataPoint) => ({
+      ...dataPoint,
+      ...(valuesByTime.get(dataPoint.name) ?? {}),
+    }));
+  }, [downsample, durationMs, timeRange.end, transformedData]);
+
+  const timeSpans = useMemo(() => {
+    return ChartData.generateTimeSpansFromDataSeries(
+      displayDataSeries,
+      getDownsampleMinutes(downsample),
+    );
+  }, [displayDataSeries, downsample]);
+
+  const activeDataSeries = useMemo(() => {
+    if (customTimeRange) {
+      return displayDataSeries;
+    }
+
+    return timeSpans[getChartIntervalHours(chartInterval)] ?? [];
+  }, [chartInterval, customTimeRange, displayDataSeries, timeSpans]);
 
   // Build hidden output list
   const hiddenOutputsFromDeviceZones = Object.values(outputsQuery.data ?? {})
@@ -115,24 +178,20 @@ export default function StatesChartContainer({
       ? []
       : hiddenOutputsFromDeviceZones;
 
-  const filteredData = transformedData
-    ? ChartData.filterChartData(transformedData.dataSeries, hiddenOutputs)
-    : [];
-
+  const filteredData = ChartData.filterChartData(
+    activeDataSeries,
+    hiddenOutputs,
+  );
+  const hasVisibleValues = filteredData.some((dataPoint) =>
+    Object.keys(dataPoint).some((key) => key !== "name" && key !== "units"),
+  );
   return (
-    <>
-      <Flex my={-12}>
-        <h2>History</h2>
-        <h5>{"%"}</h5>
-      </Flex>
-      <StatesChart
-        dataSeries={filteredData}
-        chartSeries={transformedData?.chartSeries ?? []}
-        chartRendering={
-          isFetching || chartDataQuery.isPending || chartRendering
-        }
-        showEmptyState={filteredData.length === 0}
-      />
-    </>
+    <StatesChart
+      dataSeries={filteredData}
+      chartSeries={transformedData?.chartSeries ?? []}
+      chartRendering={chartDataQuery.isPending && !chartDataQuery.data}
+      showEmptyState={!hasVisibleValues}
+      valueSuffix={valueSuffix}
+    />
   );
 }
