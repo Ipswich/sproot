@@ -71,6 +71,7 @@ export function buildSensorRawQuery(
       "sensor_id",
       "sensors.name as sensor_name",
       "metric",
+      "units",
       knex.raw("COUNT(*) AS sample_count"),
       knex.raw("AVG(data)::numeric(12, 7) AS average_data"),
       knex.raw("MIN(data) AS minimum_data"),
@@ -81,7 +82,7 @@ export function buildSensorRawQuery(
       knex.raw('last(data, "logTime" ORDER BY "logTime" DESC) AS last_data'),
     )
     .where(whereRaw)
-    .groupByRaw('"sensor_id", "metric", "bucket"')
+    .groupByRaw('"sensor_id", "sensors"."name", "metric", "units", "bucket"')
     .orderBy("bucket", "DESC")
     .limit(limit + 1);
 }
@@ -104,7 +105,7 @@ export function buildOutputRawQuery(
       bucketExpr,
       "output_id",
       knex.raw('"outputs"."name" as output_name'),
-      knex.raw('"outputs"."units" as output_units'),
+      knex.raw("'%' as output_units"),
       knex.raw("COUNT(*) AS sample_count"),
       knex.raw("AVG(value)::numeric(12, 7) AS average_value"),
       knex.raw("MIN(value) AS minimum_value"),
@@ -115,7 +116,7 @@ export function buildOutputRawQuery(
       knex.raw('last(value, "logTime" ORDER BY "logTime" DESC) AS last_value'),
     )
     .where(whereRaw)
-    .groupByRaw('"output_id", "bucket"')
+    .groupByRaw('"output_id", "outputs"."name", "bucket"')
     .orderBy("bucket", "DESC")
     .limit(limit + 1);
 }
