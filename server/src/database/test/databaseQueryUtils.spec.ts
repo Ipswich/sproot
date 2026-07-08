@@ -11,8 +11,8 @@ import {
   getRecentTailStart,
   extractPercentile,
   extractRowAggregates,
-  formatSensorAggregateRows,
-  formatOutputAggregateRows,
+  formatSensorDataQueryRows,
+  formatOutputDataQueryRows,
 } from "../databaseQueryUtils";
 import { assert } from "chai";
 
@@ -323,96 +323,176 @@ describe("extractOutputAggregateValue (via extractRowAggregates)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// formatSensorAggregateRows
+// formatSensorDataQueryRows
 // ---------------------------------------------------------------------------
 
-describe("formatSensorAggregateRows", () => {
-  it("should format sensor aggregate rows into response structure", () => {
+describe("formatSensorDataQueryRows", () => {
+  it("should format sensor rows into column-based response structure", () => {
     const rows = [
       {
         bucket: "2024-01-15T10:00:00.000Z",
         sensor_id: 1,
+        sensor_name: "Temp Sensor",
         metric: "temperature",
         units: "°C",
         average_data: 22,
         minimum_data: 20,
         maximum_data: 24,
         sample_count: 3,
+        stddev_data: 2,
+        percentile_data: { percentile: 22 },
+        first_data: 20,
+        last_data: 24,
       },
       {
         bucket: "2024-01-15T10:05:00.000Z",
         sensor_id: 1,
+        sensor_name: "Temp Sensor",
+        metric: "temperature",
+        units: "°C",
+        average_data: 23,
+        minimum_data: 21,
+        maximum_data: 25,
+        sample_count: 3,
+        stddev_data: 2,
+        percentile_data: { percentile: 23 },
+        first_data: 21,
+        last_data: 25,
+      },
+      {
+        bucket: "2024-01-15T10:00:00.000Z",
+        sensor_id: 1,
+        sensor_name: "Temp Sensor",
         metric: "humidity",
         units: "%",
         average_data: 60,
         minimum_data: 55,
         maximum_data: 65,
         sample_count: 3,
+        stddev_data: 3,
+        percentile_data: { percentile: 60 },
+        first_data: 55,
+        last_data: 65,
       },
       {
-        bucket: "2024-01-15T10:10:00.000Z",
+        bucket: "2024-01-15T10:00:00.000Z",
         sensor_id: 2,
+        sensor_name: "Sensor 2",
         metric: "temperature",
         units: "°C",
         average_data: 25,
         minimum_data: 23,
         maximum_data: 27,
         sample_count: 3,
+        stddev_data: 2,
+        percentile_data: { percentile: 25 },
+        first_data: 23,
+        last_data: 27,
       },
     ];
-    const result = formatSensorAggregateRows(rows, ["min", "max", "avg"]);
+    const result = formatSensorDataQueryRows(rows, ["min", "max", "avg"]);
     assert.notProperty(result, "nextCursor");
-    assert.strictEqual(Object.keys(result.data).length, 2);
-    const s1 = result.data[1]!;
-    const temp1 = s1["temperature"]!;
+    assert.isArray(result.data);
+    assert.strictEqual(result.data.length, 3);
+    const xAxisValues = result.xAxis.values;
+    assert.isArray(xAxisValues);
+    assert.strictEqual(xAxisValues.length, 2);
+    assert.strictEqual(xAxisValues[0], "2024-01-15T10:05:00.000Z");
+    assert.strictEqual(xAxisValues[1], "2024-01-15T10:00:00.000Z");
+    const temp1 = result.data.find((d) => d.id === 1 && d.name === "temperature")!;
     assert.strictEqual(temp1.units, "°C");
-    assert.strictEqual(s1["humidity"]!.units, "%");
-    assert.strictEqual(temp1.values.length, 1);
-    assert.strictEqual(temp1.values[0]!["min"], 20);
+    assert.strictEqual(temp1.statistics["avg"]!.length, 2);
+    assert.strictEqual(temp1.statistics["avg"]![0], 23);
+    assert.strictEqual(temp1.statistics["avg"]![1], 22);
+    const hum1 = result.data.find((d) => d.id === 1 && d.name === "humidity")!;
+    assert.strictEqual(hum1.units, "%");
+    assert.strictEqual(hum1.statistics["avg"]!.length, 2);
+    assert.strictEqual(hum1.statistics["avg"]![0], null);
+    assert.strictEqual(hum1.statistics["avg"]![1], 60);
   });
 
-  it("should return empty data object when rows array is empty", () => {
-    const result = formatSensorAggregateRows([], ["min", "max", "avg"]);
-    assert.deepEqual(result.data, {});
+  it("should return empty data when rows array is empty", () => {
+    const result = formatSensorDataQueryRows([], ["min", "max", "avg"]);
+    assert.deepEqual(result.data, []);
+    assert.deepEqual(result.xAxis.values, []);
     assert.notProperty(result, "nextCursor");
+  });
+
+  it("should include nextCursor when provided", () => {
+    const result = formatSensorDataQueryRows([], ["min", "max", "avg"], "cursor-123");
+    assert.strictEqual(result.nextCursor, "cursor-123");
   });
 });
 
 // ---------------------------------------------------------------------------
-// formatOutputAggregateRows
+// formatOutputDataQueryRows
 // ---------------------------------------------------------------------------
 
-describe("formatOutputAggregateRows", () => {
-  it("should format output aggregate rows into response structure", () => {
+describe("formatOutputDataQueryRows", () => {
+  it("should format output rows into column-based response structure", () => {
     const rows = [
       {
         bucket: "2024-01-15T10:00:00.000Z",
         output_id: 1,
+        output_name: "Output 1",
+        output_units: "V",
         average_value: 0.5,
         minimum_value: 0,
         maximum_value: 1,
         sample_count: 10,
+        stddev_value: 0.3,
+        percentile_value: { percentile: 0.8 },
       },
       {
         bucket: "2024-01-15T10:05:00.000Z",
+        output_id: 1,
+        output_name: "Output 1",
+        output_units: "V",
+        average_value: 0.7,
+        minimum_value: 0.2,
+        maximum_value: 1,
+        sample_count: 10,
+        stddev_value: 0.2,
+        percentile_value: { percentile: 0.9 },
+      },
+      {
+        bucket: "2024-01-15T10:00:00.000Z",
         output_id: 2,
+        output_name: "Output 2",
+        output_units: "A",
         average_value: 1,
         minimum_value: 1,
         maximum_value: 1,
         sample_count: 5,
+        stddev_value: 0,
+        percentile_value: { percentile: 1 },
       },
     ];
-    const result = formatOutputAggregateRows(rows, ["min", "max", "avg"], "some-cursor");
+    const result = formatOutputDataQueryRows(rows, ["min", "max", "avg"], "some-cursor");
     assert.strictEqual(result.nextCursor, "some-cursor");
-    assert.strictEqual(Object.keys(result.data).length, 2);
-    assert.strictEqual(result.data[1]!.values.length, 1);
-    assert.strictEqual(result.data[1]!.values[0]!["min"], 0);
-    assert.strictEqual(result.data[2]!.values[0]!["max"], 1);
+    assert.isArray(result.data);
+    assert.strictEqual(result.data.length, 2);
+    const xAxisValues = result.xAxis.values;
+    assert.isArray(xAxisValues);
+    assert.strictEqual(xAxisValues.length, 2);
+    assert.strictEqual(xAxisValues[0], "2024-01-15T10:05:00.000Z");
+    assert.strictEqual(xAxisValues[1], "2024-01-15T10:00:00.000Z");
+    const out1 = result.data.find((d) => d.id === 1)!;
+    assert.strictEqual(out1.units, "V");
+    assert.strictEqual(out1.statistics["avg"]!.length, 2);
+    assert.strictEqual(out1.statistics["avg"]![0], 0.7);
+    assert.strictEqual(out1.statistics["avg"]![1], 0.5);
+    const out2 = result.data.find((d) => d.id === 2)!;
+    assert.strictEqual(out2.units, "A");
+    assert.strictEqual(out2.statistics["avg"]!.length, 2);
+    assert.strictEqual(out2.statistics["avg"]![0], null);
+    assert.strictEqual(out2.statistics["avg"]![1], 1);
   });
 
-  it("should return empty data object when rows array is empty", () => {
-    const result = formatOutputAggregateRows([], ["min", "max", "avg"]);
-    assert.deepEqual(result.data, {});
+  it("should return empty data when rows array is empty", () => {
+    const result = formatOutputDataQueryRows([], ["min", "max", "avg"]);
+    assert.deepEqual(result.data, []);
+    assert.deepEqual(result.xAxis.values, []);
     assert.notProperty(result, "nextCursor");
   });
 });

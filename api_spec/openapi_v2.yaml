@@ -1858,15 +1858,7 @@ paths:
                       statusCode:
                         example: 200
                       content:
-                        properties:
-                          data:
-                            type: object
-                            description: "Keyed by outputId"
-                            additionalProperties:
-                              $ref: "#/components/schemas/OutputReadingGroup"
-                          nextCursor:
-                            type: string
-                            description: "base64-encoded ISO 8601 timestamp for next page"
+                       $ref: "#/components/schemas/OutputDataQueryResponse"
         400:
           description: "Bad request"
           content:
@@ -4903,17 +4895,7 @@ paths:
                       statusCode:
                         example: 200
                       content:
-                        properties:
-                          data:
-                            type: object
-                            description: "Keyed by sensorId, then by readingType"
-                            additionalProperties:
-                              type: object
-                              additionalProperties:
-                                $ref: "#/components/schemas/SensorReadingGroup"
-                          nextCursor:
-                             type: string
-                             description: "base64-encoded ISO 8601 timestamp for next page"
+                       $ref: "#/components/schemas/SensorDataQueryResponse"
         400:
           description: "Bad request"
           content:
@@ -8503,46 +8485,115 @@ components:
           type: number
           nullable: true
 
-    SensorReadingGroup:
+    DataQueryXAxis:
       type: object
+      required:
+        - field
+        - values
       properties:
-        units:
+        field:
           type: string
+          description: "The field name for the x-axis (always 'time')"
         values:
           type: array
+          description: "Array of ISO 8601 timestamp strings"
           items:
-            $ref: "#/components/schemas/DataQueryValue"
+            type: string
+
+    ChartDataEntry:
+      type: object
+      required:
+        - id
+        - name
+        - units
+        - statistics
+      properties:
+        id:
+          type: integer
+          description: "The sensor_id or output_id"
+        name:
+          type: string
+          description: "The metric name (sensors) or output name"
+        units:
+          type: string
+          description: "The display units for this data series"
+        statistics:
+          type: object
+          properties:
+            min:
+              type: array
+              items:
+                type: number
+                nullable: true
+            max:
+              type: array
+              items:
+                type: number
+                nullable: true
+            avg:
+              type: array
+              items:
+                type: number
+                nullable: true
+            count:
+              type: array
+              items:
+                type: number
+                nullable: true
+            sum:
+              type: array
+              items:
+                type: number
+                nullable: true
+            stddev:
+              type: array
+              items:
+                type: number
+                nullable: true
+            percentile:
+              type: array
+              items:
+                type: number
+                nullable: true
+            first:
+              type: array
+              items:
+                type: number
+                nullable: true
+            last:
+              type: array
+              items:
+                type: number
+                nullable: true
 
     SensorDataQueryResponse:
       type: object
+      required:
+        - xAxis
+        - data
       properties:
+        xAxis:
+          $ref: "#/components/schemas/DataQueryXAxis"
         data:
-          type: object
-          description: "Keyed by sensorId, then by readingType"
-          additionalProperties:
-            type: object
-            additionalProperties:
-              $ref: "#/components/schemas/SensorReadingGroup"
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartDataEntry"
         nextCursor:
           type: string
           description: "base64-encoded ISO 8601 timestamp for next page"
 
-    OutputReadingGroup:
-      type: object
-      properties:
-        values:
-          type: array
-          items:
-            $ref: "#/components/schemas/DataQueryValue"
-
     OutputDataQueryResponse:
       type: object
+      required:
+        - xAxis
+        - data
       properties:
+        xAxis:
+          $ref: "#/components/schemas/DataQueryXAxis"
         data:
-          type: object
-          description: "Keyed by outputId"
-          additionalProperties:
-            $ref: "#/components/schemas/OutputReadingGroup"
+          type: array
+          items:
+            $ref: "#/components/schemas/ChartDataEntry"
         nextCursor:
           type: string
           description: "base64-encoded ISO 8601 timestamp for next page"

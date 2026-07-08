@@ -65,9 +65,11 @@ export function buildSensorRawQuery(
   const bucketExpr = knex.raw(`time_bucket(INTERVAL '${interval}', "logTime") AS bucket`);
 
   return knex("sensor_data")
+    .join("sensors", "sensor_data.sensor_id", "sensors.id")
     .select(
       bucketExpr,
       "sensor_id",
+      "sensors.name as sensor_name",
       "metric",
       knex.raw("COUNT(*) AS sample_count"),
       knex.raw("AVG(data)::numeric(12, 7) AS average_data"),
@@ -76,7 +78,6 @@ export function buildSensorRawQuery(
       knex.raw("STDDEV_SAMP(data) AS stddev_data"),
       knex.raw("approx_percentile(0.5, percentile_agg(data)) AS percentile_data"),
       knex.raw('first(data, "logTime" ORDER BY "logTime" ASC) AS first_data'),
-      knex.raw('first(units, "logTime" ORDER BY "logTime" ASC) AS units'),
       knex.raw('last(data, "logTime" ORDER BY "logTime" DESC) AS last_data'),
     )
     .where(whereRaw)
@@ -98,9 +99,12 @@ export function buildOutputRawQuery(
   const bucketExpr = knex.raw(`time_bucket(INTERVAL '${interval}', "logTime") AS bucket`);
 
   return knex("output_data")
+    .join("outputs", "output_data.output_id", "outputs.id")
     .select(
       bucketExpr,
       "output_id",
+      knex.raw('"outputs"."name" as output_name'),
+      knex.raw('"outputs"."units" as output_units'),
       knex.raw("COUNT(*) AS sample_count"),
       knex.raw("AVG(value)::numeric(12, 7) AS average_value"),
       knex.raw("MIN(value) AS minimum_value"),

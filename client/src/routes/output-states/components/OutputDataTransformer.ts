@@ -21,39 +21,53 @@ export function transformOutputData(
   outputObjects: Record<number, IOutputBase>,
   aggregate: Aggregate = "avg",
 ): TransformedOutputData {
-  const data = normalizeOutputResponseData(response);
+  const data = response.data;
+  const xAxisValues = response.xAxis?.values ?? [];
   const series: ChartSeries[] = [];
 
   let colorIndex = 0;
-  for (const outputId of Object.keys(data).map(Number)) {
-    const output = outputObjects[outputId] as IOutputBase | undefined;
-    if (!output || !output["name"]) continue;
-    const outputName = output["name"] as string;
-    const outputColor = output["color"] as string;
+  for (const entry of data) {
+    const output = outputObjects[entry.id];
+    if (!output?.name) continue;
+    const outputName = output.name;
+    const outputColor = output.color;
     const color =
-      outputColor || DefaultColors[colorIndex % DefaultColors.length];
-    series.push({ name: outputName, color } as ChartSeries);
+      outputColor ?? DefaultColors[colorIndex % DefaultColors.length];
+    series.push({ name: outputName, color });
     colorIndex++;
   }
 
   const timestampMap = new Map<string, DataPoint>();
 
-  for (const [outputIdStr, group] of Object.entries(data)) {
-    const outputId = Number(outputIdStr);
-    const output = outputObjects[outputId] as IOutputBase | undefined;
-    if (!output || !output["name"]) continue;
+  for (const [timeIndex, timeValue] of xAxisValues.entries()) {
+    const point: DataPoint = {
+      name: formatDateForChart(timeValue),
+    };
 
-    const outputName = output["name"] as string;
+    for (const entry of data) {
+      const outputEntry = outputObjects[entry.id];
+      if (!outputEntry?.name) continue;
 
-    for (const value of group.values) {
-      if (!timestampMap.has(value.time)) {
-        timestampMap.set(value.time, { name: formatDateForChart(value.time) });
+      const outputName = outputEntry.name;
+      const stats = entry.statistics?.[aggregate];
+
+      if (
+        stats &&
+        stats[timeIndex] !== undefined &&
+        stats[timeIndex] !== null
+      ) {
+        point[outputName] = stats[timeIndex];
+        if (!point.units) {
+          point.units = aggregate === "count" ? "" : entry.units;
+        }
       }
-      const point = timestampMap.get(value.time) as DataPoint;
-      const aggregateValue = (value as Record<string, unknown>)[aggregate];
-      if (typeof aggregateValue === "number") {
-        point[outputName] = aggregateValue;
-      }
+    }
+
+    const hasValue = Object.keys(point).some(
+      (key) => key !== "name" && key !== "units" && point[key] !== undefined,
+    );
+    if (hasValue) {
+      timestampMap.set(timeValue, point);
     }
   }
 
@@ -65,46 +79,4 @@ export function transformOutputData(
     .map(([, point]) => point);
 
   return { dataSeries, chartSeries: series };
-}
-
-function normalizeOutputResponseData(
-  response:
-    OutputDataQueryResponse | Record<string, unknown> | null | undefined,
-): Record<number, { values: { time: string }[] }> {
-  if (!response || typeof response !== "object") {
-    return {};
-  }
-
-  const responseRecord = response as Record<string, unknown>;
-  const directData = responseRecord["data"];
-
-  if (
-    directData &&
-    typeof directData === "object" &&
-    !Array.isArray(directData)
-  ) {
-    const nestedRecord = directData as Record<string, unknown>;
-    if (looksLikeOutputSeriesMap(nestedRecord)) {
-      return nestedRecord as Record<number, { values: { time: string }[] }>;
-    }
-  }
-
-  if (looksLikeOutputSeriesMap(responseRecord)) {
-    return responseRecord as Record<number, { values: { time: string }[] }>;
-  }
-
-  return {};
-}
-
-function looksLikeOutputSeriesMap(record: Record<string, unknown>): boolean {
-  const firstValue = Object.values(record)[0];
-  if (
-    !firstValue ||
-    typeof firstValue !== "object" ||
-    Array.isArray(firstValue)
-  ) {
-    return false;
-  }
-
-  return "values" in (firstValue as Record<string, unknown>);
 }

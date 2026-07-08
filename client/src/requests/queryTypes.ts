@@ -23,9 +23,6 @@ export const CHART_AGGREGATE_OPTIONS = [
   { value: "percentile", label: "Percentile" },
 ] as const satisfies ReadonlyArray<{ value: Aggregate; label: string }>;
 
-export const KNOWN_DOWNSAMPLES = ["5m", "1h", "1d"] as const;
-export type KnownDownsample = (typeof KNOWN_DOWNSAMPLES)[number];
-
 export const CHART_DOWNSAMPLE_OPTIONS = [
   { value: "auto", label: "Auto" },
   { value: "5m", label: "5 minutes" },
@@ -44,8 +41,6 @@ export const DOWNSAMPLE_TO_BUCKET_MINUTES: Record<string, number> = {
 
 export const DEFAULT_LIMIT = 500;
 export const MAX_LIMIT = 10000;
-export const DEFAULT_AGGREGATES: Aggregate[] = ["avg", "min", "max"];
-
 export function getChartIntervalHours(chartInterval: string): number {
   return chartInterval === "0" ? 168 : parseInt(chartInterval, 10) || 24;
 }
@@ -78,7 +73,7 @@ export function getDownsampleMinutes(downsample: string): number {
   return amount * 1440;
 }
 
-export function resolveAutoDownsample(
+function resolveAutoDownsample(
   durationMs: number,
   preserveLegacyResolution = false,
 ): string {
@@ -122,51 +117,45 @@ export function getQueryPointLimit(
   );
 }
 
-export interface DataQueryRequestBase {
+export interface SensorDataQueryRequest {
   timeRange: { start: string; end: string };
   downsample?: string;
   cursor?: string;
   limit?: number;
-}
-
-export interface SensorDataQueryRequest extends DataQueryRequestBase {
   ids?: number[];
   readingTypes?: string[];
   aggregates?: Aggregate[];
   percentile?: number;
 }
 
-export interface OutputDataQueryRequest extends DataQueryRequestBase {
+export interface OutputDataQueryRequest {
+  timeRange: { start: string; end: string };
+  downsample?: string;
+  cursor?: string;
+  limit?: number;
   ids?: number[];
   aggregates?: Aggregate[];
   percentile?: number;
 }
 
 export interface SensorDataQueryResponse {
-  data: Record<number, Record<string, SensorReadingGroup>>;
+  xAxis: { field: string; values: string[] };
+  data: {
+    id: number;
+    name: string;
+    units: string;
+    statistics: Record<string, (number | null)[]>;
+  }[];
   nextCursor?: string;
 }
 
 export interface OutputDataQueryResponse {
-  data: Record<number, OutputReadingGroup>;
+  xAxis: { field: string; values: string[] };
+  data: {
+    id: number;
+    name: string;
+    units: string;
+    statistics: Record<string, (number | null)[]>;
+  }[];
   nextCursor?: string;
-}
-
-export interface SensorReadingGroup {
-  units: string;
-  values: SensorDataValue[];
-}
-
-export interface OutputReadingGroup {
-  values: OutputDataValue[];
-}
-
-export interface SensorDataValue {
-  time: string;
-  [agg: string]: unknown;
-}
-
-export interface OutputDataValue {
-  time: string;
-  [agg: string]: unknown;
 }

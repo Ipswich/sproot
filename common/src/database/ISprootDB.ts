@@ -794,11 +794,11 @@ class MockSprootDB implements ISprootDB {
 
   // Raw data query mocks
   async querySensorDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
-    return { data: {} };
+    return { xAxis: { field: "time", values: [] }, data: [] };
   }
 
   async queryOutputDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
-    return { data: {} };
+    return { xAxis: { field: "time", values: [] }, data: [] };
   }
 
   async deleteOldDatabaseAsync(_logger: winston.Logger): Promise<void> {

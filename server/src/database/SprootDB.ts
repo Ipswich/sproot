@@ -49,7 +49,6 @@ import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
   DEFAULT_AGGREGATES,
-  Aggregate,
   SENSOR_AGGREGATE_TABLES,
   OUTPUT_AGGREGATE_TABLES,
   BUCKET_MINUTES_TO_SENSOR_TABLE,
@@ -57,8 +56,8 @@ import {
 } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 
 import {
-  formatSensorAggregateRows,
-  formatOutputAggregateRows,
+  formatSensorDataQueryRows,
+  formatOutputDataQueryRows,
   normalizeBucketMinutes,
   getLookbackDate,
   getRecentTailStart,
@@ -67,26 +66,6 @@ import {
 import { buildSensorRawQuery, buildOutputRawQuery } from "./rawDataQueryHelpers";
 
 import * as winston from "winston";
-
-// ---------------------------------------------------------------------------
-// Generic data query configuration
-// ---------------------------------------------------------------------------
-
-interface DataQueryConfig<T> {
-  tableName: string;
-  selectColumns: (string | Knex.Raw)[];
-  whereRaw: Knex.Raw;
-  limit: number;
-  cursorColumn: string;
-  aggregates: Aggregate[];
-  groupByRaw?: string;
-  groupByValues?: unknown[];
-  formatRows: (
-    rows: Array<Record<string, unknown>>,
-    aggregates: Aggregate[],
-    nextCursor: string | undefined,
-  ) => T;
-}
 
 export class SprootDB implements ISprootDB {
   #connection: Knex;
@@ -1204,32 +1183,44 @@ export class SprootDB implements ISprootDB {
     const readingTypes = request.readingTypes;
     const whereRaw = this.#buildAggregateFilters(request, "sensor_id", readingTypes);
 
-    const selectColumns: (string | Knex.Raw)[] = [
-      "bucket",
-      "sensor_id",
-      "metric",
-      "units",
-      "sample_count",
-      "average_data",
-      "minimum_data",
-      "maximum_data",
-      "stddev_data",
-      "first_data",
-      "last_data",
-      this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_data", [
-        request.percentile ?? 0.5,
-      ]),
-    ];
+    const query = this.#connection(aggregateTableName)
+      .select(
+        "bucket",
+        "sensor_id",
+        "metric",
+        "units",
+        "sample_count",
+        "average_data",
+        "minimum_data",
+        "maximum_data",
+        "stddev_data",
+        "first_data",
+        "last_data",
+        this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_data", [
+          request.percentile ?? 0.5,
+        ]),
+      )
+      .where(whereRaw)
+      .orderBy("bucket", "DESC")
+      .limit(limit + 1);
 
-    return this.#queryDataAsync({
-      tableName: aggregateTableName,
-      selectColumns,
-      whereRaw,
-      limit,
-      cursorColumn: "bucket",
-      aggregates: [...(request.aggregates ?? DEFAULT_AGGREGATES)],
-      formatRows: formatSensorAggregateRows,
-    });
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatSensorDataQueryRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1243,30 +1234,45 @@ export class SprootDB implements ISprootDB {
     const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
     const whereRaw = this.#buildAggregateFilters(request, "output_id", undefined);
 
-    const selectColumns: (string | Knex.Raw)[] = [
-      "bucket",
-      "output_id",
-      "sample_count",
-      "average_value",
-      "minimum_value",
-      "maximum_value",
-      "stddev_value",
-      "first_value",
-      "last_value",
-      this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_value", [
-        request.percentile ?? 0.5,
-      ]),
-    ];
+    const query = this.#connection(aggregateTableName)
+      .join("outputs", `${aggregateTableName}.output_id`, "outputs.id")
+      .select(
+        "bucket",
+        "output_id",
+        this.#connection.raw('"outputs"."name" as output_name'),
+        this.#connection.raw("'%' as output_units"),
+        "sample_count",
+        "average_value",
+        "minimum_value",
+        "maximum_value",
+        "stddev_value",
+        "first_value",
+        "last_value",
+        this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_value", [
+          request.percentile ?? 0.5,
+        ]),
+      )
+      .where(whereRaw)
+      .orderBy("bucket", "DESC")
+      .limit(limit + 1);
 
-    return this.#queryDataAsync({
-      tableName: aggregateTableName,
-      selectColumns,
-      whereRaw,
-      limit,
-      cursorColumn: "bucket",
-      aggregates: [...(request.aggregates ?? DEFAULT_AGGREGATES)],
-      formatRows: formatOutputAggregateRows,
-    });
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatOutputDataQueryRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -1295,7 +1301,7 @@ export class SprootDB implements ISprootDB {
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
     }
 
-    return formatSensorAggregateRows(
+    return formatSensorDataQueryRows(
       truncated,
       [...(request.aggregates ?? DEFAULT_AGGREGATES)],
       nextCursor,
@@ -1327,41 +1333,11 @@ export class SprootDB implements ISprootDB {
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
     }
 
-    return formatOutputAggregateRows(
+    return formatOutputDataQueryRows(
       truncated,
       [...(request.aggregates ?? DEFAULT_AGGREGATES)],
       nextCursor,
     );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Generic data query — shared logic for aggregate and raw paths
-  // ---------------------------------------------------------------------------
-
-  async #queryDataAsync<T>(config: DataQueryConfig<T>): Promise<T> {
-    const query = this.#connection(config.tableName)
-      .select(...config.selectColumns)
-      .where(config.whereRaw);
-
-    if (config.groupByRaw) {
-      query.groupByRaw(config.groupByRaw, ...((config.groupByValues as Knex.RawBinding[]) ?? []));
-    }
-
-    query.orderBy(config.cursorColumn, "DESC").limit(config.limit + 1);
-
-    const result = await query;
-    const rows = result as Array<Record<string, unknown>>;
-    const hasMoreRows = rows.length > config.limit;
-    const truncated = hasMoreRows ? rows.slice(0, config.limit) : rows;
-
-    let nextCursor: string | undefined;
-    if (truncated.length > 0) {
-      const lastRow = truncated[truncated.length - 1]!;
-      const bucketValue = lastRow[config.cursorColumn] as string | Date | null | undefined;
-      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
-    }
-
-    return config.formatRows(truncated, config.aggregates, nextCursor);
   }
 
   // ---------------------------------------------------------------------------

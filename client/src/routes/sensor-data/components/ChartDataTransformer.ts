@@ -21,51 +21,52 @@ export function transformSensorData(
   sensorObjects: Record<number, ISensorBase>,
   aggregate: Aggregate = "avg",
 ): TransformedSensorData {
-  const data = normalizeSensorResponseData(response);
+  const data = response.data;
+  const xAxisValues = response.xAxis?.values ?? [];
   const series: ChartSeries[] = [];
 
-  // Build chart series using full sensor objects for color
   let colorIndex = 0;
-  for (const sensorId of Object.keys(data).map(Number)) {
-    const sensor = sensorObjects[sensorId] as ISensorBase | undefined;
+  for (const entry of data) {
+    const sensor = sensorObjects[entry.id];
     if (!sensor) continue;
-    const sensorName = sensor["name"] as string;
-    const sensorColor = sensor["color"] as string;
+    const sensorName = sensor.name;
     const color =
-      sensorColor || DefaultColors[colorIndex % DefaultColors.length];
-    series.push({ name: sensorName, color } as ChartSeries);
+      sensor.color ?? DefaultColors[colorIndex % DefaultColors.length];
+    series.push({ name: sensorName, color });
     colorIndex++;
   }
 
-  // Group values by timestamp across all sensors
   const timestampMap = new Map<string, DataPoint>();
 
-  for (const [sensorIdStr, readingGroups] of Object.entries(data)) {
-    const sensorId = Number(sensorIdStr);
-    const sensor = sensorObjects[sensorId] as ISensorBase | undefined;
-    if (!sensor) continue;
+  for (const [timeIndex, timeValue] of xAxisValues.entries()) {
+    const point: DataPoint = {
+      name: formatDateForChart(timeValue),
+    };
 
-    const sensorName = sensor["name"] as string;
+    for (const entry of data) {
+      const sensorEntry = sensorObjects[entry.id];
+      if (!sensorEntry) continue;
 
-    for (const [_readingType, group] of Object.entries(
-      readingGroups as Record<
-        string,
-        { units: string; values: { time: string }[] }
-      >,
-    )) {
-      for (const value of group.values) {
-        if (!timestampMap.has(value.time)) {
-          timestampMap.set(value.time, {
-            name: formatDateForChart(value.time),
-            units: aggregate === "count" ? "" : group.units,
-          });
-        }
-        const point = timestampMap.get(value.time) as DataPoint;
-        const aggregateValue = (value as Record<string, unknown>)[aggregate];
-        if (typeof aggregateValue === "number") {
-          point[sensorName] = aggregateValue;
+      const sensorName = sensorEntry.name;
+      const stats = entry.statistics?.[aggregate];
+
+      if (
+        stats &&
+        stats[timeIndex] !== undefined &&
+        stats[timeIndex] !== null
+      ) {
+        point[sensorName] = stats[timeIndex];
+        if (!point.units) {
+          point.units = aggregate === "count" ? "" : entry.units;
         }
       }
+    }
+
+    const hasValue = Object.keys(point).some(
+      (key) => key !== "name" && key !== "units" && point[key] !== undefined,
+    );
+    if (hasValue) {
+      timestampMap.set(timeValue, point);
     }
   }
 
@@ -77,62 +78,4 @@ export function transformSensorData(
     .map(([, point]) => point);
 
   return { dataSeries, chartSeries: series };
-}
-
-function normalizeSensorResponseData(
-  response:
-    SensorDataQueryResponse | Record<string, unknown> | null | undefined,
-): Record<
-  number,
-  Record<string, { units: string; values: { time: string }[] }>
-> {
-  if (!response || typeof response !== "object") {
-    return {};
-  }
-
-  const responseRecord = response as Record<string, unknown>;
-  const directData = responseRecord["data"];
-
-  if (
-    directData &&
-    typeof directData === "object" &&
-    !Array.isArray(directData)
-  ) {
-    const nestedRecord = directData as Record<string, unknown>;
-    if (looksLikeSensorSeriesMap(nestedRecord)) {
-      return nestedRecord as Record<
-        number,
-        Record<string, { units: string; values: { time: string }[] }>
-      >;
-    }
-  }
-
-  if (looksLikeSensorSeriesMap(responseRecord)) {
-    return responseRecord as Record<
-      number,
-      Record<string, { units: string; values: { time: string }[] }>
-    >;
-  }
-
-  return {};
-}
-
-function looksLikeSensorSeriesMap(record: Record<string, unknown>): boolean {
-  const firstValue = Object.values(record)[0];
-  if (
-    !firstValue ||
-    typeof firstValue !== "object" ||
-    Array.isArray(firstValue)
-  ) {
-    return false;
-  }
-
-  const firstReadingGroup = Object.values(
-    firstValue as Record<string, unknown>,
-  )[0];
-  if (!firstReadingGroup || typeof firstReadingGroup !== "object") {
-    return false;
-  }
-
-  return "values" in (firstReadingGroup as Record<string, unknown>);
 }

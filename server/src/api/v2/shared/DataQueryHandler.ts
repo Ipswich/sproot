@@ -39,6 +39,11 @@ export function createDataQueryHandler<T, R extends { data: unknown; nextCursor?
       if (result["nextCursor"]) {
         responseData["nextCursor"] = result["nextCursor"];
       }
+      if ((result as Record<string, unknown>)["xAxis"]) {
+        (responseData as Record<string, unknown>)["xAxis"] = (result as Record<string, unknown>)[
+          "xAxis"
+        ];
+      }
       return {
         statusCode: 200,
         content: responseData,

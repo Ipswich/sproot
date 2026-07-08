@@ -4,9 +4,28 @@ import {
   OutputDataQueryRequest,
   DEFAULT_LIMIT,
   MAX_LIMIT,
+  ChartDataEntry,
 } from "../../../../common/dist/api/v2/QueryTypes";
 import { assert } from "chai";
 import sinon from "sinon";
+
+function statsArr(entry: ChartDataEntry, key: string): (number | null)[] {
+  return entry["statistics"][key] as (number | null)[];
+}
+
+function assertDataEntry(
+  data: ChartDataEntry[],
+  predicate: (d: ChartDataEntry) => boolean,
+): ChartDataEntry {
+  const found = data.find(predicate);
+  assert.isDefined(found, "Expected data entry to be defined");
+  return found as ChartDataEntry;
+}
+
+function assertFirstEntry(data: ChartDataEntry[]): ChartDataEntry {
+  assert.isNotEmpty(data, "Expected data array to be non-empty");
+  return data[0] as ChartDataEntry;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers — sinon-based Knex stubs
@@ -29,6 +48,7 @@ function createQueryBuilderStub(rows: unknown[]): any {
     "orderBy",
     "limit",
     "groupByRaw",
+    "join",
   ];
   for (const method of chainMethods) {
     builder[method] = sinon.stub().callsFake(() => builder);
@@ -125,6 +145,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         r.push({
           bucket: `2024-01-01T${String(hourOffset + i).padStart(2, "0")}:00:00.000Z`,
           sensor_id: sensorId,
+          sensor_name: `Sensor ${sensorId}`,
           metric,
           units: metric === "humidity" ? "%" : "°C",
           average_data: 25,
@@ -153,9 +174,10 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
 
       assert.isNotEmpty(result.data);
       assert.isString(result.nextCursor);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1]["temperature"].units, "°C");
-      assert.equal((result.data as any)[1]["temperature"].values.length, 1);
+      assert.isTrue(result.data.some((d) => d.id === 1 && d.name === "temperature"));
+      const entry1 = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
+      assert.equal(entry1.units, "°C");
+      assert.equal(statsArr(entry1, "avg").length, 1);
     });
 
     it("should return nextCursor when rows exceed limit", async () => {
@@ -170,7 +192,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isString(result.nextCursor);
-      assert.equal((result.data as any)[1]["temperature"].values.length, 10);
+      const entry2 = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
+      assert.equal(statsArr(entry2, "avg").length, 10);
     });
 
     it("should filter by sensor IDs", async () => {
@@ -184,8 +207,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         ids: [2, 3],
       } as SensorDataQueryRequest);
 
-      assert.isDefined((result.data as any)[2]);
-      assert.equal(Object.keys(result.data).length, 1);
+      assert.isTrue(result.data.some((d) => d.id === 2));
+      assert.equal(result.data.length, 1);
     });
 
     it("should filter by reading types", async () => {
@@ -199,7 +222,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         readingTypes: ["temperature"],
       } as SensorDataQueryRequest);
 
-      assert.isDefined((result.data as any)[1]["temperature"]);
+      assert.isTrue(result.data.some((d) => d.id === 1 && d.name === "temperature"));
     });
 
     it("should handle cursor-based pagination", async () => {
@@ -254,7 +277,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         downsample: "5m",
       } as SensorDataQueryRequest);
 
-      assert.equal((result.data as any)[1]["temperature"].values.length, DEFAULT_LIMIT);
+      assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, DEFAULT_LIMIT);
       assert.isString(result.nextCursor);
     });
 
@@ -269,7 +292,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 20000,
       } as SensorDataQueryRequest);
 
-      assert.equal((result.data as any)[1]["temperature"].values.length, MAX_LIMIT);
+      assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, MAX_LIMIT);
       assert.isString(result.nextCursor);
     });
   });
@@ -283,6 +306,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         r.push({
           bucket: `2024-01-01T${String(hourOffset + i).padStart(2, "0")}:00:00.000Z`,
           output_id: outputId,
+          output_name: `Output ${outputId}`,
+          output_units: "V",
           average_value: 100,
           minimum_value: 50,
           maximum_value: 150,
@@ -307,8 +332,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
 
       assert.isNotEmpty(result.data);
       assert.isString(result.nextCursor);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1].values.length, 1);
+      assert.isTrue(result.data.some((d) => d.id === 1));
+      const outputEntry1 = assertDataEntry(result.data, (d) => d.id === 1);
+      assert.equal(statsArr(outputEntry1, "avg").length, 1);
     });
 
     it("should return nextCursor when rows exceed limit", async () => {
@@ -323,7 +349,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isString(result.nextCursor);
-      assert.equal((result.data as any)[1].values.length, 10);
+      const outputEntry2 = assertDataEntry(result.data, (d) => d.id === 1);
+      assert.equal(statsArr(outputEntry2, "avg").length, 10);
     });
 
     it("should filter by output IDs", async () => {
@@ -337,8 +364,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         ids: [3],
       } as OutputDataQueryRequest);
 
-      assert.isDefined((result.data as any)[3]);
-      assert.equal(Object.keys(result.data).length, 1);
+      assert.isTrue(result.data.some((d) => d.id === 3));
+      assert.equal(result.data.length, 1);
     });
 
     it("should use default limit when none provided", async () => {
@@ -351,7 +378,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         downsample: "5m",
       } as OutputDataQueryRequest);
 
-      assert.equal((result.data as any)[1].values.length, DEFAULT_LIMIT);
+      assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, DEFAULT_LIMIT);
       assert.isString(result.nextCursor);
     });
 
@@ -366,7 +393,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 20000,
       } as OutputDataQueryRequest);
 
-      assert.equal((result.data as any)[1].values.length, MAX_LIMIT);
+      assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, MAX_LIMIT);
       assert.isString(result.nextCursor);
     });
 
@@ -381,7 +408,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 1,
       } as OutputDataQueryRequest);
 
-      assert.equal((result.data as any)[1].values.length, 1);
+      assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, 1);
       assert.isString(result.nextCursor);
     });
 
@@ -413,6 +440,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         {
           bucket: "2024-01-01T00:00:00.000Z",
           output_id: 1,
+          output_name: "Output 1",
+          output_units: "V",
           average_value: 100,
           minimum_value: 50,
           maximum_value: 150,
@@ -431,9 +460,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      const value = (result.data as any)[1].values[0];
-      assert.equal(value["first"], null);
-      assert.equal(value["last"], null);
+      const entry = assertDataEntry(result.data, (d) => d.id === 1);
+      assert.equal(statsArr(entry, "first")[0], null);
+      assert.equal(statsArr(entry, "last")[0], null);
     });
   });
 
@@ -446,6 +475,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         r.push({
           bucket: `2024-01-01T${String(i * 15).padStart(2, "0")}:00:00.000Z`,
           sensor_id: sensorId,
+          sensor_name: `Sensor ${sensorId}`,
           metric,
           units: metric === "humidity" ? "%" : "°C",
           average_data: 22 + i,
@@ -473,9 +503,10 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1]["temperature"].units, "°C");
-      assert.equal((result.data as any)[1]["temperature"].values.length, 1);
+      assert.isTrue(result.data.some((d) => d.id === 1 && d.name === "temperature"));
+      const entry1 = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
+      assert.equal(entry1.units, "°C");
+      assert.equal(statsArr(entry1, "avg").length, 1);
     });
 
     it("should query raw sensor_data for 4 hours interval", async () => {
@@ -490,7 +521,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.equal((result.data as any)[1]["humidity"].values.length, 1);
+      const entry = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "humidity");
+      assert.equal(statsArr(entry, "avg").length, 1);
     });
 
     it("should filter by reading types in raw path", async () => {
@@ -505,8 +537,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.equal(Object.keys((result.data as any)[1]).length, 1);
-      assert.equal((result.data as any)[1]["temperature"].values.length, 2);
+      assert.equal(result.data.length, 1);
+      const entry = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
+      assert.equal(statsArr(entry, "avg").length, 2);
     });
 
     it("should return nextCursor when rows exceed limit in raw path", async () => {
@@ -521,7 +554,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isString(result.nextCursor);
-      assert.equal((result.data as any)[1]["temperature"].values.length, 10);
+      const entry = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
+      assert.equal(statsArr(entry, "avg").length, 10);
     });
   });
 
@@ -534,6 +568,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         r.push({
           bucket: `2024-01-01T${String(i * 15).padStart(2, "0")}:00:00.000Z`,
           output_id: outputId,
+          output_name: `Output ${outputId}`,
+          output_units: "V",
           average_value: 100 + i,
           minimum_value: 50 + i,
           maximum_value: 150 + i,
@@ -559,8 +595,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.isDefined((result.data as any)[1]);
-      assert.equal((result.data as any)[1].values.length, 1);
+      assert.isTrue(result.data.some((d) => d.id === 1));
+      const entry = assertDataEntry(result.data, (d) => d.id === 1);
+      assert.equal(statsArr(entry, "avg").length, 1);
     });
 
     it("should query raw output_data for 4 hours interval", async () => {
@@ -575,7 +612,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.equal((result.data as any)[2].values.length, 1);
+      const entry = assertDataEntry(result.data, (d) => d.id === 2);
+      assert.equal(statsArr(entry, "avg").length, 1);
     });
 
     it("should return nextCursor when rows exceed limit in raw output path", async () => {
@@ -590,7 +628,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isString(result.nextCursor);
-      assert.equal((result.data as any)[1].values.length, 10);
+      const entry = assertDataEntry(result.data, (d) => d.id === 1);
+      assert.equal(statsArr(entry, "avg").length, 10);
     });
   });
 
@@ -784,7 +823,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.deepEqual(result.data, {});
+      assert.deepEqual(result.data, []);
+      assert.deepEqual(result.xAxis.values, []);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -799,7 +839,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.deepEqual(result.data, {});
+      assert.deepEqual(result.data, []);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -829,7 +869,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 1,
       } as SensorDataQueryRequest);
 
-      assert.equal((result.data as any)[1]["temperature"].values.length, 1);
+      assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, 1);
       assert.isString(result.nextCursor);
     });
 
@@ -902,6 +942,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         {
           bucket: "2024-01-01T00:00:00.000Z",
           sensor_id: sensorId,
+          sensor_name: `Sensor ${sensorId}`,
           metric: "temperature",
           units: "°C",
           average_data: 25,
@@ -921,6 +962,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         {
           bucket: "2024-01-01T00:00:00.000Z",
           output_id: outputId,
+          output_name: `Output ${outputId}`,
+          output_units: "V",
           average_value: 100,
           minimum_value: 50,
           maximum_value: 150,
@@ -945,8 +988,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      const sensorIds = Object.keys(result.data);
-      assert.includeMembers(sensorIds, ["1", "3"], "Should return zone 1 sensor IDs");
+      const sensorIds = result.data.map((d) => d.id);
+      assert.includeMembers(sensorIds, [1, 3], "Should return zone 1 sensor IDs");
       assert.equal(sensorIds.length, 2, "Should return exactly 2 zone 1 sensors");
     });
 
@@ -963,8 +1006,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      const sensorIds = Object.keys(result.data);
-      assert.includeMembers(sensorIds, ["2", "4"], "Should return zone 2 sensor IDs");
+      const sensorIds = result.data.map((d) => d.id);
+      assert.includeMembers(sensorIds, [2, 4], "Should return zone 2 sensor IDs");
       assert.equal(sensorIds.length, 2, "Should return exactly 2 zone 2 sensors");
     });
 
@@ -982,8 +1025,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      const outputIds = Object.keys(result.data);
-      assert.includeMembers(outputIds, ["1"], "Should return zone 1 output ID");
+      const outputIds = result.data.map((d) => d.id);
+      assert.includeMembers(outputIds, [1], "Should return zone 1 output ID");
       assert.equal(outputIds.length, 1, "Should return exactly 1 zone 1 output");
     });
 
@@ -1000,8 +1043,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      const outputIds = Object.keys(result.data);
-      assert.includeMembers(outputIds, ["5"], "Should return zone 2 output ID");
+      const outputIds = result.data.map((d) => d.id);
+      assert.includeMembers(outputIds, [5], "Should return zone 2 output ID");
       assert.equal(outputIds.length, 1, "Should return exactly 1 zone 2 output");
     });
 
@@ -1016,7 +1059,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.deepEqual(result.data, {}, "Should return empty data for non-existent zone sensors");
+      assert.deepEqual(result.data, [], "Should return empty data for non-existent zone sensors");
     });
 
     it("should return empty data when querying outputs from a non-existent zone", async () => {
@@ -1030,7 +1073,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.deepEqual(result.data, {}, "Should return empty data for non-existent zone outputs");
+      assert.deepEqual(result.data, [], "Should return empty data for non-existent zone outputs");
     });
   });
 });

@@ -2,9 +2,8 @@ import { dbToIso } from "../utils/dateUtils";
 import {
   SensorDataQueryResponse,
   OutputDataQueryResponse,
+  ChartDataEntry,
   Aggregate,
-  SensorDataValue,
-  OutputDataValue,
 } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 
 // ---------------------------------------------------------------------------
@@ -124,61 +123,152 @@ export function extractRowAggregates(
   return value;
 }
 
-export function formatSensorAggregateRows(
+// ---------------------------------------------------------------------------
+// Column-based format functions (server-side pivot)
+// ---------------------------------------------------------------------------
+
+export function formatSensorDataQueryRows(
   rows: Array<Record<string, unknown>>,
   aggregates: Aggregate[],
   nextCursor?: string,
 ): SensorDataQueryResponse {
-  const response: SensorDataQueryResponse = { data: {} };
-  if (nextCursor) {
-    response.nextCursor = nextCursor;
+  const response: SensorDataQueryResponse = { xAxis: { field: "time", values: [] }, data: [] };
+  if (nextCursor) response.nextCursor = nextCursor;
+
+  // Collect all unique timestamps (descending)
+  const timestampSet = new Set<string>();
+  for (const row of rows) {
+    const bucket = row["bucket"];
+    if (bucket != null) {
+      const bucketValue =
+        typeof bucket === "string" || bucket instanceof Date ? bucket : String(bucket);
+      timestampSet.add(dbToIso(bucketValue) ?? String(bucketValue));
+    }
   }
+  response.xAxis.values = Array.from(timestampSet).sort(
+    (a: string, b: string) => new Date(b).getTime() - new Date(a).getTime(),
+  );
+
+  // Group by sensor_id + metric
+  const sensorMetricMap = new Map<
+    string,
+    {
+      id: number;
+      name: string;
+      units: string;
+      values: Map<string, Record<string, unknown>>;
+    }
+  >();
 
   for (const row of rows) {
     const sensorId = row["sensor_id"] as number;
-    if (sensorId == null) {
-      throw new Error("Row missing sensor_id in aggregate query result");
-    }
     const metric = row["metric"] as string;
+    const key = `${sensorId}:${metric}`;
+    const name = metric;
     const units = row["units"] as string;
+    const bucket = row["bucket"];
+    const bucketValue =
+      typeof bucket === "string" || bucket instanceof Date ? bucket : String(bucket);
+    const timeStr = dbToIso(bucketValue) ?? String(bucketValue);
 
-    if (!response.data[sensorId]) {
-      response.data[sensorId] = {};
+    if (!sensorMetricMap.has(key)) {
+      sensorMetricMap.set(key, { id: sensorId, name, units, values: new Map() });
     }
-    if (!response.data[sensorId][metric]) {
-      response.data[sensorId][metric] = { units, values: [] };
-    }
-
-    const value = extractRowAggregates(row, aggregates, "_data");
-    response.data[sensorId][metric].values.push(value as SensorDataValue);
+    const entry = sensorMetricMap.get(key)!;
+    const agg = extractRowAggregates(row, aggregates, "_data");
+    entry.values.set(timeStr, agg as Record<string, unknown>);
   }
 
+  // Build data array
+  for (const [, entry] of sensorMetricMap) {
+    const statistics: Record<string, (number | null)[]> = {};
+    for (const agg of aggregates) {
+      statistics[agg] = response.xAxis.values.map((ts: string) => {
+        const value = entry.values.get(ts);
+        return value ? (value[agg] as number | null) : null;
+      });
+    }
+    response.data.push({
+      id: entry.id,
+      name: entry.name,
+      units: entry.units,
+      statistics,
+    });
+  }
+
+  // Sort by id
+  response.data.sort((a: ChartDataEntry, b: ChartDataEntry) => a.id - b.id);
   return response;
 }
 
-export function formatOutputAggregateRows(
+export function formatOutputDataQueryRows(
   rows: Array<Record<string, unknown>>,
   aggregates: Aggregate[],
   nextCursor?: string,
 ): OutputDataQueryResponse {
-  const response: OutputDataQueryResponse = { data: {} };
-  if (nextCursor) {
-    response.nextCursor = nextCursor;
+  const response: OutputDataQueryResponse = { xAxis: { field: "time", values: [] }, data: [] };
+  if (nextCursor) response.nextCursor = nextCursor;
+
+  // Collect all unique timestamps (descending)
+  const timestampSet = new Set<string>();
+  for (const row of rows) {
+    const bucket = row["bucket"];
+    if (bucket != null) {
+      const bucketValue =
+        typeof bucket === "string" || bucket instanceof Date ? bucket : String(bucket);
+      timestampSet.add(dbToIso(bucketValue) ?? String(bucketValue));
+    }
   }
+  response.xAxis.values = Array.from(timestampSet).sort(
+    (a: string, b: string) => new Date(b).getTime() - new Date(a).getTime(),
+  );
+
+  // Group by output_id
+  const outputMap = new Map<
+    number,
+    {
+      id: number;
+      name: string;
+      units: string;
+      values: Map<string, Record<string, unknown>>;
+    }
+  >();
 
   for (const row of rows) {
     const outputId = row["output_id"] as number;
-    if (outputId == null) {
-      throw new Error("Row missing output_id in aggregate query result");
-    }
+    const name = row["output_name"] as string;
+    const units = row["output_units"] as string;
+    const bucket = row["bucket"];
+    const bucketValue =
+      typeof bucket === "string" || bucket instanceof Date ? bucket : String(bucket);
+    const timeStr = dbToIso(bucketValue) ?? String(bucketValue);
 
-    if (!response.data[outputId]) {
-      response.data[outputId] = { values: [] };
+    if (!outputMap.has(outputId)) {
+      outputMap.set(outputId, { id: outputId, name, units, values: new Map() });
     }
-
-    const value = extractRowAggregates(row, aggregates, "_value");
-    response.data[outputId].values.push(value as OutputDataValue);
+    const entry = outputMap.get(outputId)!;
+    const agg = extractRowAggregates(row, aggregates, "_value");
+    entry.values.set(timeStr, agg as Record<string, unknown>);
   }
 
+  // Build data array
+  for (const [, entry] of outputMap) {
+    const statistics: Record<string, (number | null)[]> = {};
+    for (const agg of aggregates) {
+      statistics[agg] = response.xAxis.values.map((ts: string) => {
+        const value = entry.values.get(ts);
+        return value ? (value[agg] as number | null) : null;
+      });
+    }
+    response.data.push({
+      id: entry.id,
+      name: entry.name,
+      units: entry.units,
+      statistics,
+    });
+  }
+
+  // Sort by id
+  response.data.sort((a: ChartDataEntry, b: ChartDataEntry) => a.id - b.id);
   return response;
 }

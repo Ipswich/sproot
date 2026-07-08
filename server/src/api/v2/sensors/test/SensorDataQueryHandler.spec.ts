@@ -1,7 +1,4 @@
-import {
-  SensorDataQueryRequest,
-  SensorDataQueryResponse,
-} from "../../../../../../common/dist/api/v2/QueryTypes";
+import { SensorDataQueryRequest } from "../../../../../../common/dist/api/v2/QueryTypes";
 import { sensorDataQueryHandlerAsync } from "../handlers/SensorDataQueryHandler";
 import { testDataQueryHandlerTests } from "../../shared/test/sharedDataQueryHandlerTests";
 
@@ -12,18 +9,24 @@ const validBody: Partial<SensorDataQueryRequest> = {
   },
 };
 
-const responseData: SensorDataQueryResponse = {
-  data: {
-    1: {
-      temperature: {
-        units: "°C",
-        values: [{ time: "2024-01-01T00:00:00.000Z", avg: 25, min: 20, max: 30, count: 60 }],
+const responseData = {
+  data: [
+    {
+      id: 1,
+      name: "temperature",
+      units: "°C",
+      statistics: {
+        avg: [25],
+        min: [20],
+        max: [30],
+        count: [60],
       },
     },
-  },
+  ],
+  xAxis: { field: "time", values: ["2024-01-01T00:00:00.000Z"] },
 };
 
-testDataQueryHandlerTests<SensorDataQueryRequest, SensorDataQueryResponse>({
+testDataQueryHandlerTests<SensorDataQueryRequest, typeof responseData>({
   handlerName: "SensorDataQueryHandler.ts",
   url: "/api/v2/sensors/data",
   handler: sensorDataQueryHandlerAsync,

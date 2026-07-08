@@ -19,9 +19,6 @@ export type Aggregate = (typeof VALID_AGGREGATES)[number];
 // Downsample intervals — supports any PostgreSQL INTERVAL string.
 // Known intervals (5m, 1h, 1d) map to continuous aggregate tables for best performance.
 // Other intervals (1m, 15 minutes, 4 hours, etc.) compute on-the-fly from raw data.
-export const KNOWN_DOWNSAMPLES = ["5m", "1h", "1d"] as const;
-export type KnownDownsample = (typeof KNOWN_DOWNSAMPLES)[number];
-
 export type Downsample = string; // accepts any PostgreSQL INTERVAL string
 
 export const DOWNSAMPLE_TO_BUCKET_MINUTES: Record<string, number> = {
@@ -99,32 +96,27 @@ export interface DataQueryResponseBase {
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
-export interface SensorDataValue {
-  time: string; // ISO 8601 bucket timestamp
-  [agg: string]: unknown; // min, max, avg, count, sum, stddev, percentile, first, last
+export interface DataQueryXAxis {
+  field: string;
+  values: string[];
 }
 
-export interface OutputDataValue {
-  time: string; // ISO 8601 bucket timestamp
-  [agg: string]: unknown; // min, max, avg, count, sum, stddev, percentile, first, last
-}
-
-export interface SensorReadingGroup {
+export interface ChartDataEntry {
+  id: number;
+  name: string;
   units: string;
-  values: SensorDataValue[];
+  statistics: Record<string, (number | null)[]>;
 }
 
 export interface SensorDataQueryResponse {
-  data: Record<number, Record<string, SensorReadingGroup>>;
+  xAxis: DataQueryXAxis;
+  data: ChartDataEntry[];
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
-export interface OutputReadingGroup {
-  values: OutputDataValue[];
-}
-
 export interface OutputDataQueryResponse {
-  data: Record<number, OutputReadingGroup>;
+  xAxis: DataQueryXAxis;
+  data: ChartDataEntry[];
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
@@ -506,7 +498,8 @@ function createDataQueryValidator(config: ValidatorConfig) {
     return {
       valid: true,
       data: buildValidationData(req, config.validationFields) as
-        SensorDataQueryRequest | OutputDataQueryRequest,
+        | SensorDataQueryRequest
+        | OutputDataQueryRequest,
     };
   };
 }
