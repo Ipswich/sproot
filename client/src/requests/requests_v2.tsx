@@ -648,8 +648,7 @@ export async function addNotificationActionAsync(
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data as
-    | SDBNotificationAction
-    | undefined;
+    SDBNotificationAction | undefined;
 }
 
 export async function deleteNotificationActionAsync(id: number): Promise<void> {
@@ -1740,7 +1739,7 @@ export async function getSubControllerApplicationAsync(model: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Direct DB query functions — replace chart-data endpoints
+// Historical data query functions
 // ---------------------------------------------------------------------------
 
 export async function fetchSensorDataAsync(

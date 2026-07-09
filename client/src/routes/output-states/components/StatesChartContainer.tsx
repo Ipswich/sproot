@@ -1,35 +1,39 @@
-import * as Constants from "@sproot/sproot-common/src/utility/Constants";
-import { ChartData } from "@sproot/sproot-common/src/utility/ChartData";
+import { useQuery } from "@tanstack/react-query";
+import { Box, Text } from "@mantine/core";
+import { getOutputsAsync } from "../../../requests/requests_v2";
+import { fetchOutputDataAsync } from "../../../requests/requests_v2";
+import { useMemo } from "react";
 import {
   getQueryPointLimit,
-  getChartIntervalHours,
-  getDownsampleMinutes,
   resolveSelectedDownsample,
   type Aggregate,
   type OutputDataQueryRequest,
 } from "../../../requests/queryTypes";
-import { useQuery } from "@tanstack/react-query";
 import {
-  getOutputsAsync,
-  fetchOutputDataAsync,
-} from "../../../requests/requests_v2";
-import { useMemo } from "react";
+  buildChartTimeline,
+  getChartIntervalMs,
+  mergeDataIntoTimeline,
+  scalePercentile,
+} from "../../../requests/chartDataTypes";
+import { fetchPaginatedChartData } from "../../../requests/chartDataPagination";
+import { OutputDataTransformer } from "./OutputDataTransformer";
 import StatesChart from "./StatesChart";
-import { transformOutputData } from "./OutputDataTransformer";
-import type { IOutputBase } from "@sproot/outputs/IOutputBase";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
 
 interface StatesChartContainerProps {
   chartInterval: string;
+  toggledOutputs?: string[];
   toggledDeviceZones: string[];
   customTimeRange?: { start: Date; end: Date } | null;
   aggregate: Aggregate;
   downsampleSelection: string;
-  percentile: number;
-  valueSuffix: string;
+  percentile?: number;
+  valueSuffix?: string;
 }
 
 export default function StatesChartContainer({
   chartInterval,
+  toggledOutputs = [],
   toggledDeviceZones,
   customTimeRange,
   aggregate,
@@ -39,159 +43,140 @@ export default function StatesChartContainer({
 }: StatesChartContainerProps) {
   const outputsQuery = useQuery({
     queryKey: ["outputs"],
-    queryFn: () => getOutputsAsync(),
+    queryFn: async () => {
+      const allOutputs = await getOutputsAsync();
+      return Object.values(allOutputs) as IOutputBase[];
+    },
     refetchInterval: 60000,
     staleTime: 60000,
   });
 
   const timeRange = useMemo(() => {
     if (customTimeRange) {
-      return {
-        start: customTimeRange.start.toISOString(),
-        end: customTimeRange.end.toISOString(),
-      };
+      return [customTimeRange.start, customTimeRange.end] as [Date, Date];
     }
+
     const end = new Date();
-    const start = new Date(
-      end.getTime() -
-        Constants.MAX_CHART_DATA_POINTS *
-          Constants.CHART_DATA_POINT_INTERVAL *
-          60 *
-          1000,
-    );
-    return { start: start.toISOString(), end: end.toISOString() };
-  }, [customTimeRange]);
+    const start = new Date(end.getTime() - getChartIntervalMs(chartInterval));
+    return [start, end] as [Date, Date];
+  }, [chartInterval, customTimeRange]);
 
-  const durationMs = useMemo(() => {
-    return (
-      new Date(timeRange.end).getTime() - new Date(timeRange.start).getTime()
-    );
-  }, [timeRange.end, timeRange.start]);
+  const durationMs = timeRange[1].getTime() - timeRange[0].getTime();
+  const downsample = resolveSelectedDownsample(downsampleSelection, durationMs);
+  const queryLimit = getQueryPointLimit(durationMs, downsample);
 
-  const downsample = useMemo(() => {
-    return resolveSelectedDownsample(
-      downsampleSelection,
-      durationMs,
-      !customTimeRange,
-    );
-  }, [customTimeRange, downsampleSelection, durationMs]);
+  const outputs = outputsQuery.data || [];
+  const visibleOutputs = useMemo(
+    () =>
+      outputs.filter((output) => {
+        const deviceZoneId = output.deviceZoneId ?? -1;
+        return (
+          !toggledDeviceZones.includes(String(deviceZoneId)) &&
+          !toggledOutputs.includes(String(output.id))
+        );
+      }),
+    [outputs, toggledDeviceZones, toggledOutputs],
+  );
+  const ids = visibleOutputs.map((output) => output.id);
 
-  const queryLimit = useMemo(() => {
-    return getQueryPointLimit(durationMs, downsample);
-  }, [downsample, durationMs]);
-
-  const chartDataQuery = useQuery({
+  const dataQuery = useQuery({
     queryKey: [
-      "output-states-chart",
-      timeRange.start,
-      timeRange.end,
+      "outputData",
+      timeRange[0].toISOString(),
+      timeRange[1].toISOString(),
       downsample,
       aggregate,
       percentile,
+      ...ids,
     ],
     queryFn: async () => {
       const request: OutputDataQueryRequest = {
-        timeRange,
+        timeRange: {
+          start: timeRange[0].toISOString(),
+          end: timeRange[1].toISOString(),
+        },
         downsample,
         limit: queryLimit,
         aggregates: [aggregate],
+        ids,
+        ...(percentile !== undefined && {
+          percentile: scalePercentile(percentile),
+        }),
       };
-      if (aggregate === "percentile") {
-        request.percentile = percentile;
-      }
-      return fetchOutputDataAsync(request);
+      return fetchPaginatedChartData(fetchOutputDataAsync, request);
     },
+    enabled: outputsQuery.isSuccess && ids.length > 0,
     refetchInterval: 300000,
-    enabled: !!outputsQuery.data,
     placeholderData: (previousData) => previousData,
   });
 
-  const outputObjects = useMemo(() => {
-    if (!outputsQuery.data) return {};
-    const result: Record<number, IOutputBase> = {};
-    for (const key of Object.keys(outputsQuery.data)) {
-      const output = outputsQuery.data[key]!;
-      result[output.id] = output;
-    }
-    return result;
-  }, [outputsQuery.data]);
-
-  const transformedData = useMemo(() => {
-    if (!chartDataQuery.data) return null;
-    return transformOutputData(chartDataQuery.data, outputObjects, aggregate);
-  }, [aggregate, chartDataQuery.data, outputObjects]);
+  const transformed = useMemo(
+    () =>
+      dataQuery.data?.data
+        ? OutputDataTransformer.transform(
+            dataQuery.data.data,
+            visibleOutputs,
+            aggregate,
+          )
+        : null,
+    [aggregate, dataQuery.data?.data, visibleOutputs],
+  );
 
   const displayDataSeries = useMemo(() => {
-    if (!transformedData) {
+    if (!transformed) {
       return [];
     }
 
-    const intervalMinutes = getDownsampleMinutes(downsample);
-    const end = new Date(timeRange.end);
-    const baseSeries = new ChartData(
-      Math.max(1, Math.ceil(durationMs / (intervalMinutes * 60 * 1000))),
-      intervalMinutes,
-      undefined,
-      end,
-    ).get();
-
-    const valuesByTime = new Map(
-      transformedData.dataSeries.map((dataPoint) => [
-        dataPoint.name,
-        dataPoint,
-      ]),
+    return mergeDataIntoTimeline(
+      buildChartTimeline(timeRange[0], timeRange[1], downsample),
+      transformed.dataSeries,
     );
+  }, [downsample, timeRange, transformed]);
 
-    return baseSeries.map((dataPoint) => ({
-      ...dataPoint,
-      ...(valuesByTime.get(dataPoint.name) ?? {}),
-    }));
-  }, [downsample, durationMs, timeRange.end, transformedData]);
+  const hasVisibleValues = displayDataSeries.some((dataPoint) =>
+    Object.keys(dataPoint).some(
+      (key) =>
+        key !== "name" && key !== "units" && dataPoint[key] !== undefined,
+    ),
+  );
 
-  const timeSpans = useMemo(() => {
-    return ChartData.generateTimeSpansFromDataSeries(
-      displayDataSeries,
-      getDownsampleMinutes(downsample),
+  if (outputsQuery.isLoading || (dataQuery.isLoading && !dataQuery.data)) {
+    return (
+      <Box>
+        <Text>Loading chart data...</Text>
+      </Box>
     );
-  }, [displayDataSeries, downsample]);
+  }
 
-  const activeDataSeries = useMemo(() => {
-    if (customTimeRange) {
-      return displayDataSeries;
-    }
+  if (dataQuery.error) {
+    return (
+      <Box>
+        <Text c="red">
+          Error loading chart data: {(dataQuery.error as Error).message}
+        </Text>
+      </Box>
+    );
+  }
 
-    return timeSpans[getChartIntervalHours(chartInterval)] ?? [];
-  }, [chartInterval, customTimeRange, displayDataSeries, timeSpans]);
+  if (dataQuery.data?.error) {
+    return (
+      <Box>
+        <Text c="yellow.7">
+          Unable to fetch all data. Showing partial results.
+        </Text>
+      </Box>
+    );
+  }
 
-  // Build hidden output list
-  const hiddenOutputsFromDeviceZones = Object.values(outputsQuery.data ?? {})
-    .filter((output: any) => {
-      return toggledDeviceZones.includes(
-        (output.deviceZoneId ?? -1).toString(),
-      );
-    })
-    .map((output: any) => output.name ?? "");
-
-  const hiddenOutputs =
-    hiddenOutputsFromDeviceZones.length ===
-    Object.values(outputsQuery.data ?? {}).length
-      ? []
-      : hiddenOutputsFromDeviceZones;
-
-  const filteredData = ChartData.filterChartData(
-    activeDataSeries,
-    hiddenOutputs,
-  );
-  const hasVisibleValues = filteredData.some((dataPoint) =>
-    Object.keys(dataPoint).some((key) => key !== "name" && key !== "units"),
-  );
   return (
-    <StatesChart
-      dataSeries={filteredData}
-      chartSeries={transformedData?.chartSeries ?? []}
-      chartRendering={chartDataQuery.isPending && !chartDataQuery.data}
-      showEmptyState={!hasVisibleValues}
-      valueSuffix={valueSuffix}
-    />
+    <Box>
+      <StatesChart
+        dataSeries={displayDataSeries}
+        chartSeries={transformed?.chartSeries ?? []}
+        chartRendering={dataQuery.isFetching && !dataQuery.data}
+        showEmptyState={!hasVisibleValues}
+        valueSuffix={valueSuffix ?? transformed?.units ?? "%"}
+      />
+    </Box>
   );
 }

@@ -1,35 +1,30 @@
-import * as Constants from "@sproot/sproot-common/src/utility/Constants";
+import { useQuery } from "@tanstack/react-query";
+import { Box, Text } from "@mantine/core";
+import { useMemo, useState } from "react";
 import {
-  ChartData,
-  DataSeries,
-} from "@sproot/sproot-common/src/utility/ChartData";
-import {
-  ReadingType,
-  Units,
-} from "@sproot/sproot-common/src/sensors/ReadingType";
-import type { ISensorBase } from "@sproot/sensors/ISensorBase";
+  fetchSensorDataAsync,
+  getSensorsAsync,
+} from "../../../requests/requests_v2";
 import {
   getQueryPointLimit,
-  getChartIntervalHours,
-  getDownsampleMinutes,
   resolveSelectedDownsample,
   type Aggregate,
   type SensorDataQueryRequest,
 } from "../../../requests/queryTypes";
-import { useMemo } from "react";
 import {
-  getSensorsAsync,
-  fetchSensorDataAsync,
-} from "../../../requests/requests_v2";
-import { useQuery } from "@tanstack/react-query";
+  buildChartTimeline,
+  convertTemperatureSeries,
+  getChartIntervalMs,
+  mergeDataIntoTimeline,
+  scalePercentile,
+} from "../../../requests/chartDataTypes";
+import { fetchPaginatedChartData } from "../../../requests/chartDataPagination";
+import { ReadingsChartTransformer } from "./ReadingsChartTransformer";
 import ReadingsChart from "./ReadingsChart";
-import { transformSensorData } from "./ChartDataTransformer";
-import {
-  convertCelsiusToFahrenheit,
-  convertFahrenheitToCelsius,
-} from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 
-export interface ReadingsChartContainerProps {
+interface ReadingsChartContainerProps {
   readingType: string;
   chartInterval: string;
   toggledSensors: string[];
@@ -38,7 +33,7 @@ export interface ReadingsChartContainerProps {
   customTimeRange?: { start: Date; end: Date } | null;
   aggregate: Aggregate;
   downsampleSelection: string;
-  percentile: number;
+  percentile?: number;
 }
 
 export default function ReadingsChartContainer({
@@ -52,206 +47,161 @@ export default function ReadingsChartContainer({
   downsampleSelection,
   percentile,
 }: ReadingsChartContainerProps) {
+  const [showReferenceLines, setShowReferenceLines] = useState(true);
+
   const sensorsQuery = useQuery({
-    queryKey: ["sensor-data-sensors"],
-    queryFn: () => getSensorsAsync(),
+    queryKey: ["sensors", readingType],
+    queryFn: async () => {
+      const allSensors = await getSensorsAsync();
+      return Object.values(allSensors).filter(
+        (sensor: ISensorBase) =>
+          sensor.lastReading &&
+          readingType in sensor.lastReading &&
+          sensor.lastReading[readingType as ReadingType] != null,
+      );
+    },
     refetchInterval: 60000,
     staleTime: 60000,
   });
 
   const timeRange = useMemo(() => {
     if (customTimeRange) {
-      return {
-        start: customTimeRange.start.toISOString(),
-        end: customTimeRange.end.toISOString(),
-      };
+      return [customTimeRange.start, customTimeRange.end] as [Date, Date];
     }
 
     const end = new Date();
-    const start = new Date(
-      end.getTime() -
-        Constants.MAX_CHART_DATA_POINTS *
-          Constants.CHART_DATA_POINT_INTERVAL *
-          60 *
-          1000,
-    );
+    const start = new Date(end.getTime() - getChartIntervalMs(chartInterval));
+    return [start, end] as [Date, Date];
+  }, [chartInterval, customTimeRange]);
 
-    return { start: start.toISOString(), end: end.toISOString() };
-  }, [customTimeRange]);
+  const durationMs = timeRange[1].getTime() - timeRange[0].getTime();
+  const downsample = resolveSelectedDownsample(downsampleSelection, durationMs);
+  const queryLimit = getQueryPointLimit(durationMs, downsample);
 
-  const durationMs = useMemo(() => {
-    return (
-      new Date(timeRange.end).getTime() - new Date(timeRange.start).getTime()
-    );
-  }, [timeRange.end, timeRange.start]);
+  const sensors = useMemo(() => sensorsQuery.data ?? [], [sensorsQuery.data]);
+  const visibleSensors = useMemo(
+    () =>
+      sensors.filter((sensor) => {
+        const deviceZoneId = sensor.deviceZoneId ?? -1;
+        return (
+          !toggledDeviceZones.includes(String(deviceZoneId)) &&
+          !toggledSensors.includes(String(sensor.id))
+        );
+      }),
+    [sensors, toggledDeviceZones, toggledSensors],
+  );
+  const ids = visibleSensors.map((sensor) => sensor.id);
 
-  const downsample = useMemo(() => {
-    return resolveSelectedDownsample(
-      downsampleSelection,
-      durationMs,
-      !customTimeRange,
-    );
-  }, [customTimeRange, downsampleSelection, durationMs]);
-
-  const queryLimit = useMemo(() => {
-    return getQueryPointLimit(durationMs, downsample);
-  }, [downsample, durationMs]);
-
-  const chartDataQuery = useQuery({
+  const dataQuery = useQuery({
     queryKey: [
-      "sensor-data-chart",
+      "sensorData",
       readingType,
-      timeRange.start,
-      timeRange.end,
+      timeRange[0].toISOString(),
+      timeRange[1].toISOString(),
       downsample,
       aggregate,
       percentile,
+      useAlternateUnits,
+      ...ids,
     ],
     queryFn: async () => {
       const request: SensorDataQueryRequest = {
-        timeRange,
+        timeRange: {
+          start: timeRange[0].toISOString(),
+          end: timeRange[1].toISOString(),
+        },
         readingTypes: [readingType],
         downsample,
         limit: queryLimit,
         aggregates: [aggregate],
+        ids,
+        ...(percentile !== undefined && {
+          percentile: scalePercentile(percentile),
+        }),
       };
-      if (aggregate === "percentile") {
-        request.percentile = percentile;
-      }
-      return fetchSensorDataAsync(request);
+      return fetchPaginatedChartData(fetchSensorDataAsync, request);
     },
+    enabled: sensorsQuery.isSuccess && ids.length > 0,
     refetchInterval: 300000,
-    enabled: !!sensorsQuery.data,
     placeholderData: (previousData) => previousData,
   });
 
-  const sensorObjects = useMemo(() => {
-    if (!sensorsQuery.data) return {};
-    const result: Record<number, ISensorBase> = {};
-    for (const key of Object.keys(sensorsQuery.data)) {
-      const sensor = sensorsQuery.data[key]!;
-      result[sensor.id] = sensor;
-    }
-    return result;
-  }, [sensorsQuery.data]);
-
-  const transformedData = useMemo(() => {
-    if (!chartDataQuery.data) return null;
-    return transformSensorData(chartDataQuery.data, sensorObjects, aggregate);
-  }, [aggregate, chartDataQuery.data, sensorObjects]);
+  const transformed = useMemo(
+    () =>
+      dataQuery.data?.data
+        ? ReadingsChartTransformer.transform(
+            dataQuery.data.data,
+            visibleSensors,
+            aggregate,
+          )
+        : null,
+    [aggregate, dataQuery.data?.data, visibleSensors],
+  );
 
   const displayDataSeries = useMemo(() => {
-    if (!transformedData) {
+    if (!transformed) {
       return [];
     }
 
-    const intervalMinutes = getDownsampleMinutes(downsample);
-    const end = new Date(timeRange.end);
-    const baseSeries = new ChartData(
-      Math.max(1, Math.ceil(durationMs / (intervalMinutes * 60 * 1000))),
-      intervalMinutes,
-      undefined,
-      end,
-    ).get();
-
-    const valuesByTime = new Map(
-      transformedData.dataSeries.map((dataPoint) => [
-        dataPoint.name,
-        dataPoint,
-      ]),
+    const mergedDataSeries = mergeDataIntoTimeline(
+      buildChartTimeline(timeRange[0], timeRange[1], downsample),
+      transformed.dataSeries,
     );
 
-    return baseSeries.map((dataPoint) => ({
-      ...dataPoint,
-      ...(valuesByTime.get(dataPoint.name) ?? {}),
-    }));
-  }, [downsample, durationMs, timeRange.end, transformedData]);
-
-  const timeSpans = useMemo(() => {
-    return ChartData.generateTimeSpansFromDataSeries(
-      displayDataSeries,
-      getDownsampleMinutes(downsample),
-    );
-  }, [displayDataSeries, downsample]);
-
-  const activeDataSeries = useMemo(() => {
-    if (customTimeRange) {
-      return displayDataSeries;
-    }
-
-    return timeSpans[getChartIntervalHours(chartInterval)] ?? [];
-  }, [chartInterval, customTimeRange, displayDataSeries, timeSpans]);
-
-  const chartDataForRender = useMemo(() => {
     if (readingType !== ReadingType.temperature) {
-      return activeDataSeries.map((dataPoint) => ({ ...dataPoint }));
+      return mergedDataSeries;
     }
 
-    const clonedData = activeDataSeries.map((dataPoint) => ({ ...dataPoint }));
-    convertTemperatureUnits(clonedData, useAlternateUnits);
-    return clonedData;
-  }, [activeDataSeries, readingType, useAlternateUnits]);
+    return convertTemperatureSeries(mergedDataSeries, useAlternateUnits);
+  }, [downsample, readingType, timeRange, transformed, useAlternateUnits]);
 
-  // Build hidden sensor list
-  const hiddenSensorsFromDeviceZones = Object.values(sensorsQuery.data ?? {})
-    .filter((sensor: any) => {
-      return (
-        toggledDeviceZones.includes((sensor.deviceZoneId ?? -1).toString()) ||
-        !Object.keys(sensor.lastReading).includes(readingType)
-      );
-    })
-    .map((sensor: any) => sensor.name);
-
-  const hiddenSensors =
-    hiddenSensorsFromDeviceZones.length ===
-    Object.values(sensorsQuery.data ?? {}).length
-      ? []
-      : toggledSensors.concat(hiddenSensorsFromDeviceZones);
-
-  const filteredData = ChartData.filterChartData(
-    chartDataForRender,
-    hiddenSensors,
+  const hasVisibleValues = displayDataSeries.some((dataPoint) =>
+    Object.keys(dataPoint).some(
+      (key) =>
+        key !== "name" && key !== "units" && dataPoint[key] !== undefined,
+    ),
   );
-  const hasVisibleValues = filteredData.some((dataPoint) =>
-    Object.keys(dataPoint).some((key) => key !== "name" && key !== "units"),
-  );
+
+  if (sensorsQuery.isLoading || (dataQuery.isLoading && !dataQuery.data)) {
+    return (
+      <Box>
+        <Text>Loading chart data...</Text>
+      </Box>
+    );
+  }
+
+  if (dataQuery.error) {
+    return (
+      <Box>
+        <Text c="red">
+          Error loading chart data: {(dataQuery.error as Error).message}
+        </Text>
+      </Box>
+    );
+  }
+
+  if (dataQuery.data?.error) {
+    return (
+      <Box>
+        <Text c="yellow.7">
+          Unable to fetch all data. Showing partial results.
+        </Text>
+      </Box>
+    );
+  }
 
   return (
     <ReadingsChart
-      dataSeries={filteredData}
-      chartSeries={transformedData?.chartSeries ?? []}
+      dataSeries={displayDataSeries}
+      chartSeries={transformed?.chartSeries ?? []}
       readingType={readingType}
-      chartRendering={chartDataQuery.isPending && !chartDataQuery.data}
+      chartRendering={dataQuery.isFetching && !dataQuery.data}
       showEmptyState={!hasVisibleValues}
+      showReferenceLines={showReferenceLines}
+      onToggleReferenceLines={setShowReferenceLines}
+      {...(displayDataSeries[0]?.units
+        ? { units: displayDataSeries[0].units as string }
+        : {})}
     />
   );
-}
-
-function convertTemperatureUnits(
-  dataSeries: DataSeries,
-  useFahrenheit: boolean,
-) {
-  for (const dataPoint of dataSeries) {
-    if (useFahrenheit) {
-      if (dataPoint.units === "\u00b0F") continue;
-      dataPoint.units = "\u00b0F";
-      for (const key of Object.keys(dataPoint)) {
-        if (key === "units" || key === "name") continue;
-        const val = dataPoint[key];
-        if (typeof val === "number") {
-          dataPoint[key] = convertCelsiusToFahrenheit(val)!;
-        }
-      }
-    } else {
-      if (dataPoint.units === Units.temperature) continue;
-      dataPoint.units = Units.temperature;
-      for (const key of Object.keys(dataPoint)) {
-        if (key === "units" || key === "name") continue;
-        const val = dataPoint[key];
-        if (typeof val === "number") {
-          dataPoint[key] = convertFahrenheitToCelsius(val)!;
-        }
-      }
-    }
-  }
 }

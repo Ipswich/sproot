@@ -56,10 +56,10 @@ export class ChartData {
     const res: Record<number, DataSeries> = {};
 
     res[0] = dataSeries.slice();
-    res[6] = dataSeries.slice(Math.floor(-360 / interval));
-    res[12] = dataSeries.slice(Math.floor(-720 / interval));
-    res[24] = dataSeries.slice(Math.floor(-1440 / interval));
-    res[72] = dataSeries.slice(Math.floor(-4320 / interval));
+    res[6] = dataSeries.slice(Math.min(-1, Math.floor(-360 / interval)));
+    res[12] = dataSeries.slice(Math.min(-1, Math.floor(-720 / interval)));
+    res[24] = dataSeries.slice(Math.min(-1, Math.floor(-1440 / interval)));
+    res[72] = dataSeries.slice(Math.min(-1, Math.floor(-4320 / interval)));
     return res;
   }
 
