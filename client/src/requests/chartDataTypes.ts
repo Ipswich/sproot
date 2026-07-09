@@ -1,6 +1,5 @@
 import {
   convertCelsiusToFahrenheit,
-  convertFahrenheitToCelsius,
   formatDateForChart,
 } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { Units } from "@sproot/sproot-common/src/sensors/ReadingType";
@@ -74,19 +73,23 @@ export function convertTemperatureSeries(
   dataSeries: DataSeries,
   useFahrenheit: boolean,
 ): DataSeries {
+  if (!useFahrenheit) {
+    return dataSeries.map((dataPoint) => ({
+      ...dataPoint,
+      units: Units.temperature,
+    }));
+  }
+
   return dataSeries.map((dataPoint) => {
     const convertedPoint: DataPoint = { ...dataPoint };
-    const targetUnits = useFahrenheit ? "\u00b0F" : Units.temperature;
-    convertedPoint.units = targetUnits;
+    convertedPoint.units = "\u00b0F";
 
     for (const [key, value] of Object.entries(dataPoint)) {
       if (key === "name" || key === "units" || typeof value !== "number") {
         continue;
       }
 
-      convertedPoint[key] = useFahrenheit
-        ? (convertCelsiusToFahrenheit(value) ?? value)
-        : (convertFahrenheitToCelsius(value) ?? value);
+      convertedPoint[key] = convertCelsiusToFahrenheit(value) ?? value;
     }
 
     return convertedPoint;

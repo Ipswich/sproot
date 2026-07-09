@@ -85,7 +85,8 @@ export default function ReadingsChartContainer({
         const deviceZoneId = sensor.deviceZoneId ?? -1;
         return (
           !toggledDeviceZones.includes(String(deviceZoneId)) &&
-          !toggledSensors.includes(String(sensor.id))
+          !toggledSensors.includes(String(sensor.id)) &&
+          !toggledSensors.includes(sensor.name)
         );
       }),
     [sensors, toggledDeviceZones, toggledSensors],
@@ -101,7 +102,6 @@ export default function ReadingsChartContainer({
       downsample,
       aggregate,
       percentile,
-      useAlternateUnits,
       ...ids,
     ],
     queryFn: async () => {
@@ -162,13 +162,8 @@ export default function ReadingsChartContainer({
     ),
   );
 
-  if (sensorsQuery.isLoading || (dataQuery.isLoading && !dataQuery.data)) {
-    return (
-      <Box>
-        <Text>Loading chart data...</Text>
-      </Box>
-    );
-  }
+  const isInitialLoading =
+    sensorsQuery.isLoading || (dataQuery.isLoading && !dataQuery.data);
 
   if (dataQuery.error) {
     return (
@@ -195,8 +190,10 @@ export default function ReadingsChartContainer({
       dataSeries={displayDataSeries}
       chartSeries={transformed?.chartSeries ?? []}
       readingType={readingType}
-      chartRendering={dataQuery.isFetching && !dataQuery.data}
-      showEmptyState={!hasVisibleValues}
+      chartRendering={
+        isInitialLoading || (dataQuery.isFetching && !dataQuery.data)
+      }
+      showEmptyState={!isInitialLoading && !hasVisibleValues}
       showReferenceLines={showReferenceLines}
       onToggleReferenceLines={setShowReferenceLines}
       {...(displayDataSeries[0]?.units

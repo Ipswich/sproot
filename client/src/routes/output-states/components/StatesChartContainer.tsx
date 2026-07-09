@@ -140,13 +140,8 @@ export default function StatesChartContainer({
     ),
   );
 
-  if (outputsQuery.isLoading || (dataQuery.isLoading && !dataQuery.data)) {
-    return (
-      <Box>
-        <Text>Loading chart data...</Text>
-      </Box>
-    );
-  }
+  const isInitialLoading =
+    outputsQuery.isLoading || (dataQuery.isLoading && !dataQuery.data);
 
   if (dataQuery.error) {
     return (
@@ -173,8 +168,10 @@ export default function StatesChartContainer({
       <StatesChart
         dataSeries={displayDataSeries}
         chartSeries={transformed?.chartSeries ?? []}
-        chartRendering={dataQuery.isFetching && !dataQuery.data}
-        showEmptyState={!hasVisibleValues}
+        chartRendering={
+          isInitialLoading || (dataQuery.isFetching && !dataQuery.data)
+        }
+        showEmptyState={!isInitialLoading && !hasVisibleValues}
         valueSuffix={valueSuffix ?? transformed?.units ?? "%"}
       />
     </Box>

@@ -1,8 +1,7 @@
 import { LineChart } from "@mantine/charts";
-import { Box, Group, LoadingOverlay, Paper, Switch, Text } from "@mantine/core";
-import { DataSeries, ChartSeries } from "../../../requests/chartDataTypes";
+import { Box, Button, Group, LoadingOverlay, Paper, Text } from "@mantine/core";
 import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
-import { ResponsiveContainer } from "recharts";
+import { ChartSeries, DataSeries } from "../../../requests/chartDataTypes";
 
 export interface ReadingsChartProps {
   dataSeries: DataSeries;
@@ -18,7 +17,6 @@ export interface ReadingsChartProps {
 export default function ReadingsChart({
   dataSeries,
   chartSeries,
-  readingType,
   chartRendering,
   showEmptyState,
   showReferenceLines,
@@ -26,9 +24,9 @@ export default function ReadingsChart({
   units,
 }: ReadingsChartProps) {
   const stats = getSeriesStats(dataSeries);
-  const data = dataSeries.map((data) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { units: _, ...rest } = data;
+  const data = dataSeries.map((dataPoint) => {
+    const rest = { ...dataPoint };
+    delete rest.units;
     return rest;
   });
 
@@ -51,94 +49,90 @@ export default function ReadingsChart({
             borderRadius: 8,
           }}
         >
-          <Text c="dimmed">No data found for this interval</Text>
+          {!chartRendering ? (
+            <Text c="dimmed">No data found for this interval</Text>
+          ) : null}
         </div>
       ) : (
         <Box>
-          <Group justify="space-between" mb="xs">
-            <Text size="sm" fw={500}>
-              {readingType}
-            </Text>
-            {onToggleReferenceLines && (
-              <Switch
-                size="xs"
-                label={showReferenceLines ? "Hide stats" : "Show stats"}
-                checked={showReferenceLines}
-                onChange={(e) =>
-                  onToggleReferenceLines(e.currentTarget.checked)
-                }
-              />
-            )}
+          <Group justify="flex-end" mb="xs">
+            {onToggleReferenceLines ? (
+              <Button
+                size="compact-xs"
+                variant={showReferenceLines ? "light" : "subtle"}
+                onClick={() => onToggleReferenceLines(!showReferenceLines)}
+              >
+                {showReferenceLines ? "Hide Stats" : "Show Stats"}
+              </Button>
+            ) : null}
           </Group>
-          <ResponsiveContainer height="300">
-            <LineChart
-              tooltipProps={{
-                position: {},
-                content: ({ label, payload }) => (
-                  <ChartTooltip
-                    label={label}
-                    payload={
-                      (payload || []) as Record<
-                        string,
-                        { name: string; color: string; value: string }
-                      >[]
-                    }
-                    units={units || ""}
-                    readingType={readingType}
-                  />
-                ),
-              }}
-              mt={12}
-              ml={-28}
-              curveType="linear"
-              h={300}
-              dotProps={{ r: 0 }}
-              data={data}
-              withLegend={false}
-              withXAxis
-              withYAxis
-              tickLine="xy"
-              xAxisProps={{
-                dataKey: "name",
-                interval: "equidistantPreserveStart",
-              }}
-              yAxisProps={{
-                allowDataOverflow: true,
-                padding: { top: 5 },
-                type: "number",
-                domain: ["auto", "auto"],
-              }}
-              referenceLines={
-                showReferenceLines && stats
-                  ? [
-                      {
-                        y: stats.avg,
-                        label: `Average: ${formatDecimalReadingForDisplay(String(stats.avg))}${stats.units || units || ""}`,
-                        color: "red",
-                        ifOverflow: "extendDomain",
-                        labelPosition: "insideTopLeft",
-                      },
-                      {
-                        y: stats.min,
-                        label: `Min: ${formatDecimalReadingForDisplay(String(stats.min))}${stats.units || units || ""}`,
-                        color: "blue",
-                        ifOverflow: "extendDomain",
-                        labelPosition: "insideBottomLeft",
-                      },
-                      {
-                        y: stats.max,
-                        label: `Max: ${formatDecimalReadingForDisplay(String(stats.max))}${stats.units || units || ""}`,
-                        color: "green",
-                        ifOverflow: "extendDomain",
-                        labelPosition: "insideTopLeft",
-                      },
-                    ]
-                  : []
-              }
-              dataKey="name"
-              series={chartSeries ?? []}
-            ></LineChart>
-          </ResponsiveContainer>
+          <LineChart
+            tooltipProps={{
+              position: {},
+              content: ({ label, payload }) => (
+                <ChartTooltip
+                  label={label}
+                  payload={
+                    (payload || []) as Record<
+                      string,
+                      { name: string; color: string; value: string }
+                    >[]
+                  }
+                  units={units || ""}
+                />
+              ),
+            }}
+            mt={12}
+            ml={-28}
+            curveType="linear"
+            h={300}
+            data={data}
+            withLegend={false}
+            withDots
+            dotProps={{ r: 0, fillOpacity: 0, strokeOpacity: 0 }}
+            activeDotProps={{ r: 5, strokeWidth: 2 }}
+            withYAxis
+            tickLine="xy"
+            xAxisProps={{
+              dataKey: "name",
+              interval: "equidistantPreserveStart",
+            }}
+            yAxisProps={{
+              allowDataOverflow: true,
+              padding: { top: 5 },
+              type: "number",
+              domain: ["auto", "auto"],
+            }}
+            referenceLines={
+              showReferenceLines && stats
+                ? [
+                    {
+                      y: stats.avg,
+                      label: `Average: ${formatDecimalReadingForDisplay(String(stats.avg))}${stats.units || units || ""}`,
+                      color: "red",
+                      ifOverflow: "extendDomain",
+                      labelPosition: "insideTopLeft",
+                    },
+                    {
+                      y: stats.min,
+                      label: `Min: ${formatDecimalReadingForDisplay(String(stats.min))}${stats.units || units || ""}`,
+                      color: "blue",
+                      ifOverflow: "extendDomain",
+                      labelPosition: "insideBottomLeft",
+                    },
+                    {
+                      y: stats.max,
+                      label: `Max: ${formatDecimalReadingForDisplay(String(stats.max))}${stats.units || units || ""}`,
+                      color: "green",
+                      ifOverflow: "extendDomain",
+                      labelPosition: "insideTopLeft",
+                    },
+                  ]
+                : []
+            }
+            dataKey="name"
+            series={chartSeries}
+          />
         </Box>
       )}
     </Box>
@@ -151,16 +145,12 @@ interface ChartTooltipProps {
     | Record<string, { name: string; color: string; value: string }>[]
     | undefined;
   units: string;
-  readingType: string;
 }
 
-function ChartTooltip({
-  label,
-  payload,
-  units,
-  readingType: _readingType,
-}: ChartTooltipProps) {
-  if (!payload) return null;
+function ChartTooltip({ label, payload, units }: ChartTooltipProps) {
+  if (!payload) {
+    return null;
+  }
 
   return (
     <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
@@ -168,8 +158,13 @@ function ChartTooltip({
         {label}
       </Text>
       {payload.map((item) => (
-        <Text key={String(item["name"])} c={item["color"]!} fz="sm">
-          {String(item["name"])}: {String(item["value"] + String(units))}
+        <Text
+          key={String(item["name"])}
+          c={String(item["color"] ?? "")}
+          fz="sm"
+        >
+          {String(item["name"])}: {String(item["value"])}
+          {units}
         </Text>
       ))}
     </Paper>

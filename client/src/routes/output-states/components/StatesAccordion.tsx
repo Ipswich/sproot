@@ -40,13 +40,8 @@ export default function StatesAccordion({
 
   useEffect(() => {
     updateOutputOrderAsync();
-
-    const interval = setInterval(() => {
-      updateOutputOrderAsync();
-    }, 60000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [outputs, deviceZoneId]);
 
   const sortableItems = orderedOutputs
     .filter((output) => output.parentOutputId == null)

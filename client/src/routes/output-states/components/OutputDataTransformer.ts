@@ -79,7 +79,8 @@ export const OutputDataTransformer = {
         const output = outputById.get(responseEntry.id);
         const key = output?.name || responseEntry.name;
         const stats = responseEntry.statistics[aggregate];
-        const value = stats?.[timeIndex];
+        const rawValue = stats?.[timeIndex];
+        const value = normalizeOutputValue(rawValue, aggregate);
 
         if (value != null) {
           point[key] = value;
@@ -108,3 +109,18 @@ export const OutputDataTransformer = {
     };
   },
 };
+
+function normalizeOutputValue(
+  value: number | null | undefined,
+  aggregate: Aggregate,
+): number | null | undefined {
+  if (value == null) {
+    return value;
+  }
+
+  if (aggregate === "percentile" || aggregate === "stddev") {
+    return Number(value.toFixed(3));
+  }
+
+  return Math.round(value);
+}

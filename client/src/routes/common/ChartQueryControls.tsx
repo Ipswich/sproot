@@ -1,11 +1,13 @@
 import {
+  ComboboxItem,
   NumberInput,
   SegmentedControl,
   Select,
   SimpleGrid,
   Stack,
-  Switch,
+  Text,
 } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
 import type { Aggregate } from "../../requests/queryTypes";
 import {
   CHART_AGGREGATE_OPTIONS,
@@ -42,15 +44,96 @@ export default function ChartQueryControls({
   percentile,
   onPercentileChange,
 }: ChartQueryControlsProps) {
+  const knownDownsampleValues = useMemo(
+    () =>
+      new Set<string>(CHART_DOWNSAMPLE_OPTIONS.map((option) => option.value)),
+    [],
+  );
+  const usesCustomDownsample =
+    downsample !== "auto" && !knownDownsampleValues.has(downsample);
+  const [customDownsampleAmount, setCustomDownsampleAmount] = useState(15);
+  const [customDownsampleUnit, setCustomDownsampleUnit] = useState<
+    "minutes" | "hours" | "days"
+  >("minutes");
+  const [showCustomResolutionEditor, setShowCustomResolutionEditor] =
+    useState(usesCustomDownsample);
+
+  useEffect(() => {
+    setShowCustomResolutionEditor(usesCustomDownsample);
+  }, [usesCustomDownsample]);
+
+  useEffect(() => {
+    if (!usesCustomDownsample) {
+      return;
+    }
+
+    const match = downsample
+      .trim()
+      .toLowerCase()
+      .match(/^(\d+)\s*(minute(?:s)?|hour(?:s)?|day(?:s)?|m|h|d)$/);
+
+    if (!match) {
+      return;
+    }
+
+    setCustomDownsampleAmount(Number(match[1]));
+    const unit = match[2];
+    if (unit?.startsWith("hour") || unit === "h") {
+      setCustomDownsampleUnit("hours");
+      return;
+    }
+    if (unit?.startsWith("day") || unit === "d") {
+      setCustomDownsampleUnit("days");
+      return;
+    }
+    setCustomDownsampleUnit("minutes");
+  }, [downsample, usesCustomDownsample]);
+
+  const selectedPresetOrCustom = useCustomRange
+    ? "custom-range"
+    : chartInterval;
+  const resolutionOptions: ComboboxItem[] = [
+    ...CHART_DOWNSAMPLE_OPTIONS,
+    { value: "custom-resolution", label: "Custom..." },
+  ];
+
+  const selectedResolutionValue = usesCustomDownsample
+    ? "custom-resolution"
+    : downsample;
+
+  function emitCustomDownsample(
+    amount: number,
+    unit: "minutes" | "hours" | "days",
+  ) {
+    const nextValue = `${amount} ${unit}`;
+    onDownsampleChange(nextValue);
+  }
+
   return (
     <Stack gap="sm" mt="sm">
-      <Switch
-        checked={useCustomRange}
-        onChange={(event) =>
-          onUseCustomRangeChange(event.currentTarget.checked)
-        }
-        label="Custom range"
-        size="sm"
+      <SegmentedControl
+        value={selectedPresetOrCustom}
+        onChange={(value) => {
+          if (value === "custom-range") {
+            onUseCustomRangeChange(true);
+            return;
+          }
+
+          onUseCustomRangeChange(false);
+          onChartIntervalChange(value);
+        }}
+        color="blue"
+        fullWidth
+        size="xs"
+        radius="md"
+        data={[
+          { label: "6 Hours", value: "6" },
+          { label: "12 Hours", value: "12" },
+          { label: "1 Day", value: "24" },
+          { label: "3 Days", value: "72" },
+          { label: "1 Week", value: "0" },
+          { label: "Custom", value: "custom-range" },
+        ]}
       />
 
       {useCustomRange ? (
@@ -71,29 +154,15 @@ export default function ChartQueryControls({
             onCustomRangeChange(null);
           }}
         />
-      ) : (
-        <SegmentedControl
-          value={chartInterval}
-          onChange={onChartIntervalChange}
-          color="blue"
-          fullWidth
-          size="xs"
-          radius="md"
-          data={[
-            { label: "6 Hours", value: "6" },
-            { label: "12 Hours", value: "12" },
-            { label: "1 Day", value: "24" },
-            { label: "3 Days", value: "72" },
-            { label: "1 Week", value: "0" },
-          ]}
-        />
-      )}
+      ) : null}
 
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+      <SimpleGrid cols={{ base: 2 }} spacing="sm">
         <Select
           label="Statistic"
           size="xs"
           allowDeselect={false}
+          searchable={false}
+          styles={{ input: { cursor: "pointer", caretColor: "transparent" } }}
           value={aggregate}
           data={CHART_AGGREGATE_OPTIONS}
           onChange={(value) => {
@@ -106,15 +175,74 @@ export default function ChartQueryControls({
           label="Resolution"
           size="xs"
           allowDeselect={false}
-          value={downsample}
-          data={CHART_DOWNSAMPLE_OPTIONS}
+          searchable={false}
+          styles={{ input: { cursor: "pointer", caretColor: "transparent" } }}
+          value={selectedResolutionValue}
+          data={resolutionOptions}
           onChange={(value) => {
             if (value) {
+              if (value === "custom-resolution") {
+                setShowCustomResolutionEditor(true);
+                emitCustomDownsample(
+                  customDownsampleAmount,
+                  customDownsampleUnit,
+                );
+                return;
+              }
+
+              setShowCustomResolutionEditor(false);
               onDownsampleChange(value);
             }
           }}
         />
       </SimpleGrid>
+
+      {showCustomResolutionEditor ? (
+        <SimpleGrid cols={{ base: 2 }} spacing="sm">
+          <NumberInput
+            label="Custom resolution"
+            size="xs"
+            min={1}
+            value={customDownsampleAmount}
+            onChange={(value) => {
+              if (typeof value === "number" && Number.isFinite(value)) {
+                setCustomDownsampleAmount(value);
+                emitCustomDownsample(value, customDownsampleUnit);
+              }
+            }}
+          />
+          <Select
+            label="Unit"
+            size="xs"
+            searchable={false}
+            allowDeselect={false}
+            styles={{ input: { cursor: "pointer", caretColor: "transparent" } }}
+            value={customDownsampleUnit}
+            data={[
+              { value: "minutes", label: "Minutes" },
+              { value: "hours", label: "Hours" },
+              { value: "days", label: "Days" },
+            ]}
+            onChange={(value) => {
+              if (
+                value === "minutes" ||
+                value === "hours" ||
+                value === "days"
+              ) {
+                setCustomDownsampleUnit(value);
+                emitCustomDownsample(customDownsampleAmount, value);
+              }
+            }}
+          />
+        </SimpleGrid>
+      ) : null}
+
+      {showCustomResolutionEditor ? (
+        <Text size="xs" c="dimmed">
+          Buckets are sent directly to the server, for example "15 minutes" or
+          "2 hours".
+        </Text>
+      ) : null}
 
       {aggregate === "percentile" ? (
         <NumberInput

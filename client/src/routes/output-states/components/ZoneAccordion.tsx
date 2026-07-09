@@ -63,8 +63,8 @@ function ZoneAccordion({
     const deviceZones: SDBDeviceZone[] = [];
     const outputsByDeviceZone: Record<number, IOutputBase[]> = { [-1]: [] };
 
-    const deviceZonesData = (await getDeviceZonesQuery.refetch()).data;
-    const outputsData = (await getOutputsQuery.refetch()).data;
+    const deviceZonesData = getDeviceZonesQuery.data;
+    const outputsData = getOutputsQuery.data;
 
     deviceZonesData?.forEach((zone: SDBDeviceZone) => {
       deviceZones.push(zone);
@@ -126,13 +126,8 @@ function ZoneAccordion({
 
   useEffect(() => {
     updateDataAsync();
-
-    const interval = setInterval(() => {
-      updateDataAsync();
-    }, 60000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(deviceZoneToggleStates)]);
+  }, [getDeviceZonesQuery.data, getOutputsQuery.data]);
 
   const sortableItems = deviceZones
     .map((zone) => {

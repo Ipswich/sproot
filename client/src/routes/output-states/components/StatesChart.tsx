@@ -1,7 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
 import { DataSeries, ChartSeries } from "../../../requests/chartDataTypes";
-import { ResponsiveContainer } from "recharts";
 
 export interface StatesChartProps {
   dataSeries: DataSeries;
@@ -43,49 +42,51 @@ export default function StatesChart({
             borderRadius: 8,
           }}
         >
-          <Text c="dimmed">No data found for this interval</Text>
+          {!chartRendering ? (
+            <Text c="dimmed">No data found for this interval</Text>
+          ) : null}
         </div>
       ) : (
-        <ResponsiveContainer height="300">
-          <LineChart
-            tooltipProps={{
-              position: {},
-              content: ({ label, payload }) => (
-                <ChartTooltip
-                  label={label}
-                  payload={
-                    (payload || []) as Record<
-                      string,
-                      { name: string; color: string; value: string }
-                    >[]
-                  }
-                  valueSuffix={valueSuffix}
-                />
-              ),
-            }}
-            mt={12}
-            ml={-28}
-            curveType="linear"
-            h={300}
-            dotProps={{ r: 0 }}
-            data={data}
-            withLegend={false}
-            withXAxis
-            withYAxis
-            tickLine="xy"
-            xAxisProps={{
-              dataKey: "name",
-              interval: "equidistantPreserveStart",
-            }}
-            yAxisProps={{
-              padding: { top: 5 },
-              type: "number",
-              domain: [0, 100],
-            }}
-            dataKey="name"
-            series={chartSeries ?? []}
-          />
-        </ResponsiveContainer>
+        <LineChart
+          tooltipProps={{
+            position: {},
+            content: ({ label, payload }) => (
+              <ChartTooltip
+                label={label}
+                payload={
+                  (payload || []) as Record<
+                    string,
+                    { name: string; color: string; value: string }
+                  >[]
+                }
+                valueSuffix={valueSuffix}
+              />
+            ),
+          }}
+          mt={12}
+          ml={-28}
+          curveType="linear"
+          h={300}
+          withDots
+          dotProps={{ r: 0, fillOpacity: 0, strokeOpacity: 0 }}
+          activeDotProps={{ r: 5, strokeWidth: 2 }}
+          data={data}
+          withLegend={false}
+          withXAxis
+          withYAxis
+          tickLine="xy"
+          xAxisProps={{
+            dataKey: "name",
+            interval: "equidistantPreserveStart",
+          }}
+          yAxisProps={{
+            padding: { top: 5 },
+            type: "number",
+            domain: [0, 100],
+          }}
+          dataKey="name"
+          series={chartSeries ?? []}
+        />
       )}
     </Box>
   );
