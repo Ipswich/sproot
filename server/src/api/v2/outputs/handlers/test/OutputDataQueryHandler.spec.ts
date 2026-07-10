@@ -39,7 +39,15 @@ describe("OutputDataQueryHandler", () => {
   it("should return 200 with data when DB query succeeds", async () => {
     const mockDb = {
       queryOutputDataAsync: sinon.stub().resolves({
-        data: { 1: { values: [{ time: "2024-01-01T00:00:00.000Z", avg: 100 }] } },
+        data: [
+          {
+            id: 1,
+            name: "relay",
+            units: "percent",
+            statistics: { avg: [100], min: [0], max: [100] },
+          },
+        ],
+        xAxis: { field: "time", values: ["2024-01-01T00:00:00.000Z"] },
       }),
     } as unknown as SprootDB;
 
@@ -54,7 +62,7 @@ describe("OutputDataQueryHandler", () => {
     const res = createMockResponse();
     const result = await outputDataQueryHandlerAsync(req, res);
     assert.equal(result.statusCode, 200);
-    assert.property((result as any).content.data, "1");
+    assert.isTrue((result as any).content.data.some((d: any) => d.id === 1));
   });
 
   it("should return 500 when DB query throws", async () => {
@@ -78,7 +86,7 @@ describe("OutputDataQueryHandler", () => {
   it("should include nextCursor in response when present", async () => {
     const mockDb = {
       queryOutputDataAsync: sinon.stub().resolves({
-        data: {},
+        data: [],
         nextCursor: Buffer.from("2024-01-01T01:00:00.000Z").toString("base64"),
       }),
     } as unknown as SprootDB;

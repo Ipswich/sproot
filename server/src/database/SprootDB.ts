@@ -1210,7 +1210,7 @@ export class SprootDB implements ISprootDB {
     const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
 
     let nextCursor: string | undefined;
-    if (truncated.length > 0) {
+    if (hasMoreRows && truncated.length > 0) {
       const lastRow = truncated[truncated.length - 1]!;
       const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
@@ -1262,7 +1262,7 @@ export class SprootDB implements ISprootDB {
     const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
 
     let nextCursor: string | undefined;
-    if (truncated.length > 0) {
+    if (hasMoreRows && truncated.length > 0) {
       const lastRow = truncated[truncated.length - 1]!;
       const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
@@ -1295,7 +1295,7 @@ export class SprootDB implements ISprootDB {
     const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
 
     let nextCursor: string | undefined;
-    if (truncated.length > 0) {
+    if (hasMoreRows && truncated.length > 0) {
       const lastRow = truncated[truncated.length - 1]!;
       const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
@@ -1327,7 +1327,7 @@ export class SprootDB implements ISprootDB {
     const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
 
     let nextCursor: string | undefined;
-    if (truncated.length > 0) {
+    if (hasMoreRows && truncated.length > 0) {
       const lastRow = truncated[truncated.length - 1]!;
       const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
       nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
@@ -1354,7 +1354,7 @@ export class SprootDB implements ISprootDB {
     const ids = request.ids;
 
     const timeFilter = cursor
-      ? this.#connection.raw('"bucket" > ?', [cursor])
+      ? this.#connection.raw('"bucket" > ? AND "bucket" <= ?', [cursor, end])
       : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
 
     const idFilter =
@@ -1383,7 +1383,7 @@ export class SprootDB implements ISprootDB {
     const ids = (request as any).ids;
 
     const timeFilter = cursor
-      ? this.#connection.raw('"logTime" > ?', [cursor])
+      ? this.#connection.raw('"logTime" > ? AND "logTime" <= ?', [cursor, end])
       : this.#connection.raw('"logTime" BETWEEN ? AND ?', [start, end]);
 
     const idFilter =

@@ -18,15 +18,12 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isObject(content.data);
-    assert.isObject(content.data[1]);
-    assert.exists(content.data[1]["temperature"]);
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isAbove(content.data[1]["temperature"].values.length, 0);
+    assert.isArray(content.data);
+    assert.isAbove(content.xAxis.values.length, 0);
     if (content.nextCursor) {
       assert.isString(content.nextCursor);
     }
-    assert.property(content.data[1]["temperature"].values[0], "time");
+    assert.isArray(content.xAxis.values);
   });
 
   it("GET /sensor-data/query respects custom limit parameter", async () => {
@@ -44,7 +41,7 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.equal(content.data[2]["temperature"].values.length, 5);
+    assert.equal(content.xAxis.values.length, 5);
     assert.exists(content.nextCursor);
     assert.isString(content.nextCursor);
   });
@@ -66,7 +63,7 @@ describe("DataQuery API - Sensor Pagination", function () {
     const content = response.body["content"];
     assert.isString(content.nextCursor);
     assert.isAbove(content.nextCursor.length, 0);
-    assert.equal(content.data[3]["moisture"].values.length, 10);
+    assert.equal(content.xAxis.values.length, 10);
   });
 
   it("GET /sensor-data/query with valid cursor returns next page", async () => {
@@ -85,9 +82,7 @@ describe("DataQuery API - Sensor Pagination", function () {
 
     const firstContent = firstResponse.body["content"];
     const nextCursor = firstContent.nextCursor as string;
-    const lastTimeFirstPage =
-      firstContent.data[4]["voltage"].values[firstContent.data[4]["voltage"].values.length - 1]
-        .time;
+    const lastTimeFirstPage = firstContent.xAxis.values[firstContent.xAxis.values.length - 1];
 
     const secondResponse = await request(server)
       .post("/api/v2/sensors/data")
@@ -104,10 +99,10 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const secondContent = secondResponse.body["content"];
-    assert.isArray(secondContent.data[4]["voltage"].values);
-    assert.isAbove(secondContent.data[4]["voltage"].values.length, 0);
+    assert.isArray(secondContent.xAxis.values);
+    assert.isAbove(secondContent.xAxis.values.length, 0);
     assert.isAbove(
-      new Date(secondContent.data[4]["voltage"].values[0].time).getTime(),
+      new Date(secondContent.xAxis.values[0]).getTime(),
       new Date(lastTimeFirstPage).getTime(),
     );
   });
@@ -146,17 +141,9 @@ describe("DataQuery API - Sensor Pagination", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.exists(content.data[1]["temperature"]);
-    assert.exists(content.data[2]["temperature"]);
-    assert.exists(content.data[3]["moisture"]);
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isArray(content.data[2]["temperature"].values);
-    assert.isArray(content.data[3]["moisture"].values);
 
     const totalValues =
-      content.data[1]["temperature"].values.length +
-      content.data[2]["temperature"].values.length +
-      content.data[3]["moisture"].values.length;
+      content.xAxis.values.length + content.xAxis.values.length + content.xAxis.values.length;
     assert.isAbove(totalValues, 0);
   });
 });
@@ -178,10 +165,14 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isAbove(content.data[1]["temperature"].values.length, 0);
-    assert.property(content.data[1]["temperature"].values[0], "min");
-    assert.isNumber(content.data[1]["temperature"].values[0].min);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 1 && d.name === "temperature")?.statistics,
+      "min",
+    );
+    assert.isNumber(
+      content.data.find((d: any) => d.id === 1 && d.name === "temperature")?.statistics.min[0],
+    );
   });
 
   it("GET /sensors/data returns sensor data with max aggregate", async () => {
@@ -198,9 +189,11 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[2]["temperature"].values);
-    assert.isAbove(content.data[2]["temperature"].values.length, 0);
-    assert.property(content.data[2]["temperature"].values[0], "max");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 2 && d.name === "temperature")?.statistics,
+      "max",
+    );
   });
 
   it("GET /sensors/data returns sensor data with avg aggregate", async () => {
@@ -218,9 +211,11 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[3]["moisture"].values);
-    assert.isAbove(content.data[3]["moisture"].values.length, 0);
-    assert.property(content.data[3]["moisture"].values[0], "avg");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 3 && d.name === "moisture")?.statistics,
+      "avg",
+    );
   });
 
   it("GET /sensors/data returns sensor data with count aggregate", async () => {
@@ -238,10 +233,14 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[4]["voltage"].values);
-    assert.isAbove(content.data[4]["voltage"].values.length, 0);
-    assert.property(content.data[4]["voltage"].values[0], "count");
-    assert.isNumber(content.data[4]["voltage"].values[0].count);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 4 && d.name === "voltage")?.statistics,
+      "count",
+    );
+    assert.isNumber(
+      content.data.find((d: any) => d.id === 4 && d.name === "voltage")?.statistics.count[0],
+    );
   });
 
   it("GET /sensors/data returns sensor data with sum aggregate", async () => {
@@ -258,9 +257,11 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isAbove(content.data[1]["temperature"].values.length, 0);
-    assert.property(content.data[1]["temperature"].values[0], "sum");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 1 && d.name === "temperature")?.statistics,
+      "sum",
+    );
   });
 
   it("GET /sensors/data returns sensor data with stddev aggregate", async () => {
@@ -277,9 +278,11 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[2]["temperature"].values);
-    assert.isAbove(content.data[2]["temperature"].values.length, 0);
-    assert.property(content.data[2]["temperature"].values[0], "stddev");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 2 && d.name === "temperature")?.statistics,
+      "stddev",
+    );
   });
 
   it("GET /sensors/data returns sensor data with percentile aggregate", async () => {
@@ -298,9 +301,11 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[3]["moisture"].values);
-    assert.isAbove(content.data[3]["moisture"].values.length, 0);
-    assert.property(content.data[3]["moisture"].values[0], "percentile");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 3 && d.name === "moisture")?.statistics,
+      "percentile",
+    );
   });
 
   it("GET /sensors/data returns sensor data with first aggregate", async () => {
@@ -318,9 +323,11 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[4]["voltage"].values);
-    assert.isAbove(content.data[4]["voltage"].values.length, 0);
-    assert.property(content.data[4]["voltage"].values[0], "first");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 4 && d.name === "voltage")?.statistics,
+      "first",
+    );
   });
 
   it("GET /sensors/data returns sensor data with last aggregate", async () => {
@@ -337,9 +344,11 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isAbove(content.data[1]["temperature"].values.length, 0);
-    assert.property(content.data[1]["temperature"].values[0], "last");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 1 && d.name === "temperature")?.statistics,
+      "last",
+    );
   });
 
   it("GET /sensors/data returns sensor data with multiple aggregates", async () => {
@@ -356,12 +365,23 @@ describe("DataQuery API - Sensor Aggregates", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[2]["temperature"].values);
-    assert.isAbove(content.data[2]["temperature"].values.length, 0);
-    assert.property(content.data[2]["temperature"].values[0], "min");
-    assert.property(content.data[2]["temperature"].values[0], "max");
-    assert.property(content.data[2]["temperature"].values[0], "avg");
-    assert.property(content.data[2]["temperature"].values[0], "count");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 2 && d.name === "temperature")?.statistics,
+      "min",
+    );
+    assert.property(
+      content.data.find((d: any) => d.id === 2 && d.name === "temperature")?.statistics,
+      "max",
+    );
+    assert.property(
+      content.data.find((d: any) => d.id === 2 && d.name === "temperature")?.statistics,
+      "avg",
+    );
+    assert.property(
+      content.data.find((d: any) => d.id === 2 && d.name === "temperature")?.statistics,
+      "count",
+    );
   });
 });
 
@@ -382,10 +402,9 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isAbove(content.data[1]["temperature"].values.length, 0);
-    assert.property(content.data[1]["temperature"].values[0], "time");
-    assert.isAtMost(content.data[1]["temperature"].values.length, 20);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isArray(content.xAxis.values);
+    assert.isAtMost(content.xAxis.values.length, 20);
   });
 
   it("GET /sensors/data with downsample 1h returns downsampled results", async () => {
@@ -402,9 +421,8 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[2]["temperature"].values);
-    assert.isAbove(content.data[2]["temperature"].values.length, 0);
-    assert.isBelow(content.data[2]["temperature"].values.length, 8);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isBelow(content.xAxis.values.length, 8);
   });
 
   it("GET /sensors/data with downsample 1h and aggregates returns both", async () => {
@@ -422,9 +440,8 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[3]["moisture"].values);
-    assert.isAbove(content.data[3]["moisture"].values.length, 0);
-    assert.isAtMost(content.data[3]["moisture"].values.length, 25);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isAtMost(content.xAxis.values.length, 25);
   });
 
   it("GET /sensors/data with downsample 1d returns downsampled results", async () => {
@@ -441,9 +458,8 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isAbove(content.data[1]["temperature"].values.length, 0);
-    assert.isAtMost(content.data[1]["temperature"].values.length, 3);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isAtMost(content.xAxis.values.length, 3);
   });
 
   it("GET /sensors/data with downsample and aggregates returns both", async () => {
@@ -462,12 +478,20 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[4]["voltage"].values);
-    assert.isAbove(content.data[4]["voltage"].values.length, 0);
-    assert.property(content.data[4]["voltage"].values[0], "min");
-    assert.property(content.data[4]["voltage"].values[0], "max");
-    assert.property(content.data[4]["voltage"].values[0], "avg");
-    assert.isBelow(content.data[4]["voltage"].values.length, 18);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.property(
+      content.data.find((d: any) => d.id === 4 && d.name === "voltage")?.statistics,
+      "min",
+    );
+    assert.property(
+      content.data.find((d: any) => d.id === 4 && d.name === "voltage")?.statistics,
+      "max",
+    );
+    assert.property(
+      content.data.find((d: any) => d.id === 4 && d.name === "voltage")?.statistics,
+      "avg",
+    );
+    assert.isBelow(content.xAxis.values.length, 18);
   });
 
   it("GET /sensors/data with timeRange filter returns filtered results", async () => {
@@ -483,15 +507,14 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isAbove(content.data[1]["temperature"].values.length, 0);
-    assert.isAtMost(content.data[1]["temperature"].values.length, 4);
-    for (const value of content.data[1]["temperature"].values) {
-      const valueTime = new Date(value.time).getTime();
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isAtMost(content.xAxis.values.length, 4);
+    for (const valueTime of content.xAxis.values) {
+      const timeMs = new Date(valueTime).getTime();
       const rangeStart = new Date("2024-01-01T12:00:00.000Z").getTime();
       const rangeEnd = new Date("2024-01-01T13:00:00.000Z").getTime();
-      assert.isAtLeast(valueTime, rangeStart);
-      assert.isAtMost(valueTime, rangeEnd);
+      assert.isAtLeast(timeMs, rangeStart);
+      assert.isAtMost(timeMs, rangeEnd);
     }
   });
 
@@ -508,7 +531,7 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.deepEqual(content.data, {});
+    assert.deepEqual(content.data, []);
   });
 
   it("GET /sensors/data with empty readingTypes behaves like no filter", async () => {
@@ -524,8 +547,8 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.property(content.data[1], "temperature");
-    assert.property(content.data[1], "humidity");
+    assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "temperature"));
+    assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "humidity"));
   });
 
   it("GET /sensors/data with no readingTypes returns all seeded metrics", async () => {
@@ -540,9 +563,9 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.property(content.data[1], "temperature");
-    assert.property(content.data[1], "humidity");
-    assert.property(content.data[1], "pressure");
+    assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "temperature"));
+    assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "humidity"));
+    assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "pressure"));
   });
 
   it("GET /sensors/data with limit exceeding max returns 400", async () => {
@@ -639,10 +662,12 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[4]["voltage"].values);
-    assert.isAbove(content.data[4]["voltage"].values.length, 0);
-    assert.isAtMost(content.data[4]["voltage"].values.length, 12);
-    assert.property(content.data[4]["voltage"].values[0], "count");
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isAtMost(content.xAxis.values.length, 12);
+    assert.property(
+      content.data.find((d: any) => d.id === 4 && d.name === "voltage")?.statistics,
+      "count",
+    );
   });
 
   it("GET /sensors/data with downsample 1h and multiple reading types", async () => {
@@ -660,12 +685,16 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1]["temperature"].values);
-    assert.isArray(content.data[2]["temperature"].values);
-    assert.isBelow(content.data[1]["temperature"].values.length, 8);
-    assert.isBelow(content.data[2]["temperature"].values.length, 8);
-    assert.property(content.data[1]["temperature"].values[0], "avg");
-    assert.property(content.data[2]["temperature"].values[0], "avg");
+    assert.isBelow(content.xAxis.values.length, 8);
+    assert.isBelow(content.xAxis.values.length, 8);
+    assert.property(
+      content.data.find((d: any) => d.id === 1 && d.name === "temperature")?.statistics,
+      "avg",
+    );
+    assert.property(
+      content.data.find((d: any) => d.id === 2 && d.name === "temperature")?.statistics,
+      "avg",
+    );
   });
 
   it("GET /sensors/data cursor pagination works with downsample", async () => {
@@ -684,10 +713,7 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
 
     const firstContent = firstResponse.body["content"];
     const nextCursor = firstContent.nextCursor as string;
-    const lastTimeFirstPage =
-      firstContent.data[1]["temperature"].values[
-        firstContent.data[1]["temperature"].values.length - 1
-      ].time;
+    const lastTimeFirstPage = firstContent.xAxis.values[firstContent.xAxis.values.length - 1];
 
     const secondResponse = await request(server)
       .post("/api/v2/sensors/data")
@@ -704,10 +730,10 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
       .expect(200);
 
     const secondContent = secondResponse.body["content"];
-    assert.isArray(secondContent.data[1]["temperature"].values);
-    assert.isAbove(secondContent.data[1]["temperature"].values.length, 0);
+    assert.isArray(secondContent.xAxis.values);
+    assert.isAbove(secondContent.xAxis.values.length, 0);
     assert.isAtLeast(
-      new Date(secondContent.data[1]["temperature"].values[0].time).getTime(),
+      new Date(secondContent.xAxis.values[0]).getTime(),
       new Date(lastTimeFirstPage).getTime(),
     );
   });
@@ -727,9 +753,8 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
         .expect(200);
 
       const content = response.body["content"];
-      assert.isArray(content.data[1]["temperature"].values);
-      assert.isAbove(content.data[1]["temperature"].values.length, 0);
-      assert.property(content.data[1]["temperature"].values[0], "time");
+      assert.isAbove(content.xAxis.values.length, 0);
+      assert.isArray(content.xAxis.values);
     });
 
     it("GET /sensors/data with downsample 15 minutes returns raw-path results", async () => {
@@ -746,9 +771,8 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
         .expect(200);
 
       const content = response.body["content"];
-      assert.isArray(content.data[1]["temperature"].values);
-      assert.isAbove(content.data[1]["temperature"].values.length, 0);
-      assert.isBelow(content.data[1]["temperature"].values.length, 25);
+      assert.isAbove(content.xAxis.values.length, 0);
+      assert.isBelow(content.xAxis.values.length, 25);
     });
 
     it("GET /sensors/data with downsample 4 hours returns raw-path results", async () => {
@@ -765,9 +789,8 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
         .expect(200);
 
       const content = response.body["content"];
-      assert.isArray(content.data[1]["temperature"].values);
-      assert.isAbove(content.data[1]["temperature"].values.length, 0);
-      assert.isAtMost(content.data[1]["temperature"].values.length, 2);
+      assert.isAbove(content.xAxis.values.length, 0);
+      assert.isAtMost(content.xAxis.values.length, 2);
     });
 
     it("GET /sensors/data with raw-path downsample and percentile returns percentile data", async () => {
@@ -787,9 +810,11 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
         .expect(200);
 
       const content = response.body["content"];
-      assert.isArray(content.data[3]["moisture"].values);
-      assert.isAbove(content.data[3]["moisture"].values.length, 0);
-      assert.property(content.data[3]["moisture"].values[0], "percentile");
+      assert.isAbove(content.xAxis.values.length, 0);
+      assert.property(
+        content.data.find((d: any) => d.id === 3 && d.name === "moisture")?.statistics,
+        "percentile",
+      );
     });
 
     it("GET /sensors/data with raw-path downsample and all aggregates returns all fields", async () => {
@@ -819,16 +844,16 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
         .expect(200);
 
       const content = response.body["content"];
-      const value = content.data[4]["voltage"].values[0];
-      assert.property(value, "min");
-      assert.property(value, "max");
-      assert.property(value, "avg");
-      assert.property(value, "count");
-      assert.property(value, "sum");
-      assert.property(value, "stddev");
-      assert.property(value, "percentile");
-      assert.property(value, "first");
-      assert.property(value, "last");
+      const entry = content.data.find((d: any) => d.id === 4 && d.name === "voltage");
+      assert.property(entry?.statistics, "min");
+      assert.property(entry?.statistics, "max");
+      assert.property(entry?.statistics, "avg");
+      assert.property(entry?.statistics, "count");
+      assert.property(entry?.statistics, "sum");
+      assert.property(entry?.statistics, "stddev");
+      assert.property(entry?.statistics, "percentile");
+      assert.property(entry?.statistics, "first");
+      assert.property(entry?.statistics, "last");
     });
 
     it("GET /sensors/data cursor pagination works with raw-path downsample", async () => {
@@ -847,10 +872,7 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
 
       const firstContent = firstResponse.body["content"];
       const nextCursor = firstContent.nextCursor as string;
-      const lastTimeFirstPage =
-        firstContent.data[1]["temperature"].values[
-          firstContent.data[1]["temperature"].values.length - 1
-        ].time;
+      const lastTimeFirstPage = firstContent.xAxis.values[firstContent.xAxis.values.length - 1];
 
       const secondResponse = await request(server)
         .post("/api/v2/sensors/data")
@@ -867,10 +889,10 @@ describe("DataQuery API - Sensor Downsample, Filters & Edge Cases", function () 
         .expect(200);
 
       const secondContent = secondResponse.body["content"];
-      assert.isArray(secondContent.data[1]["temperature"].values);
-      assert.isAbove(secondContent.data[1]["temperature"].values.length, 0);
+      assert.isArray(secondContent.xAxis.values);
+      assert.isAbove(secondContent.xAxis.values.length, 0);
       assert.isAtLeast(
-        new Date(secondContent.data[1]["temperature"].values[0].time).getTime(),
+        new Date(secondContent.xAxis.values[0]).getTime(),
         new Date(lastTimeFirstPage).getTime(),
       );
     });
@@ -891,11 +913,11 @@ describe("DataQuery API - Output Data Query", function () {
       })
       .expect(200);
 
-    const value = response.body["content"].data[1].values[0];
-    assert.property(value, "time");
-    assert.property(value, "avg");
-    assert.property(value, "min");
-    assert.property(value, "max");
+    const content = response.body["content"];
+    const entry = content.data.find((d: any) => d.id === 1);
+    assert.property(entry?.statistics, "avg");
+    assert.property(entry?.statistics, "min");
+    assert.property(entry?.statistics, "max");
   });
 
   it("GET /outputs/data returns paginated output data", async () => {
@@ -911,11 +933,11 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isObject(content.data);
-    assert.exists(content.data[1]);
-    assert.isArray(content.data[1].values);
-    assert.isAbove(content.data[1].values.length, 0);
-    assert.property(content.data[1].values[0], "time");
+    assert.isArray(content.data);
+    assert.exists(content.data.find((d: any) => d.id === 1));
+    assert.isArray(content.xAxis.values);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isArray(content.xAxis.values);
     assert.exists(content.nextCursor);
     assert.isString(content.nextCursor);
   });
@@ -933,7 +955,7 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isAtLeast(content.data[1].values.length, 1);
+    assert.isAtLeast(content.xAxis.values.length, 1);
     assert.exists(content.nextCursor);
   });
 
@@ -951,8 +973,7 @@ describe("DataQuery API - Output Data Query", function () {
 
     const firstContent = firstResponse.body["content"];
     const nextCursor = firstContent.nextCursor as string;
-    const lastTimeFirstPage =
-      firstContent.data[1].values[firstContent.data[1].values.length - 1].time;
+    const lastTimeFirstPage = firstContent.xAxis.values[firstContent.xAxis.values.length - 1];
 
     const secondResponse = await request(server)
       .post("/api/v2/outputs/data")
@@ -967,10 +988,10 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const secondContent = secondResponse.body["content"];
-    assert.isArray(secondContent.data[1].values);
-    assert.isAbove(secondContent.data[1].values.length, 0);
+    assert.isArray(secondContent.xAxis.values);
+    assert.isAbove(secondContent.xAxis.values.length, 0);
     assert.isAbove(
-      new Date(secondContent.data[1].values[0].time).getTime(),
+      new Date(secondContent.xAxis.values[0]).getTime(),
       new Date(lastTimeFirstPage).getTime(),
     );
   });
@@ -1004,11 +1025,10 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1].values);
-    assert.isAbove(content.data[1].values.length, 0);
-    for (const value of content.data[1].values) {
-      assert.property(value, "min");
-    }
+    assert.isArray(content.xAxis.values);
+    assert.isAbove(content.xAxis.values.length, 0);
+    const entry = content.data.find((d: any) => d.id === 1);
+    assert.property(entry?.statistics, "min");
   });
 
   it("GET /outputs/data with max aggregate returns aggregate data", async () => {
@@ -1024,11 +1044,10 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1].values);
-    assert.isAbove(content.data[1].values.length, 0);
-    for (const value of content.data[1].values) {
-      assert.property(value, "max");
-    }
+    assert.isArray(content.xAxis.values);
+    assert.isAbove(content.xAxis.values.length, 0);
+    const entry = content.data.find((d: any) => d.id === 1);
+    assert.property(entry?.statistics, "max");
   });
 
   it("GET /outputs/data with custom aggregates omits avg", async () => {
@@ -1043,11 +1062,12 @@ describe("DataQuery API - Output Data Query", function () {
       })
       .expect(200);
 
-    const value = response.body["content"].data[1].values[0];
-    assert.property(value, "min");
-    assert.property(value, "max");
-    assert.property(value, "count");
-    assert.notProperty(value, "avg");
+    const content = response.body["content"];
+    const entry = content.data.find((d: any) => d.id === 1);
+    assert.property(entry?.statistics, "min");
+    assert.property(entry?.statistics, "max");
+    assert.property(entry?.statistics, "count");
+    assert.notProperty(entry?.statistics, "avg");
   });
 
   it("GET /outputs/data with downsample returns downsampled results", async () => {
@@ -1062,7 +1082,7 @@ describe("DataQuery API - Output Data Query", function () {
       })
       .expect(200);
 
-    assert.isArray(response.body["content"].data[1].values);
+    assert.isArray(response.body["content"].xAxis.values);
   });
 
   it("GET /outputs/data returns 400 for missing timeRange", async () => {
@@ -1084,12 +1104,12 @@ describe("DataQuery API - Output Data Query", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.isArray(content.data[1].values);
-      assert.isAbove(content.data[1].values.length, 0);
-      assert.property(content.data[1].values[0], "time");
-      assert.property(content.data[1].values[0], "avg");
-      assert.property(content.data[1].values[0], "min");
-      assert.property(content.data[1].values[0], "max");
+      assert.isArray(content.xAxis.values);
+      assert.isAbove(content.xAxis.values.length, 0);
+      assert.isArray(content.xAxis.values);
+      assert.property(content.data.find((d: any) => d.id === 1)?.statistics, "avg");
+      assert.property(content.data.find((d: any) => d.id === 1)?.statistics, "min");
+      assert.property(content.data.find((d: any) => d.id === 1)?.statistics, "max");
     });
 
     it("GET /outputs/data with downsample 15 minutes returns raw-path results", async () => {
@@ -1105,9 +1125,9 @@ describe("DataQuery API - Output Data Query", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.isArray(content.data[1].values);
-      assert.isAbove(content.data[1].values.length, 0);
-      assert.isBelow(content.data[1].values.length, 25);
+      assert.isArray(content.xAxis.values);
+      assert.isAbove(content.xAxis.values.length, 0);
+      assert.isBelow(content.xAxis.values.length, 25);
     });
 
     it("GET /outputs/data with raw-path downsample and all aggregates returns all fields", async () => {
@@ -1125,7 +1145,7 @@ describe("DataQuery API - Output Data Query", function () {
         })
         .expect(200);
 
-      const value = response.body["content"].data[1].values[0];
+      const value = response.body["content"].data.find((d: any) => d.id === 1)?.statistics;
       assert.property(value, "avg");
       assert.property(value, "count");
       assert.property(value, "sum");
@@ -1151,8 +1171,7 @@ describe("DataQuery API - Output Data Query", function () {
 
       const firstContent = firstResponse.body["content"];
       const nextCursor = firstContent.nextCursor as string;
-      const lastTimeFirstPage =
-        firstContent.data[1].values[firstContent.data[1].values.length - 1].time;
+      const lastTimeFirstPage = firstContent.xAxis.values[firstContent.xAxis.values.length - 1];
 
       const secondResponse = await request(server)
         .post("/api/v2/outputs/data")
@@ -1169,10 +1188,10 @@ describe("DataQuery API - Output Data Query", function () {
         .expect(200);
 
       const secondContent = secondResponse.body["content"];
-      assert.isArray(secondContent.data[1].values);
-      assert.isAbove(secondContent.data[1].values.length, 0);
+      assert.isArray(secondContent.xAxis.values);
+      assert.isAbove(secondContent.xAxis.values.length, 0);
       assert.isAtLeast(
-        new Date(secondContent.data[1].values[0].time).getTime(),
+        new Date(secondContent.xAxis.values[0]).getTime(),
         new Date(lastTimeFirstPage).getTime(),
       );
     });
@@ -1191,8 +1210,8 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.property(content.data, "5");
-    assert.notProperty(content.data, "1");
+    assert.exists(content.data.find((d: any) => d.id === 5));
+    assert.notExists(content.data.find((d: any) => d.id === 1));
   });
 
   it("GET /outputs/data with timeRange filter returns filtered results", async () => {
@@ -1207,9 +1226,9 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const content = response.body["content"];
-    assert.isArray(content.data[1].values);
-    assert.isAbove(content.data[1].values.length, 0);
-    assert.isAtMost(content.data[1].values.length, 4);
+    assert.isArray(content.xAxis.values);
+    assert.isAbove(content.xAxis.values.length, 0);
+    assert.isAtMost(content.xAxis.values.length, 4);
   });
 
   it("GET /outputs/data with bad cursor returns 400", async () => {
@@ -1288,14 +1307,15 @@ describe("DataQuery API - Output Data Query", function () {
       })
       .expect(200);
 
-    const value = response.body["content"].data[1].values[0];
-    assert.property(value, "avg");
-    assert.property(value, "count");
-    assert.property(value, "sum");
-    assert.property(value, "stddev");
-    assert.property(value, "percentile");
-    assert.property(value, "first");
-    assert.property(value, "last");
+    const content = response.body["content"];
+    const entry = content.data.find((d: any) => d.id === 1);
+    assert.property(entry?.statistics, "avg");
+    assert.property(entry?.statistics, "count");
+    assert.property(entry?.statistics, "sum");
+    assert.property(entry?.statistics, "stddev");
+    assert.property(entry?.statistics, "percentile");
+    assert.property(entry?.statistics, "first");
+    assert.property(entry?.statistics, "last");
   });
 
   it("GET /outputs/data cursor pagination works with downsample", async () => {
@@ -1314,8 +1334,7 @@ describe("DataQuery API - Output Data Query", function () {
 
     const firstContent = firstResponse.body["content"];
     const nextCursor = firstContent.nextCursor as string;
-    const lastTimeFirstPage =
-      firstContent.data[1].values[firstContent.data[1].values.length - 1].time;
+    const lastTimeFirstPage = firstContent.xAxis.values[firstContent.xAxis.values.length - 1];
 
     const secondResponse = await request(server)
       .post("/api/v2/outputs/data")
@@ -1332,10 +1351,10 @@ describe("DataQuery API - Output Data Query", function () {
       .expect(200);
 
     const secondContent = secondResponse.body["content"];
-    assert.isArray(secondContent.data[1].values);
-    assert.isAbove(secondContent.data[1].values.length, 0);
+    assert.isArray(secondContent.xAxis.values);
+    assert.isAbove(secondContent.xAxis.values.length, 0);
     assert.isAtLeast(
-      new Date(secondContent.data[1].values[0].time).getTime(),
+      new Date(secondContent.xAxis.values[0]).getTime(),
       new Date(lastTimeFirstPage).getTime(),
     );
   });
@@ -1373,9 +1392,9 @@ describe("DataQuery API - Sensor Reading Type Verification", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.property(content.data["1"], "temperature");
-      assert.notProperty(content.data["1"], "humidity");
-      assert.notProperty(content.data["1"], "pressure");
+      assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "temperature"));
+      assert.notExists(content.data.find((d: any) => d.id === 1 && d.name === "humidity"));
+      assert.notExists(content.data.find((d: any) => d.id === 1 && d.name === "pressure"));
     });
 
     it("querying humidity does not return temperature or pressure", async () => {
@@ -1391,9 +1410,9 @@ describe("DataQuery API - Sensor Reading Type Verification", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.property(content.data["1"], "humidity");
-      assert.notProperty(content.data["1"], "temperature");
-      assert.notProperty(content.data["1"], "pressure");
+      assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "humidity"));
+      assert.notExists(content.data.find((d: any) => d.id === 1 && d.name === "temperature"));
+      assert.notExists(content.data.find((d: any) => d.id === 1 && d.name === "pressure"));
     });
 
     it("querying pressure does not return temperature or humidity", async () => {
@@ -1410,9 +1429,9 @@ describe("DataQuery API - Sensor Reading Type Verification", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.property(content.data["1"], "pressure");
-      assert.notProperty(content.data["1"], "temperature");
-      assert.notProperty(content.data["1"], "humidity");
+      assert.exists(content.data.find((d: any) => d.id === 1 && d.name === "pressure"));
+      assert.notExists(content.data.find((d: any) => d.id === 1 && d.name === "temperature"));
+      assert.notExists(content.data.find((d: any) => d.id === 1 && d.name === "humidity"));
     });
   });
 
@@ -1430,8 +1449,8 @@ describe("DataQuery API - Sensor Reading Type Verification", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.property(content.data["2"], "temperature");
-      assert.isAbove(content.data["2"]["temperature"].values.length, 0);
+      assert.exists(content.data.find((d: any) => d.id === 2 && d.name === "temperature"));
+      assert.isAbove(content.xAxis.values.length, 0);
     });
   });
 
@@ -1450,8 +1469,8 @@ describe("DataQuery API - Sensor Reading Type Verification", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.property(content.data["3"], "moisture");
-      assert.isAbove(content.data["3"]["moisture"].values.length, 0);
+      assert.exists(content.data.find((d: any) => d.id === 3 && d.name === "moisture"));
+      assert.isAbove(content.xAxis.values.length, 0);
     });
   });
 
@@ -1470,8 +1489,8 @@ describe("DataQuery API - Sensor Reading Type Verification", function () {
         .expect(200);
 
       const content = response.body["content"];
-      assert.property(content.data["4"], "voltage");
-      assert.isAbove(content.data["4"]["voltage"].values.length, 0);
+      assert.exists(content.data.find((d: any) => d.id === 4 && d.name === "voltage"));
+      assert.isAbove(content.xAxis.values.length, 0);
     });
   });
 });

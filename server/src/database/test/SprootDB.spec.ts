@@ -173,7 +173,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.isString(result.nextCursor);
+      assert.notProperty(result, "nextCursor");
       assert.isTrue(result.data.some((d) => d.id === 1 && d.name === "temperature"));
       const entry1 = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
       assert.equal(entry1.units, "°C");
@@ -331,7 +331,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.isString(result.nextCursor);
+      assert.notProperty(result, "nextCursor");
       assert.isTrue(result.data.some((d) => d.id === 1));
       const outputEntry1 = assertDataEntry(result.data, (d) => d.id === 1);
       assert.equal(statsArr(outputEntry1, "avg").length, 1);
@@ -409,7 +409,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, 1);
-      assert.isString(result.nextCursor);
+      assert.notProperty(result, "nextCursor");
     });
 
     it("should use custom percentile in output aggregate query", async () => {
@@ -774,7 +774,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       assert.include(idFilterSql!, "output_id");
     });
 
-    it("should use cursor filter when cursor provided", async () => {
+    it("should use cursor filter with end bound when cursor provided", async () => {
       const base64Cursor = Buffer.from("2024-01-01T00:30:00.000Z").toString("base64");
       const knex = createKnexStubWithCapture([]);
       const db = new SprootDB(knex as any);
@@ -787,8 +787,10 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       const rawCalls = (knex as any).rawCalls || [];
-      const cursorFilterSql = rawCalls.find((s: string) => s.includes("bucket") && s.includes(">"));
-      assert.isDefined(cursorFilterSql, "Should have a cursor-based bucket > filter");
+      const cursorFilterSql = rawCalls.find(
+        (s: string) => s.includes("bucket") && s.includes(">") && s.includes("<="),
+      );
+      assert.isDefined(cursorFilterSql, "Should have a cursor-based bucket > AND bucket <= filter");
     });
 
     it("should use BETWEEN filter when no cursor", async () => {
@@ -870,7 +872,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.equal(statsArr(assertFirstEntry(result.data), "avg").length, 1);
-      assert.isString(result.nextCursor);
+      assert.notProperty(result, "nextCursor");
     });
 
     it("should use custom percentile in sensor aggregate query", async () => {
@@ -927,6 +929,56 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         .filter((c) => c.args[0]?.includes("approx_percentile"));
       assert.isAtLeast(percentileCalls.length, 1);
       assert.equal(percentileCalls[0]!.args[1]?.[0], 0.95);
+    });
+  });
+
+  describe("cursor respects time range", () => {
+    it("should return empty when cursor is at or beyond end of time range", async () => {
+      const base64Cursor = Buffer.from("2024-01-01T02:00:00.000Z").toString("base64");
+      const knex = createKnexStub([]);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
+        downsample: "5m",
+        cursor: base64Cursor,
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      assert.deepEqual(result.data, []);
+      assert.notProperty(result, "nextCursor");
+    });
+
+    it("should return empty when cursor is beyond end of time range", async () => {
+      const base64Cursor = Buffer.from("2024-01-01T03:00:00.000Z").toString("base64");
+      const knex = createKnexStub([]);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.querySensorDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
+        downsample: "5m",
+        cursor: base64Cursor,
+        limit: 10,
+      } as SensorDataQueryRequest);
+
+      assert.deepEqual(result.data, []);
+      assert.notProperty(result, "nextCursor");
+    });
+
+    it("should respect end bound for output data with cursor", async () => {
+      const base64Cursor = Buffer.from("2024-01-01T02:00:00.000Z").toString("base64");
+      const knex = createKnexStub([]);
+      const db = new SprootDB(knex as any);
+
+      const result = await db.queryOutputDataAsync({
+        timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
+        downsample: "5m",
+        cursor: base64Cursor,
+        limit: 10,
+      } as OutputDataQueryRequest);
+
+      assert.deepEqual(result.data, []);
+      assert.notProperty(result, "nextCursor");
     });
   });
 
