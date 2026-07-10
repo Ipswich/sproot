@@ -1,13 +1,7 @@
 import { LineChart } from "@mantine/charts";
-import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
-import { ISensorBase } from "@sproot/sensors/ISensorBase";
-import {
-  DataSeries,
-  ChartSeries,
-  ChartData,
-} from "@sproot/sproot-common/src/utility/ChartData";
+import { Box, Button, Group, LoadingOverlay, Paper, Text } from "@mantine/core";
 import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
-import { ResponsiveContainer } from "recharts";
+import { ChartSeries, DataSeries } from "../../../requests/chartDataTypes";
 
 export interface ReadingsChartProps {
   dataSeries: DataSeries;
@@ -15,19 +9,24 @@ export interface ReadingsChartProps {
   readingType: string;
   chartRendering: boolean;
   showEmptyState?: boolean;
+  showReferenceLines?: boolean;
+  onToggleReferenceLines?: (show: boolean) => void;
+  units?: string;
 }
 
 export default function ReadingsChart({
   dataSeries,
   chartSeries,
-  readingType,
   chartRendering,
   showEmptyState,
+  showReferenceLines,
+  onToggleReferenceLines,
+  units,
 }: ReadingsChartProps) {
-  const stats = ChartData.generateStatsForDataSeries(dataSeries);
-  const data = dataSeries.map((data) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { units: _, ...rest } = data;
+  const stats = getSeriesStats(dataSeries);
+  const data = dataSeries.map((dataPoint) => {
+    const rest = { ...dataPoint };
+    delete rest.units;
     return rest;
   });
 
@@ -50,10 +49,23 @@ export default function ReadingsChart({
             borderRadius: 8,
           }}
         >
-          <Text c="dimmed">No data found for this interval</Text>
+          {!chartRendering ? (
+            <Text c="dimmed">No data found for this interval</Text>
+          ) : null}
         </div>
       ) : (
-        <ResponsiveContainer height="300">
+        <Box>
+          <Group justify="flex-end" mb="xs">
+            {onToggleReferenceLines ? (
+              <Button
+                size="compact-xs"
+                variant={showReferenceLines ? "light" : "subtle"}
+                onClick={() => onToggleReferenceLines(!showReferenceLines)}
+              >
+                {showReferenceLines ? "Hide Stats" : "Show Stats"}
+              </Button>
+            ) : null}
+          </Group>
           <LineChart
             tooltipProps={{
               position: {},
@@ -66,8 +78,7 @@ export default function ReadingsChart({
                       { name: string; color: string; value: string }
                     >[]
                   }
-                  units={stats.units}
-                  readingType={readingType}
+                  units={units || ""}
                 />
               ),
             }}
@@ -75,10 +86,11 @@ export default function ReadingsChart({
             ml={-28}
             curveType="linear"
             h={300}
-            dotProps={{ r: 0 }}
             data={data}
             withLegend={false}
-            withXAxis
+            withDots
+            dotProps={{ r: 0, fillOpacity: 0, strokeOpacity: 0 }}
+            activeDotProps={{ r: 5, strokeWidth: 2 }}
             withYAxis
             tickLine="xy"
             xAxisProps={{
@@ -91,33 +103,37 @@ export default function ReadingsChart({
               type: "number",
               domain: ["auto", "auto"],
             }}
-            referenceLines={[
-              {
-                y: stats.cumulativeAverage!,
-                label: `Average: ${formatDecimalReadingForDisplay(String(stats.cumulativeAverage!))}${stats.units}`,
-                color: "red",
-                ifOverflow: "extendDomain",
-                labelPosition: "insideTopLeft",
-              },
-              {
-                y: stats.cumulativeMin!,
-                label: `Min: ${formatDecimalReadingForDisplay(String(stats.cumulativeMin!))}${stats.units}`,
-                color: "blue",
-                ifOverflow: "extendDomain",
-                labelPosition: "insideBottomLeft",
-              },
-              {
-                y: stats.cumulativeMax!,
-                label: `Max: ${formatDecimalReadingForDisplay(String(stats.cumulativeMax!))}${stats.units}`,
-                color: "green",
-                ifOverflow: "extendDomain",
-                labelPosition: "insideTopLeft",
-              },
-            ]}
-            dataKey="sensorName"
-            series={chartSeries ?? []}
-          ></LineChart>
-        </ResponsiveContainer>
+            referenceLines={
+              showReferenceLines && stats
+                ? [
+                    {
+                      y: stats.avg,
+                      label: `Average: ${formatDecimalReadingForDisplay(String(stats.avg))}${stats.units || units || ""}`,
+                      color: "red",
+                      ifOverflow: "extendDomain",
+                      labelPosition: "insideTopLeft",
+                    },
+                    {
+                      y: stats.min,
+                      label: `Min: ${formatDecimalReadingForDisplay(String(stats.min))}${stats.units || units || ""}`,
+                      color: "blue",
+                      ifOverflow: "extendDomain",
+                      labelPosition: "insideBottomLeft",
+                    },
+                    {
+                      y: stats.max,
+                      label: `Max: ${formatDecimalReadingForDisplay(String(stats.max))}${stats.units || units || ""}`,
+                      color: "green",
+                      ifOverflow: "extendDomain",
+                      labelPosition: "insideTopLeft",
+                    },
+                  ]
+                : []
+            }
+            dataKey="name"
+            series={chartSeries}
+          />
+        </Box>
       )}
     </Box>
   );
@@ -129,37 +145,12 @@ interface ChartTooltipProps {
     | Record<string, { name: string; color: string; value: string }>[]
     | undefined;
   units: string;
-  readingType: string;
 }
 
-function ChartTooltip({
-  label,
-  payload,
-  units,
-  readingType,
-}: ChartTooltipProps) {
-  if (!payload) return null;
-
-  const order = (
-    JSON.parse(
-      localStorage.getItem(`${readingType}-sensorDataOrder`) ?? "[]",
-    ) as ISensorBase[]
-  ).map((s) => s.name);
-  const orderNames = Array.isArray(order) ? order : [];
-  const indexMap = new Map(orderNames.map((n, i) => [n, i]));
-
-  // Reorder payload to match orderNames. Items not in orderNames go to the end.
-  payload = [...payload].sort((a, b) => {
-    const nameA = String(a["name"]);
-    const nameB = String(b["name"]);
-    const idxA = indexMap.has(nameA)
-      ? indexMap.get(nameA)!
-      : Number.MAX_SAFE_INTEGER;
-    const idxB = indexMap.has(nameB)
-      ? indexMap.get(nameB)!
-      : Number.MAX_SAFE_INTEGER;
-    return idxA - idxB || nameA.localeCompare(nameB);
-  });
+function ChartTooltip({ label, payload, units }: ChartTooltipProps) {
+  if (!payload) {
+    return null;
+  }
 
   return (
     <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
@@ -167,10 +158,40 @@ function ChartTooltip({
         {label}
       </Text>
       {payload.map((item) => (
-        <Text key={String(item["name"])} c={item["color"]!} fz="sm">
-          {String(item["name"])}: {String(item["value"] + String(units))}
+        <Text
+          key={String(item["name"])}
+          c={String(item["color"] ?? "")}
+          fz="sm"
+        >
+          {String(item["name"])}: {String(item["value"])}
+          {units}
         </Text>
       ))}
     </Paper>
   );
+}
+
+function getSeriesStats(dataSeries: DataSeries) {
+  const values = dataSeries.flatMap((dataPoint) =>
+    Object.entries(dataPoint)
+      .filter(
+        ([key, value]) =>
+          key !== "name" && key !== "units" && typeof value === "number",
+      )
+      .map(([, value]) => value as number),
+  );
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  const total = values.reduce((sum, value) => sum + value, 0);
+  return {
+    avg: total / values.length,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    units:
+      (dataSeries.find((dataPoint) => dataPoint.units)?.units as
+        string | undefined) ?? "",
+  };
 }

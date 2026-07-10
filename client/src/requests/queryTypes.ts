@@ -73,14 +73,7 @@ export function getDownsampleMinutes(downsample: string): number {
   return amount * 1440;
 }
 
-function resolveAutoDownsample(
-  durationMs: number,
-  preserveLegacyResolution = false,
-): string {
-  if (preserveLegacyResolution) {
-    return "5m";
-  }
-
+function resolveAutoDownsample(durationMs: number): string {
   const durationHours = durationMs / (1000 * 60 * 60);
   if (durationHours <= 72) {
     return "5m";
@@ -95,13 +88,12 @@ function resolveAutoDownsample(
 export function resolveSelectedDownsample(
   downsample: string | null | undefined,
   durationMs: number,
-  preserveLegacyResolution = false,
 ): string {
   if (downsample && downsample !== "auto") {
     return downsample;
   }
 
-  return resolveAutoDownsample(durationMs, preserveLegacyResolution);
+  return resolveAutoDownsample(durationMs);
 }
 
 export function getQueryPointLimit(

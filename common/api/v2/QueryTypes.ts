@@ -108,15 +108,27 @@ export interface ChartDataEntry {
   statistics: Record<string, (number | null)[]>;
 }
 
+export interface SensorReadingValues {
+  values: Array<Record<string, unknown>>;
+}
+
+export type SensorDataMap = Record<number, Record<string, SensorReadingValues>>;
+
+export interface OutputReadingValues {
+  values: Array<Record<string, unknown>>;
+}
+
+export type OutputDataMap = Record<number, OutputReadingValues>;
+
 export interface SensorDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: ChartDataEntry[];
+  data: SensorDataMap;
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
 export interface OutputDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: ChartDataEntry[];
+  data: OutputDataMap;
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 

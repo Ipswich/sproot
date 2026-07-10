@@ -5,45 +5,45 @@ import {
   ChartSeries,
 } from "../../../requests/chartDataTypes";
 import { formatDateForChart } from "@sproot/sproot-common/src/utility/DisplayFormats";
-import type { IOutputBase } from "@sproot/outputs/IOutputBase";
+import type { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import type {
   Aggregate,
-  OutputDataQueryResponse,
+  SensorDataQueryResponse,
 } from "../../../requests/queryTypes";
 
-export interface TransformedOutputData {
+export interface TransformedSensorData {
   dataSeries: DataSeries;
   chartSeries: ChartSeries[];
   units: string;
 }
 
-export const OutputDataTransformer = {
+export const ReadingsChartTransformer = {
   transform(
-    serverResponse: OutputDataQueryResponse | null,
-    outputs: IOutputBase[],
+    serverResponse: SensorDataQueryResponse | null,
+    sensors: ISensorBase[],
     aggregate: Aggregate,
-  ): TransformedOutputData | null {
+  ): TransformedSensorData | null {
     if (!serverResponse || !serverResponse.xAxis.values.length) {
       return null;
     }
 
-    const outputById = new Map(outputs.map((output) => [output.id, output]));
+    const sensorById = new Map(sensors.map((sensor) => [sensor.id, sensor]));
     const responseById = new Map(
       serverResponse.data.map((entry) => [entry.id, entry]),
     );
 
     const chartSeries: ChartSeries[] = [];
     let colorIndex = 0;
-    for (const output of outputs) {
-      const responseEntry = responseById.get(output.id);
+    for (const sensor of sensors) {
+      const responseEntry = responseById.get(sensor.id);
       if (!responseEntry) {
         continue;
       }
 
       chartSeries.push({
-        name: output.name || responseEntry.name,
+        name: sensor.name || responseEntry.name,
         color:
-          output.color ??
+          sensor.color ??
           DefaultColors[colorIndex % DefaultColors.length] ??
           "#2e2e2e",
       });
@@ -51,7 +51,7 @@ export const OutputDataTransformer = {
     }
 
     for (const responseEntry of serverResponse.data) {
-      if (outputById.has(responseEntry.id)) {
+      if (sensorById.has(responseEntry.id)) {
         continue;
       }
 
@@ -76,11 +76,10 @@ export const OutputDataTransformer = {
       };
 
       for (const responseEntry of serverResponse.data) {
-        const output = outputById.get(responseEntry.id);
-        const key = output?.name || responseEntry.name;
+        const sensor = sensorById.get(responseEntry.id);
+        const key = sensor?.name || responseEntry.name;
         const stats = responseEntry.statistics[aggregate];
-        const rawValue = stats?.[timeIndex];
-        const value = normalizeOutputValue(rawValue, aggregate);
+        const value = stats?.[timeIndex];
 
         if (value != null) {
           point[key] = value;
@@ -109,18 +108,3 @@ export const OutputDataTransformer = {
     };
   },
 };
-
-function normalizeOutputValue(
-  value: number | null | undefined,
-  aggregate: Aggregate,
-): number | null | undefined {
-  if (value == null) {
-    return value;
-  }
-
-  if (aggregate === "percentile" || aggregate === "stddev") {
-    return Number(value.toFixed(3));
-  }
-
-  return Math.round(value);
-}

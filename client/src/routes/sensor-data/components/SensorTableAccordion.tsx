@@ -72,8 +72,8 @@ function SensorTableAccordion({
     const deviceZones: SDBDeviceZone[] = [];
     const sensorsByDeviceZone: Record<number, ISensorBase[]> = { [-1]: [] };
 
-    const deviceZonesData = (await getDeviceZonesQuery.refetch()).data;
-    const sensorsData = (await getSensorsQuery.refetch()).data;
+    const deviceZonesData = getDeviceZonesQuery.data;
+    const sensorsData = getSensorsQuery.data;
 
     deviceZonesData?.forEach((zone) => {
       deviceZones.push(zone);
@@ -134,18 +134,10 @@ function SensorTableAccordion({
     setSensors(sensorsByDeviceZone);
   };
 
-  const sensorToggleStatesJSON = JSON.stringify(sensorToggleStates);
-  const deviceZoneToggleStatesJSON = JSON.stringify(deviceZoneToggleStates);
-
   useEffect(() => {
     updateDataAsync();
-
-    const interval = setInterval(() => {
-      updateDataAsync();
-    }, 60000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType, sensorToggleStatesJSON, deviceZoneToggleStatesJSON]);
+  }, [readingType, getDeviceZonesQuery.data, getSensorsQuery.data]);
 
   const sortableItems = deviceZones
     .map((zone) => {
