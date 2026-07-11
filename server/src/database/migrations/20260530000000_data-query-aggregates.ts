@@ -57,7 +57,7 @@ const OUTPUT_1H_VIEW = "output_data_1h";
 const OUTPUT_1D_VIEW = "output_data_1d";
 
 export const config = {
-  transaction: false,
+  transaction: true,
 };
 
 export async function up(knex: Knex): Promise<void> {
@@ -318,58 +318,16 @@ export async function up(knex: Knex): Promise<void> {
   // ------------------------------------------------------------------
   // Update existing 5m refresh policies (schedule from 1m to 10m)
   // ------------------------------------------------------------------
-  await knex.raw(`
-    DO $$
-    BEGIN
-      IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'sensor_data_5m') THEN
-        CALL refresh_continuous_aggregate('sensor_data_5m', NULL, NULL);
-      END IF;
-    END $$;
-  `);
-  await knex.raw(`
-    DO $$
-    BEGIN
-      IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'output_data_5m') THEN
-        CALL refresh_continuous_aggregate('output_data_5m', NULL, NULL);
-      END IF;
-    END $$;
-  `);
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_5m', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_5m', NULL, NULL);`);
 
   // ------------------------------------------------------------------
   // Refresh 1h/1d views
   // ------------------------------------------------------------------
-  await knex.raw(`
-    DO $$
-    BEGIN
-      IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'sensor_data_1h') THEN
-        CALL refresh_continuous_aggregate('sensor_data_1h', NULL, NULL);
-      END IF;
-    END $$;
-  `);
-  await knex.raw(`
-    DO $$
-    BEGIN
-      IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'sensor_data_1d') THEN
-        CALL refresh_continuous_aggregate('sensor_data_1d', NULL, NULL);
-      END IF;
-    END $$;
-  `);
-  await knex.raw(`
-    DO $$
-    BEGIN
-      IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'output_data_1h') THEN
-        CALL refresh_continuous_aggregate('output_data_1h', NULL, NULL);
-      END IF;
-    END $$;
-  `);
-  await knex.raw(`
-    DO $$
-    BEGIN
-      IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'output_data_1d') THEN
-        CALL refresh_continuous_aggregate('output_data_1d', NULL, NULL);
-      END IF;
-    END $$;
-  `);
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_1h', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_1d', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_1h', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_1d', NULL, NULL);`);
 }
 
 export async function down(knex: Knex): Promise<void> {
