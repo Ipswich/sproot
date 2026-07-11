@@ -51,7 +51,6 @@ describe("ESP32_PCA9685.ts tests", function () {
       5,
       5,
       5,
-      5,
       undefined,
       logger,
     );
@@ -136,7 +135,6 @@ describe("ESP32_PCA9685.ts tests", function () {
       5,
       5,
       5,
-      5,
       undefined,
       logger,
     );
@@ -195,7 +193,6 @@ describe("ESP32_PCA9685.ts tests", function () {
       eventBus,
       mockSprootDB,
       mockMdnsService,
-      5,
       5,
       5,
       5,

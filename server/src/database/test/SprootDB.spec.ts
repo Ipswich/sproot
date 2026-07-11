@@ -4,27 +4,27 @@ import {
   OutputDataQueryRequest,
   DEFAULT_LIMIT,
   MAX_LIMIT,
-  ChartDataEntry,
+  DeviceDataQueryRow,
 } from "../../../../common/dist/api/v2/QueryTypes";
 import { assert } from "chai";
 import sinon from "sinon";
 
-function statsArr(entry: ChartDataEntry, key: string): (number | null)[] {
+function statsArr(entry: DeviceDataQueryRow, key: string): (number | null)[] {
   return entry["statistics"][key] as (number | null)[];
 }
 
 function assertDataEntry(
-  data: ChartDataEntry[],
-  predicate: (d: ChartDataEntry) => boolean,
-): ChartDataEntry {
+  data: DeviceDataQueryRow[],
+  predicate: (d: DeviceDataQueryRow) => boolean,
+): DeviceDataQueryRow {
   const found = data.find(predicate);
   assert.isDefined(found, "Expected data entry to be defined");
-  return found as ChartDataEntry;
+  return found as DeviceDataQueryRow;
 }
 
-function assertFirstEntry(data: ChartDataEntry[]): ChartDataEntry {
+function assertFirstEntry(data: DeviceDataQueryRow[]): DeviceDataQueryRow {
   assert.isNotEmpty(data, "Expected data array to be non-empty");
-  return data[0] as ChartDataEntry;
+  return data[0] as DeviceDataQueryRow;
 }
 
 // ---------------------------------------------------------------------------

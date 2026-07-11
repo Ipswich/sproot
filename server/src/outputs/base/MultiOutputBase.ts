@@ -17,8 +17,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
   protected frequency: number;
   protected maxCacheSize: number;
   protected initialCacheLookback: number;
-  protected maxChartDataSize: number;
-  protected chartDataPointInterval: number;
+  protected cacheBucketMinutes: number;
   protected logger: winston.Logger;
 
   constructor(
@@ -26,8 +25,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     frequency: number = 800,
     logger: winston.Logger,
   ) {
@@ -35,8 +33,7 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     this.sprootDB = sprootDB;
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
-    this.maxChartDataSize = maxChartDataSize;
-    this.chartDataPointInterval = chartDataPointInterval;
+    this.cacheBucketMinutes = cacheBucketMinutes;
     this.frequency = frequency;
     this.logger = logger;
   }

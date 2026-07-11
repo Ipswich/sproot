@@ -20,8 +20,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<CapacitiveMoistureSensor | null> {
     const sensor = new CapacitiveMoistureSensor(
@@ -29,8 +28,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensor.initializeAsync(ADS1115.MAX_SENSOR_READ_TIME);
@@ -41,8 +39,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -50,8 +47,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [ReadingType.moisture],
       logger,
     );

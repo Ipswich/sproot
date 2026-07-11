@@ -3,10 +3,8 @@ import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
 import { OutputCache } from "./OutputCache";
-import { OutputChartData } from "./OutputChartData";
 import winston from "winston";
 import { OutputState } from "./OutputState";
-import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
 import { OutputActionManager } from "../../automation/outputs/OutputActionManager";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { toDbDate } from "../../utils/dateUtils";
@@ -31,10 +29,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   readonly logger: winston.Logger;
   #cache: OutputCache;
   #initialCacheLookback: number;
-  #chartData: OutputChartData;
-  #chartDataPointInterval: number;
+  #cacheBucketMinutes: number;
   #actionManager: OutputActionManager | null = null;
-  #updateMissCount = 0;
   #isExecuting = false;
 
   constructor(
@@ -43,8 +39,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     this.id = sdbOutput.id;
@@ -64,9 +59,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.sprootDB = sprootDB;
     this.logger = logger;
     this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
-    this.#chartData = new OutputChartData(maxChartDataSize, chartDataPointInterval);
-    this.#chartDataPointInterval = Number(chartDataPointInterval);
     this.#initialCacheLookback = initialCacheLookback;
+    this.#cacheBucketMinutes = cacheBucketMinutes;
   }
 
   get value(): number {
@@ -134,7 +128,6 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   protected async initializeAsync(): Promise<this> {
     await this.state.loadAsync();
     await this.loadCacheFromDatabaseAsync();
-    this.loadChartData();
     this.#actionManager = await OutputActionManager.createInstanceAsync(
       this.parentOutputId ?? this.id,
       this.#actionFunctionWrapperAsync.bind(this),
@@ -149,12 +142,10 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
 
   updateName(name: string): void {
     this.name = name;
-    this.loadChartData();
   }
 
   updateColor(color: string): void {
     this.color = color;
-    this.loadChartData();
   }
 
   updateAutomationTimeout(timeoutSeconds: number): void {
@@ -197,33 +188,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     return this.#cache.get(offset, limit);
   }
 
-  getChartData(): {
-    data: DataSeries;
-    series: ChartSeries;
-  } {
-    return this.#chartData.get();
-  }
-
   async updateDataStoresAsync(): Promise<void> {
     this.addCurrentStateToCache();
-    const lastCacheData = this.#cache.get().slice(-1)[0];
-    //Only update chart if the most recent datapoint is N minutes after last cache
-    if (this.#chartData.shouldUpdateChartData(lastCacheData)) {
-      this.#updateChartData();
-      //Reset miss count if successful
-      this.#updateMissCount = 0;
-    } else {
-      //Increment miss count if unsuccessful. Easy CYA if things get out of sync.
-      this.#updateMissCount++;
-      //If miss count exceeds 3 * N, force update (3 real tries, because intervals).
-      if (this.#updateMissCount >= 3 * this.#chartDataPointInterval) {
-        this.logger.warn(
-          `Chart data update miss count exceeded (3) for output {id: ${this.id}}. Forcing update to re-sync.`,
-        );
-        this.#updateChartData();
-        this.#updateMissCount = 0;
-      }
-    }
 
     try {
       await this.state.addCurrentStateToDatabaseAsync();
@@ -249,7 +215,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       await this.#cache.loadFromDatabaseAsync(
         this.id,
         this.#initialCacheLookback,
-        this.#chartDataPointInterval,
+        this.#cacheBucketMinutes,
       );
       this.logger.info(
         `Loaded cached states for output {id: ${this.id}}. Cache size - ${this.#cache.get().length}`,
@@ -257,14 +223,6 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     } catch (err) {
       this.logger.error(`Failed to load cached states for {id: ${this.id}}. ${err}`);
     }
-  }
-
-  protected loadChartData(): void {
-    this.#chartData.loadChartData(this.#cache.get(), this.name);
-    this.#chartData.loadChartSeries({ name: this.name, color: this.color });
-    this.logger.info(
-      `Loaded chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
-    );
   }
 
   protected async executeStateHelperAsync(
@@ -327,10 +285,4 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     return this.isInvertedPwm ? 100 - value : value;
   }
 
-  #updateChartData(): void {
-    this.#chartData.updateChartData(this.#cache.get(), this.name);
-    this.logger.info(
-      `Updated chart data for output {id: ${this.id}}. Chart data size - ${this.#chartData.get().data.length}`,
-    );
-  }
-}
+ }

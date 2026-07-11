@@ -19,8 +19,7 @@ class ESP32_DS18B20 extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<ESP32_DS18B20 | null> {
     const sensor = new ESP32_DS18B20(
@@ -30,8 +29,7 @@ class ESP32_DS18B20 extends SensorBase {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensor.initializeAsync(ESP32_DS18B20.MAX_SENSOR_READ_TIME);
@@ -44,8 +42,7 @@ class ESP32_DS18B20 extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -53,8 +50,7 @@ class ESP32_DS18B20 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [ReadingType.temperature],
       logger,
     );

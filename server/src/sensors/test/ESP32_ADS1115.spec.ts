@@ -69,7 +69,6 @@ describe("ESP32_ADS1115.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -129,7 +128,6 @@ describe("ESP32_ADS1115.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -152,7 +150,6 @@ describe("ESP32_ADS1115.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );

@@ -197,7 +197,7 @@ export class SprootDB implements ISprootDB {
 
     return this.#normalizeReadings(readings, toIsoString);
   }
-  async getSensorChartReadingsAsync(
+  async getBucketedSensorReadingsAsync(
     sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
@@ -254,7 +254,7 @@ export class SprootDB implements ISprootDB {
     ]);
 
     return this.#normalizeReadings(
-      this.#mergeSensorChartReadings(
+      this.#mergeSensorReadings(
         this.#getRawRows<SDBReading>(aggregateResult),
         this.#getRawRows<SDBReading>(tailResult),
       ),
@@ -602,7 +602,7 @@ export class SprootDB implements ISprootDB {
 
     return this.#normalizeOutputStates(states, toIsoString);
   }
-  async getOutputChartStatesAsync(
+  async getBucketedOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
@@ -652,7 +652,7 @@ export class SprootDB implements ISprootDB {
     ]);
 
     return this.#normalizeOutputStates(
-      this.#mergeOutputChartStates(
+      this.#mergeOutputStates(
         this.#getRawRows<SDBOutputState>(aggregateResult),
         this.#getRawRows<SDBOutputState>(tailResult),
       ),
@@ -1150,7 +1150,7 @@ export class SprootDB implements ISprootDB {
   }
 
   // ---------------------------------------------------------------------------
-  // Raw data query endpoints (for client-side formatting, not Recharts consumption)
+  // Raw data query endpoints
   // ---------------------------------------------------------------------------
 
   async querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
@@ -1469,7 +1469,7 @@ export class SprootDB implements ISprootDB {
     return typeof value === "string" ? value : isoValue;
   }
 
-  #mergeSensorChartReadings(baseRows: SDBReading[], tailRows: SDBReading[]): SDBReading[] {
+  #mergeSensorReadings(baseRows: SDBReading[], tailRows: SDBReading[]): SDBReading[] {
     const mergedRows = new Map<string, SDBReading>();
     for (const row of baseRows) {
       mergedRows.set(`${row.metric}:${dbToIso(row.logTime) ?? row.logTime}`, row);
@@ -1488,7 +1488,7 @@ export class SprootDB implements ISprootDB {
     });
   }
 
-  #mergeOutputChartStates(
+  #mergeOutputStates(
     baseRows: SDBOutputState[],
     tailRows: SDBOutputState[],
   ): SDBOutputState[] {

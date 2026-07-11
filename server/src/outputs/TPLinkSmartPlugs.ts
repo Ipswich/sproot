@@ -20,8 +20,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
     connectionTimeout: number = 5000,
   ) {
@@ -30,8 +29,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       undefined,
       logger,
     );
@@ -123,8 +121,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
         this.sprootDB,
         this.maxCacheSize,
         this.initialCacheLookback,
-        this.maxChartDataSize,
-        this.chartDataPointInterval,
+        this.cacheBucketMinutes,
         this.logger,
       );
     } catch (error) {
@@ -164,8 +161,7 @@ class TPLinkPlug extends OutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<TPLinkPlug> {
     const tplinkSmartPlug = new TPLinkPlug(
@@ -175,8 +171,7 @@ class TPLinkPlug extends OutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return tplinkSmartPlug.initializeAsync();
@@ -189,8 +184,7 @@ class TPLinkPlug extends OutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -199,8 +193,7 @@ class TPLinkPlug extends OutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     this.plugRegistry = plugRegistry;

@@ -58,7 +58,6 @@ describe("ADS1115.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -104,7 +103,6 @@ describe("ADS1115.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -125,7 +123,6 @@ describe("ADS1115.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -179,7 +176,6 @@ describe("ADS1115.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -191,7 +187,6 @@ describe("ADS1115.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -203,7 +198,6 @@ describe("ADS1115.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );

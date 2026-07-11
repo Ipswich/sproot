@@ -38,7 +38,6 @@ describe("DS18B20.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -76,7 +75,6 @@ describe("DS18B20.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -92,7 +90,6 @@ describe("DS18B20.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -110,7 +107,6 @@ describe("DS18B20.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -128,7 +124,6 @@ describe("DS18B20.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -188,7 +183,6 @@ describe("DS18B20.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );

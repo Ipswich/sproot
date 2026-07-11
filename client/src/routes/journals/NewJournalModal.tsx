@@ -19,7 +19,7 @@ import {
   getJournalsAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { SDBJournal } from "@sproot/database/SDBJournal";
-import { DefaultColors } from "../../colors";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
 import TagsPillsCombo from "./utils/tags/TagsPillsCombo";
 
 interface NewJournalModalProps {

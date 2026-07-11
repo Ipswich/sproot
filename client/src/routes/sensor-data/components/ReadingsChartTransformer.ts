@@ -1,10 +1,10 @@
-import { DefaultColors } from "../../../colors";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
 import {
   DataPoint,
   DataSeries,
   ChartSeries,
 } from "../../../requests/chartDataTypes";
-import { formatDateForChart } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { formatDateForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import type { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import type {
   Aggregate,
@@ -71,7 +71,7 @@ export const ReadingsChartTransformer = {
       timeValue,
     ] of serverResponse.xAxis.values.entries()) {
       const point: DataPoint = {
-        name: formatDateForChart(timeValue),
+        name: formatDateForDisplay(timeValue),
         units,
       };
 

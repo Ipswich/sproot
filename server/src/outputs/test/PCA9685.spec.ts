@@ -35,7 +35,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -106,7 +106,7 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -140,7 +140,7 @@ describe("PCA9685.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = stubPca9685DutyCycle();
     const eventBus = new MemoryEventBus(logger);
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,

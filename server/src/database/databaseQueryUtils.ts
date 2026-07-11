@@ -2,7 +2,7 @@ import { dbToIso } from "../utils/dateUtils";
 import {
   SensorDataQueryResponse,
   OutputDataQueryResponse,
-  ChartDataEntry,
+  DeviceDataQueryRow,
   Aggregate,
 } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 
@@ -197,7 +197,7 @@ export function formatSensorDataQueryRows(
   }
 
   // Sort by id
-  response.data.sort((a: ChartDataEntry, b: ChartDataEntry) => a.id - b.id);
+  response.data.sort((a: DeviceDataQueryRow, b: DeviceDataQueryRow) => a.id - b.id);
   return response;
 }
 
@@ -269,6 +269,6 @@ export function formatOutputDataQueryRows(
   }
 
   // Sort by id
-  response.data.sort((a: ChartDataEntry, b: ChartDataEntry) => a.id - b.id);
+  response.data.sort((a: DeviceDataQueryRow, b: DeviceDataQueryRow) => a.id - b.id);
   return response;
 }

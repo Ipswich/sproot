@@ -9,7 +9,7 @@ import { ESP32_CapacitiveMoistureSensor } from "../ESP32_CapacitiveMoistureSenso
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { DefaultColors } from "@sproot/sproot-common/dist/utility/ChartData";
+import { DefaultColors } from "@sproot/sproot-common/dist/utility/Constants";
 import { SensorBase } from "../base/SensorBase";
 import winston from "winston";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
@@ -28,8 +28,7 @@ class SensorList {
   #logger: winston.Logger;
   #maxCacheSize: number;
   #initialCacheLookback: number;
-  #maxChartDataSize: number;
-  #chartDataPointInterval: number;
+  #cacheBucketMinutes: number;
   #isUpdating: boolean = false;
   #ds18b20UpdateSetInterval: NodeJS.Timeout | null = null;
   #listenerCleanupFunction: () => void;
@@ -40,8 +39,7 @@ class SensorList {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<SensorList> {
     const sensorList = new SensorList(
@@ -50,8 +48,7 @@ class SensorList {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensorList.regenerateAsync();
@@ -63,8 +60,7 @@ class SensorList {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
@@ -72,8 +68,7 @@ class SensorList {
     this.#mdnsService = mdnsService;
     this.#maxCacheSize = maxCacheSize;
     this.#initialCacheLookback = initialCacheLookback;
-    this.#maxChartDataSize = maxChartDataSize;
-    this.#chartDataPointInterval = chartDataPointInterval;
+    this.#cacheBucketMinutes = cacheBucketMinutes;
     this.#logger = logger;
 
     const sensorModifiedListener = async (_event: SensorModifiedEvent) => {
@@ -192,13 +187,13 @@ class SensorList {
           }
 
           if (this.#sensors[key].name != sensor.name) {
-            //Also updates chartSeries data (and chart data)
+            // Also updates name in cache
             this.#sensors[key].updateName(sensor.name);
             sensorChanges = true;
           }
 
           if (this.#sensors[key].color != sensor.color) {
-            //Also updates chartSeries data (and chart data)
+            // Also updates color in cache
             this.#sensors[key].updateColor(sensor.color);
             sensorChanges = true;
           }
@@ -317,8 +312,7 @@ class SensorList {
           this.#sprootDB,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;
@@ -345,8 +339,7 @@ class SensorList {
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;
@@ -360,8 +353,7 @@ class SensorList {
           this.#sprootDB,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;
@@ -388,8 +380,7 @@ class SensorList {
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;
@@ -408,8 +399,7 @@ class SensorList {
           this.#sprootDB,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;
@@ -441,8 +431,7 @@ class SensorList {
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;
@@ -459,8 +448,7 @@ class SensorList {
           this.#sprootDB,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;
@@ -492,8 +480,7 @@ class SensorList {
           this.#mdnsService,
           this.#maxCacheSize,
           this.#initialCacheLookback,
-          this.#maxChartDataSize,
-          this.#chartDataPointInterval,
+          this.#cacheBucketMinutes,
           this.#logger,
         );
         break;

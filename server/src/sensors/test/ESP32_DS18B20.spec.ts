@@ -48,7 +48,6 @@ describe("ESP32_DS18B20.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -99,7 +98,6 @@ describe("ESP32_DS18B20.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -119,7 +117,6 @@ describe("ESP32_DS18B20.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -138,7 +135,6 @@ describe("ESP32_DS18B20.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -211,7 +207,6 @@ describe("ESP32_DS18B20.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );

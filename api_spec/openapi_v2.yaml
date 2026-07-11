@@ -1918,81 +1918,6 @@ paths:
                           details:
                             items:
                               example: "Failed to query output data: database error"
-
-  /api/v2/outputs/chart-data:
-    get:
-      deprecated: true
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Outputs"
-      summary: "Get all chart data."
-      parameters:
-        - name: "latest"
-          in: "query"
-          description: "Return only the latest data point."
-          schema:
-            type: string
-          example: "true"
-      description: "Returns chart data for all ouputs."
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            type: object
-                            properties:
-                              data:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/DataPoint"
-                                example:
-                                  - name: "1/24 12:00 am"
-                                    output1: 0
-                                    output2: 50
-                                    units: "%"
-                                  - name: "1/24 12:05 am"
-                                    output1: 0
-                                    output2: 50
-                                    units: "%"
-                              series:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/ChartSeries"
-                                example:
-                                  - name: "output1"
-                                    color: "lime"
-                                  - name: "output2"
-                                    color: "blue"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/outputs/chart-data"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
   /api/v2/outputs/supported-models:
     get:
       security:
@@ -4955,101 +4880,6 @@ paths:
                           details:
                             items:
                               example: "Failed to query sensor data: database error"
-
-  /api/v2/sensors/chart-data:
-    get:
-      deprecated: true
-      security:
-        - bearerAuth: []
-        - cookieAuth: []
-      tags:
-        - "Sensors"
-      summary: "Get all chart data."
-      description: "Returns chart data for all sensors."
-      parameters:
-        - in: query
-          name: readingType
-          description: "Reading type"
-          schema:
-            type: string
-          example: "temperature"
-        - name: "latest"
-          in: "query"
-          description: "Return only the latest data point."
-          schema:
-            type: string
-          example: "true"
-      responses:
-        200:
-          description: "Success"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
-                      statusCode:
-                        example: 200
-                      content:
-                        properties:
-                          data:
-                            type: object
-                            properties:
-                              temperature:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/DataPoint"
-                                example:
-                                  - name: "1/24 12:00 am"
-                                    sensor1: 25.000
-                                    sensor2: 25.000
-                                    units: "°C"
-                                  - name: "1/24 12:05 am"
-                                    sensor1: 25.625
-                                    sensor2: 25.625
-                                    units: "°C"
-                              humidity:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/DataPoint"
-                                example:
-                                  - name: "1/24 12:00 am"
-                                    sensor1: 50.000
-                                    sensor2: 50.000
-                                    units: "%rH"
-                                  - name: "1/24 12:05 am"
-                                    sensor1: 50.625
-                                    sensor2: 50.625
-                                    units: "%rH"
-                          series:
-                            type: array
-                            items:
-                              $ref: "#/components/schemas/ChartSeries"
-                            example:
-                              - name: "sensor1"
-                                color: "lime"
-                              - name: "sensor2"
-                                color: "blue"
-        401:
-          description: "Unauthorized"
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      statusCode:
-                        example: 401
-                      error:
-                        properties:
-                          name:
-                            example: "Unauthorized"
-                          url:
-                            example: "/api/v2/sensors/chart-data"
-                          details:
-                            items:
-                              example: "Invalid or Missing JWT."
-
   /api/v2/sensors/supported-models:
     get:
       security:
@@ -8500,7 +8330,7 @@ components:
           items:
             type: string
 
-    ChartDataEntry:
+    DeviceDataQueryRow:
       type: object
       required:
         - id
@@ -8577,7 +8407,7 @@ components:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/ChartDataEntry"
+            $ref: "#/components/schemas/DeviceDataQueryRow"
         nextCursor:
           type: string
           description: "base64-encoded ISO 8601 timestamp for next page"
@@ -8593,7 +8423,7 @@ components:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/ChartDataEntry"
+            $ref: "#/components/schemas/DeviceDataQueryRow"
         nextCursor:
           type: string
           description: "base64-encoded ISO 8601 timestamp for next page"
@@ -9391,31 +9221,6 @@ components:
       description: >
         An obejct of active sensor reading types and their units.
       type: object
-
-    DataPoint:
-      description: >
-        A data point for recharts.
-      type: object
-      required:
-        - "name"
-      properties:
-        name:
-          type: string
-        units:
-          type: string
-
-    ChartSeries:
-      description: >
-        An object containing both a name and a color. Used to add flair to a line on a chart.
-      type: object
-      required:
-        - "name"
-        - "color"
-      properties:
-        name:
-          type: string
-        color:
-          type: string
 
     CameraSettings:
       description: >

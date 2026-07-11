@@ -21,7 +21,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DefaultColors } from "../../../colors";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
 import { useRevalidator } from "react-router-dom";
 import { Models } from "@sproot/sproot-common/src/sensors/Models";
 import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";

@@ -1,4 +1,4 @@
-function formatDateForChart(date: Date | string): string {
+function formatDateForDisplay(date: Date | string): string {
   if (typeof date === "string") {
     date = new Date(date);
   }
@@ -33,7 +33,7 @@ function convertFahrenheitToCelsius(value: number | string | undefined | null): 
 }
 
 export {
-  formatDateForChart,
+  formatDateForDisplay,
   formatDecimalReadingForDisplay,
   convertCelsiusToFahrenheit,
   convertFahrenheitToCelsius,

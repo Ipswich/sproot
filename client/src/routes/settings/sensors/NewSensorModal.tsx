@@ -17,7 +17,7 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DefaultColors } from "../../../colors";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
 import { Fragment } from "react";
 import { useRevalidator } from "react-router-dom";
 import { Models } from "@sproot/sproot-common/src/sensors/Models";

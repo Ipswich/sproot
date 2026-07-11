@@ -17,8 +17,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     frequency: number = 800,
     logger: winston.Logger,
   ) {
@@ -27,8 +26,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       frequency,
       logger,
     );
@@ -66,8 +64,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.#mdnsService,
       this.maxCacheSize,
       this.initialCacheLookback,
-      this.maxChartDataSize,
-      this.chartDataPointInterval,
+      this.cacheBucketMinutes,
       this.logger,
     );
     (this.usedPins[output.subcontrollerId] as Record<string, string[]>)[output.address]?.push(
@@ -102,8 +99,7 @@ class ESP32_PCA9685Output extends OutputBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<ESP32_PCA9685Output> {
     const esp32PCA9685Output = new ESP32_PCA9685Output(
@@ -114,8 +110,7 @@ class ESP32_PCA9685Output extends OutputBase {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return esp32PCA9685Output.initializeAsync();
@@ -129,8 +124,7 @@ class ESP32_PCA9685Output extends OutputBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -139,8 +133,7 @@ class ESP32_PCA9685Output extends OutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     this.subcontroller = subcontroller;

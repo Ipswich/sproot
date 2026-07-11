@@ -1,6 +1,6 @@
 import {
   convertCelsiusToFahrenheit,
-  formatDateForChart,
+  formatDateForDisplay,
 } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { Units } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { getDownsampleMinutes } from "./queryTypes";
@@ -46,7 +46,7 @@ export function buildChartTimeline(
     current <= lastBucket;
     current += intervalMs
   ) {
-    timeline.push({ name: formatDateForChart(new Date(current)) });
+    timeline.push({ name: formatDateForDisplay(new Date(current)) });
   }
 
   return timeline;

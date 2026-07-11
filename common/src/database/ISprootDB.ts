@@ -62,7 +62,7 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBReading[]>;
-  getSensorChartReadingsAsync(
+  getBucketedSensorReadingsAsync(
     sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
@@ -91,7 +91,7 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
-  getOutputChartStatesAsync(
+  getBucketedOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
@@ -279,7 +279,7 @@ interface ISprootDB {
   addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number>;
   deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
 
-  // Raw data query endpoints (for client-side formatting, not Recharts consumption)
+  // Raw data query endpoints
   querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse>;
   queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse>;
 }
@@ -501,7 +501,7 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async getOutputChartStatesAsync(
+  async getBucketedOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
@@ -608,7 +608,7 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async getSensorChartReadingsAsync(
+  async getBucketedSensorReadingsAsync(
     sensor: ISensorBase,
     since: Date,
     minutes: number,

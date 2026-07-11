@@ -77,8 +77,7 @@ export default async function setupAsync(): Promise<Express> {
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
-    Constants.MAX_CHART_DATA_POINTS,
-    Constants.CHART_DATA_POINT_INTERVAL,
+    5,
     logger,
   );
   app.set(DI_KEYS.SensorList, sensorList);
@@ -88,8 +87,7 @@ export default async function setupAsync(): Promise<Express> {
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
-    Constants.MAX_CHART_DATA_POINTS,
-    Constants.CHART_DATA_POINT_INTERVAL,
+    5,
     logger,
   );
   app.set(DI_KEYS.OutputList, outputList);

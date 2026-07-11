@@ -23,7 +23,7 @@ import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTab
 import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
 import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms/PCA9685Form";
 import { OutputFormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
-import { DefaultColors } from "../../../colors";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import TPLinkSmartPlugForm from "./forms/TPLinkSmartPlugForm";

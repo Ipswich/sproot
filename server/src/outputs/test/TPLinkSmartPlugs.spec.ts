@@ -47,7 +47,6 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       5000,
     );
@@ -131,7 +130,6 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       5000,
     );
@@ -173,7 +171,6 @@ describe("tplinkPlug.ts tests", async function () {
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
       mockSprootDB,
-      5,
       5,
       5,
       5,
@@ -244,7 +241,6 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       50,
     );
@@ -282,7 +278,6 @@ describe("tplinkPlug.ts tests", async function () {
     await using tplinkSmartPlugs = new TPLinkSmartPlugs(
       eventBus,
       mockSprootDB,
-      5,
       5,
       5,
       5,
@@ -418,7 +413,7 @@ describe("tplinkPlug.ts tests", async function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(eventBus, mockSprootDB, 5, 5, 5, 5, logger);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(eventBus, mockSprootDB, 5, 5, 5, logger);
     const plug = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
@@ -515,7 +510,7 @@ describe("tplinkPlug.ts tests", async function () {
     ]);
     const eventBus = new MemoryEventBus(logger);
 
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(eventBus, sprootDB, 5, 5, 5, 5, logger, 50);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(eventBus, sprootDB, 5, 5, 5, logger, 50);
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,

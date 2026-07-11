@@ -101,7 +101,7 @@ export interface DataQueryXAxis {
   values: string[];
 }
 
-export interface ChartDataEntry {
+export interface DeviceDataQueryRow {
   id: number;
   name: string;
   units: string;
@@ -110,13 +110,13 @@ export interface ChartDataEntry {
 
 export interface SensorDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: ChartDataEntry[];
+  data: DeviceDataQueryRow[];
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
 export interface OutputDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: ChartDataEntry[];
+  data: DeviceDataQueryRow[];
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 

@@ -115,7 +115,6 @@ describe("OutputList.ts tests", function () {
         5,
         5,
         5,
-        5,
         logger,
       );
       assert.equal(Object.keys(outputList.outputs).length, 7);
@@ -215,7 +214,6 @@ describe("OutputList.ts tests", function () {
         5,
         5,
         5,
-        5,
         logger,
       );
 
@@ -290,7 +288,6 @@ describe("OutputList.ts tests", function () {
         eventBus,
         mockSprootDB,
         mockMdnsService,
-        5,
         5,
         5,
         5,

@@ -25,8 +25,7 @@ class OutputList implements AsyncDisposable {
   #isUpdating: boolean = false;
   maxCacheSize: number;
   initialCacheLookback: number;
-  maxChartDataSize: number;
-  chartDataPointInterval: number;
+  cacheBucketMinutes: number;
   #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
@@ -35,8 +34,7 @@ class OutputList implements AsyncDisposable {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<OutputList> {
     const outputList = new OutputList(
@@ -45,8 +43,7 @@ class OutputList implements AsyncDisposable {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return outputList.regenerateAsync();
@@ -58,8 +55,7 @@ class OutputList implements AsyncDisposable {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
@@ -70,8 +66,7 @@ class OutputList implements AsyncDisposable {
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       undefined,
       this.#logger,
     );
@@ -81,8 +76,7 @@ class OutputList implements AsyncDisposable {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       undefined,
       this.#logger,
     );
@@ -91,14 +85,12 @@ class OutputList implements AsyncDisposable {
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       this.#logger,
     );
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
-    this.maxChartDataSize = maxChartDataSize;
-    this.chartDataPointInterval = chartDataPointInterval;
+    this.cacheBucketMinutes = cacheBucketMinutes;
 
     const outputModifiedListener = async (_event: OutputModifiedEvent) => {
       await this.regenerateAsync();
@@ -229,7 +221,7 @@ class OutputList implements AsyncDisposable {
           // Check for actual output changes
           if (this.#outputs[key]?.name != output.name) {
             changeList.push("Name");
-            //Also updates chart data (and series)
+            // Also updates name in cache
             this.#outputs[key]!.updateName(output.name);
           }
 
@@ -245,7 +237,7 @@ class OutputList implements AsyncDisposable {
 
           if (this.#outputs[key]?.color != output.color) {
             changeList.push("Color");
-            //Also updates chart data (and series)
+            // Also updates color in cache
             this.#outputs[key]!.updateColor(output.color);
           }
 
@@ -412,8 +404,7 @@ class OutputList implements AsyncDisposable {
           this.#sprootDB,
           this.maxCacheSize,
           this.initialCacheLookback,
-          this.maxChartDataSize,
-          this.chartDataPointInterval,
+          this.cacheBucketMinutes,
           this.#logger,
         );
         break;
