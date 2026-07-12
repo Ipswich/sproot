@@ -54,7 +54,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: config.validBody,
+        params: { id: 1 },
+        query: { ...config.validBody },
       } as unknown as Request;
 
       const result = (await config.handler(mockRequest, mockResponse)) as SuccessResponse;
@@ -87,7 +88,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: config.validBody,
+        params: { id: 1 },
+        query: { ...config.validBody },
       } as unknown as Request;
 
       const result = (await config.handler(mockRequest, mockResponse)) as SuccessResponse;
@@ -105,7 +107,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: {},
+        params: { id: 1 },
+        query: {},
       } as unknown as Request;
 
       const result = (await config.handler(mockRequest, mockResponse)) as ErrorResponse;
@@ -129,7 +132,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: {
+        params: { id: 1 },
+        query: {
           timeRange: { start: "not-a-date", end: "2024-01-01T01:00:00.000Z" },
         },
       } as unknown as Request;
@@ -152,7 +156,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: {
+        params: { id: 1 },
+        query: {
           timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
           limit: 0,
         },
@@ -167,7 +172,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
       );
     });
 
-    it("should return 400 when validation fails — invalid ids", async () => {
+    it("should return 400 when validation fails — invalid id", async () => {
       const mockRequest = {
         app: {
           get: (key: string) => {
@@ -176,9 +181,9 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: {
+        params: { id: "not-a-number" },
+        query: {
           timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
-          ids: ["not-a-number"],
         },
       } as unknown as Request;
 
@@ -200,7 +205,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: {
+        params: { id: 1 },
+        query: {
           timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
           aggregates: ["invalid_agg"],
         },
@@ -224,7 +230,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: {
+        params: { id: 1 },
+        query: {
           timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
           cursor: 12345,
         },
@@ -255,7 +262,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: config.validBody,
+        params: { id: 1 },
+        query: { ...config.validBody },
       } as unknown as Request;
 
       const result = (await config.handler(mockRequest, mockResponse)) as ErrorResponse;
@@ -284,7 +292,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: config.validBody,
+        params: { id: 1 },
+        query: { ...config.validBody },
       } as unknown as Request;
 
       const result = (await config.handler(mockRequest, mockResponse)) as ErrorResponse;
@@ -312,7 +321,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: config.validBody,
+        params: { id: 1 },
+        query: { ...config.validBody },
       } as unknown as Request;
 
       const result = (await config.handler(mockRequest, mockResponse)) as ErrorResponse;
@@ -334,10 +344,10 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: {
+        params: { id: 2 },
+        query: {
           ...config.validBody,
           downsample: "1h",
-          ids: [2, 3],
           aggregates: ["avg", "max"],
           limit: 100,
           cursor: Buffer.from("2024-01-01T00:30:00.000Z").toString("base64"),
@@ -350,7 +360,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
         sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub
       ).getCall(0).args[0];
       assert.equal(callArg.downsample, "1h");
-      assert.deepEqual(callArg.ids, [2, 3]);
+      assert.equal(callArg.id, 2);
       assert.deepEqual(callArg.aggregates, ["avg", "max"]);
       assert.equal(callArg.limit, 100);
       assert.isDefined(callArg.cursor);
@@ -373,7 +383,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
           },
         },
         originalUrl: config.url,
-        body: config.validBody,
+        params: { id: 1 },
+        query: { ...config.validBody },
       } as unknown as Request;
 
       const result = (await config.handler(mockRequest, mockResponse)) as SuccessResponse;
@@ -393,7 +404,8 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
               },
             },
             originalUrl: config.url,
-            body: test.body,
+            params: { id: 1 },
+            query: test.body,
           } as unknown as Request;
 
           const result = (await config.handler(mockRequest, mockResponse)) as ErrorResponse;

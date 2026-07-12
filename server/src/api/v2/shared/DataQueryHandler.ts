@@ -5,7 +5,7 @@ import { SprootDB, InvalidCursorError } from "../../../database/SprootDB";
 import { safeErrorMessage, GENERIC_ERROR_MESSAGE } from "../../../utils/errorSanitizer";
 import { ValidationResultType } from "@sproot/api/v2/QueryTypes";
 
-type ValidatorFn = (body: unknown) => ValidationResultType;
+type ValidatorFn = (params: Record<string, unknown>, query: Record<string, unknown>) => ValidationResultType;
 
 type QueryFn<T, R> = (db: SprootDB, params: T) => Promise<R>;
 
@@ -16,7 +16,9 @@ export function createDataQueryHandler<T, R extends { data: unknown; nextCursor?
   return async (request: Request, response: Response): Promise<SuccessResponse | ErrorResponse> => {
     const sprootDB = request.app.get(DI_KEYS.SprootDB) as SprootDB;
 
-    const validation = validate(request.body);
+    const query = (request.query ?? {}) as Record<string, unknown>;
+    const params = (request.params ?? {}) as Record<string, unknown>;
+    const validation = validate(params, query);
     if (!validation.valid) {
       return {
         statusCode: 400,
