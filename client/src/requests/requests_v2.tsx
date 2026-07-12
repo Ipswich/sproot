@@ -1745,11 +1745,28 @@ export async function getSubControllerApplicationAsync(model: string) {
 export async function fetchSensorDataAsync(
   request: SensorDataQueryRequest,
 ): Promise<SensorDataQueryResponse> {
-  const response = await fetch(`${SERVER_URL}/api/v2/sensors/data`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  const url = new URL(`${SERVER_URL}/api/v2/sensors/${request.id}/data`);
+  url.searchParams.set("timeRange.start", request.timeRange.start);
+  url.searchParams.set("timeRange.end", request.timeRange.end);
+  if (request.downsample) url.searchParams.set("downsample", request.downsample);
+  if (request.cursor) url.searchParams.set("cursor", request.cursor);
+  if (request.limit) url.searchParams.set("limit", String(request.limit));
+  if (request.readingTypes) {
+    for (const rt of request.readingTypes) {
+      url.searchParams.append("readingTypes", rt);
+    }
+  }
+  if (request.aggregates) {
+    for (const agg of request.aggregates) {
+      url.searchParams.append("aggregates", agg);
+    }
+  }
+  if (request.percentile !== undefined) {
+    url.searchParams.set("percentile", String(request.percentile));
+  }
+  const response = await fetch(url.toString(), {
+    method: "GET",
     mode: "cors",
-    body: JSON.stringify(request),
   });
   if (!response.ok) {
     console.error(
@@ -1763,11 +1780,23 @@ export async function fetchSensorDataAsync(
 export async function fetchOutputDataAsync(
   request: OutputDataQueryRequest,
 ): Promise<OutputDataQueryResponse> {
-  const response = await fetch(`${SERVER_URL}/api/v2/outputs/data`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  const url = new URL(`${SERVER_URL}/api/v2/outputs/${request.id}/data`);
+  url.searchParams.set("timeRange.start", request.timeRange.start);
+  url.searchParams.set("timeRange.end", request.timeRange.end);
+  if (request.downsample) url.searchParams.set("downsample", request.downsample);
+  if (request.cursor) url.searchParams.set("cursor", request.cursor);
+  if (request.limit) url.searchParams.set("limit", String(request.limit));
+  if (request.aggregates) {
+    for (const agg of request.aggregates) {
+      url.searchParams.append("aggregates", agg);
+    }
+  }
+  if (request.percentile !== undefined) {
+    url.searchParams.set("percentile", String(request.percentile));
+  }
+  const response = await fetch(url.toString(), {
+    method: "GET",
     mode: "cors",
-    body: JSON.stringify(request),
   });
   if (!response.ok) {
     console.error(
