@@ -35,7 +35,7 @@ router.post("/", async (req: Request, res: Response) => {
   return;
 });
 
-router.post("/data", async (req: Request, res: Response) => {
+router.get("/:id/data", async (req: Request, res: Response) => {
   const response = await outputDataQueryHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
