@@ -1828,8 +1828,8 @@ paths:
                                 - "Failed to delete output from database."
                                 - "Database connection failed."
 
-  /api/v2/outputs/data:
-    post:
+  /api/v2/outputs/{id}/data:
+    get:
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1840,12 +1840,68 @@ paths:
         Returns historical output data with optional downsampling and aggregation. Uses TimescaleDB
         continuous aggregates for known intervals (5m, 1h, 1d). Other intervals compute on-the-fly
         from the raw hypertable. Supports cursor-based pagination for large datasets.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/OutputDataQueryRequest"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "Output ID to query"
+        - name: timeRange.start
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Start of time range (ISO 8601)"
+        - name: timeRange.end
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "End of time range (ISO 8601)"
+        - name: downsample
+          in: query
+          schema:
+            type: string
+          description: "Downsample interval (e.g. '5m', '1h', '1d', '15 minutes')"
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: "Base64-encoded ISO 8601 timestamp for pagination"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            default: 500
+          description: "Maximum number of data points"
+        - name: aggregates
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - "min"
+                - "max"
+                - "avg"
+                - "count"
+                - "sum"
+                - "stddev"
+                - "percentile"
+                - "first"
+                - "last"
+          description: "Aggregate functions to compute"
+        - name: percentile
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+          description: "Percentile value for percentile aggregate (0-1)"
       responses:
         200:
           description: "Success"
@@ -1874,7 +1930,7 @@ paths:
                           name:
                             example: "Validation Error"
                           url:
-                            example: "/api/v2/outputs/data"
+                            example: "/api/v2/outputs/1/data"
                           details:
                             items:
                               example:
@@ -1895,7 +1951,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/outputs/data"
+                            example: "/api/v2/outputs/1/data"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -1914,7 +1970,7 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/outputs/data"
+                            example: "/api/v2/outputs/1/data"
                           details:
                             items:
                               example: "Failed to query output data: database error"
@@ -4790,8 +4846,8 @@ paths:
                                 - "Failed to delete sensor from database."
                                 - "Database connection failed."
 
-  /api/v2/sensors/data:
-    post:
+  /api/v2/sensors/{id}/data:
+    get:
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -4802,12 +4858,75 @@ paths:
         Returns historical sensor data with optional downsampling and aggregation. Uses TimescaleDB
         continuous aggregates for known intervals (5m, 1h, 1d). Other intervals compute on-the-fly
         from the raw hypertable. Supports cursor-based pagination for large datasets.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SensorDataQueryRequest"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "Sensor ID to query"
+        - name: timeRange.start
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Start of time range (ISO 8601)"
+        - name: timeRange.end
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "End of time range (ISO 8601)"
+        - name: downsample
+          in: query
+          schema:
+            type: string
+          description: "Downsample interval (e.g. '5m', '1h', '1d', '15 minutes')"
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: "Base64-encoded ISO 8601 timestamp for pagination"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            default: 500
+          description: "Maximum number of data points"
+        - name: readingTypes
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter by reading type (metric name)"
+        - name: aggregates
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - "min"
+                - "max"
+                - "avg"
+                - "count"
+                - "sum"
+                - "stddev"
+                - "percentile"
+                - "first"
+                - "last"
+          description: "Aggregate functions to compute"
+        - name: percentile
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+          description: "Percentile value for percentile aggregate (0-1)"
       responses:
         200:
           description: "Success"
@@ -4836,7 +4955,7 @@ paths:
                           name:
                             example: "Validation Error"
                           url:
-                            example: "/api/v2/sensors/data"
+                            example: "/api/v2/sensors/1/data"
                           details:
                             items:
                               example:
@@ -4857,7 +4976,7 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/sensors/data"
+                            example: "/api/v2/sensors/1/data"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
@@ -4876,7 +4995,7 @@ paths:
                           name:
                             example: "Internal Server Error"
                           url:
-                            example: "/api/v2/sensors/data"
+                            example: "/api/v2/sensors/1/data"
                           details:
                             items:
                               example: "Failed to query sensor data: database error"
@@ -8223,11 +8342,10 @@ components:
       allOf:
         - $ref: "#/components/schemas/DataQueryRequestBase"
         - properties:
-            ids:
-              type: array
-              items:
-                type: integer
-              description: "Filter by sensor IDs"
+            id:
+              type: integer
+              minimum: 1
+              description: "Sensor ID to query"
             readingTypes:
               type: array
               items:
@@ -8259,11 +8377,10 @@ components:
       allOf:
         - $ref: "#/components/schemas/DataQueryRequestBase"
         - properties:
-            ids:
-              type: array
-              items:
-                type: integer
-              description: "Filter by output IDs"
+            id:
+              type: integer
+              minimum: 1
+              description: "Output ID to query"
             aggregates:
               type: array
               items:
@@ -8405,9 +8522,8 @@ components:
         xAxis:
           $ref: "#/components/schemas/DataQueryXAxis"
         data:
-          type: array
-          items:
-            $ref: "#/components/schemas/DeviceDataQueryRow"
+          $ref: "#/components/schemas/DeviceDataQueryRow"
+          nullable: true
         nextCursor:
           type: string
           description: "base64-encoded ISO 8601 timestamp for next page"
@@ -8421,9 +8537,8 @@ components:
         xAxis:
           $ref: "#/components/schemas/DataQueryXAxis"
         data:
-          type: array
-          items:
-            $ref: "#/components/schemas/DeviceDataQueryRow"
+          $ref: "#/components/schemas/DeviceDataQueryRow"
+          nullable: true
         nextCursor:
           type: string
           description: "base64-encoded ISO 8601 timestamp for next page"
