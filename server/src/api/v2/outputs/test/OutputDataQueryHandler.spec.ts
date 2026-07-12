@@ -10,25 +10,23 @@ const validBody: Partial<OutputDataQueryRequest> = {
 };
 
 const responseData = {
-  data: [
-    {
-      id: 1,
-      name: "output_1",
-      units: "V",
-      statistics: {
-        avg: [100],
-        min: [50],
-        max: [150],
-        count: [60],
-      },
+  data: {
+    id: 1,
+    name: "output_1",
+    units: "V",
+    statistics: {
+      avg: [100],
+      min: [50],
+      max: [150],
+      count: [60],
     },
-  ],
+  },
   xAxis: { field: "time", values: ["2024-01-01T00:00:00.000Z"] },
 };
 
 testDataQueryHandlerTests<OutputDataQueryRequest, typeof responseData>({
   handlerName: "OutputDataQueryHandler.ts",
-  url: "/api/v2/outputs/data",
+  url: "/api/v2/outputs/1/data",
   handler: outputDataQueryHandlerAsync,
   queryMethod: "queryOutputDataAsync",
   validBody,

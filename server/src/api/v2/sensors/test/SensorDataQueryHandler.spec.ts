@@ -10,25 +10,23 @@ const validBody: Partial<SensorDataQueryRequest> = {
 };
 
 const responseData = {
-  data: [
-    {
-      id: 1,
-      name: "temperature",
-      units: "°C",
-      statistics: {
-        avg: [25],
-        min: [20],
-        max: [30],
-        count: [60],
-      },
+  data: {
+    id: 1,
+    name: "temperature",
+    units: "°C",
+    statistics: {
+      avg: [25],
+      min: [20],
+      max: [30],
+      count: [60],
     },
-  ],
+  },
   xAxis: { field: "time", values: ["2024-01-01T00:00:00.000Z"] },
 };
 
 testDataQueryHandlerTests<SensorDataQueryRequest, typeof responseData>({
   handlerName: "SensorDataQueryHandler.ts",
-  url: "/api/v2/sensors/data",
+  url: "/api/v2/sensors/1/data",
   handler: sensorDataQueryHandlerAsync,
   queryMethod: "querySensorDataAsync",
   validBody,
