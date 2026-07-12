@@ -40,6 +40,7 @@ import {
   OutputDataQueryRequest,
   SensorDataQueryResponse,
   OutputDataQueryResponse,
+  DeviceDataQueryRow,
 } from "@sproot/api/v2/QueryTypes";
 import * as winston from "winston";
 
@@ -794,11 +795,11 @@ class MockSprootDB implements ISprootDB {
 
   // Raw data query mocks
   async querySensorDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
-    return { xAxis: { field: "time", values: [] }, data: [] };
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
   }
 
   async queryOutputDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
-    return { xAxis: { field: "time", values: [] }, data: [] };
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
   }
 
   async deleteOldDatabaseAsync(_logger: winston.Logger): Promise<void> {

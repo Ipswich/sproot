@@ -75,14 +75,14 @@ export interface DataQueryRequestBase {
 }
 
 export interface SensorDataQueryRequest extends DataQueryRequestBase {
-  ids?: number[];
+  id: number;
   readingTypes?: string[];
   aggregates?: Aggregate[];
   percentile?: number; // 0-1, default 0.5
 }
 
 export interface OutputDataQueryRequest extends DataQueryRequestBase {
-  ids?: number[];
+  id: number;
   aggregates?: Aggregate[];
   percentile?: number; // 0-1, default 0.5
 }
@@ -110,13 +110,13 @@ export interface DeviceDataQueryRow {
 
 export interface SensorDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: DeviceDataQueryRow[];
+  data: DeviceDataQueryRow;
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
 export interface OutputDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: DeviceDataQueryRow[];
+  data: DeviceDataQueryRow;
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
@@ -231,17 +231,12 @@ function validateCursor(cursor: unknown): { valid: true } | { valid: false; erro
   return { valid: true };
 }
 
-function validateIds(ids: unknown): { valid: true } | { valid: false; errors: string[] } {
-  if (ids === undefined) {
-    return { valid: true };
+function validateId(id: unknown): { valid: true } | { valid: false; errors: string[] } {
+  if (typeof id !== "number" || !Number.isFinite(id) || id <= 0) {
+    return { valid: false, errors: ["id must be a positive integer"] };
   }
-  if (!Array.isArray(ids)) {
-    return { valid: false, errors: ["ids must be an array"] };
-  }
-  for (const id of ids) {
-    if (typeof id !== "number" || !Number.isFinite(id)) {
-      return { valid: false, errors: ["ids must contain only numbers"] };
-    }
+  if (!Number.isInteger(id)) {
+    return { valid: false, errors: ["id must be an integer"] };
   }
   return { valid: true };
 }
@@ -322,7 +317,7 @@ type ValidationField =
   | { name: "downsample"; required: false }
   | { name: "cursor"; required: false }
   | { name: "limit"; required: false }
-  | { name: "ids"; required: false; arraySizeValidator?: true }
+  | { name: "id"; required: true }
   | { name: "readingTypes"; required: false; arraySizeValidator?: true }
   | { name: "aggregates"; required: false }
   | { name: "percentile"; required: false };
@@ -352,13 +347,9 @@ function runValidationChecks(req: Record<string, unknown>, fields: ValidationFie
         if (!result.valid) errors.push(...result.errors);
         break;
       }
-      case "ids": {
-        const idsResult = validateIds(req["ids"]);
-        if (!idsResult.valid) errors.push(...idsResult.errors);
-        if (field.arraySizeValidator) {
-          const sizeResult = validateArraySize(req["ids"], "ids", MAX_ARRAY_SIZE);
-          if (!sizeResult.valid) errors.push(...sizeResult.errors);
-        }
+      case "id": {
+        const idResult = validateId(req["id"]);
+        if (!idResult.valid) errors.push(...idResult.errors);
         break;
       }
       case "readingTypes": {
@@ -394,7 +385,7 @@ function buildValidationData(
   downsample: Downsample | undefined;
   cursor: string | undefined;
   limit: number;
-  ids: number[] | undefined;
+  id: number;
   aggregates: Aggregate[];
   percentile: number;
   readingTypes?: string[];
@@ -404,7 +395,7 @@ function buildValidationData(
     downsample: Downsample | undefined;
     cursor: string | undefined;
     limit: number;
-    ids: number[] | undefined;
+    id: number;
     aggregates: Aggregate[];
     percentile: number;
     readingTypes?: string[];
@@ -413,7 +404,7 @@ function buildValidationData(
     downsample: req["downsample"] as Downsample | undefined,
     cursor: req["cursor"] as string | undefined,
     limit: (req["limit"] as number) ?? DEFAULT_LIMIT,
-    ids: req["ids"] as number[] | undefined,
+    id: req["id"] as number,
     aggregates: (req["aggregates"] as Aggregate[] | undefined) ?? [...DEFAULT_AGGREGATES],
     percentile: (req["percentile"] as number) ?? 0.5,
   };
@@ -440,7 +431,7 @@ const SENSOR_VALIDATOR_CONFIG: ValidatorConfig = {
     "downsample",
     "cursor",
     "limit",
-    "ids",
+    "id",
     "readingTypes",
     "aggregates",
     "percentile",
@@ -450,7 +441,7 @@ const SENSOR_VALIDATOR_CONFIG: ValidatorConfig = {
     { name: "downsample", required: false },
     { name: "cursor", required: false },
     { name: "limit", required: false },
-    { name: "ids", required: false, arraySizeValidator: true },
+    { name: "id", required: true },
     { name: "readingTypes", required: false, arraySizeValidator: true },
     { name: "aggregates", required: false },
     { name: "percentile", required: false },
@@ -459,13 +450,13 @@ const SENSOR_VALIDATOR_CONFIG: ValidatorConfig = {
 };
 
 const OUTPUT_VALIDATOR_CONFIG: ValidatorConfig = {
-  allowedFields: ["timeRange", "downsample", "cursor", "limit", "ids", "aggregates", "percentile"],
+  allowedFields: ["timeRange", "downsample", "cursor", "limit", "id", "aggregates", "percentile"],
   validationFields: [
     { name: "timeRange", required: true },
     { name: "downsample", required: false },
     { name: "cursor", required: false },
     { name: "limit", required: false },
-    { name: "ids", required: false, arraySizeValidator: true },
+    { name: "id", required: true },
     { name: "aggregates", required: false },
     { name: "percentile", required: false },
   ],
