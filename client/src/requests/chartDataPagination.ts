@@ -1,6 +1,6 @@
 export type ChartDataResponse<TData = any> = {
   xAxis: { field: string; values: string[] };
-  data: TData[];
+  data: TData | null;
   nextCursor?: string;
 };
 
@@ -63,39 +63,39 @@ export async function fetchPaginatedChartData<
     const xAxisValues = response.xAxis.values;
     allXAxisValues = [...allXAxisValues, ...xAxisValues];
 
-    for (const item of response.data) {
+    if (response.data != null) {
+      const item = response.data;
       const key = (item as Record<string, unknown>)["id"] as
         string | number | undefined;
-      if (key == null) continue;
+      if (key != null) {
+        const existing = dataMap.get(key);
+        if (existing) {
+          const existingEntry = existing as Record<string, unknown>;
+          const newItem = item as Record<string, unknown>;
+          const existingStats = existingEntry["statistics"] as Record<
+            string,
+            (number | null)[]
+          >;
+          const newStats = newItem["statistics"] as Record<
+            string,
+            (number | null)[]
+          >;
 
-      const existing = dataMap.get(key);
-      if (existing) {
-        // Merge statistics arrays from this page into the existing entry
-        const existingEntry = existing as Record<string, unknown>;
-        const newItem = item as Record<string, unknown>;
-        const existingStats = existingEntry["statistics"] as Record<
-          string,
-          (number | null)[]
-        >;
-        const newStats = newItem["statistics"] as Record<
-          string,
-          (number | null)[]
-        >;
-
-        if (existingStats && newStats) {
-          for (const agg of Object.keys(newStats)) {
-            if (agg in existingStats) {
-              (existingStats[agg] as (number | null)[]) = [
-                ...(existingStats[agg] as (number | null)[]),
-                ...(newStats[agg] as (number | null)[]),
-              ];
-            } else {
-              existingStats[agg] = [...newStats[agg]!];
+          if (existingStats && newStats) {
+            for (const agg of Object.keys(newStats)) {
+              if (agg in existingStats) {
+                (existingStats[agg] as (number | null)[]) = [
+                  ...(existingStats[agg] as (number | null)[]),
+                  ...(newStats[agg] as (number | null)[]),
+                ];
+              } else {
+                existingStats[agg] = [...newStats[agg]!];
+              }
             }
           }
+        } else {
+          dataMap.set(key, item);
         }
-      } else {
-        dataMap.set(key, item);
       }
     }
 
@@ -135,7 +135,7 @@ export async function fetchFanOutPaginatedChartData<
   // Build per-ID request templates (without cursor)
   const perIdRequests = ids.map((id) => ({
     ...initialRequest,
-    ids: [id],
+    id,
   }));
 
   let xAxisField = "time";
@@ -204,38 +204,39 @@ export async function fetchFanOutPaginatedChartData<
       }
 
       // Merge data entries
-      for (const item of response.data) {
+      if (response.data != null) {
+        const item = response.data;
         const key = (item as Record<string, unknown>)["id"] as
           | string
           | number
           | undefined;
-        if (key == null) continue;
+        if (key != null) {
+          const existing = dataMap.get(key);
+          if (existing) {
+            const existingEntry = existing as Record<string, unknown>;
+            const newItem = item as Record<string, unknown>;
+            const existingStats = existingEntry[
+              "statistics"
+            ] as Record<string, (number | null)[]>;
+            const newStats = newItem[
+              "statistics"
+            ] as Record<string, (number | null)[]>;
 
-        const existing = dataMap.get(key);
-        if (existing) {
-          const existingEntry = existing as Record<string, unknown>;
-          const newItem = item as Record<string, unknown>;
-          const existingStats = existingEntry[
-            "statistics"
-          ] as Record<string, (number | null)[]>;
-          const newStats = newItem[
-            "statistics"
-          ] as Record<string, (number | null)[]>;
-
-          if (existingStats && newStats) {
-            for (const agg of Object.keys(newStats)) {
-              if (agg in existingStats) {
-                (existingStats[agg] as (number | null)[]) = [
-                  ...(existingStats[agg] as (number | null)[]),
-                  ...(newStats[agg] as (number | null)[]),
-                ];
-              } else {
-                existingStats[agg] = [...newStats[agg]!];
+            if (existingStats && newStats) {
+              for (const agg of Object.keys(newStats)) {
+                if (agg in existingStats) {
+                  (existingStats[agg] as (number | null)[]) = [
+                    ...(existingStats[agg] as (number | null)[]),
+                    ...(newStats[agg] as (number | null)[]),
+                  ];
+                } else {
+                  existingStats[agg] = [...newStats[agg]!];
+                }
               }
             }
+          } else {
+            dataMap.set(key, item);
           }
-        } else {
-          dataMap.set(key, item);
         }
       }
     }
