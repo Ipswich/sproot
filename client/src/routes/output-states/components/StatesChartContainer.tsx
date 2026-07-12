@@ -15,7 +15,7 @@ import {
   mergeDataIntoTimeline,
   scalePercentile,
 } from "../../../requests/chartDataTypes";
-import { fetchPaginatedChartData } from "../../../requests/chartDataPagination";
+import { fetchFanOutPaginatedChartData } from "../../../requests/chartDataPagination";
 import { OutputDataTransformer } from "./OutputDataTransformer";
 import StatesChart from "./StatesChart";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
@@ -98,16 +98,14 @@ export default function StatesChartContainer({
         downsample,
         limit: queryLimit,
         aggregates: [aggregate],
-        ids,
         ...(percentile !== undefined && {
           percentile: scalePercentile(percentile),
         }),
       };
-      return fetchPaginatedChartData(fetchOutputDataAsync, request);
+      return fetchFanOutPaginatedChartData(fetchOutputDataAsync, request, ids);
     },
     enabled: outputsQuery.isSuccess && ids.length > 0,
     refetchInterval: 300000,
-    placeholderData: (previousData) => previousData,
   });
 
   const transformed = useMemo(

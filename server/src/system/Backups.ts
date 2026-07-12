@@ -40,7 +40,7 @@ export class Backups {
     }
   }
 
-  static async restoreAsync(
+  static async 8restoreAsync(
     backupPath: string,
     sprootDB: ISprootDB,
     logger: winston.Logger,

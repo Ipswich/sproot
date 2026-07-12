@@ -18,7 +18,7 @@ import {
   mergeDataIntoTimeline,
   scalePercentile,
 } from "../../../requests/chartDataTypes";
-import { fetchPaginatedChartData } from "../../../requests/chartDataPagination";
+import { fetchFanOutPaginatedChartData } from "../../../requests/chartDataPagination";
 import { ReadingsChartTransformer } from "./ReadingsChartTransformer";
 import ReadingsChart from "./ReadingsChart";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
@@ -114,16 +114,14 @@ export default function ReadingsChartContainer({
         downsample,
         limit: queryLimit,
         aggregates: [aggregate],
-        ids,
         ...(percentile !== undefined && {
           percentile: scalePercentile(percentile),
         }),
       };
-      return fetchPaginatedChartData(fetchSensorDataAsync, request);
+      return fetchFanOutPaginatedChartData(fetchSensorDataAsync, request, ids);
     },
     enabled: sensorsQuery.isSuccess && ids.length > 0,
     refetchInterval: 300000,
-    placeholderData: (previousData) => previousData,
   });
 
   const transformed = useMemo(

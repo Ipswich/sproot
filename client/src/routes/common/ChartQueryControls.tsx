@@ -138,6 +138,11 @@ export default function ChartQueryControls({
 
       {useCustomRange ? (
         <PopoverDatePickerInput
+          key={
+            customRange
+              ? `${customRange.start.getTime()}-${customRange.end.getTime()}`
+              : "empty"
+          }
           type="range"
           size="xs"
           clearable
