@@ -14,17 +14,17 @@ function statsArr(entry: DeviceDataQueryRow, key: string): (number | null)[] {
 }
 
 function assertDataEntry(
-  data: DeviceDataQueryRow[],
+  data: DeviceDataQueryRow,
   predicate: (d: DeviceDataQueryRow) => boolean,
 ): DeviceDataQueryRow {
-  const found = data.find(predicate);
-  assert.isDefined(found, "Expected data entry to be defined");
-  return found as DeviceDataQueryRow;
+  assert.isDefined(data, "Expected data entry to be defined");
+  assert.isTrue(predicate(data), "Expected data entry to match predicate");
+  return data;
 }
 
-function assertFirstEntry(data: DeviceDataQueryRow[]): DeviceDataQueryRow {
-  assert.isNotEmpty(data, "Expected data array to be non-empty");
-  return data[0] as DeviceDataQueryRow;
+function assertFirstEntry(data: DeviceDataQueryRow): DeviceDataQueryRow {
+  assert.isDefined(data, "Expected data to be defined");
+  return data;
 }
 
 // ---------------------------------------------------------------------------
@@ -174,10 +174,10 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
 
       assert.isNotEmpty(result.data);
       assert.notProperty(result, "nextCursor");
-      assert.isTrue(result.data.some((d) => d.id === 1 && d.name === "temperature"));
-      const entry1 = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
-      assert.equal(entry1.units, "°C");
-      assert.equal(statsArr(entry1, "avg").length, 1);
+      assert.equal(result.data.id, 1);
+      assert.equal(result.data.name, "temperature");
+      assert.equal(result.data.units, "°C");
+      assert.equal(statsArr(result.data, "avg").length, 1);
     });
 
     it("should return nextCursor when rows exceed limit", async () => {
@@ -192,8 +192,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isString(result.nextCursor);
-      const entry2 = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
-      assert.equal(statsArr(entry2, "avg").length, 10);
+      assert.equal(result.data.id, 1);
+      assert.equal(result.data.name, "temperature");
+      assert.equal(statsArr(result.data, "avg").length, 10);
     });
 
     it("should filter by sensor IDs", async () => {
@@ -204,11 +205,10 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.querySensorDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
-        ids: [2, 3],
+        id: 2,
       } as SensorDataQueryRequest);
 
-      assert.isTrue(result.data.some((d) => d.id === 2));
-      assert.equal(result.data.length, 1);
+      assert.equal(result.data.id, 2);
     });
 
     it("should filter by reading types", async () => {
@@ -222,7 +222,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         readingTypes: ["temperature"],
       } as SensorDataQueryRequest);
 
-      assert.isTrue(result.data.some((d) => d.id === 1 && d.name === "temperature"));
+      assert.equal(result.data.id, 1);
+      assert.equal(result.data.name, "temperature");
     });
 
     it("should handle cursor-based pagination", async () => {
@@ -332,9 +333,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
 
       assert.isNotEmpty(result.data);
       assert.notProperty(result, "nextCursor");
-      assert.isTrue(result.data.some((d) => d.id === 1));
-      const outputEntry1 = assertDataEntry(result.data, (d) => d.id === 1);
-      assert.equal(statsArr(outputEntry1, "avg").length, 1);
+      assert.equal(result.data.id, 1);
+      assert.equal(statsArr(result.data, "avg").length, 1);
     });
 
     it("should return nextCursor when rows exceed limit", async () => {
@@ -361,11 +361,10 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
-        ids: [3],
+        id: 3,
       } as OutputDataQueryRequest);
 
-      assert.isTrue(result.data.some((d) => d.id === 3));
-      assert.equal(result.data.length, 1);
+      assert.equal(result.data.id, 3);
     });
 
     it("should use default limit when none provided", async () => {
@@ -503,10 +502,10 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.isTrue(result.data.some((d) => d.id === 1 && d.name === "temperature"));
-      const entry1 = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
-      assert.equal(entry1.units, "°C");
-      assert.equal(statsArr(entry1, "avg").length, 1);
+      assert.equal(result.data.id, 1);
+      assert.equal(result.data.name, "temperature");
+      assert.equal(result.data.units, "°C");
+      assert.equal(statsArr(result.data, "avg").length, 1);
     });
 
     it("should query raw sensor_data for 4 hours interval", async () => {
@@ -521,8 +520,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      const entry = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "humidity");
-      assert.equal(statsArr(entry, "avg").length, 1);
+      assert.equal(result.data.id, 1);
+      assert.equal(result.data.name, "humidity");
+      assert.equal(statsArr(result.data, "avg").length, 1);
     });
 
     it("should filter by reading types in raw path", async () => {
@@ -537,9 +537,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.equal(result.data.length, 1);
-      const entry = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
-      assert.equal(statsArr(entry, "avg").length, 2);
+      assert.equal(result.data.id, 1);
+      assert.equal(result.data.name, "temperature");
+      assert.equal(statsArr(result.data, "avg").length, 2);
     });
 
     it("should return nextCursor when rows exceed limit in raw path", async () => {
@@ -554,8 +554,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as SensorDataQueryRequest);
 
       assert.isString(result.nextCursor);
-      const entry = assertDataEntry(result.data, (d) => d.id === 1 && d.name === "temperature");
-      assert.equal(statsArr(entry, "avg").length, 10);
+      assert.equal(result.data.id, 1);
+      assert.equal(result.data.name, "temperature");
+      assert.equal(statsArr(result.data, "avg").length, 10);
     });
   });
 
@@ -595,9 +596,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      assert.isTrue(result.data.some((d) => d.id === 1));
-      const entry = assertDataEntry(result.data, (d) => d.id === 1);
-      assert.equal(statsArr(entry, "avg").length, 1);
+      assert.equal(result.data.id, 1);
+      assert.equal(statsArr(result.data, "avg").length, 1);
     });
 
     it("should query raw output_data for 4 hours interval", async () => {
@@ -612,8 +612,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isNotEmpty(result.data);
-      const entry = assertDataEntry(result.data, (d) => d.id === 2);
-      assert.equal(statsArr(entry, "avg").length, 1);
+      assert.equal(result.data.id, 2);
+      assert.equal(statsArr(result.data, "avg").length, 1);
     });
 
     it("should return nextCursor when rows exceed limit in raw output path", async () => {
@@ -628,8 +628,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       } as OutputDataQueryRequest);
 
       assert.isString(result.nextCursor);
-      const entry = assertDataEntry(result.data, (d) => d.id === 1);
-      assert.equal(statsArr(entry, "avg").length, 10);
+      assert.equal(result.data.id, 1);
+      assert.equal(statsArr(result.data, "avg").length, 10);
     });
   });
 
@@ -725,13 +725,13 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       await db.querySensorDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
-        ids: [1, 2],
+        id: 1,
         limit: 10,
       } as SensorDataQueryRequest);
 
       const rawCalls = (knex as any).rawCalls || [];
-      const idFilterSql = rawCalls.find((s: string) => s.includes("sensor_id") && s.includes("IN"));
-      assert.isDefined(idFilterSql, "Should have a sensor_id IN filter");
+      const idFilterSql = rawCalls.find((s: string) => s.includes("sensor_id") && s.includes("="));
+      assert.isDefined(idFilterSql, "Should have a sensor_id = filter");
       assert.include(idFilterSql!, "?");
       assert.include(idFilterSql!, "sensor_id");
     });
@@ -763,13 +763,13 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
-        ids: [5, 6],
+        id: 5,
         limit: 10,
       } as OutputDataQueryRequest);
 
       const rawCalls = (knex as any).rawCalls || [];
-      const idFilterSql = rawCalls.find((s: string) => s.includes("output_id") && s.includes("IN"));
-      assert.isDefined(idFilterSql, "Should have an output_id IN filter");
+      const idFilterSql = rawCalls.find((s: string) => s.includes("output_id") && s.includes("="));
+      assert.isDefined(idFilterSql, "Should have an output_id = filter");
       assert.include(idFilterSql!, "?");
       assert.include(idFilterSql!, "output_id");
     });
@@ -821,11 +821,11 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.querySensorDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
-        ids: [999],
+        id: 999,
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.deepEqual(result.data, []);
+      assert.isUndefined(result.data);
       assert.deepEqual(result.xAxis.values, []);
       assert.notProperty(result, "nextCursor");
     });
@@ -837,11 +837,11 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
-        ids: [999],
+        id: 999,
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.deepEqual(result.data, []);
+      assert.isUndefined(result.data);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -945,7 +945,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.deepEqual(result.data, []);
+      assert.isUndefined(result.data);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -961,7 +961,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.deepEqual(result.data, []);
+      assert.isUndefined(result.data);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -977,7 +977,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.deepEqual(result.data, []);
+      assert.isUndefined(result.data);
       assert.notProperty(result, "nextCursor");
     });
   });
@@ -1029,38 +1029,34 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
     it("should return only zone 1 sensors when querying zone 1 data", async () => {
       // Zone 1 has sensors 1 (BME280) and 3 (Capacitive Moisture Sensor)
       // Zone 2 has sensors 2 (DS18B20) and 4 (ADS1115)
-      const rows = [...makeZoneSensorRows(1, 1), ...makeZoneSensorRows(3, 1)];
+      const rows = makeZoneSensorRows(1, 1);
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
       const result = await db.querySensorDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
-        ids: [1, 3],
+        id: 1,
         limit: 10,
       } as SensorDataQueryRequest);
 
-      const sensorIds = result.data.map((d) => d.id);
-      assert.includeMembers(sensorIds, [1, 3], "Should return zone 1 sensor IDs");
-      assert.equal(sensorIds.length, 2, "Should return exactly 2 zone 1 sensors");
+      assert.equal(result.data.id, 1, "Should return zone 1 sensor ID");
     });
 
     it("should return only zone 2 sensors when querying zone 2 data", async () => {
       // Zone 2 has sensors 2 (DS18B20) and 4 (ADS1115)
-      const rows = [...makeZoneSensorRows(2, 2), ...makeZoneSensorRows(4, 2)];
+      const rows = makeZoneSensorRows(2, 2);
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
       const result = await db.querySensorDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
-        ids: [2, 4],
+        id: 2,
         limit: 10,
       } as SensorDataQueryRequest);
 
-      const sensorIds = result.data.map((d) => d.id);
-      assert.includeMembers(sensorIds, [2, 4], "Should return zone 2 sensor IDs");
-      assert.equal(sensorIds.length, 2, "Should return exactly 2 zone 2 sensors");
+      assert.equal(result.data.id, 2, "Should return zone 2 sensor ID");
     });
 
     it("should return only zone 1 outputs when querying zone 1 data", async () => {
@@ -1073,13 +1069,11 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
-        ids: [1],
+        id: 1,
         limit: 10,
       } as OutputDataQueryRequest);
 
-      const outputIds = result.data.map((d) => d.id);
-      assert.includeMembers(outputIds, [1], "Should return zone 1 output ID");
-      assert.equal(outputIds.length, 1, "Should return exactly 1 zone 1 output");
+      assert.equal(result.data.id, 1, "Should return zone 1 output ID");
     });
 
     it("should return only zone 2 outputs when querying zone 2 data", async () => {
@@ -1091,13 +1085,11 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
-        ids: [5],
+        id: 5,
         limit: 10,
       } as OutputDataQueryRequest);
 
-      const outputIds = result.data.map((d) => d.id);
-      assert.includeMembers(outputIds, [5], "Should return zone 2 output ID");
-      assert.equal(outputIds.length, 1, "Should return exactly 1 zone 2 output");
+      assert.equal(result.data.id, 5, "Should return zone 2 output ID");
     });
 
     it("should return empty data when querying sensors from a non-existent zone", async () => {
@@ -1107,11 +1099,11 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.querySensorDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
-        ids: [999],
+        id: 999,
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.deepEqual(result.data, [], "Should return empty data for non-existent zone sensors");
+      assert.isUndefined(result.data, "Should return empty data for non-existent zone sensors");
     });
 
     it("should return empty data when querying outputs from a non-existent zone", async () => {
@@ -1121,11 +1113,11 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const result = await db.queryOutputDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
-        ids: [999],
+        id: 999,
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.deepEqual(result.data, [], "Should return empty data for non-existent zone outputs");
+      assert.isUndefined(result.data, "Should return empty data for non-existent zone outputs");
     });
   });
 });

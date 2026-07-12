@@ -1351,16 +1351,13 @@ export class SprootDB implements ISprootDB {
   ) {
     const cursor = this.#parseCursor(request.cursor);
     const { start, end } = request.timeRange;
-    const ids = request.ids;
+    const id = request.id;
 
     const timeFilter = cursor
       ? this.#connection.raw('"bucket" > ? AND "bucket" <= ?', [cursor, end])
       : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
 
-    const idFilter =
-      ids && ids.length > 0
-        ? this.#connection.raw(`"${idColumnName}" IN (${ids.map(() => "?").join(", ")})`, ids)
-        : this.#connection.raw("1=1");
+    const idFilter = this.#connection.raw(`"${idColumnName}" = ?`, [id]);
 
     const metricFilter =
       readingTypes && readingTypes.length > 0
@@ -1380,16 +1377,13 @@ export class SprootDB implements ISprootDB {
   ) {
     const cursor = this.#parseCursor(request.cursor);
     const { start, end } = request.timeRange;
-    const ids = (request as any).ids;
+    const id = request.id;
 
     const timeFilter = cursor
       ? this.#connection.raw('"logTime" > ? AND "logTime" <= ?', [cursor, end])
       : this.#connection.raw('"logTime" BETWEEN ? AND ?', [start, end]);
 
-    const idFilter =
-      ids && ids.length > 0
-        ? this.#connection.raw(`"${idColumnName}" IN (${ids.map(() => "?").join(", ")})`, ids)
-        : this.#connection.raw("1=1");
+    const idFilter = this.#connection.raw(`"${idColumnName}" = ?`, [id]);
 
     const metricFilter =
       readingTypes && readingTypes.length > 0
