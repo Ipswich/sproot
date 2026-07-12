@@ -114,7 +114,7 @@ export interface SensorDataQueryRequest {
   downsample?: string;
   cursor?: string;
   limit?: number;
-  ids?: number[];
+  id: number;
   readingTypes?: string[];
   aggregates?: Aggregate[];
   percentile?: number;
@@ -125,7 +125,7 @@ export interface OutputDataQueryRequest {
   downsample?: string;
   cursor?: string;
   limit?: number;
-  ids?: number[];
+  id: number;
   aggregates?: Aggregate[];
   percentile?: number;
 }
@@ -137,7 +137,7 @@ export interface SensorDataQueryResponse {
     name: string;
     units: string;
     statistics: Record<string, (number | null)[]>;
-  }[];
+  } | null;
   nextCursor?: string;
 }
 
@@ -148,6 +148,6 @@ export interface OutputDataQueryResponse {
     name: string;
     units: string;
     statistics: Record<string, (number | null)[]>;
-  }[];
+  } | null;
   nextCursor?: string;
 }
