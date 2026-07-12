@@ -2,7 +2,6 @@ import { dbToIso } from "../utils/dateUtils";
 import {
   SensorDataQueryResponse,
   OutputDataQueryResponse,
-  DeviceDataQueryRow,
   Aggregate,
 } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 
@@ -132,8 +131,10 @@ export function formatSensorDataQueryRows(
   aggregates: Aggregate[],
   nextCursor?: string,
 ): SensorDataQueryResponse {
-  const response: SensorDataQueryResponse = { xAxis: { field: "time", values: [] }, data: [] };
+  const response: SensorDataQueryResponse = { xAxis: { field: "time", values: [] }, data: null };
   if (nextCursor) response.nextCursor = nextCursor;
+
+  if (rows.length === 0) return response;
 
   // Collect all unique timestamps (descending)
   const timestampSet = new Set<string>();
@@ -179,7 +180,7 @@ export function formatSensorDataQueryRows(
     entry.values.set(timeStr, agg as Record<string, unknown>);
   }
 
-  // Build data array
+  // Build data (single entry for single-ID query)
   for (const [, entry] of sensorMetricMap) {
     const statistics: Record<string, (number | null)[]> = {};
     for (const agg of aggregates) {
@@ -188,16 +189,15 @@ export function formatSensorDataQueryRows(
         return value ? (value[agg] as number | null) : null;
       });
     }
-    response.data.push({
+    response.data = {
       id: entry.id,
       name: entry.name,
       units: entry.units,
       statistics,
-    });
+    };
+    break;
   }
 
-  // Sort by id
-  response.data.sort((a: DeviceDataQueryRow, b: DeviceDataQueryRow) => a.id - b.id);
   return response;
 }
 
@@ -206,8 +206,10 @@ export function formatOutputDataQueryRows(
   aggregates: Aggregate[],
   nextCursor?: string,
 ): OutputDataQueryResponse {
-  const response: OutputDataQueryResponse = { xAxis: { field: "time", values: [] }, data: [] };
+  const response: OutputDataQueryResponse = { xAxis: { field: "time", values: [] }, data: null };
   if (nextCursor) response.nextCursor = nextCursor;
+
+  if (rows.length === 0) return response;
 
   // Collect all unique timestamps (descending)
   const timestampSet = new Set<string>();
@@ -251,7 +253,7 @@ export function formatOutputDataQueryRows(
     entry.values.set(timeStr, agg as Record<string, unknown>);
   }
 
-  // Build data array
+  // Build data (single entry for single-ID query)
   for (const [, entry] of outputMap) {
     const statistics: Record<string, (number | null)[]> = {};
     for (const agg of aggregates) {
@@ -260,15 +262,14 @@ export function formatOutputDataQueryRows(
         return value ? (value[agg] as number | null) : null;
       });
     }
-    response.data.push({
+    response.data = {
       id: entry.id,
       name: entry.name,
       units: entry.units,
       statistics,
-    });
+    };
+    break;
   }
 
-  // Sort by id
-  response.data.sort((a: DeviceDataQueryRow, b: DeviceDataQueryRow) => a.id - b.id);
   return response;
 }

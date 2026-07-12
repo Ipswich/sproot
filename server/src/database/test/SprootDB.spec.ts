@@ -825,7 +825,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.isUndefined(result.data);
+      assert.isNull(result.data);
       assert.deepEqual(result.xAxis.values, []);
       assert.notProperty(result, "nextCursor");
     });
@@ -841,7 +841,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.isUndefined(result.data);
+      assert.isNull(result.data);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -945,7 +945,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.isUndefined(result.data);
+      assert.isNull(result.data);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -961,7 +961,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      assert.isUndefined(result.data);
+      assert.isNull(result.data);
       assert.notProperty(result, "nextCursor");
     });
 
@@ -977,7 +977,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      assert.isUndefined(result.data);
+      assert.isNull(result.data);
       assert.notProperty(result, "nextCursor");
     });
   });

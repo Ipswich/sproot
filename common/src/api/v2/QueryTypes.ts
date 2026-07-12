@@ -110,13 +110,13 @@ export interface DeviceDataQueryRow {
 
 export interface SensorDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: DeviceDataQueryRow;
+  data: DeviceDataQueryRow | null;
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
 export interface OutputDataQueryResponse {
   xAxis: DataQueryXAxis;
-  data: DeviceDataQueryRow;
+  data: DeviceDataQueryRow | null;
   nextCursor?: string; // base64-encoded ISO 8601 timestamp for next page
 }
 
