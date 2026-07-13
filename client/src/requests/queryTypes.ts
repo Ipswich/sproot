@@ -114,7 +114,7 @@ export interface SensorDataQueryRequest {
   downsample?: string;
   cursor?: string;
   limit?: number;
-  id: number;
+  id?: number;
   readingTypes?: string[];
   aggregates?: Aggregate[];
   percentile?: number;
@@ -125,7 +125,7 @@ export interface OutputDataQueryRequest {
   downsample?: string;
   cursor?: string;
   limit?: number;
-  id: number;
+  id?: number;
   aggregates?: Aggregate[];
   percentile?: number;
 }

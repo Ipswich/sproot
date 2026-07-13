@@ -648,7 +648,8 @@ export async function addNotificationActionAsync(
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data as
-    SDBNotificationAction | undefined;
+    | SDBNotificationAction
+    | undefined;
 }
 
 export async function deleteNotificationActionAsync(id: number): Promise<void> {
@@ -1748,7 +1749,8 @@ export async function fetchSensorDataAsync(
   const url = new URL(`${SERVER_URL}/api/v2/sensors/${request.id}/data`);
   url.searchParams.set("timeRange.start", request.timeRange.start);
   url.searchParams.set("timeRange.end", request.timeRange.end);
-  if (request.downsample) url.searchParams.set("downsample", request.downsample);
+  if (request.downsample)
+    url.searchParams.set("downsample", request.downsample);
   if (request.cursor) url.searchParams.set("cursor", request.cursor);
   if (request.limit) url.searchParams.set("limit", String(request.limit));
   if (request.readingTypes) {
@@ -1783,7 +1785,8 @@ export async function fetchOutputDataAsync(
   const url = new URL(`${SERVER_URL}/api/v2/outputs/${request.id}/data`);
   url.searchParams.set("timeRange.start", request.timeRange.start);
   url.searchParams.set("timeRange.end", request.timeRange.end);
-  if (request.downsample) url.searchParams.set("downsample", request.downsample);
+  if (request.downsample)
+    url.searchParams.set("downsample", request.downsample);
   if (request.cursor) url.searchParams.set("cursor", request.cursor);
   if (request.limit) url.searchParams.set("limit", String(request.limit));
   if (request.aggregates) {

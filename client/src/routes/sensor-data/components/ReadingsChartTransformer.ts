@@ -6,10 +6,8 @@ import {
 } from "../../../requests/chartDataTypes";
 import { formatDateForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import type { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import type {
-  Aggregate,
-  SensorDataQueryResponse,
-} from "../../../requests/queryTypes";
+import type { Aggregate } from "../../../requests/queryTypes";
+import type { MergedChartData } from "../../../requests/chartDataPagination";
 
 export interface TransformedSensorData {
   dataSeries: DataSeries;
@@ -19,17 +17,21 @@ export interface TransformedSensorData {
 
 export const ReadingsChartTransformer = {
   transform(
-    serverResponse: SensorDataQueryResponse | null,
+    mergedData: MergedChartData | null,
     sensors: ISensorBase[],
     aggregate: Aggregate,
   ): TransformedSensorData | null {
-    if (!serverResponse || !serverResponse.xAxis.values.length) {
+    if (
+      !mergedData ||
+      !mergedData.xAxis.values.length ||
+      mergedData.data.length === 0
+    ) {
       return null;
     }
 
     const sensorById = new Map(sensors.map((sensor) => [sensor.id, sensor]));
     const responseById = new Map(
-      serverResponse.data.map((entry) => [entry.id, entry]),
+      mergedData.data.map((entry) => [entry.id, entry]),
     );
 
     const chartSeries: ChartSeries[] = [];
@@ -50,7 +52,7 @@ export const ReadingsChartTransformer = {
       colorIndex++;
     }
 
-    for (const responseEntry of serverResponse.data) {
+    for (const responseEntry of mergedData.data) {
       if (sensorById.has(responseEntry.id)) {
         continue;
       }
@@ -63,19 +65,16 @@ export const ReadingsChartTransformer = {
     }
 
     const units =
-      aggregate === "count" ? "" : (serverResponse.data[0]?.units ?? "");
+      aggregate === "count" ? "" : (mergedData.data[0]?.units ?? "");
     const timestampMap = new Map<string, DataPoint>();
 
-    for (const [
-      timeIndex,
-      timeValue,
-    ] of serverResponse.xAxis.values.entries()) {
+    for (const [timeIndex, timeValue] of mergedData.xAxis.values.entries()) {
       const point: DataPoint = {
         name: formatDateForDisplay(timeValue),
         units,
       };
 
-      for (const responseEntry of serverResponse.data) {
+      for (const responseEntry of mergedData.data) {
         const sensor = sensorById.get(responseEntry.id);
         const key = sensor?.name || responseEntry.name;
         const stats = responseEntry.statistics[aggregate];

@@ -126,7 +126,7 @@ export default function ReadingsChartContainer({
 
   const transformed = useMemo(
     () =>
-      dataQuery.data?.data
+      dataQuery.data?.data && dataQuery.data.data.data.length > 0
         ? ReadingsChartTransformer.transform(
             dataQuery.data.data,
             visibleSensors,

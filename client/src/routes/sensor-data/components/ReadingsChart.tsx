@@ -192,6 +192,7 @@ function getSeriesStats(dataSeries: DataSeries) {
     max: Math.max(...values),
     units:
       (dataSeries.find((dataPoint) => dataPoint.units)?.units as
-        string | undefined) ?? "",
+        | string
+        | undefined) ?? "",
   };
 }

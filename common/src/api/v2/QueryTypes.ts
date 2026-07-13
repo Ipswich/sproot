@@ -464,14 +464,16 @@ const OUTPUT_VALIDATOR_CONFIG: ValidatorConfig = {
 };
 
 function createDataQueryValidator(config: ValidatorConfig) {
-  return function validateDataQueryRequest(body: unknown): ValidationResultType {
+  return function validateDataQueryRequest(params: unknown, query: unknown): ValidationResultType {
     const errors: string[] = [];
 
-    if (!body || typeof body !== "object") {
-      return { valid: false, errors: ["Request body must be an object"] };
+    let req: Record<string, unknown> = {};
+    if (params && typeof params === "object") {
+      req = { ...req, ...(params as Record<string, unknown>) };
     }
-
-    const req = body as Record<string, unknown>;
+    if (query && typeof query === "object") {
+      req = { ...req, ...(query as Record<string, unknown>) };
+    }
 
     const validationErrors = runValidationChecks(req, config.validationFields);
     errors.push(...validationErrors);
@@ -489,7 +491,8 @@ function createDataQueryValidator(config: ValidatorConfig) {
     return {
       valid: true,
       data: buildValidationData(req, config.validationFields) as
-        SensorDataQueryRequest | OutputDataQueryRequest,
+        | SensorDataQueryRequest
+        | OutputDataQueryRequest,
     };
   };
 }

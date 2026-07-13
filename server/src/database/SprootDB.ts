@@ -1482,10 +1482,7 @@ export class SprootDB implements ISprootDB {
     });
   }
 
-  #mergeOutputStates(
-    baseRows: SDBOutputState[],
-    tailRows: SDBOutputState[],
-  ): SDBOutputState[] {
+  #mergeOutputStates(baseRows: SDBOutputState[], tailRows: SDBOutputState[]): SDBOutputState[] {
     const mergedRows = new Map<string, SDBOutputState>();
     for (const row of baseRows) {
       mergedRows.set(dbToIso(row.logTime) ?? String(row.logTime), row);

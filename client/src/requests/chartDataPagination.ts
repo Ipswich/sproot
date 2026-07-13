@@ -66,7 +66,9 @@ export async function fetchPaginatedChartData<
     if (response.data != null) {
       const item = response.data;
       const key = (item as Record<string, unknown>)["id"] as
-        string | number | undefined;
+        | string
+        | number
+        | undefined;
       if (key != null) {
         const existing = dataMap.get(key);
         if (existing) {
@@ -151,9 +153,14 @@ export async function fetchFanOutPaginatedChartData<
     pageCount++;
 
     // Fan out requests in bounded parallel batches
-    const batches: Array<{ req: typeof perIdRequests[0]; index: number }>[] = [];
+    const batches: Array<{ req: (typeof perIdRequests)[0]; index: number }>[] =
+      [];
     for (let i = 0; i < perIdRequests.length; i += maxConcurrent) {
-      batches.push(perIdRequests.slice(i, i + maxConcurrent).map((req, j) => ({ req, index: i + j })));
+      batches.push(
+        perIdRequests
+          .slice(i, i + maxConcurrent)
+          .map((req, j) => ({ req, index: i + j })),
+      );
     }
 
     const allResults: PromiseSettledResult<ChartDataResponse<TData>>[] = [];
@@ -215,12 +222,14 @@ export async function fetchFanOutPaginatedChartData<
           if (existing) {
             const existingEntry = existing as Record<string, unknown>;
             const newItem = item as Record<string, unknown>;
-            const existingStats = existingEntry[
-              "statistics"
-            ] as Record<string, (number | null)[]>;
-            const newStats = newItem[
-              "statistics"
-            ] as Record<string, (number | null)[]>;
+            const existingStats = existingEntry["statistics"] as Record<
+              string,
+              (number | null)[]
+            >;
+            const newStats = newItem["statistics"] as Record<
+              string,
+              (number | null)[]
+            >;
 
             if (existingStats && newStats) {
               for (const agg of Object.keys(newStats)) {

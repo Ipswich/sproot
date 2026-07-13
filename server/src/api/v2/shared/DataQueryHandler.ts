@@ -5,7 +5,10 @@ import { SprootDB, InvalidCursorError } from "../../../database/SprootDB";
 import { safeErrorMessage, GENERIC_ERROR_MESSAGE } from "../../../utils/errorSanitizer";
 import { ValidationResultType } from "@sproot/api/v2/QueryTypes";
 
-type ValidatorFn = (params: Record<string, unknown>, query: Record<string, unknown>) => ValidationResultType;
+type ValidatorFn = (
+  params: Record<string, unknown>,
+  query: Record<string, unknown>,
+) => ValidationResultType;
 
 type QueryFn<T, R> = (db: SprootDB, params: T) => Promise<R>;
 

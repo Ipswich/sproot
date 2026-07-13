@@ -110,7 +110,7 @@ export default function StatesChartContainer({
 
   const transformed = useMemo(
     () =>
-      dataQuery.data?.data
+      dataQuery.data?.data && dataQuery.data.data.data.length > 0
         ? OutputDataTransformer.transform(
             dataQuery.data.data,
             visibleOutputs,

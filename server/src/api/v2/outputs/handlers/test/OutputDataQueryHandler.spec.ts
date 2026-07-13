@@ -12,17 +12,13 @@ function createMockResponse(): Response {
   return res;
 }
 
-function createMockRequest(body: unknown): Request {
-  return {
-    body,
-    app: { get: sinon.stub().returns({} as SprootDB) },
-    originalUrl: "/api/v2/outputs/data",
-  } as unknown as Request;
-}
-
 describe("OutputDataQueryHandler", () => {
   it("should return 400 for invalid request body", async () => {
-    const req = createMockRequest("not an object");
+    const req = {
+      params: "not an object",
+      app: { get: sinon.stub().returns({} as SprootDB) },
+      originalUrl: "/api/v2/outputs/data/1",
+    } as unknown as Request;
     const res = createMockResponse();
     const result = await outputDataQueryHandlerAsync(req, res);
     assert.equal(result.statusCode, 400);
@@ -30,7 +26,12 @@ describe("OutputDataQueryHandler", () => {
   });
 
   it("should return 400 for missing timeRange", async () => {
-    const req = createMockRequest({});
+    const req = {
+      params: { id: 1 },
+      query: {},
+      app: { get: sinon.stub().returns({} as SprootDB) },
+      originalUrl: "/api/v2/outputs/data/1",
+    } as unknown as Request;
     const res = createMockResponse();
     const result = await outputDataQueryHandlerAsync(req, res);
     assert.equal(result.statusCode, 400);
@@ -39,30 +40,30 @@ describe("OutputDataQueryHandler", () => {
   it("should return 200 with data when DB query succeeds", async () => {
     const mockDb = {
       queryOutputDataAsync: sinon.stub().resolves({
-        data: [
-          {
-            id: 1,
-            name: "relay",
-            units: "percent",
-            statistics: { avg: [100], min: [0], max: [100] },
-          },
-        ],
+        data: {
+          id: 1,
+          name: "relay",
+          units: "percent",
+          statistics: { avg: [100], min: [0], max: [100] },
+        },
         xAxis: { field: "time", values: ["2024-01-01T00:00:00.000Z"] },
       }),
     } as unknown as SprootDB;
 
     const req = {
-      body: {
+      params: { id: 1 },
+      query: {
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
       },
       app: { get: sinon.stub().returns(mockDb) },
-      originalUrl: "/api/v2/outputs/data",
+      originalUrl: "/api/v2/outputs/data/1",
       locals: { defaultProperties: { timestamp: "2024-01-01T00:00:00.000Z", version: "v2" } },
     } as unknown as Request;
     const res = createMockResponse();
     const result = await outputDataQueryHandlerAsync(req, res);
     assert.equal(result.statusCode, 200);
-    assert.isTrue((result as any).content.data.some((d: any) => d.id === 1));
+    assert.isNotNull((result as any).content.data);
+    assert.equal((result as any).content.data.id, 1);
   });
 
   it("should return 500 when DB query throws", async () => {
@@ -71,11 +72,12 @@ describe("OutputDataQueryHandler", () => {
     } as unknown as SprootDB;
 
     const req = {
-      body: {
+      params: { id: 1 },
+      query: {
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
       },
       app: { get: sinon.stub().returns(mockDb) },
-      originalUrl: "/api/v2/outputs/data",
+      originalUrl: "/api/v2/outputs/data/1",
       locals: { defaultProperties: { timestamp: "2024-01-01T00:00:00.000Z", version: "v2" } },
     } as unknown as Request;
     const res = createMockResponse();
@@ -86,17 +88,19 @@ describe("OutputDataQueryHandler", () => {
   it("should include nextCursor in response when present", async () => {
     const mockDb = {
       queryOutputDataAsync: sinon.stub().resolves({
-        data: [],
+        data: null,
         nextCursor: Buffer.from("2024-01-01T01:00:00.000Z").toString("base64"),
+        xAxis: { field: "time", values: [] },
       }),
     } as unknown as SprootDB;
 
     const req = {
-      body: {
+      params: { id: 1 },
+      query: {
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
       },
       app: { get: sinon.stub().returns(mockDb) },
-      originalUrl: "/api/v2/outputs/data",
+      originalUrl: "/api/v2/outputs/data/1",
       locals: { defaultProperties: { timestamp: "2024-01-01T00:00:00.000Z", version: "v2" } },
     } as unknown as Request;
     const res = createMockResponse();

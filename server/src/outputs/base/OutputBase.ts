@@ -284,5 +284,4 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     }
     return this.isInvertedPwm ? 100 - value : value;
   }
-
- }
+}
