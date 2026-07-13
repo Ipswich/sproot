@@ -27,6 +27,13 @@ router.get("/", (req: Request, res: Response) => {
   return;
 });
 
+router.get("/:id/data", async (req: Request, res: Response) => {
+  const response = await sensorDataQueryHandlerAsync(req, res);
+
+  res.status(response.statusCode).json(response);
+  return;
+});
+
 router.get("/:sensorId", (req: Request, res: Response) => {
   const response = get(req, res);
 
@@ -36,13 +43,6 @@ router.get("/:sensorId", (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   const response = await addAsync(req, res);
-
-  res.status(response.statusCode).json(response);
-  return;
-});
-
-router.get("/:id/data", async (req: Request, res: Response) => {
-  const response = await sensorDataQueryHandlerAsync(req, res);
 
   res.status(response.statusCode).json(response);
   return;
