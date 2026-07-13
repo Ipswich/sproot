@@ -102,9 +102,6 @@ class Timelapse implements Disposable {
    * @returns The size of the timelapse archive in MB, or null if timelapse is disabled.
    */
   async getTimelapseArchiveSizeAsync(): Promise<number | null> {
-    if (!this.#enabled) {
-      return null;
-    }
     try {
       await fs.promises.mkdir(ARCHIVE_DIRECTORY, { recursive: true });
       const files = await fs.promises.readdir(ARCHIVE_DIRECTORY);

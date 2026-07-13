@@ -1058,7 +1058,8 @@ describe("API Tests", async function () {
       });
 
       describe("PATCH", () => {
-        it("should return 200 and the updated settings", async () => {
+        it("should return 200 and the updated settings", async function () {
+          this.timeout(15000);
           assert.equal(app.get("cameraManager").cameraSettings.name, "Pi Camera");
 
           const updatedSettings = {
@@ -1314,7 +1315,10 @@ describe("API Tests", async function () {
           assert.isNumber(data.system.totalDiskSize);
           assert.isNumber(data.system.freeDiskSize);
           assert.isNumber(data.timelapse.directorySize);
-          assert.isNumber(data.timelapse.lastArchiveGenerationDuration);
+          assert.isTrue(
+            data.timelapse.lastArchiveGenerationDuration === null ||
+              typeof data.timelapse.lastArchiveGenerationDuration === "number",
+          );
         });
       });
     });

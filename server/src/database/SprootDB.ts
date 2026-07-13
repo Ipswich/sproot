@@ -1354,7 +1354,7 @@ export class SprootDB implements ISprootDB {
     const id = request.id;
 
     const timeFilter = cursor
-      ? this.#connection.raw('"bucket" > ? AND "bucket" <= ?', [cursor, end])
+      ? this.#connection.raw('"bucket" >= ? AND "bucket" < ?', [start, cursor])
       : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
 
     const idFilter = this.#connection.raw(`"${idColumnName}" = ?`, [id]);
@@ -1380,7 +1380,7 @@ export class SprootDB implements ISprootDB {
     const id = request.id;
 
     const timeFilter = cursor
-      ? this.#connection.raw('"logTime" > ? AND "logTime" <= ?', [cursor, end])
+      ? this.#connection.raw('"logTime" >= ? AND "logTime" < ?', [start, cursor])
       : this.#connection.raw('"logTime" BETWEEN ? AND ?', [start, end]);
 
     const idFilter = this.#connection.raw(`"${idColumnName}" = ?`, [id]);

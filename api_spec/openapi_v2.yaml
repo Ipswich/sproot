@@ -1880,6 +1880,8 @@ paths:
           description: "Maximum number of data points"
         - name: aggregates
           in: query
+          style: form
+          explode: true
           schema:
             type: array
             items:
@@ -1909,12 +1911,16 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    required:
+                      - content
+                    properties:
                       statusCode:
+                        type: integer
                         example: 200
                       content:
-                       $ref: "#/components/schemas/OutputDataQueryResponse"
+                        $ref: "#/components/schemas/OutputDataQueryResponse"
         400:
           description: "Bad request"
           content:
@@ -4898,6 +4904,8 @@ paths:
           description: "Maximum number of data points"
         - name: readingTypes
           in: query
+          style: form
+          explode: true
           schema:
             type: array
             items:
@@ -4905,6 +4913,8 @@ paths:
           description: "Filter by reading type (metric name)"
         - name: aggregates
           in: query
+          style: form
+          explode: true
           schema:
             type: array
             items:
@@ -4934,12 +4944,16 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    required:
+                      - content
+                    properties:
                       statusCode:
+                        type: integer
                         example: 200
                       content:
-                       $ref: "#/components/schemas/SensorDataQueryResponse"
+                        $ref: "#/components/schemas/SensorDataQueryResponse"
         400:
           description: "Bad request"
           content:

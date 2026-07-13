@@ -9,6 +9,48 @@ import {
 import { assert } from "chai";
 
 describe("QueryTypes validation — sensor data", () => {
+  it("should normalize GET params and dotted timeRange query fields", () => {
+    const result = validateSensorDataQueryRequest(
+      { id: "1" },
+      {
+        "timeRange.start": "2024-01-01T00:00:00.000Z",
+        "timeRange.end": "2024-01-02T00:00:00.000Z",
+        limit: "100",
+        aggregates: "avg",
+        readingTypes: "temperature",
+        percentile: "0.95",
+      },
+    );
+    assert.isTrue(result.valid);
+    if (result.valid) {
+      const d = result.data as Record<string, unknown>;
+      assert.strictEqual(d["id"], 1);
+      assert.strictEqual(d["limit"], 100);
+      assert.strictEqual(d["percentile"], 0.95);
+      assert.deepStrictEqual(d["aggregates"], ["avg"]);
+      assert.deepStrictEqual(d["readingTypes"], ["temperature"]);
+      assert.deepStrictEqual(d["timeRange"], {
+        start: "2024-01-01T00:00:00.000Z",
+        end: "2024-01-02T00:00:00.000Z",
+      });
+    }
+  });
+
+  it("should normalize bracketed timeRange query fields", () => {
+    const result = validateSensorDataQueryRequest(
+      { id: "2" },
+      {
+        "timeRange[start]": "2024-01-01T00:00:00.000Z",
+        "timeRange[end]": "2024-01-02T00:00:00.000Z",
+      },
+    );
+    assert.isTrue(result.valid);
+    if (result.valid) {
+      const d = result.data as Record<string, unknown>;
+      assert.strictEqual(d["id"], 2);
+    }
+  });
+
   it("should validate a complete valid request", () => {
     const body = {
       timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
@@ -365,6 +407,27 @@ describe("QueryTypes validation — sensor data", () => {
 });
 
 describe("QueryTypes validation — output data", () => {
+  it("should normalize GET params and dotted timeRange query fields", () => {
+    const result = validateOutputDataQueryRequest(
+      { id: "10" },
+      {
+        "timeRange.start": "2024-01-01T00:00:00.000Z",
+        "timeRange.end": "2024-01-02T00:00:00.000Z",
+        limit: "200",
+        aggregates: ["avg", "stddev"],
+        percentile: "0.99",
+      },
+    );
+    assert.isTrue(result.valid);
+    if (result.valid) {
+      const d = result.data as Record<string, unknown>;
+      assert.strictEqual(d["id"], 10);
+      assert.strictEqual(d["limit"], 200);
+      assert.strictEqual(d["percentile"], 0.99);
+      assert.deepStrictEqual(d["aggregates"], ["avg", "stddev"]);
+    }
+  });
+
   it("should validate a complete valid request", () => {
     const body = {
       timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },

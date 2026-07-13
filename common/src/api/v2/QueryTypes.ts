@@ -148,6 +148,107 @@ export interface CursorPayload {
 // Validation functions
 // ---------------------------------------------------------------------------
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeNumericValue(value: unknown): unknown {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed === "") {
+    return Number.NaN;
+  }
+
+  const parsed = Number(trimmed);
+  return Number.isNaN(parsed) ? Number.NaN : parsed;
+}
+
+function normalizeStringList(value: unknown): unknown {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return [value];
+  }
+
+  return value;
+}
+
+function normalizeTimeRange(req: Record<string, unknown>): Record<string, unknown> {
+  const next = { ...req };
+  const existingTimeRange = isRecord(next["timeRange"])
+    ? { ...(next["timeRange"] as Record<string, unknown>) }
+    : {};
+
+  const start = next["timeRange.start"];
+  if (typeof start === "string") {
+    existingTimeRange["start"] = start;
+    delete next["timeRange.start"];
+  }
+
+  const end = next["timeRange.end"];
+  if (typeof end === "string") {
+    existingTimeRange["end"] = end;
+    delete next["timeRange.end"];
+  }
+
+  const bracketStart = next["timeRange[start]"];
+  if (typeof bracketStart === "string") {
+    existingTimeRange["start"] = bracketStart;
+    delete next["timeRange[start]"];
+  }
+
+  const bracketEnd = next["timeRange[end]"];
+  if (typeof bracketEnd === "string") {
+    existingTimeRange["end"] = bracketEnd;
+    delete next["timeRange[end]"];
+  }
+
+  if (Object.keys(existingTimeRange).length > 0) {
+    next["timeRange"] = existingTimeRange;
+  }
+
+  return next;
+}
+
+function normalizeRequestShape(params: unknown, query: unknown): Record<string, unknown> {
+  let req: Record<string, unknown> = {};
+  if (params && typeof params === "object") {
+    req = { ...req, ...(params as Record<string, unknown>) };
+  }
+  if (query && typeof query === "object") {
+    req = { ...req, ...(query as Record<string, unknown>) };
+  }
+
+  req = normalizeTimeRange(req);
+
+  if ("id" in req) {
+    req["id"] = normalizeNumericValue(req["id"]);
+  }
+  if ("limit" in req) {
+    req["limit"] = normalizeNumericValue(req["limit"]);
+  }
+  if ("percentile" in req) {
+    req["percentile"] = normalizeNumericValue(req["percentile"]);
+  }
+  if ("readingTypes" in req) {
+    req["readingTypes"] = normalizeStringList(req["readingTypes"]);
+  }
+  if ("aggregates" in req) {
+    req["aggregates"] = normalizeStringList(req["aggregates"]);
+  }
+
+  return req;
+}
+
 function validateTimeRange(
   timeRange: unknown,
 ): { valid: true } | { valid: false; errors: string[] } {
@@ -467,13 +568,7 @@ function createDataQueryValidator(config: ValidatorConfig) {
   return function validateDataQueryRequest(params: unknown, query: unknown): ValidationResultType {
     const errors: string[] = [];
 
-    let req: Record<string, unknown> = {};
-    if (params && typeof params === "object") {
-      req = { ...req, ...(params as Record<string, unknown>) };
-    }
-    if (query && typeof query === "object") {
-      req = { ...req, ...(query as Record<string, unknown>) };
-    }
+    const req = normalizeRequestShape(params, query);
 
     const validationErrors = runValidationChecks(req, config.validationFields);
     errors.push(...validationErrors);

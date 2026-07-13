@@ -182,6 +182,7 @@ export async function fetchFanOutPaginatedChartData<
     const results = allResults;
 
     let anyHasMore = false;
+    let pageXAxisValues: string[] | null = null;
 
     for (let i = 0; i < results.length; i++) {
       const result = results[i]!;
@@ -204,10 +205,10 @@ export async function fetchFanOutPaginatedChartData<
         cursors.delete(ids[i]!);
       }
 
-      // Merge xAxis from first successful response
-      if (allXAxisValues.length === 0) {
+      // All per-ID responses for a page share the same xAxis; capture it once per page.
+      if (pageXAxisValues == null) {
         xAxisField = response.xAxis.field;
-        allXAxisValues = [...response.xAxis.values];
+        pageXAxisValues = [...response.xAxis.values];
       }
 
       // Merge data entries
@@ -248,6 +249,10 @@ export async function fetchFanOutPaginatedChartData<
           }
         }
       }
+    }
+
+    if (pageXAxisValues != null) {
+      allXAxisValues = [...allXAxisValues, ...pageXAxisValues];
     }
 
     if (!anyHasMore) {

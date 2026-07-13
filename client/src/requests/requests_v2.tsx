@@ -1771,7 +1771,7 @@ export async function fetchSensorDataAsync(
     mode: "cors",
   });
   if (!response.ok) {
-    console.error(
+    throw new Error(
       `Error fetching sensor data: ${response.status} ${response.statusText}`,
     );
   }
@@ -1802,7 +1802,7 @@ export async function fetchOutputDataAsync(
     mode: "cors",
   });
   if (!response.ok) {
-    console.error(
+    throw new Error(
       `Error fetching output data: ${response.status} ${response.statusText}`,
     );
   }
