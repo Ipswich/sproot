@@ -242,17 +242,9 @@ export default function ChartQueryControls({
         </SimpleGrid>
       ) : null}
 
-      {showCustomResolutionEditor ? (
-        <Text size="xs" c="dimmed">
-          Buckets are sent directly to the server, for example "15 minutes" or
-          "2 hours".
-        </Text>
-      ) : null}
-
       {aggregate === "percentile" ? (
         <NumberInput
           label="Percentile"
-          description="Uses the server percentile aggregate for the selected range"
           size="xs"
           min={1}
           max={99.9}

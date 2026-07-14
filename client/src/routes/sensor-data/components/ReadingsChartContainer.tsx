@@ -48,6 +48,14 @@ export default function ReadingsChartContainer({
   percentile,
 }: ReadingsChartContainerProps) {
   const [showReferenceLines, setShowReferenceLines] = useState(true);
+  const hiddenDeviceZoneIds = useMemo(
+    () => new Set(toggledDeviceZones),
+    [toggledDeviceZones],
+  );
+  const hiddenSensorKeys = useMemo(
+    () => new Set(toggledSensors),
+    [toggledSensors],
+  );
 
   const sensorsQuery = useQuery({
     queryKey: ["sensors", readingType],
@@ -60,8 +68,10 @@ export default function ReadingsChartContainer({
           sensor.lastReading[readingType as ReadingType] != null,
       );
     },
-    refetchInterval: 60000,
     staleTime: 60000,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 
   const timeRange = useMemo(() => {
@@ -84,14 +94,17 @@ export default function ReadingsChartContainer({
       sensors.filter((sensor) => {
         const deviceZoneId = sensor.deviceZoneId ?? -1;
         return (
-          !toggledDeviceZones.includes(String(deviceZoneId)) &&
-          !toggledSensors.includes(String(sensor.id)) &&
-          !toggledSensors.includes(sensor.name)
+          !hiddenDeviceZoneIds.has(String(deviceZoneId)) &&
+          !hiddenSensorKeys.has(String(sensor.id)) &&
+          !hiddenSensorKeys.has(sensor.name)
         );
       }),
-    [sensors, toggledDeviceZones, toggledSensors],
+    [hiddenDeviceZoneIds, hiddenSensorKeys, sensors],
   );
-  const ids = visibleSensors.map((sensor) => sensor.id);
+  const ids = useMemo(
+    () => visibleSensors.map((sensor) => sensor.id),
+    [visibleSensors],
+  );
 
   const dataQuery = useQuery({
     queryKey: [
@@ -121,7 +134,10 @@ export default function ReadingsChartContainer({
       return fetchFanOutPaginatedChartData(fetchSensorDataAsync, request, ids);
     },
     enabled: sensorsQuery.isSuccess && ids.length > 0,
-    refetchInterval: 300000,
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 
   const transformed = useMemo(

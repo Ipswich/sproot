@@ -41,14 +41,25 @@ export default function StatesChartContainer({
   percentile,
   valueSuffix,
 }: StatesChartContainerProps) {
+  const hiddenDeviceZoneIds = useMemo(
+    () => new Set(toggledDeviceZones),
+    [toggledDeviceZones],
+  );
+  const hiddenOutputIds = useMemo(
+    () => new Set(toggledOutputs),
+    [toggledOutputs],
+  );
+
   const outputsQuery = useQuery({
     queryKey: ["outputs"],
     queryFn: async () => {
       const allOutputs = await getOutputsAsync();
       return Object.values(allOutputs) as IOutputBase[];
     },
-    refetchInterval: 60000,
     staleTime: 60000,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 
   const timeRange = useMemo(() => {
@@ -65,19 +76,23 @@ export default function StatesChartContainer({
   const downsample = resolveSelectedDownsample(downsampleSelection, durationMs);
   const queryLimit = getQueryPointLimit(durationMs, downsample);
 
-  const outputs = outputsQuery.data || [];
+  const outputs = useMemo(() => outputsQuery.data ?? [], [outputsQuery.data]);
   const visibleOutputs = useMemo(
     () =>
       outputs.filter((output) => {
         const deviceZoneId = output.deviceZoneId ?? -1;
         return (
-          !toggledDeviceZones.includes(String(deviceZoneId)) &&
-          !toggledOutputs.includes(String(output.id))
+          output.parentOutputId == null &&
+          !hiddenDeviceZoneIds.has(String(deviceZoneId)) &&
+          !hiddenOutputIds.has(String(output.id))
         );
       }),
-    [outputs, toggledDeviceZones, toggledOutputs],
+    [hiddenDeviceZoneIds, hiddenOutputIds, outputs],
   );
-  const ids = visibleOutputs.map((output) => output.id);
+  const ids = useMemo(
+    () => visibleOutputs.map((output) => output.id),
+    [visibleOutputs],
+  );
 
   const dataQuery = useQuery({
     queryKey: [
@@ -105,7 +120,10 @@ export default function StatesChartContainer({
       return fetchFanOutPaginatedChartData(fetchOutputDataAsync, request, ids);
     },
     enabled: outputsQuery.isSuccess && ids.length > 0,
-    refetchInterval: 300000,
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 
   const transformed = useMemo(

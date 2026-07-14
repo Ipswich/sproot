@@ -111,8 +111,7 @@ export default function NewJournalEntryModal({
               try {
                 // attach tags to the created entry
                 const createdObj = created as
-                  | Record<string, unknown>
-                  | undefined;
+                  Record<string, unknown> | undefined;
                 const idVal = createdObj ? createdObj["id"] : undefined;
                 const createdId =
                   typeof idVal === "number" ? (idVal as number) : undefined;

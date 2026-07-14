@@ -66,9 +66,7 @@ export async function fetchPaginatedChartData<
     if (response.data != null) {
       const item = response.data;
       const key = (item as Record<string, unknown>)["id"] as
-        | string
-        | number
-        | undefined;
+        string | number | undefined;
       if (key != null) {
         const existing = dataMap.get(key);
         if (existing) {
@@ -215,9 +213,7 @@ export async function fetchFanOutPaginatedChartData<
       if (response.data != null) {
         const item = response.data;
         const key = (item as Record<string, unknown>)["id"] as
-          | string
-          | number
-          | undefined;
+          string | number | undefined;
         if (key != null) {
           const existing = dataMap.get(key);
           if (existing) {

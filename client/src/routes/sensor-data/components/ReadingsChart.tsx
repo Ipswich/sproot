@@ -1,6 +1,7 @@
 import { LineChart } from "@mantine/charts";
 import { Box, Button, Group, LoadingOverlay, Paper, Text } from "@mantine/core";
 import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { useMemo } from "react";
 import { ChartSeries, DataSeries } from "../../../requests/chartDataTypes";
 
 export interface ReadingsChartProps {
@@ -23,12 +24,17 @@ export default function ReadingsChart({
   onToggleReferenceLines,
   units,
 }: ReadingsChartProps) {
-  const stats = getSeriesStats(dataSeries);
-  const data = dataSeries.map((dataPoint) => {
-    const rest = { ...dataPoint };
-    delete rest.units;
-    return rest;
-  });
+  const stats = useMemo(() => getSeriesStats(dataSeries), [dataSeries]);
+  const data = useMemo(
+    () =>
+      dataSeries.map((dataPoint) => {
+        const rest = { ...dataPoint };
+        delete rest.units;
+        return rest;
+      }),
+    [dataSeries],
+  );
+  // const shouldRenderDots = data.length <= 200;
 
   return (
     <Box pos="relative">
@@ -62,7 +68,9 @@ export default function ReadingsChart({
                 variant={showReferenceLines ? "light" : "subtle"}
                 onClick={() => onToggleReferenceLines(!showReferenceLines)}
               >
-                {showReferenceLines ? "Hide Stats" : "Show Stats"}
+                {showReferenceLines
+                  ? "Hide Reference Lines"
+                  : "Show Reference Lines"}
               </Button>
             ) : null}
           </Group>
@@ -88,9 +96,8 @@ export default function ReadingsChart({
             h={300}
             data={data}
             withLegend={false}
-            withDots
-            dotProps={{ r: 0, fillOpacity: 0, strokeOpacity: 0 }}
-            activeDotProps={{ r: 5, strokeWidth: 2 }}
+            withDots={false}
+            lineProps={{ activeDot: <ActiveDot /> }}
             withYAxis
             tickLine="xy"
             xAxisProps={{
@@ -172,27 +179,49 @@ function ChartTooltip({ label, payload, units }: ChartTooltipProps) {
 }
 
 function getSeriesStats(dataSeries: DataSeries) {
-  const values = dataSeries.flatMap((dataPoint) =>
-    Object.entries(dataPoint)
-      .filter(
-        ([key, value]) =>
-          key !== "name" && key !== "units" && typeof value === "number",
-      )
-      .map(([, value]) => value as number),
-  );
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  let total = 0;
+  let count = 0;
+  let detectedUnits = "";
 
-  if (values.length === 0) {
+  for (const dataPoint of dataSeries) {
+    if (!detectedUnits && typeof dataPoint.units === "string") {
+      detectedUnits = dataPoint.units;
+    }
+
+    for (const [key, value] of Object.entries(dataPoint)) {
+      if (key === "name" || key === "units" || typeof value !== "number") {
+        continue;
+      }
+
+      if (value < min) {
+        min = value;
+      }
+      if (value > max) {
+        max = value;
+      }
+
+      total += value;
+      count++;
+    }
+  }
+
+  if (count === 0) {
     return null;
   }
 
-  const total = values.reduce((sum, value) => sum + value, 0);
   return {
-    avg: total / values.length,
-    min: Math.min(...values),
-    max: Math.max(...values),
-    units:
-      (dataSeries.find((dataPoint) => dataPoint.units)?.units as
-        | string
-        | undefined) ?? "",
+    avg: total / count,
+    min,
+    max,
+    units: detectedUnits,
   };
+}
+
+function ActiveDot(props: any) {
+  if (props.cy == null || props.cy < 0 || props.cy > 300) {
+    return null;
+  }
+  return <circle cx={props.cx} cy={props.cy} r={5} fill={props.fill} />;
 }

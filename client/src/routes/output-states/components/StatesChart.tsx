@@ -1,5 +1,6 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
+import { useMemo } from "react";
 import { DataSeries, ChartSeries } from "../../../requests/chartDataTypes";
 
 export interface StatesChartProps {
@@ -17,11 +18,15 @@ export default function StatesChart({
   showEmptyState,
   valueSuffix = "%",
 }: StatesChartProps) {
-  const data = dataSeries.map((data) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { units: _, ...rest } = data;
-    return rest;
-  });
+  const data = useMemo(
+    () =>
+      dataSeries.map((dataPoint) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { units: _, ...rest } = dataPoint;
+        return rest;
+      }),
+    [dataSeries],
+  );
 
   return (
     <Box pos="relative">
@@ -67,9 +72,8 @@ export default function StatesChart({
           ml={-28}
           curveType="linear"
           h={300}
-          withDots
-          dotProps={{ r: 0, fillOpacity: 0, strokeOpacity: 0 }}
-          activeDotProps={{ r: 5, strokeWidth: 2 }}
+          withDots={false}
+          lineProps={{ activeDot: <ActiveDot /> }}
           data={data}
           withLegend={false}
           withXAxis
@@ -116,4 +120,11 @@ function ChartTooltip({ label, payload, valueSuffix }: ChartTooltipProps) {
       ))}
     </Paper>
   );
+}
+
+function ActiveDot(props: any) {
+  if (props.cy == null || props.cy < 0 || props.cy > 300) {
+    return null;
+  }
+  return <circle cx={props.cx} cy={props.cy} r={5} fill={props.fill} />;
 }
