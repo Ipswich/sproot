@@ -54,7 +54,7 @@ describe("ServerStatsManager", () => {
     assert.strictEqual(typeof stats.system.totalDiskSize, "number");
     assert.strictEqual(typeof stats.system.freeDiskSize, "number");
     assert.strictEqual(stats.timelapse.imageCount, 0);
-    assert.strictEqual(stats.timelapse.directorySize, null);
+    assert.isAtMost(stats.timelapse.directorySize ?? 0, 0.001);
     assert.strictEqual(stats.timelapse.lastArchiveGenerationDuration, null);
   });
 

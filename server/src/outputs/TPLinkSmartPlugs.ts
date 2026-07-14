@@ -14,6 +14,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   readonly plugRegistry = new PlugRegistry();
   readonly initializingPlugs: Record<string, string[]> = {};
   #client: Client;
+  #discoveryTarget: string;
 
   constructor(
     eventBus: IEventBus,
@@ -23,6 +24,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     cacheBucketMinutes: number,
     logger: winston.Logger,
     connectionTimeout: number = 5000,
+    discoveryTarget: string = "255.255.255.255",
   ) {
     super(
       eventBus,
@@ -33,6 +35,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
       undefined,
       logger,
     );
+    this.#discoveryTarget = discoveryTarget;
     this.#client = new Client({
       defaultSendOptions: {
         timeout: connectionTimeout,
@@ -65,7 +68,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     this.#client.on("discovery-invalid", (error: unknown) => {
       this.logger.error(`TPLink Smart Plug client error: ${error}`);
     });
-    this.#client.startDiscovery({ deviceTypes: ["plug"] });
+    this.#client.startDiscovery({ deviceTypes: ["plug"], broadcast: this.#discoveryTarget });
   }
 
   getHosts(): string[] {

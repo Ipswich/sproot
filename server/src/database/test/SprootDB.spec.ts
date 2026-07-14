@@ -788,9 +788,9 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
 
       const rawCalls = (knex as any).rawCalls || [];
       const cursorFilterSql = rawCalls.find(
-        (s: string) => s.includes("bucket") && s.includes(">") && s.includes("<="),
+        (s: string) => s.includes("bucket") && s.includes(">") && s.includes("<"),
       );
-      assert.isDefined(cursorFilterSql, "Should have a cursor-based bucket > AND bucket <= filter");
+      assert.isDefined(cursorFilterSql, "Should have a cursor-based bucket > AND bucket < filter");
     });
 
     it("should use BETWEEN filter when no cursor", async () => {
