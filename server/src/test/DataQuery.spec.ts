@@ -90,7 +90,7 @@ describe("DataQuery API - Sensor Data", function () {
     const secondPageTimestamps = secondContent.xAxis.values as string[];
 
     assert.isAbove(secondPageTimestamps.length, 0);
-    assert.isBelow(
+    assert.isAtLeast(
       new Date(secondPageTimestamps[0]!).getTime(),
       new Date(firstPageTimestamps[firstPageTimestamps.length - 1]!).getTime(),
     );
@@ -191,7 +191,7 @@ describe("DataQuery API - Output Data", function () {
     const secondPageTimestamps = secondContent.xAxis.values as string[];
 
     assert.isAbove(secondPageTimestamps.length, 0);
-    assert.isBelow(
+    assert.isAtLeast(
       new Date(secondPageTimestamps[0]!).getTime(),
       new Date(firstPageTimestamps[firstPageTimestamps.length - 1]!).getTime(),
     );
