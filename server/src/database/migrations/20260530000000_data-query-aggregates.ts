@@ -57,7 +57,7 @@ const OUTPUT_1H_VIEW = "output_data_1h";
 const OUTPUT_1D_VIEW = "output_data_1d";
 
 export const config = {
-  transaction: true,
+  transaction: false,
 };
 
 export async function up(knex: Knex): Promise<void> {
