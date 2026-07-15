@@ -1149,6 +1149,81 @@ export class SprootDB implements ISprootDB {
     }
   }
 
+  async refreshAllAggregateTablesAsync(logger: winston.Logger): Promise<void> {
+    logger.info("Refreshing aggregate tables...");
+
+    const aggregateTables = [
+      ...Object.entries(SENSOR_AGGREGATE_TABLES).map(([, name]) => ({
+        name,
+        rawTable: "sensor_data",
+      })),
+      ...Object.entries(OUTPUT_AGGREGATE_TABLES).map(([, name]) => ({
+        name,
+        rawTable: "output_data",
+      })),
+    ];
+
+    for (const agg of aggregateTables) {
+      try {
+        await this.#refreshAggregateChunksAsync(agg.name, agg.rawTable, logger);
+      } catch (error) {
+        logger.error(`Failed to refresh aggregate table ${agg.name}:`, error);
+      }
+    }
+
+    logger.info("Aggregate table refresh complete");
+  }
+
+  async #refreshAggregateChunksAsync(
+    tableName: string,
+    rawTable: string,
+    logger: winston.Logger,
+  ): Promise<void> {
+    const oldestResult = await this.#connection(rawTable).min("logTime as oldest");
+    const oldestTime = oldestResult[0]?.["oldest"];
+    if (!oldestTime) return;
+
+    let windowEnd = this.#alignToMonth(new Date());
+    let windowStart = new Date(windowEnd.getFullYear(), windowEnd.getMonth() - 1, 1, 0, 0, 0, 0);
+
+    while (windowStart > oldestTime) {
+      const startStr = this.#formatDbDate(windowStart);
+      const endStr = this.#formatDbDate(windowEnd);
+      try {
+        await this.#connection.raw(
+          `CALL refresh_continuous_aggregate('${tableName}', '${startStr}', '${endStr}');`,
+        );
+        logger.info(`Refreshed aggregate table ${tableName}: ${startStr} to ${endStr}`);
+      } catch (error) {
+        logger.error(`Failed to refresh ${tableName} chunk ${startStr} to ${endStr}:`, error);
+      }
+      windowEnd = windowStart;
+      windowStart = new Date(windowStart.getFullYear(), windowStart.getMonth() - 1, 1, 0, 0, 0, 0);
+    }
+
+    if (windowStart <= oldestTime) {
+      const startStr = this.#formatDbDate(oldestTime);
+      const endStr = this.#formatDbDate(windowEnd);
+      try {
+        await this.#connection.raw(
+          `CALL refresh_continuous_aggregate('${tableName}', '${startStr}', '${endStr}');`,
+        );
+        logger.info(`Refreshed aggregate table ${tableName}: ${startStr} to ${endStr}`);
+      } catch (error) {
+        logger.error(`Failed to refresh ${tableName} chunk ${startStr} to ${endStr}:`, error);
+      }
+    }
+  }
+
+  #alignToMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+  }
+
+  #formatDbDate(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
   // ---------------------------------------------------------------------------
   // Raw data query endpoints
   // ---------------------------------------------------------------------------

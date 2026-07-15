@@ -131,9 +131,6 @@ export async function up(knex: Knex): Promise<void> {
       schedule_interval => INTERVAL '1 minute'
     );
   `);
-
-  await knex.raw(`CALL refresh_continuous_aggregate('${SENSOR_AGGREGATE_VIEW}', NULL, NULL);`);
-  await knex.raw(`CALL refresh_continuous_aggregate('${OUTPUT_AGGREGATE_VIEW}', NULL, NULL);`);
 }
 
 export async function down(knex: Knex): Promise<void> {
