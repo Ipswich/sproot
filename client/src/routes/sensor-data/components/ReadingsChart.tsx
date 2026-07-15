@@ -1,5 +1,5 @@
 import { LineChart } from "@mantine/charts";
-import { Box, Button, Group, LoadingOverlay, Paper, Text } from "@mantine/core";
+import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
 import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { useMemo } from "react";
 import { ChartSeries, DataSeries } from "../../../requests/chartDataTypes";
@@ -11,7 +11,7 @@ export interface ReadingsChartProps {
   chartRendering: boolean;
   showEmptyState?: boolean;
   showReferenceLines?: boolean;
-  onToggleReferenceLines?: (show: boolean) => void;
+  allSensorsHidden?: boolean;
   units?: string;
 }
 
@@ -21,7 +21,7 @@ export default function ReadingsChart({
   chartRendering,
   showEmptyState,
   showReferenceLines,
-  onToggleReferenceLines,
+  allSensorsHidden,
   units,
 }: ReadingsChartProps) {
   const stats = useMemo(() => getSeriesStats(dataSeries), [dataSeries]);
@@ -39,7 +39,7 @@ export default function ReadingsChart({
   return (
     <Box pos="relative">
       <LoadingOverlay
-        style={{ height: "100%" }}
+        style={{ height: "100%", pointerEvents: "none" }}
         visible={chartRendering}
         zIndex={1000}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
@@ -56,24 +56,15 @@ export default function ReadingsChart({
           }}
         >
           {!chartRendering ? (
-            <Text c="dimmed">No data found for this interval</Text>
+            <Text c="dimmed">
+              {allSensorsHidden
+                ? "No sensors selected"
+                : "No data found for this interval"}
+            </Text>
           ) : null}
         </div>
       ) : (
         <Box>
-          <Group justify="flex-end" mb="xs">
-            {onToggleReferenceLines ? (
-              <Button
-                size="compact-xs"
-                variant={showReferenceLines ? "light" : "subtle"}
-                onClick={() => onToggleReferenceLines(!showReferenceLines)}
-              >
-                {showReferenceLines
-                  ? "Hide Reference Lines"
-                  : "Show Reference Lines"}
-              </Button>
-            ) : null}
-          </Group>
           <LineChart
             tooltipProps={{
               position: {},

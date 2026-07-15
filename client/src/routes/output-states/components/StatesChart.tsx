@@ -31,7 +31,7 @@ export default function StatesChart({
   return (
     <Box pos="relative">
       <LoadingOverlay
-        style={{ height: "100%" }}
+        style={{ height: "100%", pointerEvents: "none" }}
         visible={chartRendering}
         zIndex={1000}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}

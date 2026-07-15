@@ -1,5 +1,5 @@
-import { Fragment, useState, useTransition } from "react";
-import { Card, Flex, Group, Switch } from "@mantine/core";
+import { useState, useTransition } from "react";
+import { Box, Button, Flex, Group, Paper, Switch } from "@mantine/core";
 import {
   ReadingType,
   Units,
@@ -51,14 +51,17 @@ export default function SensorData() {
         "[]",
     ) as string[],
   );
+  const [showReferenceLines, setShowReferenceLines] = useState(
+    localStorage.getItem(`${readingTypeString}-showReferenceLines`) !== "false",
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, startTransition] = useTransition();
 
   return (
-    <Fragment>
-      <Card shadow="sm" px="md" py="xs" radius="md" withBorder>
-        <Group justify="space-between">
+    <Box pos="relative">
+      <Paper shadow="sm" px="md" py="xs" radius="md" withBorder>
+        <Group justify="space-between" align="center">
           <Flex my={-12}>
             <h2>
               {readingTypeString.charAt(0).toUpperCase() +
@@ -71,10 +74,9 @@ export default function SensorData() {
             </h5>
           </Flex>
 
-          {readingTypeString == ReadingType.temperature ? (
-            <Flex justify="right">
+          <Flex justify="right" gap="xs" align="center">
+            {readingTypeString == ReadingType.temperature ? (
               <Switch
-                mr="32px"
                 size="md"
                 offLabel={Units[readingTypeString as ReadingType]}
                 onLabel="°F"
@@ -87,9 +89,46 @@ export default function SensorData() {
                   setAlternateUnits(!useAlternateUnits);
                 }}
               />
-            </Flex>
-          ) : null}
+            ) : null}
+            <Button
+              size="compact-xs"
+              variant={"light"}
+              w="110px"
+              onClick={() => {
+                startTransition(() => {
+                  localStorage.setItem(
+                    `${readingTypeString}-showReferenceLines`,
+                    (!showReferenceLines).toString(),
+                  );
+                  setShowReferenceLines(!showReferenceLines);
+                });
+              }}
+            >
+              {showReferenceLines ? "Hide Stat Lines" : "Show Stat Lines"}
+            </Button>
+          </Flex>
         </Group>
+        <ReadingsChartContainer
+          readingType={readingTypeString}
+          chartInterval={chartInterval}
+          toggledSensors={sensorToggleStates}
+          toggledDeviceZones={deviceZoneToggleStates}
+          useAlternateUnits={useAlternateUnits}
+          customTimeRange={useCustomRange ? customRange : null}
+          aggregate={aggregate}
+          downsampleSelection={downsample}
+          percentile={percentile}
+          showReferenceLines={showReferenceLines}
+          onToggleReferenceLines={(value) => {
+            startTransition(() => {
+              localStorage.setItem(
+                `${readingTypeString}-showReferenceLines`,
+                value.toString(),
+              );
+              setShowReferenceLines(value);
+            });
+          }}
+        />
         <ChartQueryControls
           chartInterval={segmentedControlValue}
           onChartIntervalChange={(value) => {
@@ -110,9 +149,7 @@ export default function SensorData() {
           }}
           customRange={customRange}
           onCustomRangeChange={(value) => {
-            startTransition(() => {
-              setCustomRange(value);
-            });
+            setCustomRange(value);
           }}
           aggregate={aggregate}
           onAggregateChange={(value) => {
@@ -130,23 +167,9 @@ export default function SensorData() {
           }}
           percentile={percentile}
           onPercentileChange={(value) => {
-            startTransition(() => {
-              localStorage.setItem("sensorChartPercentile", value.toString());
-              setPercentile(value);
-            });
+            localStorage.setItem("sensorChartPercentile", value.toString());
+            setPercentile(value);
           }}
-        />
-
-        <ReadingsChartContainer
-          readingType={readingTypeString}
-          chartInterval={chartInterval}
-          toggledSensors={sensorToggleStates}
-          toggledDeviceZones={deviceZoneToggleStates}
-          useAlternateUnits={useAlternateUnits}
-          customTimeRange={useCustomRange ? customRange : null}
-          aggregate={aggregate}
-          downsampleSelection={downsample}
-          percentile={percentile}
         />
         <SensorTableAccordion
           readingType={readingTypeString as ReadingType}
@@ -156,7 +179,7 @@ export default function SensorData() {
           setDeviceZoneToggleStates={setDeviceZoneToggleStates}
           useAlternateUnits={useAlternateUnits}
         />
-      </Card>
-    </Fragment>
+      </Paper>
+    </Box>
   );
 }

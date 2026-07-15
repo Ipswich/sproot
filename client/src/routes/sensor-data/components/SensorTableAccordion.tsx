@@ -166,12 +166,6 @@ function SensorTableAccordion({
     .filter((id) => !deviceZoneToggleStates.includes(id));
   return (
     <Fragment>
-      <Center>
-        <h5>
-          Last Updated:{" "}
-          {`${new Date().toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
-        </h5>
-      </Center>
       {getDeviceZonesQuery.isLoading || getSensorsQuery.isLoading ? (
         <Center>
           <h3>Loading...</h3>
@@ -218,6 +212,12 @@ function SensorTableAccordion({
           </Accordion>
         </DndContext>
       )}
+      <Center>
+        <h5>
+          Last Updated:{" "}
+          {`${new Date().toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+        </h5>
+      </Center>
     </Fragment>
   );
 

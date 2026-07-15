@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Box, Text } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   fetchSensorDataAsync,
   getSensorsAsync,
@@ -34,6 +34,7 @@ interface ReadingsChartContainerProps {
   aggregate: Aggregate;
   downsampleSelection: string;
   percentile?: number;
+  showReferenceLines: boolean;
 }
 
 export default function ReadingsChartContainer({
@@ -46,8 +47,8 @@ export default function ReadingsChartContainer({
   aggregate,
   downsampleSelection,
   percentile,
+  showReferenceLines,
 }: ReadingsChartContainerProps) {
-  const [showReferenceLines, setShowReferenceLines] = useState(true);
   const hiddenDeviceZoneIds = useMemo(
     () => new Set(toggledDeviceZones),
     [toggledDeviceZones],
@@ -208,8 +209,13 @@ export default function ReadingsChartContainer({
         isInitialLoading || (dataQuery.isFetching && !dataQuery.data)
       }
       showEmptyState={!isInitialLoading && !hasVisibleValues}
+      allSensorsHidden={
+        !isInitialLoading &&
+        !hasVisibleValues &&
+        sensors.length > 0 &&
+        visibleSensors.length === 0
+      }
       showReferenceLines={showReferenceLines}
-      onToggleReferenceLines={setShowReferenceLines}
       {...(displayDataSeries[0]?.units
         ? { units: displayDataSeries[0].units as string }
         : {})}

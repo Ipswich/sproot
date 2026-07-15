@@ -37,10 +37,19 @@ export default function OutputStates() {
     <>
       <Box pos="relative">
         <Paper shadow="sm" px="md" py="xs" radius="md" withBorder>
-          <Flex my={-12} mb="xs">
+          <Flex my={-12}>
             <h2>History</h2>
             <h5>{valueSuffix}</h5>
           </Flex>
+          <StatesChartContainer
+            chartInterval={chartInterval}
+            toggledDeviceZones={deviceZoneToggleStates}
+            customTimeRange={useCustomRange ? customRange : null}
+            aggregate={aggregate}
+            downsampleSelection={downsample}
+            percentile={percentile}
+            valueSuffix={valueSuffix}
+          />
           <ChartQueryControls
             chartInterval={segmentedControlValue}
             onChartIntervalChange={(value) => {
@@ -86,15 +95,6 @@ export default function OutputStates() {
                 setPercentile(value);
               });
             }}
-          />
-          <StatesChartContainer
-            chartInterval={chartInterval}
-            toggledDeviceZones={deviceZoneToggleStates}
-            customTimeRange={useCustomRange ? customRange : null}
-            aggregate={aggregate}
-            downsampleSelection={downsample}
-            percentile={percentile}
-            valueSuffix={valueSuffix}
           />
           <ZoneAccordion
             deviceZoneToggleStates={deviceZoneToggleStates}

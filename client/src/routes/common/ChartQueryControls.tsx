@@ -5,7 +5,6 @@ import {
   Select,
   SimpleGrid,
   Stack,
-  Text,
 } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 import type { Aggregate } from "../../requests/queryTypes";
