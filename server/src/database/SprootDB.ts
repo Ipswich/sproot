@@ -1183,8 +1183,8 @@ export class SprootDB implements ISprootDB {
     const oldestTime = oldestResult[0]?.["oldest"];
     if (!oldestTime) return;
 
-    let windowEnd = this.#alignToMonth(new Date());
-    let windowStart = new Date(windowEnd.getFullYear(), windowEnd.getMonth() - 1, 1, 0, 0, 0, 0);
+    let windowEnd = new Date();
+    let windowStart = this.#alignToMonth(windowEnd);
 
     while (windowStart > oldestTime) {
       const startStr = this.#formatDbDate(windowStart);
