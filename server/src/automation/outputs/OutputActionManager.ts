@@ -63,7 +63,7 @@ export class OutputActionManager implements Disposable {
         .then(async () => {
           const result = await this.#handleAutomationEvent(event);
           this.#logger.debug(
-            `Received Automation event for output ${this.#outputId} - result: ${result}`,
+            `Received Automation event ${event.eventId} for output ${this.#outputId} - result: ${result}`,
           );
           await this.#triggeredActionFunction(result);
         })

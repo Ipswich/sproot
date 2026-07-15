@@ -35,7 +35,6 @@ export class FrameBuffer {
     if (!this.#passThrough) {
       this.#passThrough = new PassThrough();
       this.#passThrough.on("data", (chunk: Buffer) => {
-        this.#logger.debug(`FrameBuffer: received chunk of ${chunk.length} bytes from upstream`);
         this.#deliverChunk(chunk);
       });
       this.#passThrough.on("error", (err: Error) => {
@@ -95,7 +94,6 @@ export class FrameBuffer {
    */
   #deliverChunk(chunk: Buffer): void {
     if (this.#subscribers.size === 0) {
-      this.#logger.debug(`FrameBuffer: no subscribers, dropping chunk of ${chunk.length} bytes`);
       return;
     }
 
