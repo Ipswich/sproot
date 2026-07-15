@@ -238,6 +238,8 @@ interface ISprootDB {
 
   deleteOldDatabaseAsync(logger: winston.Logger): Promise<void>;
 
+  refreshAllAggregateTablesAsync(logger: winston.Logger): Promise<void>;
+
   /* Journals */
   getJournalsAsync(): Promise<SDBJournal[]>;
   getJournalAsync(id: number): Promise<SDBJournal[]>;
@@ -803,6 +805,10 @@ class MockSprootDB implements ISprootDB {
   }
 
   async deleteOldDatabaseAsync(_logger: winston.Logger): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async refreshAllAggregateTablesAsync(_logger: winston.Logger): Promise<void> {
     return Promise.resolve();
   }
 }

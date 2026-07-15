@@ -12,7 +12,6 @@ mainAsync().then((app) => {
     logger.info("Sproot server listening on port 3000!");
 
     const sprootDB = app.get(DI_KEYS.SprootDB) as ISprootDB;
-    await sprootDB.deleteOldDatabaseAsync(logger);
 
     // Graceful shutdown on signals
     process.on("SIGINT", async () => {
@@ -21,5 +20,8 @@ mainAsync().then((app) => {
     process.on("SIGTERM", async () => {
       await gracefulHaltAsync(server, app);
     });
+
+    await sprootDB.deleteOldDatabaseAsync(logger);
+    await sprootDB.refreshAllAggregateTablesAsync(logger);
   });
 });
