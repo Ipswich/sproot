@@ -15,8 +15,8 @@ export const CHART_AGGREGATE_OPTIONS = [
   { value: "avg", label: "Average" },
   { value: "min", label: "Minimum" },
   { value: "max", label: "Maximum" },
-  { value: "last", label: "Last" },
-  { value: "first", label: "First" },
+  { value: "last", label: "Last in interval" },
+  { value: "first", label: "First in interval" },
   { value: "sum", label: "Sum" },
   { value: "count", label: "Count" },
   { value: "stddev", label: "Std. Dev." },
@@ -25,6 +25,7 @@ export const CHART_AGGREGATE_OPTIONS = [
 
 export const CHART_DOWNSAMPLE_OPTIONS = [
   { value: "auto", label: "Auto" },
+  { value: "1m", label: "1 minute" },
   { value: "5m", label: "5 minutes" },
   { value: "15 minutes", label: "15 minutes" },
   { value: "30 minutes", label: "30 minutes" },
@@ -34,6 +35,7 @@ export const CHART_DOWNSAMPLE_OPTIONS = [
 ] as const;
 
 export const DOWNSAMPLE_TO_BUCKET_MINUTES: Record<string, number> = {
+  "1m": 1,
   "5m": 5,
   "1h": 60,
   "1d": 1440,
