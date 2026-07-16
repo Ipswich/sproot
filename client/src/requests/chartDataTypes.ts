@@ -27,6 +27,36 @@ export function scalePercentile(value: number): number {
   return Math.min(1, Math.max(0, value / 100));
 }
 
+export function getEffectiveEndDate(selectedEnd: Date): Date {
+  const selectedDayStart = new Date(
+    selectedEnd.getFullYear(),
+    selectedEnd.getMonth(),
+    selectedEnd.getDate(),
+  );
+
+  return new Date(selectedDayStart.getTime() + 86399999);
+}
+
+export function getEffectiveDisplayEndDate(selectedEnd: Date): Date {
+  const now = new Date();
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  const selectedDayStart = new Date(
+    selectedEnd.getFullYear(),
+    selectedEnd.getMonth(),
+    selectedEnd.getDate(),
+  );
+
+  if (selectedDayStart.getTime() === todayStart.getTime()) {
+    return now;
+  }
+
+  return new Date(selectedDayStart.getTime() + 86399999);
+}
+
 export function buildChartTimeline(
   start: Date,
   end: Date,

@@ -12,6 +12,8 @@ import {
 import {
   buildChartTimeline,
   getChartIntervalMs,
+  getEffectiveEndDate,
+  getEffectiveDisplayEndDate,
   mergeDataIntoTimeline,
   scalePercentile,
 } from "../../../requests/chartDataTypes";
@@ -72,7 +74,8 @@ export default function StatesChartContainer({
     return [start, end] as [Date, Date];
   }, [chartInterval, customTimeRange]);
 
-  const durationMs = timeRange[1].getTime() - timeRange[0].getTime();
+  const effectiveEnd = getEffectiveEndDate(timeRange[1]);
+  const durationMs = effectiveEnd.getTime() - timeRange[0].getTime();
   const downsample = resolveSelectedDownsample(downsampleSelection, durationMs);
   const queryLimit = getQueryPointLimit(durationMs, downsample);
 
@@ -98,7 +101,7 @@ export default function StatesChartContainer({
     queryKey: [
       "outputData",
       timeRange[0].toISOString(),
-      timeRange[1].toISOString(),
+      effectiveEnd.toISOString(),
       downsample,
       aggregate,
       percentile,
@@ -108,7 +111,7 @@ export default function StatesChartContainer({
       const request: OutputDataQueryRequest = {
         timeRange: {
           start: timeRange[0].toISOString(),
-          end: timeRange[1].toISOString(),
+          end: effectiveEnd.toISOString(),
         },
         downsample,
         limit: queryLimit,
@@ -143,8 +146,9 @@ export default function StatesChartContainer({
       return [];
     }
 
+    const effectiveDisplayEnd = getEffectiveDisplayEndDate(timeRange[1]);
     return mergeDataIntoTimeline(
-      buildChartTimeline(timeRange[0], timeRange[1], downsample),
+      buildChartTimeline(timeRange[0], effectiveDisplayEnd, downsample),
       transformed.dataSeries,
     );
   }, [downsample, timeRange, transformed]);

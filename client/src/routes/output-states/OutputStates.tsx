@@ -63,9 +63,6 @@ export default function OutputStates() {
             onUseCustomRangeChange={(value) => {
               startTransition(() => {
                 setUseCustomRange(value);
-                if (!value) {
-                  setCustomRange(null);
-                }
               });
             }}
             customRange={customRange}

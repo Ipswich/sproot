@@ -6,7 +6,7 @@ import {
   SimpleGrid,
   Stack,
 } from "@mantine/core";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Aggregate } from "../../requests/queryTypes";
 import {
   CHART_AGGREGATE_OPTIONS,
@@ -58,6 +58,13 @@ export default function ChartQueryControls({
     useState(usesCustomDownsample);
 
   useEffect(() => {
+    if (customRange === null && rangeSelectionRef.current.hasClearedRef) {
+      onCustomRangeChange(null);
+    }
+    rangeSelectionRef.current.hasClearedRef = customRange === null;
+  }, [customRange, onCustomRangeChange]);
+
+  useEffect(() => {
     setShowCustomResolutionEditor(usesCustomDownsample);
   }, [usesCustomDownsample]);
 
@@ -100,6 +107,10 @@ export default function ChartQueryControls({
     ? "custom-resolution"
     : downsample;
 
+  const rangeSelectionRef = useRef<{ hasClearedRef: boolean }>({
+    hasClearedRef: false,
+  });
+
   function emitCustomDownsample(
     amount: number,
     unit: "minutes" | "hours" | "days",
@@ -109,7 +120,7 @@ export default function ChartQueryControls({
   }
 
   return (
-    <Stack gap="sm" mt="sm">
+    <Stack gap="0" mt="sm" mb="xs">
       <SegmentedControl
         value={selectedPresetOrCustom}
         onChange={(value) => {
@@ -135,7 +146,15 @@ export default function ChartQueryControls({
         ]}
       />
 
-      {useCustomRange ? (
+      <div
+        style={{
+          overflow: "hidden",
+          maxHeight: useCustomRange ? "100px" : "0px",
+          opacity: useCustomRange ? 1 : 0,
+          transition: "max-height 0.2s ease, opacity 0.2s ease",
+          marginBottom: useCustomRange ? undefined : 0,
+        }}
+      >
         <PopoverDatePickerInput
           key={
             customRange
@@ -143,9 +162,10 @@ export default function ChartQueryControls({
               : "empty"
           }
           type="range"
-          size="xs"
+          size="sm"
           clearable
           placeholder="Select date range"
+          autocomplete="off"
           value={
             customRange ? [customRange.start, customRange.end] : [null, null]
           }
@@ -155,10 +175,13 @@ export default function ChartQueryControls({
               return;
             }
 
-            onCustomRangeChange(null);
+            if (!start && !end) {
+              onCustomRangeChange(null);
+              return;
+            }
           }}
         />
-      ) : null}
+      </div>
 
       <SimpleGrid cols={{ base: 2 }} spacing="sm">
         <Select
@@ -201,12 +224,21 @@ export default function ChartQueryControls({
         />
       </SimpleGrid>
 
-      {showCustomResolutionEditor ? (
+      <div
+        style={{
+          overflow: "hidden",
+          maxHeight: showCustomResolutionEditor ? "120px" : "0px",
+          opacity: showCustomResolutionEditor ? 1 : 0,
+          transition: "max-height 0.2s ease, opacity 0.2s ease",
+          marginBottom: showCustomResolutionEditor ? undefined : 0,
+        }}
+      >
         <SimpleGrid cols={{ base: 2 }} spacing="sm">
           <NumberInput
             label="Custom resolution"
             size="xs"
             min={1}
+            autocomplete="off"
             value={customDownsampleAmount}
             onChange={(value) => {
               if (typeof value === "number" && Number.isFinite(value)) {
@@ -239,9 +271,17 @@ export default function ChartQueryControls({
             }}
           />
         </SimpleGrid>
-      ) : null}
+      </div>
 
-      {aggregate === "percentile" ? (
+      <div
+        style={{
+          overflow: "hidden",
+          maxHeight: aggregate === "percentile" ? "60px" : "0px",
+          opacity: aggregate === "percentile" ? 1 : 0,
+          transition: "max-height 0.2s ease, opacity 0.2s ease",
+          marginBottom: aggregate === "percentile" ? undefined : 0,
+        }}
+      >
         <NumberInput
           label="Percentile"
           size="xs"
@@ -249,6 +289,7 @@ export default function ChartQueryControls({
           max={99.9}
           step={1}
           decimalScale={1}
+          autocomplete="off"
           value={percentile}
           onChange={(value) => {
             if (typeof value === "number" && Number.isFinite(value)) {
@@ -256,7 +297,7 @@ export default function ChartQueryControls({
             }
           }}
         />
-      ) : null}
+      </div>
     </Stack>
   );
 }

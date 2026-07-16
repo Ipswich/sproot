@@ -142,9 +142,6 @@ export default function SensorData() {
           onUseCustomRangeChange={(value) => {
             startTransition(() => {
               setUseCustomRange(value);
-              if (!value) {
-                setCustomRange(null);
-              }
             });
           }}
           customRange={customRange}
