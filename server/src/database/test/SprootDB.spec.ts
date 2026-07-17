@@ -667,8 +667,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as SensorDataQueryRequest);
 
-      const cursorCall = rawSpy.getCalls().find((c) => c.args[1]?.[0] instanceof Date);
-      const cursorParam = cursorCall!.args[1]?.[0];
+      const cursorCall = rawSpy.getCalls().find((c) => c.args[1]?.[1] instanceof Date);
+      const cursorParam = cursorCall!.args[1]?.[1];
       assert.instanceOf(cursorParam, Date, "cursor should be a Date object");
       assert.isFalse(
         isNaN(cursorParam.getTime()),
@@ -704,8 +704,8 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
         limit: 10,
       } as OutputDataQueryRequest);
 
-      const cursorCall = rawSpy.getCalls().find((c) => c.args[1]?.[0] instanceof Date);
-      const cursorParam = cursorCall!.args[1]?.[0];
+      const cursorCall = rawSpy.getCalls().find((c) => c.args[1]?.[1] instanceof Date);
+      const cursorParam = cursorCall!.args[1]?.[1];
       assert.instanceOf(cursorParam, Date, "cursor should be a Date object");
       assert.isFalse(
         isNaN(cursorParam.getTime()),
