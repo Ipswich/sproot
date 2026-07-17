@@ -1,4 +1,4 @@
-export type ChartDataResponse<TData = any> = {
+export type ChartDataResponse<TData = unknown> = {
   xAxis: { field: string; values: string[] };
   data: TData | null;
   nextCursor?: string;
@@ -8,19 +8,117 @@ export type ChartDataRequest = {
   cursor?: string;
 };
 
-export type ChartDataFetchFn<TRequest extends ChartDataRequest, TData = any> = (
-  request: TRequest,
-) => Promise<ChartDataResponse<TData>>;
+export type ChartDataFetchFn<
+  TRequest extends ChartDataRequest,
+  TData = unknown,
+> = (request: TRequest) => Promise<ChartDataResponse<TData>>;
 
-export type MergedChartData<TData = any> = {
+export type MergedChartData<TData = unknown> = {
   xAxis: { field: string; values: string[] };
   data: TData[];
 };
 
-export type ChartDataPaginationResult<TData = any> = {
+export type ChartDataPaginationResult<TData = unknown> = {
   data: MergedChartData<TData> | null;
   error: string | undefined;
 };
+
+type ChartStatisticValue = number | null;
+
+type ChartDataEntry = {
+  id?: string | number;
+  statistics?: Record<string, ChartStatisticValue[]>;
+} & Record<string, unknown>;
+
+type NormalizedChartDataEntry<TData> = {
+  template: TData;
+  statisticsByAggregate: Map<string, Map<string, ChartStatisticValue>>;
+};
+
+function mergeChartDataPage<TData>(
+  response: ChartDataResponse<TData>,
+  timestampValues: Set<string>,
+  dataMap: Map<string | number, NormalizedChartDataEntry<TData>>,
+): void {
+  for (const timestamp of response.xAxis.values) {
+    timestampValues.add(timestamp);
+  }
+
+  if (response.data == null) {
+    return;
+  }
+
+  const item = response.data as ChartDataEntry;
+  const key = item["id"] as string | number | undefined;
+  if (key == null) {
+    return;
+  }
+
+  let normalizedEntry = dataMap.get(key);
+  if (!normalizedEntry) {
+    normalizedEntry = {
+      template: response.data,
+      statisticsByAggregate: new Map(),
+    };
+    dataMap.set(key, normalizedEntry);
+  }
+
+  const statistics = item["statistics"];
+  if (!statistics) {
+    return;
+  }
+
+  for (const [aggregate, values] of Object.entries(statistics)) {
+    let valuesByTimestamp =
+      normalizedEntry.statisticsByAggregate.get(aggregate);
+    if (!valuesByTimestamp) {
+      valuesByTimestamp = new Map<string, ChartStatisticValue>();
+      normalizedEntry.statisticsByAggregate.set(aggregate, valuesByTimestamp);
+    }
+
+    for (const [index, timestamp] of response.xAxis.values.entries()) {
+      const value = values[index];
+      if (value !== undefined) {
+        valuesByTimestamp.set(timestamp, value);
+      }
+    }
+  }
+}
+
+function buildMergedChartData<TData>(
+  xAxisField: string,
+  timestampValues: Set<string>,
+  dataMap: Map<string | number, NormalizedChartDataEntry<TData>>,
+): MergedChartData<TData> {
+  const sortedTimestamps = Array.from(timestampValues).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+  );
+
+  return {
+    xAxis: { field: xAxisField, values: sortedTimestamps },
+    data: Array.from(dataMap.values()).map(
+      ({ template, statisticsByAggregate }) => {
+        const baseEntry = template as ChartDataEntry;
+        const statistics: Record<string, ChartStatisticValue[]> = {};
+
+        for (const [
+          aggregate,
+          valuesByTimestamp,
+        ] of statisticsByAggregate.entries()) {
+          statistics[aggregate] = sortedTimestamps.map((timestamp) => {
+            const value = valuesByTimestamp.get(timestamp);
+            return value === undefined ? null : value;
+          });
+        }
+
+        return {
+          ...baseEntry,
+          statistics,
+        } as TData;
+      },
+    ),
+  };
+}
 
 export async function fetchPaginatedChartData<
   TRequest extends ChartDataRequest,
@@ -30,8 +128,8 @@ export async function fetchPaginatedChartData<
   initialRequest: TRequest,
 ): Promise<ChartDataPaginationResult<TData>> {
   let xAxisField = "time";
-  let allXAxisValues: string[] = [];
-  let dataMap = new Map<string | number, TData>();
+  const allXAxisValues = new Set<string>();
+  const dataMap = new Map<string | number, NormalizedChartDataEntry<TData>>();
   let error: string | undefined;
   let pageCount = 0;
 
@@ -47,12 +145,9 @@ export async function fetchPaginatedChartData<
       response = await fetchFn(currentRequest);
     } catch (err) {
       error = err instanceof Error ? err.message : "Unknown error";
-      if (allXAxisValues.length > 0) {
+      if (allXAxisValues.size > 0) {
         return {
-          data: {
-            xAxis: { field: xAxisField, values: allXAxisValues },
-            data: Array.from(dataMap.values()),
-          },
+          data: buildMergedChartData(xAxisField, allXAxisValues, dataMap),
           error,
         };
       }
@@ -60,44 +155,7 @@ export async function fetchPaginatedChartData<
     }
 
     xAxisField = response.xAxis.field;
-    const xAxisValues = response.xAxis.values;
-    allXAxisValues = [...allXAxisValues, ...xAxisValues];
-
-    if (response.data != null) {
-      const item = response.data;
-      const key = (item as Record<string, unknown>)["id"] as
-        string | number | undefined;
-      if (key != null) {
-        const existing = dataMap.get(key);
-        if (existing) {
-          const existingEntry = existing as Record<string, unknown>;
-          const newItem = item as Record<string, unknown>;
-          const existingStats = existingEntry["statistics"] as Record<
-            string,
-            (number | null)[]
-          >;
-          const newStats = newItem["statistics"] as Record<
-            string,
-            (number | null)[]
-          >;
-
-          if (existingStats && newStats) {
-            for (const agg of Object.keys(newStats)) {
-              if (agg in existingStats) {
-                (existingStats[agg] as (number | null)[]) = [
-                  ...(existingStats[agg] as (number | null)[]),
-                  ...(newStats[agg] as (number | null)[]),
-                ];
-              } else {
-                existingStats[agg] = [...newStats[agg]!];
-              }
-            }
-          }
-        } else {
-          dataMap.set(key, item);
-        }
-      }
-    }
+    mergeChartDataPage(response, allXAxisValues, dataMap);
 
     if (!response.nextCursor) {
       break;
@@ -107,10 +165,7 @@ export async function fetchPaginatedChartData<
   }
 
   const result: ChartDataPaginationResult<TData> = {
-    data: {
-      xAxis: { field: xAxisField, values: allXAxisValues },
-      data: Array.from(dataMap.values()),
-    },
+    data: buildMergedChartData(xAxisField, allXAxisValues, dataMap),
     error: undefined,
   };
   if (error) {
@@ -139,15 +194,15 @@ export async function fetchFanOutPaginatedChartData<
   }));
 
   let xAxisField = "time";
-  let allXAxisValues: string[] = [];
-  let dataMap = new Map<string | number, TData>();
+  const allXAxisValues = new Set<string>();
+  const dataMap = new Map<string | number, NormalizedChartDataEntry<TData>>();
   let error: string | undefined;
   let pageCount = 0;
 
   // Cursor state per ID
   const cursors = new Map<number, string>();
 
-  while (true) {
+  for (;;) {
     pageCount++;
 
     // Fan out requests in bounded parallel batches
@@ -180,7 +235,6 @@ export async function fetchFanOutPaginatedChartData<
     const results = allResults;
 
     let anyHasMore = false;
-    let pageXAxisValues: string[] | null = null;
 
     for (let i = 0; i < results.length; i++) {
       const result = results[i]!;
@@ -203,52 +257,8 @@ export async function fetchFanOutPaginatedChartData<
         cursors.delete(ids[i]!);
       }
 
-      // All per-ID responses for a page share the same xAxis; capture it once per page.
-      if (pageXAxisValues == null) {
-        xAxisField = response.xAxis.field;
-        pageXAxisValues = [...response.xAxis.values];
-      }
-
-      // Merge data entries
-      if (response.data != null) {
-        const item = response.data;
-        const key = (item as Record<string, unknown>)["id"] as
-          string | number | undefined;
-        if (key != null) {
-          const existing = dataMap.get(key);
-          if (existing) {
-            const existingEntry = existing as Record<string, unknown>;
-            const newItem = item as Record<string, unknown>;
-            const existingStats = existingEntry["statistics"] as Record<
-              string,
-              (number | null)[]
-            >;
-            const newStats = newItem["statistics"] as Record<
-              string,
-              (number | null)[]
-            >;
-
-            if (existingStats && newStats) {
-              for (const agg of Object.keys(newStats)) {
-                if (agg in existingStats) {
-                  (existingStats[agg] as (number | null)[]) = [
-                    ...(existingStats[agg] as (number | null)[]),
-                    ...(newStats[agg] as (number | null)[]),
-                  ];
-                } else {
-                  existingStats[agg] = [...newStats[agg]!];
-                }
-              }
-            }
-          } else {
-            dataMap.set(key, item);
-          }
-        }
-      }
-    }
-
-    if (pageXAxisValues != null) {
-      allXAxisValues = [...allXAxisValues, ...pageXAxisValues];
+      xAxisField = response.xAxis.field;
+      mergeChartDataPage(response, allXAxisValues, dataMap);
     }
 
     if (!anyHasMore) {
@@ -262,10 +272,7 @@ export async function fetchFanOutPaginatedChartData<
   }
 
   const result: ChartDataPaginationResult<TData> = {
-    data: {
-      xAxis: { field: xAxisField, values: allXAxisValues },
-      data: Array.from(dataMap.values()),
-    },
+    data: buildMergedChartData(xAxisField, allXAxisValues, dataMap),
     error: undefined,
   };
   if (error) {

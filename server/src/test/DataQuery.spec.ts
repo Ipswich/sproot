@@ -90,9 +90,12 @@ describe("DataQuery API - Sensor Data", function () {
     const secondPageTimestamps = secondContent.xAxis.values as string[];
 
     assert.isAbove(secondPageTimestamps.length, 0);
-    assert.isAtLeast(
+    assert.isBelow(
       new Date(secondPageTimestamps[0]!).getTime(),
       new Date(firstPageTimestamps[firstPageTimestamps.length - 1]!).getTime(),
+    );
+    assert.isFalse(
+      secondPageTimestamps.some((timestamp) => firstPageTimestamps.includes(timestamp)),
     );
   });
 
@@ -191,9 +194,12 @@ describe("DataQuery API - Output Data", function () {
     const secondPageTimestamps = secondContent.xAxis.values as string[];
 
     assert.isAbove(secondPageTimestamps.length, 0);
-    assert.isAtLeast(
+    assert.isBelow(
       new Date(secondPageTimestamps[0]!).getTime(),
       new Date(firstPageTimestamps[firstPageTimestamps.length - 1]!).getTime(),
+    );
+    assert.isFalse(
+      secondPageTimestamps.some((timestamp) => firstPageTimestamps.includes(timestamp)),
     );
   });
 
