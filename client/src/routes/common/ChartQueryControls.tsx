@@ -166,7 +166,7 @@ export default function ChartQueryControls({
           size="sm"
           clearable
           placeholder="Select date range"
-          autocomplete="off"
+          autoComplete="off"
           value={
             customRange ? [customRange.start, customRange.end] : [null, null]
           }
@@ -244,7 +244,7 @@ export default function ChartQueryControls({
             label="Custom resolution"
             size="xs"
             min={1}
-            autocomplete="off"
+            autoComplete="off"
             value={customDownsampleAmount}
             onChange={(value) => {
               if (typeof value === "number" && Number.isFinite(value)) {
@@ -295,7 +295,7 @@ export default function ChartQueryControls({
           max={99.9}
           step={1}
           decimalScale={1}
-          autocomplete="off"
+          autoComplete="off"
           value={percentile}
           onChange={(value) => {
             if (typeof value === "number" && Number.isFinite(value)) {

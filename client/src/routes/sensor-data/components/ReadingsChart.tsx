@@ -129,21 +129,21 @@ export default function ReadingsChart({
                 ? [
                     {
                       y: stats.avg,
-                      label: `Average: ${formatDecimalReadingForDisplay(String(stats.avg))}${stats.units || units || ""}`,
+                      label: `Average: ${formatDecimalReadingForDisplay(String(stats.avg))} ${stats.units || units || ""}`,
                       color: "red",
                       ifOverflow: "extendDomain",
                       labelPosition: "insideTopLeft",
                     },
                     {
                       y: stats.min,
-                      label: `Min: ${formatDecimalReadingForDisplay(String(stats.min))}${stats.units || units || ""}`,
+                      label: `Min: ${formatDecimalReadingForDisplay(String(stats.min))} ${stats.units || units || ""}`,
                       color: "blue",
                       ifOverflow: "extendDomain",
                       labelPosition: "insideBottomLeft",
                     },
                     {
                       y: stats.max,
-                      label: `Max: ${formatDecimalReadingForDisplay(String(stats.max))}${stats.units || units || ""}`,
+                      label: `Max: ${formatDecimalReadingForDisplay(String(stats.max))} ${stats.units || units || ""}`,
                       color: "green",
                       ifOverflow: "extendDomain",
                       labelPosition: "insideTopLeft",
