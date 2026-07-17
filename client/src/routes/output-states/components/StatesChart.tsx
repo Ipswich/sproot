@@ -1,7 +1,17 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
+import {
+  formatNumberForDisplay,
+  formatDateForDisplay,
+  formatTickValue,
+} from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { useMemo } from "react";
 import { DataSeries, ChartSeries } from "../../../requests/chartDataTypes";
+import {
+  getDownsampleMinutes,
+  Aggregate,
+  isUnitlessAggregate,
+} from "../../../requests/queryTypes";
 
 export interface StatesChartProps {
   dataSeries: DataSeries;
@@ -9,6 +19,8 @@ export interface StatesChartProps {
   chartRendering: boolean;
   showEmptyState?: boolean;
   valueSuffix?: string;
+  aggregate?: Aggregate;
+  downsample?: string;
 }
 
 export default function StatesChart({
@@ -17,6 +29,8 @@ export default function StatesChart({
   chartRendering,
   showEmptyState,
   valueSuffix = "%",
+  aggregate,
+  downsample,
 }: StatesChartProps) {
   const data = useMemo(
     () =>
@@ -55,18 +69,25 @@ export default function StatesChart({
         <LineChart
           tooltipProps={{
             position: {},
-            content: ({ label, payload }) => (
-              <ChartTooltip
-                label={label}
-                payload={
-                  (payload || []) as Record<
-                    string,
-                    { name: string; color: string; value: string }
-                  >[]
-                }
-                valueSuffix={valueSuffix}
-              />
-            ),
+            content: (props: any) => {
+              const rawTimestamp = props.payload?.[0]?.payload?.rawTimestamp;
+              return (
+                <ChartTooltip
+                  label={props.label}
+                  payload={
+                    (props.payload || []) as {
+                      name: string;
+                      color: string;
+                      value: string;
+                    }[]
+                  }
+                  valueSuffix={valueSuffix}
+                  aggregate={aggregate}
+                  downsample={downsample ?? undefined}
+                  rawTimestamp={rawTimestamp}
+                />
+              );
+            },
           }}
           mt={12}
           ml={-28}
@@ -80,6 +101,7 @@ export default function StatesChart({
           withYAxis
           tickLine="xy"
           xAxisProps={{
+            tickMargin: -5,
             dataKey: "name",
             interval: "equidistantPreserveStart",
           }}
@@ -87,6 +109,7 @@ export default function StatesChart({
             padding: { top: 5 },
             type: "number",
             domain: [0, 100],
+            tickFormatter: formatTickValue,
           }}
           dataKey="name"
           series={chartSeries ?? []}
@@ -98,24 +121,40 @@ export default function StatesChart({
 
 interface ChartTooltipProps {
   label: string;
-  payload:
-    | Record<string, { name: string; color: string; value: string }>[]
-    | undefined;
+  payload: { name: string; color: string; value: string }[] | undefined;
   valueSuffix: string;
+  aggregate?: Aggregate;
+  downsample: string | undefined;
+  rawTimestamp: string | undefined;
 }
 
-function ChartTooltip({ label, payload, valueSuffix }: ChartTooltipProps) {
+function ChartTooltip({
+  label,
+  payload,
+  valueSuffix,
+  aggregate,
+  downsample,
+  rawTimestamp,
+}: ChartTooltipProps) {
   if (!payload) return null;
+
+  let headerText = label;
+  if (downsample && getDownsampleMinutes(downsample) > 1 && rawTimestamp) {
+    const bucketStart = new Date(rawTimestamp);
+    const intervalMs = getDownsampleMinutes(downsample) * 60 * 1000;
+    const bucketEnd = new Date(bucketStart.getTime() + intervalMs);
+    headerText = `${formatDateForDisplay(bucketStart)} - ${formatDateForDisplay(bucketEnd)}`;
+  }
 
   return (
     <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
       <Text fw={500} mb={5}>
-        {label}
+        {headerText}
       </Text>
       {payload.map((item) => (
         <Text key={String(item["name"])} c={item["color"]!} fz="sm">
-          {String(item["name"])}: {String(item["value"])}
-          {valueSuffix}
+          {String(item["name"])}: {formatNumberForDisplay(item["value"] ?? "")}
+          {!isUnitlessAggregate(aggregate ?? "avg") ? valueSuffix : ""}
         </Text>
       ))}
     </Paper>

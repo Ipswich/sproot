@@ -23,6 +23,7 @@ import {
 import { fetchFanOutPaginatedChartData } from "../../../requests/chartDataPagination";
 import { ReadingsChartTransformer } from "./ReadingsChartTransformer";
 import ReadingsChart from "./ReadingsChart";
+import { isUnitlessAggregate } from "../../../requests/queryTypes";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 
@@ -167,7 +168,10 @@ export default function ReadingsChartContainer({
       transformed.dataSeries,
     );
 
-    if (readingType !== ReadingType.temperature) {
+    if (
+      readingType !== ReadingType.temperature ||
+      isUnitlessAggregate(aggregate)
+    ) {
       return mergedDataSeries;
     }
 
@@ -220,6 +224,8 @@ export default function ReadingsChartContainer({
         visibleSensors.length === 0
       }
       showReferenceLines={showReferenceLines}
+      downsample={downsample}
+      aggregate={aggregate}
       {...(displayDataSeries[0]?.units
         ? { units: displayDataSeries[0].units as string }
         : {})}

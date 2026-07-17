@@ -7,6 +7,7 @@ import { getDownsampleMinutes } from "./queryTypes";
 
 export type DataPoint = {
   name: string;
+  rawTimestamp?: string;
   units?: string;
   [key: string]: number | string | undefined;
 };
@@ -39,11 +40,7 @@ export function getEffectiveEndDate(selectedEnd: Date): Date {
 
 export function getEffectiveDisplayEndDate(selectedEnd: Date): Date {
   const now = new Date();
-  const todayStart = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const selectedDayStart = new Date(
     selectedEnd.getFullYear(),
     selectedEnd.getMonth(),
@@ -76,7 +73,11 @@ export function buildChartTimeline(
     current <= lastBucket;
     current += intervalMs
   ) {
-    timeline.push({ name: formatDateForDisplay(new Date(current)) });
+    const date = new Date(current);
+    timeline.push({
+      name: formatDateForDisplay(date),
+      rawTimestamp: date.toISOString(),
+    });
   }
 
   return timeline;

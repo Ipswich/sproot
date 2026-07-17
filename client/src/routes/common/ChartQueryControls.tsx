@@ -11,6 +11,7 @@ import type { Aggregate } from "../../requests/queryTypes";
 import {
   CHART_AGGREGATE_OPTIONS,
   CHART_DOWNSAMPLE_OPTIONS,
+  isOneMinuteDownsample,
 } from "../../requests/queryTypes";
 import PopoverDatePickerInput from "../../components/PopoverDatePickerInput";
 
@@ -189,11 +190,16 @@ export default function ChartQueryControls({
           size="xs"
           allowDeselect={false}
           searchable={false}
+          disabled={isOneMinuteDownsample(downsample)}
           styles={{ input: { cursor: "pointer", caretColor: "transparent" } }}
-          value={aggregate}
-          data={CHART_AGGREGATE_OPTIONS}
+          value={isOneMinuteDownsample(downsample) ? "raw" : aggregate}
+          data={
+            isOneMinuteDownsample(downsample)
+              ? [{ value: "raw", label: "Raw" }]
+              : CHART_AGGREGATE_OPTIONS
+          }
           onChange={(value) => {
-            if (value) {
+            if (value && value !== "raw") {
               onAggregateChange(value as Aggregate);
             }
           }}

@@ -71,6 +71,7 @@ export const OutputDataTransformer = {
     for (const [timeIndex, timeValue] of mergedData.xAxis.values.entries()) {
       const point: DataPoint = {
         name: formatDateForDisplay(timeValue),
+        rawTimestamp: timeValue,
         units,
       };
 

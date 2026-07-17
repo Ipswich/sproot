@@ -1,8 +1,18 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
-import { formatDecimalReadingForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
+import {
+  formatDecimalReadingForDisplay,
+  formatNumberForDisplay,
+  formatDateForDisplay,
+  formatTickValue,
+} from "@sproot/sproot-common/src/utility/DisplayFormats";
 import { useMemo } from "react";
 import { ChartSeries, DataSeries } from "../../../requests/chartDataTypes";
+import {
+  getDownsampleMinutes,
+  Aggregate,
+  isUnitlessAggregate,
+} from "../../../requests/queryTypes";
 
 export interface ReadingsChartProps {
   dataSeries: DataSeries;
@@ -13,6 +23,8 @@ export interface ReadingsChartProps {
   showReferenceLines?: boolean;
   allSensorsHidden?: boolean;
   units?: string;
+  aggregate?: Aggregate;
+  downsample?: string;
 }
 
 export default function ReadingsChart({
@@ -23,6 +35,8 @@ export default function ReadingsChart({
   showReferenceLines,
   allSensorsHidden,
   units,
+  aggregate,
+  downsample,
 }: ReadingsChartProps) {
   const stats = useMemo(() => getSeriesStats(dataSeries), [dataSeries]);
   const data = useMemo(
@@ -68,18 +82,25 @@ export default function ReadingsChart({
           <LineChart
             tooltipProps={{
               position: {},
-              content: ({ label, payload }) => (
-                <ChartTooltip
-                  label={label}
-                  payload={
-                    (payload || []) as Record<
-                      string,
-                      { name: string; color: string; value: string }
-                    >[]
-                  }
-                  units={units || ""}
-                />
-              ),
+              content: (props: any) => {
+                const rawTimestamp = props.payload?.[0]?.payload?.rawTimestamp;
+                return (
+                  <ChartTooltip
+                    label={props.label}
+                    payload={
+                      (props.payload || []) as {
+                        name: string;
+                        color: string;
+                        value: string;
+                      }[]
+                    }
+                    units={units || ""}
+                    aggregate={aggregate}
+                    downsample={downsample ?? undefined}
+                    rawTimestamp={rawTimestamp}
+                  />
+                );
+              },
             }}
             mt={12}
             ml={-28}
@@ -96,10 +117,12 @@ export default function ReadingsChart({
               interval: "equidistantPreserveStart",
             }}
             yAxisProps={{
+              tickMargin: -5,
               allowDataOverflow: true,
               padding: { top: 5 },
               type: "number",
               domain: ["auto", "auto"],
+              tickFormatter: formatTickValue,
             }}
             referenceLines={
               showReferenceLines && stats
@@ -139,21 +162,37 @@ export default function ReadingsChart({
 
 interface ChartTooltipProps {
   label: string;
-  payload:
-    | Record<string, { name: string; color: string; value: string }>[]
-    | undefined;
+  payload: { name: string; color: string; value: string }[] | undefined;
   units: string;
+  aggregate?: Aggregate;
+  downsample: string | undefined;
+  rawTimestamp: string | undefined;
 }
 
-function ChartTooltip({ label, payload, units }: ChartTooltipProps) {
+function ChartTooltip({
+  label,
+  payload,
+  units,
+  aggregate,
+  downsample,
+  rawTimestamp,
+}: ChartTooltipProps) {
   if (!payload) {
     return null;
+  }
+
+  let headerText = label;
+  if (downsample && getDownsampleMinutes(downsample) > 1 && rawTimestamp) {
+    const bucketStart = new Date(rawTimestamp);
+    const intervalMs = getDownsampleMinutes(downsample) * 60 * 1000;
+    const bucketEnd = new Date(bucketStart.getTime() + intervalMs);
+    headerText = `${formatDateForDisplay(bucketStart)} - ${formatDateForDisplay(bucketEnd)}`;
   }
 
   return (
     <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
       <Text fw={500} mb={5}>
-        {label}
+        {headerText}
       </Text>
       {payload.map((item) => (
         <Text
@@ -161,8 +200,8 @@ function ChartTooltip({ label, payload, units }: ChartTooltipProps) {
           c={String(item["color"] ?? "")}
           fz="sm"
         >
-          {String(item["name"])}: {String(item["value"])}
-          {units}
+          {String(item["name"])}: {formatNumberForDisplay(item["value"] ?? "")}
+          {!isUnitlessAggregate(aggregate ?? "avg") && units ? ` ${units}` : ""}
         </Text>
       ))}
     </Paper>

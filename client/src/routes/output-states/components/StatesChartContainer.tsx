@@ -20,6 +20,7 @@ import {
 import { fetchFanOutPaginatedChartData } from "../../../requests/chartDataPagination";
 import { OutputDataTransformer } from "./OutputDataTransformer";
 import StatesChart from "./StatesChart";
+import { isUnitlessAggregate } from "../../../requests/queryTypes";
 import { IOutputBase } from "@sproot/outputs/IOutputBase";
 
 interface StatesChartContainerProps {
@@ -193,6 +194,8 @@ export default function StatesChartContainer({
         }
         showEmptyState={!isInitialLoading && !hasVisibleValues}
         valueSuffix={valueSuffix ?? transformed?.units ?? "%"}
+        aggregate={aggregate}
+        downsample={downsample}
       />
     </Box>
   );

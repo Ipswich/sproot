@@ -16,6 +16,17 @@ function formatDecimalReadingForDisplay(data: string): string {
   return parseFloat(data).toFixed(3);
 }
 
+function formatNumberForDisplay(value: number | string): string {
+  const num = Number(value);
+  if (!isFinite(num)) return String(value);
+  return num.toFixed(3).replace(/\.?0+$/, "") || "0";
+}
+
+function formatTickValue(value: number | string): string {
+  const num = Number(value);
+  return Number(num.toFixed(2)).toString();
+}
+
 function convertCelsiusToFahrenheit(value: number | string | undefined | null): number | undefined {
   if (value == undefined || value == null) {
     return undefined;
@@ -35,6 +46,8 @@ function convertFahrenheitToCelsius(value: number | string | undefined | null): 
 export {
   formatDateForDisplay,
   formatDecimalReadingForDisplay,
+  formatNumberForDisplay,
+  formatTickValue,
   convertCelsiusToFahrenheit,
   convertFahrenheitToCelsius,
 };

@@ -153,3 +153,11 @@ export interface OutputDataQueryResponse {
   } | null;
   nextCursor?: string;
 }
+
+export function isUnitlessAggregate(aggregate: Aggregate): boolean {
+  return aggregate === "count" || aggregate === "sum";
+}
+
+export function isOneMinuteDownsample(downsample: string): boolean {
+  return getDownsampleMinutes(downsample) === 1;
+}

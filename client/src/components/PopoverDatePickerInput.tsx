@@ -26,10 +26,9 @@ export default function PopoverDatePickerInput({
   type = "range",
 }: Props) {
   const dpType: NonNullable<DatePickerInputProps["type"]> = type ?? "range";
-  const [internalValue, setInternalValue] = useState<[Date | null, Date | null]>([
-    null,
-    null,
-  ]);
+  const [internalValue, setInternalValue] = useState<
+    [Date | null, Date | null]
+  >([null, null]);
   const hasClearedRef = useRef(false);
 
   useEffect(() => {
