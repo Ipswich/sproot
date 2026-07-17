@@ -2,8 +2,8 @@
  * Migration: Create TimescaleDB continuous aggregate tables for sensor and output data.
  *
  * Purpose:
- *   Creates 5 continuous aggregate materialized views (sensor_data_5m, sensor_data_1h,
- *   sensor_data_1d, output_data_1h, output_data_1d) that pre-compute statistics from
+ *   Creates 6 continuous aggregate materialized views (sensor_data_5m, sensor_data_1h,
+ *   sensor_data_1d, output_data_5m, output_data_1h, output_data_1d) that pre-compute statistics from
  *   raw sensor_data and output_data hypertables. These views use TimescaleDB's
  *   continuous aggregate feature to incrementally refresh on a schedule.
  *
@@ -98,8 +98,8 @@ export async function up(knex: Knex): Promise<void> {
     DO $$
     BEGIN
       PERFORM add_continuous_aggregate_policy('sensor_data_1h',
-        start_offset => INTERVAL '8 days',
-        end_offset => INTERVAL '1 hour',
+        start_offset => INTERVAL '3 hours',
+        end_offset => INTERVAL '1 minute',
         schedule_interval => INTERVAL '1 minute'
       );
     EXCEPTION WHEN duplicate_object THEN
@@ -140,8 +140,8 @@ export async function up(knex: Knex): Promise<void> {
     DO $$
     BEGIN
       PERFORM add_continuous_aggregate_policy('sensor_data_1d',
-        start_offset => INTERVAL '8 days',
-        end_offset => INTERVAL '1 day',
+        start_offset => INTERVAL '3 days',
+        end_offset => INTERVAL '1 minute',
         schedule_interval => INTERVAL '1 minute'
       );
     EXCEPTION WHEN duplicate_object THEN
@@ -180,8 +180,8 @@ export async function up(knex: Knex): Promise<void> {
     DO $$
     BEGIN
       PERFORM add_continuous_aggregate_policy('output_data_1h',
-        start_offset => INTERVAL '8 days',
-        end_offset => INTERVAL '1 hour',
+        start_offset => INTERVAL '3 hours',
+        end_offset => INTERVAL '1 minute',
         schedule_interval => INTERVAL '1 minute'
       );
     EXCEPTION WHEN duplicate_object THEN
@@ -220,8 +220,8 @@ export async function up(knex: Knex): Promise<void> {
     DO $$
     BEGIN
       PERFORM add_continuous_aggregate_policy('output_data_1d',
-        start_offset => INTERVAL '8 days',
-        end_offset => INTERVAL '1 day',
+        start_offset => INTERVAL '3 days',
+        end_offset => INTERVAL '1 minute',
         schedule_interval => INTERVAL '1 minute'
       );
     EXCEPTION WHEN duplicate_object THEN
@@ -294,8 +294,8 @@ export async function up(knex: Knex): Promise<void> {
     DO $$
     BEGIN
       PERFORM add_continuous_aggregate_policy('sensor_data_5m',
-        start_offset => INTERVAL '8 days',
-        end_offset => INTERVAL '5 minutes',
+        start_offset => INTERVAL '15 minutes',
+        end_offset => INTERVAL '1 minute',
         schedule_interval => INTERVAL '1 minute'
       );
     EXCEPTION WHEN duplicate_object THEN
@@ -306,8 +306,8 @@ export async function up(knex: Knex): Promise<void> {
     DO $$
     BEGIN
       PERFORM add_continuous_aggregate_policy('output_data_5m',
-        start_offset => INTERVAL '8 days',
-        end_offset => INTERVAL '5 minutes',
+        start_offset => INTERVAL '15 minutes',
+        end_offset => INTERVAL '1 minute',
         schedule_interval => INTERVAL '1 minute'
       );
     EXCEPTION WHEN duplicate_object THEN
