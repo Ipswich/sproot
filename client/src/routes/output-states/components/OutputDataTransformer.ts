@@ -9,6 +9,13 @@ import type { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase"
 import type { Aggregate } from "../../../requests/queryTypes";
 import type { MergedChartData } from "../../../requests/chartDataPagination";
 
+interface ChartDataEntry {
+  id: string | number;
+  name?: string;
+  units?: string;
+  statistics?: Record<string, (number | null)[]>;
+}
+
 export interface TransformedOutputData {
   dataSeries: DataSeries;
   chartSeries: ChartSeries[];
@@ -30,9 +37,11 @@ export const OutputDataTransformer = {
     }
 
     const outputById = new Map(outputs.map((output) => [output.id, output]));
-    const responseById = new Map(
-      mergedData.data.map((entry) => [entry.id, entry]),
-    );
+    const responseById = new Map<string | number, ChartDataEntry>();
+    for (const entry of mergedData.data) {
+      const typedEntry = entry as ChartDataEntry;
+      responseById.set(typedEntry.id, typedEntry);
+    }
 
     const chartSeries: ChartSeries[] = [];
     let colorIndex = 0;
@@ -43,7 +52,7 @@ export const OutputDataTransformer = {
       }
 
       chartSeries.push({
-        name: output.name || responseEntry.name,
+        name: output.name || responseEntry.name || "",
         color:
           output.color ??
           DefaultColors[colorIndex % DefaultColors.length] ??
@@ -52,20 +61,23 @@ export const OutputDataTransformer = {
       colorIndex++;
     }
 
-    for (const responseEntry of mergedData.data) {
-      if (outputById.has(responseEntry.id)) {
+    for (const entry of mergedData.data) {
+      const responseEntry = entry as ChartDataEntry;
+      if (outputById.has(Number(responseEntry.id))) {
         continue;
       }
 
       chartSeries.push({
-        name: responseEntry.name,
+        name: responseEntry.name || "",
         color: DefaultColors[colorIndex % DefaultColors.length] ?? "#2e2e2e",
       });
       colorIndex++;
     }
 
     const units =
-      aggregate === "count" ? "" : (mergedData.data[0]?.units ?? "");
+      aggregate === "count"
+        ? ""
+        : ((mergedData.data[0] as ChartDataEntry)?.units ?? "");
     const timestampMap = new Map<string, DataPoint>();
 
     for (const [timeIndex, timeValue] of mergedData.xAxis.values.entries()) {
@@ -75,10 +87,11 @@ export const OutputDataTransformer = {
         units,
       };
 
-      for (const responseEntry of mergedData.data) {
-        const output = outputById.get(responseEntry.id);
-        const key = output?.name || responseEntry.name;
-        const stats = responseEntry.statistics[aggregate];
+      for (const entry of mergedData.data) {
+        const responseEntry = entry as ChartDataEntry;
+        const output = outputById.get(Number(responseEntry.id));
+        const key = (output?.name || responseEntry.name || "") as string;
+        const stats = responseEntry.statistics?.[aggregate];
         const rawValue = stats?.[timeIndex];
         const value = normalizeOutputValue(rawValue, aggregate);
 

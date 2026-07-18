@@ -166,7 +166,6 @@ export default function ChartQueryControls({
           size="sm"
           clearable
           placeholder="Select date range"
-          autoComplete="off"
           value={
             customRange ? [customRange.start, customRange.end] : [null, null]
           }

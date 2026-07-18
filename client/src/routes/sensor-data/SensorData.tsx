@@ -119,7 +119,7 @@ export default function SensorData() {
           downsampleSelection={downsample}
           percentile={percentile}
           showReferenceLines={showReferenceLines}
-          onToggleReferenceLines={(value) => {
+          onToggleReferenceLines={(value: boolean) => {
             startTransition(() => {
               localStorage.setItem(
                 `${readingTypeString}-showReferenceLines`,

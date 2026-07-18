@@ -123,7 +123,7 @@ interface ChartTooltipProps {
   label: string;
   payload: { name: string; color: string; value: string }[] | undefined;
   valueSuffix: string;
-  aggregate?: Aggregate;
+  aggregate?: Aggregate | undefined;
   downsample: string | undefined;
   rawTimestamp: string | undefined;
 }

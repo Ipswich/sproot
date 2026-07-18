@@ -38,6 +38,7 @@ interface ReadingsChartContainerProps {
   downsampleSelection: string;
   percentile?: number;
   showReferenceLines: boolean;
+  onToggleReferenceLines?: (value: boolean) => void;
 }
 
 export default function ReadingsChartContainer({
@@ -51,6 +52,7 @@ export default function ReadingsChartContainer({
   downsampleSelection,
   percentile,
   showReferenceLines,
+  onToggleReferenceLines,
 }: ReadingsChartContainerProps) {
   const hiddenDeviceZoneIds = useMemo(
     () => new Set(toggledDeviceZones),
@@ -224,6 +226,7 @@ export default function ReadingsChartContainer({
         visibleSensors.length === 0
       }
       showReferenceLines={showReferenceLines}
+      {...(onToggleReferenceLines ? { onToggleReferenceLines } : {})}
       downsample={downsample}
       aggregate={aggregate}
       {...(displayDataSeries[0]?.units

@@ -9,6 +9,13 @@ import type { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase"
 import type { Aggregate } from "../../../requests/queryTypes";
 import type { MergedChartData } from "../../../requests/chartDataPagination";
 
+interface ChartDataEntry {
+  id: string | number;
+  name?: string;
+  units?: string;
+  statistics?: Record<string, (number | null)[]>;
+}
+
 export interface TransformedSensorData {
   dataSeries: DataSeries;
   chartSeries: ChartSeries[];
@@ -30,9 +37,11 @@ export const ReadingsChartTransformer = {
     }
 
     const sensorById = new Map(sensors.map((sensor) => [sensor.id, sensor]));
-    const responseById = new Map(
-      mergedData.data.map((entry) => [entry.id, entry]),
-    );
+    const responseById = new Map<string | number, ChartDataEntry>();
+    for (const entry of mergedData.data) {
+      const typedEntry = entry as ChartDataEntry;
+      responseById.set(typedEntry.id, typedEntry);
+    }
 
     const chartSeries: ChartSeries[] = [];
     let colorIndex = 0;
@@ -43,7 +52,7 @@ export const ReadingsChartTransformer = {
       }
 
       chartSeries.push({
-        name: sensor.name || responseEntry.name,
+        name: sensor.name || responseEntry.name || "",
         color:
           sensor.color ??
           DefaultColors[colorIndex % DefaultColors.length] ??
@@ -52,20 +61,23 @@ export const ReadingsChartTransformer = {
       colorIndex++;
     }
 
-    for (const responseEntry of mergedData.data) {
-      if (sensorById.has(responseEntry.id)) {
+    for (const entry of mergedData.data) {
+      const responseEntry = entry as ChartDataEntry;
+      if (sensorById.has(Number(responseEntry.id))) {
         continue;
       }
 
       chartSeries.push({
-        name: responseEntry.name,
+        name: responseEntry.name || "",
         color: DefaultColors[colorIndex % DefaultColors.length] ?? "#2e2e2e",
       });
       colorIndex++;
     }
 
     const units =
-      aggregate === "count" ? "" : (mergedData.data[0]?.units ?? "");
+      aggregate === "count"
+        ? ""
+        : ((mergedData.data[0] as ChartDataEntry)?.units ?? "");
     const timestampMap = new Map<string, DataPoint>();
 
     for (const [timeIndex, timeValue] of mergedData.xAxis.values.entries()) {
@@ -75,10 +87,11 @@ export const ReadingsChartTransformer = {
         units,
       };
 
-      for (const responseEntry of mergedData.data) {
-        const sensor = sensorById.get(responseEntry.id);
-        const key = sensor?.name || responseEntry.name;
-        const stats = responseEntry.statistics[aggregate];
+      for (const entry of mergedData.data) {
+        const responseEntry = entry as ChartDataEntry;
+        const sensor = sensorById.get(Number(responseEntry.id));
+        const key = (sensor?.name || responseEntry.name || "") as string;
+        const stats = responseEntry.statistics?.[aggregate];
         const value = stats?.[timeIndex];
 
         if (value != null) {
