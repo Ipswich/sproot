@@ -47,7 +47,7 @@ export default function StatesChart({
       <LoadingOverlay
         style={{ height: "100%", pointerEvents: "none" }}
         visible={chartRendering}
-        zIndex={1000}
+        zIndex={90}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
       {showEmptyState ? (
