@@ -227,6 +227,8 @@ interface ISprootDB {
     logger: winston.Logger,
   ): Promise<void>;
 
+  validateBackupArchiveAsync(inputFile: string, logger: winston.Logger): Promise<void>;
+
   swapRestoreDatabaseAsync(
     host: string,
     port: number,
@@ -782,6 +784,10 @@ class MockSprootDB implements ISprootDB {
     _logger: winston.Logger,
   ): Promise<void> {
     return;
+  }
+
+  async validateBackupArchiveAsync(_inputFile: string, _logger: winston.Logger): Promise<void> {
+    return Promise.resolve();
   }
 
   async swapRestoreDatabaseAsync(

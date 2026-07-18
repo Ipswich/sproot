@@ -13,6 +13,7 @@ import { SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
 import fs from "fs";
 import path from "path";
 import { tmpdir } from "os";
+import { PassThrough, Readable } from "stream";
 import { Backups } from "../../../../system/Backups";
 
 describe("BackupHandlers.ts", () => {
@@ -183,6 +184,9 @@ describe("BackupHandlers.ts", () => {
 
   describe("systemBackupRestoreHandlerAsync", () => {
     it("should return a 202 when restore is initiated", async () => {
+      const sprootDBMock = {
+        validateBackupArchiveAsync: sinon.stub().resolves(),
+      };
       const response = {
         locals: {
           defaultProperties: {
@@ -192,40 +196,81 @@ describe("BackupHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const request = {
+      const requestStream = new PassThrough();
+      requestStream.end(Buffer.from("test backup data"));
+      const request = Object.assign(requestStream, {
         params: { fileName: "test-backup-file.sproot" },
-        // Add stream event handlers so piping to this mocked response works
-        on: sinon.stub().returnsThis(),
-        once: sinon.stub().returnsThis(),
-        emit: sinon.stub().returnsThis(),
-        write: sinon.stub().returnsThis(),
-        end: sinon.stub().returnsThis(),
-        error: sinon.stub().returnsThis(),
-        pipe: sinon.stub().callsFake((dest: any) => {
-          if (typeof dest.write === "function") dest.write(Buffer.from("test backup data"));
-          if (typeof dest.end === "function") dest.end();
-          setImmediate(() => {
-            if (typeof dest.emit === "function") dest.emit("finish");
-          });
-          return dest;
-        }),
         app: {
-          get: (_dependency: string) => {
-            return async (_fn: () => Promise<void>) => {
-              return Promise.resolve();
-            };
+          get: (dependency: string) => {
+            if (dependency === "gracefulHaltAsync") {
+              return (_fn: () => Promise<void>) => {
+                return;
+              };
+            }
+
+            if (dependency === "logger") {
+              return logger;
+            }
+
+            return sprootDBMock;
           },
         },
-      } as unknown as Request;
+      }) as unknown as Request;
       const result = (await systemBackupRestoreHandlerAsync(request, response)) as SuccessResponse;
 
       assert.equal(result.statusCode, 202);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
+      assert.isTrue(sprootDBMock.validateBackupArchiveAsync.calledOnce);
     });
 
-    it("should return a 202 when restoring with any file content", async () => {
+    it("should return a 400 for invalid backup content", async () => {
       const sprootDBMock = {
+        validateBackupArchiveAsync: sinon.stub().rejects(new Error("pg_restore exited with 1")),
+      };
+      const gracefulHaltSpy = sinon.spy();
+      const response = {
+        locals: {
+          defaultProperties: {
+            timestamp: new Date().toISOString(),
+            requestId: "1234",
+          },
+        },
+      } as unknown as Response;
+      const requestStream = new PassThrough();
+      requestStream.end(Buffer.from("INVALID DATA!"));
+      const request = Object.assign(requestStream, {
+        params: { fileName: "invalid-backup-file" },
+        originalUrl: "/api/v2/system/backups/restore",
+        app: {
+          get: (dependency: string) => {
+            if (dependency === "gracefulHaltAsync") {
+              return async (_fn: () => Promise<void>) => {
+                gracefulHaltSpy();
+                return Promise.resolve();
+              };
+            }
+
+            if (dependency === "logger") {
+              return logger;
+            }
+
+            return sprootDBMock;
+          },
+        },
+      }) as unknown as Request;
+      const result = (await systemBackupRestoreHandlerAsync(request, response)) as SuccessResponse;
+
+      assert.equal(result.statusCode, 400);
+      assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
+      assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
+      assert.isTrue(sprootDBMock.validateBackupArchiveAsync.calledOnce);
+      assert.isTrue(gracefulHaltSpy.notCalled);
+    });
+
+    it("should invoke the restore after shutdown with a validated backup", async () => {
+      const sprootDBMock = {
+        validateBackupArchiveAsync: sinon.stub().resolves(),
         swapRestoreDatabaseAsync: sinon.stub().resolves(),
       };
       const response = {
@@ -236,41 +281,39 @@ describe("BackupHandlers.ts", () => {
           },
         },
       } as unknown as Response;
-      const request = {
+      const requestStream = new PassThrough();
+      requestStream.end(Buffer.from("VALID BACKUP DATA"));
+      const request = Object.assign(requestStream, {
         params: { fileName: "invalid-backup-file" },
-        // Add stream event handlers so piping to this mocked response works
-        on: sinon.stub().returnsThis(),
-        once: sinon.stub().returnsThis(),
-        emit: sinon.stub().returnsThis(),
-        write: sinon.stub().returnsThis(),
-        end: sinon.stub().returnsThis(),
-        error: sinon.stub().returnsThis(),
-        pipe: sinon.stub().callsFake((dest: any) => {
-          if (typeof dest.write === "function") dest.write(Buffer.from("INVALID DATA!"));
-          if (typeof dest.end === "function") dest.end();
-          setImmediate(() => {
-            if (typeof dest.emit === "function") dest.emit("finish");
-          });
-          return dest;
-        }),
         app: {
           get: (dependency: string) => {
             if (dependency === "gracefulHaltAsync") {
-              return async (fn: () => Promise<void>) => {
-                await fn();
+              return (fn: () => Promise<void>) => {
+                void fn();
               };
+            }
+            if (dependency === "logger") {
+              return logger;
             }
             return sprootDBMock;
           },
         },
-      } as unknown as Request;
+      }) as unknown as Request;
       const result = (await systemBackupRestoreHandlerAsync(request, response)) as SuccessResponse;
+      await new Promise((resolve) => setImmediate(resolve));
       assert.equal(result.statusCode, 202);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, response.locals["defaultProperties"]["requestId"]);
+      assert.isTrue(sprootDBMock.validateBackupArchiveAsync.calledOnce);
+      assert.isTrue(sprootDBMock.swapRestoreDatabaseAsync.calledOnce);
     });
 
     it("should return a 500 if an exception occurs during restore", async () => {
+      const requestStream = Readable.from(
+        (async function* () {
+          throw new Error("SOMETHING BROKE");
+        })(),
+      );
       const response = {
         locals: {
           defaultProperties: {
@@ -280,23 +323,8 @@ describe("BackupHandlers.ts", () => {
         },
       } as unknown as Response;
 
-      const request = {
+      const request = Object.assign(requestStream, {
         params: { fileName: "test-backup-file.sproot" },
-        // Add stream event handlers so piping to this mocked response works
-        on: sinon.stub().returnsThis(),
-        once: sinon.stub().returnsThis(),
-        emit: sinon.stub().returnsThis(),
-        write: sinon.stub().returnsThis(),
-        end: sinon.stub().returnsThis(),
-        error: sinon.stub().returnsThis(),
-        pipe: sinon.stub().callsFake((dest: any) => {
-          if (typeof dest.write === "function") dest.write(Buffer.from("test backup data"));
-          if (typeof dest.end === "function") dest.end();
-          setImmediate(() => {
-            if (typeof dest.emit === "function") dest.emit("error", "SOMETHING BROKE");
-          });
-          return dest;
-        }),
         app: {
           get: (_dependency: string) => {
             // return an async function that accepts a function to run (graceful halt)
@@ -305,7 +333,7 @@ describe("BackupHandlers.ts", () => {
             };
           },
         },
-      } as unknown as Request;
+      }) as unknown as Request;
       const result = (await systemBackupRestoreHandlerAsync(request, response)) as SuccessResponse;
       assert.equal(result.statusCode, 500);
       assert.equal(result.timestamp, response.locals["defaultProperties"]["timestamp"]);

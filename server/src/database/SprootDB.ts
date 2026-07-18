@@ -1084,6 +1084,10 @@ export class SprootDB implements ISprootDB {
     return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile, logger);
   }
 
+  async validateBackupArchiveAsync(inputFile: string, logger: winston.Logger): Promise<void> {
+    return this.#validateBackupArchiveAsync(inputFile, logger);
+  }
+
   async swapRestoreDatabaseAsync(
     host: string,
     port: number,
@@ -1099,6 +1103,8 @@ export class SprootDB implements ISprootDB {
     let cleanupNeeded = false;
 
     try {
+      await this.#validateBackupArchiveAsync(inputFile, logger);
+
       await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
       await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
       await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
@@ -1165,7 +1171,10 @@ export class SprootDB implements ISprootDB {
 
     for (const agg of aggregateTables) {
       try {
-        await this.#refreshAggregateChunksAsync(agg.name, agg.rawTable, logger);
+        const result = await this.#refreshAggregateChunksAsync(agg.name, agg.rawTable, logger);
+        if (result) {
+          logger.info(`Refreshed ${result.tableName}: ${result.minStart} to ${result.maxEnd}`);
+        }
       } catch (error) {
         logger.error(`Failed to refresh aggregate table ${agg.name}:`, error);
       }
@@ -1178,13 +1187,15 @@ export class SprootDB implements ISprootDB {
     tableName: string,
     rawTable: string,
     logger: winston.Logger,
-  ): Promise<void> {
+  ): Promise<{ tableName: string; minStart: string; maxEnd: string } | null> {
     const oldestResult = await this.#connection(rawTable).min("logTime as oldest");
     const oldestTime = oldestResult[0]?.["oldest"];
-    if (!oldestTime) return;
+    if (!oldestTime) return null;
 
     let windowEnd = new Date();
     let windowStart = this.#alignToMonth(windowEnd);
+    let minStart: string | null = null;
+    let maxEnd: string | null = null;
 
     while (windowStart > oldestTime) {
       const startStr = this.#formatDbDate(windowStart);
@@ -1193,7 +1204,8 @@ export class SprootDB implements ISprootDB {
         await this.#connection.raw(
           `CALL refresh_continuous_aggregate('${tableName}', '${startStr}', '${endStr}');`,
         );
-        logger.info(`Refreshed aggregate table ${tableName}: ${startStr} to ${endStr}`);
+        if (minStart === null || startStr < minStart) minStart = startStr;
+        if (maxEnd === null || endStr > maxEnd) maxEnd = endStr;
       } catch (error) {
         logger.error(`Failed to refresh ${tableName} chunk ${startStr} to ${endStr}:`, error);
       }
@@ -1208,11 +1220,15 @@ export class SprootDB implements ISprootDB {
         await this.#connection.raw(
           `CALL refresh_continuous_aggregate('${tableName}', '${startStr}', '${endStr}');`,
         );
-        logger.info(`Refreshed aggregate table ${tableName}: ${startStr} to ${endStr}`);
+        if (minStart === null || startStr < minStart) minStart = startStr;
+        if (maxEnd === null || endStr > maxEnd) maxEnd = endStr;
       } catch (error) {
         logger.error(`Failed to refresh ${tableName} chunk ${startStr} to ${endStr}:`, error);
       }
     }
+
+    if (minStart === null || maxEnd === null) return null;
+    return { tableName, minStart, maxEnd };
   }
 
   #alignToMonth(date: Date): Date {
@@ -1641,13 +1657,7 @@ export class SprootDB implements ISprootDB {
           "-",
         ],
         {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
+          env: this.#buildPostgresToolEnv(password),
         },
       );
 
@@ -1663,7 +1673,7 @@ export class SprootDB implements ISprootDB {
       psql.stdin.write(psqlInput);
       psql.stdin.end();
 
-      psql.on("exit", (code) => {
+      psql.on("close", (code) => {
         if (code !== 0) {
           reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
         } else {
@@ -1681,54 +1691,61 @@ export class SprootDB implements ISprootDB {
     outputFile: string,
     logger: winston.Logger,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const stderrChunks: string[] = [];
-      const dump = spawn(
-        "pg_dump",
-        [
-          `--host=${host}`,
-          `--port=${port}`,
-          `--username=${user}`,
-          "--format=custom",
-          "--compress=9",
-          "--no-owner",
-          "--no-privileges",
-          this.#connection.client.database(),
-        ],
-        {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+    const tempOutputFile = `${outputFile}.partial`;
+
+    await fs.promises.rm(tempOutputFile, { force: true });
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const stderrChunks: string[] = [];
+        const dump = spawn(
+          "pg_dump",
+          [
+            `--host=${host}`,
+            `--port=${port}`,
+            `--username=${user}`,
+            "--format=custom",
+            "--compress=9",
+            "--no-owner",
+            "--no-privileges",
+            `--file=${tempOutputFile}`,
+            this.#connection.client.database(),
+          ],
+          {
+            env: this.#buildPostgresToolEnv(password),
           },
-        },
-      );
-      const out = fs.createWriteStream(outputFile, { flags: "w" });
+        );
 
-      dump.stdout.pipe(out);
+        dump.stderr.on("data", (d) => {
+          const chunk = d.toString();
+          stderrChunks.push(chunk);
+          logger.debug("pg_dump:", chunk);
+        });
 
-      dump.stderr.on("data", (d) => {
-        const chunk = d.toString();
-        stderrChunks.push(chunk);
-        logger.debug("pg_dump:", chunk);
+        dump.on("error", (err) => reject(err));
+        dump.on("close", (code) => {
+          if (code !== 0) {
+            reject(
+              new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_dump")),
+            );
+            return;
+          }
+
+          resolve();
+        });
       });
 
-      dump.on("error", (err) => reject(err));
-      out.on("error", (err) => reject(err));
+      const archiveStats = await fs.promises.stat(tempOutputFile);
+      if (!archiveStats.isFile() || archiveStats.size === 0) {
+        throw new Error("pg_dump produced an empty backup archive");
+      }
 
-      dump.on("exit", (code) => {
-        if (code !== 0) {
-          return reject(
-            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_dump")),
-          );
-        }
-        out.end();
-      });
-
-      out.on("close", () => resolve());
-    });
+      await this.#validateBackupArchiveAsync(tempOutputFile, logger);
+      await fs.promises.rename(tempOutputFile, outputFile);
+    } catch (error) {
+      await fs.promises.rm(tempOutputFile, { force: true }).catch(() => undefined);
+      throw error;
+    }
   }
 
   async #restoreDatabaseArchiveAsync(
@@ -1740,6 +1757,8 @@ export class SprootDB implements ISprootDB {
     databaseName: string,
     logger: winston.Logger,
   ): Promise<void> {
+    await this.#validateBackupArchiveAsync(inputFile, logger);
+
     await this.#runTimescaleHookAsync(
       host,
       port,
@@ -1809,22 +1828,16 @@ export class SprootDB implements ISprootDB {
           `--dbname=${databaseName}`,
           "--clean",
           "--if-exists",
+          "--no-owner",
+          "--no-privileges",
           "--single-transaction",
           "--exit-on-error",
+          archiveFile,
         ],
         {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
+          env: this.#buildPostgresToolEnv(password),
         },
       );
-
-      const archiveStream = fs.createReadStream(archiveFile);
-      archiveStream.pipe(pgRestore.stdin);
 
       let stderrChunks: string[] = [];
       pgRestore.stderr.on("data", (d) => {
@@ -1833,10 +1846,9 @@ export class SprootDB implements ISprootDB {
         logger.debug("pg_restore:", chunk);
       });
 
-      archiveStream.on("error", (err) => reject(err));
       pgRestore.on("error", (err) => reject(err));
 
-      pgRestore.on("exit", (code) => {
+      pgRestore.on("close", (code) => {
         if (code !== 0) {
           reject(
             new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")),
@@ -1846,6 +1858,60 @@ export class SprootDB implements ISprootDB {
         }
       });
     });
+  }
+
+  async #validateBackupArchiveAsync(archiveFile: string, logger: winston.Logger): Promise<void> {
+    let archiveStats: fs.Stats;
+
+    try {
+      archiveStats = await fs.promises.stat(archiveFile);
+    } catch (error) {
+      throw new Error(`Backup archive is not readable: ${(error as Error).message}`);
+    }
+
+    if (!archiveStats.isFile()) {
+      throw new Error("Backup archive path is not a file");
+    }
+
+    if (archiveStats.size === 0) {
+      throw new Error("Backup archive is empty");
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const stderrChunks: string[] = [];
+      const pgRestore = spawn("pg_restore", ["--list", archiveFile], {
+        env: this.#buildPostgresToolEnv(),
+        stdio: ["ignore", "ignore", "pipe"],
+      });
+
+      pgRestore.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        logger.debug("pg_restore validate:", chunk);
+      });
+
+      pgRestore.on("error", (err) => reject(err));
+      pgRestore.on("close", (code) => {
+        if (code !== 0) {
+          reject(
+            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")),
+          );
+          return;
+        }
+
+        resolve();
+      });
+    });
+  }
+
+  #buildPostgresToolEnv(password?: string): NodeJS.ProcessEnv {
+    return {
+      ...process.env,
+      ...(password ? { PGPASSWORD: password } : {}),
+      LANG: process.env["LANG"] ?? "C.UTF-8",
+      LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+      LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+    };
   }
 
   #buildRestoreErrorMessage(
