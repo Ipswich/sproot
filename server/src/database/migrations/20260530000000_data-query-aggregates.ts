@@ -11,8 +11,9 @@
  *   This migration creates the `timescaledb_toolkit` extension (via CREATE EXTENSION
  *   IF NOT EXISTS). The runtime database image must include the toolkit package so
  *   this extension can be created successfully. The current compose configuration
- *   uses the repo's custom PostgreSQL image, which layers toolkit 1.22.0 onto the
- *   standard `timescale/timescaledb:2.26.4-pg18` image. The toolkit provides
+ *   uses the repo's custom PostgreSQL image, which installs PostgreSQL 18,
+ *   TimescaleDB OSS 2.26.4, and toolkit 1.22.0 from Timescale's Debian packages.
+ *   The toolkit provides
  *   `percentile_agg()`, a hyperloglog-based approximation function used to compute
  *   P1, P5, P10, P25, P50, P75, P90, P95, P99 percentiles in constant space.
  *

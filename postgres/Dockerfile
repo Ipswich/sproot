@@ -1,46 +1,22 @@
-ARG BASE_IMAGE=timescale/timescaledb:2.26.4-pg18
+FROM postgres:18-bookworm
 
-FROM ${BASE_IMAGE} AS toolkit-builder
+ARG TIMESCALEDB_LOADER_VERSION=2.26.4~debian12-1803
+ARG TIMESCALEDB_OSS_VERSION=2.26.4~debian12-1803
+ARG TIMESCALEDB_TOOLKIT_VERSION=1:1.22.0~debian12
 
-ARG TOOLKIT_VERSION=1.22.0
-ARG CARGO_PGRX_VERSION=0.16.1
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends ca-certificates curl gnupg; \
+  install -d /usr/share/postgresql-common/pgdg; \
+  curl -fsSL https://packagecloud.io/timescale/timescaledb/gpgkey \
+    | gpg --dearmor -o /usr/share/postgresql-common/pgdg/timescale.gpg; \
+  echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/timescale.gpg] https://packagecloud.io/timescale/timescaledb/debian/ bookworm main' \
+    > /etc/apt/sources.list.d/timescaledb.list; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    timescaledb-2-loader-postgresql-18=${TIMESCALEDB_LOADER_VERSION} \
+    timescaledb-2-oss-2.26.4-postgresql-18=${TIMESCALEDB_OSS_VERSION} \
+    timescaledb-toolkit-postgresql-18=${TIMESCALEDB_TOOLKIT_VERSION}; \
+  rm -rf /var/lib/apt/lists/*
 
-USER root
-
-RUN apk add --no-cache \
-  bash \
-  build-base \
-  cargo \
-  clang \
-  clang19-libclang \
-  curl \
-  git \
-  llvm19-dev \
-  openssl-dev \
-  pkgconf \
-  postgresql18-dev \
-  rust \
-  rustfmt
-
-ENV CARGO_HOME=/root/.cargo
-ENV LIBCLANG_PATH=/usr/lib
-ENV PATH=/root/.cargo/bin:${PATH}
-ENV PGRX_HOME=/tmp/pgrx
-
-WORKDIR /tmp
-RUN git clone --depth 1 --branch ${TOOLKIT_VERSION} https://github.com/timescale/timescaledb-toolkit.git
-
-WORKDIR /tmp/timescaledb-toolkit/extension
-RUN cargo install --version =${CARGO_PGRX_VERSION} --force cargo-pgrx \
-  && cargo pgrx init --pg18 /usr/local/bin/pg_config \
-  && cargo pgrx install --release --features pg18 \
-  && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/local/bin/pg_config
-
-RUN install -d /toolkit-artifacts/lib /toolkit-artifacts/share/extension \
-  && cp /usr/local/lib/postgresql/timescaledb_toolkit-* /toolkit-artifacts/lib/ \
-  && cp /usr/local/share/postgresql/extension/timescaledb_toolkit* /toolkit-artifacts/share/extension/
-
-FROM ${BASE_IMAGE}
-
-COPY --from=toolkit-builder /toolkit-artifacts/lib/ /usr/local/lib/postgresql/
-COPY --from=toolkit-builder /toolkit-artifacts/share/extension/ /usr/local/share/postgresql/extension/
+CMD ["postgres", "-c", "shared_preload_libraries=timescaledb"]
