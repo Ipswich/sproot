@@ -201,6 +201,7 @@ export default function ReadingsChartContainer({
   }
 
   if (dataQuery.data?.error) {
+    console.log(dataQuery.data.error)
     return (
       <Box>
         <Text c="yellow.7">

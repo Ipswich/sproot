@@ -1745,6 +1745,7 @@ export async function getSubControllerApplicationAsync(model: string) {
 export async function fetchSensorDataAsync(
   request: SensorDataQueryRequest,
 ): Promise<SensorDataQueryResponse> {
+  console.log(request);
   const url = new URL(`/api/v2/sensors/${request.id}/data`, SERVER_URL);
   url.searchParams.set("timeRange.start", request.timeRange.start);
   url.searchParams.set("timeRange.end", request.timeRange.end);
@@ -1765,6 +1766,7 @@ export async function fetchSensorDataAsync(
   if (request.percentile !== undefined) {
     url.searchParams.set("percentile", String(request.percentile));
   }
+  console.log(url.toString());
   const response = await fetch(url.toString(), {
     method: "GET",
     mode: "cors",
@@ -1781,6 +1783,7 @@ export async function fetchSensorDataAsync(
 export async function fetchOutputDataAsync(
   request: OutputDataQueryRequest,
 ): Promise<OutputDataQueryResponse> {
+  console.log(request);
   const url = new URL(`/api/v2/outputs/${request.id}/data`, SERVER_URL);
   url.searchParams.set("timeRange.start", request.timeRange.start);
   url.searchParams.set("timeRange.end", request.timeRange.end);
@@ -1796,6 +1799,7 @@ export async function fetchOutputDataAsync(
   if (request.percentile !== undefined) {
     url.searchParams.set("percentile", String(request.percentile));
   }
+  console.log(url.toString());
   const response = await fetch(url.toString(), {
     method: "GET",
     mode: "cors",
