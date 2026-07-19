@@ -64,7 +64,8 @@ services:
       timeout: 3s
       retries: 20
     volumes:
-      - ./docker_volumes/postgresql:/var/lib/postgresql
+      # timescaledb-ha stores its cluster under PGDATA=/home/postgres/pgdata/data.
+      - ./docker_volumes/postgresql:/home/postgres/pgdata/data
     network_mode: "host"
     expose:
       - "5432"
