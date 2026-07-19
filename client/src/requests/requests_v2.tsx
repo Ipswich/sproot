@@ -38,7 +38,8 @@ import type {
   OutputDataQueryResponse,
 } from "./queryTypes";
 
-const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"] || window.location.origin;
+const SERVER_URL =
+  import.meta.env["VITE_API_SERVER_URL"] || window.location.origin;
 
 export async function getReadingTypesAsync(): Promise<
   Record<ReadingType, string>

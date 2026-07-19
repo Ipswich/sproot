@@ -82,17 +82,17 @@ Select a preset time window using the segmented control: **6 Hours**, **12 Hours
 
 Determines how multiple data points within each resolution bucket are combined into a single value. Available options:
 
-| Option | Description |
-|---|---|
-| Average | The mean value across all data points in the bucket |
-| Minimum | The lowest value in the bucket |
-| Maximum | The highest value in the bucket |
-| Last in interval | The most recent value in the bucket |
-| First in interval | The earliest value in the bucket |
-| Sum | The total of all values in the bucket |
-| Count | The number of data points in the bucket |
-| Std. Dev. | The standard deviation of values in the bucket |
-| Percentile | The value at the specified percentile rank within the bucket |
+| Option            | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| Average           | The mean value across all data points in the bucket          |
+| Minimum           | The lowest value in the bucket                               |
+| Maximum           | The highest value in the bucket                              |
+| Last in interval  | The most recent value in the bucket                          |
+| First in interval | The earliest value in the bucket                             |
+| Sum               | The total of all values in the bucket                        |
+| Count             | The number of data points in the bucket                      |
+| Std. Dev.         | The standard deviation of values in the bucket               |
+| Percentile        | The value at the specified percentile rank within the bucket |
 
 When the resolution is set to **1 minute** (raw data), this selector shows "Raw" and is disabled since individual data points don't have any aggregation.
 
@@ -100,17 +100,17 @@ When the resolution is set to **1 minute** (raw data), this selector shows "Raw"
 
 Controls the time bucket size for chart data points. Available options:
 
-| Option | Description |
-|---|---|
-| Auto | Automatically selects resolution based on time range: 5 minutes for ≤72 hours, 1 hour for ≤1 week, 1 day beyond that |
-| 1 minute | One data point per minute |
-| 5 minutes | One data point every 5 minutes |
-| 15 minutes | One data point every 15 minutes |
-| 30 minutes | One data point every 30 minutes |
-| 1 hour | One data point per hour |
-| 6 hours | One data point every 6 hours |
-| 1 day | One data point per day |
-| Custom... | Opens a custom resolution editor with a numeric input and unit selector (minutes, hours, or days) |
+| Option     | Description                                                                                                          |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| Auto       | Automatically selects resolution based on time range: 5 minutes for ≤72 hours, 1 hour for ≤1 week, 1 day beyond that |
+| 1 minute   | One data point per minute                                                                                            |
+| 5 minutes  | One data point every 5 minutes                                                                                       |
+| 15 minutes | One data point every 15 minutes                                                                                      |
+| 30 minutes | One data point every 30 minutes                                                                                      |
+| 1 hour     | One data point per hour                                                                                              |
+| 6 hours    | One data point every 6 hours                                                                                         |
+| 1 day      | One data point per day                                                                                               |
+| Custom...  | Opens a custom resolution editor with a numeric input and unit selector (minutes, hours, or days)                    |
 
 #### Percentile
 
