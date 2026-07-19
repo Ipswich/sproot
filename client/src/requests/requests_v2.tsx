@@ -1745,7 +1745,7 @@ export async function getSubControllerApplicationAsync(model: string) {
 export async function fetchSensorDataAsync(
   request: SensorDataQueryRequest,
 ): Promise<SensorDataQueryResponse> {
-  const url = new URL(`${SERVER_URL}/api/v2/sensors/${request.id}/data`);
+  const url = new URL(`/api/v2/sensors/${request.id}/data`, SERVER_URL);
   url.searchParams.set("timeRange.start", request.timeRange.start);
   url.searchParams.set("timeRange.end", request.timeRange.end);
   if (request.downsample)
@@ -1781,7 +1781,7 @@ export async function fetchSensorDataAsync(
 export async function fetchOutputDataAsync(
   request: OutputDataQueryRequest,
 ): Promise<OutputDataQueryResponse> {
-  const url = new URL(`${SERVER_URL}/api/v2/outputs/${request.id}/data`);
+  const url = new URL(`/api/v2/outputs/${request.id}/data`, SERVER_URL);
   url.searchParams.set("timeRange.start", request.timeRange.start);
   url.searchParams.set("timeRange.end", request.timeRange.end);
   if (request.downsample)
