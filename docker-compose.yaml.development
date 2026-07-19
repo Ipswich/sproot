@@ -53,7 +53,10 @@ services:
       - "80"
 
   postgres:
-    image: timescale/timescaledb-ha:pg18-ts2.26
+    image: sproot-postgres:pg18-ts2.26.4-toolkit1.22.0
+    build:
+      context: ./
+      dockerfile: ./postgres/Dockerfile
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -64,8 +67,7 @@ services:
       timeout: 3s
       retries: 20
     volumes:
-      # timescaledb-ha stores its cluster under PGDATA=/home/postgres/pgdata/data.
-      - ./docker_volumes/postgresql:/home/postgres/pgdata/data
+      - ./docker_volumes/postgresql:/var/lib/postgresql/data
     network_mode: "host"
     expose:
       - "5432"
