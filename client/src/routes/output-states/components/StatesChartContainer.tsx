@@ -1,110 +1,201 @@
-import * as Constants from "@sproot/sproot-common/src/utility/Constants";
-import {
-  ChartData,
-  ChartSeries,
-} from "@sproot/sproot-common/src/utility/ChartData";
 import { useQuery } from "@tanstack/react-query";
+import { Box, Text } from "@mantine/core";
+import { getOutputsAsync } from "../../../requests/requests_v2";
+import { fetchOutputDataAsync } from "../../../requests/requests_v2";
+import { useMemo } from "react";
 import {
-  getOutputChartDataAsync,
-  getOutputsAsync,
-} from "../../../requests/requests_v2";
-import { Fragment, useEffect, useState } from "react";
-import { Flex } from "@mantine/core";
+  getQueryPointLimit,
+  resolveSelectedDownsample,
+  type Aggregate,
+  type OutputDataQueryRequest,
+} from "../../../requests/queryTypes";
+import {
+  buildChartTimeline,
+  getChartIntervalMs,
+  getEffectiveEndDate,
+  getEffectiveDisplayEndDate,
+  mergeDataIntoTimeline,
+  scalePercentile,
+} from "../../../requests/chartDataTypes";
+import { fetchFanOutPaginatedChartData } from "../../../requests/chartDataPagination";
+import { OutputDataTransformer } from "./OutputDataTransformer";
 import StatesChart from "./StatesChart";
+import { IOutputBase } from "@sproot/outputs/IOutputBase";
 
 interface StatesChartContainerProps {
   chartInterval: string;
-  chartRendering: boolean;
-  setChartRendering: (value: boolean) => void;
+  toggledOutputs?: string[];
   toggledDeviceZones: string[];
+  customTimeRange?: { start: Date; end: Date } | null;
+  aggregate: Aggregate;
+  downsampleSelection: string;
+  percentile?: number;
+  valueSuffix?: string;
 }
 
 export default function StatesChartContainer({
   chartInterval,
-  chartRendering,
-  setChartRendering,
+  toggledOutputs = [],
   toggledDeviceZones,
+  customTimeRange,
+  aggregate,
+  downsampleSelection,
+  percentile,
+  valueSuffix,
 }: StatesChartContainerProps) {
-  const baseChartData = new ChartData(
-    Constants.MAX_CHART_DATA_POINTS,
-    Constants.CHART_DATA_POINT_INTERVAL,
+  const hiddenDeviceZoneIds = useMemo(
+    () => new Set(toggledDeviceZones),
+    [toggledDeviceZones],
   );
-  const [timeSpans, setTimeSpans] = useState(
-    ChartData.generateTimeSpansFromDataSeries(
-      baseChartData.get(),
-      baseChartData.intervalMinutes,
-    ),
+  const hiddenOutputIds = useMemo(
+    () => new Set(toggledOutputs),
+    [toggledOutputs],
   );
-  const [chartSeries, setChartSeries] = useState([] as ChartSeries[]);
-
-  const chartDataQuery = useQuery({
-    queryKey: ["output-states-chart"],
-    queryFn: () => getOutputChartDataAsync(),
-    refetchInterval: 300000,
-  });
 
   const outputsQuery = useQuery({
     queryKey: ["outputs"],
-    queryFn: () => getOutputsAsync(),
-    refetchInterval: 60000,
+    queryFn: async () => {
+      const allOutputs = await getOutputsAsync();
+      return Object.values(allOutputs) as IOutputBase[];
+    },
+    staleTime: 60000,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
 
-  const updateAsync = async () => {
-    const newData = (await chartDataQuery.refetch()).data!;
-    const baseChartData = new ChartData(
-      Constants.MAX_CHART_DATA_POINTS,
-      Constants.CHART_DATA_POINT_INTERVAL,
-      newData.data,
+  const timeRange = useMemo(() => {
+    if (customTimeRange) {
+      return [customTimeRange.start, customTimeRange.end] as [Date, Date];
+    }
+
+    const end = new Date();
+    const start = new Date(end.getTime() - getChartIntervalMs(chartInterval));
+    return [start, end] as [Date, Date];
+  }, [chartInterval, customTimeRange]);
+
+  const effectiveEnd = getEffectiveEndDate(timeRange[1]);
+  const durationMs = effectiveEnd.getTime() - timeRange[0].getTime();
+  const downsample = resolveSelectedDownsample(downsampleSelection, durationMs);
+  const queryLimit = getQueryPointLimit(durationMs, downsample);
+
+  const outputs = useMemo(() => outputsQuery.data ?? [], [outputsQuery.data]);
+  const visibleOutputs = useMemo(
+    () =>
+      outputs.filter((output) => {
+        const deviceZoneId = output.deviceZoneId ?? -1;
+        return (
+          output.parentOutputId == null &&
+          !hiddenDeviceZoneIds.has(String(deviceZoneId)) &&
+          !hiddenOutputIds.has(String(output.id))
+        );
+      }),
+    [hiddenDeviceZoneIds, hiddenOutputIds, outputs],
+  );
+  const ids = useMemo(
+    () => visibleOutputs.map((output) => output.id),
+    [visibleOutputs],
+  );
+
+  const dataQuery = useQuery({
+    queryKey: [
+      "outputData",
+      timeRange[0].toISOString(),
+      effectiveEnd.toISOString(),
+      downsample,
+      aggregate,
+      percentile,
+      ...ids,
+    ],
+    queryFn: async () => {
+      const request: OutputDataQueryRequest = {
+        timeRange: {
+          start: timeRange[0].toISOString(),
+          end: effectiveEnd.toISOString(),
+        },
+        downsample,
+        limit: queryLimit,
+        aggregates: [aggregate],
+        ...(percentile !== undefined && {
+          percentile: scalePercentile(percentile),
+        }),
+      };
+      return fetchFanOutPaginatedChartData(fetchOutputDataAsync, request, ids);
+    },
+    enabled: outputsQuery.isSuccess && ids.length > 0,
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+  });
+
+  const transformed = useMemo(
+    () =>
+      dataQuery.data?.data && dataQuery.data.data.data.length > 0
+        ? OutputDataTransformer.transform(
+            dataQuery.data.data,
+            visibleOutputs,
+            aggregate,
+          )
+        : null,
+    [aggregate, dataQuery.data?.data, visibleOutputs],
+  );
+
+  const displayDataSeries = useMemo(() => {
+    if (!transformed) {
+      return [];
+    }
+
+    const effectiveDisplayEnd = getEffectiveDisplayEndDate(timeRange[1]);
+    return mergeDataIntoTimeline(
+      buildChartTimeline(timeRange[0], effectiveDisplayEnd, downsample),
+      transformed.dataSeries,
     );
-    setTimeSpans(
-      ChartData.generateTimeSpansFromDataSeries(
-        baseChartData.get(),
-        baseChartData.intervalMinutes,
-      ),
+  }, [downsample, timeRange, transformed]);
+
+  const hasVisibleValues = displayDataSeries.some((dataPoint) =>
+    Object.keys(dataPoint).some(
+      (key) =>
+        key !== "name" && key !== "units" && dataPoint[key] !== undefined,
+    ),
+  );
+
+  const isInitialLoading =
+    outputsQuery.isLoading || (dataQuery.isLoading && !dataQuery.data);
+
+  if (dataQuery.error) {
+    return (
+      <Box>
+        <Text c="red">
+          Error loading chart data: {(dataQuery.error as Error).message}
+        </Text>
+      </Box>
     );
-    setChartSeries(newData.series);
-    setChartRendering(false);
-  };
+  }
 
-  useEffect(() => {
-    updateAsync();
+  if (dataQuery.data?.error) {
+    return (
+      <Box>
+        <Text c="yellow.7">
+          Unable to fetch all data. Showing partial results.
+        </Text>
+      </Box>
+    );
+  }
 
-    const interval = setInterval(() => {
-      updateAsync();
-    }, 60000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const hiddenOutputsFromDeviceZones = (
-    Object.values(outputsQuery.data ?? {}) ?? []
-  )
-    .filter((output) => {
-      return toggledDeviceZones.includes(
-        (output.deviceZoneId ?? -1).toString(),
-      );
-    })
-    .map((output) => output.name ?? "");
-
-  const hiddenOutputs =
-    hiddenOutputsFromDeviceZones.length ==
-    Object.values(outputsQuery.data ?? {}).length
-      ? []
-      : hiddenOutputsFromDeviceZones;
   return (
-    <Fragment>
-      <Flex my={-12}>
-        <h2>History</h2>
-        <h5>{"%"}</h5>
-      </Flex>
+    <Box>
       <StatesChart
-        dataSeries={ChartData.filterChartData(
-          timeSpans[parseInt(chartInterval)]!,
-          hiddenOutputs,
-        )}
-        chartSeries={chartSeries}
-        chartRendering={chartDataQuery.isPending || chartRendering}
+        dataSeries={displayDataSeries}
+        chartSeries={transformed?.chartSeries ?? []}
+        chartRendering={
+          isInitialLoading || (dataQuery.isFetching && !dataQuery.data)
+        }
+        showEmptyState={!isInitialLoading && !hasVisibleValues}
+        valueSuffix={valueSuffix ?? transformed?.units ?? "%"}
+        aggregate={aggregate}
+        downsample={downsample}
       />
-    </Fragment>
+    </Box>
   );
 }

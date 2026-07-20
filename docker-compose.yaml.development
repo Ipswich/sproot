@@ -53,7 +53,10 @@ services:
       - "80"
 
   postgres:
-    image: timescale/timescaledb:2.26.4-pg18
+    image: sproot-postgres:pg18-ts2.26.4-toolkit1.22.0
+    build:
+      context: ./
+      dockerfile: ./postgres/Dockerfile
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres

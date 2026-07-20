@@ -69,7 +69,7 @@ export function getKnexConfigForEnvironment(
     case "development":
       return getConfigForSuffix("-development", ".js");
     case "test":
-      return getConfigForSuffix("-test", ".js");
+      return getConfigForSuffix("-test", ".ts");
     case "production":
       return getConfigForSuffix("", ".js");
     default:

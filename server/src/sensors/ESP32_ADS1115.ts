@@ -21,8 +21,7 @@ export class ESP32_ADS1115 extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<ESP32_ADS1115 | null> {
     const sensor = new ESP32_ADS1115(
@@ -34,8 +33,7 @@ export class ESP32_ADS1115 extends SensorBase {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensor.initializeAsync(ESP32_ADS1115.MAX_SENSOR_READ_TIME);
@@ -50,8 +48,7 @@ export class ESP32_ADS1115 extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -59,8 +56,7 @@ export class ESP32_ADS1115 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [readingType],
       logger,
     );

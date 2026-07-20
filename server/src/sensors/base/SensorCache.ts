@@ -29,7 +29,7 @@ export class SensorCache {
     bucketMinutes: number = 5,
   ): Promise<void> {
     this.clear();
-    const chartReadings = await this.sprootDB.getSensorChartReadingsAsync(
+    const readings = await this.sprootDB.getBucketedSensorReadingsAsync(
       { id: sensorId },
       new Date(),
       minutes,
@@ -37,7 +37,7 @@ export class SensorCache {
       true,
     );
     const sdbReadings =
-      chartReadings ??
+      readings ??
       (await this.sprootDB.getSensorReadingsAsync({ id: sensorId }, new Date(), minutes, true));
     for (const reading of sdbReadings) {
       const newReading = {

@@ -59,7 +59,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -105,7 +104,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       stubbedMockDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -147,7 +145,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       stubbedMockDB,
       500,
       500,
-      3,
       5,
       logger,
     );
@@ -166,7 +163,6 @@ describe("CapacitiveMoistureSensor.ts tests", function () {
       stubbedMockDB,
       5,
       5,
-      3,
       5,
       logger,
     );

@@ -31,6 +31,12 @@ describe("dateUtils", function () {
       assert.isNull(dbToIso(null));
       assert.isNull(dbToIso(undefined));
     });
+
+    it("should not double-Z suffix timestamps that already end with Z", function () {
+      const db = "2020-01-02T03:04:05.000Z";
+      const iso = dbToIso(db);
+      assert.equal(iso, "2020-01-02T03:04:05.000Z");
+    });
   });
 
   describe("isoToDb", function () {

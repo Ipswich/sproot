@@ -13,8 +13,7 @@ class BME280 extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<BME280 | null> {
     const sensor = new BME280(
@@ -22,8 +21,7 @@ class BME280 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensor.initializeAsync(BME280.MAX_SENSOR_READ_TIME);
@@ -34,8 +32,7 @@ class BME280 extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -43,8 +40,7 @@ class BME280 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
       logger,
     );

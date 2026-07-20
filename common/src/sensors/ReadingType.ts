@@ -1,4 +1,4 @@
-// Used as keys for things like caches, charts, etc.
+// Used as keys for things like caches, display, etc.
 enum ReadingType {
   temperature = "temperature",
   humidity = "humidity",

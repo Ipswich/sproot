@@ -9,6 +9,8 @@ let server: Server;
 let app: Express;
 before(async function () {
   this.timeout(0);
+  process.env["NODE_ENV"] = "test";
+
   // We don't want this actually trying to do something.
   sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
     const callback = args[3];

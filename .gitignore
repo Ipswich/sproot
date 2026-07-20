@@ -77,6 +77,8 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+server/.env.test
+server/.env
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -138,4 +140,7 @@ client/.env.development
 *.sproot
 
 build
-.prompts/**
+.prompts/**.superpowers
+.opencode
+.superpowers
+ANCHOR.md

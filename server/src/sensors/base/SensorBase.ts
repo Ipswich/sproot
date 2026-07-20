@@ -4,9 +4,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { ReadingType, Units } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import winston from "winston";
-import { SensorChartData } from "./SensorChartData";
 import { SensorCache } from "./SensorCache";
-import { DataSeries, ChartSeries } from "@sproot/utility/ChartData";
 import { Models } from "@sproot/sproot-common/dist/sensors/Models";
 
 export abstract class SensorBase implements ISensorBase, AsyncDisposable {
@@ -28,10 +26,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   #updateInterval: NodeJS.Timeout | null = null;
   #cache: SensorCache;
   #initialCacheLookback: number;
-  #chartData: SensorChartData;
-  #chartDataPointInterval: number;
-
-  #updateMissCount = 0;
+  #cacheBucketMinutes: number;
   #isTakingReading = false;
 
   constructor(
@@ -39,8 +34,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     readingTypes: ReadingType[],
     logger: winston.Logger,
   ) {
@@ -58,18 +52,12 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     this.logger = logger;
     this.units = {} as Record<ReadingType, string>;
     this.#initialCacheLookback = initialCacheLookback;
-    this.#chartDataPointInterval = chartDataPointInterval;
+    this.#cacheBucketMinutes = cacheBucketMinutes;
     for (const readingType of readingTypes) {
       this.units[readingType as ReadingType] = Units[readingType as ReadingType];
     }
 
     this.#cache = new SensorCache(maxCacheSize, sprootDB, logger);
-    this.#chartData = new SensorChartData(
-      maxChartDataSize,
-      this.#chartDataPointInterval,
-      undefined,
-      readingTypes,
-    );
   }
 
   abstract takeReadingAsync(): Promise<void>;
@@ -77,7 +65,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   protected async initializeAsync(maxSensorReadTime: number): Promise<this | null> {
     const profiler = this.logger.startTimer();
     try {
-      await this.intitializeCacheAndChartDataAsync();
+      await this.initializeCacheAsync();
       this.#updateInterval = setInterval(async () => {
         // If we're already taking a reading, skip this interval
         if (this.#isTakingReading) {
@@ -108,14 +96,10 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
 
   updateName(name: string): void {
     this.name = name;
-    this.#chartData.chartSeries.name = name;
-    this.#loadChartData();
   }
 
   updateColor(color: string): void {
     this.color = color;
-    this.#chartData.chartSeries.color = color;
-    this.#loadChartData();
   }
 
   getCachedReadings(offset?: number, limit?: number): Partial<Record<ReadingType, SDBReading[]>> {
@@ -126,41 +110,13 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
     return result;
   }
 
-  getChartData(): {
-    data: Record<ReadingType, DataSeries>;
-    series: ChartSeries;
-  } {
-    return this.#chartData.get();
-  }
-
   async updateDataStoresAsync(): Promise<void> {
     this.#updateCachedReadings();
-    for (const readingType in this.units) {
-      const lastCacheData = this.#cache.get(readingType as ReadingType).slice(-1)[0];
-      //Only update chart if the most recent datapoint is N minutes after last cache
-      if (this.#chartData.shouldUpdateChartData(readingType as ReadingType, lastCacheData)) {
-        this.#updateChartData();
-        //Reset miss count if successful
-        this.#updateMissCount = 0;
-      } else {
-        //Increment miss count if unsuccessful. Easy CYA if things get out of sync.
-        this.#updateMissCount++;
-        //If miss count exceeds 3 * N, force update (3 real tries, because intervals).
-        if (this.#updateMissCount >= 3 * this.#chartDataPointInterval) {
-          this.logger.warn(
-            `Chart data update miss count exceeded (3) for sensor {id: ${this.id}}. Forcing update to re-sync.`,
-          );
-          this.#updateChartData();
-          this.#updateMissCount = 0;
-        }
-      }
-    }
     await this.#addLastReadingToDatabaseAsync();
   }
 
-  protected async intitializeCacheAndChartDataAsync(): Promise<void> {
+  protected async initializeCacheAsync(): Promise<void> {
     await this.#loadCacheFromDatabaseAsync();
-    this.#loadChartData();
   }
 
   async #loadCacheFromDatabaseAsync(): Promise<void> {
@@ -169,7 +125,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       await this.#cache.loadFromDatabaseAsync(
         this.id,
         this.#initialCacheLookback,
-        this.#chartDataPointInterval,
+        this.#cacheBucketMinutes,
       );
 
       let updateInfoString = "";
@@ -218,33 +174,6 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
       this.logger.error(`Error adding reading to database for sensor ${this.id}: ${error}`);
     }
   };
-
-  #loadChartData(): void {
-    for (const readingType in this.units) {
-      this.#chartData.loadChartData(
-        this.#cache.get(readingType as ReadingType),
-        this.name,
-        readingType as ReadingType,
-      );
-      this.logger.info(
-        `Loaded chart data for sensor {id: ${this.id}}. Chart data size - ${this.#chartData.get().data[readingType as ReadingType].length}`,
-      );
-    }
-    this.#chartData.loadChartSeries({ name: this.name, color: this.color });
-  }
-
-  #updateChartData(): void {
-    for (const readingType in this.units) {
-      this.#chartData.updateChartData(
-        this.#cache.get(readingType as ReadingType),
-        this.name,
-        readingType as ReadingType,
-      );
-      this.logger.info(
-        `Updated chart data for sensor {id: ${this.id}, ${readingType}}. Chart data size - ${this.#chartData.get().data[readingType as ReadingType].length}`,
-      );
-    }
-  }
 
   [Symbol.asyncDispose](): Promise<void> {
     if (this.#updateInterval) {

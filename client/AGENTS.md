@@ -240,3 +240,8 @@ This module imports shared types from `@sproot/sproot-common/src/*`:
 - `common/src/automation/*` - Automation types
 - `common/src/sensors/*` - Sensor interfaces
 - `common/src/outputs/*` - Output interfaces
+
+## Plans and Specs
+
+- NEVER write plans, specs, or implementation documents to the `docs/` directory. The `docs/` directory is a Docusaurus project that produces the project's public-facing documentation, and must only contain end-user or API documentation.
+- Plans and specs should be written to `.opencode/` instead.

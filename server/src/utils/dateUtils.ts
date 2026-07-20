@@ -12,7 +12,8 @@ export function dbToIso(s?: string | Date | null): string | null {
     return s.toISOString();
   }
 
-  return s.includes("T") ? s : s.replace(" ", "T") + "Z";
+  const normalized = s.replace(" ", "T").replace(/Z$/, "");
+  return normalized + "Z";
 }
 
 export function isoToDb(iso?: string | null): string | null {

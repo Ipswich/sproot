@@ -27,8 +27,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<ESP32_CapacitiveMoistureSensor | null> {
     const sensor = new ESP32_CapacitiveMoistureSensor(
@@ -38,8 +37,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensor.initializeAsync(ESP32_ADS1115.MAX_SENSOR_READ_TIME);
@@ -52,8 +50,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -61,8 +58,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [ReadingType.moisture],
       logger,
     );

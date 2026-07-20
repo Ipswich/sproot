@@ -62,25 +62,32 @@ jobs:
             experimental: false
           # - node-version: 22.x
           #   experimental: true
-    services:
-      postgres:
-        image: timescale/timescaledb:2.26.4-pg18
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Build PostgreSQL image
+        run: docker build -f ./postgres/Dockerfile -t sproot-postgres:ci .
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -p 5432:5432 \
+            sproot-postgres:ci
+      - name: Wait for PostgreSQL
+        run: |
+          for attempt in $(seq 1 30); do
+            if docker exec postgres pg_isready -U postgres; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs postgres
+          exit 1
       - name: Install PostgreSQL 18 client
         run: |
           set -e

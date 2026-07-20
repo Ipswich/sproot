@@ -85,7 +85,6 @@ describe("ESP32_BME280.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -148,7 +147,6 @@ describe("ESP32_BME280.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -177,7 +175,6 @@ describe("ESP32_BME280.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );

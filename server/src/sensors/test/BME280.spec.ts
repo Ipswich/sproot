@@ -76,7 +76,6 @@ describe("BME280.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -126,7 +125,6 @@ describe("BME280.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -147,7 +145,6 @@ describe("BME280.ts tests", function () {
       mockSprootDB,
       5,
       5,
-      3,
       5,
       logger,
     );

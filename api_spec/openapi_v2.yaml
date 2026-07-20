@@ -1827,22 +1827,83 @@ paths:
                               example:
                                 - "Failed to delete output from database."
                                 - "Database connection failed."
-  /api/v2/outputs/chart-data:
+
+  /api/v2/outputs/{id}/data:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
         - "Outputs"
-      summary: "Get all chart data."
+      summary: Query historical output data.
+      description: >
+        Returns historical output data with optional downsampling and aggregation. Uses TimescaleDB
+        continuous aggregates for known intervals (5m, 1h, 1d). Other intervals compute on-the-fly
+        from the raw hypertable. Supports cursor-based pagination for large datasets.
       parameters:
-        - name: "latest"
-          in: "query"
-          description: "Return only the latest data point."
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "Output ID to query"
+        - name: timeRange.start
+          in: query
+          required: true
           schema:
             type: string
-          example: "true"
-      description: "Returns chart data for all ouputs."
+          description: "Start of time range (ISO 8601)"
+        - name: timeRange.end
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "End of time range (ISO 8601)"
+        - name: downsample
+          in: query
+          schema:
+            type: string
+          description: "Downsample interval (e.g. '5m', '1h', '1d', '15 minutes')"
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: "Base64-encoded ISO 8601 timestamp for pagination"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            default: 500
+          description: "Maximum number of data points"
+        - name: aggregates
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - "min"
+                - "max"
+                - "avg"
+                - "count"
+                - "sum"
+                - "stddev"
+                - "percentile"
+                - "first"
+                - "last"
+          description: "Aggregate functions to compute"
+        - name: percentile
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+          description: "Percentile value for percentile aggregate (0-1)"
       responses:
         200:
           description: "Success"
@@ -1850,37 +1911,37 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    required:
+                      - content
+                    properties:
                       statusCode:
+                        type: integer
                         example: 200
                       content:
+                        $ref: "#/components/schemas/OutputDataQueryResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
                         properties:
-                          data:
-                            type: object
-                            properties:
-                              data:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/DataPoint"
-                                example:
-                                  - name: "1/24 12:00 am"
-                                    output1: 0
-                                    output2: 50
-                                    units: "%"
-                                  - name: "1/24 12:05 am"
-                                    output1: 0
-                                    output2: 50
-                                    units: "%"
-                              series:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/ChartSeries"
-                                example:
-                                  - name: "output1"
-                                    color: "lime"
-                                  - name: "output2"
-                                    color: "blue"
+                          name:
+                            example: "Validation Error"
+                          url:
+                            example: "/api/v2/outputs/1/data"
+                          details:
+                            items:
+                              example:
+                                - "timeRange.start is required and must be a string"
+                                - "downsample must be one of: 5m, 1h, 1d"
         401:
           description: "Unauthorized"
           content:
@@ -1896,10 +1957,29 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/outputs/chart-data"
+                            example: "/api/v2/outputs/1/data"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/outputs/1/data"
+                          details:
+                            items:
+                              example: "Failed to query output data: database error"
   /api/v2/outputs/supported-models:
     get:
       security:
@@ -4772,28 +4852,91 @@ paths:
                                 - "Failed to delete sensor from database."
                                 - "Database connection failed."
 
-  /api/v2/sensors/chart-data:
+  /api/v2/sensors/{id}/data:
     get:
       security:
         - bearerAuth: []
         - cookieAuth: []
       tags:
         - "Sensors"
-      summary: "Get all chart data."
-      description: "Returns chart data for all sensors."
+      summary: Query historical sensor data.
+      description: >
+        Returns historical sensor data with optional downsampling and aggregation. Uses TimescaleDB
+        continuous aggregates for known intervals (5m, 1h, 1d). Other intervals compute on-the-fly
+        from the raw hypertable. Supports cursor-based pagination for large datasets.
       parameters:
-        - in: query
-          name: readingType
-          description: "Reading type"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: "Sensor ID to query"
+        - name: timeRange.start
+          in: query
+          required: true
           schema:
             type: string
-          example: "temperature"
-        - name: "latest"
-          in: "query"
-          description: "Return only the latest data point."
+          description: "Start of time range (ISO 8601)"
+        - name: timeRange.end
+          in: query
+          required: true
           schema:
             type: string
-          example: "true"
+          description: "End of time range (ISO 8601)"
+        - name: downsample
+          in: query
+          schema:
+            type: string
+          description: "Downsample interval (e.g. '5m', '1h', '1d', '15 minutes')"
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: "Base64-encoded ISO 8601 timestamp for pagination"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            default: 500
+          description: "Maximum number of data points"
+        - name: readingTypes
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          description: "Filter by reading type (metric name)"
+        - name: aggregates
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - "min"
+                - "max"
+                - "avg"
+                - "count"
+                - "sum"
+                - "stddev"
+                - "percentile"
+                - "first"
+                - "last"
+          description: "Aggregate functions to compute"
+        - name: percentile
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+          description: "Percentile value for percentile aggregate (0-1)"
       responses:
         200:
           description: "Success"
@@ -4801,50 +4944,37 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/SuccessResponse"
-                  - properties:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    required:
+                      - content
+                    properties:
                       statusCode:
+                        type: integer
                         example: 200
                       content:
+                        $ref: "#/components/schemas/SensorDataQueryResponse"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 400
+                      error:
                         properties:
-                          data:
-                            type: object
-                            properties:
-                              temperature:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/DataPoint"
-                                example:
-                                  - name: "1/24 12:00 am"
-                                    sensor1: 25.000
-                                    sensor2: 25.000
-                                    units: "°C"
-                                  - name: "1/24 12:05 am"
-                                    sensor1: 25.625
-                                    sensor2: 25.625
-                                    units: "°C"
-                              humidity:
-                                type: array
-                                items:
-                                  $ref: "#/components/schemas/DataPoint"
-                                example:
-                                  - name: "1/24 12:00 am"
-                                    sensor1: 50.000
-                                    sensor2: 50.000
-                                    units: "%rH"
-                                  - name: "1/24 12:05 am"
-                                    sensor1: 50.625
-                                    sensor2: 50.625
-                                    units: "%rH"
-                          series:
-                            type: array
+                          name:
+                            example: "Validation Error"
+                          url:
+                            example: "/api/v2/sensors/1/data"
+                          details:
                             items:
-                              $ref: "#/components/schemas/ChartSeries"
-                            example:
-                              - name: "sensor1"
-                                color: "lime"
-                              - name: "sensor2"
-                                color: "blue"
+                              example:
+                                - "timeRange.start is required and must be a string"
+                                - "downsample must be one of: 5m, 1h, 1d"
         401:
           description: "Unauthorized"
           content:
@@ -4860,11 +4990,29 @@ paths:
                           name:
                             example: "Unauthorized"
                           url:
-                            example: "/api/v2/sensors/chart-data"
+                            example: "/api/v2/sensors/1/data"
                           details:
                             items:
                               example: "Invalid or Missing JWT."
-
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      statusCode:
+                        example: 500
+                      error:
+                        properties:
+                          name:
+                            example: "Internal Server Error"
+                          url:
+                            example: "/api/v2/sensors/1/data"
+                          details:
+                            items:
+                              example: "Failed to query sensor data: database error"
   /api/v2/sensors/supported-models:
     get:
       security:
@@ -8115,7 +8263,7 @@ components:
 
     SuccessResponse:
       description: >
-        A success response object that is returned by all successful API requests. 
+        A success response object that is returned by all successful API requests.
         Contains a status code, timestamp, a unique request Id, and, optionally, some content.
       allOf:
         - type: object
@@ -8126,6 +8274,11 @@ components:
               type: object
               required:
                 - "data"
+              properties:
+                data: {}
+                nextCursor:
+                  type: string
+                  description: "base64-encoded ISO 8601 timestamp for next page"
         - $ref: "#/components/schemas/ApiResponse"
 
     ErrorResponse:
@@ -8161,6 +8314,248 @@ components:
                 details:
                   type: array
         - $ref: "#/components/schemas/ApiResponse"
+
+    DataQueryTimeRange:
+      type: object
+      required:
+        - "start"
+        - "end"
+      properties:
+        start:
+          type: string
+          format: date-time
+          description: "ISO 8601 start timestamp"
+          example: "2024-01-01T00:00:00.000Z"
+        end:
+          type: string
+          format: date-time
+          description: "ISO 8601 end timestamp"
+          example: "2024-01-02T00:00:00.000Z"
+
+    DataQueryRequestBase:
+      type: object
+      required:
+        - "timeRange"
+      properties:
+        timeRange:
+          $ref: "#/components/schemas/DataQueryTimeRange"
+        downsample:
+          type: string
+          description: "Downsample interval (PostgreSQL INTERVAL format, e.g. '15 minutes', '4 hours'). Known intervals 5m, 1h, 1d use pre-computed continuous aggregates; other intervals compute on-the-fly from raw data."
+        cursor:
+          type: string
+          description: "Base64-encoded ISO 8601 timestamp for pagination"
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 500
+          description: "Maximum number of data points per sensor/output"
+
+    SensorDataQueryRequest:
+      allOf:
+        - $ref: "#/components/schemas/DataQueryRequestBase"
+        - properties:
+            id:
+              type: integer
+              minimum: 1
+              description: "Sensor ID to query"
+            readingTypes:
+              type: array
+              items:
+                type: string
+              description: "Filter by reading type (metric name)"
+            aggregates:
+              type: array
+              items:
+                type: string
+                enum:
+                  - "min"
+                  - "max"
+                  - "avg"
+                  - "count"
+                  - "sum"
+                  - "stddev"
+                  - "percentile"
+                  - "first"
+                  - "last"
+              description: "Aggregate functions to compute"
+            percentile:
+              type: number
+              minimum: 0
+              maximum: 1
+              default: 0.5
+              description: "Percentile value for percentile aggregate (0-1)"
+
+    OutputDataQueryRequest:
+      allOf:
+        - $ref: "#/components/schemas/DataQueryRequestBase"
+        - properties:
+            id:
+              type: integer
+              minimum: 1
+              description: "Output ID to query"
+            aggregates:
+              type: array
+              items:
+                type: string
+                enum:
+                  - "min"
+                  - "max"
+                  - "avg"
+                  - "count"
+                  - "sum"
+                  - "stddev"
+                  - "percentile"
+                  - "first"
+                  - "last"
+              description: "Aggregate functions to compute"
+
+    DataQueryValue:
+      type: object
+      properties:
+        time:
+          type: string
+          format: date-time
+          description: "ISO 8601 bucket timestamp"
+        min:
+          type: number
+          nullable: true
+        max:
+          type: number
+          nullable: true
+        avg:
+          type: number
+          nullable: true
+        count:
+          type: integer
+          nullable: true
+        sum:
+          type: number
+          nullable: true
+        stddev:
+          type: number
+          nullable: true
+        percentile:
+          type: number
+          nullable: true
+        first:
+          type: number
+          nullable: true
+        last:
+          type: number
+          nullable: true
+
+    DataQueryXAxis:
+      type: object
+      required:
+        - field
+        - values
+      properties:
+        field:
+          type: string
+          description: "The field name for the x-axis (always 'time')"
+        values:
+          type: array
+          description: "Array of ISO 8601 timestamp strings"
+          items:
+            type: string
+
+    DeviceDataQueryRow:
+      type: object
+      required:
+        - id
+        - name
+        - units
+        - statistics
+      properties:
+        id:
+          type: integer
+          description: "The sensor_id or output_id"
+        name:
+          type: string
+          description: "The metric name (sensors) or output name"
+        units:
+          type: string
+          description: "The display units for this data series"
+        statistics:
+          type: object
+          properties:
+            min:
+              type: array
+              items:
+                type: number
+                nullable: true
+            max:
+              type: array
+              items:
+                type: number
+                nullable: true
+            avg:
+              type: array
+              items:
+                type: number
+                nullable: true
+            count:
+              type: array
+              items:
+                type: number
+                nullable: true
+            sum:
+              type: array
+              items:
+                type: number
+                nullable: true
+            stddev:
+              type: array
+              items:
+                type: number
+                nullable: true
+            percentile:
+              type: array
+              items:
+                type: number
+                nullable: true
+            first:
+              type: array
+              items:
+                type: number
+                nullable: true
+            last:
+              type: array
+              items:
+                type: number
+                nullable: true
+
+    SensorDataQueryResponse:
+      type: object
+      required:
+        - xAxis
+        - data
+      properties:
+        xAxis:
+          $ref: "#/components/schemas/DataQueryXAxis"
+        data:
+          $ref: "#/components/schemas/DeviceDataQueryRow"
+          nullable: true
+        nextCursor:
+          type: string
+          description: "base64-encoded ISO 8601 timestamp for next page"
+
+    OutputDataQueryResponse:
+      type: object
+      required:
+        - xAxis
+        - data
+      properties:
+        xAxis:
+          $ref: "#/components/schemas/DataQueryXAxis"
+        data:
+          $ref: "#/components/schemas/DeviceDataQueryRow"
+          nullable: true
+        nextCursor:
+          type: string
+          description: "base64-encoded ISO 8601 timestamp for next page"
 
     SDBOutput:
       description: >
@@ -8955,31 +9350,6 @@ components:
       description: >
         An obejct of active sensor reading types and their units.
       type: object
-
-    DataPoint:
-      description: >
-        A data point for recharts.
-      type: object
-      required:
-        - "name"
-      properties:
-        name:
-          type: string
-        units:
-          type: string
-
-    ChartSeries:
-      description: >
-        An object containing both a name and a color. Used to add flair to a line on a chart.
-      type: object
-      required:
-        - "name"
-        - "color"
-      properties:
-        name:
-          type: string
-        color:
-          type: string
 
     CameraSettings:
       description: >

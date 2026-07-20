@@ -21,7 +21,7 @@ import { useForm } from "@mantine/form";
 import PCA9685Form from "@sproot/sproot-client/src/routes/settings/outputs/forms/PCA9685Form";
 import { OutputFormValues } from "@sproot/sproot-client/src/routes/settings/outputs/OutputSettings";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DefaultColors } from "@sproot/sproot-common/src/utility/ChartData";
+import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
 import { Fragment, useEffect } from "react";
 
 import { useRevalidator } from "react-router-dom";

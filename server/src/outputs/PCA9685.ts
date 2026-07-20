@@ -14,8 +14,7 @@ class PCA9685 extends MultiOutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     frequency: number = 800,
     logger: winston.Logger,
   ) {
@@ -24,8 +23,7 @@ class PCA9685 extends MultiOutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       frequency,
       logger,
     );
@@ -54,8 +52,7 @@ class PCA9685 extends MultiOutputBase {
       this.sprootDB,
       this.maxCacheSize,
       this.initialCacheLookback,
-      this.maxChartDataSize,
-      this.chartDataPointInterval,
+      this.cacheBucketMinutes,
       this.logger,
     );
     if (Array.isArray(this.usedPins[output.address])) {
@@ -88,8 +85,7 @@ class PCA9685Output extends OutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<PCA9685Output> {
     const pca9685Output = new PCA9685Output(
@@ -99,8 +95,7 @@ class PCA9685Output extends OutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return pca9685Output.initializeAsync();
@@ -113,8 +108,7 @@ class PCA9685Output extends OutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -123,8 +117,7 @@ class PCA9685Output extends OutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     this.pca9685 = pca9685;

@@ -23,7 +23,7 @@ export class OutputCache {
     bucketMinutes: number = 5,
   ): Promise<void> {
     this.queueCache.clear();
-    const chartStates = await this.sprootDB.getOutputChartStatesAsync(
+    const states = await this.sprootDB.getBucketedOutputStatesAsync(
       { id: outputId },
       new Date(),
       minutes,
@@ -31,7 +31,7 @@ export class OutputCache {
       true,
     );
     const sdbStates =
-      chartStates ??
+      states ??
       (await this.sprootDB.getOutputStatesAsync({ id: outputId }, new Date(), minutes, true));
     for (const sdbState of sdbStates) {
       const newState = {

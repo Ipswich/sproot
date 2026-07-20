@@ -15,7 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { Accordion, Center } from "@mantine/core";
 import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { Fragment, startTransition, useEffect, useState } from "react";
+import { Fragment, memo, startTransition, useEffect, useState } from "react";
 import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -39,7 +39,7 @@ interface SensorTableAccordionProps {
   useAlternateUnits: boolean;
 }
 
-export default function SensorTableAccordion({
+function SensorTableAccordion({
   readingType,
   sensorToggleStates,
   setSensorToggleStates,
@@ -72,8 +72,8 @@ export default function SensorTableAccordion({
     const deviceZones: SDBDeviceZone[] = [];
     const sensorsByDeviceZone: Record<number, ISensorBase[]> = { [-1]: [] };
 
-    const deviceZonesData = (await getDeviceZonesQuery.refetch()).data;
-    const sensorsData = (await getSensorsQuery.refetch()).data;
+    const deviceZonesData = getDeviceZonesQuery.data;
+    const sensorsData = getSensorsQuery.data;
 
     deviceZonesData?.forEach((zone) => {
       deviceZones.push(zone);
@@ -134,18 +134,10 @@ export default function SensorTableAccordion({
     setSensors(sensorsByDeviceZone);
   };
 
-  const sensorToggleStatesJSON = JSON.stringify(sensorToggleStates);
-  const deviceZoneToggleStatesJSON = JSON.stringify(deviceZoneToggleStates);
-
   useEffect(() => {
     updateDataAsync();
-
-    const interval = setInterval(() => {
-      updateDataAsync();
-    }, 60000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readingType, sensorToggleStatesJSON, deviceZoneToggleStatesJSON]);
+  }, [readingType, getDeviceZonesQuery.data, getSensorsQuery.data]);
 
   const sortableItems = deviceZones
     .map((zone) => {
@@ -174,12 +166,6 @@ export default function SensorTableAccordion({
     .filter((id) => !deviceZoneToggleStates.includes(id));
   return (
     <Fragment>
-      <Center>
-        <h5>
-          Last Updated:{" "}
-          {`${new Date().toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
-        </h5>
-      </Center>
       {getDeviceZonesQuery.isLoading || getSensorsQuery.isLoading ? (
         <Center>
           <h3>Loading...</h3>
@@ -226,6 +212,12 @@ export default function SensorTableAccordion({
           </Accordion>
         </DndContext>
       )}
+      <Center>
+        <h5>
+          Last Updated:{" "}
+          {`${new Date().toLocaleDateString([], { day: "2-digit", month: "numeric" })} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+        </h5>
+      </Center>
     </Fragment>
   );
 
@@ -250,3 +242,5 @@ export default function SensorTableAccordion({
     }
   }
 }
+
+export default memo(SensorTableAccordion);

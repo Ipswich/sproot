@@ -16,8 +16,7 @@ export class ADS1115 extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<ADS1115 | null> {
     const sensor = new ADS1115(
@@ -27,8 +26,7 @@ export class ADS1115 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensor.initializeAsync(ADS1115.MAX_SENSOR_READ_TIME);
@@ -41,8 +39,7 @@ export class ADS1115 extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -50,8 +47,7 @@ export class ADS1115 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [readingType],
       logger,
     );

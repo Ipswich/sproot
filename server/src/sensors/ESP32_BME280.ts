@@ -18,8 +18,7 @@ class ESP32_BME280 extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<ESP32_BME280 | null> {
     const sensor = new ESP32_BME280(
@@ -29,8 +28,7 @@ class ESP32_BME280 extends SensorBase {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return sensor.initializeAsync(ESP32_BME280.MAX_SENSOR_READ_TIME);
@@ -43,8 +41,7 @@ class ESP32_BME280 extends SensorBase {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -52,8 +49,7 @@ class ESP32_BME280 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [ReadingType.humidity, ReadingType.temperature, ReadingType.pressure],
       logger,
     );

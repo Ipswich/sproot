@@ -70,18 +70,65 @@ All of these devices require an address, but some may also require a pin. As ADS
 </p>
 Navigate to the `Sensor Data` page for the relevant measurement type from the nav bar.
 
-### Chart
+### Chart Settings
 
-This chart displays the history of each sensor. You can change the time range by clicking on the different control segments below the chart.
+The chart displays the history of each sensor. Below the chart is a settings panel with several controls. Please note that these _will_ let you be dumb - if you ask for 6 months of 1 minute raw data, buckle up.
 
-- Please note that data points are every 5 minutes. Depending on the number of sensors you have configured and the selected time range, this can be a significant amount of data to process and render.
+#### Time Range
 
-Temperature sensors can also be toggled to display in °C or °F
+Select a preset time window using the segmented control: **6 Hours**, **12 Hours**, **1 Day**, **3 Days**, or **1 Week**. Choose **Custom** to open a date range picker where you can select any start and end date.
+
+#### Statistic (Aggregate)
+
+Determines how multiple data points within each resolution bucket are combined into a single value. Available options:
+
+| Option            | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| Average           | The mean value across all data points in the bucket          |
+| Minimum           | The lowest value in the bucket                               |
+| Maximum           | The highest value in the bucket                              |
+| Last in interval  | The most recent value in the bucket                          |
+| First in interval | The earliest value in the bucket                             |
+| Sum               | The total of all values in the bucket                        |
+| Count             | The number of data points in the bucket                      |
+| Std. Dev.         | The standard deviation of values in the bucket               |
+| Percentile        | The value at the specified percentile rank within the bucket |
+
+When the resolution is set to **1 minute** (raw data), this selector shows "Raw" and is disabled since individual data points don't have any aggregation.
+
+#### Resolution (Downsample)
+
+Controls the time bucket size for chart data points. Available options:
+
+| Option     | Description                                                                                                          |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| Auto       | Automatically selects resolution based on time range: 5 minutes for ≤72 hours, 1 hour for ≤1 week, 1 day beyond that |
+| 1 minute   | One data point per minute                                                                                            |
+| 5 minutes  | One data point every 5 minutes                                                                                       |
+| 15 minutes | One data point every 15 minutes                                                                                      |
+| 30 minutes | One data point every 30 minutes                                                                                      |
+| 1 hour     | One data point per hour                                                                                              |
+| 6 hours    | One data point every 6 hours                                                                                         |
+| 1 day      | One data point per day                                                                                               |
+| Custom...  | Opens a custom resolution editor with a numeric input and unit selector (minutes, hours, or days)                    |
+
+#### Percentile
+
+Visible only when the **Percentile** aggregate is selected. Enter a value between 1 and 99.9 (default: 95) to compute the corresponding percentile rank. For example, the 95th percentile shows a value below which 95% of the data in each bucket falls.
+
+#### Show Stat Lines
+
+A toggle button that overlays reference lines on the chart showing the overall **Average** (red), **Minimum** (blue), and **Maximum** (green) across the displayed time range. This provides a quick visual benchmark for comparing individual sensor readings against the full dataset.
+
+#### Alternate Units (Temperature Only)
+
+For temperature sensors, a switch toggles between Celsius and Fahrenheit. This affects both the chart display and the table values.
 
 ### Sensor Table
 
-This table contains each sensor you have configured, grouped according to their configurations.
+This table contains each sensor you have configured, grouped according to their device zones.
 
 - Virtually everything in this table is reorderable. If there's a more significant zone, or a more significant sensor, drag it to the top!
 - If you collapse or expand a zone, it'll automatically hide or show its data on the chart. Display only the data you care about!
-- You can also hide or show individual sensor data by adjusting the toggle switch in the same row as the sensor.
+- Each sensor row has a toggle switch to show or hide that individual sensor's line on the chart.
+- Sensor order is persisted per reading type, as is zone order and per-zone sensor order.

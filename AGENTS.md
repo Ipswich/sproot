@@ -165,7 +165,7 @@ VITE_API_SERVER_URL=<your server URL>
 
 **Server:** `ghcr.io/ipswich/sproot-server:latest`
 **Client:** `ghcr.io/ipswich/sproot-client:latest` (nginx + React)
-**DB:** `timescale/timescaledb:2.26.4-pg18`
+**DB:** `timescale/timescaledb-ha:pg18-ts2.26`
 **pgAdmin:** `dpage/pgadmin4:9.14.0`
 
 ## Key Directories
@@ -194,3 +194,11 @@ VITE_API_SERVER_URL=<your server URL>
 - `client/src/components/*` - Shareable, reusable, components
 - `client/src/requests/*` - API request utilities
 - `client/src/shell/*` - Header/navbar layout
+
+## Instructions For Any Changes
+- ALWAYS ask before making a commit. Never make a commit without asking first.
+- ALWAYS ask before reverting or rolling back changes to a previous commit. This is potentially extremely destructive, and should not be done without asking first.
+
+## Plans and Specs
+- NEVER write plans, specs, or implementation documents to the `docs/` directory. The `docs/` directory is a Docusaurus project that produces the project's public-facing documentation, and must only contain end-user or API documentation.
+- Plans and specs should be written to `.opencode/` instead.

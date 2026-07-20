@@ -1,28 +1,28 @@
 import { assert } from "chai";
 import {
-  formatDateForChart,
+  formatDateForDisplay,
   convertCelsiusToFahrenheit,
   convertFahrenheitToCelsius,
   formatDecimalReadingForDisplay,
 } from "../DisplayFormats";
 
 describe("DisplayFormats.ts", function () {
-  describe("formatDateForChart", () => {
+  describe("formatDateForDisplay", () => {
     it("should format date correctly for AM times", () => {
       const date = new Date("2024-06-15T09:05:00");
-      const formatted = formatDateForChart(date);
+      const formatted = formatDateForDisplay(date);
       assert.strictEqual(formatted, "6/15 9:05 am");
     });
 
     it("should format date correctly for PM times", () => {
       const date = new Date("2024-06-15T15:30:00");
-      const formatted = formatDateForChart(date);
+      const formatted = formatDateForDisplay(date);
       assert.strictEqual(formatted, "6/15 3:30 pm");
     });
 
     it("should handle string input", () => {
       const dateString = "2024-06-15T00:00:00";
-      const formatted = formatDateForChart(dateString);
+      const formatted = formatDateForDisplay(dateString);
       assert.strictEqual(formatted, "6/15 12:00 am");
     });
   });

@@ -14,7 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Accordion, Center } from "@mantine/core";
-import { Fragment, startTransition, useEffect, useState } from "react";
+import { Fragment, memo, startTransition, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getOutputsAsync,
@@ -34,7 +34,7 @@ interface ZoneAccordionProps {
   setDeviceZoneToggleStates: (deviceZoneNames: string[]) => void;
 }
 
-export default function ZoneAccordion({
+function ZoneAccordion({
   deviceZoneToggleStates,
   setDeviceZoneToggleStates,
 }: ZoneAccordionProps) {
@@ -63,8 +63,8 @@ export default function ZoneAccordion({
     const deviceZones: SDBDeviceZone[] = [];
     const outputsByDeviceZone: Record<number, IOutputBase[]> = { [-1]: [] };
 
-    const deviceZonesData = (await getDeviceZonesQuery.refetch()).data;
-    const outputsData = (await getOutputsQuery.refetch()).data;
+    const deviceZonesData = getDeviceZonesQuery.data;
+    const outputsData = getOutputsQuery.data;
 
     deviceZonesData?.forEach((zone: SDBDeviceZone) => {
       deviceZones.push(zone);
@@ -126,13 +126,8 @@ export default function ZoneAccordion({
 
   useEffect(() => {
     updateDataAsync();
-
-    const interval = setInterval(() => {
-      updateDataAsync();
-    }, 60000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(deviceZoneToggleStates)]);
+  }, [getDeviceZonesQuery.data, getOutputsQuery.data]);
 
   const sortableItems = deviceZones
     .map((zone) => {
@@ -227,3 +222,5 @@ export default function ZoneAccordion({
     }
   }
 }
+
+export default memo(ZoneAccordion);

@@ -47,9 +47,9 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       5000,
+      "127.0.0.1",
     );
 
     // disposing with nothing shouldn't cause issues
@@ -131,9 +131,9 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       5000,
+      "127.0.0.1",
     );
 
     // No devices should be available at first - takes a hot sec for events to get emitted
@@ -176,9 +176,9 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       50,
+      "127.0.0.1",
     );
 
     (await tplinkSmartPlugs.createOutputAsync({
@@ -244,9 +244,9 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       50,
+      "127.0.0.1",
     );
 
     await tplinkSmartPlugs.createOutputAsync({
@@ -285,9 +285,9 @@ describe("tplinkPlug.ts tests", async function () {
       5,
       5,
       5,
-      5,
       logger,
       50,
+      "127.0.0.1",
     );
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,
@@ -418,7 +418,16 @@ describe("tplinkPlug.ts tests", async function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(eventBus, mockSprootDB, 5, 5, 5, 5, logger);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      eventBus,
+      mockSprootDB,
+      5,
+      5,
+      5,
+      logger,
+      5000,
+      "127.0.0.1",
+    );
     const plug = await tplinkSmartPlugs.createOutputAsync({
       id: 1,
       model: "TPLINK_SMART_PLUG",
@@ -434,18 +443,18 @@ describe("tplinkPlug.ts tests", async function () {
     // Some simple "If we're in manual, does it update the state to reflect this?"
     await plug!.updateControlModeAsync(ControlMode.manual);
 
-    assert.equal(infoStub.callCount, 2);
+    assert.equal(infoStub.callCount, 1);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 0);
 
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-on");
-    assert.equal(infoStub.callCount, 3);
+    assert.equal(infoStub.callCount, 2);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 100);
 
     await new Promise((r) => setTimeout(r, 10)); // Wait for any debounced calls to finish
     (tplinkSmartPlugs.outputs["1"] as TPLinkPlug).tplinkPlug?.emit("power-off");
-    assert.equal(infoStub.callCount, 4);
+    assert.equal(infoStub.callCount, 3);
     assert.equal(plug!.controlMode, ControlMode.manual);
     assert.equal(plug!.value, 0);
 
@@ -515,7 +524,16 @@ describe("tplinkPlug.ts tests", async function () {
     ]);
     const eventBus = new MemoryEventBus(logger);
 
-    await using tplinkSmartPlugs = new TPLinkSmartPlugs(eventBus, sprootDB, 5, 5, 5, 5, logger, 50);
+    await using tplinkSmartPlugs = new TPLinkSmartPlugs(
+      eventBus,
+      sprootDB,
+      5,
+      5,
+      5,
+      logger,
+      50,
+      "127.0.0.1",
+    );
 
     await tplinkSmartPlugs.createOutputAsync({
       id: 1,

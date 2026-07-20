@@ -41,6 +41,30 @@ import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalE
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
 import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
+import {
+  SensorDataQueryRequest,
+  OutputDataQueryRequest,
+  SensorDataQueryResponse,
+  OutputDataQueryResponse,
+  DEFAULT_LIMIT,
+  MAX_LIMIT,
+  DEFAULT_AGGREGATES,
+  SENSOR_AGGREGATE_TABLES,
+  OUTPUT_AGGREGATE_TABLES,
+  BUCKET_MINUTES_TO_SENSOR_TABLE,
+  BUCKET_MINUTES_TO_OUTPUT_TABLE,
+} from "@sproot/sproot-common/dist/api/v2/QueryTypes";
+
+import {
+  formatSensorDataQueryRows,
+  formatOutputDataQueryRows,
+  normalizeBucketMinutes,
+  getLookbackDate,
+  getRecentTailStart,
+} from "./databaseQueryUtils";
+
+import { buildSensorRawQuery, buildOutputRawQuery } from "./rawDataQueryHelpers";
+
 import * as winston from "winston";
 
 export class SprootDB implements ISprootDB {
@@ -167,27 +191,27 @@ export class SprootDB implements ISprootDB {
     const readings = await this.#connection("sensors as s")
       .join("sensor_data as d", "s.id", "d.sensor_id")
       .select("metric", "data", "units", "logTime")
-      .where("d.logTime", ">", this.#getLookbackDate(since, minutes))
+      .where("d.logTime", ">", getLookbackDate(since, minutes))
       .andWhere("d.sensor_id", sensor.id)
       .orderBy("d.logTime", "asc");
 
     return this.#normalizeReadings(readings, toIsoString);
   }
-  async getSensorChartReadingsAsync(
+  async getBucketedSensorReadingsAsync(
     sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
     bucketMinutes: number,
     toIsoString: boolean = false,
   ): Promise<SDBReading[]> {
-    const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
-    const aggregateViewName = this.#getSensorAggregateViewName(bucketInterval);
+    const bucketInterval = normalizeBucketMinutes(bucketMinutes);
+    const aggregateViewName = BUCKET_MINUTES_TO_SENSOR_TABLE[bucketInterval] ?? null;
     if (!aggregateViewName) {
       return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
     }
 
-    const lookbackDate = this.#getLookbackDate(since, minutes);
-    const tailStart = this.#getRecentTailStart(since, minutes, bucketInterval);
+    const lookbackDate = getLookbackDate(since, minutes);
+    const tailStart = getRecentTailStart(since, minutes, bucketInterval);
     const [aggregateResult, tailResult] = await Promise.all([
       this.#connection.raw(
         `
@@ -230,7 +254,7 @@ export class SprootDB implements ISprootDB {
     ]);
 
     return this.#normalizeReadings(
-      this.#mergeSensorChartReadings(
+      this.#mergeSensorReadings(
         this.#getRawRows<SDBReading>(aggregateResult),
         this.#getRawRows<SDBReading>(tailResult),
       ),
@@ -572,27 +596,27 @@ export class SprootDB implements ISprootDB {
     const states = await this.#connection("outputs as o")
       .join("output_data as d", "o.id", "d.output_id")
       .select("d.value", "d.controlMode", "d.logTime")
-      .where("d.logTime", ">", this.#getLookbackDate(since, minutes))
+      .where("d.logTime", ">", getLookbackDate(since, minutes))
       .andWhere("d.output_id", output.id)
       .orderBy("d.logTime", "asc");
 
     return this.#normalizeOutputStates(states, toIsoString);
   }
-  async getOutputChartStatesAsync(
+  async getBucketedOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
     bucketMinutes: number,
     toIsoString: boolean = false,
   ): Promise<SDBOutputState[]> {
-    const bucketInterval = this.#normalizeBucketMinutes(bucketMinutes);
-    const aggregateViewName = this.#getOutputAggregateViewName(bucketInterval);
+    const bucketInterval = normalizeBucketMinutes(bucketMinutes);
+    const aggregateViewName = BUCKET_MINUTES_TO_OUTPUT_TABLE[bucketInterval] ?? null;
     if (!aggregateViewName) {
       return this.getOutputStatesAsync(output, since, minutes, toIsoString);
     }
 
-    const lookbackDate = this.#getLookbackDate(since, minutes);
-    const tailStart = this.#getRecentTailStart(since, minutes, bucketInterval);
+    const lookbackDate = getLookbackDate(since, minutes);
+    const tailStart = getRecentTailStart(since, minutes, bucketInterval);
     const [aggregateResult, tailResult] = await Promise.all([
       this.#connection.raw(
         `
@@ -628,7 +652,7 @@ export class SprootDB implements ISprootDB {
     ]);
 
     return this.#normalizeOutputStates(
-      this.#mergeOutputChartStates(
+      this.#mergeOutputStates(
         this.#getRawRows<SDBOutputState>(aggregateResult),
         this.#getRawRows<SDBOutputState>(tailResult),
       ),
@@ -747,7 +771,8 @@ export class SprootDB implements ISprootDB {
         "s.name as sensorName",
       ])
       .innerJoin("sensors as s", "sc.sensor_id", "s.id")
-      .where("automation_id", automationId);
+      .where("automation_id", automationId)
+      .orderBy("sc.id", "asc");
   }
   async addSensorConditionAsync(
     automationId: number,
@@ -800,7 +825,8 @@ export class SprootDB implements ISprootDB {
         "o.name as outputName",
       ])
       .innerJoin("outputs as o", "oc.output_id", "o.id")
-      .where("automation_id", automationId);
+      .where("automation_id", automationId)
+      .orderBy("oc.id", "asc");
   }
   async addOutputConditionAsync(
     automationId: number,
@@ -840,7 +866,8 @@ export class SprootDB implements ISprootDB {
   async getTimeConditionsAsync(automationId: number): Promise<SDBTimeCondition[]> {
     return this.#connection("time_conditions")
       .where("automation_id", automationId)
-      .select(["id", "automation_id as automationId", "groupType", "startTime", "endTime"]);
+      .select(["id", "automation_id as automationId", "groupType", "startTime", "endTime"])
+      .orderBy("id", "asc");
   }
   async addTimeConditionAsync(
     automationId: number,
@@ -871,7 +898,8 @@ export class SprootDB implements ISprootDB {
   async getWeekdayConditionsAsync(automationId: number): Promise<SDBWeekdayCondition[]> {
     return this.#connection("weekday_conditions")
       .where("automation_id", automationId)
-      .select(["id", "automation_id as automationId", "groupType", "weekdays"]);
+      .select(["id", "automation_id as automationId", "groupType", "weekdays"])
+      .orderBy("id", "asc");
   }
   async addWeekdayConditionAsync(
     automationId: number,
@@ -903,7 +931,8 @@ export class SprootDB implements ISprootDB {
   async getMonthConditionsAsync(automationId: number): Promise<SDBMonthCondition[]> {
     return this.#connection("month_conditions")
       .where("automation_id", automationId)
-      .select(["id", "automation_id as automationId", "groupType", "months"]);
+      .select(["id", "automation_id as automationId", "groupType", "months"])
+      .orderBy("id", "asc");
   }
   async addMonthConditionAsync(
     automationId: number,
@@ -940,7 +969,8 @@ export class SprootDB implements ISprootDB {
         "startDate",
         "endMonth",
         "endDate",
-      ]);
+      ])
+      .orderBy("id", "asc");
   }
   async addDateRangeConditionAsync(
     automationId: number,
@@ -1060,6 +1090,10 @@ export class SprootDB implements ISprootDB {
     return this.#backupDatabaseArchiveAsync(host, port, user, password, outputFile, logger);
   }
 
+  async validateBackupArchiveAsync(inputFile: string, logger: winston.Logger): Promise<void> {
+    return this.#validateBackupArchiveAsync(inputFile, logger);
+  }
+
   async swapRestoreDatabaseAsync(
     host: string,
     port: number,
@@ -1075,6 +1109,8 @@ export class SprootDB implements ISprootDB {
     let cleanupNeeded = false;
 
     try {
+      await this.#validateBackupArchiveAsync(inputFile, logger);
+
       await this.#dropDatabaseIfExistsAsync(host, port, user, password, oldDbName, logger);
       await this.#dropDatabaseIfExistsAsync(host, port, user, password, restoreDbName, logger);
       await this.#createDatabaseAsync(host, port, user, password, restoreDbName, logger);
@@ -1125,47 +1161,368 @@ export class SprootDB implements ISprootDB {
     }
   }
 
+  async refreshAllAggregateTablesAsync(logger: winston.Logger): Promise<void> {
+    logger.info("Refreshing aggregate tables...");
+
+    const aggregateTables = [
+      ...Object.entries(SENSOR_AGGREGATE_TABLES).map(([, name]) => ({
+        name,
+        rawTable: "sensor_data",
+      })),
+      ...Object.entries(OUTPUT_AGGREGATE_TABLES).map(([, name]) => ({
+        name,
+        rawTable: "output_data",
+      })),
+    ];
+
+    for (const agg of aggregateTables) {
+      try {
+        const result = await this.#refreshAggregateChunksAsync(agg.name, agg.rawTable, logger);
+        if (result) {
+          logger.info(`Refreshed ${result.tableName}: ${result.minStart} to ${result.maxEnd}`);
+        }
+      } catch (error) {
+        logger.error(`Failed to refresh aggregate table ${agg.name}:`, error);
+      }
+    }
+
+    logger.info("Aggregate table refresh complete");
+  }
+
+  async #refreshAggregateChunksAsync(
+    tableName: string,
+    rawTable: string,
+    logger: winston.Logger,
+  ): Promise<{ tableName: string; minStart: string; maxEnd: string } | null> {
+    const oldestResult = await this.#connection(rawTable).min("logTime as oldest");
+    const oldestTime = oldestResult[0]?.["oldest"];
+    if (!oldestTime) return null;
+
+    let windowEnd = new Date();
+    let windowStart = this.#alignToMonth(windowEnd);
+    let minStart: string | null = null;
+    let maxEnd: string | null = null;
+
+    while (windowStart > oldestTime) {
+      const startStr = this.#formatDbDate(windowStart);
+      const endStr = this.#formatDbDate(windowEnd);
+      try {
+        await this.#connection.raw(
+          `CALL refresh_continuous_aggregate('${tableName}', '${startStr}', '${endStr}');`,
+        );
+        if (minStart === null || startStr < minStart) minStart = startStr;
+        if (maxEnd === null || endStr > maxEnd) maxEnd = endStr;
+      } catch (error) {
+        logger.error(`Failed to refresh ${tableName} chunk ${startStr} to ${endStr}:`, error);
+      }
+      windowEnd = windowStart;
+      windowStart = new Date(windowStart.getFullYear(), windowStart.getMonth() - 1, 1, 0, 0, 0, 0);
+    }
+
+    if (windowStart <= oldestTime) {
+      const startStr = this.#formatDbDate(oldestTime);
+      const endStr = this.#formatDbDate(windowEnd);
+      try {
+        await this.#connection.raw(
+          `CALL refresh_continuous_aggregate('${tableName}', '${startStr}', '${endStr}');`,
+        );
+        if (minStart === null || startStr < minStart) minStart = startStr;
+        if (maxEnd === null || endStr > maxEnd) maxEnd = endStr;
+      } catch (error) {
+        logger.error(`Failed to refresh ${tableName} chunk ${startStr} to ${endStr}:`, error);
+      }
+    }
+
+    if (minStart === null || maxEnd === null) return null;
+    return { tableName, minStart, maxEnd };
+  }
+
+  #alignToMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+  }
+
+  #formatDbDate(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Raw data query endpoints
+  // ---------------------------------------------------------------------------
+
+  async querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
+    const tableName = SENSOR_AGGREGATE_TABLES[request.downsample ?? "5m"];
+    if (tableName) {
+      return this.#querySensorDataAggregateAsync(request, tableName);
+    }
+    // Unknown downsample interval — compute on-the-fly from raw data
+    return this.#querySensorDataRawAsync(request, request.downsample ?? "5m");
+  }
+
+  async queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
+    const tableName = OUTPUT_AGGREGATE_TABLES[request.downsample ?? "5m"];
+    if (tableName) {
+      return this.#queryOutputDataAggregateAsync(request, tableName);
+    }
+    // Unknown downsample interval — compute on-the-fly from raw data
+    return this.#queryOutputDataRawAsync(request, request.downsample ?? "5m");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sensor aggregate path — one query for all sensors
+  // ---------------------------------------------------------------------------
+
+  async #querySensorDataAggregateAsync(
+    request: SensorDataQueryRequest,
+    aggregateTableName: string,
+  ): Promise<SensorDataQueryResponse> {
+    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const readingTypes = request.readingTypes;
+    const whereRaw = this.#buildAggregateFilters(request, "sensor_id", readingTypes);
+
+    const query = this.#connection(aggregateTableName)
+      .select(
+        "bucket",
+        "sensor_id",
+        "metric",
+        "units",
+        "sample_count",
+        "average_data",
+        "minimum_data",
+        "maximum_data",
+        "stddev_data",
+        "first_data",
+        "last_data",
+        this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_data", [
+          request.percentile ?? 0.5,
+        ]),
+      )
+      .where(whereRaw)
+      .orderBy("bucket", "DESC")
+      .limit(limit + 1);
+
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (hasMoreRows && truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatSensorDataQueryRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Output aggregate path — one query for all outputs
+  // ---------------------------------------------------------------------------
+
+  async #queryOutputDataAggregateAsync(
+    request: OutputDataQueryRequest,
+    aggregateTableName: string,
+  ): Promise<OutputDataQueryResponse> {
+    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const whereRaw = this.#buildAggregateFilters(request, "output_id", undefined);
+
+    const query = this.#connection(aggregateTableName)
+      .join("outputs", `${aggregateTableName}.output_id`, "outputs.id")
+      .select(
+        "bucket",
+        "output_id",
+        this.#connection.raw('"outputs"."name" as output_name'),
+        this.#connection.raw("'%' as output_units"),
+        "sample_count",
+        "average_value",
+        "minimum_value",
+        "maximum_value",
+        "stddev_value",
+        "first_value",
+        "last_value",
+        this.#connection.raw("approx_percentile(?, percentile_sketch) AS percentile_value", [
+          request.percentile ?? 0.5,
+        ]),
+      )
+      .where(whereRaw)
+      .orderBy("bucket", "DESC")
+      .limit(limit + 1);
+
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (hasMoreRows && truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatOutputDataQueryRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sensor raw path — computes time_bucket on-the-fly from raw hypertable
+  // ---------------------------------------------------------------------------
+
+  async #querySensorDataRawAsync(
+    request: SensorDataQueryRequest,
+    interval: string,
+  ): Promise<SensorDataQueryResponse> {
+    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const readingTypes = request.readingTypes;
+    const whereRaw = this.#buildRawFilters(request, "sensor_id", readingTypes);
+
+    const query = buildSensorRawQuery(this.#connection, interval, whereRaw, limit);
+
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (hasMoreRows && truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatSensorDataQueryRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Output raw path — computes time_bucket on-the-fly from raw hypertable
+  // ---------------------------------------------------------------------------
+
+  async #queryOutputDataRawAsync(
+    request: OutputDataQueryRequest,
+    interval: string,
+  ): Promise<OutputDataQueryResponse> {
+    const limit = Math.min(request.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const whereRaw = this.#buildRawFilters(request, "output_id", undefined);
+
+    const query = buildOutputRawQuery(this.#connection, interval, whereRaw, limit);
+
+    const result = await query;
+    const rows = result as Array<Record<string, unknown>>;
+    const hasMoreRows = rows.length > limit;
+    const truncated = hasMoreRows ? rows.slice(0, limit) : rows;
+
+    let nextCursor: string | undefined;
+    if (hasMoreRows && truncated.length > 0) {
+      const lastRow = truncated[truncated.length - 1]!;
+      const bucketValue = lastRow["bucket"] as string | Date | null | undefined;
+      nextCursor = Buffer.from(dbToIso(bucketValue) ?? String(bucketValue)).toString("base64");
+    }
+
+    return formatOutputDataQueryRows(
+      truncated,
+      [...(request.aggregates ?? DEFAULT_AGGREGATES)],
+      nextCursor,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Metadata helpers
+  // ---------------------------------------------------------------------------
+
+  #buildAggregateFilters(
+    request: SensorDataQueryRequest | OutputDataQueryRequest,
+    idColumnName: "sensor_id" | "output_id",
+    readingTypes: string[] | undefined,
+  ) {
+    const cursor = this.#parseCursor(request.cursor);
+    const { start, end } = request.timeRange;
+    const id = request.id;
+
+    const timeFilter = cursor
+      ? this.#connection.raw('"bucket" >= ? AND "bucket" < ?', [start, cursor])
+      : this.#connection.raw('"bucket" BETWEEN ? AND ?', [start, end]);
+
+    const idFilter = this.#connection.raw(`"${idColumnName}" = ?`, [id]);
+
+    const metricFilter =
+      readingTypes && readingTypes.length > 0
+        ? this.#connection.raw(
+            '"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")",
+            readingTypes,
+          )
+        : this.#connection.raw("1=1");
+
+    return this.#connection.raw("? AND ? AND ?", [timeFilter, idFilter, metricFilter]);
+  }
+
+  #buildRawFilters(
+    request: SensorDataQueryRequest | OutputDataQueryRequest,
+    idColumnName: "sensor_id" | "output_id",
+    readingTypes: string[] | undefined,
+  ) {
+    const cursor = this.#parseCursor(request.cursor);
+    const { start, end } = request.timeRange;
+    const id = request.id;
+
+    const timeFilter = cursor
+      ? this.#connection.raw('"logTime" >= ? AND "logTime" < ?', [start, cursor])
+      : this.#connection.raw('"logTime" BETWEEN ? AND ?', [start, end]);
+
+    const idFilter = this.#connection.raw(`"${idColumnName}" = ?`, [id]);
+
+    const metricFilter =
+      readingTypes && readingTypes.length > 0
+        ? this.#connection.raw(
+            '"metric" IN (' + readingTypes.map(() => "?").join(", ") + ")",
+            readingTypes,
+          )
+        : this.#connection.raw("1=1");
+
+    return this.#connection.raw("? AND ? AND ?", [timeFilter, idFilter, metricFilter]);
+  }
+
   async [Symbol.asyncDispose](): Promise<void> {
     await this.#connection.destroy();
+  }
+
+  #parseCursor(cursor: string | undefined): Date | undefined {
+    if (!cursor) return undefined;
+    try {
+      const decoded = Buffer.from(cursor, "base64").toString();
+      const date = new Date(decoded);
+      if (isNaN(date.getTime())) {
+        throw new InvalidCursorError(`Invalid cursor timestamp: ${decoded}`);
+      }
+      return date;
+    } catch {
+      throw new InvalidCursorError(`Invalid cursor: must be base64-encoded ISO 8601 timestamp`);
+    }
   }
 
   async #insertAndGetIdAsync(tableName: string, values: Record<string, unknown>): Promise<number> {
     const result = await this.#connection(tableName)
       .insert(values)
       .returning<{ id: number }[]>("id");
-    return result[0]?.id ?? -1;
+    if (!result[0]?.id) {
+      throw new Error(`Insert into "${tableName}" returned no id`);
+    }
+    return result[0].id;
   }
 
   #getCurrentTimestampValue(): Date {
     return new Date();
-  }
-
-  #getLookbackDate(since: Date, minutes: number): Date {
-    const lookbackDate = new Date(since.getTime() - minutes * 60_000);
-    return lookbackDate;
-  }
-
-  #getRecentTailStart(since: Date, minutes: number, bucketMinutes: number): Date {
-    const lookbackDate = new Date(since.getTime() - minutes * 60_000);
-    const tailStart = new Date(since.getTime() - bucketMinutes * 60_000);
-    const effectiveStart = tailStart > lookbackDate ? tailStart : lookbackDate;
-    return effectiveStart;
-  }
-
-  #normalizeBucketMinutes(bucketMinutes: number): number {
-    if (!Number.isInteger(bucketMinutes) || bucketMinutes <= 0) {
-      throw new Error(`Invalid bucketMinutes value: ${bucketMinutes}`);
-    }
-
-    return bucketMinutes;
-  }
-
-  #getSensorAggregateViewName(bucketMinutes: number): string | null {
-    return bucketMinutes === 5 ? "sensor_data_5m" : null;
-  }
-
-  #getOutputAggregateViewName(bucketMinutes: number): string | null {
-    return bucketMinutes === 5 ? "output_data_5m" : null;
   }
 
   #normalizeReadings(readings: SDBReading[], toIsoString: boolean): SDBReading[] {
@@ -1203,7 +1560,7 @@ export class SprootDB implements ISprootDB {
     return typeof value === "string" ? value : isoValue;
   }
 
-  #mergeSensorChartReadings(baseRows: SDBReading[], tailRows: SDBReading[]): SDBReading[] {
+  #mergeSensorReadings(baseRows: SDBReading[], tailRows: SDBReading[]): SDBReading[] {
     const mergedRows = new Map<string, SDBReading>();
     for (const row of baseRows) {
       mergedRows.set(`${row.metric}:${dbToIso(row.logTime) ?? row.logTime}`, row);
@@ -1222,10 +1579,7 @@ export class SprootDB implements ISprootDB {
     });
   }
 
-  #mergeOutputChartStates(
-    baseRows: SDBOutputState[],
-    tailRows: SDBOutputState[],
-  ): SDBOutputState[] {
+  #mergeOutputStates(baseRows: SDBOutputState[], tailRows: SDBOutputState[]): SDBOutputState[] {
     const mergedRows = new Map<string, SDBOutputState>();
     for (const row of baseRows) {
       mergedRows.set(dbToIso(row.logTime) ?? String(row.logTime), row);
@@ -1309,13 +1663,7 @@ export class SprootDB implements ISprootDB {
           "-",
         ],
         {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
+          env: this.#buildPostgresToolEnv(password),
         },
       );
 
@@ -1331,7 +1679,7 @@ export class SprootDB implements ISprootDB {
       psql.stdin.write(psqlInput);
       psql.stdin.end();
 
-      psql.on("exit", (code) => {
+      psql.on("close", (code) => {
         if (code !== 0) {
           reject(new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "psql")));
         } else {
@@ -1349,54 +1697,61 @@ export class SprootDB implements ISprootDB {
     outputFile: string,
     logger: winston.Logger,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const stderrChunks: string[] = [];
-      const dump = spawn(
-        "pg_dump",
-        [
-          `--host=${host}`,
-          `--port=${port}`,
-          `--username=${user}`,
-          "--format=custom",
-          "--compress=9",
-          "--no-owner",
-          "--no-privileges",
-          this.#connection.client.database(),
-        ],
-        {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+    const tempOutputFile = `${outputFile}.partial`;
+
+    await fs.promises.rm(tempOutputFile, { force: true });
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const stderrChunks: string[] = [];
+        const dump = spawn(
+          "pg_dump",
+          [
+            `--host=${host}`,
+            `--port=${port}`,
+            `--username=${user}`,
+            "--format=custom",
+            "--compress=9",
+            "--no-owner",
+            "--no-privileges",
+            `--file=${tempOutputFile}`,
+            this.#connection.client.database(),
+          ],
+          {
+            env: this.#buildPostgresToolEnv(password),
           },
-        },
-      );
-      const out = fs.createWriteStream(outputFile, { flags: "w" });
+        );
 
-      dump.stdout.pipe(out);
+        dump.stderr.on("data", (d) => {
+          const chunk = d.toString();
+          stderrChunks.push(chunk);
+          logger.debug("pg_dump:", chunk);
+        });
 
-      dump.stderr.on("data", (d) => {
-        const chunk = d.toString();
-        stderrChunks.push(chunk);
-        logger.debug("pg_dump:", chunk);
+        dump.on("error", (err) => reject(err));
+        dump.on("close", (code) => {
+          if (code !== 0) {
+            reject(
+              new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_dump")),
+            );
+            return;
+          }
+
+          resolve();
+        });
       });
 
-      dump.on("error", (err) => reject(err));
-      out.on("error", (err) => reject(err));
+      const archiveStats = await fs.promises.stat(tempOutputFile);
+      if (!archiveStats.isFile() || archiveStats.size === 0) {
+        throw new Error("pg_dump produced an empty backup archive");
+      }
 
-      dump.on("exit", (code) => {
-        if (code !== 0) {
-          return reject(
-            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_dump")),
-          );
-        }
-        out.end();
-      });
-
-      out.on("close", () => resolve());
-    });
+      await this.#validateBackupArchiveAsync(tempOutputFile, logger);
+      await fs.promises.rename(tempOutputFile, outputFile);
+    } catch (error) {
+      await fs.promises.rm(tempOutputFile, { force: true }).catch(() => undefined);
+      throw error;
+    }
   }
 
   async #restoreDatabaseArchiveAsync(
@@ -1408,6 +1763,8 @@ export class SprootDB implements ISprootDB {
     databaseName: string,
     logger: winston.Logger,
   ): Promise<void> {
+    await this.#validateBackupArchiveAsync(inputFile, logger);
+
     await this.#runTimescaleHookAsync(
       host,
       port,
@@ -1477,22 +1834,16 @@ export class SprootDB implements ISprootDB {
           `--dbname=${databaseName}`,
           "--clean",
           "--if-exists",
+          "--no-owner",
+          "--no-privileges",
           "--single-transaction",
           "--exit-on-error",
+          archiveFile,
         ],
         {
-          env: {
-            ...process.env,
-            PGPASSWORD: password,
-            LANG: process.env["LANG"] ?? "C.UTF-8",
-            LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
-            LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
-          },
+          env: this.#buildPostgresToolEnv(password),
         },
       );
-
-      const archiveStream = fs.createReadStream(archiveFile);
-      archiveStream.pipe(pgRestore.stdin);
 
       let stderrChunks: string[] = [];
       pgRestore.stderr.on("data", (d) => {
@@ -1501,10 +1852,9 @@ export class SprootDB implements ISprootDB {
         logger.debug("pg_restore:", chunk);
       });
 
-      archiveStream.on("error", (err) => reject(err));
       pgRestore.on("error", (err) => reject(err));
 
-      pgRestore.on("exit", (code) => {
+      pgRestore.on("close", (code) => {
         if (code !== 0) {
           reject(
             new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")),
@@ -1514,6 +1864,60 @@ export class SprootDB implements ISprootDB {
         }
       });
     });
+  }
+
+  async #validateBackupArchiveAsync(archiveFile: string, logger: winston.Logger): Promise<void> {
+    let archiveStats: fs.Stats;
+
+    try {
+      archiveStats = await fs.promises.stat(archiveFile);
+    } catch (error) {
+      throw new Error(`Backup archive is not readable: ${(error as Error).message}`);
+    }
+
+    if (!archiveStats.isFile()) {
+      throw new Error("Backup archive path is not a file");
+    }
+
+    if (archiveStats.size === 0) {
+      throw new Error("Backup archive is empty");
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const stderrChunks: string[] = [];
+      const pgRestore = spawn("pg_restore", ["--list", archiveFile], {
+        env: this.#buildPostgresToolEnv(),
+        stdio: ["ignore", "ignore", "pipe"],
+      });
+
+      pgRestore.stderr.on("data", (d) => {
+        const chunk = d.toString();
+        stderrChunks.push(chunk);
+        logger.debug("pg_restore validate:", chunk);
+      });
+
+      pgRestore.on("error", (err) => reject(err));
+      pgRestore.on("close", (code) => {
+        if (code !== 0) {
+          reject(
+            new Error(this.#buildRestoreErrorMessage(code, stderrChunks.join(""), "pg_restore")),
+          );
+          return;
+        }
+
+        resolve();
+      });
+    });
+  }
+
+  #buildPostgresToolEnv(password?: string): NodeJS.ProcessEnv {
+    return {
+      ...process.env,
+      ...(password ? { PGPASSWORD: password } : {}),
+      LANG: process.env["LANG"] ?? "C.UTF-8",
+      LC_ALL: process.env["LC_ALL"] ?? "C.UTF-8",
+      LANGUAGE: process.env["LANGUAGE"] ?? "C.UTF-8",
+    };
   }
 
   #buildRestoreErrorMessage(
@@ -1613,5 +2017,11 @@ export class SprootDB implements ISprootDB {
       { databaseName },
       logger,
     );
+  }
+}
+
+export class InvalidCursorError extends Error {
+  constructor(message: string) {
+    super(message);
   }
 }

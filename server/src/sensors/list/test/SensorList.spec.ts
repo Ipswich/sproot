@@ -62,7 +62,6 @@ describe("SensorList.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -127,7 +126,6 @@ describe("SensorList.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -185,7 +183,6 @@ describe("SensorList.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );
@@ -278,7 +275,6 @@ describe("SensorList.ts tests", function () {
       mockMdnsService,
       5,
       5,
-      3,
       5,
       logger,
     );

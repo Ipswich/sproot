@@ -7,8 +7,6 @@ import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
 import winston from "winston";
-import { ChartData } from "@sproot/sproot-common/dist/utility/ChartData";
-import { OutputListChartData } from "./OutputListChartData";
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
@@ -24,12 +22,10 @@ class OutputList implements AsyncDisposable {
   #TPLinkSmartPlugs: TPLinkSmartPlugs;
   #outputs: Record<string, OutputBase> = {};
   #logger: winston.Logger;
-  #chartData: OutputListChartData;
   #isUpdating: boolean = false;
   maxCacheSize: number;
   initialCacheLookback: number;
-  maxChartDataSize: number;
-  chartDataPointInterval: number;
+  cacheBucketMinutes: number;
   #listenerCleanupFunction: () => void;
 
   static createInstanceAsync(
@@ -38,8 +34,7 @@ class OutputList implements AsyncDisposable {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<OutputList> {
     const outputList = new OutputList(
@@ -48,8 +43,7 @@ class OutputList implements AsyncDisposable {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return outputList.regenerateAsync();
@@ -61,8 +55,7 @@ class OutputList implements AsyncDisposable {
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
@@ -73,8 +66,7 @@ class OutputList implements AsyncDisposable {
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       undefined,
       this.#logger,
     );
@@ -84,8 +76,7 @@ class OutputList implements AsyncDisposable {
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       undefined,
       this.#logger,
     );
@@ -94,15 +85,12 @@ class OutputList implements AsyncDisposable {
       this.#sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       this.#logger,
     );
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
-    this.maxChartDataSize = maxChartDataSize;
-    this.chartDataPointInterval = chartDataPointInterval;
-    this.#chartData = new OutputListChartData(maxChartDataSize, chartDataPointInterval);
+    this.cacheBucketMinutes = cacheBucketMinutes;
 
     const outputModifiedListener = async (_event: OutputModifiedEvent) => {
       await this.regenerateAsync();
@@ -130,10 +118,6 @@ class OutputList implements AsyncDisposable {
       }
     }
     return cleanObject;
-  }
-
-  get chartData(): OutputListChartData {
-    return this.#chartData;
   }
 
   async updateControlModeAsync(outputId: string, controlMode: ControlMode): Promise<void> {
@@ -237,7 +221,7 @@ class OutputList implements AsyncDisposable {
           // Check for actual output changes
           if (this.#outputs[key]?.name != output.name) {
             changeList.push("Name");
-            //Also updates chart data (and series)
+            // Also updates name in cache
             this.#outputs[key]!.updateName(output.name);
           }
 
@@ -253,7 +237,7 @@ class OutputList implements AsyncDisposable {
 
           if (this.#outputs[key]?.color != output.color) {
             changeList.push("Color");
-            //Also updates chart data (and series)
+            // Also updates color in cache
             this.#outputs[key]!.updateColor(output.color);
           }
 
@@ -351,20 +335,6 @@ class OutputList implements AsyncDisposable {
             (output as OutputGroup)?.updateShouldBePwmAsync();
           }
         }
-        // Chart data should only include data for outputs that don't have a parent
-        const data = Object.values(this.outputs)
-          .filter((output) => output.parentOutputId == null)
-          .map((output) => output.getChartData().data);
-        const series = Object.values(this.outputs)
-          .filter((output) => output.parentOutputId == null)
-          .map((output) => output.getChartData().series);
-        this.#chartData.loadChartData(data, "output");
-        this.#chartData.loadChartSeries(series);
-        this.#logger.info(
-          `Loaded aggregate output chart data. Data count: ${
-            Object.keys(this.#chartData.chartData.get()).length
-          }`,
-        );
       }
 
       profiler.done({
@@ -381,18 +351,6 @@ class OutputList implements AsyncDisposable {
     await this.#touchAllOutputsAsync(async (output) => {
       output.updateDataStoresAsync();
     });
-
-    if (ChartData.shouldUpdateByInterval(new Date(), this.chartDataPointInterval)) {
-      this.#chartData.updateChartData(
-        Object.values(this.outputs).map((output) => output.getChartData().data),
-        "output",
-      );
-      this.#logger.info(
-        `Updated aggregate output chart data. Data count: ${
-          Object.keys(this.#chartData.chartData.get()).length
-        }`,
-      );
-    }
   }
 
   async addOutputAsync(output: SDBOutput): Promise<number> {
@@ -446,8 +404,7 @@ class OutputList implements AsyncDisposable {
           this.#sprootDB,
           this.maxCacheSize,
           this.initialCacheLookback,
-          this.maxChartDataSize,
-          this.chartDataPointInterval,
+          this.cacheBucketMinutes,
           this.#logger,
         );
         break;

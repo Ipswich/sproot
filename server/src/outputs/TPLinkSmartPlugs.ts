@@ -14,27 +14,28 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   readonly plugRegistry = new PlugRegistry();
   readonly initializingPlugs: Record<string, string[]> = {};
   #client: Client;
+  #discoveryTarget: string;
 
   constructor(
     eventBus: IEventBus,
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
     connectionTimeout: number = 5000,
+    discoveryTarget: string = "255.255.255.255",
   ) {
     super(
       eventBus,
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       undefined,
       logger,
     );
+    this.#discoveryTarget = discoveryTarget;
     this.#client = new Client({
       defaultSendOptions: {
         timeout: connectionTimeout,
@@ -67,7 +68,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
     this.#client.on("discovery-invalid", (error: unknown) => {
       this.logger.error(`TPLink Smart Plug client error: ${error}`);
     });
-    this.#client.startDiscovery({ deviceTypes: ["plug"] });
+    this.#client.startDiscovery({ deviceTypes: ["plug"], broadcast: this.#discoveryTarget });
   }
 
   getHosts(): string[] {
@@ -123,8 +124,7 @@ class TPLinkSmartPlugs extends MultiOutputBase {
         this.sprootDB,
         this.maxCacheSize,
         this.initialCacheLookback,
-        this.maxChartDataSize,
-        this.chartDataPointInterval,
+        this.cacheBucketMinutes,
         this.logger,
       );
     } catch (error) {
@@ -164,8 +164,7 @@ class TPLinkPlug extends OutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<TPLinkPlug> {
     const tplinkSmartPlug = new TPLinkPlug(
@@ -175,8 +174,7 @@ class TPLinkPlug extends OutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     return tplinkSmartPlug.initializeAsync();
@@ -189,8 +187,7 @@ class TPLinkPlug extends OutputBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -199,8 +196,7 @@ class TPLinkPlug extends OutputBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     );
     this.plugRegistry = plugRegistry;

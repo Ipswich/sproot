@@ -1,6 +1,7 @@
 import { Models } from "@sproot/sproot-common/dist/outputs/Models";
 import { Knex } from "knex";
 import { toDbDate } from "../../utils/dateUtils";
+import { SprootDB } from "../SprootDB";
 
 export async function seed(knex: Knex): Promise<void> {
   console.log("Truncating tables...");
@@ -23,12 +24,9 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 2, name: "Zone 2" },
   ]);
 
-  await knex("outputs").where("id", 1).update({ deviceZoneId: 1 });
-  await knex("sensors").where("id", 1).update({ deviceZoneId: 1 });
-
   await knex("outputs").insert([
     {
-      id: "1",
+      id: 1,
       model: Models.PCA9685,
       address: "0x40",
       name: "Relay #1",
@@ -40,12 +38,13 @@ export async function seed(knex: Knex): Promise<void> {
       automationTimeout: 1,
     },
     {
-      id: "5",
+      id: 5,
       model: Models.PCA9685,
       address: "0x40",
       name: "Pwm #1",
       color: "#228be6",
       pin: "4",
+      deviceZoneId: 2,
       isPwm: true,
       isInvertedPwm: false,
       automationTimeout: 1,
@@ -69,6 +68,7 @@ export async function seed(knex: Knex): Promise<void> {
       model: "DS18B20",
       address: "28-583bd446df61",
       color: "#40c057",
+      deviceZoneId: 2,
       lowCalibrationPoint: null,
       highCalibrationPoint: null,
     },
@@ -79,6 +79,7 @@ export async function seed(knex: Knex): Promise<void> {
       address: "0x48",
       color: "#228be6",
       pin: "0",
+      deviceZoneId: 1,
       lowCalibrationPoint: 0,
       highCalibrationPoint: 100,
     },
@@ -89,6 +90,7 @@ export async function seed(knex: Knex): Promise<void> {
       address: "0x48",
       color: "#ff8787",
       pin: "1",
+      deviceZoneId: 2,
       lowCalibrationPoint: null,
       highCalibrationPoint: null,
     },
@@ -227,6 +229,83 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ]);
 
+  // Data-query test rows: sensor and output data in 2024-01-01 window for existing tests
+  const dataQueryStart = "2024-01-01 00:05:00";
+  const dataQueryEnd = "2024-01-01 23:55:00";
+
+  await knex("sensor_data").insert([
+    { sensor_id: 1, metric: "temperature", data: 22.5, units: "°C", logTime: dataQueryStart },
+    { sensor_id: 1, metric: "humidity", data: 50.0, units: "%", logTime: dataQueryStart },
+    { sensor_id: 2, metric: "temperature", data: 21.0, units: "°C", logTime: dataQueryStart },
+    { sensor_id: 1, metric: "temperature", data: 23.0, units: "°C", logTime: dataQueryEnd },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 23.5,
+      units: "°C",
+      logTime: "2024-01-01 12:00:00",
+    },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 24.0,
+      units: "°C",
+      logTime: "2024-01-01 18:00:00",
+    },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 24.5,
+      units: "°C",
+      logTime: "2024-01-01 20:00:00",
+    },
+    {
+      sensor_id: 1,
+      metric: "temperature",
+      data: 25.0,
+      units: "°C",
+      logTime: "2024-01-01 22:00:00",
+    },
+  ]);
+
+  await knex("output_data").insert([
+    { output_id: 1, value: 100, controlMode: "manual", logTime: dataQueryStart },
+    { output_id: 1, value: 75, controlMode: "manual", logTime: dataQueryEnd },
+    { output_id: 1, value: 50, controlMode: "manual", logTime: "2024-01-01 12:00:00" },
+    { output_id: 1, value: 25, controlMode: "manual", logTime: "2024-01-01 18:00:00" },
+    { output_id: 5, value: 50, controlMode: "manual", logTime: dataQueryStart },
+  ]);
+
+  // Data-query test rows: sensor data at 10/8/5 min ago for aggregate path tests
+  const tenMinAgo = toDbDate(new Date(Date.now() - 10 * 60 * 1000));
+  const eightMinAgo = toDbDate(new Date(Date.now() - 8 * 60 * 1000));
+  const fiveMinAgo = toDbDate(new Date(Date.now() - 5 * 60 * 1000));
+
+  await knex("sensor_data").insert([
+    { sensor_id: 1, metric: "temperature", data: 23.5, units: "°C", logTime: tenMinAgo },
+    { sensor_id: 1, metric: "temperature", data: 23.8, units: "°C", logTime: eightMinAgo },
+    { sensor_id: 1, metric: "temperature", data: 24.0, units: "°C", logTime: fiveMinAgo },
+    { sensor_id: 1, metric: "humidity", data: 55.0, units: "%", logTime: tenMinAgo },
+    { sensor_id: 2, metric: "temperature", data: 21.0, units: "°C", logTime: tenMinAgo },
+  ]);
+
+  await knex("output_data").insert([
+    { output_id: 1, value: 100, controlMode: "manual", logTime: tenMinAgo },
+    { output_id: 1, value: 75, controlMode: "manual", logTime: eightMinAgo },
+    { output_id: 5, value: 50, controlMode: "manual", logTime: tenMinAgo },
+  ]);
+
+  // Bulk seed data spanning 3 days for aggregate tests
+  await generateDataQuerySeedData(knex, new SprootDB(knex));
+
+  // Refresh continuous aggregates so downsample: "1h"/"1d" sees seeded data
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_5m', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_1h', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('sensor_data_1d', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_5m', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_1h', NULL, NULL);`);
+  await knex.raw(`CALL refresh_continuous_aggregate('output_data_1d', NULL, NULL);`);
+
   console.log("Seeding complete.");
 }
 
@@ -253,4 +332,175 @@ async function truncateSeedTablesAsync(knex: Knex, tables: string[]): Promise<vo
 
 function quoteIdentifier(identifier: string): string {
   return `"${identifier.replaceAll('"', '""')}"`;
+}
+
+export async function generateDataQuerySeedData(
+  knex: Knex,
+  _db: SprootDB,
+): Promise<{
+  sensorReadingIds: number[];
+  outputReadingIds: number[];
+  sensorIds: number[];
+  outputIds: number[];
+  zoneId: number;
+}> {
+  const zoneId = 1;
+
+  // Ensure device zones exist
+  const existingZones = await knex("device_zones").select("id").whereIn("id", [1, 2]);
+  const existingZoneIds = existingZones.map((z) => z.id);
+  if (!existingZoneIds.includes(1)) {
+    await knex("device_zones").insert({ id: 1, name: "Zone 1" });
+  }
+  if (!existingZoneIds.includes(2)) {
+    await knex("device_zones").insert({ id: 2, name: "Zone 2" });
+  }
+
+  // Ensure sensors 1-4 exist for data query tests
+  const existingSensors = await knex("sensors").select("id").whereIn("id", [1, 2, 3, 4]);
+  const existingSensorIds = existingSensors.map((s) => s.id);
+  const missingSensors = [1, 2, 3, 4].filter((id) => !existingSensorIds.includes(id));
+  if (missingSensors.length > 0) {
+    const sensorDefs: Record<
+      number,
+      {
+        name: string;
+        model: string;
+        address: string;
+        color: string;
+        pin?: string;
+        lowCalibrationPoint?: number | null;
+        highCalibrationPoint?: number | null;
+      }
+    > = {
+      1: { name: "BME280", model: "BME280", address: "0x76", color: "#82c91e" },
+      2: { name: "DS18B20", model: "DS18B20", address: "28-583bd446df61", color: "#40c057" },
+      3: {
+        name: "Capacitive Moisture Sensor",
+        model: "CAPACITIVE_MOISTURE_SENSOR",
+        address: "0x48",
+        color: "#228be6",
+        pin: "0",
+        lowCalibrationPoint: 0,
+        highCalibrationPoint: 100,
+      },
+      4: { name: "ADS1115", model: "ADS1115", address: "0x48", color: "#ff8787", pin: "1" },
+    };
+    await knex("sensors").insert(
+      missingSensors.map((id) => {
+        const def = sensorDefs[id]!;
+        return {
+          id,
+          ...def,
+          deviceZoneId: [1, 2, 1, 2][id - 1],
+          lowCalibrationPoint: def.lowCalibrationPoint ?? null,
+          highCalibrationPoint: def.highCalibrationPoint ?? null,
+        };
+      }),
+    );
+  }
+
+  const sensorIds: number[] = [1, 2, 3, 4];
+  const sensorReadingTypes: Record<number, string[]> = {
+    1: ["temperature", "humidity", "pressure"],
+    2: ["temperature"],
+    3: ["moisture"],
+    4: ["voltage"],
+  };
+  const readingUnits: Record<string, string> = {
+    temperature: "°C",
+    humidity: "%rH",
+    pressure: "hPa",
+    moisture: "%",
+    voltage: "V",
+  };
+
+  // Ensure outputs 1 and 5 exist for data query tests
+  const existingOutputs = await knex("outputs").select("id").whereIn("id", [1, 5]);
+  const existingIds = existingOutputs.map((o) => o.id);
+  const missingOutputs = [1, 5].filter((id) => !existingIds.includes(id));
+  if (missingOutputs.length > 0) {
+    await knex("outputs").insert(
+      missingOutputs.map((id) => ({
+        id,
+        model: Models.PCA9685,
+        address: "0x40",
+        name: id === 1 ? "Relay #1" : "Pwm #1",
+        color: id === 1 ? "#82c91e" : "#228be6",
+        pin: id === 1 ? "0" : "4",
+        deviceZoneId: id === 1 ? 1 : 2,
+        isPwm: id === 5,
+        isInvertedPwm: false,
+        automationTimeout: 1,
+      })),
+    );
+  }
+
+  const outputIds: number[] = [1, 5];
+
+  const sensorReadingIds: number[] = [];
+  const outputReadingIds: number[] = [];
+
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = [0, 20, 40];
+  const days = [1, 2, 3];
+
+  const sensorBatch: Array<{
+    sensor_id: number;
+    metric: string;
+    data: number;
+    units: string;
+    logTime: string;
+  }> = [];
+  const outputBatch: Array<{
+    output_id: number;
+    value: number;
+    controlMode: string;
+    logTime: string;
+  }> = [];
+
+  for (const day of days) {
+    for (const hour of hours) {
+      for (const minute of minutes) {
+        const minuteOffset = minutes.indexOf(minute);
+        const isoDate = new Date(Date.UTC(2024, 0, day, hour, minute)).toISOString();
+
+        for (const sensorId of sensorIds) {
+          const types = sensorReadingTypes[sensorId]!;
+          for (const readingType of types) {
+            const value = 20.0 + hour * 0.5 + minuteOffset;
+            sensorBatch.push({
+              sensor_id: sensorId,
+              metric: readingType,
+              data: value,
+              units: readingUnits[readingType] ?? "",
+              logTime: isoDate,
+            });
+            sensorReadingIds.push(sensorId);
+          }
+        }
+
+        for (let i = 0; i < outputIds.length; i++) {
+          const outputId = outputIds[i]!;
+          const value = (minuteOffset + i) % 2;
+          outputBatch.push({
+            output_id: outputId,
+            value,
+            controlMode: "manual",
+            logTime: isoDate,
+          });
+          outputReadingIds.push(outputId);
+        }
+      }
+    }
+  }
+
+  if (sensorBatch.length > 0) {
+    await knex("sensor_data").insert(sensorBatch);
+  }
+  if (outputBatch.length > 0) {
+    await knex("output_data").insert(outputBatch);
+  }
+
+  return { sensorReadingIds, outputReadingIds, sensorIds, outputIds, zoneId };
 }

@@ -7,7 +7,7 @@ import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";
-import { finished } from "stream/promises";
+import { pipeline } from "stream/promises";
 import { DI_KEYS } from "../../../utils/DependencyInjectionConstants";
 
 export async function systemBackupListHandlerAsync(response: Response): Promise<SuccessResponse> {
@@ -66,24 +66,17 @@ export async function systemBackupRestoreHandlerAsync(
   response: Response,
 ): Promise<SuccessResponse | ErrorResponse> {
   // Generate a temp file path
-  const tempFile =
-    (await fs.promises.mkdtemp(path.join(tmpdir(), "sproot-backup-"))) + "/uploaded-backup.sproot";
+  const tempDirectory = await fs.promises.mkdtemp(path.join(tmpdir(), "sproot-backup-"));
+  const tempFile = `${tempDirectory}/uploaded-backup.sproot`;
   const writeStream = fs.createWriteStream(tempFile, { flags: "w" });
-  let uploadError: string | null = null;
-
-  // Stream incoming request to temp file
-  request.pipe(writeStream);
-
-  request.on("error", (err) => (uploadError = err.toString()));
-  writeStream.on("error", (err) => (uploadError = err.toString()));
+  const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
+  const logger = request.app.get(DI_KEYS.Logger) as winston.Logger;
 
   try {
-    await finished(writeStream);
-    if (uploadError) {
-      throw new Error(uploadError);
-    }
+    await pipeline(request, writeStream);
   } catch (err) {
-    const uploadMsg = uploadError ?? (err instanceof Error ? err.message : String(err));
+    const uploadMsg = err instanceof Error ? err.message : String(err);
+    await fs.promises.rm(tempDirectory, { recursive: true, force: true }).catch(() => undefined);
     return {
       statusCode: 500,
       error: {
@@ -96,14 +89,25 @@ export async function systemBackupRestoreHandlerAsync(
   }
 
   try {
+    await sprootDB.validateBackupArchiveAsync(tempFile, logger);
+  } catch (err) {
+    await fs.promises.rm(tempDirectory, { recursive: true, force: true }).catch(() => undefined);
+    return {
+      statusCode: 400,
+      error: {
+        name: "Bad Request",
+        url: request.originalUrl,
+        details: [`Invalid backup file: ${(err as Error).message}`],
+      },
+      ...response.locals["defaultProperties"],
+    };
+  }
+
+  try {
     request.app.get("gracefulHaltAsync")(async (): Promise<void> => {
-      request.app.get(DI_KEYS.Logger).info(`Restoring from backup file ${tempFile}`);
-      await Backups.restoreAsync(
-        tempFile,
-        request.app.get(DI_KEYS.SprootDB) as ISprootDB,
-        request.app.get(DI_KEYS.Logger) as winston.Logger,
-      );
-      request.app.get(DI_KEYS.Logger).info(`Restore complete! System exiting now!`);
+      logger.info(`Restoring from backup file ${tempFile}`);
+      await Backups.restoreAsync(tempFile, sprootDB, logger);
+      logger.info(`Restore complete! System exiting now!`);
     });
 
     return {

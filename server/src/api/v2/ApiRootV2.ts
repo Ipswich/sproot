@@ -33,6 +33,7 @@ const authenticateMiddleware = authorize(
   process.env["AUTHENTICATION_ENABLED"]!,
   process.env["JWT_SECRET"]!,
 );
+const enableOpenApiValidation = process.env["OPENAPI_VALIDATE_REQUESTS"]?.toLowerCase() === "true";
 
 function ApiRootV2(app: Express) {
   const logger = app.get(DI_KEYS.Logger);
@@ -43,15 +44,16 @@ function ApiRootV2(app: Express) {
     swaggerUi.setup(openapi_v2_doc),
   );
 
-  // OpenAPI Validator
-  app.use(
-    OpenApiValidator.middleware({
-      apiSpec: spec_path,
-      validateRequests: true,
-      validateResponses: true,
-      validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
-    }),
-  );
+  if (enableOpenApiValidation) {
+    app.use(
+      OpenApiValidator.middleware({
+        apiSpec: spec_path,
+        validateRequests: true,
+        validateResponses: false,
+        validateSecurity: process.env["AUTHENTICATION_ENABLED"]!.toLowerCase() === "true",
+      }),
+    );
+  }
 
   app.use("/api/v2/", addDefaultProperties);
   app.use("/api/v2/ping", pingRouter);

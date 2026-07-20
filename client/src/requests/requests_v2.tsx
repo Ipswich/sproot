@@ -21,10 +21,6 @@ import {
   ErrorResponse,
 } from "@sproot/sproot-common/src/api/v2/Responses";
 import {
-  ChartSeries,
-  DataSeries,
-} from "@sproot/sproot-common/src/utility/ChartData";
-import {
   ConditionGroupType,
   ConditionOperator,
 } from "@sproot/automation/ConditionTypes";
@@ -35,8 +31,15 @@ import { SDBJournal } from "@sproot/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/database/SDBJournalTag";
 import { SDBJournalEntryTag } from "@sproot/database/SDBJournalEntryTag";
 import { SDBJournalEntry } from "@sproot/database/SDBJournalEntry";
+import type {
+  SensorDataQueryRequest,
+  OutputDataQueryRequest,
+  SensorDataQueryResponse,
+  OutputDataQueryResponse,
+} from "./queryTypes";
 
-const SERVER_URL = import.meta.env["VITE_API_SERVER_URL"];
+const SERVER_URL =
+  import.meta.env["VITE_API_SERVER_URL"] || window.location.origin;
 
 export async function getReadingTypesAsync(): Promise<
   Record<ReadingType, string>
@@ -49,56 +52,6 @@ export async function getReadingTypesAsync(): Promise<
   });
   if (!response.ok) {
     console.error(`Error fetching reading types: ${response}`);
-  }
-  const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data;
-}
-
-export async function getSensorChartDataAsync(
-  readingType?: string,
-  latest?: boolean,
-): Promise<{
-  data: Partial<Record<ReadingType, DataSeries>>;
-  series: ChartSeries[];
-}> {
-  const queryString = queryBuilder({
-    readingType,
-    latest,
-  });
-  const response = await fetch(
-    `${SERVER_URL}/api/v2/sensors/chart-data?${queryString}`,
-    {
-      method: "GET",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    },
-  );
-  if (!response.ok) {
-    console.error(`Error fetching sensor chart data: ${response}`);
-  }
-  const deserializedResponse = (await response.json()) as SuccessResponse;
-  return deserializedResponse.content?.data;
-}
-
-export async function getOutputChartDataAsync(latest?: boolean): Promise<{
-  data: DataSeries;
-  series: ChartSeries[];
-}> {
-  const queryString = queryBuilder({
-    latest,
-  });
-  const response = await fetch(
-    `${SERVER_URL}/api/v2/outputs/chart-data?${queryString}`,
-    {
-      method: "GET",
-      headers: {},
-      mode: "cors",
-      // credentials: "include",
-    },
-  );
-  if (!response.ok) {
-    console.error(`Error fetching output chart data: ${response}`);
   }
   const deserializedResponse = (await response.json()) as SuccessResponse;
   return deserializedResponse.content?.data;
@@ -1784,6 +1737,77 @@ export async function getSubControllerApplicationAsync(model: string) {
   }
 
   return new Uint8Array(await response.arrayBuffer());
+}
+
+// ---------------------------------------------------------------------------
+// Historical data query functions
+// ---------------------------------------------------------------------------
+
+export async function fetchSensorDataAsync(
+  request: SensorDataQueryRequest,
+): Promise<SensorDataQueryResponse> {
+  const url = new URL(`/api/v2/sensors/${request.id}/data`, SERVER_URL);
+  url.searchParams.set("timeRange.start", request.timeRange.start);
+  url.searchParams.set("timeRange.end", request.timeRange.end);
+  if (request.downsample)
+    url.searchParams.set("downsample", request.downsample);
+  if (request.cursor) url.searchParams.set("cursor", request.cursor);
+  if (request.limit) url.searchParams.set("limit", String(request.limit));
+  if (request.readingTypes) {
+    for (const rt of request.readingTypes) {
+      url.searchParams.append("readingTypes", rt);
+    }
+  }
+  if (request.aggregates) {
+    for (const agg of request.aggregates) {
+      url.searchParams.append("aggregates", agg);
+    }
+  }
+  if (request.percentile !== undefined) {
+    url.searchParams.set("percentile", String(request.percentile));
+  }
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    mode: "cors",
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Error fetching sensor data: ${response.status} ${response.statusText}`,
+    );
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content as SensorDataQueryResponse;
+}
+
+export async function fetchOutputDataAsync(
+  request: OutputDataQueryRequest,
+): Promise<OutputDataQueryResponse> {
+  const url = new URL(`/api/v2/outputs/${request.id}/data`, SERVER_URL);
+  url.searchParams.set("timeRange.start", request.timeRange.start);
+  url.searchParams.set("timeRange.end", request.timeRange.end);
+  if (request.downsample)
+    url.searchParams.set("downsample", request.downsample);
+  if (request.cursor) url.searchParams.set("cursor", request.cursor);
+  if (request.limit) url.searchParams.set("limit", String(request.limit));
+  if (request.aggregates) {
+    for (const agg of request.aggregates) {
+      url.searchParams.append("aggregates", agg);
+    }
+  }
+  if (request.percentile !== undefined) {
+    url.searchParams.set("percentile", String(request.percentile));
+  }
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    mode: "cors",
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Error fetching output data: ${response.status} ${response.statusText}`,
+    );
+  }
+  const deserializedResponse = (await response.json()) as SuccessResponse;
+  return deserializedResponse.content as OutputDataQueryResponse;
 }
 
 function queryBuilder(

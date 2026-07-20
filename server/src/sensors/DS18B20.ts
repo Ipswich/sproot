@@ -14,8 +14,7 @@ class DS18B20 extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ): Promise<DS18B20 | null> {
     return new DS18B20(
@@ -23,8 +22,7 @@ class DS18B20 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       logger,
     ).initializeAsync(DS18B20.MAX_SENSOR_READ_TIME);
   }
@@ -34,8 +32,7 @@ class DS18B20 extends SensorBase {
     sprootDB: ISprootDB,
     maxCacheSize: number,
     initialCacheLookback: number,
-    maxChartDataSize: number,
-    chartDataPointInterval: number,
+    cacheBucketMinutes: number,
     logger: winston.Logger,
   ) {
     super(
@@ -43,8 +40,7 @@ class DS18B20 extends SensorBase {
       sprootDB,
       maxCacheSize,
       initialCacheLookback,
-      maxChartDataSize,
-      chartDataPointInterval,
+      cacheBucketMinutes,
       [ReadingType.temperature],
       logger,
     );

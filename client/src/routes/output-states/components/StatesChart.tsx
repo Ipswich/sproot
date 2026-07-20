@@ -1,120 +1,169 @@
 import { LineChart } from "@mantine/charts";
 import { Box, LoadingOverlay, Paper, Text } from "@mantine/core";
-import { IOutputBase } from "@sproot/outputs/IOutputBase";
 import {
-  DataSeries,
-  ChartSeries,
-} from "@sproot/sproot-common/src/utility/ChartData";
-import { ResponsiveContainer } from "recharts";
+  formatNumberForDisplay,
+  formatDateForDisplay,
+  formatTickValue,
+} from "@sproot/sproot-common/src/utility/DisplayFormats";
+import { useMemo } from "react";
+import { DataSeries, ChartSeries } from "../../../requests/chartDataTypes";
+import {
+  getDownsampleMinutes,
+  Aggregate,
+  isUnitlessAggregate,
+} from "../../../requests/queryTypes";
 
 export interface StatesChartProps {
   dataSeries: DataSeries;
   chartSeries: ChartSeries[];
   chartRendering: boolean;
+  showEmptyState?: boolean;
+  valueSuffix?: string;
+  aggregate?: Aggregate;
+  downsample?: string;
 }
 
 export default function StatesChart({
   dataSeries,
   chartSeries,
   chartRendering,
+  showEmptyState,
+  valueSuffix = "%",
+  aggregate,
+  downsample,
 }: StatesChartProps) {
-  const data = dataSeries.map((data) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { units: _, ...rest } = data;
-    return rest;
-  });
+  const data = useMemo(
+    () =>
+      dataSeries.map((dataPoint) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { units: _, ...rest } = dataPoint;
+        return rest;
+      }),
+    [dataSeries],
+  );
 
   return (
     <Box pos="relative">
       <LoadingOverlay
-        style={{ height: "100%" }}
+        style={{ height: "100%", pointerEvents: "none" }}
         visible={chartRendering}
-        zIndex={1000}
+        zIndex={90}
         loaderProps={{ color: "teal", type: "bars", size: "lg" }}
       />
-      <ResponsiveContainer height="300">
+      {showEmptyState ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: 300,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 8,
+          }}
+        >
+          {!chartRendering ? (
+            <Text c="dimmed">No data found for this interval</Text>
+          ) : null}
+        </div>
+      ) : (
         <LineChart
           tooltipProps={{
             position: {},
-            content: ({ label, payload }) => (
-              <ChartTooltip
-                label={label}
-                payload={
-                  (payload || []) as Record<
-                    string,
-                    { name: string; color: string; value: string }
-                  >[]
-                }
-              />
-            ),
+            content: (props: any) => {
+              const rawTimestamp = props.payload?.[0]?.payload?.rawTimestamp;
+              return (
+                <ChartTooltip
+                  label={props.label}
+                  payload={
+                    (props.payload || []) as {
+                      name: string;
+                      color: string;
+                      value: string;
+                    }[]
+                  }
+                  valueSuffix={valueSuffix}
+                  aggregate={aggregate}
+                  downsample={downsample ?? undefined}
+                  rawTimestamp={rawTimestamp}
+                />
+              );
+            },
           }}
           mt={12}
           ml={-28}
           curveType="linear"
           h={300}
-          dotProps={{ r: 0 }}
+          withDots={false}
+          lineProps={{ activeDot: <ActiveDot /> }}
           data={data}
           withLegend={false}
           withXAxis
           withYAxis
           tickLine="xy"
-          xAxisProps={{ dataKey: "name", interval: "equidistantPreserveStart" }}
+          xAxisProps={{
+            tickMargin: -5,
+            dataKey: "name",
+            interval: "equidistantPreserveStart",
+          }}
           yAxisProps={{
             padding: { top: 5 },
             type: "number",
             domain: [0, 100],
+            tickFormatter: formatTickValue,
           }}
-          // unit={unit}
-          dataKey="outputName"
+          dataKey="name"
           series={chartSeries ?? []}
         />
-      </ResponsiveContainer>
+      )}
     </Box>
   );
 }
 
 interface ChartTooltipProps {
   label: string;
-  payload:
-    | Record<string, { name: string; color: string; value: string }>[]
-    | undefined;
+  payload: { name: string; color: string; value: string }[] | undefined;
+  valueSuffix: string;
+  aggregate?: Aggregate | undefined;
+  downsample: string | undefined;
+  rawTimestamp: string | undefined;
 }
 
-function ChartTooltip({ label, payload }: ChartTooltipProps) {
+function ChartTooltip({
+  label,
+  payload,
+  valueSuffix,
+  aggregate,
+  downsample,
+  rawTimestamp,
+}: ChartTooltipProps) {
   if (!payload) return null;
 
-  const order = (
-    JSON.parse(
-      localStorage.getItem(`outputStateOrder`) ?? "[]",
-    ) as IOutputBase[]
-  ).map((s) => s.name);
-
-  const orderNames = Array.isArray(order) ? order : [];
-  const indexMap = new Map(orderNames.map((n, i) => [n, i]));
-
-  // Reorder payload to match orderNames. Items not in orderNames go to the end.
-  payload = [...payload].sort((a, b) => {
-    const nameA = String(a["name"]);
-    const nameB = String(b["name"]);
-    const idxA = indexMap.has(nameA)
-      ? indexMap.get(nameA)!
-      : Number.MAX_SAFE_INTEGER;
-    const idxB = indexMap.has(nameB)
-      ? indexMap.get(nameB)!
-      : Number.MAX_SAFE_INTEGER;
-    return idxA - idxB || nameA.localeCompare(nameB);
-  });
+  let headerText = label;
+  if (downsample && getDownsampleMinutes(downsample) > 1 && rawTimestamp) {
+    const bucketStart = new Date(rawTimestamp);
+    const intervalMs = getDownsampleMinutes(downsample) * 60 * 1000;
+    const bucketEnd = new Date(bucketStart.getTime() + intervalMs);
+    headerText = `${formatDateForDisplay(bucketStart)} - ${formatDateForDisplay(bucketEnd)}`;
+  }
 
   return (
     <Paper px="md" py="sm" withBorder shadow="md" radius="md" opacity="80%">
       <Text fw={500} mb={5}>
-        {label}
+        {headerText}
       </Text>
       {payload.map((item) => (
         <Text key={String(item["name"])} c={item["color"]!} fz="sm">
-          {String(item["name"])}: {String(item["value"] + "%")}
+          {String(item["name"])}: {formatNumberForDisplay(item["value"] ?? "")}
+          {!isUnitlessAggregate(aggregate ?? "avg") ? valueSuffix : ""}
         </Text>
       ))}
     </Paper>
   );
+}
+
+function ActiveDot(props: any) {
+  if (props.cy == null || props.cy < 0 || props.cy > 300) {
+    return null;
+  }
+  return <circle cx={props.cx} cy={props.cy} r={5} fill={props.fill} />;
 }

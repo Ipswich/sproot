@@ -35,6 +35,13 @@ import { SDBJournalTagLookup } from "./SDBJournalTagLookup";
 import { SDBJournalEntry } from "./SDBJournalEntry";
 import { SDBJournalEntryTag } from "./SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "./SDBJournalEntryTagLookup";
+import {
+  SensorDataQueryRequest,
+  OutputDataQueryRequest,
+  SensorDataQueryResponse,
+  OutputDataQueryResponse,
+  DeviceDataQueryRow,
+} from "@sproot/api/v2/QueryTypes";
 import * as winston from "winston";
 
 interface ISprootDB {
@@ -56,7 +63,7 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBReading[]>;
-  getSensorChartReadingsAsync(
+  getBucketedSensorReadingsAsync(
     sensor: ISensorBase | { id: number },
     since: Date,
     minutes: number,
@@ -85,7 +92,7 @@ interface ISprootDB {
     minutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
-  getOutputChartStatesAsync(
+  getBucketedOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
@@ -220,6 +227,8 @@ interface ISprootDB {
     logger: winston.Logger,
   ): Promise<void>;
 
+  validateBackupArchiveAsync(inputFile: string, logger: winston.Logger): Promise<void>;
+
   swapRestoreDatabaseAsync(
     host: string,
     port: number,
@@ -230,6 +239,8 @@ interface ISprootDB {
   ): Promise<void>;
 
   deleteOldDatabaseAsync(logger: winston.Logger): Promise<void>;
+
+  refreshAllAggregateTablesAsync(logger: winston.Logger): Promise<void>;
 
   /* Journals */
   getJournalsAsync(): Promise<SDBJournal[]>;
@@ -272,6 +283,10 @@ interface ISprootDB {
   getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]>;
   addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number>;
   deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
+
+  // Raw data query endpoints
+  querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse>;
+  queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -491,7 +506,7 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async getOutputChartStatesAsync(
+  async getBucketedOutputStatesAsync(
     output: IOutputBase | { id: number },
     since: Date,
     minutes: number,
@@ -598,7 +613,7 @@ class MockSprootDB implements ISprootDB {
     return [];
   }
 
-  async getSensorChartReadingsAsync(
+  async getBucketedSensorReadingsAsync(
     sensor: ISensorBase,
     since: Date,
     minutes: number,
@@ -771,6 +786,10 @@ class MockSprootDB implements ISprootDB {
     return;
   }
 
+  async validateBackupArchiveAsync(_inputFile: string, _logger: winston.Logger): Promise<void> {
+    return Promise.resolve();
+  }
+
   async swapRestoreDatabaseAsync(
     _host: string,
     _port: number,
@@ -782,7 +801,20 @@ class MockSprootDB implements ISprootDB {
     return Promise.resolve();
   }
 
+  // Raw data query mocks
+  async querySensorDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
+  }
+
+  async queryOutputDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
+  }
+
   async deleteOldDatabaseAsync(_logger: winston.Logger): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async refreshAllAggregateTablesAsync(_logger: winston.Logger): Promise<void> {
     return Promise.resolve();
   }
 }
