@@ -771,7 +771,8 @@ export class SprootDB implements ISprootDB {
         "s.name as sensorName",
       ])
       .innerJoin("sensors as s", "sc.sensor_id", "s.id")
-      .where("automation_id", automationId);
+      .where("automation_id", automationId)
+      .orderBy("sc.id", "asc");
   }
   async addSensorConditionAsync(
     automationId: number,
@@ -824,7 +825,8 @@ export class SprootDB implements ISprootDB {
         "o.name as outputName",
       ])
       .innerJoin("outputs as o", "oc.output_id", "o.id")
-      .where("automation_id", automationId);
+      .where("automation_id", automationId)
+      .orderBy("oc.id", "asc");
   }
   async addOutputConditionAsync(
     automationId: number,
@@ -864,7 +866,8 @@ export class SprootDB implements ISprootDB {
   async getTimeConditionsAsync(automationId: number): Promise<SDBTimeCondition[]> {
     return this.#connection("time_conditions")
       .where("automation_id", automationId)
-      .select(["id", "automation_id as automationId", "groupType", "startTime", "endTime"]);
+      .select(["id", "automation_id as automationId", "groupType", "startTime", "endTime"])
+      .orderBy("id", "asc");
   }
   async addTimeConditionAsync(
     automationId: number,
@@ -895,7 +898,8 @@ export class SprootDB implements ISprootDB {
   async getWeekdayConditionsAsync(automationId: number): Promise<SDBWeekdayCondition[]> {
     return this.#connection("weekday_conditions")
       .where("automation_id", automationId)
-      .select(["id", "automation_id as automationId", "groupType", "weekdays"]);
+      .select(["id", "automation_id as automationId", "groupType", "weekdays"])
+      .orderBy("id", "asc");
   }
   async addWeekdayConditionAsync(
     automationId: number,
@@ -927,7 +931,8 @@ export class SprootDB implements ISprootDB {
   async getMonthConditionsAsync(automationId: number): Promise<SDBMonthCondition[]> {
     return this.#connection("month_conditions")
       .where("automation_id", automationId)
-      .select(["id", "automation_id as automationId", "groupType", "months"]);
+      .select(["id", "automation_id as automationId", "groupType", "months"])
+      .orderBy("id", "asc");
   }
   async addMonthConditionAsync(
     automationId: number,
@@ -964,7 +969,8 @@ export class SprootDB implements ISprootDB {
         "startDate",
         "endMonth",
         "endDate",
-      ]);
+      ])
+      .orderBy("id", "asc");
   }
   async addDateRangeConditionAsync(
     automationId: number,
