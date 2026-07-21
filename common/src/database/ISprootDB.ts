@@ -44,7 +44,7 @@ import {
 } from "@sproot/api/v2/QueryTypes";
 import * as winston from "winston";
 
-interface ISprootDB {
+export interface ISensorsRepository {
   getSensorsAsync(): Promise<SDBSensor[]>;
   getSensorAsync(id: number): Promise<SDBSensor[]>;
   getDS18B20AddressesAsync(): Promise<SDBSensor[]>;
@@ -70,6 +70,9 @@ interface ISprootDB {
     bucketMinutes: number,
     toIsoString: boolean,
   ): Promise<SDBReading[]>;
+}
+
+export interface IOutputsRepository {
   getOutputsAsync(): Promise<SDBOutput[]>;
   getOutputAsync(id: number): Promise<SDBOutput[]>;
   addOutputAsync(output: SDBOutput): Promise<number>;
@@ -99,12 +102,16 @@ interface ISprootDB {
     bucketMinutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
+}
 
+export interface ISubcontrollersRepository {
   getSubcontrollersAsync(): Promise<SDBSubcontroller[]>;
   addSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
   updateSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
   deleteSubcontrollersAsync(id: number): Promise<number>;
+}
 
+export interface IAutomationsRepository {
   getAutomationsAsync(): Promise<SDBAutomation[]>;
   getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
   addAutomationAsync(name: string, operator: AutomationOperator): Promise<number>;
@@ -135,7 +142,9 @@ interface ISprootDB {
   deleteNotificationActionAsync(notificationActionId: number): Promise<void>;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
+}
 
+export interface IConditionsRepository {
   getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]>;
   addSensorConditionAsync(
     automationId: number,
@@ -203,20 +212,28 @@ interface ISprootDB {
     condition: IDateRangeCondition,
   ): Promise<void>;
   deleteDateRangeConditionAsync(conditionId: number): Promise<void>;
+}
 
+export interface ICameraRepository {
   getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
   // addCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<number>;
   updateCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<void>;
   // deleteCameraSettingsAsync(cameraId: number): Promise<void>;
+}
 
+export interface IUsersRepository {
   getUserAsync(username: string): Promise<SDBUser[]>;
   addUserAsync(user: SDBUser): Promise<void>;
+}
 
+export interface IDeviceZonesRepository {
   getDeviceZonesAsync(): Promise<SDBDeviceZone[]>;
   addDeviceZoneAsync(name: string): Promise<number>;
   updateDeviceZoneAsync(deviceZone: SDBDeviceZone): Promise<void>;
   deleteDeviceZoneAsync(id: number): Promise<void>;
+}
 
+export interface ISystemRepository {
   getDatabaseSizeAsync(): Promise<number>;
   backupDatabaseAsync(
     host: string,
@@ -241,8 +258,9 @@ interface ISprootDB {
   deleteOldDatabaseAsync(logger: winston.Logger): Promise<void>;
 
   refreshAllAggregateTablesAsync(logger: winston.Logger): Promise<void>;
+}
 
-  /* Journals */
+export interface IJournalsRepository {
   getJournalsAsync(): Promise<SDBJournal[]>;
   getJournalAsync(id: number): Promise<SDBJournal[]>;
   addJournalAsync(
@@ -283,10 +301,26 @@ interface ISprootDB {
   getJournalEntryTagLookupsAsync(): Promise<SDBJournalEntryTagLookup[]>;
   addJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<number>;
   deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
+}
 
-  // Raw data query endpoints
+export interface IDataQueriesRepository {
   querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse>;
   queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse>;
+}
+
+export interface ISprootDB
+  extends ISensorsRepository,
+    IOutputsRepository,
+    ISubcontrollersRepository,
+    IAutomationsRepository,
+    IConditionsRepository,
+    ICameraRepository,
+    IUsersRepository,
+    IDeviceZonesRepository,
+    ISystemRepository,
+    IJournalsRepository,
+    IDataQueriesRepository {
+  [Symbol.asyncDispose](): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
@@ -817,7 +851,10 @@ class MockSprootDB implements ISprootDB {
   async refreshAllAggregateTablesAsync(_logger: winston.Logger): Promise<void> {
     return Promise.resolve();
   }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 export { MockSprootDB };
-export type { ISprootDB };

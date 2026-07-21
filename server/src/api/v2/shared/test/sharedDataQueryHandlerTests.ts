@@ -8,7 +8,7 @@ interface DataQueryHandlerTestConfig<RequestType, ResponseType> {
   handlerName: string;
   url: string;
   handler: (req: Request, res: Response) => Promise<SuccessResponse | ErrorResponse>;
-  queryMethod: keyof SprootDB;
+  queryMethod: "querySensorDataAsync" | "queryOutputDataAsync";
   validBody: Partial<RequestType>;
   responseData: ResponseType;
   extraValidationTests?: Array<{
@@ -42,9 +42,9 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
     });
 
     it("should return a 200 with data", async () => {
-      sprootDBStub[config.queryMethod as keyof typeof sprootDBStub].resolves(
-        config.responseData as any,
-      );
+      (
+        sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as unknown as sinon.SinonStub
+      ).resolves(config.responseData as any);
 
       const mockRequest = {
         app: {
@@ -76,9 +76,9 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
         nextCursor: "test-cursor-value",
       } as ResponseType;
 
-      sprootDBStub[config.queryMethod as keyof typeof sprootDBStub].resolves(
-        responseDataWithCursor as any,
-      );
+      (
+        sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as unknown as sinon.SinonStub
+      ).resolves(responseDataWithCursor as any);
 
       const mockRequest = {
         app: {
