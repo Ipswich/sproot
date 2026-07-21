@@ -33,11 +33,16 @@ RUN npm run install:docs
 RUN npm run build:docs
 
 FROM nginx:1.29.5-alpine-slim
+RUN apk add --no-cache openssl iproute2
 COPY --from=build ./sproot/client/dist /usr/share/nginx/html
 COPY --from=build ./sproot/docs/build /usr/share/nginx/html/docs
-COPY --from=build ./sproot/gateway/config/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build ./sproot/gateway/config/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build ./sproot/gateway/config/default.conf /etc/nginx/conf.d/default.conf
 
-# Expose app ports
+COPY --from=build ./sproot/gateway/scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 EXPOSE 80
-ENTRYPOINT ["nginx", "-g", "daemon off;"]
+EXPOSE 443
+
+ENTRYPOINT ["/docker-entrypoint.sh"]

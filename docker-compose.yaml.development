@@ -46,17 +46,26 @@ services:
         VITE_API_SERVER_URL: ""
     environment:
       NODE_ENV: development
+      TLS_AUTO_IP: "true"
+      TLS_SANS: ""
+      TLS_CERT_DAYS: "825"
+      TLS_RENEW_BEFORE_DAYS: "30"
+      TLS_KEY_TYPE: "ec"
+      TLS_EC_CURVE: "prime256v1"
     volumes:
       - ./docker_volumes/sproot/client/logs:/sproot/logs
+      - ./docker_volumes/sproot/gateway/certs:/etc/nginx/certs
     network_mode: "host"
     expose:
       - "80"
+      - "443"
 
   postgres:
     image: sproot-postgres:pg18-ts2.26.4-toolkit1.22.0
     build:
       context: ./
       dockerfile: ./postgres/Dockerfile
+    pull_policy: never
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
