@@ -1,25 +1,35 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB, MockJournalsRepository } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalEntryTagHandlers";
 import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 
 describe("JournalEntryTagHandlers.ts tests", () => {
+  function stubJournalsMethods(sprootDB: any) {
+    sprootDB.journals = new MockJournalsRepository();
+    const methodNames = Object.getOwnPropertyNames(MockJournalsRepository.prototype).filter(
+      (name) => name !== "constructor" && typeof (MockJournalsRepository.prototype as any)[name] === "function",
+    );
+    for (const name of methodNames) {
+      sinon.stub(sprootDB.journals, name as any);
+    }
+  }
   describe("getAsync", () => {
     it("should return 200 and entry tags", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er1" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 1, name: "et", color: null }]);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([{ id: 1, name: "et", color: null }]);
 
       const mockRequest = {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { entryTagManager: { getTagsAsync: () => sprootDB.getJournalEntryTagsAsync() } }
+              ? { entryTagManager: { getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync() } }
               : undefined,
         },
       } as unknown as Request;
@@ -35,14 +45,15 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er1" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.rejects(new Error("boom2"));
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).rejects(new Error("boom2"));
 
       const mockRequest = {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { entryTagManager: { getTagsAsync: () => sprootDB.getJournalEntryTagsAsync() } }
+              ? { entryTagManager: { getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync() } }
               : undefined,
           originalUrl: "/api/v2/journal/entries/tags",
         },
@@ -62,8 +73,9 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er2" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addJournalEntryTagAsync.resolves(7);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.addJournalEntryTagAsync as sinon.SinonStub).resolves(7);
 
       const mockRequest = {
         app: {
@@ -72,7 +84,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               ? {
                   entryTagManager: {
                     createTagAsync: (n: string, c: string | null) =>
-                      sprootDB.addJournalEntryTagAsync(n, c),
+                      sprootDB.journals.addJournalEntryTagAsync(n, c),
                   },
                 }
               : undefined,
@@ -104,8 +116,9 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er3" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.addJournalEntryTagAsync.rejects(new Error("addFail2"));
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.addJournalEntryTagAsync as sinon.SinonStub).rejects(new Error("addFail2"));
 
       const mockRequest = {
         app: {
@@ -114,7 +127,7 @@ describe("JournalEntryTagHandlers.ts tests", () => {
               ? {
                   entryTagManager: {
                     createTagAsync: (n: string, c: string | null) =>
-                      sprootDB.addJournalEntryTagAsync(n, c),
+                      sprootDB.journals.addJournalEntryTagAsync(n, c),
                   },
                 }
               : undefined,
@@ -150,14 +163,15 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er4" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([]);
 
       const mockRequest = {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { entryTagManager: { getTagsAsync: () => sprootDB.getJournalEntryTagsAsync() } }
+              ? { entryTagManager: { getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync() } }
               : undefined,
         },
         params: { tagId: "2" },
@@ -173,9 +187,10 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er5" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 3, name: "old", color: null }]);
-      sprootDB.updateJournalEntryTagAsync.resolves();
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([{ id: 3, name: "old", color: null }]);
+      (sprootDB.journals.updateJournalEntryTagAsync as sinon.SinonStub).resolves();
 
       const mockRequest = {
         app: {
@@ -183,9 +198,9 @@ describe("JournalEntryTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   entryTagManager: {
-                    getTagsAsync: () => sprootDB.getJournalEntryTagsAsync(),
+                    getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync(),
                     updateTagAsync: (t: SDBJournalEntryTag) =>
-                      sprootDB.updateJournalEntryTagAsync(t),
+                      sprootDB.journals.updateJournalEntryTagAsync(t),
                   },
                 }
               : undefined,
@@ -205,9 +220,10 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er6" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 4, name: "a", color: null }]);
-      sprootDB.updateJournalEntryTagAsync.rejects(new Error("updFail"));
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([{ id: 4, name: "a", color: null }]);
+      (sprootDB.journals.updateJournalEntryTagAsync as sinon.SinonStub).rejects(new Error("updFail"));
 
       const mockRequest = {
         app: {
@@ -215,9 +231,9 @@ describe("JournalEntryTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   entryTagManager: {
-                    getTagsAsync: () => sprootDB.getJournalEntryTagsAsync(),
+                    getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync(),
                     updateTagAsync: (t: SDBJournalEntryTag) =>
-                      sprootDB.updateJournalEntryTagAsync(t),
+                      sprootDB.journals.updateJournalEntryTagAsync(t),
                   },
                 }
               : undefined,
@@ -254,14 +270,15 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er7" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.resolves([]);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([]);
 
       const mockRequest = {
         app: {
           get: (k: string) =>
             k === "journalService"
-              ? { entryTagManager: { getTagsAsync: () => sprootDB.getJournalEntryTagsAsync() } }
+              ? { entryTagManager: { getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync() } }
               : undefined,
         },
         params: { tagId: "9" },
@@ -276,9 +293,10 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er8" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 10, name: "t", color: null }]);
-      sprootDB.deleteJournalEntryTagAsync.resolves();
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([{ id: 10, name: "t", color: null }]);
+      (sprootDB.journals.deleteJournalEntryTagAsync as sinon.SinonStub).resolves();
 
       const mockRequest = {
         app: {
@@ -286,8 +304,8 @@ describe("JournalEntryTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   entryTagManager: {
-                    getTagsAsync: () => sprootDB.getJournalEntryTagsAsync(),
-                    deleteTagAsync: (id: number) => sprootDB.deleteJournalEntryTagAsync(id),
+                    getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync(),
+                    deleteTagAsync: (id: number) => sprootDB.journals.deleteJournalEntryTagAsync(id),
                   },
                 }
               : undefined,
@@ -303,9 +321,10 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er9" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getJournalEntryTagsAsync.resolves([{ id: 11, name: "t", color: null }]);
-      sprootDB.deleteJournalEntryTagAsync.rejects(new Error("delFail2"));
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([{ id: 11, name: "t", color: null }]);
+      (sprootDB.journals.deleteJournalEntryTagAsync as sinon.SinonStub).rejects(new Error("delFail2"));
 
       const mockRequest = {
         app: {
@@ -313,8 +332,8 @@ describe("JournalEntryTagHandlers.ts tests", () => {
             k === "journalService"
               ? {
                   entryTagManager: {
-                    getTagsAsync: () => sprootDB.getJournalEntryTagsAsync(),
-                    deleteTagAsync: (id: number) => sprootDB.deleteJournalEntryTagAsync(id),
+                    getTagsAsync: () => sprootDB.journals.getJournalEntryTagsAsync(),
+                    deleteTagAsync: (id: number) => sprootDB.journals.deleteJournalEntryTagAsync(id),
                   },
                 }
               : undefined,

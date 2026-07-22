@@ -506,7 +506,7 @@ describe("tplinkPlug.ts tests", async function () {
     const logger = winston.createLogger({ silent: true });
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
     const sprootDB = new MockSprootDB();
-    sinon.stub(sprootDB, "getAutomationsAsync").resolves([
+    sinon.stub(sprootDB.automations, "getAutomationsAsync").resolves([
       {
         id: 1,
         name: "testAutomation",
@@ -514,7 +514,7 @@ describe("tplinkPlug.ts tests", async function () {
         enabled: true,
       },
     ]);
-    sinon.stub(sprootDB, "getOutputActionsByOutputIdAsync").resolves([
+    sinon.stub(sprootDB.automations, "getOutputActionsByOutputIdAsync").resolves([
       {
         id: 1,
         automationId: 1,

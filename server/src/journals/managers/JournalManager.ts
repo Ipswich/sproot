@@ -17,27 +17,27 @@ export default class JournalManager {
     color: string | null = null,
     startDate: Date | null = null,
   ): Promise<number> {
-    return this.#sprootDB.addJournalAsync(name, description, icon, color, toDbDate(startDate));
+    return this.#sprootDB.journals.addJournalAsync(name, description, icon, color, toDbDate(startDate));
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    return this.#sprootDB.updateJournalAsync(journal);
+    return this.#sprootDB.journals.updateJournalAsync(journal);
   }
 
   async deleteJournalAsync(id: number): Promise<void> {
-    return this.#sprootDB.deleteJournalAsync(id);
+    return this.#sprootDB.journals.deleteJournalAsync(id);
   }
 
   async createJournalTagAsync(name: string, color: string | null = null): Promise<number> {
-    return this.#sprootDB.addJournalTagAsync(name, color);
+    return this.#sprootDB.journals.addJournalTagAsync(name, color);
   }
 
   async addTagAsync(journalId: number, tagId: number): Promise<number> {
-    return this.#sprootDB.addJournalTagLookupAsync(journalId, tagId);
+    return this.#sprootDB.journals.addJournalTagLookupAsync(journalId, tagId);
   }
 
   async removeTagAsync(journalId: number, tagId: number): Promise<void> {
-    return this.#sprootDB.deleteJournalTagLookupAsync(journalId, tagId);
+    return this.#sprootDB.journals.deleteJournalTagLookupAsync(journalId, tagId);
   }
 
   async getJournalsAsync(
@@ -45,15 +45,15 @@ export default class JournalManager {
   ): Promise<Array<{ journal: SDBJournal; tags: SDBJournalTag[] }>> {
     let journals: SDBJournal[] = [];
     if (journalId != null) {
-      journals = await this.#sprootDB.getJournalAsync(journalId);
+      journals = await this.#sprootDB.journals.getJournalAsync(journalId);
     } else {
-      journals = await this.#sprootDB.getJournalsAsync();
+      journals = await this.#sprootDB.journals.getJournalsAsync();
     }
     if (!journals || journals.length === 0) return [];
 
     const [allTags, tagLookups] = await Promise.all([
-      this.#sprootDB.getJournalTagsAsync(),
-      this.#sprootDB.getJournalTagLookupsAsync(),
+      this.#sprootDB.journals.getJournalTagsAsync(),
+      this.#sprootDB.journals.getJournalTagLookupsAsync(),
     ]);
 
     const tagById = new Map<number, SDBJournalTag>(

@@ -175,7 +175,7 @@ describe("ESP32_DS18B20.ts tests", function () {
       subcontrollerId: 1,
     } as SDBSensor;
     const recordsToLoad = 2;
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,

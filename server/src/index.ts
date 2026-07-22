@@ -21,7 +21,7 @@ mainAsync().then((app) => {
       await gracefulHaltAsync(server, app);
     });
 
-    await sprootDB.deleteOldDatabaseAsync(logger);
-    await sprootDB.refreshAllAggregateTablesAsync(logger);
+    await sprootDB.system.deleteOldDatabaseAsync(logger);
+    await sprootDB.system.refreshAllAggregateTablesAsync(logger);
   });
 });

@@ -29,7 +29,7 @@ describe("ESP32_BME280.ts tests", function () {
       model: "ESP32_BME280",
       address: "0x76",
     } as SDBSensor;
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,

@@ -17,10 +17,7 @@ import fs from "node:fs";
 import { spawn } from "node:child_process";
 import * as winston from "winston";
 import { dbToIso } from "../../utils/dateUtils";
-import {
-  formatOutputDataQueryRows,
-  formatSensorDataQueryRows,
-} from "../databaseQueryUtils";
+import { formatOutputDataQueryRows, formatSensorDataQueryRows } from "../databaseQueryUtils";
 import { buildOutputRawQuery, buildSensorRawQuery } from "../rawDataQueryHelpers";
 
 export abstract class BaseKnexRepository {
@@ -34,7 +31,9 @@ export abstract class BaseKnexRepository {
     tableName: string,
     values: Record<string, unknown>,
   ): Promise<number> {
-    const result = await this.connection(tableName).insert(values).returning<{ id: number }[]>("id");
+    const result = await this.connection(tableName)
+      .insert(values)
+      .returning<{ id: number }[]>("id");
     if (!result[0]?.id) {
       throw new Error(`Insert into "${tableName}" returned no id`);
     }
@@ -518,7 +517,15 @@ export abstract class BaseKnexRepository {
       "timescaledb_pre_restore",
       logger,
     );
-    await this.restoreViaPgRestoreAsync(host, port, user, password, inputFile, databaseName, logger);
+    await this.restoreViaPgRestoreAsync(
+      host,
+      port,
+      user,
+      password,
+      inputFile,
+      databaseName,
+      logger,
+    );
     await this.runTimescaleHookAsync(
       host,
       port,

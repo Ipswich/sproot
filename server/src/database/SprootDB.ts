@@ -26,19 +26,6 @@ import { SubcontrollersRepository } from "./repositories/SubcontrollersRepositor
 import { SystemRepository } from "./repositories/SystemRepository";
 import { UsersRepository } from "./repositories/UsersRepository";
 
-type RepositoryKey =
-  | "sensors"
-  | "outputs"
-  | "subcontrollers"
-  | "automations"
-  | "conditions"
-  | "camera"
-  | "users"
-  | "deviceZones"
-  | "journals"
-  | "system"
-  | "dataQueries";
-
 export class SprootDB {
   readonly sensors: ISensorsRepository;
   readonly outputs: IOutputsRepository;
@@ -75,55 +62,4 @@ export class SprootDB {
 }
 
 export interface SprootDB extends ISprootDB {}
-
-composeRepositoryMethods(SprootDB, "sensors", SensorsRepository.prototype);
-composeRepositoryMethods(SprootDB, "outputs", OutputsRepository.prototype);
-composeRepositoryMethods(SprootDB, "subcontrollers", SubcontrollersRepository.prototype);
-composeRepositoryMethods(SprootDB, "automations", AutomationsRepository.prototype);
-composeRepositoryMethods(SprootDB, "conditions", ConditionsRepository.prototype);
-composeRepositoryMethods(SprootDB, "camera", CameraRepository.prototype);
-composeRepositoryMethods(SprootDB, "users", UsersRepository.prototype);
-composeRepositoryMethods(SprootDB, "deviceZones", DeviceZonesRepository.prototype);
-composeRepositoryMethods(SprootDB, "journals", JournalsRepository.prototype);
-composeRepositoryMethods(SprootDB, "system", SystemRepository.prototype);
-composeRepositoryMethods(SprootDB, "dataQueries", DataQueriesRepository.prototype);
-
-function composeRepositoryMethods(
-  targetClass: new (...args: never[]) => SprootDB,
-  repositoryKey: RepositoryKey,
-  repositoryPrototype: object,
-): void {
-  for (const propertyName of Object.getOwnPropertyNames(repositoryPrototype)) {
-    if (propertyName === "constructor") {
-      continue;
-    }
-
-    const descriptor = Object.getOwnPropertyDescriptor(repositoryPrototype, propertyName);
-    if (!descriptor || typeof descriptor.value !== "function") {
-      continue;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(targetClass.prototype, propertyName)) {
-      continue;
-    }
-
-    Object.defineProperty(targetClass.prototype, propertyName, {
-      configurable: true,
-      enumerable: false,
-      writable: true,
-      value: function (this: SprootDB, ...args: unknown[]) {
-        const repository = this[repositoryKey] as unknown as Record<
-          string,
-          ((...innerArgs: unknown[]) => unknown) | undefined
-        >;
-        const method = repository[propertyName];
-        if (!method) {
-          throw new Error(`Repository method ${propertyName} is not available on ${repositoryKey}`);
-        }
-        return method.apply(repository, args);
-      },
-    });
-  }
-}
-
 export { InvalidCursorError };

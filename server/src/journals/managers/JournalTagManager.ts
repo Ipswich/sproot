@@ -8,18 +8,18 @@ export default class JournalTagManager {
   }
 
   getTagsAsync(): Promise<SDBJournalTag[]> {
-    return this.#sprootDB.getJournalTagsAsync();
+    return this.#sprootDB.journals.getJournalTagsAsync();
   }
 
   createTagAsync(name: string, color: string | null = null): Promise<number> {
-    return this.#sprootDB.addJournalTagAsync(name, color);
+    return this.#sprootDB.journals.addJournalTagAsync(name, color);
   }
 
   updateTagAsync(tag: SDBJournalTag): Promise<void> {
-    return this.#sprootDB.updateJournalTagAsync(tag);
+    return this.#sprootDB.journals.updateJournalTagAsync(tag);
   }
 
   deleteTagAsync(tagId: number): Promise<void> {
-    return this.#sprootDB.deleteJournalTagAsync(tagId);
+    return this.#sprootDB.journals.deleteJournalTagAsync(tagId);
   }
 }

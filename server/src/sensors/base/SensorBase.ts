@@ -169,7 +169,7 @@ export abstract class SensorBase implements ISensorBase, AsyncDisposable {
 
   #addLastReadingToDatabaseAsync = async (): Promise<void> => {
     try {
-      await this.sprootDB.addSensorReadingAsync(this);
+      await this.sprootDB.sensors.addSensorReadingAsync(this);
     } catch (error) {
       this.logger.error(`Error adding reading to database for sensor ${this.id}: ${error}`);
     }

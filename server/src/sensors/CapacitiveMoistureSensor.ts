@@ -140,7 +140,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       this.logger.info(
         `${this.model} { id: ${this.id} } recalibrated. New low: ${this.lowCalibrationPoint}, new high: ${this.highCalibrationPoint}`,
       );
-      await this.sprootDB.updateSensorCalibrationAsync(
+      await this.sprootDB.sensors.updateSensorCalibrationAsync(
         this.id,
         this.lowCalibrationPoint,
         this.highCalibrationPoint,

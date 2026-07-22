@@ -16,9 +16,9 @@ export default class EntryManager {
   ): Promise<Array<{ entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }>> {
     let entries: SDBJournalEntry[] = [];
     if (journalId != null) {
-      entries = await this.#sprootDB.getJournalEntriesAsync(journalId, withContent ?? true);
+      entries = await this.#sprootDB.journals.getJournalEntriesAsync(journalId, withContent ?? true);
     } else if (entryId != null) {
-      entries = await this.#sprootDB.getJournalEntryAsync(entryId, withContent ?? true);
+      entries = await this.#sprootDB.journals.getJournalEntryAsync(entryId, withContent ?? true);
     } else {
       return [];
     }
@@ -27,8 +27,8 @@ export default class EntryManager {
       return [];
     }
 
-    const entryTagLookups = await this.#sprootDB.getJournalEntryTagLookupsAsync();
-    const allEntryTags = await this.#sprootDB.getJournalEntryTagsAsync();
+    const entryTagLookups = await this.#sprootDB.journals.getJournalEntryTagLookupsAsync();
+    const allEntryTags = await this.#sprootDB.journals.getJournalEntryTagsAsync();
 
     const tagById = new Map<number, SDBJournalEntryTag>(
       (allEntryTags as SDBJournalEntryTag[]).map((t) => [t.id, t]),
@@ -58,7 +58,7 @@ export default class EntryManager {
     name?: string | null,
     createdAt?: Date | null,
   ): Promise<number> {
-    return this.#sprootDB.addJournalEntryAsync(
+    return this.#sprootDB.journals.addJournalEntryAsync(
       journalId,
       name ?? null,
       text,
@@ -67,18 +67,18 @@ export default class EntryManager {
   }
 
   updateAsync(entry: SDBJournalEntry): Promise<void> {
-    return this.#sprootDB.updateJournalEntryAsync(entry);
+    return this.#sprootDB.journals.updateJournalEntryAsync(entry);
   }
 
   deleteAsync(entryId: number) {
-    return this.#sprootDB.deleteJournalEntryAsync(entryId);
+    return this.#sprootDB.journals.deleteJournalEntryAsync(entryId);
   }
 
   addTagAsync(entryId: number, tagId: number): Promise<number> {
-    return this.#sprootDB.addJournalEntryTagLookupAsync(entryId, tagId);
+    return this.#sprootDB.journals.addJournalEntryTagLookupAsync(entryId, tagId);
   }
 
   removeTagAsync(entryId: number, tagId: number): Promise<void> {
-    return this.#sprootDB.deleteJournalEntryTagLookupAsync(entryId, tagId);
+    return this.#sprootDB.journals.deleteJournalEntryTagLookupAsync(entryId, tagId);
   }
 }

@@ -40,11 +40,18 @@ describe("CameraManager", () => {
 
   const createManager = async (
     settings: SDBCameraSettings[] = [],
-    overrides?: Partial<Record<string, sinon.SinonStub>>,
+    overrides?: { camera?: Record<string, sinon.SinonStub> } & Record<string, unknown>,
   ) => {
+    const cameraOverrides = overrides?.camera;
+    const rootOverrides = { ...overrides };
+    delete rootOverrides.camera;
     const sprootDB = {
-      getCameraSettingsAsync: sandbox.stub().resolves(settings),
-      ...overrides,
+      camera: {
+        getCameraSettingsAsync: sandbox.stub().resolves(settings),
+        updateCameraSettingsAsync: sandbox.stub().resolves(),
+        ...(cameraOverrides ?? {}),
+      },
+      ...rootOverrides,
     };
 
     const eventBus = new MemoryEventBus(logger);
@@ -275,10 +282,12 @@ describe("CameraManager", () => {
     const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
     const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
     const sprootDB = {
-      getCameraSettingsAsync: sandbox.stub(),
+      camera: {
+        getCameraSettingsAsync: sandbox.stub(),
+      },
     };
-    sprootDB.getCameraSettingsAsync.onFirstCall().resolves([cameraSettings]);
-    sprootDB.getCameraSettingsAsync
+    sprootDB.camera.getCameraSettingsAsync.onFirstCall().resolves([cameraSettings]);
+    sprootDB.camera.getCameraSettingsAsync
       .onSecondCall()
       .resolves([{ ...cameraSettings, enabled: false }]);
 
@@ -303,7 +312,7 @@ describe("CameraManager", () => {
   it("returns the same instance and does nothing after disposal", async () => {
     const getCameraSettingsAsync = sandbox.stub().resolves([cameraSettings]);
     const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-    const manager = (await createManager([], { getCameraSettingsAsync })).manager;
+    const manager = (await createManager([], { camera: { getCameraSettingsAsync } })).manager;
 
     await manager[Symbol.asyncDispose]();
     createdManagers = createdManagers.filter((currentManager) => currentManager !== manager);
@@ -326,7 +335,7 @@ describe("CameraManager", () => {
         }),
     );
 
-    const manager = (await createManager([], { getCameraSettingsAsync })).manager;
+    const manager = (await createManager([], { camera: { getCameraSettingsAsync } })).manager;
 
     const firstRegenerate = manager.regenerateAsync();
     const secondRegenerate = manager.regenerateAsync();

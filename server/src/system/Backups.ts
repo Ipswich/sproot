@@ -23,7 +23,7 @@ export class Backups {
         this.#generationStartTime = Date.now();
         logger.info(`Creating backup at ${backupFilePath}...`);
         await fsPromises.mkdir(BACKUP_DIRECTORY, { recursive: true });
-        await sprootDB.backupDatabaseAsync(
+        await sprootDB.system.backupDatabaseAsync(
           process.env["DATABASE_HOST"]!,
           parseInt(process.env["DATABASE_PORT"]!),
           process.env["DATABASE_USER"]!,
@@ -46,7 +46,7 @@ export class Backups {
     logger: winston.Logger,
   ): Promise<boolean> {
     try {
-      await sprootDB.swapRestoreDatabaseAsync(
+      await sprootDB.system.swapRestoreDatabaseAsync(
         process.env["DATABASE_HOST"]!,
         parseInt(process.env["DATABASE_PORT"]!),
         process.env["DATABASE_USER"]!,

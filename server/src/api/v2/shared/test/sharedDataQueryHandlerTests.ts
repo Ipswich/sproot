@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { SprootDB } from "../../../../database/SprootDB";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
 interface DataQueryHandlerTestConfig<RequestType, ResponseType> {
   handlerName: string;
@@ -23,10 +23,42 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 ) {
   describe(`${config.handlerName} tests`, () => {
     let mockResponse: Response;
-    let sprootDBStub: sinon.SinonStubbedInstance<SprootDB>;
+    let sprootDBStub: MockSprootDB;
+
+    function getQueryStub(): sinon.SinonStub {
+      const db = sprootDBStub as unknown as {
+        dataQueries: {
+          querySensorDataAsync: sinon.SinonStub;
+          queryOutputDataAsync: sinon.SinonStub;
+        };
+      };
+      if (config.queryMethod === "querySensorDataAsync") {
+        return db.dataQueries.querySensorDataAsync;
+      }
+      return db.dataQueries.queryOutputDataAsync;
+    }
 
     beforeEach(() => {
-      sprootDBStub = sinon.createStubInstance(SprootDB);
+      sprootDBStub = new MockSprootDB();
+      const dataQueries = {
+        querySensorDataAsync: sinon.stub(),
+        queryOutputDataAsync: sinon.stub(),
+      };
+      Object.defineProperty(sprootDBStub, "dataQueries", {
+        value: dataQueries,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(sprootDBStub, "querySensorDataAsync", {
+        value: dataQueries.querySensorDataAsync,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(sprootDBStub, "queryOutputDataAsync", {
+        value: dataQueries.queryOutputDataAsync,
+        writable: true,
+        configurable: true,
+      });
       mockResponse = {
         locals: {
           defaultProperties: {
@@ -42,9 +74,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
     });
 
     it("should return a 200 with data", async () => {
-      (
-        sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as unknown as sinon.SinonStub
-      ).resolves(config.responseData as any);
+      getQueryStub().resolves(config.responseData as any);
 
       const mockRequest = {
         app: {
@@ -64,10 +94,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
       assert.deepEqual(result.content?.data, (config.responseData as any).data);
       assert.equal(result.timestamp, mockResponse.locals["defaultProperties"]["timestamp"]);
       assert.equal(result.requestId, mockResponse.locals["defaultProperties"]["requestId"]);
-      assert.isTrue(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub)
-          .calledOnce,
-      );
+      assert.isTrue(getQueryStub().calledOnce);
     });
 
     it("should return nextCursor in response when present", async () => {
@@ -76,9 +103,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
         nextCursor: "test-cursor-value",
       } as ResponseType;
 
-      (
-        sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as unknown as sinon.SinonStub
-      ).resolves(responseDataWithCursor as any);
+      getQueryStub().resolves(responseDataWithCursor as any);
 
       const mockRequest = {
         app: {
@@ -118,9 +143,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
       assert.equal(result.error.url, config.url);
       assert.isArray(result.error.details);
       assert.isTrue(result.error.details.length > 0);
-      assert.isFalse(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).called,
-      );
+      assert.isFalse(getQueryStub().called);
     });
 
     it("should return 400 when validation fails — invalid timeRange", async () => {
@@ -142,9 +165,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 
       assert.equal(result.statusCode, 400);
       assert.equal(result.error.name, "Validation Error");
-      assert.isFalse(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).called,
-      );
+      assert.isFalse(getQueryStub().called);
     });
 
     it("should return 400 when validation fails — invalid limit", async () => {
@@ -167,9 +188,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 
       assert.equal(result.statusCode, 400);
       assert.equal(result.error.name, "Validation Error");
-      assert.isFalse(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).called,
-      );
+      assert.isFalse(getQueryStub().called);
     });
 
     it("should return 400 when validation fails — invalid id", async () => {
@@ -191,9 +210,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 
       assert.equal(result.statusCode, 400);
       assert.equal(result.error.name, "Validation Error");
-      assert.isFalse(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).called,
-      );
+      assert.isFalse(getQueryStub().called);
     });
 
     it("should return 400 when validation fails — invalid aggregates", async () => {
@@ -216,9 +233,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 
       assert.equal(result.statusCode, 400);
       assert.equal(result.error.name, "Validation Error");
-      assert.isFalse(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).called,
-      );
+      assert.isFalse(getQueryStub().called);
     });
 
     it("should return 400 when validation fails — invalid cursor", async () => {
@@ -241,18 +256,14 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 
       assert.equal(result.statusCode, 400);
       assert.equal(result.error.name, "Validation Error");
-      assert.isFalse(
-        (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).called,
-      );
+      assert.isFalse(getQueryStub().called);
     });
 
     it("should sanitize error details — never expose SQL queries or internal messages", async () => {
       const sqlError = new Error(
         'relation "readings" does not exist\nLINE 1: SELECT * FROM readings WHERE ...',
       );
-      (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).rejects(
-        sqlError,
-      );
+      getQueryStub().rejects(sqlError);
 
       const mockRequest = {
         app: {
@@ -280,9 +291,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
     });
 
     it("should return 500 when SprootDB throws", async () => {
-      (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).rejects(
-        new Error("Database connection failed"),
-      );
+      getQueryStub().rejects(new Error("Database connection failed"));
 
       const mockRequest = {
         app: {
@@ -307,11 +316,9 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
     });
 
     it("should return 500 with generic message for non-Error exceptions", async () => {
-      (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).callsFake(
-        async () => {
-          throw 42;
-        },
-      );
+      getQueryStub().callsFake(async () => {
+        throw 42;
+      });
 
       const mockRequest = {
         app: {
@@ -332,9 +339,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
     });
 
     it("should pass through all request params to SprootDB", async () => {
-      (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).resolves(
-        config.responseData as any,
-      );
+      getQueryStub().resolves(config.responseData as any);
 
       const mockRequest = {
         app: {
@@ -356,9 +361,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 
       await config.handler(mockRequest, mockResponse);
 
-      const callArg = (
-        sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub
-      ).getCall(0).args[0];
+      const callArg = getQueryStub().getCall(0).args[0];
       assert.equal(callArg.downsample, "1h");
       assert.equal(callArg.id, 2);
       assert.deepEqual(callArg.aggregates, ["avg", "max"]);
@@ -371,9 +374,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
         data: {},
       } as ResponseType;
 
-      (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub).resolves(
-        emptyResponse as any,
-      );
+      getQueryStub().resolves(emptyResponse as any);
 
       const mockRequest = {
         app: {
@@ -412,10 +413,7 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
 
           assert.equal(result.statusCode, 400);
           assert.equal(result.error.name, test.errorName ?? "Validation Error");
-          assert.isFalse(
-            (sprootDBStub[config.queryMethod as keyof typeof sprootDBStub] as sinon.SinonStub)
-              .called,
-          );
+          assert.isFalse(getQueryStub().called);
         });
       }
     }

@@ -4,7 +4,7 @@ import express, { Request, Response } from "express";
 const router = express.Router();
 
 router.get("/", async (_req: Request, res: Response) => {
-  let response: SuccessResponse = {
+  const response: SuccessResponse = {
     statusCode: 200,
     content: {
       data: "pong",

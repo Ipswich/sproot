@@ -20,7 +20,7 @@ describe("SensorList.ts tests", function () {
 
   it("should create, update, and delete sensors, adding a DS18B20 to MockSprootDB", async function () {
     const mockMdnsService = sinon.createStubInstance(MdnsService);
-    const getSensorsAsyncStub = sinon.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
+    const getSensorsAsyncStub = sinon.stub(mockSprootDB.sensors, "getSensorsAsync").resolves([
       {
         id: 1,
         name: "test sensor 1",
@@ -51,10 +51,10 @@ describe("SensorList.ts tests", function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
     sinon
-      .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
+      .stub(mockSprootDB.sensors, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor, { address: "28-00001" } as SDBSensor]);
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000", "28-00001", "28-00002"]);
-    const addSensorSpy = sinon.spy(mockSprootDB, "addSensorAsync");
+    const addSensorSpy = sinon.spy(mockSprootDB.sensors, "addSensorAsync");
 
     await using sensorList = await SensorList.createInstanceAsync(
       eventBus,
@@ -96,7 +96,7 @@ describe("SensorList.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
-    sinon.stub(MockSprootDB.prototype, "getSensorsAsync").resolves([
+    sinon.stub(mockSprootDB.sensors, "getSensorsAsync").resolves([
       mockBME280Data,
       {
         id: 2,
@@ -115,9 +115,7 @@ describe("SensorList.ts tests", function () {
     );
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
-    sinon
-      .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
-      .resolves([{ address: "28-00000" } as SDBSensor]);
+    sinon.stub(mockSprootDB.sensors, "getDS18B20AddressesAsync").resolves([{ address: "28-00000" } as SDBSensor]);
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
 
     await using sensorList = await SensorList.createInstanceAsync(
@@ -174,7 +172,7 @@ describe("SensorList.ts tests", function () {
     const eventBus = new MemoryEventBus(logger);
 
     const getSensorsStub = sinon
-      .stub(MockSprootDB.prototype, "getSensorsAsync")
+      .stub(mockSprootDB.sensors, "getSensorsAsync")
       .resolves([mockBME280Data]);
     const getAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     await using sensorList = await SensorList.createInstanceAsync(
@@ -190,7 +188,7 @@ describe("SensorList.ts tests", function () {
     mockBME280Data["address"] = "0x76";
     getSensorsStub.resolves([mockBME280Data, mockDS18B20Data]);
     sinon
-      .stub(MockSprootDB.prototype, "getDS18B20AddressesAsync")
+      .stub(mockSprootDB.sensors, "getDS18B20AddressesAsync")
       .resolves([{ address: "28-00000" } as SDBSensor]);
     getAddressesStub.resolves(["28-00000"]);
     await sensorList.regenerateAsync();
@@ -252,7 +250,7 @@ describe("SensorList.ts tests", function () {
     );
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
-    sinon.stub(MockSprootDB.prototype, "getSubcontrollersAsync").resolves([
+    sinon.stub(mockSprootDB.subcontrollers, "getSubcontrollersAsync").resolves([
       {
         id: 1,
         hostName: "sproot-device-7ab3.local",
@@ -262,12 +260,12 @@ describe("SensorList.ts tests", function () {
       } as SDBSubcontroller,
     ]);
     const mockGetDS18B20AddressesAsync = sinon.stub(
-      MockSprootDB.prototype,
+      mockSprootDB.sensors,
       "getDS18B20AddressesAsync",
     );
     mockGetDS18B20AddressesAsync.resolves([mockDS18B20Data1, mockDS18B20Data2]);
 
-    const addSensorSpy = sinon.stub(mockSprootDB, "addSensorAsync");
+    const addSensorSpy = sinon.stub(mockSprootDB.sensors, "addSensorAsync");
     const ds18b20GetAddressesStub = sinon.stub(DS18B20, "getAddressesAsync").resolves([]);
     await using sensorList = await SensorList.createInstanceAsync(
       eventBus,

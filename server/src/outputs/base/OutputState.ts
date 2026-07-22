@@ -28,7 +28,7 @@ export class OutputState implements IOutputState {
   }
 
   async loadAsync() {
-    const lastState = await this.#sprootDB.getLastOutputStateAsync(this.#outputId);
+    const lastState = await this.#sprootDB.outputs.getLastOutputStateAsync(this.#outputId);
     if (lastState[0]?.controlMode == ControlMode.manual) {
       this.controlMode = ControlMode.manual;
       await this.setNewStateAsync(lastState[0]);
@@ -105,7 +105,7 @@ export class OutputState implements IOutputState {
    * This is used for second granularity, as opposed to minute granularity.
    */
   async updateDatabaseStateAsync(): Promise<void> {
-    await this.#sprootDB.updateLastOutputStateAsync({
+    await this.#sprootDB.outputs.updateLastOutputStateAsync({
       id: this.#outputId,
       value: this.value,
       controlMode: this.controlMode,
@@ -116,7 +116,7 @@ export class OutputState implements IOutputState {
    * Adds the current state of the output to the database.
    */
   async addCurrentStateToDatabaseAsync(): Promise<void> {
-    await this.#sprootDB.addOutputStateAsync({
+    await this.#sprootDB.outputs.addOutputStateAsync({
       id: this.#outputId,
       value: this.value,
       controlMode: this.controlMode,

@@ -187,8 +187,8 @@ class OutputList implements AsyncDisposable {
     try {
       let outputListChanges = false;
       const profiler = this.#logger.startTimer();
-      const outputsFromDatabase = await this.#sprootDB.getOutputsAsync();
-      const subcontrollersFromDatabase = await this.#sprootDB.getSubcontrollersAsync();
+      const outputsFromDatabase = await this.#sprootDB.outputs.getOutputsAsync();
+      const subcontrollersFromDatabase = await this.#sprootDB.subcontrollers.getSubcontrollersAsync();
 
       const promises = [];
       for (const output of outputsFromDatabase) {
@@ -354,18 +354,18 @@ class OutputList implements AsyncDisposable {
   }
 
   async addOutputAsync(output: SDBOutput): Promise<number> {
-    const newOutputId = await this.#sprootDB.addOutputAsync(output);
+    const newOutputId = await this.#sprootDB.outputs.addOutputAsync(output);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
     return newOutputId;
   }
 
   async updateOutputAsync(output: SDBOutput): Promise<void> {
-    await this.#sprootDB.updateOutputAsync(output);
+    await this.#sprootDB.outputs.updateOutputAsync(output);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
   async deleteOutputAsync(outputId: number): Promise<void> {
-    await this.#sprootDB.deleteOutputAsync(outputId);
+    await this.#sprootDB.outputs.deleteOutputAsync(outputId);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 

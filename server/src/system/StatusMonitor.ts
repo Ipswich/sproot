@@ -35,7 +35,7 @@ export class SystemStatusMonitor implements Disposable {
         cpuUsage: this.#cpuMonitor.getAverageUsage(),
       },
       database: {
-        size: await this.#sprootDB.getDatabaseSizeAsync(),
+        size: await this.#sprootDB.system.getDatabaseSizeAsync(),
         connectionsUsed: pool.numUsed(),
         connectionsFree: pool.numFree(),
         pendingAcquires: pool.numPendingAcquires(),

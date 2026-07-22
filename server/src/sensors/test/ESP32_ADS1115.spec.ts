@@ -35,7 +35,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       address: "0x48",
       pin: "0",
     } as SDBSensor;
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1.23",
         metric: ReadingType.voltage,

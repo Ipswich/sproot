@@ -13,7 +13,7 @@ describe("Authenticate.ts tests", () => {
         cookies: {},
       } as unknown as Request;
 
-      let response = {
+      const response = {
         locals: {
           defaultProperties: {
             timestamp: new Date().toISOString(),
@@ -46,7 +46,7 @@ describe("Authenticate.ts tests", () => {
         cookies: {},
       } as unknown as Request;
 
-      let response = {
+      const response = {
         locals: {
           defaultProperties: {
             timestamp: new Date().toISOString(),
@@ -79,7 +79,7 @@ describe("Authenticate.ts tests", () => {
         cookies: { jwt_token: token },
       } as unknown as Request;
 
-      let response = {
+      const response = {
         locals: {
           defaultProperties: {
             timestamp: new Date().toISOString(),
@@ -108,7 +108,7 @@ describe("Authenticate.ts tests", () => {
         cookies: {},
       } as unknown as Request;
 
-      let response = {
+      const response = {
         locals: {
           defaultProperties: {
             timestamp: new Date().toISOString(),
@@ -141,7 +141,7 @@ describe("Authenticate.ts tests", () => {
         cookies: { jwt_token: token },
       } as unknown as Request;
 
-      let response = {
+      const response = {
         locals: {
           defaultProperties: {
             timestamp: new Date().toISOString(),
@@ -174,7 +174,7 @@ describe("Authenticate.ts tests", () => {
         cookies: { jwt_token: token },
       } as unknown as Request;
 
-      let response = {
+      const response = {
         locals: {
           defaultProperties: {
             timestamp: new Date().toISOString(),

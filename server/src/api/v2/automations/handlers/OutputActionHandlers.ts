@@ -22,7 +22,7 @@ export async function getAsync(
       request.query["automationId"] != null &&
       !isNaN(parseInt(request.query["automationId"] as string))
     ) {
-      const automations = await sprootDB.getOutputActionsByAutomationIdAsync(
+      const automations = await sprootDB.automations.getOutputActionsByAutomationIdAsync(
         parseInt(request.query["automationId"] as string),
       );
       automationResponse = {
@@ -35,7 +35,7 @@ export async function getAsync(
       return automationResponse;
     }
 
-    const actions = await sprootDB.getOutputActionsAsync();
+    const actions = await sprootDB.automations.getOutputActionsAsync();
     automationResponse = {
       statusCode: 200,
       content: {
@@ -88,7 +88,7 @@ export async function getByIdAsync(
 
   try {
     const outputActionId = parseInt(request.params["outputActionId"] ?? "");
-    const automation = (await sprootDB.getOutputActionAsync(outputActionId))[0];
+    const automation = (await sprootDB.automations.getOutputActionAsync(outputActionId))[0];
     if (automation == null) {
       automationResponse = {
         statusCode: 404,
@@ -186,7 +186,7 @@ export async function addAsync(
   }
 
   try {
-    if ((await sprootDB.getAutomationAsync(automationId)).length == 0) {
+    if ((await sprootDB.automations.getAutomationAsync(automationId)).length == 0) {
       automationResponse = {
         statusCode: 404,
         error: {
@@ -253,7 +253,7 @@ export async function deleteAsync(
 
   try {
     const outputActionId = parseInt(request.params["outputActionId"] ?? "");
-    const action = (await sprootDB.getOutputActionAsync(outputActionId))[0];
+    const action = (await sprootDB.automations.getOutputActionAsync(outputActionId))[0];
     if (action == null) {
       automationResponse = {
         statusCode: 404,

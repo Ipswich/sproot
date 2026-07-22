@@ -4,9 +4,7 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { Knex } from "knex";
-import {
-  BUCKET_MINUTES_TO_SENSOR_TABLE,
-} from "@sproot/sproot-common/dist/api/v2/QueryTypes";
+import { BUCKET_MINUTES_TO_SENSOR_TABLE } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 import { getLookbackDate, getRecentTailStart, normalizeBucketMinutes } from "../databaseQueryUtils";
 import { BaseKnexRepository } from "./BaseKnexRepository";
 
@@ -16,7 +14,10 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
   }
 
   async getSensorsAsync(): Promise<SDBSensor[]> {
-    const sensors = await this.connection("sensors").select("*", "subcontroller_id as subcontrollerId");
+    const sensors = await this.connection("sensors").select(
+      "*",
+      "subcontroller_id as subcontrollerId",
+    );
     return this.normalizeSensors(sensors);
   }
 

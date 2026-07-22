@@ -89,7 +89,7 @@ export async function systemBackupRestoreHandlerAsync(
   }
 
   try {
-    await sprootDB.validateBackupArchiveAsync(tempFile, logger);
+    await sprootDB.system.validateBackupArchiveAsync(tempFile, logger);
   } catch (err) {
     await fs.promises.rm(tempDirectory, { recursive: true, force: true }).catch(() => undefined);
     return {

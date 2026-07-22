@@ -2,11 +2,19 @@ import { NotificationActionManager } from "../NotificationActionManager";
 import { NotificationAction } from "../NotificationAction";
 import { assert } from "chai";
 import sinon from "sinon";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
 import { NotificationActionsModifiedEvent } from "../../../eventbus/events/actions/NotificationActionsModifiedEvent";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+
+const createStubSprootDB = () => {
+  const sprootDB = new MockSprootDB() as any;
+  sprootDB.automations = {
+    getNotificationActionsAsync: sinon.stub(),
+  } as any;
+  return sprootDB;
+};
 
 describe("NotificationActionManager.ts tests", () => {
   let mockLogger: winston.Logger;
@@ -41,9 +49,9 @@ describe("NotificationActionManager.ts tests", () => {
 
   describe("activeNotifications", () => {
     it("should return active notifications with correct structure", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -79,9 +87,9 @@ describe("NotificationActionManager.ts tests", () => {
     });
 
     it("should return empty notifications when no automations trigger", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -105,9 +113,9 @@ describe("NotificationActionManager.ts tests", () => {
     });
 
     it("should return multiple active notifications when multiple automations trigger", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -154,9 +162,9 @@ describe("NotificationActionManager.ts tests", () => {
     });
 
     it("should return multiple active notifications for one automation when it has multiple actions", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -198,9 +206,9 @@ describe("NotificationActionManager.ts tests", () => {
     });
 
     it("should update lastRunAt when events are processed", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -237,9 +245,9 @@ describe("NotificationActionManager.ts tests", () => {
 
   describe("reloadActionsAsync", () => {
     it("should load notification actions from database on creation", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -270,9 +278,9 @@ describe("NotificationActionManager.ts tests", () => {
     });
 
     it("should reload actions from database on NotificationActionsUpdated event", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -298,7 +306,7 @@ describe("NotificationActionManager.ts tests", () => {
       const notif1 = manager.activeNotifications.notifications[0]!;
       assert.equal(notif1.subject, "Original Subject");
 
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -320,9 +328,9 @@ describe("NotificationActionManager.ts tests", () => {
 
   describe("createInstanceAsync", () => {
     it("should create manager and load actions", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([
+      sprootDB.automations.getNotificationActionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -342,9 +350,9 @@ describe("NotificationActionManager.ts tests", () => {
     });
 
     it("should handle empty action list", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([]);
+      sprootDB.automations.getNotificationActionsAsync.resolves([]);
 
       using manager = await NotificationActionManager.createInstanceAsync(
         sprootDB,
@@ -390,9 +398,9 @@ describe("NotificationActionManager.ts tests", () => {
 
   describe("event listener cleanup", () => {
     it("should remove event listeners when disposed", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockLogger);
-      sprootDB.getNotificationActionsAsync.resolves([]);
+      sprootDB.automations.getNotificationActionsAsync.resolves([]);
 
       const manager = await NotificationActionManager.createInstanceAsync(
         sprootDB,
@@ -419,9 +427,9 @@ describe("NotificationActionManager.ts tests", () => {
         verbose: sinon.stub(),
         child: sinon.stub(),
       } as unknown as winston.Logger;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const eventBus = new MemoryEventBus(mockErrorLogger);
-      sprootDB.getNotificationActionsAsync.rejects(new Error("DB Error"));
+      sprootDB.automations.getNotificationActionsAsync.rejects(new Error("DB Error"));
 
       await NotificationActionManager.createInstanceAsync(sprootDB, eventBus, mockErrorLogger);
 

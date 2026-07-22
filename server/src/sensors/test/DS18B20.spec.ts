@@ -153,7 +153,7 @@ describe("DS18B20.ts tests", function () {
       address: "28-00000",
     } as SDBSensor;
     const recordsToLoad = 2;
-    sinon.stub(mockSprootDB, "getSensorReadingsAsync").resolves([
+    sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,

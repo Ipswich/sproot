@@ -240,7 +240,7 @@ export async function updateESP32FirmwareOTAAsync(
 
   let device: SDBSubcontroller | undefined;
   try {
-    device = await sprootDB
+    device = await sprootDB.subcontrollers
       .getSubcontrollersAsync()
       .then((devices) => devices.find((d) => d.id === id));
   } catch (e) {

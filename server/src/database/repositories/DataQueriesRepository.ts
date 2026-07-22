@@ -10,10 +10,7 @@ import { IDataQueriesRepository } from "@sproot/sproot-common/dist/database/ISpr
 import { Knex } from "knex";
 import { BaseKnexRepository } from "./BaseKnexRepository";
 
-export class DataQueriesRepository
-  extends BaseKnexRepository
-  implements IDataQueriesRepository
-{
+export class DataQueriesRepository extends BaseKnexRepository implements IDataQueriesRepository {
   constructor(connection: Knex) {
     super(connection);
   }

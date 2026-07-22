@@ -70,7 +70,7 @@ export class NotificationActionManager implements Disposable {
    */
   async #reloadActionsAsync(): Promise<void> {
     try {
-      const notificationActions = await this.#sprootDB.getNotificationActionsAsync();
+      const notificationActions = await this.#sprootDB.automations.getNotificationActionsAsync();
       this.#actions = notificationActions.map((action) => new NotificationAction(action));
     } catch (error) {
       this.#logger.error(`Error reloading actions for notifications - ${error}`);

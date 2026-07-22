@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
-import { MockSprootDB, ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB, MockJournalsRepository, ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import JournalManager from "../../../../journals/managers/JournalManager";
 import { SuccessResponse, ErrorResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
 import {
@@ -16,13 +16,25 @@ import {
 describe("JournalsHandlers.ts tests", () => {
   afterEach(() => sinon.restore());
 
+  function stubJournalsMethods(sprootDB: any) {
+    sprootDB.journals = new MockJournalsRepository();
+    const methodNames = Object.getOwnPropertyNames(MockJournalsRepository.prototype).filter(
+      (name) => name !== "constructor" && typeof (MockJournalsRepository.prototype as any)[name] === "function",
+    );
+    for (const name of methodNames) {
+      sinon.stub(sprootDB.journals, name as any);
+    }
+  }
+
   describe("getAsync", () => {
     it("should return 200 with journals", async () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r1" } },
       } as unknown as Response;
 
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+     const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+
       const journals = [
         {
           id: 1,
@@ -36,11 +48,11 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalsAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([
+      (sprootDB.journals.getJournalsAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 3, name: "x", color: null },
       ]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
 
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
@@ -74,12 +86,13 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r3" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 9, name: "tag", color: null },
       ]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
 
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
@@ -98,8 +111,9 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r4" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.getJournalsAsync as sinon.SinonStub).rejects(new Error("boom"));
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalsAsync as sinon.SinonStub).rejects(new Error("boom"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -119,8 +133,9 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r5" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.addJournalAsync as sinon.SinonStub).resolves(7);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.addJournalAsync as sinon.SinonStub).resolves(7);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -155,8 +170,9 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r7" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.addJournalAsync as sinon.SinonStub).rejects(new Error("create fail"));
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.addJournalAsync as sinon.SinonStub).rejects(new Error("create fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -192,8 +208,9 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r9" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves([]);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -211,7 +228,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r10" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const existing = [
         {
           id: 6,
@@ -225,9 +243,9 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(existing);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -249,7 +267,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r11" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const existing = [
         {
           id: 8,
@@ -263,10 +282,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(existing);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.updateJournalAsync as sinon.SinonStub).resolves();
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.updateJournalAsync as sinon.SinonStub).resolves();
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -284,7 +303,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r12" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const existing = [
         {
           id: 12,
@@ -298,10 +318,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(existing);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.updateJournalAsync as sinon.SinonStub).rejects(new Error("update fail"));
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.updateJournalAsync as sinon.SinonStub).rejects(new Error("update fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -337,8 +357,9 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r14" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves([]);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -355,7 +376,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r15" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const existing = [
         {
           id: 3,
@@ -369,10 +391,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(existing);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.deleteJournalAsync as sinon.SinonStub).resolves();
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.deleteJournalAsync as sinon.SinonStub).resolves();
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -389,7 +411,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r16" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const existing = [
         {
           id: 4,
@@ -403,10 +426,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(existing);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.deleteJournalAsync as sinon.SinonStub).rejects(new Error("del fail"));
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.deleteJournalAsync as sinon.SinonStub).rejects(new Error("del fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -446,8 +469,9 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r18" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves([]);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -467,7 +491,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r19" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const journals = [
         {
           id: 5,
@@ -481,11 +506,11 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 2, name: "x", color: null },
       ]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([
         { journalId: 5, tagId: 2 },
       ]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
@@ -504,7 +529,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r20" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const journals = [
         {
           id: 6,
@@ -518,10 +544,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.addJournalTagLookupAsync as sinon.SinonStub).resolves(1);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.addJournalTagLookupAsync as sinon.SinonStub).resolves(1);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -548,7 +574,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r21" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const journals = [
         {
           id: 7,
@@ -562,10 +589,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.addJournalTagLookupAsync as sinon.SinonStub).rejects(new Error("addtag fail"));
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.addJournalTagLookupAsync as sinon.SinonStub).rejects(new Error("addtag fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -613,8 +640,9 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r23" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves([]);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -633,7 +661,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r24" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const existing = [
         {
           id: 2,
@@ -647,9 +676,9 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(existing);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -670,7 +699,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r25" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const journals = [
         {
           id: 3,
@@ -684,14 +714,14 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 4, name: "tag", color: null },
       ]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([
         { journalId: 3, tagId: 4 },
       ]);
-      (sprootDB.deleteJournalTagLookupAsync as sinon.SinonStub).resolves();
+      (sprootDB.journals.deleteJournalTagLookupAsync as sinon.SinonStub).resolves();
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -707,7 +737,8 @@ describe("JournalsHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "r26" } },
       } as unknown as Response;
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = new MockSprootDB();
+      stubJournalsMethods(sprootDB);
       const journals = [
         {
           id: 11,
@@ -721,14 +752,14 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.getJournalAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.getJournalTagsAsync as sinon.SinonStub).resolves([
+      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 6, name: "tag", color: null },
       ]);
-      (sprootDB.getJournalTagLookupsAsync as sinon.SinonStub).resolves([
+      (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([
         { journalId: 11, tagId: 6 },
       ]);
-      (sprootDB.deleteJournalTagLookupAsync as sinon.SinonStub).rejects(new Error("rem fail"));
+      (sprootDB.journals.deleteJournalTagLookupAsync as sinon.SinonStub).rejects(new Error("rem fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {

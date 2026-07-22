@@ -7,29 +7,42 @@ import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
 import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 
+const createStubSprootDB = () => {
+  const sprootDB = new MockSprootDB() as any;
+  sprootDB.conditions = {
+    getSensorConditionsAsync: sinon.stub(),
+    getOutputConditionsAsync: sinon.stub(),
+    getTimeConditionsAsync: sinon.stub(),
+    getWeekdayConditionsAsync: sinon.stub(),
+    getMonthConditionsAsync: sinon.stub(),
+    getDateRangeConditionsAsync: sinon.stub(),
+  } as any;
+  return sprootDB;
+};
+
 describe("Automation.ts tests", () => {
   describe("evaluate", () => {
     it("should return true when conditions are met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
       // No conditions should return false
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
       const automation = await Automation.createInstanceAsync(1, "test", "or", true, sprootDB);
       const result1 = await automation.evaluate(sensorListMock, outputListMock, new Date());
       assert.isFalse(result1.result);
 
       // Add a condition (empty time range matches always)
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -38,9 +51,9 @@ describe("Automation.ts tests", () => {
           endTime: null,
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
       // Reload conditions from DB
       await automation.conditions.loadAsync();
@@ -51,26 +64,26 @@ describe("Automation.ts tests", () => {
     });
 
     it("should return false when conditions are not met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
       const now = new Date();
       now.setHours(12);
 
       // Initial load with empty conditions
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
       const automation = await Automation.createInstanceAsync(1, "test", "or", true, sprootDB);
 
       // Add conditions that don't match (time is 12:00, condition requires >= 13:00)
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -86,9 +99,9 @@ describe("Automation.ts tests", () => {
           endTime: null,
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
       // Reload conditions from DB
       await automation.conditions.loadAsync();
@@ -100,17 +113,17 @@ describe("Automation.ts tests", () => {
 
   describe("enabled flag", () => {
     it("should return false for disabled automations", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
+      const sprootDB = createStubSprootDB();
       const sensorListMock = sinon.createStubInstance(SensorList);
       const outputListMock = sinon.createStubInstance(OutputList);
 
       // Initial load with empty conditions
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
       const automationEnabled = await Automation.createInstanceAsync(
         1,
@@ -134,9 +147,9 @@ describe("Automation.ts tests", () => {
       assert.isFalse(result.result);
 
       // Add a condition to the enabled automation
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -145,9 +158,9 @@ describe("Automation.ts tests", () => {
           endTime: null,
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
       // Reload conditions from DB
       await automationEnabled.conditions.loadAsync();

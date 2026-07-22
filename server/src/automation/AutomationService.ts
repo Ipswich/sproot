@@ -50,7 +50,7 @@ class AutomationService {
    */
   async loadAllAutomationsAsync(): Promise<void> {
     try {
-      const rawAutomations = await this.#sprootDB.getAutomationsAsync();
+      const rawAutomations = await this.#sprootDB.automations.getAutomationsAsync();
       this.#automations = new Map();
 
       const promises = rawAutomations.map(async (automation) => {
@@ -112,13 +112,13 @@ class AutomationService {
 
   // CRUD methods
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
-    const resultId = await this.#sprootDB.addAutomationAsync(name, operator);
+    const resultId = await this.#sprootDB.automations.addAutomationAsync(name, operator);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
   async deleteAutomationAsync(id: number) {
-    await this.#sprootDB.deleteAutomationAsync(id);
+    await this.#sprootDB.automations.deleteAutomationAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -128,7 +128,7 @@ class AutomationService {
     operator: AutomationOperator,
     enabled: boolean,
   ) {
-    await this.#sprootDB.updateAutomationAsync(name, operator, id, enabled);
+    await this.#sprootDB.automations.updateAutomationAsync(name, operator, id, enabled);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -141,7 +141,7 @@ class AutomationService {
     sensorId: number,
     readingType: ReadingType,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.addSensorConditionAsync(
+    const resultId = await this.#sprootDB.conditions.addSensorConditionAsync(
       automationId,
       type,
       operator,
@@ -162,7 +162,7 @@ class AutomationService {
     comparisonLookback: number | null,
     outputId: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.addOutputConditionAsync(
+    const resultId = await this.#sprootDB.conditions.addOutputConditionAsync(
       automationId,
       type,
       operator,
@@ -180,7 +180,7 @@ class AutomationService {
     startTime: string | null | undefined,
     endTime: string | null | undefined,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.addTimeConditionAsync(
+    const resultId = await this.#sprootDB.conditions.addTimeConditionAsync(
       automationId,
       type,
       startTime,
@@ -195,7 +195,11 @@ class AutomationService {
     type: ConditionGroupType,
     weekdays: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.addWeekdayConditionAsync(automationId, type, weekdays);
+    const resultId = await this.#sprootDB.conditions.addWeekdayConditionAsync(
+      automationId,
+      type,
+      weekdays,
+    );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
@@ -205,7 +209,11 @@ class AutomationService {
     type: ConditionGroupType,
     months: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.addMonthConditionAsync(automationId, type, months);
+    const resultId = await this.#sprootDB.conditions.addMonthConditionAsync(
+      automationId,
+      type,
+      months,
+    );
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
@@ -218,7 +226,7 @@ class AutomationService {
     endMonth: number,
     endDate: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.addDateRangeConditionAsync(
+    const resultId = await this.#sprootDB.conditions.addDateRangeConditionAsync(
       automationId,
       type,
       startMonth,
@@ -241,17 +249,17 @@ class AutomationService {
       | DateRangeCondition,
   ) {
     if (condition instanceof SensorCondition) {
-      await this.#sprootDB.updateSensorConditionAsync(automationId, condition);
+      await this.#sprootDB.conditions.updateSensorConditionAsync(automationId, condition);
     } else if (condition instanceof OutputCondition) {
-      await this.#sprootDB.updateOutputConditionAsync(automationId, condition);
+      await this.#sprootDB.conditions.updateOutputConditionAsync(automationId, condition);
     } else if (condition instanceof TimeCondition) {
-      await this.#sprootDB.updateTimeConditionAsync(automationId, condition);
+      await this.#sprootDB.conditions.updateTimeConditionAsync(automationId, condition);
     } else if (condition instanceof WeekdayCondition) {
-      await this.#sprootDB.updateWeekdayConditionAsync(automationId, condition);
+      await this.#sprootDB.conditions.updateWeekdayConditionAsync(automationId, condition);
     } else if (condition instanceof MonthCondition) {
-      await this.#sprootDB.updateMonthConditionAsync(automationId, condition);
+      await this.#sprootDB.conditions.updateMonthConditionAsync(automationId, condition);
     } else if (condition instanceof DateRangeCondition) {
-      await this.#sprootDB.updateDateRangeConditionAsync(automationId, condition);
+      await this.#sprootDB.conditions.updateDateRangeConditionAsync(automationId, condition);
     } else {
       return;
     }
@@ -259,32 +267,32 @@ class AutomationService {
   }
 
   async deleteSensorConditionAsync(id: number) {
-    await this.#sprootDB.deleteSensorConditionAsync(id);
+    await this.#sprootDB.conditions.deleteSensorConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteOutputConditionAsync(id: number) {
-    await this.#sprootDB.deleteOutputConditionAsync(id);
+    await this.#sprootDB.conditions.deleteOutputConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteTimeConditionAsync(id: number) {
-    await this.#sprootDB.deleteTimeConditionAsync(id);
+    await this.#sprootDB.conditions.deleteTimeConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteWeekdayConditionAsync(id: number) {
-    await this.#sprootDB.deleteWeekdayConditionAsync(id);
+    await this.#sprootDB.conditions.deleteWeekdayConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteMonthConditionAsync(id: number) {
-    await this.#sprootDB.deleteMonthConditionAsync(id);
+    await this.#sprootDB.conditions.deleteMonthConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteDateRangeConditionAsync(id: number) {
-    await this.#sprootDB.deleteDateRangeConditionAsync(id);
+    await this.#sprootDB.conditions.deleteDateRangeConditionAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -294,13 +302,17 @@ class AutomationService {
     subject: string,
     content: string,
   ): Promise<number> {
-    const result = await this.#sprootDB.addNotificationActionAsync(automationId, subject, content);
+    const result = await this.#sprootDB.automations.addNotificationActionAsync(
+      automationId,
+      subject,
+      content,
+    );
     await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
     return result;
   }
 
   async deleteNotificationActionAsync(notificationActionId: number) {
-    await this.#sprootDB.deleteNotificationActionAsync(notificationActionId);
+    await this.#sprootDB.automations.deleteNotificationActionAsync(notificationActionId);
     await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
   }
 
@@ -310,13 +322,17 @@ class AutomationService {
     outputId: number,
     value: number,
   ): Promise<number> {
-    const result = await this.#sprootDB.addOutputActionAsync(automationId, outputId, value);
+    const result = await this.#sprootDB.automations.addOutputActionAsync(
+      automationId,
+      outputId,
+      value,
+    );
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
-    await this.#sprootDB.deleteOutputActionAsync(outputActionId);
+    await this.#sprootDB.automations.deleteOutputActionAsync(outputActionId);
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
   }
 

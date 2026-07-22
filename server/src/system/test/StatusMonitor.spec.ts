@@ -14,8 +14,13 @@ describe("ServerStatsManager", () => {
 
   beforeEach(() => {
     sprootDBMock = {
-      getDatabaseSizeAsync: sinon.stub().resolves(12345),
-      getCameraSettingsAsync: sinon.stub().resolves([]),
+      system: {
+        getDatabaseSizeAsync: sinon.stub().resolves(12345),
+      },
+      camera: {
+        getCameraSettingsAsync: sinon.stub().resolves([]),
+        updateCameraSettingsAsync: sinon.stub().resolves(),
+      },
     };
     knexConnectionMock = {
       client: {
@@ -70,6 +75,6 @@ describe("ServerStatsManager", () => {
     await manager.regenerateAsync();
     using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
     await monitor.getStatusAsync();
-    assert.strictEqual(sprootDBMock.getDatabaseSizeAsync.calledOnce, true);
+    assert.strictEqual(sprootDBMock.system.getDatabaseSizeAsync.calledOnce, true);
   });
 });

@@ -1,6 +1,6 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB, IJournalsRepository } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
 import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
@@ -12,10 +12,12 @@ describe("EntryManager.ts tests", () => {
 
   beforeEach(() => {
     sprootDB = {
-      getJournalEntryAsync: sinon.stub(),
-      getJournalEntriesAsync: sinon.stub(),
-      getJournalEntryTagLookupsAsync: sinon.stub(),
-      getJournalEntryTagsAsync: sinon.stub(),
+      journals: {
+        getJournalEntryAsync: sinon.stub(),
+        getJournalEntriesAsync: sinon.stub(),
+        getJournalEntryTagLookupsAsync: sinon.stub(),
+        getJournalEntryTagsAsync: sinon.stub(),
+      } as unknown as IJournalsRepository,
     };
 
     entryManager = new EntryManager(sprootDB as ISprootDB);
@@ -53,9 +55,9 @@ describe("EntryManager.ts tests", () => {
         { id: 6, name: "tag2", color: "#fff" },
       ];
 
-      (sprootDB.getJournalEntriesAsync as sinon.SinonStub).resolves(entries);
-      (sprootDB.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
-      (sprootDB.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
+      (sprootDB.journals!.getJournalEntriesAsync as sinon.SinonStub).resolves(entries);
+      (sprootDB.journals!.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
+      (sprootDB.journals!.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
 
       const res = await entryManager.getAsync(10);
       assert.strictEqual(res.length, 2);
@@ -98,9 +100,9 @@ describe("EntryManager.ts tests", () => {
       const lookups: SDBJournalEntryTagLookup[] = [{ id: 1, journalEntryId: 1, tagId: 5 }];
       const tags: SDBJournalEntryTag[] = [{ id: 5, name: "tag", color: null }];
 
-      (sprootDB.getJournalEntryAsync as sinon.SinonStub).resolves(entries);
-      (sprootDB.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
-      (sprootDB.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
+      (sprootDB.journals!.getJournalEntryAsync as sinon.SinonStub).resolves(entries);
+      (sprootDB.journals!.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
+      (sprootDB.journals!.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
 
       const res = await entryManager.getAsync(undefined, 1);
       assert.strictEqual(res.length, 1);
@@ -116,14 +118,14 @@ describe("EntryManager.ts tests", () => {
     });
 
     it("should return empty array if no entries found", async () => {
-      (sprootDB.getJournalEntriesAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals!.getJournalEntriesAsync as sinon.SinonStub).resolves([]);
       const res = await entryManager.getAsync(10);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);
     });
 
     it("should return empty array if no entry found for id", async () => {
-      (sprootDB.getJournalEntryAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals!.getJournalEntryAsync as sinon.SinonStub).resolves([]);
       const res = await entryManager.getAsync(undefined, 999);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);

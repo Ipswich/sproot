@@ -3,10 +3,7 @@ import { IDeviceZonesRepository } from "@sproot/sproot-common/dist/database/ISpr
 import { Knex } from "knex";
 import { BaseKnexRepository } from "./BaseKnexRepository";
 
-export class DeviceZonesRepository
-  extends BaseKnexRepository
-  implements IDeviceZonesRepository
-{
+export class DeviceZonesRepository extends BaseKnexRepository implements IDeviceZonesRepository {
   constructor(connection: Knex) {
     super(connection);
   }

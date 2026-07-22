@@ -3,11 +3,27 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
+import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+
+const createStubSprootDB = () => {
+  const sprootDB = new MockSprootDB() as any;
+  sprootDB.automations = {
+    getAutomationsAsync: sinon.stub(),
+  } as any;
+  sprootDB.conditions = {
+    getSensorConditionsAsync: sinon.stub(),
+    getOutputConditionsAsync: sinon.stub(),
+    getTimeConditionsAsync: sinon.stub(),
+    getWeekdayConditionsAsync: sinon.stub(),
+    getMonthConditionsAsync: sinon.stub(),
+    getDateRangeConditionsAsync: sinon.stub(),
+  } as any;
+  return sprootDB;
+};
 
 describe("AutomationService", () => {
   let mockLogger: winston.Logger;
@@ -52,10 +68,10 @@ describe("AutomationService", () => {
 
   describe("evaluateAllAutomationsAsync", () => {
     it("should emit event with enabled automation when conditions are met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -64,10 +80,10 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
-      sprootDB.getAutomationsAsync.resolves([
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.getAutomationsAsync.resolves([
         {
           id: 1,
           name: "Time Alert",
@@ -95,10 +111,10 @@ describe("AutomationService", () => {
     });
 
     it("should emit event with timestamp matching the input 'now' parameter", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -107,11 +123,11 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
-      sprootDB.getAutomationsAsync.resolves([
+      sprootDB.automations.getAutomationsAsync.resolves([
         {
           id: 1,
           name: "Test Automation",
@@ -134,10 +150,10 @@ describe("AutomationService", () => {
     });
 
     it("should emit single event with multiple automations with conditions met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -153,10 +169,10 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
-      sprootDB.getAutomationsAsync.resolves([
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.getAutomationsAsync.resolves([
         {
           id: 1,
           name: "Automation 1",
@@ -194,10 +210,10 @@ describe("AutomationService", () => {
     });
 
     it("should emit (empty) event with disabled automation (conditions met)", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([
+      const sprootDB = createStubSprootDB();
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -206,10 +222,10 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
-      sprootDB.getAutomationsAsync.resolves([
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.automations.getAutomationsAsync.resolves([
         {
           id: 1,
           name: "Time Alert",
@@ -231,15 +247,15 @@ describe("AutomationService", () => {
     });
 
     it("should emit (empty) event with enabled automation when no conditions are met", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getSensorConditionsAsync.resolves([]);
-      sprootDB.getOutputConditionsAsync.resolves([]);
-      sprootDB.getTimeConditionsAsync.resolves([]);
-      sprootDB.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.getMonthConditionsAsync.resolves([]);
-      sprootDB.getDateRangeConditionsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
+      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
+      sprootDB.conditions.getTimeConditionsAsync.resolves([]);
+      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
+      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
+      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
 
-      sprootDB.getAutomationsAsync.resolves([
+      sprootDB.automations.getAutomationsAsync.resolves([
         {
           id: 1,
           name: "Test Automation",
@@ -263,8 +279,8 @@ describe("AutomationService", () => {
     });
 
     it("should emit (empty)event when handling empty automation list", async () => {
-      const sprootDB = sinon.createStubInstance(MockSprootDB);
-      sprootDB.getAutomationsAsync.resolves([]);
+      const sprootDB = createStubSprootDB();
+      sprootDB.automations.getAutomationsAsync.resolves([]);
 
       const service = await AutomationService.createInstanceAsync(sprootDB, eventBus, mockLogger);
 

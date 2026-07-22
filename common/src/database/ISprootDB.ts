@@ -308,85 +308,252 @@ export interface IDataQueriesRepository {
   queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse>;
 }
 
-export interface ISprootDB
-  extends ISensorsRepository,
-    IOutputsRepository,
-    ISubcontrollersRepository,
-    IAutomationsRepository,
-    IConditionsRepository,
-    ICameraRepository,
-    IUsersRepository,
-    IDeviceZonesRepository,
-    ISystemRepository,
-    IJournalsRepository,
-    IDataQueriesRepository {
+export interface ISprootDB {
+  sensors: ISensorsRepository;
+  outputs: IOutputsRepository;
+  subcontrollers: ISubcontrollersRepository;
+  automations: IAutomationsRepository;
+  conditions: IConditionsRepository;
+  camera: ICameraRepository;
+  users: IUsersRepository;
+  deviceZones: IDeviceZonesRepository;
+  system: ISystemRepository;
+  journals: IJournalsRepository;
+  dataQueries: IDataQueriesRepository;
   [Symbol.asyncDispose](): Promise<void>;
 }
 
 class MockSprootDB implements ISprootDB {
-  async getWeekdayConditionsAsync(_automationId: number): Promise<SDBWeekdayCondition[]> {
+  sensors = new MockSensorsRepository();
+  outputs = new MockOutputsRepository();
+  subcontrollers = new MockSubcontrollersRepository();
+  automations = new MockAutomationsRepository();
+  conditions = new MockConditionsRepository();
+  camera = new MockCameraRepository();
+  users = new MockUsersRepository();
+  deviceZones = new MockDeviceZonesRepository();
+  system = new MockSystemRepository();
+  journals = new MockJournalsRepository();
+  dataQueries = new MockDataQueriesRepository();
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+export class MockUsersRepository implements IUsersRepository {
+  async getUserAsync(_username: string): Promise<SDBUser[]> {
     return [];
   }
-  async addWeekdayConditionAsync(
-    _automationId: number,
-    _groupType: ConditionGroupType,
-    _weekdays: number,
-  ): Promise<number> {
+  async addUserAsync(_user: SDBUser): Promise<void> {
+    return;
+  }
+}
+
+export class MockCameraRepository implements ICameraRepository {
+  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
+    return [];
+  }
+  async updateCameraSettingsAsync(_cameraSettings: SDBCameraSettings): Promise<void> {
+    return;
+  }
+}
+
+export class MockDeviceZonesRepository implements IDeviceZonesRepository {
+  async getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
+    return [];
+  }
+  async addDeviceZoneAsync(_name: string): Promise<number> {
     return 0;
   }
-  async updateWeekdayConditionAsync(
-    _automationId: number,
-    _condition: IWeekdayCondition,
+  async updateDeviceZoneAsync(_deviceZone: SDBDeviceZone): Promise<void> {
+    return;
+  }
+  async deleteDeviceZoneAsync(_id: number): Promise<void> {
+    return;
+  }
+}
+
+export class MockSubcontrollersRepository implements ISubcontrollersRepository {
+  async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
+    return [];
+  }
+  async addSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
+    return 0;
+  }
+  async updateSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
+    return 0;
+  }
+  async deleteSubcontrollersAsync(_id: number): Promise<number> {
+    return 0;
+  }
+}
+
+export class MockDataQueriesRepository implements IDataQueriesRepository {
+  async querySensorDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
+  }
+  async queryOutputDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
+  }
+}
+
+export class MockOutputsRepository implements IOutputsRepository {
+  async getOutputsAsync(): Promise<SDBOutput[]> {
+    return [];
+  }
+  async getOutputAsync(_id: number): Promise<SDBOutput[]> {
+    return [];
+  }
+  async addOutputAsync(_output: SDBOutput): Promise<number> {
+    return 0;
+  }
+  async updateOutputAsync(_output: SDBOutput): Promise<void> {
+    return;
+  }
+  async deleteOutputAsync(_id: number): Promise<void> {
+    return;
+  }
+  async updateLastOutputStateAsync(_output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void> {
+    return;
+  }
+  async getLastOutputStateAsync(_outputId: number): Promise<SDBOutputState[]> {
+    return [];
+  }
+  async addOutputStateAsync(_output: {
+    id: number;
+    value: number;
+    controlMode: ControlMode;
+  }): Promise<void> {
+    return;
+  }
+  async getOutputStatesAsync(
+    _output: IOutputBase | { id: number },
+    _since: Date,
+    _minutes: number,
+    _toIsoString: boolean,
+  ): Promise<SDBOutputState[]> {
+    return [];
+  }
+  async getBucketedOutputStatesAsync(
+    _output: IOutputBase | { id: number },
+    _since: Date,
+    _minutes: number,
+    _bucketMinutes: number,
+    _toIsoString: boolean,
+  ): Promise<SDBOutputState[]> {
+    return [];
+  }
+}
+
+export class MockSensorsRepository implements ISensorsRepository {
+  async getSensorsAsync(): Promise<SDBSensor[]> {
+    return [];
+  }
+  async getSensorAsync(_id: number): Promise<SDBSensor[]> {
+    return [];
+  }
+  async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
+    return [];
+  }
+  async addSensorAsync(_sensor: SDBSensor): Promise<void> {
+    return;
+  }
+  async updateSensorAsync(_sensor: SDBSensor): Promise<void> {
+    return;
+  }
+  async updateSensorCalibrationAsync(
+    _sensorId: number,
+    _lowCalibrationPoint: number,
+    _highCalibrationPoint: number,
   ): Promise<void> {
     return;
   }
-  async deleteWeekdayConditionAsync(_conditionId: number): Promise<void> {
+  async deleteSensorAsync(_id: number): Promise<void> {
     return;
   }
-
-  async getMonthConditionsAsync(_automationId: number): Promise<SDBMonthCondition[]> {
+  async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
+    return;
+  }
+  async getSensorReadingsAsync(
+    _sensor: ISensorBase | { id: number },
+    _since: Date,
+    _minutes: number,
+    _toIsoString: boolean,
+  ): Promise<SDBReading[]> {
     return [];
   }
-  async addMonthConditionAsync(
-    _automationId: number,
-    _groupType: ConditionGroupType,
-    _months: number,
-  ): Promise<number> {
+  async getBucketedSensorReadingsAsync(
+    _sensor: ISensorBase | { id: number },
+    _since: Date,
+    _minutes: number,
+    _bucketMinutes: number,
+    _toIsoString: boolean,
+  ): Promise<SDBReading[]> {
+    return [];
+  }
+}
+
+export class MockSystemRepository implements ISystemRepository {
+  async getDatabaseSizeAsync(): Promise<number> {
     return 0;
   }
-  async updateMonthConditionAsync(
-    _automationId: number,
-    _condition: IMonthCondition,
+  async backupDatabaseAsync(
+    _host: string,
+    _port: number,
+    _user: string,
+    _password: string,
+    _outputFile: string,
+    _logger: winston.Logger,
   ): Promise<void> {
     return;
   }
-  async deleteMonthConditionAsync(_conditionId: number): Promise<void> {
+  async validateBackupArchiveAsync(_inputFile: string, _logger: winston.Logger): Promise<void> {
     return;
   }
-
-  async getDateRangeConditionsAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
-    return [];
-  }
-  async addDateRangeConditionAsync(
-    _automationId: number,
-    _groupType: ConditionGroupType,
-    _startMonth: number,
-    _startDate: number,
-    _endMonth: number,
-    _endDate: number,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateDateRangeConditionAsync(
-    _automationId: number,
-    _condition: IDateRangeCondition,
+  async swapRestoreDatabaseAsync(
+    _host: string,
+    _port: number,
+    _user: string,
+    _password: string,
+    _inputFile: string,
+    _logger: winston.Logger,
   ): Promise<void> {
     return;
   }
-  async deleteDateRangeConditionAsync(_conditionId: number): Promise<void> {
+  async deleteOldDatabaseAsync(_logger: winston.Logger): Promise<void> {
     return;
   }
+  async refreshAllAggregateTablesAsync(_logger: winston.Logger): Promise<void> {
+    return;
+  }
+}
 
+export class MockAutomationsRepository implements IAutomationsRepository {
+  async getAutomationsAsync(): Promise<SDBAutomation[]> {
+    return [];
+  }
+  async getAutomationAsync(_automationId: number): Promise<SDBAutomation[]> {
+    return [];
+  }
+  async addAutomationAsync(_name: string, _operator: AutomationOperator): Promise<number> {
+    return 0;
+  }
+  async updateAutomationAsync(
+    _name: string,
+    _operator: AutomationOperator,
+    _id: number,
+    _enabled: boolean,
+  ): Promise<void> {
+    return;
+  }
+  async deleteAutomationAsync(_automationId: number): Promise<void> {
+    return;
+  }
   async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
     return [];
   }
@@ -409,15 +576,12 @@ class MockSprootDB implements ISprootDB {
   async getOutputActionsByOutputIdAsync(_outputId: number): Promise<SDBOutputAction[]> {
     return [];
   }
-
-  async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputActionView[]> {
-    return [];
-  }
-
   async getNotificationActionsAsync(): Promise<SDBNotificationAction[]> {
     return [];
   }
-  async getNotificationActionByIdAsync(_id: number): Promise<SDBNotificationAction[]> {
+  async getNotificationActionByIdAsync(
+    _notificationActionId: number,
+  ): Promise<SDBNotificationAction[]> {
     return [];
   }
   async getNotificationActionsByAutomationIdAsync(
@@ -435,23 +599,8 @@ class MockSprootDB implements ISprootDB {
   async deleteNotificationActionAsync(_notificationActionId: number): Promise<void> {
     return;
   }
-
-  async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {
+  async getAutomationsForOutputAsync(_outputId: number): Promise<SDBOutputActionView[]> {
     return [];
-  }
-  async addTimeConditionAsync(
-    _automationId: number,
-    _type: ConditionGroupType,
-    _startTime: string | null,
-    _endTime: string | null,
-  ): Promise<number> {
-    return 1;
-  }
-  async updateTimeConditionAsync(_automationId: number, _condition: ITimeCondition): Promise<void> {
-    return;
-  }
-  async deleteTimeConditionAsync(_conditionId: number): Promise<void> {
-    return;
   }
   async deleteSensorAutomationConditionsExceptAsync(
     _automationId: number,
@@ -465,26 +614,9 @@ class MockSprootDB implements ISprootDB {
   ): Promise<void> {
     return;
   }
-  async getAutomationsAsync(): Promise<SDBAutomation[]> {
-    return [];
-  }
-  async getAutomationAsync(_automationId: number): Promise<SDBAutomation[]> {
-    return [];
-  }
-  async addAutomationAsync(_name: string, _operator: AutomationOperator): Promise<number> {
-    return 0;
-  }
-  async updateAutomationAsync(
-    _name: string,
-    _operator: AutomationOperator,
-    _id: number,
-    _enabled: boolean,
-  ): Promise<void> {
-    return;
-  }
-  async deleteAutomationAsync(_automationId: number): Promise<void> {
-    return;
-  }
+}
+
+export class MockConditionsRepository implements IConditionsRepository {
   async getSensorConditionsAsync(_automationId: number): Promise<SDBSensorCondition[]> {
     return [];
   }
@@ -530,189 +662,86 @@ class MockSprootDB implements ISprootDB {
   async deleteOutputConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
-
-  async getOutputStatesAsync(
-    _output: IOutputBase | { id: number },
-    _since: Date,
-    _minutes: number,
-    _toIsoString: boolean,
-  ): Promise<SDBOutputState[]> {
+  async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {
     return [];
   }
-
-  async getBucketedOutputStatesAsync(
-    output: IOutputBase | { id: number },
-    since: Date,
-    minutes: number,
-    _bucketMinutes: number,
-    toIsoString: boolean,
-  ): Promise<SDBOutputState[]> {
-    return this.getOutputStatesAsync(output, since, minutes, toIsoString);
+  async addTimeConditionAsync(
+    _automationId: number,
+    _type: ConditionGroupType,
+    _startTime: string | undefined | null,
+    _endTime: string | undefined | null,
+  ): Promise<number> {
+    return 0;
   }
-
-  async addOutputStateAsync(_output: {
-    id: number;
-    value: number;
-    controlMode: ControlMode;
-  }): Promise<void> {
+  async updateTimeConditionAsync(_automationId: number, _condition: ITimeCondition): Promise<void> {
     return;
   }
-
-  async updateLastOutputStateAsync(_output: {
-    id: number;
-    value: number;
-    controlMode: ControlMode;
-  }): Promise<void> {
+  async deleteTimeConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
-
-  async getLastOutputStateAsync(_outputId: number): Promise<SDBOutputState[]> {
+  async getWeekdayConditionsAsync(_automationId: number): Promise<SDBWeekdayCondition[]> {
     return [];
   }
-
-  async getOutputsAsync(): Promise<SDBOutput[]> {
-    return [];
+  async addWeekdayConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _weekdays: number,
+  ): Promise<number> {
+    return 0;
   }
-
-  async getOutputAsync(_id: number): Promise<SDBOutput[]> {
-    return [];
-  }
-
-  async getSensorsAsync(): Promise<SDBSensor[]> {
-    return [];
-  }
-
-  async getSensorAsync(_id: number): Promise<SDBSensor[]> {
-    return [];
-  }
-
-  async addSensorAsync(_sensor: SDBSensor): Promise<void> {
-    return;
-  }
-
-  async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
-    return [];
-  }
-
-  async addSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
-    return 1;
-  }
-
-  async updateSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
-    return 1;
-  }
-
-  async deleteSubcontrollersAsync(_id: number): Promise<number> {
-    return 1;
-  }
-
-  async updateSensorAsync(_sensor: SDBSensor): Promise<void> {
-    return;
-  }
-
-  async updateSensorCalibrationAsync(
-    _sensorId: number,
-    _lowCalibrationPoint: number,
-    _highCalibrationPoint: number,
+  async updateWeekdayConditionAsync(
+    _automationId: number,
+    _condition: IWeekdayCondition,
   ): Promise<void> {
     return;
   }
-
-  async deleteSensorAsync(_id: number): Promise<void> {
+  async deleteWeekdayConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
-
-  async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
+  async getMonthConditionsAsync(_automationId: number): Promise<SDBMonthCondition[]> {
     return [];
   }
-
-  async addOutputAsync(_output: SDBOutput): Promise<number> {
+  async addMonthConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _months: number,
+  ): Promise<number> {
     return 0;
   }
-
-  async updateOutputAsync(_output: SDBOutput): Promise<void> {
+  async updateMonthConditionAsync(
+    _automationId: number,
+    _condition: IMonthCondition,
+  ): Promise<void> {
     return;
   }
-
-  async deleteOutputAsync(_id: number): Promise<void> {
+  async deleteMonthConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
-
-  async getSensorReadingsAsync(
-    _sensor: ISensorBase,
-    _since: Date,
-    _minutes?: number,
-    _toIsoString?: boolean,
-  ): Promise<SDBReading[]> {
+  async getDateRangeConditionsAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
     return [];
   }
-
-  async getBucketedSensorReadingsAsync(
-    sensor: ISensorBase,
-    since: Date,
-    minutes: number,
-    _bucketMinutes: number,
-    toIsoString: boolean,
-  ): Promise<SDBReading[]> {
-    return this.getSensorReadingsAsync(sensor, since, minutes, toIsoString);
-  }
-
-  async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
-    return;
-  }
-
-  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
-    return [];
-  }
-
-  // async addCameraSettingsAsync(
-  //   _name: string,
-  //   _xVideoResolution: number | null,
-  //   _yVideoResolution: number | null,
-  //   _videoFps: number,
-  //   _xImageResolution: number | null,
-  //   _yImageResolution: number | null,
-  //   _imageRetentionDays: number,
-  //   _imageRetentionSize: number,
-  //   _timelapseEnabled: boolean,
-  //   _timelapseInterval: number | null,
-  // ): Promise<number> {
-  //   return 0;
-  // }
-
-  async updateCameraSettingsAsync(_cameraSettings: SDBCameraSettings): Promise<void> {
-    return;
-  }
-
-  async deleteCameraSettingsAsync(_cameraId: number): Promise<void> {
-    return;
-  }
-
-  async getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
-    return [];
-  }
-
-  async addDeviceZoneAsync(_name: string): Promise<number> {
+  async addDateRangeConditionAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _startMonth: number,
+    _startDate: number,
+    _endMonth: number,
+    _endDate: number,
+  ): Promise<number> {
     return 0;
   }
-
-  async updateDeviceZoneAsync(_deviceZone: SDBDeviceZone): Promise<void> {
+  async updateDateRangeConditionAsync(
+    _automationId: number,
+    _condition: IDateRangeCondition,
+  ): Promise<void> {
     return;
   }
-
-  async deleteDeviceZoneAsync(_id: number): Promise<void> {
+  async deleteDateRangeConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
+}
 
-  async getUserAsync(_username: string): Promise<SDBUser[]> {
-    return [];
-  }
-
-  async addUserAsync(_user: SDBUser): Promise<void> {
-    return;
-  }
-
-  /* Journals (mock implementations) */
+class MockJournalsRepository implements IJournalsRepository {
   async getJournalsAsync(): Promise<SDBJournal[]> {
     return [];
   }
@@ -804,57 +833,6 @@ class MockSprootDB implements ISprootDB {
   async deleteJournalEntryTagLookupAsync(_journalEntryId: number, _tagId: number): Promise<void> {
     return;
   }
-
-  async getDatabaseSizeAsync(): Promise<number> {
-    return 0;
-  }
-
-  async backupDatabaseAsync(
-    _host: string,
-    _port: number,
-    _user: string,
-    _password: string,
-    _outputFile: string,
-    _logger: winston.Logger,
-  ): Promise<void> {
-    return;
-  }
-
-  async validateBackupArchiveAsync(_inputFile: string, _logger: winston.Logger): Promise<void> {
-    return Promise.resolve();
-  }
-
-  async swapRestoreDatabaseAsync(
-    _host: string,
-    _port: number,
-    _user: string,
-    _password: string,
-    _inputFile: string,
-    _logger: winston.Logger,
-  ): Promise<void> {
-    return Promise.resolve();
-  }
-
-  // Raw data query mocks
-  async querySensorDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
-    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
-  }
-
-  async queryOutputDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
-    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
-  }
-
-  async deleteOldDatabaseAsync(_logger: winston.Logger): Promise<void> {
-    return Promise.resolve();
-  }
-
-  async refreshAllAggregateTablesAsync(_logger: winston.Logger): Promise<void> {
-    return Promise.resolve();
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    return Promise.resolve();
-  }
 }
 
-export { MockSprootDB };
+export { MockSprootDB, MockJournalsRepository };

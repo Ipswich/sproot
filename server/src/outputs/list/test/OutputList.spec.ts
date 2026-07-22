@@ -21,7 +21,7 @@ describe("OutputList.ts tests", function () {
       const mockMdnsService = sinon.createStubInstance(MdnsService);
       sinon.createStubInstance(Pca9685Driver);
 
-      const getOutputsAsyncStub = sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      const getOutputsAsyncStub = sinon.stub(mockSprootDB.outputs, "getOutputsAsync").resolves([
         {
           id: 1,
           model: Models.PCA9685,
@@ -184,7 +184,7 @@ describe("OutputList.ts tests", function () {
       const mockMdnsService = sinon.createStubInstance(MdnsService);
       sinon.createStubInstance(Pca9685Driver);
 
-      sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      sinon.stub(mockSprootDB.outputs, "getOutputsAsync").resolves([
         {
           id: 1,
           model: Models.PCA9685,
@@ -233,7 +233,7 @@ describe("OutputList.ts tests", function () {
       sinon.createStubInstance(Pca9685Driver);
 
       sinon.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
-      sinon.stub(MockSprootDB.prototype, "getOutputsAsync").resolves([
+      sinon.stub(mockSprootDB.outputs, "getOutputsAsync").resolves([
         {
           id: 1,
           model: Models.PCA9685,
