@@ -18,8 +18,8 @@ describe("ServerStatsManager", () => {
         getDatabaseSizeAsync: sinon.stub().resolves(12345),
       },
       camera: {
-        getCameraSettingsAsync: sinon.stub().resolves([]),
-        updateCameraSettingsAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([]),
+        updateAsync: sinon.stub().resolves(),
       },
     };
     knexConnectionMock = {

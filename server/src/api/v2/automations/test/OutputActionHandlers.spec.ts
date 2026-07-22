@@ -15,8 +15,8 @@ import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 const createStubSprootDB = () => {
   const sprootDB = new MockSprootDB() as any;
   sprootDB.automations = {
-    getAutomationsAsync: sinon.stub(),
-    getAutomationAsync: sinon.stub(),
+    getAllAsync: sinon.stub(),
+    getByIdAsync: sinon.stub(),
     getOutputActionsAsync: sinon.stub(),
     getOutputActionsByAutomationIdAsync: sinon.stub(),
     getOutputActionAsync: sinon.stub(),
@@ -341,7 +341,7 @@ describe("OutputActionHandlers.ts tests", () => {
         },
       } as unknown as Response;
       const sprootDB = createStubSprootDB();
-      sprootDB.automations.getAutomationAsync.resolves([
+      sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "test", operator: "or" } as SDBAutomation,
       ]);
       const outputList = sinon.createStubInstance(OutputList);
@@ -349,7 +349,7 @@ describe("OutputActionHandlers.ts tests", () => {
         1: { id: 1, name: "test", type: "test", isPwm: true },
         2: { id: 2, name: "test2", type: "test", isPwm: false },
       });
-      sprootDB.automations.getAutomationsAsync.resolves([]);
+      sprootDB.automations.getAllAsync.resolves([]);
       sprootDB.automations.addOutputActionAsync.resolves(1);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -466,9 +466,9 @@ describe("OutputActionHandlers.ts tests", () => {
       const outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputs").value({ 1: { id: 1, name: "test", type: "test" } });
       sprootDB.automations.getOutputActionAsync.resolves([]);
-      sprootDB.automations.getAutomationsAsync.resolves([]);
+      sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.automations.getAutomationAsync.rejects(new Error("Database unreachable"));
+      sprootDB.automations.getByIdAsync.rejects(new Error("Database unreachable"));
 
       const mockRequest = {
         app: {
@@ -517,7 +517,7 @@ describe("OutputActionHandlers.ts tests", () => {
       sprootDB.automations.getOutputActionAsync.resolves([
         { id: 1, automationId: 1, outputId: 1, value: 100 } as SDBOutputAction,
       ]);
-      sprootDB.automations.getAutomationsAsync.resolves([]);
+      sprootDB.automations.getAllAsync.resolves([]);
       sprootDB.automations.deleteOutputActionAsync.resolves();
       const automationService = await createAutomationServiceAsync(sprootDB);
 

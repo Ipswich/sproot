@@ -10,8 +10,8 @@ describe("JournalManager.ts tests", () => {
   beforeEach(function () {
     sprootDB = {
       journals: {
-        getJournalsAsync: sinon.stub(),
-        getJournalAsync: sinon.stub(),
+        getAllAsync: sinon.stub(),
+        getByIdAsync: sinon.stub(),
         getJournalTagsAsync: sinon.stub(),
         getJournalTagLookupsAsync: sinon.stub(),
       } as unknown as IJournalsRepository,
@@ -23,7 +23,7 @@ describe("JournalManager.ts tests", () => {
   afterEach(function () {
     sinon.restore();
   });
-  describe("getJournalsAsync", () => {
+  describe("getAllAsync", () => {
     it("should map tags for all journals", async () => {
       const journals = [
         { id: 1, title: "J1" },
@@ -40,7 +40,7 @@ describe("JournalManager.ts tests", () => {
         { journalId: 2, tagId: 12 },
       ];
 
-      (sprootDB.journals!.getJournalsAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals!.getAllAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals!.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
       (sprootDB.journals!.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
 
@@ -77,7 +77,7 @@ describe("JournalManager.ts tests", () => {
       const tags = [{ id: 10, name: "T1" }];
       const lookups = [{ journalId: 1, tagId: 10 }];
 
-      (sprootDB.journals!.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals!.getByIdAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals!.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
       (sprootDB.journals!.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
 
@@ -94,14 +94,14 @@ describe("JournalManager.ts tests", () => {
     });
 
     it("should return empty array if no journals found", async () => {
-      (sprootDB.journals!.getJournalsAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals!.getAllAsync as sinon.SinonStub).resolves([]);
       const res = await journalManager.getJournalsAsync();
       assert.isArray(res);
       assert.strictEqual(res.length, 0);
     });
 
     it("should return empty array if no journal found for id", async () => {
-      (sprootDB.journals!.getJournalAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals!.getByIdAsync as sinon.SinonStub).resolves([]);
       const res = await journalManager.getJournalsAsync(999);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);

@@ -8,11 +8,11 @@ export class CameraRepository extends BaseKnexRepository implements ICameraRepos
     super(connection);
   }
 
-  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
+  async getAllAsync(): Promise<SDBCameraSettings[]> {
     return this.connection("camera_settings").select("*");
   }
 
-  async updateCameraSettingsAsync(cameraSettings: SDBCameraSettings): Promise<void> {
+  async updateAsync(cameraSettings: SDBCameraSettings): Promise<void> {
     return this.connection("camera_settings").where("id", cameraSettings.id).update({
       id: cameraSettings.id,
       enabled: cameraSettings.enabled,

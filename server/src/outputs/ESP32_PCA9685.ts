@@ -38,7 +38,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing subcontrollerId.`);
       return undefined;
     }
-    const subcontroller = (await this.sprootDB.subcontrollers.getSubcontrollersAsync()).find(
+    const subcontroller = (await this.sprootDB.subcontrollers.getAllAsync()).find(
       (device) => device.id == output.subcontrollerId,
     );
     if (subcontroller == null) {

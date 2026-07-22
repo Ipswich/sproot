@@ -17,15 +17,15 @@ export default class JournalManager {
     color: string | null = null,
     startDate: Date | null = null,
   ): Promise<number> {
-    return this.#sprootDB.journals.addJournalAsync(name, description, icon, color, toDbDate(startDate));
+    return this.#sprootDB.journals.addAsync(name, description, icon, color, toDbDate(startDate));
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    return this.#sprootDB.journals.updateJournalAsync(journal);
+    return this.#sprootDB.journals.updateAsync(journal);
   }
 
   async deleteJournalAsync(id: number): Promise<void> {
-    return this.#sprootDB.journals.deleteJournalAsync(id);
+    return this.#sprootDB.journals.deleteAsync(id);
   }
 
   async createJournalTagAsync(name: string, color: string | null = null): Promise<number> {
@@ -45,9 +45,9 @@ export default class JournalManager {
   ): Promise<Array<{ journal: SDBJournal; tags: SDBJournalTag[] }>> {
     let journals: SDBJournal[] = [];
     if (journalId != null) {
-      journals = await this.#sprootDB.journals.getJournalAsync(journalId);
+      journals = await this.#sprootDB.journals.getByIdAsync(journalId);
     } else {
-      journals = await this.#sprootDB.journals.getJournalsAsync();
+      journals = await this.#sprootDB.journals.getAllAsync();
     }
     if (!journals || journals.length === 0) return [];
 

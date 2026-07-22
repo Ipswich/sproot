@@ -47,8 +47,8 @@ describe("CameraManager", () => {
     delete rootOverrides.camera;
     const sprootDB = {
       camera: {
-        getCameraSettingsAsync: sandbox.stub().resolves(settings),
-        updateCameraSettingsAsync: sandbox.stub().resolves(),
+        getAllAsync: sandbox.stub().resolves(settings),
+        updateAsync: sandbox.stub().resolves(),
         ...(cameraOverrides ?? {}),
       },
       ...rootOverrides,
@@ -283,11 +283,11 @@ describe("CameraManager", () => {
     const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
     const sprootDB = {
       camera: {
-        getCameraSettingsAsync: sandbox.stub(),
+        getAllAsync: sandbox.stub(),
       },
     };
-    sprootDB.camera.getCameraSettingsAsync.onFirstCall().resolves([cameraSettings]);
-    sprootDB.camera.getCameraSettingsAsync
+    sprootDB.camera.getAllAsync.onFirstCall().resolves([cameraSettings]);
+    sprootDB.camera.getAllAsync
       .onSecondCall()
       .resolves([{ ...cameraSettings, enabled: false }]);
 
@@ -310,9 +310,9 @@ describe("CameraManager", () => {
   });
 
   it("returns the same instance and does nothing after disposal", async () => {
-    const getCameraSettingsAsync = sandbox.stub().resolves([cameraSettings]);
+    const getAllAsync = sandbox.stub().resolves([cameraSettings]);
     const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
-    const manager = (await createManager([], { camera: { getCameraSettingsAsync } })).manager;
+    const manager = (await createManager([], { camera: { getAllAsync } })).manager;
 
     await manager[Symbol.asyncDispose]();
     createdManagers = createdManagers.filter((currentManager) => currentManager !== manager);
@@ -320,22 +320,22 @@ describe("CameraManager", () => {
 
     assert.strictEqual(result, manager);
     assert.isTrue(startAsyncStub.calledOnce);
-    assert.isTrue(getCameraSettingsAsync.calledOnce);
+    assert.isTrue(getAllAsync.calledOnce);
   });
 
   it("skips overlapping regenerate calls while an update is already in progress", async () => {
     const warnStub = sandbox.stub(logger, "warn");
     let resolveSettings!: (value: SDBCameraSettings[]) => void;
-    const getCameraSettingsAsync = sandbox.stub();
-    getCameraSettingsAsync.onFirstCall().resolves([]);
-    getCameraSettingsAsync.onSecondCall().callsFake(
+    const getAllAsync = sandbox.stub();
+    getAllAsync.onFirstCall().resolves([]);
+    getAllAsync.onSecondCall().callsFake(
       () =>
         new Promise<SDBCameraSettings[]>((resolve) => {
           resolveSettings = resolve;
         }),
     );
 
-    const manager = (await createManager([], { camera: { getCameraSettingsAsync } })).manager;
+    const manager = (await createManager([], { camera: { getAllAsync } })).manager;
 
     const firstRegenerate = manager.regenerateAsync();
     const secondRegenerate = manager.regenerateAsync();
@@ -345,7 +345,7 @@ describe("CameraManager", () => {
     assert.isTrue(
       warnings.includes("CameraManager is already updating, skipping regenerateAsync call."),
     );
-    assert.equal(getCameraSettingsAsync.callCount, 2);
+    assert.equal(getAllAsync.callCount, 2);
 
     resolveSettings([cameraSettings]);
     assert.strictEqual(await firstRegenerate, manager);

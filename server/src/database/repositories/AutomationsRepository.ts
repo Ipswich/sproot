@@ -14,19 +14,19 @@ export class AutomationsRepository extends BaseKnexRepository implements IAutoma
     super(connection);
   }
 
-  async getAutomationsAsync(): Promise<SDBAutomation[]> {
+  async getAllAsync(): Promise<SDBAutomation[]> {
     return this.connection("automations").select("*");
   }
 
-  async getAutomationAsync(automationId: number): Promise<SDBAutomation[]> {
+  async getByIdAsync(automationId: number): Promise<SDBAutomation[]> {
     return this.connection("automations").where("id", automationId).select("*");
   }
 
-  async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
+  async addAsync(name: string, operator: AutomationOperator): Promise<number> {
     return this.insertAndGetIdAsync("automations", { name, operator });
   }
 
-  async updateAutomationAsync(
+  async updateAsync(
     name: string,
     operator: AutomationOperator,
     id: number,
@@ -35,7 +35,7 @@ export class AutomationsRepository extends BaseKnexRepository implements IAutoma
     return this.connection("automations").where("id", id).update({ name, operator, enabled });
   }
 
-  async deleteAutomationAsync(automationId: number): Promise<void> {
+  async deleteAsync(automationId: number): Promise<void> {
     return this.connection("automations").where("id", automationId).delete();
   }
 

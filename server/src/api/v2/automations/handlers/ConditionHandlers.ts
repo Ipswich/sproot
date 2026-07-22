@@ -51,7 +51,7 @@ export async function getAllAsync(
   }
 
   try {
-    const automation = await sprootDB.automations.getAutomationAsync(automationId);
+    const automation = await sprootDB.automations.getByIdAsync(automationId);
     if (automation.length == 0) {
       getAllConditionsResponse = {
         statusCode: 404,
@@ -161,7 +161,7 @@ export async function getByTypeAsync(
   }
 
   try {
-    const automation = await sprootDB.automations.getAutomationAsync(automationId);
+    const automation = await sprootDB.automations.getByIdAsync(automationId);
     if (automation.length == 0) {
       getConditionResponse = {
         statusCode: 404,
@@ -270,7 +270,7 @@ export async function getOneOfByTypeAsync(
   }
 
   try {
-    const automation = await sprootDB.automations.getAutomationAsync(automationId);
+    const automation = await sprootDB.automations.getByIdAsync(automationId);
     if (automation.length == 0) {
       getConditionResponse = {
         statusCode: 404,
@@ -397,7 +397,7 @@ export async function addAsync(
   }
 
   try {
-    const automation = await sprootDB.automations.getAutomationAsync(automationId);
+    const automation = await sprootDB.automations.getByIdAsync(automationId);
     if (automation.length == 0) {
       addConditionResponse = {
         statusCode: 404,
@@ -702,7 +702,7 @@ export async function updateAsync(
   }
 
   try {
-    const automation = await sprootDB.automations.getAutomationAsync(automationId);
+    const automation = await sprootDB.automations.getByIdAsync(automationId);
     if (automation.length == 0) {
       updateConditionResponse = {
         statusCode: 404,
@@ -1060,7 +1060,7 @@ export async function deleteAsync(
   }
 
   try {
-    const automation = await sprootDB.automations.getAutomationAsync(automationId);
+    const automation = await sprootDB.automations.getByIdAsync(automationId);
     if (automation.length == 0) {
       deleteConditionResponse = {
         statusCode: 404,

@@ -50,7 +50,7 @@ class AutomationService {
    */
   async loadAllAutomationsAsync(): Promise<void> {
     try {
-      const rawAutomations = await this.#sprootDB.automations.getAutomationsAsync();
+      const rawAutomations = await this.#sprootDB.automations.getAllAsync();
       this.#automations = new Map();
 
       const promises = rawAutomations.map(async (automation) => {
@@ -112,13 +112,13 @@ class AutomationService {
 
   // CRUD methods
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
-    const resultId = await this.#sprootDB.automations.addAutomationAsync(name, operator);
+    const resultId = await this.#sprootDB.automations.addAsync(name, operator);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
   async deleteAutomationAsync(id: number) {
-    await this.#sprootDB.automations.deleteAutomationAsync(id);
+    await this.#sprootDB.automations.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -128,7 +128,7 @@ class AutomationService {
     operator: AutomationOperator,
     enabled: boolean,
   ) {
-    await this.#sprootDB.automations.updateAutomationAsync(name, operator, id, enabled);
+    await this.#sprootDB.automations.updateAsync(name, operator, id, enabled);
     await this.#postAutomationChangeFunctionAsync();
   }
 

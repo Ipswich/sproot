@@ -171,7 +171,7 @@ export async function addAsync(
   }
 
   try {
-    if ((await sprootDB.automations.getAutomationAsync(automationId)).length == 0) {
+    if ((await sprootDB.automations.getByIdAsync(automationId)).length == 0) {
       automationResponse = {
         statusCode: 404,
         error: {

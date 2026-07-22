@@ -16,7 +16,7 @@ const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_PCA9685.ts tests", function () {
   this.beforeEach(() => {
-    sinon.stub(mockSprootDB.subcontrollers, "getSubcontrollersAsync").resolves([
+    sinon.stub(mockSprootDB.subcontrollers, "getAllAsync").resolves([
       {
         id: 1,
         type: "ESP32",

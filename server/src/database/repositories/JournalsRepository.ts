@@ -14,18 +14,18 @@ export class JournalsRepository extends BaseKnexRepository implements IJournalsR
     super(connection);
   }
 
-  async getJournalsAsync(): Promise<SDBJournal[]> {
+  async getAllAsync(): Promise<SDBJournal[]> {
     return (await this.connection("journals").select("*")).map((journal: SDBJournal) =>
       this.mapJournal(journal),
     );
   }
 
-  async getJournalAsync(id: number): Promise<SDBJournal[]> {
+  async getByIdAsync(id: number): Promise<SDBJournal[]> {
     const results = await this.connection("journals").where("id", id).select("*");
     return (results as SDBJournal[]).map((journal: SDBJournal) => this.mapJournal(journal));
   }
 
-  async addJournalAsync(
+  async addAsync(
     title: string,
     description: string | null,
     icon: string | null,
@@ -44,7 +44,7 @@ export class JournalsRepository extends BaseKnexRepository implements IJournalsR
     });
   }
 
-  async updateJournalAsync(journal: SDBJournal): Promise<void> {
+  async updateAsync(journal: SDBJournal): Promise<void> {
     const archivedAt = journal.archived ? (isoToDb(journal.archivedAt) ?? toDbDate()) : null;
     return this.connection("journals")
       .where("id", journal.id)
@@ -59,7 +59,7 @@ export class JournalsRepository extends BaseKnexRepository implements IJournalsR
       });
   }
 
-  async deleteJournalAsync(id: number): Promise<void> {
+  async deleteAsync(id: number): Promise<void> {
     return this.connection("journals").where("id", id).delete();
   }
 

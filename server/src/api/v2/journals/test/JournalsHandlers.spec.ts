@@ -48,7 +48,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalsAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getAllAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 3, name: "x", color: null },
       ]);
@@ -88,7 +88,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 9, name: "tag", color: null },
       ]);
@@ -113,7 +113,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.getJournalsAsync as sinon.SinonStub).rejects(new Error("boom"));
+      (sprootDB.journals.getAllAsync as sinon.SinonStub).rejects(new Error("boom"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -135,7 +135,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.addJournalAsync as sinon.SinonStub).resolves(7);
+      (sprootDB.journals.addAsync as sinon.SinonStub).resolves(7);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -172,7 +172,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.addJournalAsync as sinon.SinonStub).rejects(new Error("create fail"));
+      (sprootDB.journals.addAsync as sinon.SinonStub).rejects(new Error("create fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -210,7 +210,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -243,7 +243,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(existing);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
@@ -282,10 +282,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(existing);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.journals.updateJournalAsync as sinon.SinonStub).resolves();
+      (sprootDB.journals.updateAsync as sinon.SinonStub).resolves();
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -318,10 +318,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(existing);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.journals.updateJournalAsync as sinon.SinonStub).rejects(new Error("update fail"));
+      (sprootDB.journals.updateAsync as sinon.SinonStub).rejects(new Error("update fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -359,7 +359,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: { get: (k: string) => (k === "journalService" ? { journalManager } : undefined) },
@@ -391,10 +391,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(existing);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.journals.deleteJournalAsync as sinon.SinonStub).resolves();
+      (sprootDB.journals.deleteAsync as sinon.SinonStub).resolves();
       const journalManager = new JournalManager(sprootDB as ISprootDB);
 
       const mockRequest = {
@@ -426,10 +426,10 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(existing);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
-      (sprootDB.journals.deleteJournalAsync as sinon.SinonStub).rejects(new Error("del fail"));
+      (sprootDB.journals.deleteAsync as sinon.SinonStub).rejects(new Error("del fail"));
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -471,7 +471,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -506,7 +506,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 2, name: "x", color: null },
       ]);
@@ -544,7 +544,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.addJournalTagLookupAsync as sinon.SinonStub).resolves(1);
@@ -589,7 +589,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.addJournalTagLookupAsync as sinon.SinonStub).rejects(new Error("addtag fail"));
@@ -642,7 +642,7 @@ describe("JournalsHandlers.ts tests", () => {
       } as unknown as Response;
       const sprootDB = new MockSprootDB();
       stubJournalsMethods(sprootDB);
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves([]);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
       const mockRequest = {
         app: {
@@ -676,7 +676,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(existing);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(existing);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([]);
       (sprootDB.journals.getJournalTagLookupsAsync as sinon.SinonStub).resolves([]);
       const journalManager = new JournalManager(sprootDB as ISprootDB);
@@ -714,7 +714,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 4, name: "tag", color: null },
       ]);
@@ -752,7 +752,7 @@ describe("JournalsHandlers.ts tests", () => {
           editedAt: new Date().toISOString(),
         },
       ];
-      (sprootDB.journals.getJournalAsync as sinon.SinonStub).resolves(journals);
+      (sprootDB.journals.getByIdAsync as sinon.SinonStub).resolves(journals);
       (sprootDB.journals.getJournalTagsAsync as sinon.SinonStub).resolves([
         { id: 6, name: "tag", color: null },
       ]);

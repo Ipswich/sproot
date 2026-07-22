@@ -8,11 +8,11 @@ export class UsersRepository extends BaseKnexRepository implements IUsersReposit
     super(connection);
   }
 
-  async getUserAsync(username: string): Promise<SDBUser[]> {
+  async getByIdAsync(username: string): Promise<SDBUser[]> {
     return this.connection("users").where("username", username).select("*");
   }
 
-  async addUserAsync(user: SDBUser): Promise<void> {
+  async addAsync(user: SDBUser): Promise<void> {
     return this.connection("users").insert(user);
   }
 }

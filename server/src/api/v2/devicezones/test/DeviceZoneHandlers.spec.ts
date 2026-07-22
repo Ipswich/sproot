@@ -9,13 +9,13 @@ describe("DeviceZoneHandlers.ts", function () {
   describe("getAsync", function () {
     it("should return a 200 and a list of device zones", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([
+        getAllAsync: sinon.stub().resolves([
           { id: 1, name: "Zone 1" },
           { id: 2, name: "Zone 2" },
         ]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -45,10 +45,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 503 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().rejects(new Error("Database error")),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().rejects(new Error("Database error")),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -78,10 +78,10 @@ describe("DeviceZoneHandlers.ts", function () {
   describe("addAsync", function () {
     it("should return a 201 and the new deviceId", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([]),
-        addDeviceZoneAsync: sinon.stub().resolves(1),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub().resolves(1),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -112,10 +112,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 400 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -146,10 +146,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 503 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([]),
-        addDeviceZoneAsync: sinon.stub().rejects(new Error("Database error")),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub().rejects(new Error("Database error")),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -182,10 +182,10 @@ describe("DeviceZoneHandlers.ts", function () {
   describe("updateAsync", function () {
     it("should return a 200 and the updated device zone", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -219,10 +219,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 400 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -255,10 +255,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 404 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -292,10 +292,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 503 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().rejects(new Error("Database error")),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([{ id: 1, name: "Old Zone" } as SDBDeviceZone]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().rejects(new Error("Database error")),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -331,10 +331,10 @@ describe("DeviceZoneHandlers.ts", function () {
   describe("deleteAsync", function () {
     it("should return a 200 and a success message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -363,10 +363,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 400 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().resolves(),
+        getAllAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().resolves(),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {
@@ -397,10 +397,10 @@ describe("DeviceZoneHandlers.ts", function () {
 
     it("should return a 503 and an error message", async function () {
       const deviceZones = {
-        getDeviceZonesAsync: sinon.stub().resolves([]),
-        addDeviceZoneAsync: sinon.stub().resolves(0),
-        updateDeviceZoneAsync: sinon.stub().resolves(),
-        deleteDeviceZoneAsync: sinon.stub().rejects(new Error("Database error")),
+        getAllAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub().resolves(0),
+        updateAsync: sinon.stub().resolves(),
+        deleteAsync: sinon.stub().rejects(new Error("Database error")),
       };
       const mockSprootDb = { deviceZones } as any;
       const mockRequest = {

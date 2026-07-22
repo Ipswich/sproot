@@ -506,7 +506,7 @@ describe("tplinkPlug.ts tests", async function () {
     const logger = winston.createLogger({ silent: true });
     const setStatePowerStub = sinon.stub(Plug.prototype, "setPowerState").resolves(true);
     const sprootDB = new MockSprootDB();
-    sinon.stub(sprootDB.automations, "getAutomationsAsync").resolves([
+    sinon.stub(sprootDB.automations, "getAllAsync").resolves([
       {
         id: 1,
         name: "testAutomation",

@@ -226,7 +226,7 @@ describe("API Tests", async function () {
     describe("Create, Update, Delete", async () => {
       describe("POST", async () => {
         it("should return 201", async () => {
-          assert.lengthOf(await app.get("sprootDB").automations.getAutomationsAsync(), 2);
+          assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 2);
           await request(server)
             .post("/api/v2/automations")
             .send({
@@ -234,13 +234,13 @@ describe("API Tests", async function () {
               operator: "or",
             })
             .expect(201);
-          assert.lengthOf(await app.get("sprootDB").automations.getAutomationsAsync(), 3);
+          assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 3);
         });
       });
       describe("PATCH", async () => {
         it("should return 200", async () => {
           assert.equal(
-            (await app.get("sprootDB").automations.getAutomationAsync(3))[0].name,
+            (await app.get("sprootDB").automations.getByIdAsync(3))[0].name,
             "Test Automation",
           );
           await request(server)
@@ -251,16 +251,16 @@ describe("API Tests", async function () {
             })
             .expect(200);
           assert.equal(
-            (await app.get("sprootDB").automations.getAutomationAsync(3))[0].name,
+            (await app.get("sprootDB").automations.getByIdAsync(3))[0].name,
             "Test1 Automation",
           );
         });
       });
       describe("DELETE", async () => {
         it("should return 200", async () => {
-          assert.lengthOf(await app.get("sprootDB").automations.getAutomationsAsync(), 3);
+          assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 3);
           await request(server).delete("/api/v2/automations/3").expect(200);
-          assert.lengthOf(await app.get("sprootDB").automations.getAutomationsAsync(), 2);
+          assert.lengthOf(await app.get("sprootDB").automations.getAllAsync(), 2);
         });
       });
     });
@@ -964,7 +964,7 @@ describe("API Tests", async function () {
     describe("Create, Update, Delete", async () => {
       describe("POST", async () => {
         it("should return 201", async () => {
-          assert.lengthOf(await app.get("sprootDB").deviceZones.getDeviceZonesAsync(), 2);
+          assert.lengthOf(await app.get("sprootDB").deviceZones.getAllAsync(), 2);
           const response = await request(server)
             .post("/api/v2/device-zones")
             .send({
@@ -982,7 +982,7 @@ describe("API Tests", async function () {
         describe("PATCH", async () => {
           it("should return 200", async () => {
             assert.equal(
-              (await app.get("sprootDB").deviceZones.getDeviceZonesAsync())[2].name,
+              (await app.get("sprootDB").deviceZones.getAllAsync())[2].name,
               "Test Device Group",
             );
             const response = await request(server)
@@ -996,7 +996,7 @@ describe("API Tests", async function () {
             const content = response.body["content"];
 
             assert.equal(
-              (await app.get("sprootDB").deviceZones.getDeviceZonesAsync())[2].name,
+              (await app.get("sprootDB").deviceZones.getAllAsync())[2].name,
               "Test1 Device Group",
             );
             assert.containsAllKeys(content.data, ["id", "name"]);
@@ -1005,10 +1005,10 @@ describe("API Tests", async function () {
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").deviceZones.getDeviceZonesAsync(), 3);
+            assert.lengthOf(await app.get("sprootDB").deviceZones.getAllAsync(), 3);
             const response = await request(server).delete("/api/v2/device-zones/3").expect(200);
             validateMiddlewareValues(response);
-            assert.lengthOf(await app.get("sprootDB").deviceZones.getDeviceZonesAsync(), 2);
+            assert.lengthOf(await app.get("sprootDB").deviceZones.getAllAsync(), 2);
           });
         });
       });
@@ -1983,7 +1983,7 @@ describe("API Tests", async function () {
 
       describe("POST", async () => {
         it("should return a 204 and add a subcontroller to the database", async () => {
-          let subcontrollers = await app.get("sprootDB").subcontrollers.getSubcontrollersAsync();
+          let subcontrollers = await app.get("sprootDB").subcontrollers.getAllAsync();
           assert.isEmpty(subcontrollers);
           await request(server)
             .post("/api/v2/subcontrollers")
@@ -1993,7 +1993,7 @@ describe("API Tests", async function () {
             })
             .expect(201);
 
-          subcontrollers = await app.get("sprootDB").subcontrollers.getSubcontrollersAsync();
+          subcontrollers = await app.get("sprootDB").subcontrollers.getAllAsync();
           assert.lengthOf(subcontrollers, 1);
           assert.equal(subcontrollers[0].id, 1);
           assert.equal(subcontrollers[0].name, "Test Device");
@@ -2018,7 +2018,7 @@ describe("API Tests", async function () {
 
       describe("PATCH", async () => {
         it("should return a 200 and update a subcontroller in the database", async () => {
-          let subcontrollers = await app.get("sprootDB").subcontrollers.getSubcontrollersAsync();
+          let subcontrollers = await app.get("sprootDB").subcontrollers.getAllAsync();
           const secureToken = subcontrollers[0].secureToken;
           assert.lengthOf(subcontrollers, 1);
           assert.equal(subcontrollers[0].name, "Test Device");
@@ -2030,7 +2030,7 @@ describe("API Tests", async function () {
             })
             .expect(200);
 
-          subcontrollers = await app.get("sprootDB").subcontrollers.getSubcontrollersAsync();
+          subcontrollers = await app.get("sprootDB").subcontrollers.getAllAsync();
           assert.lengthOf(subcontrollers, 1);
           assert.equal(subcontrollers[0].name, "Updated Test Device");
           assert.equal(subcontrollers[0].hostName, "sproot-device-8af4.local");
@@ -2041,12 +2041,12 @@ describe("API Tests", async function () {
 
       describe("DELETE", async () => {
         it("should return a 200 and delete a subcontroller from the database", async () => {
-          let subcontrollers = await app.get("sprootDB").subcontrollers.getSubcontrollersAsync();
+          let subcontrollers = await app.get("sprootDB").subcontrollers.getAllAsync();
           assert.lengthOf(subcontrollers, 1);
 
           await request(server).delete("/api/v2/subcontrollers/1").expect(200);
 
-          subcontrollers = await app.get("sprootDB").subcontrollers.getSubcontrollersAsync();
+          subcontrollers = await app.get("sprootDB").subcontrollers.getAllAsync();
           assert.lengthOf(subcontrollers, 0);
         });
       });

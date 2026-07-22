@@ -45,17 +45,17 @@ import {
 import * as winston from "winston";
 
 export interface ISensorsRepository {
-  getSensorsAsync(): Promise<SDBSensor[]>;
-  getSensorAsync(id: number): Promise<SDBSensor[]>;
+  getAllAsync(): Promise<SDBSensor[]>;
+  getByIdAsync(id: number): Promise<SDBSensor[]>;
   getDS18B20AddressesAsync(): Promise<SDBSensor[]>;
-  addSensorAsync(sensor: SDBSensor): Promise<void>;
-  updateSensorAsync(sensor: SDBSensor): Promise<void>;
+  addAsync(sensor: SDBSensor): Promise<void>;
+  updateAsync(sensor: SDBSensor): Promise<void>;
   updateSensorCalibrationAsync(
     sensorId: number,
     lowCalibrationPoint: number,
     highCalibrationPoint: number,
   ): Promise<void>;
-  deleteSensorAsync(id: number): Promise<void>;
+  deleteAsync(id: number): Promise<void>;
   addSensorReadingAsync(sensor: ISensorBase): Promise<void>;
   getSensorReadingsAsync(
     sensor: ISensorBase | { id: number },
@@ -73,11 +73,11 @@ export interface ISensorsRepository {
 }
 
 export interface IOutputsRepository {
-  getOutputsAsync(): Promise<SDBOutput[]>;
-  getOutputAsync(id: number): Promise<SDBOutput[]>;
-  addOutputAsync(output: SDBOutput): Promise<number>;
-  updateOutputAsync(output: SDBOutput): Promise<void>;
-  deleteOutputAsync(id: number): Promise<void>;
+  getAllAsync(): Promise<SDBOutput[]>;
+  getByIdAsync(id: number): Promise<SDBOutput[]>;
+  addAsync(output: SDBOutput): Promise<number>;
+  updateAsync(output: SDBOutput): Promise<void>;
+  deleteAsync(id: number): Promise<void>;
   updateLastOutputStateAsync(output: {
     id: number;
     value: number;
@@ -105,23 +105,23 @@ export interface IOutputsRepository {
 }
 
 export interface ISubcontrollersRepository {
-  getSubcontrollersAsync(): Promise<SDBSubcontroller[]>;
-  addSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
-  updateSubcontrollerAsync(sensor: SDBSubcontroller): Promise<number>;
-  deleteSubcontrollersAsync(id: number): Promise<number>;
+  getAllAsync(): Promise<SDBSubcontroller[]>;
+  addAsync(sensor: SDBSubcontroller): Promise<number>;
+  updateAsync(sensor: SDBSubcontroller): Promise<number>;
+  deleteAsync(id: number): Promise<number>;
 }
 
 export interface IAutomationsRepository {
-  getAutomationsAsync(): Promise<SDBAutomation[]>;
-  getAutomationAsync(automationId: number): Promise<SDBAutomation[]>;
-  addAutomationAsync(name: string, operator: AutomationOperator): Promise<number>;
-  updateAutomationAsync(
+  getAllAsync(): Promise<SDBAutomation[]>;
+  getByIdAsync(automationId: number): Promise<SDBAutomation[]>;
+  addAsync(name: string, operator: AutomationOperator): Promise<number>;
+  updateAsync(
     name: string,
     operator: AutomationOperator,
     id: number,
     enabled: boolean,
   ): Promise<void>;
-  deleteAutomationAsync(automationId: number): Promise<void>;
+  deleteAsync(automationId: number): Promise<void>;
 
   getOutputActionsAsync(): Promise<SDBOutputAction[]>;
   getOutputActionsByAutomationIdAsync(automationId: number): Promise<SDBOutputAction[]>;
@@ -215,22 +215,22 @@ export interface IConditionsRepository {
 }
 
 export interface ICameraRepository {
-  getCameraSettingsAsync(): Promise<SDBCameraSettings[]>;
+  getAllAsync(): Promise<SDBCameraSettings[]>;
   // addCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<number>;
-  updateCameraSettingsAsync(SDBCameraSettings: SDBCameraSettings): Promise<void>;
+  updateAsync(SDBCameraSettings: SDBCameraSettings): Promise<void>;
   // deleteCameraSettingsAsync(cameraId: number): Promise<void>;
 }
 
 export interface IUsersRepository {
-  getUserAsync(username: string): Promise<SDBUser[]>;
-  addUserAsync(user: SDBUser): Promise<void>;
+  getByIdAsync(username: string): Promise<SDBUser[]>;
+  addAsync(user: SDBUser): Promise<void>;
 }
 
 export interface IDeviceZonesRepository {
-  getDeviceZonesAsync(): Promise<SDBDeviceZone[]>;
-  addDeviceZoneAsync(name: string): Promise<number>;
-  updateDeviceZoneAsync(deviceZone: SDBDeviceZone): Promise<void>;
-  deleteDeviceZoneAsync(id: number): Promise<void>;
+  getAllAsync(): Promise<SDBDeviceZone[]>;
+  addAsync(name: string): Promise<number>;
+  updateAsync(deviceZone: SDBDeviceZone): Promise<void>;
+  deleteAsync(id: number): Promise<void>;
 }
 
 export interface ISystemRepository {
@@ -261,17 +261,17 @@ export interface ISystemRepository {
 }
 
 export interface IJournalsRepository {
-  getJournalsAsync(): Promise<SDBJournal[]>;
-  getJournalAsync(id: number): Promise<SDBJournal[]>;
-  addJournalAsync(
+  getAllAsync(): Promise<SDBJournal[]>;
+  getByIdAsync(id: number): Promise<SDBJournal[]>;
+  addAsync(
     name: string,
     description: string | null,
     icon: string | null,
     color: string | null,
     startDate?: string | null,
   ): Promise<number>;
-  updateJournalAsync(journal: SDBJournal): Promise<void>;
-  deleteJournalAsync(id: number): Promise<void>;
+  updateAsync(journal: SDBJournal): Promise<void>;
+  deleteAsync(id: number): Promise<void>;
 
   getJournalTagsAsync(): Promise<SDBJournalTag[]>;
   addJournalTagAsync(name: string, color: string | null): Promise<number>;
@@ -342,49 +342,49 @@ class MockSprootDB implements ISprootDB {
 }
 
 export class MockUsersRepository implements IUsersRepository {
-  async getUserAsync(_username: string): Promise<SDBUser[]> {
+  async getByIdAsync(_username: string): Promise<SDBUser[]> {
     return [];
   }
-  async addUserAsync(_user: SDBUser): Promise<void> {
+  async addAsync(_user: SDBUser): Promise<void> {
     return;
   }
 }
 
 export class MockCameraRepository implements ICameraRepository {
-  async getCameraSettingsAsync(): Promise<SDBCameraSettings[]> {
+  async getAllAsync(): Promise<SDBCameraSettings[]> {
     return [];
   }
-  async updateCameraSettingsAsync(_cameraSettings: SDBCameraSettings): Promise<void> {
+  async updateAsync(_cameraSettings: SDBCameraSettings): Promise<void> {
     return;
   }
 }
 
 export class MockDeviceZonesRepository implements IDeviceZonesRepository {
-  async getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
+  async getAllAsync(): Promise<SDBDeviceZone[]> {
     return [];
   }
-  async addDeviceZoneAsync(_name: string): Promise<number> {
+  async addAsync(_name: string): Promise<number> {
     return 0;
   }
-  async updateDeviceZoneAsync(_deviceZone: SDBDeviceZone): Promise<void> {
+  async updateAsync(_deviceZone: SDBDeviceZone): Promise<void> {
     return;
   }
-  async deleteDeviceZoneAsync(_id: number): Promise<void> {
+  async deleteAsync(_id: number): Promise<void> {
     return;
   }
 }
 
 export class MockSubcontrollersRepository implements ISubcontrollersRepository {
-  async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
+  async getAllAsync(): Promise<SDBSubcontroller[]> {
     return [];
   }
-  async addSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
+  async addAsync(_subcontroller: SDBSubcontroller): Promise<number> {
     return 0;
   }
-  async updateSubcontrollerAsync(_subcontroller: SDBSubcontroller): Promise<number> {
+  async updateAsync(_subcontroller: SDBSubcontroller): Promise<number> {
     return 0;
   }
-  async deleteSubcontrollersAsync(_id: number): Promise<number> {
+  async deleteAsync(_id: number): Promise<number> {
     return 0;
   }
 }
@@ -399,19 +399,19 @@ export class MockDataQueriesRepository implements IDataQueriesRepository {
 }
 
 export class MockOutputsRepository implements IOutputsRepository {
-  async getOutputsAsync(): Promise<SDBOutput[]> {
+  async getAllAsync(): Promise<SDBOutput[]> {
     return [];
   }
-  async getOutputAsync(_id: number): Promise<SDBOutput[]> {
+  async getByIdAsync(_id: number): Promise<SDBOutput[]> {
     return [];
   }
-  async addOutputAsync(_output: SDBOutput): Promise<number> {
+  async addAsync(_output: SDBOutput): Promise<number> {
     return 0;
   }
-  async updateOutputAsync(_output: SDBOutput): Promise<void> {
+  async updateAsync(_output: SDBOutput): Promise<void> {
     return;
   }
-  async deleteOutputAsync(_id: number): Promise<void> {
+  async deleteAsync(_id: number): Promise<void> {
     return;
   }
   async updateLastOutputStateAsync(_output: {
@@ -451,19 +451,19 @@ export class MockOutputsRepository implements IOutputsRepository {
 }
 
 export class MockSensorsRepository implements ISensorsRepository {
-  async getSensorsAsync(): Promise<SDBSensor[]> {
+  async getAllAsync(): Promise<SDBSensor[]> {
     return [];
   }
-  async getSensorAsync(_id: number): Promise<SDBSensor[]> {
+  async getByIdAsync(_id: number): Promise<SDBSensor[]> {
     return [];
   }
   async getDS18B20AddressesAsync(): Promise<SDBSensor[]> {
     return [];
   }
-  async addSensorAsync(_sensor: SDBSensor): Promise<void> {
+  async addAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
-  async updateSensorAsync(_sensor: SDBSensor): Promise<void> {
+  async updateAsync(_sensor: SDBSensor): Promise<void> {
     return;
   }
   async updateSensorCalibrationAsync(
@@ -473,7 +473,7 @@ export class MockSensorsRepository implements ISensorsRepository {
   ): Promise<void> {
     return;
   }
-  async deleteSensorAsync(_id: number): Promise<void> {
+  async deleteAsync(_id: number): Promise<void> {
     return;
   }
   async addSensorReadingAsync(_sensor: ISensorBase): Promise<void> {
@@ -534,16 +534,16 @@ export class MockSystemRepository implements ISystemRepository {
 }
 
 export class MockAutomationsRepository implements IAutomationsRepository {
-  async getAutomationsAsync(): Promise<SDBAutomation[]> {
+  async getAllAsync(): Promise<SDBAutomation[]> {
     return [];
   }
-  async getAutomationAsync(_automationId: number): Promise<SDBAutomation[]> {
+  async getByIdAsync(_automationId: number): Promise<SDBAutomation[]> {
     return [];
   }
-  async addAutomationAsync(_name: string, _operator: AutomationOperator): Promise<number> {
+  async addAsync(_name: string, _operator: AutomationOperator): Promise<number> {
     return 0;
   }
-  async updateAutomationAsync(
+  async updateAsync(
     _name: string,
     _operator: AutomationOperator,
     _id: number,
@@ -551,7 +551,7 @@ export class MockAutomationsRepository implements IAutomationsRepository {
   ): Promise<void> {
     return;
   }
-  async deleteAutomationAsync(_automationId: number): Promise<void> {
+  async deleteAsync(_automationId: number): Promise<void> {
     return;
   }
   async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
@@ -742,13 +742,13 @@ export class MockConditionsRepository implements IConditionsRepository {
 }
 
 class MockJournalsRepository implements IJournalsRepository {
-  async getJournalsAsync(): Promise<SDBJournal[]> {
+  async getAllAsync(): Promise<SDBJournal[]> {
     return [];
   }
-  async getJournalAsync(_id: number): Promise<SDBJournal[]> {
+  async getByIdAsync(_id: number): Promise<SDBJournal[]> {
     return [];
   }
-  async addJournalAsync(
+  async addAsync(
     _name: string,
     _description: string | null,
     _icon: string | null,
@@ -757,10 +757,10 @@ class MockJournalsRepository implements IJournalsRepository {
   ): Promise<number> {
     return 0;
   }
-  async updateJournalAsync(_journal: SDBJournal): Promise<void> {
+  async updateAsync(_journal: SDBJournal): Promise<void> {
     return;
   }
-  async deleteJournalAsync(_id: number): Promise<void> {
+  async deleteAsync(_id: number): Promise<void> {
     return;
   }
 

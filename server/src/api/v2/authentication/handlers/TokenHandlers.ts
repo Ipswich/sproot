@@ -52,7 +52,7 @@ export async function getTokenAsync(
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let user: SDBUser[];
   try {
-    user = await sprootDB.users.getUserAsync(request.body.username);
+    user = await sprootDB.users.getByIdAsync(request.body.username);
   } catch (error) {
     authenticationResponse = {
       statusCode: 503,

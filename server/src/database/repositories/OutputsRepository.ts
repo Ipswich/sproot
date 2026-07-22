@@ -12,17 +12,17 @@ export class OutputsRepository extends BaseKnexRepository implements IOutputsRep
     super(connection);
   }
 
-  async getOutputsAsync(): Promise<SDBOutput[]> {
+  async getAllAsync(): Promise<SDBOutput[]> {
     return this.connection("outputs").select("*", "subcontroller_id as subcontrollerId");
   }
 
-  async getOutputAsync(id: number): Promise<SDBOutput[]> {
+  async getByIdAsync(id: number): Promise<SDBOutput[]> {
     return this.connection("outputs")
       .select("*", "subcontroller_id as subcontrollerId")
       .where("id", id);
   }
 
-  async addOutputAsync(output: SDBOutput): Promise<number> {
+  async addAsync(output: SDBOutput): Promise<number> {
     return this.insertAndGetIdAsync("outputs", {
       name: output.name,
       model: output.model,
@@ -37,7 +37,7 @@ export class OutputsRepository extends BaseKnexRepository implements IOutputsRep
     });
   }
 
-  async updateOutputAsync(output: SDBOutput): Promise<void> {
+  async updateAsync(output: SDBOutput): Promise<void> {
     if (output.parentOutputId === output.id) {
       throw new Error("Output cannot be its own parent");
     }
@@ -59,7 +59,7 @@ export class OutputsRepository extends BaseKnexRepository implements IOutputsRep
       });
   }
 
-  async deleteOutputAsync(id: number): Promise<void> {
+  async deleteAsync(id: number): Promise<void> {
     return this.connection("outputs").where("id", id).delete();
   }
 

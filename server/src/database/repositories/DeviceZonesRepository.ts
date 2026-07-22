@@ -8,21 +8,21 @@ export class DeviceZonesRepository extends BaseKnexRepository implements IDevice
     super(connection);
   }
 
-  async getDeviceZonesAsync(): Promise<SDBDeviceZone[]> {
+  async getAllAsync(): Promise<SDBDeviceZone[]> {
     return this.connection("device_zones").select("*");
   }
 
-  async addDeviceZoneAsync(name: string): Promise<number> {
+  async addAsync(name: string): Promise<number> {
     return this.insertAndGetIdAsync("device_zones", { name });
   }
 
-  async updateDeviceZoneAsync(deviceZone: SDBDeviceZone): Promise<void> {
+  async updateAsync(deviceZone: SDBDeviceZone): Promise<void> {
     return this.connection("device_zones")
       .where("id", deviceZone.id)
       .update({ name: deviceZone.name });
   }
 
-  async deleteDeviceZoneAsync(id: number): Promise<void> {
+  async deleteAsync(id: number): Promise<void> {
     return this.connection("device_zones").where("id", id).delete();
   }
 }

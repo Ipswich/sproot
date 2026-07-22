@@ -12,7 +12,7 @@ export class SubcontrollersRepository
     super(connection);
   }
 
-  async getSubcontrollersAsync(): Promise<SDBSubcontroller[]> {
+  async getAllAsync(): Promise<SDBSubcontroller[]> {
     const result = await this.connection("subcontrollers").select("*");
     result.forEach((device: SDBSubcontroller) => {
       device.secureToken =
@@ -21,14 +21,14 @@ export class SubcontrollersRepository
     return result;
   }
 
-  async addSubcontrollerAsync(subcontroller: SDBSubcontroller): Promise<number> {
+  async addAsync(subcontroller: SDBSubcontroller): Promise<number> {
     const copy = { ...subcontroller };
     copy.secureToken =
       copy.secureToken == null ? null : encrypt(copy.secureToken, process.env["JWT_SECRET"]!);
     return this.insertAndGetIdAsync("subcontrollers", copy);
   }
 
-  async updateSubcontrollerAsync(subcontroller: SDBSubcontroller): Promise<number> {
+  async updateAsync(subcontroller: SDBSubcontroller): Promise<number> {
     return this.connection("subcontrollers").where("id", subcontroller.id).update({
       name: subcontroller.name,
       type: subcontroller.type,
@@ -36,7 +36,7 @@ export class SubcontrollersRepository
     });
   }
 
-  async deleteSubcontrollersAsync(id: number): Promise<number> {
+  async deleteAsync(id: number): Promise<number> {
     return this.connection("subcontrollers").where("id", id).delete();
   }
 }

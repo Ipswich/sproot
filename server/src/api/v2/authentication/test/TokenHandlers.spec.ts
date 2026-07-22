@@ -14,7 +14,7 @@ describe("TokenHandlers.ts tests", () => {
     const sprootDB = new MockSprootDB();
     const userStub = sinon.createStubInstance(MockUsersRepository);
     sprootDB.users = userStub as unknown as MockUsersRepository;
-    userStub.getUserAsync.resolves([
+    userStub.getByIdAsync.resolves([
       {
         username: "dev-test",
         hash: "$2b$10$LyJ6YjLoT/FKyG8n1Puu7Oo8kEnh9mMSR0beiETYd5qLw7qIZYqIW",
@@ -196,7 +196,7 @@ describe("TokenHandlers.ts tests", () => {
           },
         },
       } as unknown as Response;
-      userStub.getUserAsync.rejects(new Error("Database error"));
+      userStub.getByIdAsync.rejects(new Error("Database error"));
 
       const result = (await getTokenAsync(
         request,

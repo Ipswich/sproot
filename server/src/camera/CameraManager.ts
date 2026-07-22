@@ -173,7 +173,7 @@ class CameraManager {
   }
 
   async updateCameraSettingsAsync(newSettings: SDBCameraSettings): Promise<void> {
-    await this.#sprootDB.camera.updateCameraSettingsAsync(newSettings);
+    await this.#sprootDB.camera.updateAsync(newSettings);
     await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent({}));
   }
 
@@ -187,7 +187,7 @@ class CameraManager {
     }
     this.#isUpdating = true;
     try {
-      const settings = await this.#sprootDB.camera.getCameraSettingsAsync();
+      const settings = await this.#sprootDB.camera.getAllAsync();
 
       if (settings[0] != undefined) {
         this.#currentSettings = settings[0];

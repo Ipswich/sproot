@@ -15,7 +15,7 @@ export async function getAsync(request: Request, response: Response) {
   const sprootDB = request.app.get(DI_KEYS.SprootDB) as ISprootDB;
   let automationResponse: SuccessResponse | ErrorResponse;
   try {
-    const automations = await sprootDB.automations.getAutomationsAsync();
+    const automations = await sprootDB.automations.getAllAsync();
     automationResponse = {
       statusCode: 200,
       content: {
@@ -61,7 +61,7 @@ export async function getByIdAsync(request: Request, response: Response) {
 
   try {
     const automation = (
-      await sprootDB.automations.getAutomationAsync(parseInt(request.params["automationId"]))
+      await sprootDB.automations.getByIdAsync(parseInt(request.params["automationId"]))
     )[0];
     if (automation == null) {
       return {
@@ -183,7 +183,7 @@ export async function updateAsync(request: Request, response: Response) {
 
   try {
     const automation = (
-      await sprootDB.automations.getAutomationAsync(parseInt(request.params["automationId"]))
+      await sprootDB.automations.getByIdAsync(parseInt(request.params["automationId"]))
     )[0];
     if (automation == null) {
       updateAutomationResponse = {
@@ -254,7 +254,7 @@ export async function deleteAsync(request: Request, response: Response) {
   }
 
   try {
-    const automation = await sprootDB.automations.getAutomationAsync(
+    const automation = await sprootDB.automations.getByIdAsync(
       parseInt(request.params["automationId"]),
     );
     if (automation.length == 0) {

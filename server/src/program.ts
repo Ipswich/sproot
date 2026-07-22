@@ -177,12 +177,12 @@ async function defaultUserCheck(sprootDB: ISprootDB, logger: winston.Logger) {
     email: process.env["DEFAULT_USER_EMAIL"]!,
   } as SDBUser;
 
-  const user = await sprootDB.users.getUserAsync(defaultUser.username);
+  const user = await sprootDB.users.getByIdAsync(defaultUser.username);
   if (user?.length == 0) {
     logger.info("Default user not found, creating from environment variables.");
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(defaultUser.hash, salt);
     defaultUser.hash = hash;
-    await sprootDB.users.addUserAsync(defaultUser);
+    await sprootDB.users.addAsync(defaultUser);
   }
 }

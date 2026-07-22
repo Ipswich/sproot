@@ -13,7 +13,7 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
     super(connection);
   }
 
-  async getSensorsAsync(): Promise<SDBSensor[]> {
+  async getAllAsync(): Promise<SDBSensor[]> {
     const sensors = await this.connection("sensors").select(
       "*",
       "subcontroller_id as subcontrollerId",
@@ -21,7 +21,7 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
     return this.normalizeSensors(sensors);
   }
 
-  async getSensorAsync(id: number): Promise<SDBSensor[]> {
+  async getByIdAsync(id: number): Promise<SDBSensor[]> {
     const sensors = await this.connection("sensors")
       .select("*", "subcontroller_id as subcontrollerId")
       .where("id", id);
@@ -36,7 +36,7 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
     return this.normalizeSensors(sensors);
   }
 
-  async addSensorAsync(sensor: SDBSensor): Promise<void> {
+  async addAsync(sensor: SDBSensor): Promise<void> {
     return this.connection("sensors").insert({
       name: sensor.name,
       model: sensor.model,
@@ -50,7 +50,7 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
     });
   }
 
-  async updateSensorAsync(sensor: SDBSensor): Promise<void> {
+  async updateAsync(sensor: SDBSensor): Promise<void> {
     return this.connection("sensors")
       .where("id", sensor.id)
       .update({
@@ -77,7 +77,7 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
     });
   }
 
-  async deleteSensorAsync(id: number): Promise<void> {
+  async deleteAsync(id: number): Promise<void> {
     return this.connection("sensors").where("id", id).delete();
   }
 
