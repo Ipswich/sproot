@@ -70,6 +70,7 @@ export interface ISensorsRepository {
     bucketMinutes: number,
     toIsoString: boolean,
   ): Promise<SDBReading[]>;
+  getDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse>;
 }
 
 export interface IOutputsRepository {
@@ -102,6 +103,7 @@ export interface IOutputsRepository {
     bucketMinutes: number,
     toIsoString: boolean,
   ): Promise<SDBOutputState[]>;
+  getDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse>;
 }
 
 export interface ISubcontrollersRepository {
@@ -144,9 +146,15 @@ export interface IAutomationsRepository {
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
 }
 
-export interface IConditionsRepository {
-  getSensorConditionsAsync(automationId: number): Promise<SDBSensorCondition[]>;
-  addSensorConditionAsync(
+export interface IBaseConditionsRepository<T> {
+  getAsync(automationId: number): Promise<T[]>;
+  addAsync(automationId: number, ...params: unknown[]): Promise<number>;
+  updateAsync(automationId: number, condition: T): Promise<void>;
+  deleteAsync(conditionId: number): Promise<void>;
+}
+
+export interface ISensorConditionsRepository extends IBaseConditionsRepository<SDBSensorCondition> {
+  addAsync(
     automationId: number,
     type: ConditionGroupType,
     operator: ConditionOperator,
@@ -155,11 +163,34 @@ export interface IConditionsRepository {
     sensorId: number,
     readingType: string,
   ): Promise<number>;
-  updateSensorConditionAsync(automationId: number, condition: ISensorCondition): Promise<void>;
-  deleteSensorConditionAsync(conditionId: number): Promise<void>;
+  updateAsync(automationId: number, condition: ISensorCondition): Promise<void>;
+}
 
-  getOutputConditionsAsync(automationId: number): Promise<SDBOutputCondition[]>;
-  addOutputConditionAsync(
+export class MockSensorConditionsRepository implements ISensorConditionsRepository {
+  async getAsync(_automationId: number): Promise<SDBSensorCondition[]> {
+    return [];
+  }
+  async addAsync(
+    _automationId: number,
+    _type: ConditionGroupType,
+    _operator: ConditionOperator,
+    _comparisonValue: number,
+    _comparisonLookback: number | null,
+    _sensorId: number,
+    _readingType: string,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateAsync(_automationId: number, _condition: ISensorCondition): Promise<void> {
+    return;
+  }
+  async deleteAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+}
+
+export interface IOutputConditionsRepository extends IBaseConditionsRepository<SDBOutputCondition> {
+  addAsync(
     automationId: number,
     type: ConditionGroupType,
     operator: ConditionOperator,
@@ -167,39 +198,112 @@ export interface IConditionsRepository {
     comparisonLookback: number | null,
     outputId: number,
   ): Promise<number>;
-  updateOutputConditionAsync(automationId: number, condition: IOutputCondition): Promise<void>;
-  deleteOutputConditionAsync(conditionId: number): Promise<void>;
+  updateAsync(automationId: number, condition: IOutputCondition): Promise<void>;
+}
 
-  getTimeConditionsAsync(automationId: number): Promise<SDBTimeCondition[]>;
-  addTimeConditionAsync(
+export class MockOutputConditionsRepository implements IOutputConditionsRepository {
+  async getAsync(_automationId: number): Promise<SDBOutputCondition[]> {
+    return [];
+  }
+  async addAsync(
+    _automationId: number,
+    _type: ConditionGroupType,
+    _operator: ConditionOperator,
+    _comparisonValue: number,
+    _comparisonLookback: number | null,
+    _outputId: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateAsync(_automationId: number, _condition: IOutputCondition): Promise<void> {
+    return;
+  }
+  async deleteAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+}
+
+export interface ITimeConditionsRepository extends IBaseConditionsRepository<SDBTimeCondition> {
+  addAsync(
     automationId: number,
     type: ConditionGroupType,
     startTime: string | undefined | null,
     endTime: string | undefined | null,
   ): Promise<number>;
-  updateTimeConditionAsync(automationId: number, condition: ITimeCondition): Promise<void>;
-  deleteTimeConditionAsync(conditionId: number): Promise<void>;
+  updateAsync(automationId: number, condition: ITimeCondition): Promise<void>;
+}
 
-  getWeekdayConditionsAsync(automationId: number): Promise<SDBWeekdayCondition[]>;
-  addWeekdayConditionAsync(
-    automationId: number,
-    groupType: ConditionGroupType,
-    weekdays: number,
-  ): Promise<number>;
-  updateWeekdayConditionAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
-  deleteWeekdayConditionAsync(conditionId: number): Promise<void>;
+export class MockTimeConditionsRepository implements ITimeConditionsRepository {
+  async getAsync(_automationId: number): Promise<SDBTimeCondition[]> {
+    return [];
+  }
+  async addAsync(
+    _automationId: number,
+    _type: ConditionGroupType,
+    _startTime: string | undefined | null,
+    _endTime: string | undefined | null,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateAsync(_automationId: number, _condition: ITimeCondition): Promise<void> {
+    return;
+  }
+  async deleteAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+}
 
-  getMonthConditionsAsync(automationId: number): Promise<SDBMonthCondition[]>;
-  addMonthConditionAsync(
-    automationId: number,
-    groupType: ConditionGroupType,
-    months: number,
-  ): Promise<number>;
-  updateMonthConditionAsync(automationId: number, condition: IMonthCondition): Promise<void>;
-  deleteMonthConditionAsync(conditionId: number): Promise<void>;
+export interface IWeekdayConditionsRepository extends IBaseConditionsRepository<SDBWeekdayCondition> {
+  addAsync(automationId: number, groupType: ConditionGroupType, weekdays: number): Promise<number>;
+  updateAsync(automationId: number, condition: IWeekdayCondition): Promise<void>;
+}
 
-  getDateRangeConditionsAsync(automationId: number): Promise<SDBDateRangeCondition[]>;
-  addDateRangeConditionAsync(
+export class MockWeekdayConditionsRepository implements IWeekdayConditionsRepository {
+  async getAsync(_automationId: number): Promise<SDBWeekdayCondition[]> {
+    return [];
+  }
+  async addAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _weekdays: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateAsync(_automationId: number, _condition: IWeekdayCondition): Promise<void> {
+    return;
+  }
+  async deleteAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+}
+
+export interface IMonthConditionsRepository extends IBaseConditionsRepository<SDBMonthCondition> {
+  addAsync(automationId: number, groupType: ConditionGroupType, months: number): Promise<number>;
+  updateAsync(automationId: number, condition: IMonthCondition): Promise<void>;
+}
+
+export class MockMonthConditionsRepository implements IMonthConditionsRepository {
+  async getAsync(_automationId: number): Promise<SDBMonthCondition[]> {
+    return [];
+  }
+  async addAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _months: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateAsync(_automationId: number, _condition: IMonthCondition): Promise<void> {
+    return;
+  }
+  async deleteAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+}
+
+export interface IDateRangeConditionsRepository
+  extends IBaseConditionsRepository<SDBDateRangeCondition> {
+  addAsync(
     automationId: number,
     groupType: ConditionGroupType,
     startMonth: number,
@@ -207,12 +311,39 @@ export interface IConditionsRepository {
     endMonth: number,
     endDate: number,
   ): Promise<number>;
-  updateDateRangeConditionAsync(
-    automationId: number,
-    condition: IDateRangeCondition,
-  ): Promise<void>;
-  deleteDateRangeConditionAsync(conditionId: number): Promise<void>;
+  updateAsync(automationId: number, condition: IDateRangeCondition): Promise<void>;
 }
+
+export class MockDateRangeConditionsRepository implements IDateRangeConditionsRepository {
+  async getAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
+    return [];
+  }
+  async addAsync(
+    _automationId: number,
+    _groupType: ConditionGroupType,
+    _startMonth: number,
+    _startDate: number,
+    _endMonth: number,
+    _endDate: number,
+  ): Promise<number> {
+    return 0;
+  }
+  async updateAsync(_automationId: number, _condition: IDateRangeCondition): Promise<void> {
+    return;
+  }
+  async deleteAsync(_conditionId: number): Promise<void> {
+    return;
+  }
+}
+
+export type IConditionsRepository = {
+  sensor: ISensorConditionsRepository;
+  output: IOutputConditionsRepository;
+  time: ITimeConditionsRepository;
+  weekday: IWeekdayConditionsRepository;
+  month: IMonthConditionsRepository;
+  dateRange: IDateRangeConditionsRepository;
+};
 
 export interface ICameraRepository {
   getAllAsync(): Promise<SDBCameraSettings[]>;
@@ -303,11 +434,6 @@ export interface IJournalsRepository {
   deleteJournalEntryTagLookupAsync(journalEntryId: number, tagId: number): Promise<void>;
 }
 
-export interface IDataQueriesRepository {
-  querySensorDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse>;
-  queryOutputDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse>;
-}
-
 export interface ISprootDB {
   sensors: ISensorsRepository;
   outputs: IOutputsRepository;
@@ -319,7 +445,6 @@ export interface ISprootDB {
   deviceZones: IDeviceZonesRepository;
   system: ISystemRepository;
   journals: IJournalsRepository;
-  dataQueries: IDataQueriesRepository;
   [Symbol.asyncDispose](): Promise<void>;
 }
 
@@ -328,13 +453,19 @@ class MockSprootDB implements ISprootDB {
   outputs = new MockOutputsRepository();
   subcontrollers = new MockSubcontrollersRepository();
   automations = new MockAutomationsRepository();
-  conditions = new MockConditionsRepository();
+  conditions = {
+    sensor: new MockSensorConditionsRepository(),
+    output: new MockOutputConditionsRepository(),
+    time: new MockTimeConditionsRepository(),
+    weekday: new MockWeekdayConditionsRepository(),
+    month: new MockMonthConditionsRepository(),
+    dateRange: new MockDateRangeConditionsRepository(),
+  };
   camera = new MockCameraRepository();
   users = new MockUsersRepository();
   deviceZones = new MockDeviceZonesRepository();
   system = new MockSystemRepository();
   journals = new MockJournalsRepository();
-  dataQueries = new MockDataQueriesRepository();
 
   async [Symbol.asyncDispose](): Promise<void> {
     return Promise.resolve();
@@ -389,15 +520,6 @@ export class MockSubcontrollersRepository implements ISubcontrollersRepository {
   }
 }
 
-export class MockDataQueriesRepository implements IDataQueriesRepository {
-  async querySensorDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
-    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
-  }
-  async queryOutputDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
-    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
-  }
-}
-
 export class MockOutputsRepository implements IOutputsRepository {
   async getAllAsync(): Promise<SDBOutput[]> {
     return [];
@@ -448,6 +570,9 @@ export class MockOutputsRepository implements IOutputsRepository {
   ): Promise<SDBOutputState[]> {
     return [];
   }
+  async getDataAsync(_request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
+  }
 }
 
 export class MockSensorsRepository implements ISensorsRepository {
@@ -495,6 +620,9 @@ export class MockSensorsRepository implements ISensorsRepository {
     _toIsoString: boolean,
   ): Promise<SDBReading[]> {
     return [];
+  }
+  async getDataAsync(_request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
+    return { xAxis: { field: "time", values: [] }, data: {} as DeviceDataQueryRow };
   }
 }
 
@@ -612,131 +740,6 @@ export class MockAutomationsRepository implements IAutomationsRepository {
     _automationId: number,
     _exceptConditionIds: number[],
   ): Promise<void> {
-    return;
-  }
-}
-
-export class MockConditionsRepository implements IConditionsRepository {
-  async getSensorConditionsAsync(_automationId: number): Promise<SDBSensorCondition[]> {
-    return [];
-  }
-  async addSensorConditionAsync(
-    _automationId: number,
-    _type: ConditionGroupType,
-    _operator: ConditionOperator,
-    _comparisonValue: number,
-    _comparisonLookback: number | null,
-    _sensorId: number,
-    _readingType: string,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateSensorConditionAsync(
-    _automationId: number,
-    _condition: ISensorCondition,
-  ): Promise<void> {
-    return;
-  }
-  async deleteSensorConditionAsync(_conditionId: number): Promise<void> {
-    return;
-  }
-  async getOutputConditionsAsync(_automationId: number): Promise<SDBOutputCondition[]> {
-    return [];
-  }
-  async addOutputConditionAsync(
-    _automationId: number,
-    _type: ConditionGroupType,
-    _operator: ConditionOperator,
-    _comparisonValue: number,
-    _comparisonLookback: number | null,
-    _outputId: number,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateOutputConditionAsync(
-    _automationId: number,
-    _condition: IOutputCondition,
-  ): Promise<void> {
-    return;
-  }
-  async deleteOutputConditionAsync(_conditionId: number): Promise<void> {
-    return;
-  }
-  async getTimeConditionsAsync(_automationId: number): Promise<SDBTimeCondition[]> {
-    return [];
-  }
-  async addTimeConditionAsync(
-    _automationId: number,
-    _type: ConditionGroupType,
-    _startTime: string | undefined | null,
-    _endTime: string | undefined | null,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateTimeConditionAsync(_automationId: number, _condition: ITimeCondition): Promise<void> {
-    return;
-  }
-  async deleteTimeConditionAsync(_conditionId: number): Promise<void> {
-    return;
-  }
-  async getWeekdayConditionsAsync(_automationId: number): Promise<SDBWeekdayCondition[]> {
-    return [];
-  }
-  async addWeekdayConditionAsync(
-    _automationId: number,
-    _groupType: ConditionGroupType,
-    _weekdays: number,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateWeekdayConditionAsync(
-    _automationId: number,
-    _condition: IWeekdayCondition,
-  ): Promise<void> {
-    return;
-  }
-  async deleteWeekdayConditionAsync(_conditionId: number): Promise<void> {
-    return;
-  }
-  async getMonthConditionsAsync(_automationId: number): Promise<SDBMonthCondition[]> {
-    return [];
-  }
-  async addMonthConditionAsync(
-    _automationId: number,
-    _groupType: ConditionGroupType,
-    _months: number,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateMonthConditionAsync(
-    _automationId: number,
-    _condition: IMonthCondition,
-  ): Promise<void> {
-    return;
-  }
-  async deleteMonthConditionAsync(_conditionId: number): Promise<void> {
-    return;
-  }
-  async getDateRangeConditionsAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
-    return [];
-  }
-  async addDateRangeConditionAsync(
-    _automationId: number,
-    _groupType: ConditionGroupType,
-    _startMonth: number,
-    _startDate: number,
-    _endMonth: number,
-    _endDate: number,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateDateRangeConditionAsync(
-    _automationId: number,
-    _condition: IDateRangeCondition,
-  ): Promise<void> {
-    return;
-  }
-  async deleteDateRangeConditionAsync(_conditionId: number): Promise<void> {
     return;
   }
 }

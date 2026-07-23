@@ -28,7 +28,7 @@ testDataQueryHandlerTests<OutputDataQueryRequest, typeof responseData>({
   handlerName: "OutputDataQueryHandler.ts",
   url: "/api/v2/outputs/1/data",
   handler: outputDataQueryHandlerAsync,
-  queryMethod: "queryOutputDataAsync",
+  entityType: "output",
   validBody,
   responseData,
   extraValidationTests: [],

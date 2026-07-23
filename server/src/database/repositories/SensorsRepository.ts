@@ -4,7 +4,12 @@ import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
 import { ISensorBase } from "@sproot/sproot-common/dist/sensors/ISensorBase";
 import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
 import { Knex } from "knex";
-import { BUCKET_MINUTES_TO_SENSOR_TABLE } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
+import {
+  BUCKET_MINUTES_TO_SENSOR_TABLE,
+  SENSOR_AGGREGATE_TABLES,
+  SensorDataQueryRequest,
+  SensorDataQueryResponse,
+} from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 import { getLookbackDate, getRecentTailStart, normalizeBucketMinutes } from "../databaseQueryUtils";
 import { BaseKnexRepository } from "./BaseKnexRepository";
 
@@ -176,5 +181,13 @@ export class SensorsRepository extends BaseKnexRepository implements ISensorsRep
       ),
       toIsoString,
     );
+  }
+
+  async getDataAsync(request: SensorDataQueryRequest): Promise<SensorDataQueryResponse> {
+    const tableName = SENSOR_AGGREGATE_TABLES[request.downsample ?? "5m"];
+    if (tableName) {
+      return this.querySensorDataAggregateAsync(request, tableName);
+    }
+    return this.querySensorDataRawAsync(request, request.downsample ?? "5m");
   }
 }

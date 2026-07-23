@@ -38,8 +38,8 @@ describe("OutputDataQueryHandler", () => {
   });
 
   it("should return 200 with data when DB query succeeds", async () => {
-    const mockDataQueries = {
-      queryOutputDataAsync: sinon.stub().resolves({
+    const mockOutputs = {
+      getDataAsync: sinon.stub().resolves({
         data: {
           id: 1,
           name: "relay",
@@ -50,7 +50,7 @@ describe("OutputDataQueryHandler", () => {
       }),
     };
     const mockDb = {
-      dataQueries: mockDataQueries,
+      outputs: mockOutputs,
     } as unknown as SprootDB;
 
     const req = {
@@ -70,11 +70,11 @@ describe("OutputDataQueryHandler", () => {
   });
 
   it("should return 500 when DB query throws", async () => {
-    const mockDataQueries = {
-      queryOutputDataAsync: sinon.stub().rejects(new Error("connection refused")),
+    const mockOutputs = {
+      getDataAsync: sinon.stub().rejects(new Error("connection refused")),
     };
     const mockDb = {
-      dataQueries: mockDataQueries,
+      outputs: mockOutputs,
     } as unknown as SprootDB;
 
     const req = {
@@ -92,15 +92,15 @@ describe("OutputDataQueryHandler", () => {
   });
 
   it("should include nextCursor in response when present", async () => {
-    const mockDataQueries = {
-      queryOutputDataAsync: sinon.stub().resolves({
+    const mockOutputs = {
+      getDataAsync: sinon.stub().resolves({
         data: null,
         nextCursor: Buffer.from("2024-01-01T01:00:00.000Z").toString("base64"),
         xAxis: { field: "time", values: [] },
       }),
     };
     const mockDb = {
-      dataQueries: mockDataQueries,
+      outputs: mockOutputs,
     } as unknown as SprootDB;
 
     const req = {

@@ -166,7 +166,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         limit: 10,
@@ -185,7 +185,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T10:00:00.000Z" },
         downsample: "5m",
         limit: 10,
@@ -202,7 +202,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         id: 2,
@@ -216,7 +216,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         readingTypes: ["temperature"],
@@ -234,7 +234,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const originalCursor = "2024-01-01T00:30:00.000Z";
       const base64Cursor = Buffer.from(originalCursor).toString("base64");
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
         downsample: "5m",
         cursor: base64Cursor,
@@ -250,7 +250,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       // 1h
       const knex1h = createKnexStub(rows);
       const db1h = new SprootDB(knex1h as any);
-      const r1h = await db1h.dataQueries.querySensorDataAsync({
+      const r1h = await db1h.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "1h",
         limit: 10,
@@ -260,7 +260,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       // 1d
       const knex1d = createKnexStub(rows);
       const db1d = new SprootDB(knex1d as any);
-      const r1d = await db1d.dataQueries.querySensorDataAsync({
+      const r1d = await db1d.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-03-01T00:00:00.000Z" },
         downsample: "1d",
         limit: 10,
@@ -273,7 +273,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
       } as SensorDataQueryRequest);
@@ -287,7 +287,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         limit: 20000,
@@ -325,7 +325,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         limit: 10,
@@ -342,7 +342,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T10:00:00.000Z" },
         downsample: "5m",
         limit: 10,
@@ -358,7 +358,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         id: 3,
@@ -372,7 +372,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
       } as OutputDataQueryRequest);
@@ -386,7 +386,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         limit: 20000,
@@ -401,7 +401,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         limit: 1,
@@ -416,7 +416,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const rawSpy = sinon.spy(knex, "raw");
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.queryOutputDataAsync({
+      await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         percentile: 0.95,
@@ -452,7 +452,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         aggregates: ["first", "last"],
@@ -495,7 +495,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T04:00:00.000Z" },
         downsample: "15 minutes",
         limit: 10,
@@ -513,7 +513,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "4 hours",
         limit: 10,
@@ -530,7 +530,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T04:00:00.000Z" },
         downsample: "15 minutes",
         readingTypes: ["temperature"],
@@ -547,7 +547,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "15 minutes",
         limit: 10,
@@ -589,7 +589,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T04:00:00.000Z" },
         downsample: "15 minutes",
         limit: 10,
@@ -605,7 +605,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "4 hours",
         limit: 10,
@@ -621,7 +621,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "15 minutes",
         limit: 10,
@@ -660,7 +660,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const rawSpy = sinon.spy(knex, "raw");
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.querySensorDataAsync({
+      await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
         downsample: "5m",
         cursor: base64Cursor,
@@ -697,7 +697,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const rawSpy = sinon.spy(knex, "raw");
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.queryOutputDataAsync({
+      await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
         downsample: "5m",
         cursor: base64Cursor,
@@ -722,7 +722,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStubWithCapture([]);
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.querySensorDataAsync({
+      await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         id: 1,
@@ -740,7 +740,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStubWithCapture([]);
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.querySensorDataAsync({
+      await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         readingTypes: ["temperature", "humidity"],
@@ -760,7 +760,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStubWithCapture([]);
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.queryOutputDataAsync({
+      await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         id: 5,
@@ -779,7 +779,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStubWithCapture([]);
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.querySensorDataAsync({
+      await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
         downsample: "5m",
         cursor: base64Cursor,
@@ -797,7 +797,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStubWithCapture([]);
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.querySensorDataAsync({
+      await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         limit: 10,
@@ -818,7 +818,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub([]);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         id: 999,
@@ -834,7 +834,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub([]);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         id: 999,
@@ -865,7 +865,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         limit: 1,
@@ -880,7 +880,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const rawSpy = sinon.spy(knex, "raw");
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.querySensorDataAsync({
+      await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         percentile: 0.9,
@@ -899,7 +899,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const rawSpy = sinon.spy(knex, "raw");
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.querySensorDataAsync({
+      await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         limit: 10,
@@ -917,7 +917,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const rawSpy = sinon.spy(knex, "raw");
       const db = new SprootDB(knex as any);
 
-      await db.dataQueries.queryOutputDataAsync({
+      await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T01:00:00.000Z" },
         downsample: "5m",
         percentile: 0.95,
@@ -938,7 +938,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub([]);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
         downsample: "5m",
         cursor: base64Cursor,
@@ -954,7 +954,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub([]);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
         downsample: "5m",
         cursor: base64Cursor,
@@ -970,7 +970,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub([]);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-01T02:00:00.000Z" },
         downsample: "5m",
         cursor: base64Cursor,
@@ -1033,7 +1033,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         id: 1,
@@ -1049,7 +1049,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         id: 2,
@@ -1066,7 +1066,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         id: 1,
@@ -1082,7 +1082,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub(rows);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         id: 5,
@@ -1096,7 +1096,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub([]);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.querySensorDataAsync({
+      const result = await db.sensors.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         id: 999,
@@ -1110,7 +1110,7 @@ describe("SprootDB.ts — querySensorDataAsync and queryOutputDataAsync", () => 
       const knex = createKnexStub([]);
       const db = new SprootDB(knex as any);
 
-      const result = await db.dataQueries.queryOutputDataAsync({
+      const result = await db.outputs.getDataAsync({
         timeRange: { start: "2024-01-01T00:00:00.000Z", end: "2024-01-02T00:00:00.000Z" },
         downsample: "5m",
         id: 999,

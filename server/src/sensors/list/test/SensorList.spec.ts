@@ -115,7 +115,9 @@ describe("SensorList.ts tests", function () {
     );
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
-    sinon.stub(mockSprootDB.sensors, "getDS18B20AddressesAsync").resolves([{ address: "28-00000" } as SDBSensor]);
+    sinon
+      .stub(mockSprootDB.sensors, "getDS18B20AddressesAsync")
+      .resolves([{ address: "28-00000" } as SDBSensor]);
     sinon.stub(DS18B20, "getAddressesAsync").resolves(["28-00000"]);
 
     await using sensorList = await SensorList.createInstanceAsync(

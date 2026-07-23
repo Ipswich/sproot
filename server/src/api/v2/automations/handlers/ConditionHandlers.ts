@@ -65,12 +65,12 @@ export async function getAllAsync(
       return getAllConditionsResponse;
     }
 
-    const sensorConditions = await sprootDB.conditions.getSensorConditionsAsync(automationId);
-    const outputConditions = await sprootDB.conditions.getOutputConditionsAsync(automationId);
-    const timeConditions = await sprootDB.conditions.getTimeConditionsAsync(automationId);
-    const weekdayConditions = await sprootDB.conditions.getWeekdayConditionsAsync(automationId);
-    const monthConditions = await sprootDB.conditions.getMonthConditionsAsync(automationId);
-    const dateRangeConditions = await sprootDB.conditions.getDateRangeConditionsAsync(automationId);
+    const sensorConditions = await sprootDB.conditions.sensor.getAsync(automationId);
+    const outputConditions = await sprootDB.conditions.output.getAsync(automationId);
+    const timeConditions = await sprootDB.conditions.time.getAsync(automationId);
+    const weekdayConditions = await sprootDB.conditions.weekday.getAsync(automationId);
+    const monthConditions = await sprootDB.conditions.month.getAsync(automationId);
+    const dateRangeConditions = await sprootDB.conditions.dateRange.getAsync(automationId);
     getAllConditionsResponse = {
       statusCode: 200,
       content: {
@@ -184,22 +184,22 @@ export async function getByTypeAsync(
       | SDBDateRangeCondition[] = [];
     switch (type) {
       case "sensor":
-        conditions = await sprootDB.conditions.getSensorConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.sensor.getAsync(automationId);
         break;
       case "output":
-        conditions = await sprootDB.conditions.getOutputConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.output.getAsync(automationId);
         break;
       case "time":
-        conditions = await sprootDB.conditions.getTimeConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.time.getAsync(automationId);
         break;
       case "weekday":
-        conditions = await sprootDB.conditions.getWeekdayConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.weekday.getAsync(automationId);
         break;
       case "month":
-        conditions = await sprootDB.conditions.getMonthConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.month.getAsync(automationId);
         break;
       case "date-range":
-        conditions = await sprootDB.conditions.getDateRangeConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.dateRange.getAsync(automationId);
         break;
     }
 
@@ -293,32 +293,32 @@ export async function getOneOfByTypeAsync(
       | SDBDateRangeCondition[] = [];
     switch (type) {
       case "sensor":
-        condition = (await sprootDB.conditions.getSensorConditionsAsync(automationId)).filter(
-          (conditions) => conditions.id == conditionId,
+        condition = (await sprootDB.conditions.sensor.getAsync(automationId)).filter(
+          (c) => c.id == conditionId,
         );
         break;
       case "output":
-        condition = (await sprootDB.conditions.getOutputConditionsAsync(automationId)).filter(
+        condition = (await sprootDB.conditions.output.getAsync(automationId)).filter(
           (conditions) => conditions.id == conditionId,
         );
         break;
       case "time":
-        condition = (await sprootDB.conditions.getTimeConditionsAsync(automationId)).filter(
+        condition = (await sprootDB.conditions.time.getAsync(automationId)).filter(
           (conditions) => conditions.id == conditionId,
         );
         break;
       case "weekday":
-        condition = (await sprootDB.conditions.getWeekdayConditionsAsync(automationId)).filter(
+        condition = (await sprootDB.conditions.weekday.getAsync(automationId)).filter(
           (conditions) => conditions.id == conditionId,
         );
         break;
       case "month":
-        condition = (await sprootDB.conditions.getMonthConditionsAsync(automationId)).filter(
+        condition = (await sprootDB.conditions.month.getAsync(automationId)).filter(
           (conditions) => conditions.id == conditionId,
         );
         break;
       case "date-range":
-        condition = (await sprootDB.conditions.getDateRangeConditionsAsync(automationId)).filter(
+        condition = (await sprootDB.conditions.dateRange.getAsync(automationId)).filter(
           (conditions) => conditions.id == conditionId,
         );
     }
@@ -726,26 +726,26 @@ export async function updateAsync(
       | SDBDateRangeCondition[] = [];
     switch (conditionType) {
       case "sensor":
-        conditions = await sprootDB.conditions.getSensorConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.sensor.getAsync(automationId);
         break;
       case "output":
-        conditions = await sprootDB.conditions.getOutputConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.output.getAsync(automationId);
         break;
       case "time":
-        conditions = await sprootDB.conditions.getTimeConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.time.getAsync(automationId);
         break;
       case "weekday":
-        conditions = await sprootDB.conditions.getWeekdayConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.weekday.getAsync(automationId);
         break;
       case "month":
-        conditions = await sprootDB.conditions.getMonthConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.month.getAsync(automationId);
         break;
       case "date-range":
-        conditions = await sprootDB.conditions.getDateRangeConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.dateRange.getAsync(automationId);
         break;
     }
 
-    const sdbcondition = conditions.find((condition) => condition.id == conditionId);
+    const sdbcondition = conditions.find((c) => c.id == conditionId);
     if (!sdbcondition) {
       updateConditionResponse = {
         statusCode: 404,
@@ -1084,26 +1084,26 @@ export async function deleteAsync(
       | SDBDateRangeCondition[] = [];
     switch (conditionType) {
       case "sensor":
-        conditions = await sprootDB.conditions.getSensorConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.sensor.getAsync(automationId);
         break;
       case "output":
-        conditions = await sprootDB.conditions.getOutputConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.output.getAsync(automationId);
         break;
       case "time":
-        conditions = await sprootDB.conditions.getTimeConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.time.getAsync(automationId);
         break;
       case "weekday":
-        conditions = await sprootDB.conditions.getWeekdayConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.weekday.getAsync(automationId);
         break;
       case "month":
-        conditions = await sprootDB.conditions.getMonthConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.month.getAsync(automationId);
         break;
       case "date-range":
-        conditions = await sprootDB.conditions.getDateRangeConditionsAsync(automationId);
+        conditions = await sprootDB.conditions.dateRange.getAsync(automationId);
         break;
     }
 
-    const sdbcondition = conditions.find((condition) => condition.id == conditionId);
+    const sdbcondition = conditions.find((c) => c.id == conditionId);
     if (!sdbcondition) {
       deleteConditionResponse = {
         statusCode: 404,

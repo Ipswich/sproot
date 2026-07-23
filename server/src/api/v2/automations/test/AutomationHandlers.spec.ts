@@ -376,9 +376,7 @@ describe("AutomationHandlers", () => {
       const sprootDB = createStubSprootDB();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
-      sprootDB.automations.addAsync.rejects(
-        new Error("Failed to add automation to database."),
-      );
+      sprootDB.automations.addAsync.rejects(new Error("Failed to add automation to database."));
 
       const mockRequest = {
         app: {

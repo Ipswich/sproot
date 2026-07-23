@@ -15,12 +15,24 @@ const createStubSprootDB = () => {
     getAllAsync: sinon.stub(),
   } as any;
   sprootDB.conditions = {
-    getSensorConditionsAsync: sinon.stub(),
-    getOutputConditionsAsync: sinon.stub(),
-    getTimeConditionsAsync: sinon.stub(),
-    getWeekdayConditionsAsync: sinon.stub(),
-    getMonthConditionsAsync: sinon.stub(),
-    getDateRangeConditionsAsync: sinon.stub(),
+    sensor: {
+      getAsync: sinon.stub().resolves([]),
+    },
+    output: {
+      getAsync: sinon.stub().resolves([]),
+    },
+    time: {
+      getAsync: sinon.stub().resolves([]),
+    },
+    weekday: {
+      getAsync: sinon.stub().resolves([]),
+    },
+    month: {
+      getAsync: sinon.stub().resolves([]),
+    },
+    dateRange: {
+      getAsync: sinon.stub().resolves([]),
+    },
   } as any;
   return sprootDB;
 };
@@ -69,9 +81,9 @@ describe("AutomationService", () => {
   describe("evaluateAllAutomationsAsync", () => {
     it("should emit event with enabled automation when conditions are met", async () => {
       const sprootDB = createStubSprootDB();
-      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
-      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
-      sprootDB.conditions.getTimeConditionsAsync.resolves([
+      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.conditions.output.getAsync.resolves([]);
+      sprootDB.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -80,9 +92,10 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
-      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.month.getAsync.resolves([]);
+      sprootDB.conditions.dateRange.getAsync.resolves([]);
       sprootDB.automations.getAllAsync.resolves([
         {
           id: 1,
@@ -112,9 +125,9 @@ describe("AutomationService", () => {
 
     it("should emit event with timestamp matching the input 'now' parameter", async () => {
       const sprootDB = createStubSprootDB();
-      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
-      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
-      sprootDB.conditions.getTimeConditionsAsync.resolves([
+      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.conditions.output.getAsync.resolves([]);
+      sprootDB.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -123,9 +136,10 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
-      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.month.getAsync.resolves([]);
+      sprootDB.conditions.dateRange.getAsync.resolves([]);
 
       sprootDB.automations.getAllAsync.resolves([
         {
@@ -151,9 +165,9 @@ describe("AutomationService", () => {
 
     it("should emit single event with multiple automations with conditions met", async () => {
       const sprootDB = createStubSprootDB();
-      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
-      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
-      sprootDB.conditions.getTimeConditionsAsync.resolves([
+      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.conditions.output.getAsync.resolves([]);
+      sprootDB.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -169,9 +183,10 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
-      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.month.getAsync.resolves([]);
+      sprootDB.conditions.dateRange.getAsync.resolves([]);
       sprootDB.automations.getAllAsync.resolves([
         {
           id: 1,
@@ -211,9 +226,9 @@ describe("AutomationService", () => {
 
     it("should emit (empty) event with disabled automation (conditions met)", async () => {
       const sprootDB = createStubSprootDB();
-      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
-      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
-      sprootDB.conditions.getTimeConditionsAsync.resolves([
+      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.conditions.output.getAsync.resolves([]);
+      sprootDB.conditions.time.getAsync.resolves([
         {
           id: 1,
           automationId: 1,
@@ -222,9 +237,10 @@ describe("AutomationService", () => {
           groupType: "anyOf",
         },
       ]);
-      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
-      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.month.getAsync.resolves([]);
+      sprootDB.conditions.dateRange.getAsync.resolves([]);
       sprootDB.automations.getAllAsync.resolves([
         {
           id: 1,
@@ -248,12 +264,13 @@ describe("AutomationService", () => {
 
     it("should emit (empty) event with enabled automation when no conditions are met", async () => {
       const sprootDB = createStubSprootDB();
-      sprootDB.conditions.getSensorConditionsAsync.resolves([]);
-      sprootDB.conditions.getOutputConditionsAsync.resolves([]);
-      sprootDB.conditions.getTimeConditionsAsync.resolves([]);
-      sprootDB.conditions.getWeekdayConditionsAsync.resolves([]);
-      sprootDB.conditions.getMonthConditionsAsync.resolves([]);
-      sprootDB.conditions.getDateRangeConditionsAsync.resolves([]);
+      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.conditions.output.getAsync.resolves([]);
+      sprootDB.conditions.time.getAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.weekday.getAsync.resolves([]);
+      sprootDB.conditions.month.getAsync.resolves([]);
+      sprootDB.conditions.dateRange.getAsync.resolves([]);
 
       sprootDB.automations.getAllAsync.resolves([
         {

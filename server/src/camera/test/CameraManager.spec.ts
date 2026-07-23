@@ -287,9 +287,7 @@ describe("CameraManager", () => {
       },
     };
     sprootDB.camera.getAllAsync.onFirstCall().resolves([cameraSettings]);
-    sprootDB.camera.getAllAsync
-      .onSecondCall()
-      .resolves([{ ...cameraSettings, enabled: false }]);
+    sprootDB.camera.getAllAsync.onSecondCall().resolves([{ ...cameraSettings, enabled: false }]);
 
     const eventBus = new MemoryEventBus(logger);
     const manager = await CameraManager.createInstanceAsync(

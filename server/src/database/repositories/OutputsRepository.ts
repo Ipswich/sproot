@@ -1,4 +1,9 @@
-import { BUCKET_MINUTES_TO_OUTPUT_TABLE } from "@sproot/sproot-common/dist/api/v2/QueryTypes";
+import {
+  BUCKET_MINUTES_TO_OUTPUT_TABLE,
+  OUTPUT_AGGREGATE_TABLES,
+  OutputDataQueryRequest,
+  OutputDataQueryResponse,
+} from "@sproot/sproot-common/dist/api/v2/QueryTypes";
 import { IOutputsRepository } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
@@ -170,5 +175,13 @@ export class OutputsRepository extends BaseKnexRepository implements IOutputsRep
       ),
       toIsoString,
     );
+  }
+
+  async getDataAsync(request: OutputDataQueryRequest): Promise<OutputDataQueryResponse> {
+    const tableName = OUTPUT_AGGREGATE_TABLES[request.downsample ?? "5m"];
+    if (tableName) {
+      return this.queryOutputDataAggregateAsync(request, tableName);
+    }
+    return this.queryOutputDataRawAsync(request, request.downsample ?? "5m");
   }
 }

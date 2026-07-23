@@ -28,7 +28,7 @@ testDataQueryHandlerTests<SensorDataQueryRequest, typeof responseData>({
   handlerName: "SensorDataQueryHandler.ts",
   url: "/api/v2/sensors/1/data",
   handler: sensorDataQueryHandlerAsync,
-  queryMethod: "querySensorDataAsync",
+  entityType: "sensor",
   validBody,
   responseData,
   extraValidationTests: [

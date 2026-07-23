@@ -286,81 +286,71 @@ export class Conditions {
 
     const promises = [];
     promises.push(
-      this.#sprootDB.conditions
-        .getSensorConditionsAsync(this.#automationId)
-        .then((sensorConditions) => {
-          sensorConditions.map((sensorCondition) => {
-            this.#sensorConditions[sensorCondition.id] = new SensorCondition(
-              sensorCondition.id,
-              sensorCondition.groupType,
-              sensorCondition.sensorId,
-              sensorCondition.readingType,
-              sensorCondition.operator,
-              sensorCondition.comparisonValue,
-              sensorCondition.comparisonLookback,
-            );
-          });
-        }),
+      this.#sprootDB.conditions.sensor.getAsync(this.#automationId).then((sensorConditions) => {
+        sensorConditions.map((sensorCondition) => {
+          this.#sensorConditions[sensorCondition.id] = new SensorCondition(
+            sensorCondition.id,
+            sensorCondition.groupType,
+            sensorCondition.sensorId,
+            sensorCondition.readingType,
+            sensorCondition.operator,
+            sensorCondition.comparisonValue,
+            sensorCondition.comparisonLookback,
+          );
+        });
+      }),
     );
     promises.push(
-      this.#sprootDB.conditions
-        .getOutputConditionsAsync(this.#automationId)
-        .then((outputConditions) => {
-          outputConditions.map((outputCondition) => {
-            this.#outputConditions[outputCondition.id] = new OutputCondition(
-              outputCondition.id,
-              outputCondition.groupType,
-              outputCondition.outputId,
-              outputCondition.operator,
-              outputCondition.comparisonValue,
-              outputCondition.comparisonLookback,
-            );
-          });
-        }),
+      this.#sprootDB.conditions.output.getAsync(this.#automationId).then((outputConditions) => {
+        outputConditions.map((outputCondition) => {
+          this.#outputConditions[outputCondition.id] = new OutputCondition(
+            outputCondition.id,
+            outputCondition.groupType,
+            outputCondition.outputId,
+            outputCondition.operator,
+            outputCondition.comparisonValue,
+            outputCondition.comparisonLookback,
+          );
+        });
+      }),
     );
     promises.push(
-      this.#sprootDB.conditions
-        .getTimeConditionsAsync(this.#automationId)
-        .then((timeConditions) => {
-          timeConditions.map((timeCondition) => {
-            this.#timeConditions[timeCondition.id] = new TimeCondition(
-              timeCondition.id,
-              timeCondition.groupType,
-              timeCondition.startTime,
-              timeCondition.endTime,
-            );
-          });
-        }),
+      this.#sprootDB.conditions.time.getAsync(this.#automationId).then((timeConditions) => {
+        timeConditions.map((timeCondition) => {
+          this.#timeConditions[timeCondition.id] = new TimeCondition(
+            timeCondition.id,
+            timeCondition.groupType,
+            timeCondition.startTime,
+            timeCondition.endTime,
+          );
+        });
+      }),
     );
     promises.push(
-      this.#sprootDB.conditions
-        .getWeekdayConditionsAsync(this.#automationId)
-        .then((weekdayConditions) => {
-          weekdayConditions.map((weekdayCondition) => {
-            this.#weekdayConditions[weekdayCondition.id] = new WeekdayCondition(
-              weekdayCondition.id,
-              weekdayCondition.groupType,
-              weekdayCondition.weekdays,
-            );
-          });
-        }),
+      this.#sprootDB.conditions.weekday.getAsync(this.#automationId).then((weekdayConditions) => {
+        weekdayConditions.map((weekdayCondition) => {
+          this.#weekdayConditions[weekdayCondition.id] = new WeekdayCondition(
+            weekdayCondition.id,
+            weekdayCondition.groupType,
+            weekdayCondition.weekdays,
+          );
+        });
+      }),
     );
     promises.push(
-      this.#sprootDB.conditions
-        .getMonthConditionsAsync(this.#automationId)
-        .then((monthConditions) => {
-          monthConditions.map((monthCondition) => {
-            this.#monthConditions[monthCondition.id] = new MonthCondition(
-              monthCondition.id,
-              monthCondition.groupType,
-              monthCondition.months,
-            );
-          });
-        }),
+      this.#sprootDB.conditions.month.getAsync(this.#automationId).then((monthConditions) => {
+        monthConditions.map((monthCondition) => {
+          this.#monthConditions[monthCondition.id] = new MonthCondition(
+            monthCondition.id,
+            monthCondition.groupType,
+            monthCondition.months,
+          );
+        });
+      }),
     );
     promises.push(
-      this.#sprootDB.conditions
-        .getDateRangeConditionsAsync(this.#automationId)
+      this.#sprootDB.conditions.dateRange
+        .getAsync(this.#automationId)
         .then((dateRangeConditions) => {
           dateRangeConditions.map((dateRangeCondition) => {
             this.#dateRangeConditions[dateRangeCondition.id] = new DateRangeCondition(

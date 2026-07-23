@@ -7,4 +7,4 @@ import { createDataQueryHandler } from "../../shared/DataQueryHandler";
 export const sensorDataQueryHandlerAsync = createDataQueryHandler<
   SensorDataQueryRequest,
   { data: unknown; nextCursor?: string }
->(validateSensorDataQueryRequest, async (db, params) => db.dataQueries.querySensorDataAsync(params));
+>(validateSensorDataQueryRequest, async (db, params) => db.sensors.getDataAsync(params));

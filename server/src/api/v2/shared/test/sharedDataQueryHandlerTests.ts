@@ -8,7 +8,7 @@ interface DataQueryHandlerTestConfig<RequestType, ResponseType> {
   handlerName: string;
   url: string;
   handler: (req: Request, res: Response) => Promise<SuccessResponse | ErrorResponse>;
-  queryMethod: "querySensorDataAsync" | "queryOutputDataAsync";
+  entityType: "sensor" | "output";
   validBody: Partial<RequestType>;
   responseData: ResponseType;
   extraValidationTests?: Array<{
@@ -26,36 +26,23 @@ export function testDataQueryHandlerTests<RequestType, ResponseType>(
     let sprootDBStub: MockSprootDB;
 
     function getQueryStub(): sinon.SinonStub {
-      const db = sprootDBStub as unknown as {
-        dataQueries: {
-          querySensorDataAsync: sinon.SinonStub;
-          queryOutputDataAsync: sinon.SinonStub;
-        };
-      };
-      if (config.queryMethod === "querySensorDataAsync") {
-        return db.dataQueries.querySensorDataAsync;
+      if (config.entityType === "sensor") {
+        return (sprootDBStub as any).sensors.getDataAsync;
       }
-      return db.dataQueries.queryOutputDataAsync;
+      return (sprootDBStub as any).outputs.getDataAsync;
     }
 
     beforeEach(() => {
       sprootDBStub = new MockSprootDB();
-      const dataQueries = {
-        querySensorDataAsync: sinon.stub(),
-        queryOutputDataAsync: sinon.stub(),
-      };
-      Object.defineProperty(sprootDBStub, "dataQueries", {
-        value: dataQueries,
+      const sensorStub = sinon.stub();
+      const outputStub = sinon.stub();
+      Object.defineProperty(sprootDBStub, "sensors", {
+        value: { getDataAsync: sensorStub },
         writable: true,
         configurable: true,
       });
-      Object.defineProperty(sprootDBStub, "querySensorDataAsync", {
-        value: dataQueries.querySensorDataAsync,
-        writable: true,
-        configurable: true,
-      });
-      Object.defineProperty(sprootDBStub, "queryOutputDataAsync", {
-        value: dataQueries.queryOutputDataAsync,
+      Object.defineProperty(sprootDBStub, "outputs", {
+        value: { getDataAsync: outputStub },
         writable: true,
         configurable: true,
       });
