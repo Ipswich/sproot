@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/database/ISprootDB";
+import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
 import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
 
 import winston from "winston";
