@@ -19,8 +19,12 @@ export class NotificationActionsRepository
   }
 
   async getAllAsync(): Promise<SDBNotificationAction[]> {
-    return this.connection("notification_actions")
-      .select(["id", "automation_id as automationId", "subject", "content"]);
+    return this.connection("notification_actions").select([
+      "id",
+      "automation_id as automationId",
+      "subject",
+      "content",
+    ]);
   }
 
   async addAsync(automationId: number, subject: string, content: string): Promise<number> {

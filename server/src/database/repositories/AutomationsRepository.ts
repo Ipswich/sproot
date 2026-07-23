@@ -7,6 +7,7 @@ import { BaseKnexRepository } from "./BaseKnexRepository";
 
 export class AutomationsRepository extends BaseKnexRepository implements IAutomationsRepository {
   actions!: IAutomationsRepository["actions"];
+  conditions!: IAutomationsRepository["conditions"];
 
   constructor(connection: Knex) {
     super(connection);

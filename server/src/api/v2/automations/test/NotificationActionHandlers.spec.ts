@@ -31,6 +31,44 @@ const createStubSprootDB = () => {
         deleteAsync: sinon.stub(),
       },
     },
+    conditions: {
+      sensor: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      output: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      time: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      weekday: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      month: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      dateRange: {
+        getAsync: sinon.stub().resolves([]),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+    },
   } as any;
   return sprootDB;
 };

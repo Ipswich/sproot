@@ -126,6 +126,7 @@ export interface IAutomationsRepository {
   deleteAsync(automationId: number): Promise<void>;
 
   actions: IActionsRepository;
+  conditions: IConditionsRepository;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
   deleteSensorAutomationConditionsExceptAsync(
@@ -459,7 +460,6 @@ export interface ISprootDB {
   outputs: IOutputsRepository;
   subcontrollers: ISubcontrollersRepository;
   automations: IAutomationsRepository;
-  conditions: IConditionsRepository;
   camera: ICameraRepository;
   users: IUsersRepository;
   deviceZones: IDeviceZonesRepository;
@@ -473,14 +473,6 @@ class MockSprootDB implements ISprootDB {
   outputs = new MockOutputsRepository();
   subcontrollers = new MockSubcontrollersRepository();
   automations = new MockAutomationsRepository();
-  conditions = {
-    sensor: new MockSensorConditionsRepository(),
-    output: new MockOutputConditionsRepository(),
-    time: new MockTimeConditionsRepository(),
-    weekday: new MockWeekdayConditionsRepository(),
-    month: new MockMonthConditionsRepository(),
-    dateRange: new MockDateRangeConditionsRepository(),
-  };
   camera = new MockCameraRepository();
   users = new MockUsersRepository();
   deviceZones = new MockDeviceZonesRepository();
@@ -685,6 +677,14 @@ export class MockAutomationsRepository implements IAutomationsRepository {
   actions = {
     output: new MockOutputActionsRepository(),
     notification: new MockNotificationActionsRepository(),
+  };
+  conditions = {
+    sensor: new MockSensorConditionsRepository(),
+    output: new MockOutputConditionsRepository(),
+    time: new MockTimeConditionsRepository(),
+    weekday: new MockWeekdayConditionsRepository(),
+    month: new MockMonthConditionsRepository(),
+    dateRange: new MockDateRangeConditionsRepository(),
   };
 
   async getAllAsync(): Promise<SDBAutomation[]> {

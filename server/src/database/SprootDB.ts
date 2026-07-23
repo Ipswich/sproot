@@ -1,7 +1,6 @@
 import {
   IAutomationsRepository,
   ICameraRepository,
-  IConditionsRepository,
   IDeviceZonesRepository,
   IJournalsRepository,
   IOutputsRepository,
@@ -36,7 +35,6 @@ export class SprootDB {
   readonly outputs: IOutputsRepository;
   readonly subcontrollers: ISubcontrollersRepository;
   readonly automations: IAutomationsRepository;
-  readonly conditions: IConditionsRepository;
   readonly camera: ICameraRepository;
   readonly users: IUsersRepository;
   readonly deviceZones: IDeviceZonesRepository;
@@ -55,7 +53,7 @@ export class SprootDB {
       output: new OutputActionsRepository(connection),
       notification: new NotificationActionsRepository(connection),
     };
-    this.conditions = {
+    this.automations.conditions = {
       sensor: new SensorConditionsRepository(connection),
       output: new OutputConditionsRepository(connection),
       time: new TimeConditionsRepository(connection),

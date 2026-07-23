@@ -30,43 +30,43 @@ const createStubSprootDB = () => {
   sprootDB.automations = {
     getAllAsync: sinon.stub(),
     getByIdAsync: sinon.stub(),
-  } as any;
-  sprootDB.conditions = {
-    sensor: {
-      getAsync: sinon.stub(),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    output: {
-      getAsync: sinon.stub(),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    time: {
-      getAsync: sinon.stub(),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    weekday: {
-      getAsync: sinon.stub(),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    month: {
-      getAsync: sinon.stub(),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
-    },
-    dateRange: {
-      getAsync: sinon.stub(),
-      addAsync: sinon.stub(),
-      updateAsync: sinon.stub(),
-      deleteAsync: sinon.stub(),
+    conditions: {
+      sensor: {
+        getAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      output: {
+        getAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      time: {
+        getAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      weekday: {
+        getAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      month: {
+        getAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
+      dateRange: {
+        getAsync: sinon.stub(),
+        addAsync: sinon.stub(),
+        updateAsync: sinon.stub(),
+        deleteAsync: sinon.stub(),
+      },
     },
   } as any;
   return sprootDB;
@@ -115,7 +115,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -125,7 +125,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.conditions.output.getAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -134,19 +134,19 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.conditions.time.getAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.month.getAsync.resolves([
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.conditions.dateRange.getAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -340,7 +340,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -350,7 +350,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.conditions.output.getAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -359,11 +359,11 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.month.getAsync.resolves([]);
-      sprootDB.conditions.dateRange.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -414,8 +414,8 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -424,11 +424,11 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.month.getAsync.resolves([]);
-      sprootDB.conditions.dateRange.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -470,15 +470,15 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.month.getAsync.resolves([]);
-      sprootDB.conditions.dateRange.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -520,17 +520,17 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.month.getAsync.resolves([]);
-      sprootDB.conditions.dateRange.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -572,15 +572,15 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.month.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.conditions.dateRange.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -622,13 +622,13 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.month.getAsync.resolves([]);
-      sprootDB.conditions.dateRange.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -798,7 +798,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -816,8 +816,8 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -863,8 +863,8 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -880,7 +880,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -925,9 +925,9 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
         { id: 2, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
@@ -974,14 +974,14 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
         { id: 2, groupType: "allOf", weekdays: 63 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
         { id: 2, groupType: "allOf", weekdays: 63 } as SDBWeekdayCondition,
       ]);
@@ -1027,12 +1027,12 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.month.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
         { id: 2, groupType: "allOf", months: 2047 } as SDBMonthCondition,
       ]);
@@ -1078,13 +1078,13 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
-      sprootDB.conditions.output.getAsync.resolves([]);
-      sprootDB.conditions.time.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.weekday.getAsync.resolves([]);
-      sprootDB.conditions.month.getAsync.resolves([]);
-      sprootDB.conditions.dateRange.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.output.getAsync.resolves([]);
+      sprootDB.automations.conditions.time.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.weekday.getAsync.resolves([]);
+      sprootDB.automations.conditions.month.getAsync.resolves([]);
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -1222,7 +1222,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
 
       const mockRequest = {
         app: {
@@ -1310,7 +1310,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.addAsync.resolves(1);
+      sprootDB.automations.conditions.sensor.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1371,7 +1371,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.output.addAsync.resolves(1);
+      sprootDB.automations.conditions.output.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1428,7 +1428,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.time.addAsync.resolves(1);
+      sprootDB.automations.conditions.time.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1480,7 +1480,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.weekday.addAsync.resolves(1);
+      sprootDB.automations.conditions.weekday.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1530,7 +1530,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.month.addAsync.resolves(1);
+      sprootDB.automations.conditions.month.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -1580,7 +1580,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.dateRange.addAsync.resolves(1);
+      sprootDB.automations.conditions.dateRange.addAsync.resolves(1);
 
       const mockRequest = {
         app: {
@@ -2079,7 +2079,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2089,7 +2089,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.conditions.sensor.updateAsync.resolves();
+      sprootDB.automations.conditions.sensor.updateAsync.resolves();
       const sensorList = sinon.createStubInstance(SensorList);
       sinon
         .stub(sensorList, "sensors")
@@ -2153,7 +2153,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.output.getAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2162,7 +2162,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.conditions.output.updateAsync.resolves();
+      sprootDB.automations.conditions.output.updateAsync.resolves();
       const outputList = sinon.createStubInstance(OutputList);
       sinon.stub(outputList, "outputs").value({ "2": { id: 2, name: "Output 1" } });
       sprootDB.automations.getAllAsync.resolves([]);
@@ -2222,10 +2222,10 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.time.getAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.conditions.time.updateAsync.resolves();
+      sprootDB.automations.conditions.time.updateAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -2278,13 +2278,13 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.time.updateAsync.resolves();
+      sprootDB.automations.conditions.time.updateAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -2335,10 +2335,10 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.month.getAsync.resolves([
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.conditions.time.updateAsync.resolves();
+      sprootDB.automations.conditions.time.updateAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -2389,7 +2389,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.dateRange.getAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2399,7 +2399,7 @@ describe("ConditionHandlers.ts", () => {
           endDate: 31,
         } as SDBDateRangeCondition,
       ]);
-      sprootDB.conditions.time.updateAsync.resolves();
+      sprootDB.automations.conditions.time.updateAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -2495,7 +2495,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2558,7 +2558,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.output.getAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2617,7 +2617,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.time.getAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
       const mockResponse = {
@@ -2665,10 +2665,10 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 13 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 13 } as SDBWeekdayCondition,
       ]);
       const mockResponse = {
@@ -2715,7 +2715,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.month.getAsync.resolves([
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 13 } as SDBMonthCondition,
       ]);
       const mockResponse = {
@@ -2762,7 +2762,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.dateRange.getAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2869,7 +2869,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
       const mockResponse = {
         locals: {
           defaultProperties: {
@@ -2970,7 +2970,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([
+      sprootDB.automations.conditions.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -2980,7 +2980,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.conditions.sensor.deleteAsync.resolves();
+      sprootDB.automations.conditions.sensor.deleteAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -3022,7 +3022,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.output.getAsync.resolves([
+      sprootDB.automations.conditions.output.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -3031,7 +3031,7 @@ describe("ConditionHandlers.ts", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.conditions.output.deleteAsync.resolves();
+      sprootDB.automations.conditions.output.deleteAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -3073,10 +3073,10 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.time.getAsync.resolves([
+      sprootDB.automations.conditions.time.getAsync.resolves([
         { id: 1, groupType: "allOf", startTime: "12:00", endTime: "13:00" } as SDBTimeCondition,
       ]);
-      sprootDB.conditions.time.deleteAsync.resolves();
+      sprootDB.automations.conditions.time.deleteAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -3118,13 +3118,13 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.weekday.getAsync.resolves([
+      sprootDB.automations.conditions.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 127 } as SDBWeekdayCondition,
       ]);
-      sprootDB.conditions.weekday.deleteAsync.resolves();
+      sprootDB.automations.conditions.weekday.deleteAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -3166,10 +3166,10 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.month.getAsync.resolves([
+      sprootDB.automations.conditions.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 4095 } as SDBMonthCondition,
       ]);
-      sprootDB.conditions.month.deleteAsync.resolves();
+      sprootDB.automations.conditions.month.deleteAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -3211,7 +3211,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.dateRange.getAsync.resolves([
+      sprootDB.automations.conditions.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -3221,7 +3221,7 @@ describe("ConditionHandlers.ts", () => {
           endDate: 31,
         } as SDBDateRangeCondition,
       ]);
-      sprootDB.conditions.month.deleteAsync.resolves();
+      sprootDB.automations.conditions.month.deleteAsync.resolves();
       sprootDB.automations.getAllAsync.resolves([]);
       const automationService = await createAutomationServiceAsync(sprootDB);
 
@@ -3330,7 +3330,7 @@ describe("ConditionHandlers.ts", () => {
       sprootDB.automations.getByIdAsync.resolves([
         { id: 1, name: "Automation 1", operator: "and" } as SDBAutomation,
       ]);
-      sprootDB.conditions.sensor.getAsync.resolves([]);
+      sprootDB.automations.conditions.sensor.getAsync.resolves([]);
       const mockResponse = {
         locals: {
           defaultProperties: {

@@ -311,7 +311,7 @@ describe("API Tests", async function () {
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
           it("should return 201", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.sensor.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.sensor.getAsync(1), 2);
             await request(server)
               .post("/api/v2/automations/1/conditions/sensor")
               .send({
@@ -323,14 +323,15 @@ describe("API Tests", async function () {
                 readingType: "temperature",
               })
               .expect(201);
-            assert.lengthOf(await app.get("sprootDB").conditions.sensor.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.sensor.getAsync(1), 3);
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
             assert.equal(
-              (await app.get("sprootDB").conditions.sensor.getAsync(1))[2].comparisonValue,
+              (await app.get("sprootDB").automations.conditions.sensor.getAsync(1))[2]
+                .comparisonValue,
               20,
             );
             await request(server)
@@ -340,7 +341,8 @@ describe("API Tests", async function () {
               })
               .expect(200);
             assert.equal(
-              (await app.get("sprootDB").conditions.sensor.getAsync(1))[2].comparisonValue,
+              (await app.get("sprootDB").automations.conditions.sensor.getAsync(1))[2]
+                .comparisonValue,
               30,
             );
           });
@@ -348,9 +350,9 @@ describe("API Tests", async function () {
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.sensor.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.sensor.getAsync(1), 3);
             await request(server).delete("/api/v2/automations/1/conditions/sensor/3").expect(200);
-            assert.lengthOf(await app.get("sprootDB").conditions.sensor.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.sensor.getAsync(1), 2);
           });
         });
       });
@@ -387,7 +389,7 @@ describe("API Tests", async function () {
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
           it("should return 201", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.output.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.output.getAsync(1), 2);
             await request(server)
               .post("/api/v2/automations/1/conditions/output")
               .send({
@@ -398,14 +400,15 @@ describe("API Tests", async function () {
                 outputId: 1,
               })
               .expect(201);
-            assert.lengthOf(await app.get("sprootDB").conditions.output.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.output.getAsync(1), 3);
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
             assert.equal(
-              (await app.get("sprootDB").conditions.output.getAsync(1))[2].comparisonValue,
+              (await app.get("sprootDB").automations.conditions.output.getAsync(1))[2]
+                .comparisonValue,
               20,
             );
             await request(server)
@@ -415,7 +418,8 @@ describe("API Tests", async function () {
               })
               .expect(200);
             assert.equal(
-              (await app.get("sprootDB").conditions.output.getAsync(1))[2].comparisonValue,
+              (await app.get("sprootDB").automations.conditions.output.getAsync(1))[2]
+                .comparisonValue,
               30,
             );
           });
@@ -423,9 +427,9 @@ describe("API Tests", async function () {
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.output.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.output.getAsync(1), 3);
             await request(server).delete("/api/v2/automations/1/conditions/output/3").expect(200);
-            assert.lengthOf(await app.get("sprootDB").conditions.output.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.output.getAsync(1), 2);
           });
         });
       });
@@ -461,7 +465,7 @@ describe("API Tests", async function () {
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
           it("should return 201", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.time.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 2);
             await request(server)
               .post("/api/v2/automations/1/conditions/time")
               .send({
@@ -470,14 +474,14 @@ describe("API Tests", async function () {
                 endTime: "11:59",
               })
               .expect(201);
-            assert.lengthOf(await app.get("sprootDB").conditions.time.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 3);
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
             assert.equal(
-              (await app.get("sprootDB").conditions.time.getAsync(1))[2].startTime,
+              (await app.get("sprootDB").automations.conditions.time.getAsync(1))[2].startTime,
               "00:00",
             );
             await request(server)
@@ -487,7 +491,7 @@ describe("API Tests", async function () {
               })
               .expect(200);
             assert.equal(
-              (await app.get("sprootDB").conditions.time.getAsync(1))[2].startTime,
+              (await app.get("sprootDB").automations.conditions.time.getAsync(1))[2].startTime,
               "01:00",
             );
           });
@@ -495,9 +499,9 @@ describe("API Tests", async function () {
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.time.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 3);
             await request(server).delete("/api/v2/automations/1/conditions/time/3").expect(200);
-            assert.lengthOf(await app.get("sprootDB").conditions.time.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.time.getAsync(1), 2);
           });
         });
       });
@@ -527,7 +531,10 @@ describe("API Tests", async function () {
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
           it("should return 201", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.weekday.getAsync(1), 2);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.weekday.getAsync(1),
+              2,
+            );
             await request(server)
               .post("/api/v2/automations/1/conditions/weekday")
               .send({
@@ -535,28 +542,43 @@ describe("API Tests", async function () {
                 weekdays: 5,
               })
               .expect(201);
-            assert.lengthOf(await app.get("sprootDB").conditions.weekday.getAsync(1), 3);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.weekday.getAsync(1),
+              3,
+            );
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
-            assert.equal((await app.get("sprootDB").conditions.weekday.getAsync(1))[2].weekdays, 5);
+            assert.equal(
+              (await app.get("sprootDB").automations.conditions.weekday.getAsync(1))[2].weekdays,
+              5,
+            );
             await request(server)
               .patch("/api/v2/automations/1/conditions/weekday/3")
               .send({
                 weekdays: 6,
               })
               .expect(200);
-            assert.equal((await app.get("sprootDB").conditions.weekday.getAsync(1))[2].weekdays, 6);
+            assert.equal(
+              (await app.get("sprootDB").automations.conditions.weekday.getAsync(1))[2].weekdays,
+              6,
+            );
           });
         });
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.weekday.getAsync(1), 3);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.weekday.getAsync(1),
+              3,
+            );
             await request(server).delete("/api/v2/automations/1/conditions/weekday/3").expect(200);
-            assert.lengthOf(await app.get("sprootDB").conditions.weekday.getAsync(1), 2);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.weekday.getAsync(1),
+              2,
+            );
           });
         });
       });
@@ -586,7 +608,7 @@ describe("API Tests", async function () {
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
           it("should return 201", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.month.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.month.getAsync(1), 2);
             await request(server)
               .post("/api/v2/automations/1/conditions/month")
               .send({
@@ -594,28 +616,34 @@ describe("API Tests", async function () {
                 months: 13,
               })
               .expect(201);
-            assert.lengthOf(await app.get("sprootDB").conditions.month.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.month.getAsync(1), 3);
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
-            assert.equal((await app.get("sprootDB").conditions.month.getAsync(1))[2].months, 13);
+            assert.equal(
+              (await app.get("sprootDB").automations.conditions.month.getAsync(1))[2].months,
+              13,
+            );
             await request(server)
               .patch("/api/v2/automations/1/conditions/month/3")
               .send({
                 months: 14,
               })
               .expect(200);
-            assert.equal((await app.get("sprootDB").conditions.month.getAsync(1))[2].months, 14);
+            assert.equal(
+              (await app.get("sprootDB").automations.conditions.month.getAsync(1))[2].months,
+              14,
+            );
           });
         });
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.month.getAsync(1), 3);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.month.getAsync(1), 3);
             await request(server).delete("/api/v2/automations/1/conditions/month/3").expect(200);
-            assert.lengthOf(await app.get("sprootDB").conditions.month.getAsync(1), 2);
+            assert.lengthOf(await app.get("sprootDB").automations.conditions.month.getAsync(1), 2);
           });
         });
       });
@@ -653,7 +681,10 @@ describe("API Tests", async function () {
       describe("Create, Update, Delete", async () => {
         describe("POST", async () => {
           it("should return 201", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.dateRange.getAsync(1), 2);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.dateRange.getAsync(1),
+              2,
+            );
             await request(server)
               .post("/api/v2/automations/1/conditions/date-range")
               .send({
@@ -664,14 +695,18 @@ describe("API Tests", async function () {
                 endDate: 31,
               })
               .expect(201);
-            assert.lengthOf(await app.get("sprootDB").conditions.dateRange.getAsync(1), 3);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.dateRange.getAsync(1),
+              3,
+            );
           });
         });
 
         describe("PATCH", async () => {
           it("should return 200", async () => {
             assert.equal(
-              (await app.get("sprootDB").conditions.dateRange.getAsync(1))[2].startMonth,
+              (await app.get("sprootDB").automations.conditions.dateRange.getAsync(1))[2]
+                .startMonth,
               1,
             );
             await request(server)
@@ -681,7 +716,8 @@ describe("API Tests", async function () {
               })
               .expect(200);
             assert.equal(
-              (await app.get("sprootDB").conditions.dateRange.getAsync(1))[2].startMonth,
+              (await app.get("sprootDB").automations.conditions.dateRange.getAsync(1))[2]
+                .startMonth,
               6,
             );
           });
@@ -689,11 +725,17 @@ describe("API Tests", async function () {
 
         describe("DELETE", async () => {
           it("should return 200", async () => {
-            assert.lengthOf(await app.get("sprootDB").conditions.dateRange.getAsync(1), 3);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.dateRange.getAsync(1),
+              3,
+            );
             await request(server)
               .delete("/api/v2/automations/1/conditions/date-range/3")
               .expect(200);
-            assert.lengthOf(await app.get("sprootDB").conditions.dateRange.getAsync(1), 2);
+            assert.lengthOf(
+              await app.get("sprootDB").automations.conditions.dateRange.getAsync(1),
+              2,
+            );
           });
         });
       });
