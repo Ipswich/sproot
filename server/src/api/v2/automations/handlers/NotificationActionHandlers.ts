@@ -22,7 +22,7 @@ export async function getAsync(
       request.query["automationId"] != null &&
       !isNaN(parseInt(request.query["automationId"] as string))
     ) {
-      const notifications = await sprootDB.automations.getNotificationActionsByAutomationIdAsync(
+      const notifications = await sprootDB.automations.actions.notification.getAsync(
         parseInt(request.query["automationId"] as string),
       );
       automationResponse = {
@@ -35,7 +35,7 @@ export async function getAsync(
       return automationResponse;
     }
 
-    const notifications = await sprootDB.automations.getNotificationActionsAsync();
+    const notifications = await sprootDB.automations.actions.notification.getAllAsync();
     automationResponse = {
       statusCode: 200,
       content: {
@@ -89,7 +89,9 @@ export async function getByIdAsync(
   try {
     const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
     const notification = (
-      await sprootDB.automations.getNotificationActionByIdAsync(notificationActionId)
+      await sprootDB.automations.actions.notification.getNotificationActionByIdAsync(
+        notificationActionId,
+      )
     )[0];
     if (notification == null) {
       automationResponse = {
@@ -248,7 +250,9 @@ export async function deleteAsync(
   try {
     const notificationActionId = parseInt(request.params["notificationActionId"] ?? "");
     const notificationAction = (
-      await sprootDB.automations.getNotificationActionByIdAsync(notificationActionId)
+      await sprootDB.automations.actions.notification.getNotificationActionByIdAsync(
+        notificationActionId,
+      )
     )[0];
     if (notificationAction == null) {
       automationResponse = {

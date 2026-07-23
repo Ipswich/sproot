@@ -14,6 +14,8 @@ import {
 import { Knex } from "knex";
 import { AutomationsRepository } from "./repositories/AutomationsRepository";
 import { CameraRepository } from "./repositories/CameraRepository";
+import { NotificationActionsRepository } from "./repositories/NotificationActionsRepository";
+import { OutputActionsRepository } from "./repositories/OutputActionsRepository";
 import { DateRangeConditionsRepository } from "./repositories/DateRangeConditionsRepository";
 import { DeviceZonesRepository } from "./repositories/DeviceZonesRepository";
 import { InvalidCursorError } from "./repositories/BaseKnexRepository";
@@ -49,6 +51,10 @@ export class SprootDB {
     this.outputs = new OutputsRepository(connection);
     this.subcontrollers = new SubcontrollersRepository(connection);
     this.automations = new AutomationsRepository(connection);
+    this.automations.actions = {
+      output: new OutputActionsRepository(connection),
+      notification: new NotificationActionsRepository(connection),
+    };
     this.conditions = {
       sensor: new SensorConditionsRepository(connection),
       output: new OutputConditionsRepository(connection),

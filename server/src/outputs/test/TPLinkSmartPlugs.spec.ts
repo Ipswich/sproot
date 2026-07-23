@@ -514,7 +514,7 @@ describe("tplinkPlug.ts tests", async function () {
         enabled: true,
       },
     ]);
-    sinon.stub(sprootDB.automations, "getOutputActionsByOutputIdAsync").resolves([
+    sinon.stub(sprootDB.automations.actions.output, "getActionsByOutputIdAsync").resolves([
       {
         id: 1,
         automationId: 1,

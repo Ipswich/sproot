@@ -106,9 +106,8 @@ export class OutputActionManager implements Disposable {
    */
   async #reloadActionsAsync(): Promise<void> {
     try {
-      const outputActions = await this.#sprootDB.automations.getOutputActionsByOutputIdAsync(
-        this.#outputId,
-      );
+      const outputActions =
+        await this.#sprootDB.automations.actions.output.getActionsByOutputIdAsync(this.#outputId);
       this.#actionMap = new Map(outputActions.map((a) => [a.automationId, new OutputAction(a)]));
     } catch (error) {
       this.#logger.error(`Error reloading actions for output ${this.#outputId} - ${error}`);

@@ -735,7 +735,7 @@ describe("API Tests", async function () {
     describe("Create, Delete", async () => {
       describe("POST", async () => {
         it("should return 201", async () => {
-          assert.lengthOf(await app.get("sprootDB").automations.getOutputActionsAsync(), 5);
+          assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 5);
           await request(server)
             .post("/api/v2/output-actions")
             .send({
@@ -744,15 +744,15 @@ describe("API Tests", async function () {
               value: 100,
             })
             .expect(201);
-          assert.lengthOf(await app.get("sprootDB").automations.getOutputActionsAsync(), 6);
+          assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 6);
         });
       });
 
       describe("DELETE", async () => {
         it("should return 200", async () => {
-          assert.lengthOf(await app.get("sprootDB").automations.getOutputActionsAsync(), 6);
+          assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 6);
           await request(server).delete("/api/v2/output-actions/6").expect(200);
-          assert.lengthOf(await app.get("sprootDB").automations.getOutputActionsAsync(), 5);
+          assert.lengthOf(await app.get("sprootDB").automations.actions.output.getAllAsync(), 5);
         });
       });
     });
@@ -794,7 +794,10 @@ describe("API Tests", async function () {
     describe("Create, Delete", async () => {
       describe("POST", async () => {
         it("should return 201", async () => {
-          assert.lengthOf(await app.get("sprootDB").automations.getNotificationActionsAsync(), 3);
+          assert.lengthOf(
+            await app.get("sprootDB").automations.actions.notification.getAllAsync(),
+            3,
+          );
           await request(server)
             .post("/api/v2/notification-actions")
             .send({
@@ -803,15 +806,24 @@ describe("API Tests", async function () {
               content: "New Test Content",
             })
             .expect(201);
-          assert.lengthOf(await app.get("sprootDB").automations.getNotificationActionsAsync(), 4);
+          assert.lengthOf(
+            await app.get("sprootDB").automations.actions.notification.getAllAsync(),
+            4,
+          );
         });
       });
 
       describe("DELETE", async () => {
         it("should return 200", async () => {
-          assert.lengthOf(await app.get("sprootDB").automations.getNotificationActionsAsync(), 4);
+          assert.lengthOf(
+            await app.get("sprootDB").automations.actions.notification.getAllAsync(),
+            4,
+          );
           await request(server).delete("/api/v2/notification-actions/4").expect(200);
-          assert.lengthOf(await app.get("sprootDB").automations.getNotificationActionsAsync(), 3);
+          assert.lengthOf(
+            await app.get("sprootDB").automations.actions.notification.getAllAsync(),
+            3,
+          );
         });
       });
     });

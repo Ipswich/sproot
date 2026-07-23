@@ -125,25 +125,17 @@ export interface IAutomationsRepository {
   ): Promise<void>;
   deleteAsync(automationId: number): Promise<void>;
 
-  getOutputActionsAsync(): Promise<SDBOutputAction[]>;
-  getOutputActionsByAutomationIdAsync(automationId: number): Promise<SDBOutputAction[]>;
-  getOutputActionAsync(outputActionId: number): Promise<SDBOutputAction[]>;
-  addOutputActionAsync(automationId: number, outputId: number, value: number): Promise<number>;
-  deleteOutputActionAsync(outputActionId: number): Promise<void>;
-  getOutputActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
-
-  // Notifications
-  getNotificationActionsAsync(): Promise<SDBNotificationAction[]>;
-  getNotificationActionByIdAsync(notificationActionId: number): Promise<SDBNotificationAction[]>;
-  getNotificationActionsByAutomationIdAsync(automationId: number): Promise<SDBNotificationAction[]>;
-  addNotificationActionAsync(
-    automationId: number,
-    subject: string,
-    content: string,
-  ): Promise<number>;
-  deleteNotificationActionAsync(notificationActionId: number): Promise<void>;
+  actions: IActionsRepository;
 
   getAutomationsForOutputAsync(outputId: number): Promise<SDBOutputActionView[]>;
+  deleteSensorAutomationConditionsExceptAsync(
+    automationId: number,
+    exceptConditionIds: number[],
+  ): Promise<void>;
+  deleteOutputAutomationConditionsExceptAsync(
+    automationId: number,
+    exceptConditionIds: number[],
+  ): Promise<void>;
 }
 
 export interface IBaseConditionsRepository<T> {
@@ -301,8 +293,7 @@ export class MockMonthConditionsRepository implements IMonthConditionsRepository
   }
 }
 
-export interface IDateRangeConditionsRepository
-  extends IBaseConditionsRepository<SDBDateRangeCondition> {
+export interface IDateRangeConditionsRepository extends IBaseConditionsRepository<SDBDateRangeCondition> {
   addAsync(
     automationId: number,
     groupType: ConditionGroupType,
@@ -343,6 +334,35 @@ export type IConditionsRepository = {
   weekday: IWeekdayConditionsRepository;
   month: IMonthConditionsRepository;
   dateRange: IDateRangeConditionsRepository;
+};
+
+export interface IActionBaseRepository<T> {
+  getAsync(automationId: number): Promise<T[]>;
+  addAsync(automationId: number, ...params: unknown[]): Promise<number>;
+  updateAsync(automationId: number, action: T): Promise<void>;
+  deleteAsync(actionId: number): Promise<void>;
+}
+
+export interface IOutputActionsRepository extends IActionBaseRepository<SDBOutputAction> {
+  getAllAsync(): Promise<SDBOutputAction[]>;
+  getAsync(automationId: number): Promise<SDBOutputAction[]>;
+  addAsync(automationId: number, outputId: number, value: number): Promise<number>;
+  getOutputActionAsync(actionId: number): Promise<SDBOutputAction[]>;
+  getActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
+  updateAsync(automationId: number, action: SDBOutputAction): Promise<void>;
+}
+
+export interface INotificationActionsRepository extends IActionBaseRepository<SDBNotificationAction> {
+  getAllAsync(): Promise<SDBNotificationAction[]>;
+  getAsync(automationId: number): Promise<SDBNotificationAction[]>;
+  addAsync(automationId: number, subject: string, content: string): Promise<number>;
+  getNotificationActionByIdAsync(actionId: number): Promise<SDBNotificationAction[]>;
+  updateAsync(automationId: number, action: SDBNotificationAction): Promise<void>;
+}
+
+export type IActionsRepository = {
+  output: IOutputActionsRepository;
+  notification: INotificationActionsRepository;
 };
 
 export interface ICameraRepository {
@@ -662,6 +682,11 @@ export class MockSystemRepository implements ISystemRepository {
 }
 
 export class MockAutomationsRepository implements IAutomationsRepository {
+  actions = {
+    output: new MockOutputActionsRepository(),
+    notification: new MockNotificationActionsRepository(),
+  };
+
   async getAllAsync(): Promise<SDBAutomation[]> {
     return [];
   }
@@ -685,6 +710,9 @@ export class MockAutomationsRepository implements IAutomationsRepository {
   async getOutputActionsAsync(): Promise<SDBOutputAction[]> {
     return [];
   }
+  async getOutputActionsByOutputIdAsync(_outputId: number): Promise<SDBOutputAction[]> {
+    return [];
+  }
   async getOutputActionsByAutomationIdAsync(_automationId: number): Promise<SDBOutputAction[]> {
     return [];
   }
@@ -700,9 +728,6 @@ export class MockAutomationsRepository implements IAutomationsRepository {
   }
   async deleteOutputActionAsync(_outputActionId: number): Promise<void> {
     return;
-  }
-  async getOutputActionsByOutputIdAsync(_outputId: number): Promise<SDBOutputAction[]> {
-    return [];
   }
   async getNotificationActionsAsync(): Promise<SDBNotificationAction[]> {
     return [];
@@ -740,6 +765,51 @@ export class MockAutomationsRepository implements IAutomationsRepository {
     _automationId: number,
     _exceptConditionIds: number[],
   ): Promise<void> {
+    return;
+  }
+}
+
+export class MockOutputActionsRepository implements IOutputActionsRepository {
+  async getAllAsync(): Promise<SDBOutputAction[]> {
+    return [];
+  }
+  async getAsync(_automationId: number): Promise<SDBOutputAction[]> {
+    return [];
+  }
+  async addAsync(_automationId: number, _outputId: number, _value: number): Promise<number> {
+    return 0;
+  }
+  async getOutputActionAsync(_actionId: number): Promise<SDBOutputAction[]> {
+    return [];
+  }
+  async getActionsByOutputIdAsync(_outputId: number): Promise<SDBOutputAction[]> {
+    return [];
+  }
+  async updateAsync(_automationId: number, _action: SDBOutputAction): Promise<void> {
+    return;
+  }
+  async deleteAsync(_actionId: number): Promise<void> {
+    return;
+  }
+}
+
+export class MockNotificationActionsRepository implements INotificationActionsRepository {
+  async getAllAsync(): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async getAsync(_automationId: number): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async addAsync(_automationId: number, _subject: string, _content: string): Promise<number> {
+    return 0;
+  }
+  async getNotificationActionByIdAsync(_actionId: number): Promise<SDBNotificationAction[]> {
+    return [];
+  }
+  async updateAsync(_automationId: number, _action: SDBNotificationAction): Promise<void> {
+    return;
+  }
+  async deleteAsync(_actionId: number): Promise<void> {
     return;
   }
 }
