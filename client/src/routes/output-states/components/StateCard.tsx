@@ -1,7 +1,7 @@
 import {
   ControlMode,
   IOutputBase,
-} from "@sproot/sproot-common/src/outputs/IOutputBase";
+} from "@sproot/common/src/outputs/IOutputBase";
 import {
   setOutputControlModeAsync,
   setOutputManualStateAsync,

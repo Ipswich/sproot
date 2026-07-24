@@ -19,7 +19,7 @@ import { SystemStatus } from "@sproot/system/SystemStatus";
 import {
   SuccessResponse,
   ErrorResponse,
-} from "@sproot/sproot-common/src/api/v2/Responses";
+} from "@sproot/common/src/api/v2/Responses";
 import {
   ConditionGroupType,
   ConditionOperator,

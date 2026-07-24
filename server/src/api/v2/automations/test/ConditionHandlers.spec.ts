@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
 
 import { assert } from "chai";
 import sinon from "sinon";
@@ -18,7 +18,7 @@ import { AutomationService } from "../../../../automation/AutomationService";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";
 import { OutputList } from "../../../../outputs/list/OutputList";
 import { SensorList } from "../../../../sensors/list/SensorList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";

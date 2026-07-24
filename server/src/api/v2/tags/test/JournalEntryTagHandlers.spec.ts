@@ -4,10 +4,10 @@ import sinon from "sinon";
 import {
   MockSprootDB,
   MockJournalsRepository,
-} from "@sproot/sproot-common/dist/database/ISprootDB";
+} from "@sproot/common/dist/database/ISprootDB";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalEntryTagHandlers";
-import { ErrorResponse, SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
-import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
+import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
 
 describe("JournalEntryTagHandlers.ts tests", () => {
   function stubJournalsMethods(sprootDB: any) {

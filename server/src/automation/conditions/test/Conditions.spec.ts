@@ -1,7 +1,7 @@
-import { SDBTimeCondition } from "@sproot/sproot-common/dist/database/SDBTimeCondition";
-import { SDBOutputCondition } from "@sproot/sproot-common/dist/database/SDBOutputCondition";
-import { SDBSensorCondition } from "@sproot/sproot-common/dist/database/SDBSensorCondition";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { SDBTimeCondition } from "@sproot/common/dist/database/SDBTimeCondition";
+import { SDBOutputCondition } from "@sproot/common/dist/database/SDBOutputCondition";
+import { SDBSensorCondition } from "@sproot/common/dist/database/SDBSensorCondition";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { OutputList } from "../../../outputs/list/OutputList";
 import { OutputBase } from "../../../outputs/base/OutputBase";
 import { SensorList } from "../../../sensors/list/SensorList";
@@ -11,7 +11,7 @@ import { Conditions } from "../Conditions";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";

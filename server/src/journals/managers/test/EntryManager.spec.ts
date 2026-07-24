@@ -1,9 +1,9 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { ISprootDB, IJournalsRepository } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBJournalEntry } from "@sproot/sproot-common/dist/database/SDBJournalEntry";
-import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
-import { SDBJournalEntryTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalEntryTagLookup";
+import { ISprootDB, IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
+import { SDBJournalEntry } from "@sproot/common/dist/database/SDBJournalEntry";
+import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
+import { SDBJournalEntryTagLookup } from "@sproot/common/dist/database/SDBJournalEntryTagLookup";
 import EntryManager from "../EntryManager";
 
 describe("EntryManager.ts tests", () => {

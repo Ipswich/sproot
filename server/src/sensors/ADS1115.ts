@@ -1,9 +1,9 @@
 import { openPromisified, PromisifiedBus } from "i2c-bus";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 
 export class ADS1115 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;

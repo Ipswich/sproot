@@ -1,7 +1,7 @@
-import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { DS18B20 } from "../../DS18B20";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
 import { SensorList } from "../SensorList";
 
 import { assert } from "chai";

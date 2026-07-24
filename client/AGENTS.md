@@ -131,7 +131,7 @@ npm run preview
 
 **Path Aliases:**
 
-- `@sproot/sproot-common` → `../common/src/*`
+- `@sproot/common` → `../common/src/*`
 - `@sproot/sproot-client` → `../client/src/*`
 
 **Build Order:** In the normal workflow you can run `npm run build` in `client/` only; the client build will automatically build `common` first via project references. Only run `npm run build` in `common/` manually if you are building workspaces separately.
@@ -150,7 +150,7 @@ VITE_API_SERVER_URL=<your server URL>
 
 **Path Mapping:**
 
-- `@sproot/sproot-common` → `../common/src/*`
+- `@sproot/common` → `../common/src/*`
 - `@sproot/sproot-client` → `../client/src/*`
 
 **Vite:** Configured in `client/src/vite.config.ts`:
@@ -182,7 +182,7 @@ VITE_API_SERVER_URL=<your server URL>
 
 **Type Imports:**
 
-- `@sproot/sproot-common/src/*` for shared types
+- `@sproot/common/src/*` for shared types
 
 **Error Handling:**
 
@@ -193,7 +193,7 @@ VITE_API_SERVER_URL=<your server URL>
 
 **No Tests:** Manual testing only via Vite dev server.
 
-**TypeScript:** All types come from `@sproot/sproot-common`.
+**TypeScript:** All types come from `@sproot/common`.
 
 **Build Order:** Client must have common built first.
 
@@ -226,7 +226,7 @@ Client builds container image with nginx + React for production deployment:
 
 ## Common Module Pattern
 
-This module imports shared types from `@sproot/sproot-common/src/*`:
+This module imports shared types from `@sproot/common/src/*`:
 
 - Database service type definitions
 - API request/response types

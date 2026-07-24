@@ -3,7 +3,7 @@ import {
   getSensorsAsync,
   getSupportedSensorModelsAsync,
 } from "@sproot/sproot-client/src/requests/requests_v2";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ISensorBase } from "@sproot/common/src/sensors/ISensorBase";
 import { Button, Stack, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import EditTable from "@sproot/sproot-client/src/routes/settings/sensors/EditTable";

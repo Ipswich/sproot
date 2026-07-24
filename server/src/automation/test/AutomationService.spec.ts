@@ -7,7 +7,7 @@ import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 
 const createStubSprootDB = () => {
   const sprootDB = new MockSprootDB() as any;

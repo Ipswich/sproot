@@ -1,7 +1,7 @@
 // import { OutputState } from "@sproot/sproot-server/src/outputs/base/OutputState";
-// import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-// import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-// import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+// import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+// import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
+// import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 
 // import { assert } from "chai";
 // import * as sinon from "sinon";

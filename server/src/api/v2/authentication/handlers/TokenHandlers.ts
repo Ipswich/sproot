@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBUser } from "@sproot/database/SDBUser";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";

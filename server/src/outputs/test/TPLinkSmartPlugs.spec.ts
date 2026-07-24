@@ -1,8 +1,8 @@
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { TPLinkSmartPlugs, TPLinkPlug } from "../TPLinkSmartPlugs";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import { Device as SimulatedDevice, UdpServer } from "tplink-smarthome-simulator";
 import { Plug } from "tplink-smarthome-api";
 

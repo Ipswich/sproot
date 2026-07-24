@@ -8,6 +8,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "paths": {
+      "@sproot/common/*": ["../common/src/*"],
       "@sproot/*": ["../common/src/*", "../client/src/*"]
     },
 

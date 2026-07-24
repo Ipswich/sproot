@@ -1,6 +1,6 @@
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { OutputCondition } from "../../../../automation/conditions/OutputCondition";
 import { SensorCondition } from "../../../../automation/conditions/SensorCondition";
 import { TimeCondition } from "../../../../automation/conditions/TimeCondition";

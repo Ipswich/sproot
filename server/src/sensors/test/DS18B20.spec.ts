@@ -1,10 +1,10 @@
 import { promises } from "fs";
 
-import { DS18B20 } from "@sproot/sproot-server/src/sensors/DS18B20";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { DS18B20 } from "../DS18B20";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { SDBReading } from "@sproot/common/dist/database/SDBReading";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
 
 import { assert } from "chai";
 import * as sinon from "sinon";

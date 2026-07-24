@@ -1,7 +1,7 @@
 import {
   ConditionGroupType,
   ConditionOperator,
-} from "@sproot/sproot-common/src/automation/ConditionTypes";
+} from "@sproot/common/src/automation/ConditionTypes";
 
 type SDBOutputCondition = {
   id: number;

@@ -1,7 +1,7 @@
 import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { TimeCondition } from "./conditions/TimeCondition";

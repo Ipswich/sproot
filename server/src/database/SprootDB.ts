@@ -9,26 +9,26 @@ import {
   ISystemRepository,
   ISprootDB,
   IUsersRepository,
-} from "@sproot/sproot-common/dist/database/ISprootDB";
+} from "@sproot/common/dist/database/ISprootDB";
 import { Knex } from "knex";
-import { AutomationsRepository } from "./repositories/AutomationsRepository";
-import { CameraRepository } from "./repositories/CameraRepository";
-import { NotificationActionsRepository } from "./repositories/NotificationActionsRepository";
-import { OutputActionsRepository } from "./repositories/OutputActionsRepository";
-import { DateRangeConditionsRepository } from "./repositories/DateRangeConditionsRepository";
-import { DeviceZonesRepository } from "./repositories/DeviceZonesRepository";
-import { InvalidCursorError } from "./repositories/BaseKnexRepository";
-import { JournalsRepository } from "./repositories/JournalsRepository";
-import { MonthConditionsRepository } from "./repositories/MonthConditionsRepository";
-import { OutputConditionsRepository } from "./repositories/OutputConditionsRepository";
-import { OutputsRepository } from "./repositories/OutputsRepository";
-import { SensorConditionsRepository } from "./repositories/SensorConditionsRepository";
-import { SensorsRepository } from "./repositories/SensorsRepository";
-import { SubcontrollersRepository } from "./repositories/SubcontrollersRepository";
-import { SystemRepository } from "./repositories/SystemRepository";
-import { TimeConditionsRepository } from "./repositories/TimeConditionsRepository";
-import { UsersRepository } from "./repositories/UsersRepository";
-import { WeekdayConditionsRepository } from "./repositories/WeekdayConditionsRepository";
+import { AutomationsRepository } from "./repositories/automations/AutomationsRepository";
+import { CameraRepository } from "./repositories/camera/CameraRepository";
+import { NotificationActionsRepository } from "./repositories/automations/actions/NotificationActionsRepository";
+import { OutputActionsRepository } from "./repositories/automations/actions/OutputActionsRepository";
+import { DateRangeConditionsRepository } from "./repositories/automations/conditions/DateRangeConditionsRepository";
+import { DeviceZonesRepository } from "./repositories/device-zones/DeviceZonesRepository";
+import { InvalidCursorError } from "./repositories/utils/BaseKnexRepository";
+import { JournalsRepository } from "./repositories/journals/JournalsRepository";
+import { MonthConditionsRepository } from "./repositories/automations/conditions/MonthConditionsRepository";
+import { OutputConditionsRepository } from "./repositories/automations/conditions/OutputConditionsRepository";
+import { OutputsRepository } from "./repositories/outputs/OutputsRepository";
+import { SensorConditionsRepository } from "./repositories/automations/conditions/SensorConditionsRepository";
+import { SensorsRepository } from "./repositories/sensors/SensorsRepository";
+import { SubcontrollersRepository } from "./repositories/subcontrollers/SubcontrollersRepository";
+import { SystemRepository } from "./repositories/system/SystemRepository";
+import { TimeConditionsRepository } from "./repositories/automations/conditions/TimeConditionsRepository";
+import { UsersRepository } from "./repositories/users/UsersRepository";
+import { WeekdayConditionsRepository } from "./repositories/automations/conditions/WeekdayConditionsRepository";
 
 export class SprootDB {
   readonly sensors: ISensorsRepository;

@@ -20,13 +20,13 @@ import { ConditionOperator } from "@sproot/automation/ConditionTypes";
 import {
   ReadingType,
   Units,
-} from "@sproot/sproot-common/src/sensors/ReadingType";
+} from "@sproot/common/src/sensors/ReadingType";
 import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";
 import NewConditionWidget from "./NewConditionWidget";
-import { convertCelsiusToFahrenheit } from "@sproot/sproot-common/src/utility/DisplayFormats";
-import { formatMilitaryTime } from "@sproot/sproot-common/src/utility/TimeMethods";
+import { convertCelsiusToFahrenheit } from "@sproot/common/src/utility/DisplayFormats";
+import { formatMilitaryTime } from "@sproot/common/src/utility/TimeMethods";
 
 export interface ConditionsTableProps {
   automationId: number;

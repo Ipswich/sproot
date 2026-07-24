@@ -3,7 +3,7 @@ import sinon from "sinon";
 import { OutputBase } from "../../../outputs/base/OutputBase";
 import { OutputList } from "../../../outputs/list/OutputList";
 import { OutputCondition } from "../OutputCondition";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 
 describe("OutputCondition.ts tests", () => {
   describe("evaluateNumber", () => {

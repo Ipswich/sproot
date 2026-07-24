@@ -1,10 +1,10 @@
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { MdnsService } from "../system/MdnsService";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
 
 export class ESP32_ADS1115 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;

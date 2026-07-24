@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import { OutputList } from "../../../../outputs/list/OutputList";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 import { addAsync, deleteAsync, get, updateAsync } from "../handlers/OutputHandlers";
 
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { OutputBase } from "../../../../outputs/base/OutputBase";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/common/dist/outputs/Models";
 
 describe("OutputHandlers.ts tests", () => {
   describe("get", () => {

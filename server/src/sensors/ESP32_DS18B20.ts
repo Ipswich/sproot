@@ -1,11 +1,11 @@
 import winston from "winston";
 
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { MdnsService } from "../system/MdnsService";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
 
 class ESP32_DS18B20 extends SensorBase {
   static readonly MAX_SENSOR_READ_TIME = 3500;

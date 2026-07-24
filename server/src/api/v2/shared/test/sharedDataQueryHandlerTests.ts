@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 
 interface DataQueryHandlerTestConfig<RequestType, ResponseType> {
   handlerName: string;

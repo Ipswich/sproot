@@ -1,8 +1,8 @@
-import { ConditionOperator } from "@sproot/sproot-common/dist/automation/ConditionTypes";
+import { ConditionOperator } from "@sproot/common/dist/automation/ConditionTypes";
 import {
   isBetweenTimeStamp,
   isBetweenMonthDate,
-} from "@sproot/sproot-common/dist/utility/TimeMethods";
+} from "@sproot/common/dist/utility/TimeMethods";
 
 export function evaluateNumber(
   reading: number,

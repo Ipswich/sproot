@@ -1,8 +1,8 @@
 import {
   convertCelsiusToFahrenheit,
   formatDateForDisplay,
-} from "@sproot/sproot-common/src/utility/DisplayFormats";
-import { Units } from "@sproot/sproot-common/src/sensors/ReadingType";
+} from "@sproot/common/src/utility/DisplayFormats";
+import { Units } from "@sproot/common/src/sensors/ReadingType";
 import { getDownsampleMinutes } from "./queryTypes";
 
 export type DataPoint = {

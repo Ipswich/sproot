@@ -5,10 +5,10 @@ import cors from "cors";
 import express, { Express } from "express";
 import * as winston from "winston";
 
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import * as Constants from "@sproot/common/dist/utility/Constants";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { SprootDB } from "./database/SprootDB";
-import { SDBUser } from "@sproot/sproot-common/dist/database/SDBUser";
+import { SDBUser } from "@sproot/common/dist/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
 import { OutputList } from "./outputs/list/OutputList";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";

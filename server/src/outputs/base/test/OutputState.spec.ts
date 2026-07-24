@@ -1,7 +1,7 @@
 import { OutputState } from "../OutputState";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
+import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 
 import { assert } from "chai";
 import sinon from "sinon";

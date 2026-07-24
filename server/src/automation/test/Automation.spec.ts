@@ -5,7 +5,7 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 
 const createStubSprootDB = () => {
   const sprootDB = new MockSprootDB() as any;

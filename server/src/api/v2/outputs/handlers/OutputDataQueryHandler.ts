@@ -1,7 +1,7 @@
 import {
   OutputDataQueryRequest,
   validateOutputDataQueryRequest,
-} from "@sproot/sproot-common/dist/api/v2/QueryTypes";
+} from "@sproot/common/dist/api/v2/QueryTypes";
 import { createDataQueryHandler } from "../../shared/DataQueryHandler";
 
 export const outputDataQueryHandlerAsync = createDataQueryHandler<

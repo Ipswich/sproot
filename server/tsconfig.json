@@ -4,8 +4,12 @@
     "rootDir": "src",
     "outDir": "dist",
     "paths": {
+      "@sproot/common/*": ["../common/dist/*"],
       "@sproot/*": ["../common/dist/*"]
     }
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
   },
   "references": [
     {

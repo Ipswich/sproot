@@ -1,6 +1,6 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { ISprootDB, IJournalsRepository } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB, IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
 import JournalManager from "../JournalManager";
 
 describe("JournalManager.ts tests", () => {

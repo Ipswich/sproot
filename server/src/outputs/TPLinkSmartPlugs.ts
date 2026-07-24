@@ -1,11 +1,11 @@
 import { Client, Plug } from "tplink-smarthome-api";
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
-import { AvailableDevice } from "@sproot/sproot-common/dist/outputs/AvailableDevice";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { AvailableDevice } from "@sproot/common/dist/outputs/AvailableDevice";
+import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 import { EventEmitter } from "events";
 import { toDbDate } from "../utils/dateUtils";
 import { IEventBus } from "../eventbus/IEventBus";

@@ -1,7 +1,7 @@
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { addAsync, deleteAsync, getAsync, getByIdAsync } from "../handlers/OutputActionHandlers";
-import { SDBOutputAction } from "@sproot/sproot-common/dist/database/SDBOutputAction";
+import { SDBOutputAction } from "@sproot/common/dist/database/SDBOutputAction";
 
 import { assert } from "chai";
 import sinon from "sinon";
@@ -10,7 +10,7 @@ import { OutputList } from "../../../../outputs/list/OutputList";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 
 const createStubSprootDB = () => {
   const sprootDB = new MockSprootDB() as any;

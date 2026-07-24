@@ -9,7 +9,7 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon, { SinonSpy } from "sinon";
 import winston from "winston";
-import { SuccessResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
 import fs from "fs";
 import path from "path";
 import { tmpdir } from "os";

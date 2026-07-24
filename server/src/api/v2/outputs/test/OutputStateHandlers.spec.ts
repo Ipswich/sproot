@@ -5,7 +5,7 @@ import sinon from "sinon";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 
 import { OutputList } from "../../../../outputs/list/OutputList";
-import { ControlMode, IOutputBase } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ControlMode, IOutputBase } from "@sproot/common/dist/outputs/IOutputBase";
 import { setControlModeAsync, setManualStateAsync } from "../handlers/OutputStateHandlers";
 
 describe("OutputStateHandlers.ts tests", () => {

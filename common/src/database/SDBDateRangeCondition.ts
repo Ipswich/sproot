@@ -1,4 +1,4 @@
-import { ConditionGroupType } from "@sproot/sproot-common/src/automation/ConditionTypes";
+import { ConditionGroupType } from "@sproot/common/src/automation/ConditionTypes";
 
 type SDBDateRangeCondition = {
   id: number;

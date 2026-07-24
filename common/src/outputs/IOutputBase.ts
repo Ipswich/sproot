@@ -1,4 +1,4 @@
-import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
+import { SDBOutputState } from "@sproot/common/src/database/SDBOutputState";
 import { Models } from "./Models";
 
 enum ControlMode {

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
-import { SDBJournalEntryTag } from "@sproot/sproot-common/dist/database/SDBJournalEntryTag";
+import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
 
 /**
  * Possible statusCodes: 200, 503

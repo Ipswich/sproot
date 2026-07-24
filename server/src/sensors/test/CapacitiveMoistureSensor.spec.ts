@@ -1,10 +1,10 @@
 import { CapacitiveMoistureSensor } from "../CapacitiveMoistureSensor";
 import { Ads1115Device } from "../ADS1115";
 
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+import { SDBReading } from "@sproot/common/dist/database/SDBReading";
 
 import { assert } from "chai";
 import * as sinon from "sinon";

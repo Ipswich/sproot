@@ -1,7 +1,7 @@
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { ADS1115, Ads1115Device } from "./ADS1115";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
 import winston from "winston";
 import { SensorBase } from "./base/SensorBase";
 

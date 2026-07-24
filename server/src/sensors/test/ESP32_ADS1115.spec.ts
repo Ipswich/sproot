@@ -2,19 +2,19 @@ import {
   ESP32_ADS1115,
   ESP32_Ads1115Device,
   ESP32_ADS1115Response,
-} from "@sproot/sproot-server/src/sensors/ESP32_ADS1115";
+} from "../ESP32_ADS1115";
 
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ReadingType } from "@sproot/sproot-common/dist/sensors/ReadingType";
-import { SDBSensor } from "@sproot/sproot-common/dist/database/SDBSensor";
-import { SDBReading } from "@sproot/sproot-common/dist/database/SDBReading";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+import { SDBReading } from "@sproot/common/dist/database/SDBReading";
 
 import { assert } from "chai";
 import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
-import { SDBSubcontroller } from "@sproot/sproot-common/dist/database/SDBSubcontroller";
+import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
 const mockSprootDB = new MockSprootDB();
 
 describe("ESP32_ADS1115.ts tests", function () {

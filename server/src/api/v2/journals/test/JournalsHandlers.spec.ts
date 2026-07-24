@@ -5,9 +5,9 @@ import {
   MockSprootDB,
   MockJournalsRepository,
   ISprootDB,
-} from "@sproot/sproot-common/dist/database/ISprootDB";
+} from "@sproot/common/dist/database/ISprootDB";
 import JournalManager from "../../../../journals/managers/JournalManager";
-import { SuccessResponse, ErrorResponse } from "@sproot/sproot-common/dist/api/v2/Responses";
+import { SuccessResponse, ErrorResponse } from "@sproot/common/dist/api/v2/Responses";
 import {
   getAsync,
   addAsync,

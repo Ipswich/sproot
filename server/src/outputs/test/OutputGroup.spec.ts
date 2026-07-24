@@ -1,15 +1,15 @@
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { OutputGroup } from "../OutputGroup";
-import { PCA9685 } from "@sproot/sproot-server/src/outputs/PCA9685";
+import { PCA9685 } from "../PCA9685";
 import { Pca9685Driver } from "pca9685";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/common/dist/outputs/Models";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 function stubPca9685DutyCycle() {

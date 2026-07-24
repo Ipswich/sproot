@@ -1,7 +1,7 @@
 // // import { Response } from "express";
 // // import { getAvailableDevices } from "../handlers/AvailableDevicesHandlers";
 // import { OutputList } from "../../../../outputs/list/OutputList";
-// import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+// import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 // import { UdpServer, Device as SimulatedDevice } from "tplink-smarthome-simulator";
 // // import { Plug } from "tplink-smarthome-api";
 

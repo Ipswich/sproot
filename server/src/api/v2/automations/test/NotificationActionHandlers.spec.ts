@@ -7,7 +7,7 @@ import {
   getByIdAsync,
   getActiveNotificationsAsync,
 } from "../handlers/NotificationActionHandlers";
-import { SDBNotificationAction } from "@sproot/sproot-common/dist/database/SDBNotificationAction";
+import { SDBNotificationAction } from "@sproot/common/dist/database/SDBNotificationAction";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 
 import { assert } from "chai";
@@ -15,7 +15,7 @@ import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 
 const createStubSprootDB = () => {
   const sprootDB = new MockSprootDB() as any;

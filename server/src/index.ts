@@ -1,7 +1,7 @@
 import "dotenv/config";
 import mainAsync, { gracefulHaltAsync } from "./program";
 import { DI_KEYS } from "./utils/DependencyInjectionConstants";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 
 mainAsync().then((app) => {
   const server = app.listen(3000, async () => {

@@ -1,10 +1,10 @@
-import { MockSprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { ESP32_PCA9685 } from "@sproot/sproot-server/src/outputs/ESP32_PCA9685";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
+import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ESP32_PCA9685 } from "../ESP32_PCA9685";
+import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { OutputBase } from "../base/OutputBase";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
-import { ControlMode } from "@sproot/sproot-common/src/outputs/IOutputBase";
-import { SDBOutputState } from "@sproot/sproot-common/src/database/SDBOutputState";
+import { Models } from "@sproot/common/dist/outputs/Models";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 
 import { assert } from "chai";
 import nock from "nock";

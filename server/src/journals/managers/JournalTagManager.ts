@@ -1,5 +1,5 @@
-import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBJournalTag } from "@sproot/common/dist/database/SDBJournalTag";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 
 export default class JournalTagManager {
   #sprootDB: ISprootDB;

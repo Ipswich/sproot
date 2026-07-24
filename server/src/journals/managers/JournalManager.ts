@@ -1,7 +1,7 @@
-import { SDBJournal } from "@sproot/sproot-common/dist/database/SDBJournal";
-import { SDBJournalTag } from "@sproot/sproot-common/dist/database/SDBJournalTag";
-import { SDBJournalTagLookup } from "@sproot/sproot-common/dist/database/SDBJournalTagLookup";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { SDBJournal } from "@sproot/common/dist/database/SDBJournal";
+import { SDBJournalTag } from "@sproot/common/dist/database/SDBJournalTag";
+import { SDBJournalTagLookup } from "@sproot/common/dist/database/SDBJournalTagLookup";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { toDbDate } from "../../utils/dateUtils";
 
 export default class JournalManager {

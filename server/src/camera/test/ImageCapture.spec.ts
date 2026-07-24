@@ -3,7 +3,7 @@ import sinon from "sinon";
 import fs from "fs";
 import path from "path";
 import ImageCapture from "../ImageCapture";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import * as Constants from "@sproot/common/dist/utility/Constants";
 import winston from "winston";
 import os from "os";
 

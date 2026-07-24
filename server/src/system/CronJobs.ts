@@ -2,9 +2,9 @@ import { CronJob } from "cron";
 import winston from "winston";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
-import * as Constants from "@sproot/sproot-common/dist/utility/Constants";
+import * as Constants from "@sproot/common/dist/utility/Constants";
 import { Backups } from "./Backups";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { AutomationService } from "../automation/AutomationService";
 
 export function createAutomationsCronJob(

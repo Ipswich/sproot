@@ -1,6 +1,6 @@
 import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { IConditionProperties } from "@sproot/automation/IConditionProperties";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
 import { Conditions } from "./conditions/Conditions";

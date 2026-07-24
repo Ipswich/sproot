@@ -15,7 +15,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import EditablesTable from "@sproot/sproot-client/src/routes/common/EditablesTable";
-import { ISubcontroller } from "@sproot/sproot-common/src/system/ISubcontroller";
+import { ISubcontroller } from "@sproot/common/src/system/ISubcontroller";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRevalidator } from "react-router-dom";
 import { SubcontrollerFormValues } from "./NewSubcontrollerModal";

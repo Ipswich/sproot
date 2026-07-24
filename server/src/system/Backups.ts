@@ -1,9 +1,9 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { BACKUP_DIRECTORY } from "@sproot/sproot-common/dist/utility/Constants";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { BACKUP_DIRECTORY } from "@sproot/common/dist/utility/Constants";
 import {
   createTimeStampSuffix,
   sortDirectoryByStatsAsync,
-} from "@sproot/sproot-common/dist/utility/Files";
+} from "@sproot/common/dist/utility/Files";
 import { createReadStream, promises as fsPromises } from "fs";
 import winston from "winston";
 import path from "node:path";

@@ -1,12 +1,12 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
+import { IOutputBase, ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 import { OutputCache } from "./OutputCache";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { OutputActionManager } from "../../automation/outputs/OutputActionManager";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/common/dist/outputs/Models";
 import { toDbDate } from "../../utils/dateUtils";
 import { IEventBus } from "../../eventbus/IEventBus";
 

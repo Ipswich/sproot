@@ -1,13 +1,13 @@
 import { PCA9685 } from "../PCA9685";
 import { ESP32_PCA9685, ESP32_PCA9685Output } from "../ESP32_PCA9685";
 import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { IOutputBase, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { IOutputBase, ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 import { OutputBase } from "../base/OutputBase";
-import { SDBOutput } from "@sproot/sproot-common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
+import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import winston from "winston";
-import { Models } from "@sproot/sproot-common/dist/outputs/Models";
+import { Models } from "@sproot/common/dist/outputs/Models";
 import { MdnsService } from "../../system/MdnsService";
 import { OutputGroup } from "../OutputGroup";
 import { IEventBus } from "../../eventbus/IEventBus";

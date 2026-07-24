@@ -1,6 +1,6 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { IOutputState, ControlMode } from "@sproot/sproot-common/dist/outputs/IOutputBase";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
+import { IOutputState, ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 
 export class OutputState implements IOutputState {
   lastValue: number;

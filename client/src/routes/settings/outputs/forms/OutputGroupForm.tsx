@@ -1,11 +1,11 @@
 import { UseFormReturnType } from "@mantine/form";
-import { IOutputBase } from "@sproot/sproot-common/src/outputs/IOutputBase";
+import { IOutputBase } from "@sproot/common/src/outputs/IOutputBase";
 import { Fragment, useEffect } from "react";
 import { OutputFormValues } from "../OutputSettings";
 import { getOutputsAsync } from "../../../../requests/requests_v2";
 import { useQuery } from "@tanstack/react-query";
 import { Checkbox, SimpleGrid, Paper, ScrollArea, Stack } from "@mantine/core";
-import { Models } from "@sproot/sproot-common/src/outputs/Models";
+import { Models } from "@sproot/common/src/outputs/Models";
 
 interface OutputGroupFormProps {
   selectedOutput?: IOutputBase;

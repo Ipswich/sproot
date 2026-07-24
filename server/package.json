@@ -1,5 +1,5 @@
 {
-  "name": "@sproot/sproot-server",
+  "name": "@sproot/server",
   "private": true,
   "description": "sproot-server, the backend for the sproot project",
   "main": "index.js",
@@ -52,6 +52,7 @@
     "supertest": "^7.0.0",
     "tplink-smarthome-simulator": "^5.0.1",
     "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.3"
   },
   "dependencies": {

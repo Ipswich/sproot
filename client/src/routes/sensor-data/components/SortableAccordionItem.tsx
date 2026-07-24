@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { Accordion } from "@mantine/core";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
-import { ReadingType } from "@sproot/sproot-common/src/sensors/ReadingType";
+import { ISensorBase } from "@sproot/common/src/sensors/ISensorBase";
+import { ReadingType } from "@sproot/common/src/sensors/ReadingType";
 import { CSS } from "@dnd-kit/utilities";
 import { IconGripVertical } from "@tabler/icons-react";
 import SensorTable from "./SensorTable";

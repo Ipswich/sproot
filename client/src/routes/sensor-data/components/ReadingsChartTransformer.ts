@@ -1,11 +1,11 @@
-import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
+import { DefaultColors } from "@sproot/common/src/utility/Constants";
 import {
   DataPoint,
   DataSeries,
   ChartSeries,
 } from "../../../requests/chartDataTypes";
-import { formatDateForDisplay } from "@sproot/sproot-common/src/utility/DisplayFormats";
-import type { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { formatDateForDisplay } from "@sproot/common/src/utility/DisplayFormats";
+import type { ISensorBase } from "@sproot/common/src/sensors/ISensorBase";
 import type { Aggregate } from "../../../requests/queryTypes";
 import type { MergedChartData } from "../../../requests/chartDataPagination";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@sproot/sproot-common",
+  "name": "@sproot/common",
   "private": true,
   "description": "Sproot common libraries",
   "main": "index.js",

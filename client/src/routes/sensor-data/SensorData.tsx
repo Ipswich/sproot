@@ -3,7 +3,7 @@ import { Box, Button, Flex, Group, Paper, Switch } from "@mantine/core";
 import {
   ReadingType,
   Units,
-} from "@sproot/sproot-common/src/sensors/ReadingType";
+} from "@sproot/common/src/sensors/ReadingType";
 import type { Aggregate } from "../../requests/queryTypes";
 import { useLoaderData } from "react-router-dom";
 import ReadingsChartContainer from "./components/ReadingsChartContainer";

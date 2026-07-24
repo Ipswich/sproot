@@ -1,6 +1,6 @@
-import { ISprootDB } from "@sproot/sproot-common/dist/database/ISprootDB";
-import { SDBOutputState } from "@sproot/sproot-common/dist/database/SDBOutputState";
-import { QueueCache } from "@sproot/sproot-common/dist/utility/QueueCache";
+import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
+import { QueueCache } from "@sproot/common/dist/utility/QueueCache";
 import winston from "winston";
 
 export class OutputCache {

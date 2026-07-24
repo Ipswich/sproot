@@ -9,7 +9,7 @@ import {
   ColorPicker,
   NumberInput,
 } from "@mantine/core";
-import { ISensorBase } from "@sproot/sproot-common/src/sensors/ISensorBase";
+import { ISensorBase } from "@sproot/common/src/sensors/ISensorBase";
 import {
   addSensorAsync,
   getDeviceZonesAsync,
@@ -17,11 +17,11 @@ import {
 } from "@sproot/sproot-client/src/requests/requests_v2";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DefaultColors } from "@sproot/sproot-common/src/utility/Constants";
+import { DefaultColors } from "@sproot/common/src/utility/Constants";
 import { Fragment } from "react";
 import { useRevalidator } from "react-router-dom";
-import { Models } from "@sproot/sproot-common/src/sensors/Models";
-import { SDBSubcontroller } from "@sproot/sproot-common/src/database/SDBSubcontroller";
+import { Models } from "@sproot/common/src/sensors/Models";
+import { SDBSubcontroller } from "@sproot/common/src/database/SDBSubcontroller";
 
 interface NewSensorModalProps {
   supportedModels: Record<string, string>;
