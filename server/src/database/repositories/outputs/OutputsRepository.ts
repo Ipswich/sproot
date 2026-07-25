@@ -3,11 +3,11 @@ import {
   OUTPUT_AGGREGATE_TABLES,
   OutputDataQueryRequest,
   OutputDataQueryResponse,
-} from "@sproot/common/dist/api/v2/QueryTypes";
-import { IOutputsRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
-import { ControlMode, IOutputBase } from "@sproot/common/dist/outputs/IOutputBase";
+} from "@sproot/common/api/v2/QueryTypes";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { ControlMode, IOutputBase } from "@sproot/common/outputs/IOutputBase";
 import { Knex } from "knex";
 import {
   getLookbackDate,

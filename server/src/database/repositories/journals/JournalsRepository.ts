@@ -1,10 +1,10 @@
-import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBJournal } from "@sproot/common/dist/database/SDBJournal";
-import { SDBJournalEntry } from "@sproot/common/dist/database/SDBJournalEntry";
-import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
-import { SDBJournalEntryTagLookup } from "@sproot/common/dist/database/SDBJournalEntryTagLookup";
-import { SDBJournalTag } from "@sproot/common/dist/database/SDBJournalTag";
-import { SDBJournalTagLookup } from "@sproot/common/dist/database/SDBJournalTagLookup";
+import type { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
+import { SDBJournal } from "@sproot/common/database/SDBJournal";
+import { SDBJournalEntry } from "@sproot/common/database/SDBJournalEntry";
+import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
+import { SDBJournalEntryTagLookup } from "@sproot/common/database/SDBJournalEntryTagLookup";
+import { SDBJournalTag } from "@sproot/common/database/SDBJournalTag";
+import { SDBJournalTagLookup } from "@sproot/common/database/SDBJournalTagLookup";
 import { Knex } from "knex";
 import { dbToIso, isoToDb, toDbDate } from "../../../utils/dateUtils";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";

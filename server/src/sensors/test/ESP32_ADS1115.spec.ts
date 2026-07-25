@@ -1,17 +1,17 @@
 import { ESP32_ADS1115, ESP32_Ads1115Device, ESP32_ADS1115Response } from "../ESP32_ADS1115";
 
-import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { SDBReading } from "@sproot/common/dist/database/SDBReading";
+import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { SDBReading } from "@sproot/common/database/SDBReading";
 
 import { assert } from "chai";
 import nock from "nock";
 import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
-import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 
 const mockSensorsRepo: ISensorsRepository = {
   getAllAsync: async () => [],

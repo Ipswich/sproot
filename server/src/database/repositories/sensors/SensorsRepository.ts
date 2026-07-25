@@ -1,15 +1,15 @@
-import { ISensorsRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBReading } from "@sproot/common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { ISensorBase } from "@sproot/common/dist/sensors/ISensorBase";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import type { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { Knex } from "knex";
 import {
   BUCKET_MINUTES_TO_SENSOR_TABLE,
   SENSOR_AGGREGATE_TABLES,
   SensorDataQueryRequest,
   SensorDataQueryResponse,
-} from "@sproot/common/dist/api/v2/QueryTypes";
+} from "@sproot/common/api/v2/QueryTypes";
 import {
   getLookbackDate,
   getRecentTailStart,

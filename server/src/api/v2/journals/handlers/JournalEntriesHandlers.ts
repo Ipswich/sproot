@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { JournalService } from "../../../../journals/JournalService";
-import { SDBJournalEntry } from "@sproot/common/dist/database/SDBJournalEntry";
-import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
+import { SDBJournalEntry } from "@sproot/common/database/SDBJournalEntry";
+import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
 import { toDbDate, isoToDb } from "../../../../utils/dateUtils";
 
 /**

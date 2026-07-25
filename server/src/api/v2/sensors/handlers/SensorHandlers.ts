@@ -2,7 +2,7 @@ import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 import { SDBSensor } from "@sproot/database/SDBSensor";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { ModelList, Models } from "@sproot/common/dist/sensors/Models";
+import { ModelList, Models } from "@sproot/common/sensors/Models";
 import { SensorList } from "../../../../sensors/list/SensorList";
 
 /**

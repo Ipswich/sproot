@@ -3,7 +3,7 @@ import {
   SensorDataQueryResponse,
   OutputDataQueryResponse,
   Aggregate,
-} from "@sproot/common/dist/api/v2/QueryTypes";
+} from "@sproot/common/api/v2/QueryTypes";
 
 // ---------------------------------------------------------------------------
 // Bucket / time helpers

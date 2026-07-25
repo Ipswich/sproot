@@ -1,7 +1,7 @@
 import { Bonjour, Browser, Service } from "bonjour-service";
 import winston from "winston";
 
-import { MDNS_SERVICE_TYPE } from "@sproot/common/dist/utility/Constants";
+import { MDNS_SERVICE_TYPE } from "@sproot/common/utility/Constants";
 
 export class MdnsService implements Disposable {
   readonly #bonjour: Bonjour = new Bonjour();

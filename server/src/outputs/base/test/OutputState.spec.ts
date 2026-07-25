@@ -1,11 +1,11 @@
 import { OutputState } from "../OutputState";
-import { IOutputsRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
+import { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],

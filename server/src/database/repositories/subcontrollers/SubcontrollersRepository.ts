@@ -1,6 +1,6 @@
-import { ISubcontrollersRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
-import { encrypt, decrypt } from "@sproot/common/dist/utility/Crypto";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
+import { encrypt, decrypt } from "@sproot/common/utility/Crypto";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 

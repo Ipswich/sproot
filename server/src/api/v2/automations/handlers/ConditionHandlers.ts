@@ -1,12 +1,12 @@
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { OutputCondition } from "../../../../automation/conditions/OutputCondition";
 import { SensorCondition } from "../../../../automation/conditions/SensorCondition";
 import { TimeCondition } from "../../../../automation/conditions/TimeCondition";
 import { WeekdayCondition } from "../../../../automation/conditions/WeekdayCondition";
 import { AutomationService } from "../../../../automation/AutomationService";
-import { ISprootDB } from "@sproot/database/ISprootDB";
+import { ISprootDB } from "@sproot/common/database/ISprootDB";
 import { SDBOutputCondition } from "@sproot/database/SDBOutputCondition";
 import { SDBSensorCondition } from "@sproot/database/SDBSensorCondition";
 import { SDBTimeCondition } from "@sproot/database/SDBTimeCondition";

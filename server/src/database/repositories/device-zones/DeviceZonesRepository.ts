@@ -1,5 +1,5 @@
-import { SDBDeviceZone } from "@sproot/common/dist/database/SDBDeviceZone";
-import { IDeviceZonesRepository } from "@sproot/common/dist/database/ISprootDB";
+import { SDBDeviceZone } from "@sproot/common/database/SDBDeviceZone";
+import type { IDeviceZonesRepository } from "@sproot/common/database/device-zones/IDeviceZonesRepository";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 

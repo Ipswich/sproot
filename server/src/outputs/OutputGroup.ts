@@ -1,9 +1,9 @@
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
-import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import winston from "winston";
 import { IEventBus } from "../eventbus/IEventBus";
 

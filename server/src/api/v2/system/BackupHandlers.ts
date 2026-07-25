@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import winston from "winston";
 
 import { Backups } from "../../../system/Backups";
-import { ISystemRepository } from "@sproot/common/dist/database/system/ISystemRepository";
+import { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
 import path from "path";
 import fs from "fs";
 import { tmpdir } from "os";

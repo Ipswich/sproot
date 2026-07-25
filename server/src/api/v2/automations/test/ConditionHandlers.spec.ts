@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ErrorResponse, SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
 
 import { assert } from "chai";
 import sinon from "sinon";

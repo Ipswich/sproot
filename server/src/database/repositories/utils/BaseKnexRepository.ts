@@ -8,10 +8,10 @@ import {
   SENSOR_AGGREGATE_TABLES,
   SensorDataQueryRequest,
   SensorDataQueryResponse,
-} from "@sproot/common/dist/api/v2/QueryTypes";
-import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
-import { SDBReading } from "@sproot/common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+} from "@sproot/common/api/v2/QueryTypes";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
 import { Knex } from "knex";
 import fs from "node:fs";
 import { spawn } from "node:child_process";

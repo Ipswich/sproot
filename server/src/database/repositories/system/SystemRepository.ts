@@ -1,8 +1,5 @@
-import {
-  OUTPUT_AGGREGATE_TABLES,
-  SENSOR_AGGREGATE_TABLES,
-} from "@sproot/common/dist/api/v2/QueryTypes";
-import { ISystemRepository } from "@sproot/common/dist/database/ISprootDB";
+import { OUTPUT_AGGREGATE_TABLES, SENSOR_AGGREGATE_TABLES } from "@sproot/common/api/v2/QueryTypes";
+import type { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
 import { Knex } from "knex";
 import * as winston from "winston";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";

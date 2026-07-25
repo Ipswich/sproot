@@ -1,8 +1,8 @@
-import { IAutomationsRepository } from "@sproot/common/dist/database/ISprootDB";
-import { AutomationOperator } from "@sproot/common/dist/automation/IAutomation";
-import { SDBAutomation } from "@sproot/common/dist/database/SDBAutomation";
-import { SDBOutputAction, SDBOutputActionView } from "@sproot/common/dist/database/SDBOutputAction";
-import { SDBNotificationAction } from "@sproot/common/dist/database/SDBNotificationAction";
+import { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
+import { AutomationOperator } from "@sproot/common/automation/IAutomation";
+import { SDBAutomation } from "@sproot/common/database/SDBAutomation";
+import { SDBOutputAction, SDBOutputActionView } from "@sproot/common/database/SDBOutputAction";
+import { SDBNotificationAction } from "@sproot/common/database/SDBNotificationAction";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "./utils/BaseKnexRepository";
 

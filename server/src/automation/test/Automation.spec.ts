@@ -5,7 +5,7 @@ import { assert } from "chai";
 import sinon from "sinon";
 import { SensorList } from "../../sensors/list/SensorList";
 import { OutputList } from "../../outputs/list/OutputList";
-import type { IConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IConditionsRepository";
+import type { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
 
 type ConditionStub = {
   getAsync: sinon.SinonStub<any[], any>;

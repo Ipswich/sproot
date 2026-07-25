@@ -7,7 +7,7 @@ import {
   getByIdAsync,
   getActiveNotificationsAsync,
 } from "../handlers/NotificationActionHandlers";
-import { SDBNotificationAction } from "@sproot/common/dist/database/SDBNotificationAction";
+import { SDBNotificationAction } from "@sproot/common/database/SDBNotificationAction";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 
 import { assert } from "chai";

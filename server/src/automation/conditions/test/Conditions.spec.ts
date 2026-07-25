@@ -1,7 +1,7 @@
-import { SDBTimeCondition } from "@sproot/common/dist/database/SDBTimeCondition";
-import { SDBOutputCondition } from "@sproot/common/dist/database/SDBOutputCondition";
-import { SDBSensorCondition } from "@sproot/common/dist/database/SDBSensorCondition";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { SDBTimeCondition } from "@sproot/common/database/SDBTimeCondition";
+import { SDBOutputCondition } from "@sproot/common/database/SDBOutputCondition";
+import { SDBSensorCondition } from "@sproot/common/database/SDBSensorCondition";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { OutputList } from "../../../outputs/list/OutputList";
 import { OutputBase } from "../../../outputs/base/OutputBase";
 import { SensorList } from "../../../sensors/list/SensorList";

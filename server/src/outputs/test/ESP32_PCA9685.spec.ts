@@ -1,13 +1,11 @@
-import {
-  IOutputsRepository,
-  IOutputActionsRepository,
-  ISubcontrollersRepository,
-} from "@sproot/common/dist/database/ISprootDB";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 import { ESP32_PCA9685 } from "../ESP32_PCA9685";
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
 import { OutputBase } from "../base/OutputBase";
-import { Models } from "@sproot/common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 

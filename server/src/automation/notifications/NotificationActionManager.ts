@@ -5,7 +5,7 @@ import { IActiveNotification } from "@sproot/automation/IActiveNotification";
 import { IEventBus } from "../../eventbus/IEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
-import type { INotificationActionsRepository } from "@sproot/common/dist/database/automations/actions/INotificationActionsRepository";
+import type { INotificationActionsRepository } from "@sproot/common/database/automations/actions/INotificationActionsRepository";
 
 export class NotificationActionManager implements Disposable {
   #notificationActionsRepository: INotificationActionsRepository;

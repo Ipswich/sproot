@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { FirmwareManager } from "../../../../system/FirmwareManager";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { ISprootDB } from "@sproot/database/ISprootDB";
+import { ISprootDB } from "@sproot/common/database/ISprootDB";
 import { SDBSubcontroller } from "@sproot/database/SDBSubcontroller";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 

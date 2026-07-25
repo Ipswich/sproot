@@ -1,17 +1,17 @@
-import {
+import type {
   IActionsRepository,
   IAutomationsRepository,
-  ICameraRepository,
-  IConditionsRepository,
-  IDeviceZonesRepository,
-  IJournalsRepository,
-  IOutputsRepository,
-  ISensorsRepository,
-  ISubcontrollersRepository,
-  ISystemRepository,
-  ISprootDB,
-  IUsersRepository,
-} from "@sproot/common/dist/database/ISprootDB";
+} from "@sproot/common/database/automations/IAutomationsRepository";
+import type { ICameraRepository } from "@sproot/common/database/camera/ICameraRepository";
+import type { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
+import type { IDeviceZonesRepository } from "@sproot/common/database/device-zones/IDeviceZonesRepository";
+import type { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import type { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
+import type { ISprootDB } from "@sproot/common/database/ISprootDB";
+import type { IUsersRepository } from "@sproot/common/database/users/IUsersRepository";
 import { Knex } from "knex";
 import { AutomationsRepository } from "./repositories/automations/AutomationsRepository";
 import { ActionsRepository } from "./repositories/ActionsRepository";

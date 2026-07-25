@@ -1,7 +1,7 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { generateInterserviceAuthenticationToken } from "@sproot/common/dist/utility/InterserviceAuthentication";
-import { CRON, TIMELAPSE_DIRECTORY } from "@sproot/common/dist/utility/Constants";
-import { ICameraRepository } from "@sproot/common/dist/database/camera/ICameraRepository";
+import { generateInterserviceAuthenticationToken } from "@sproot/common/utility/InterserviceAuthentication";
+import { CRON, TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
+import { ICameraRepository } from "@sproot/common/database/camera/ICameraRepository";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { CronJob } from "cron";
 

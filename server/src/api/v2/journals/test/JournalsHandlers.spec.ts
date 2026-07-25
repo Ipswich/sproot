@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
-import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
 import JournalManager from "../../../../journals/managers/JournalManager";
-import { SuccessResponse, ErrorResponse } from "@sproot/common/dist/api/v2/Responses";
+import { SuccessResponse, ErrorResponse } from "@sproot/common/api/v2/Responses";
 import {
   getAsync,
   addAsync,

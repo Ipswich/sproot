@@ -1,7 +1,7 @@
 import { SensorList } from "../../../sensors/list/SensorList";
 import { SensorBase } from "../../../sensors/base/SensorBase";
 import { SensorCondition } from "../SensorCondition";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 
 import { assert } from "chai";
 import sinon from "sinon";

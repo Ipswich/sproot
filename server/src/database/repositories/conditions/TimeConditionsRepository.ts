@@ -1,7 +1,7 @@
-import { SDBTimeCondition } from "@sproot/common/dist/database/SDBTimeCondition";
-import { ConditionGroupType } from "@sproot/common/dist/automation/ConditionTypes";
-import { ITimeCondition } from "@sproot/common/dist/automation/ITimeCondition";
-import { ITimeConditionsRepository } from "@sproot/common/dist/database/automations/conditions/ITimeConditionsRepository";
+import { SDBTimeCondition } from "@sproot/common/database/SDBTimeCondition";
+import { ConditionGroupType } from "@sproot/common/automation/ConditionTypes";
+import { ITimeCondition } from "@sproot/common/automation/ITimeCondition";
+import { ITimeConditionsRepository } from "@sproot/common/database/automations/conditions/ITimeConditionsRepository";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 

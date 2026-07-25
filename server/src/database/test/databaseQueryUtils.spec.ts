@@ -4,7 +4,7 @@ import {
   BUCKET_MINUTES_TO_SENSOR_TABLE,
   BUCKET_MINUTES_TO_OUTPUT_TABLE,
   DOWNSAMPLE_TO_BUCKET_MINUTES,
-} from "@sproot/common/dist/api/v2/QueryTypes";
+} from "@sproot/common/api/v2/QueryTypes";
 import {
   normalizeBucketMinutes,
   getLookbackDate,

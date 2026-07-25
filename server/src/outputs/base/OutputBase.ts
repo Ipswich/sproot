@@ -1,13 +1,13 @@
-import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
-import { IOutputBase, ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { IOutputBase, ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { OutputCache } from "./OutputCache";
 import winston from "winston";
 import { OutputState } from "./OutputState";
 import { OutputActionManager } from "../../automation/outputs/OutputActionManager";
-import { Models } from "@sproot/common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { toDbDate } from "../../utils/dateUtils";
 import { IEventBus } from "../../eventbus/IEventBus";
 

@@ -1,15 +1,15 @@
 import { promises } from "fs";
 
 import { DS18B20 } from "../DS18B20";
-import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
-import { SDBReading } from "@sproot/common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
+import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 
 const mockSensorsRepo: ISensorsRepository = {
   getAllAsync: async () => [],

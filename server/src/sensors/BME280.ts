@@ -1,7 +1,7 @@
 import bme280 from "bme280";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 

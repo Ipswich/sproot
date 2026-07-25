@@ -6,7 +6,7 @@ import winston from "winston";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
 import { NotificationActionsModifiedEvent } from "../../../eventbus/events/actions/NotificationActionsModifiedEvent";
-import type { INotificationActionsRepository } from "@sproot/common/dist/database/automations/actions/INotificationActionsRepository";
+import type { INotificationActionsRepository } from "@sproot/common/database/automations/actions/INotificationActionsRepository";
 
 const createStubNotificationActionsRepository = (): INotificationActionsRepository =>
   ({

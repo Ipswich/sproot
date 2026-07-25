@@ -1,7 +1,7 @@
-import { SDBDeviceZone } from "@sproot/common/dist/database/SDBDeviceZone";
+import { SDBDeviceZone } from "@sproot/common/database/SDBDeviceZone";
 import { Request, Response } from "express";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
-import { ErrorResponse, SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
+import { ISprootDB } from "@sproot/common/database/ISprootDB";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
 import { DI_KEYS } from "../../../../utils/DependencyInjectionConstants";
 
 export async function getAsync(

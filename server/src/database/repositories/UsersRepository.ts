@@ -1,5 +1,5 @@
-import { IUsersRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBUser } from "@sproot/common/dist/database/SDBUser";
+import { IUsersRepository } from "@sproot/common/database/users/IUsersRepository";
+import { SDBUser } from "@sproot/common/database/SDBUser";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "./utils/BaseKnexRepository";
 

@@ -3,7 +3,7 @@ import { IConditionProperties } from "@sproot/automation/IConditionProperties";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
 import { Conditions } from "./conditions/Conditions";
-import type { IConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IConditionsRepository";
+import type { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
 
 export class Automation {
   id: number;

@@ -12,33 +12,6 @@ import { IJournalsRepository } from "./journals/IJournalsRepository";
 import { IActionsRepository } from "./automations/IAutomationsRepository";
 import { IConditionsRepository } from "./automations/conditions/IConditionsRepository";
 
-// Re-export all repository interfaces
-export type { ISensorsRepository } from "./sensors/ISensorsRepository";
-export type { IOutputsRepository } from "./outputs/IOutputsRepository";
-export type { ISubcontrollersRepository } from "./subcontrollers/ISubcontrollersRepository";
-export type {
-  IAutomationsRepository,
-  IActionsRepository,
-} from "./automations/IAutomationsRepository";
-export type { IConditionsRepository } from "./automations/conditions/IConditionsRepository";
-export type { IOutputActionsRepository } from "./automations/actions/IOutputActionsRepository";
-export type { INotificationActionsRepository } from "./automations/actions/INotificationActionsRepository";
-export type {
-  IBaseConditionsRepository,
-  IActionBaseRepository,
-} from "./automations/conditions/IBaseConditionsRepository";
-export type { ISensorConditionsRepository } from "./automations/conditions/ISensorConditionsRepository";
-export type { IOutputConditionsRepository } from "./automations/conditions/IOutputConditionsRepository";
-export type { ITimeConditionsRepository } from "./automations/conditions/ITimeConditionsRepository";
-export type { IWeekdayConditionsRepository } from "./automations/conditions/IWeekdayConditionsRepository";
-export type { IMonthConditionsRepository } from "./automations/conditions/IMonthConditionsRepository";
-export type { IDateRangeConditionsRepository } from "./automations/conditions/IDateRangeConditionsRepository";
-export type { ICameraRepository } from "./camera/ICameraRepository";
-export type { IUsersRepository } from "./users/IUsersRepository";
-export type { IDeviceZonesRepository } from "./device-zones/IDeviceZonesRepository";
-export type { ISystemRepository } from "./system/ISystemRepository";
-export type { IJournalsRepository } from "./journals/IJournalsRepository";
-
 export interface ISprootDB {
   sensors: ISensorsRepository;
   outputs: IOutputsRepository;

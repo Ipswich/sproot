@@ -1,6 +1,6 @@
-import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
-import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
-import { QueueCache } from "@sproot/common/dist/utility/QueueCache";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { QueueCache } from "@sproot/common/utility/QueueCache";
 import winston from "winston";
 
 export class OutputCache {

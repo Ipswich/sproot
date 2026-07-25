@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ErrorResponse, SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
 import { SDBAutomation } from "@sproot/database/SDBAutomation";
 import {
   getAsync,
@@ -14,17 +14,15 @@ import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
-import {
-  IAutomationsRepository,
-  IOutputActionsRepository,
-  INotificationActionsRepository,
-  ISensorConditionsRepository,
-  IOutputConditionsRepository,
-  ITimeConditionsRepository,
-  IWeekdayConditionsRepository,
-  IMonthConditionsRepository,
-  IDateRangeConditionsRepository,
-} from "@sproot/common/dist/database/ISprootDB";
+import type { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { INotificationActionsRepository } from "@sproot/common/database/automations/actions/INotificationActionsRepository";
+import type { ISensorConditionsRepository } from "@sproot/common/database/automations/conditions/ISensorConditionsRepository";
+import type { IOutputConditionsRepository } from "@sproot/common/database/automations/conditions/IOutputConditionsRepository";
+import type { ITimeConditionsRepository } from "@sproot/common/database/automations/conditions/ITimeConditionsRepository";
+import type { IWeekdayConditionsRepository } from "@sproot/common/database/automations/conditions/IWeekdayConditionsRepository";
+import type { IMonthConditionsRepository } from "@sproot/common/database/automations/conditions/IMonthConditionsRepository";
+import type { IDateRangeConditionsRepository } from "@sproot/common/database/automations/conditions/IDateRangeConditionsRepository";
 
 const createMockAutomationsRepo = (): IAutomationsRepository => ({
   getAllAsync: async () => [],

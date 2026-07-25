@@ -1,6 +1,6 @@
 // import { OutputState } from "@sproot/sproot-server/src/outputs/base/OutputState";
-// import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
-// import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
+// import { ControlMode } from "@sproot/common/outputs/IOutputBase";
+// import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
 
 // import { assert } from "chai";
 // import * as sinon from "sinon";

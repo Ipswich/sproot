@@ -1,4 +1,4 @@
-import { Models } from "@sproot/common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { Knex } from "knex";
 import { toDbDate } from "../../utils/dateUtils";
 import { SprootDB } from "../SprootDB";

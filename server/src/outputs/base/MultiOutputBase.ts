@@ -1,11 +1,11 @@
-import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
-import type { ISubcontrollersRepository } from "@sproot/common/dist/database/subcontrollers/ISubcontrollersRepository";
-import { ControlMode, IOutputBase } from "@sproot/common/dist/outputs/IOutputBase";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { ControlMode, IOutputBase } from "@sproot/common/outputs/IOutputBase";
 
 import winston from "winston";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { AvailableDevice } from "@sproot/common/dist/outputs/AvailableDevice";
+import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
 import { OutputBase } from "./OutputBase";
 import { SDBOutput } from "@sproot/database/SDBOutput";
 import { IEventBus } from "../../eventbus/IEventBus";

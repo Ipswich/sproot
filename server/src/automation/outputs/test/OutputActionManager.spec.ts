@@ -6,7 +6,7 @@ import winston from "winston";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
 import { OutputActionsModifiedEvent } from "../../../eventbus/events/actions/OutputActionsModifiedEvent";
-import { IOutputActionsRepository } from "@sproot/common/dist/database/ISprootDB";
+import { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
 
 const mockOutputActionsRepo: IOutputActionsRepository = {
   getAsync: async () => [],

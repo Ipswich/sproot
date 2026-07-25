@@ -1,4 +1,4 @@
-import { IConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IConditionsRepository";
+import { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
 import { Knex } from "knex";
 import { DateRangeConditionsRepository } from "./conditions/DateRangeConditionsRepository";
 import { MonthConditionsRepository } from "./conditions/MonthConditionsRepository";

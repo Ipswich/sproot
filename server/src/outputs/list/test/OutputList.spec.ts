@@ -1,17 +1,15 @@
 import { OutputList } from "../OutputList";
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import {
-  IOutputsRepository,
-  IOutputActionsRepository,
-  ISubcontrollersRepository,
-} from "@sproot/common/dist/database/ISprootDB";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 import Pca9685Driver from "pca9685";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { Models } from "@sproot/common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { MdnsService } from "../../../system/MdnsService";
 import { OutputGroup } from "../../OutputGroup";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";

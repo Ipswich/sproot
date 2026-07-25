@@ -1,4 +1,4 @@
-import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
 import JournalManager from "./managers/JournalManager";
 import JournalTagManager from "./managers/JournalTagManager";
 import EntryManager from "./managers/EntryManager";

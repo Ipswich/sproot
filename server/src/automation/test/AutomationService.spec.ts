@@ -7,9 +7,9 @@ import winston from "winston";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 import { Events } from "../../eventbus/events/Events";
 import { AutomationsTriggeredEvent } from "../../eventbus/events/automations/AutomationsTriggeredEvent";
-import type { IAutomationsRepository } from "@sproot/common/dist/database/automations/IAutomationsRepository";
-import type { IConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IConditionsRepository";
-import type { IActionsRepository } from "@sproot/common/dist/database/automations/IAutomationsRepository";
+import type { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
+import type { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
+import type { IActionsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
 
 type ConditionStub = {
   getAsync: sinon.SinonStub<any[], any>;

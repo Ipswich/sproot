@@ -1,9 +1,7 @@
-import {
-  IOutputsRepository,
-  IOutputActionsRepository,
-  ISubcontrollersRepository,
-} from "@sproot/common/dist/database/ISprootDB";
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
 import { OutputGroup } from "../OutputGroup";
 import { PCA9685 } from "../PCA9685";
 import { Pca9685Driver } from "pca9685";
@@ -11,11 +9,11 @@ import { Pca9685Driver } from "pca9685";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-import { Models } from "@sproot/common/dist/outputs/Models";
+import { Models } from "@sproot/common/outputs/Models";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";
-import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 
 const createMockOutputsRepo = (): IOutputsRepository => ({
   getAllAsync: async () => [],

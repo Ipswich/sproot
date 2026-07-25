@@ -1,10 +1,10 @@
 import { assert } from "chai";
 import sinon from "sinon";
 import { Request, Response } from "express";
-import { SuccessResponse, ErrorResponse } from "@sproot/common/dist/api/v2/Responses";
-import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBJournalEntry } from "@sproot/common/dist/database/SDBJournalEntry";
-import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
+import { SuccessResponse, ErrorResponse } from "@sproot/common/api/v2/Responses";
+import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
+import { SDBJournalEntry } from "@sproot/common/database/SDBJournalEntry";
+import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
 import JournalService from "../../../../journals/JournalService";
 
 import {

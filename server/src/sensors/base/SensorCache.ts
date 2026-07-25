@@ -1,7 +1,7 @@
-import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
-import { SDBReading } from "@sproot/common/dist/database/SDBReading";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
-import { QueueCache } from "@sproot/common/dist/utility/QueueCache";
+import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { QueueCache } from "@sproot/common/utility/QueueCache";
 import winston from "winston";
 
 export class SensorCache {

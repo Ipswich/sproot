@@ -1,12 +1,12 @@
-import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
+import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
 import winston from "winston";
 
 import { assert } from "chai";
 import * as sinon from "sinon";
-import { SDBReading } from "@sproot/common/dist/database/SDBReading";
+import { SDBReading } from "@sproot/common/database/SDBReading";
 import { SensorCache } from "../SensorCache";
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 
 const mockSensorsRepo: ISensorsRepository = {
   getAllAsync: async () => [],

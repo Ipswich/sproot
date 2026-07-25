@@ -1,14 +1,12 @@
-import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
-import {
-  IOutputsRepository,
-  IOutputActionsRepository,
-  ISubcontrollersRepository,
-} from "@sproot/common/dist/database/ISprootDB";
-import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+import { ControlMode } from "@sproot/common/outputs/IOutputBase";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { DeviceDataQueryRow } from "@sproot/common/api/v2/QueryTypes";
 import { TPLinkSmartPlugs, TPLinkPlug } from "../TPLinkSmartPlugs";
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
-import { SDBOutputAction } from "@sproot/common/dist/database/SDBOutputAction";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import { SDBOutputState } from "@sproot/common/database/SDBOutputState";
+import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 import { Device as SimulatedDevice, UdpServer } from "tplink-smarthome-simulator";
 import { Plug } from "tplink-smarthome-api";
 

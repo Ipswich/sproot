@@ -1,7 +1,7 @@
-import { SDBWeekdayCondition } from "@sproot/common/dist/database/SDBWeekdayCondition";
-import { ConditionGroupType } from "@sproot/common/dist/automation/ConditionTypes";
-import { IWeekdayCondition } from "@sproot/common/dist/automation/IWeekdayCondition";
-import { IWeekdayConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IWeekdayConditionsRepository";
+import { SDBWeekdayCondition } from "@sproot/common/database/SDBWeekdayCondition";
+import { ConditionGroupType } from "@sproot/common/automation/ConditionTypes";
+import { IWeekdayCondition } from "@sproot/common/automation/IWeekdayCondition";
+import { IWeekdayConditionsRepository } from "@sproot/common/database/automations/conditions/IWeekdayConditionsRepository";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 

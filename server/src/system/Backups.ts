@@ -1,9 +1,6 @@
-import { ISystemRepository } from "@sproot/common/dist/database/system/ISystemRepository";
-import { BACKUP_DIRECTORY } from "@sproot/common/dist/utility/Constants";
-import {
-  createTimeStampSuffix,
-  sortDirectoryByStatsAsync,
-} from "@sproot/common/dist/utility/Files";
+import { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
+import { BACKUP_DIRECTORY } from "@sproot/common/utility/Constants";
+import { createTimeStampSuffix, sortDirectoryByStatsAsync } from "@sproot/common/utility/Files";
 import { createReadStream, promises as fsPromises } from "fs";
 import winston from "winston";
 import path from "node:path";

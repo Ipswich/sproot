@@ -1,11 +1,11 @@
-import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
-import { SDBReading } from "@sproot/common/dist/database/SDBReading";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { ISensorBase } from "@sproot/common/dist/sensors/ISensorBase";
-import { ReadingType, Units } from "@sproot/common/dist/sensors/ReadingType";
+import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import { SDBReading } from "@sproot/common/database/SDBReading";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { ISensorBase } from "@sproot/common/sensors/ISensorBase";
+import { ReadingType, Units } from "@sproot/common/sensors/ReadingType";
 import winston from "winston";
 import { SensorCache } from "./SensorCache";
-import { Models } from "@sproot/common/dist/sensors/Models";
+import { Models } from "@sproot/common/sensors/Models";
 
 export abstract class SensorBase implements ISensorBase, AsyncDisposable {
   readonly id: number;

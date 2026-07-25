@@ -1,11 +1,11 @@
 import { Pca9685Driver } from "pca9685";
 import { openSync } from "i2c-bus";
 import { OutputBase } from "./base/OutputBase";
-import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
-import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
-import type { ISubcontrollersRepository } from "@sproot/common/dist/database/ISprootDB";
-import { AvailableDevice } from "@sproot/common/dist/outputs/AvailableDevice";
+import { SDBOutput } from "@sproot/common/database/SDBOutput";
+import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { AvailableDevice } from "@sproot/common/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { IEventBus } from "../eventbus/IEventBus";

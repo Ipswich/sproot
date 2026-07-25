@@ -1,8 +1,8 @@
 import os from "os";
 import { statfs } from "fs";
-import { ISystemRepository } from "@sproot/common/dist/database/system/ISystemRepository";
+import { ISystemRepository } from "@sproot/common/database/system/ISystemRepository";
 import { promisify } from "util";
-import { SystemStatus } from "@sproot/common/dist/system/SystemStatus";
+import { SystemStatus } from "@sproot/common/system/SystemStatus";
 import { CameraManager } from "../camera/CameraManager";
 import { Knex } from "knex";
 

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { ErrorResponse, SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
-import { SDBDeviceZone } from "@sproot/common/dist/database/SDBDeviceZone";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
+import { SDBDeviceZone } from "@sproot/common/database/SDBDeviceZone";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/DeviceZoneHandlers";
 import { assert } from "chai";
 import sinon from "sinon";

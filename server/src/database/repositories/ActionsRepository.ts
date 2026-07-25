@@ -1,9 +1,9 @@
 import { Knex } from "knex";
-import { IActionsRepository } from "@sproot/common/dist/database/automations/IAutomationsRepository";
-import { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
-import { INotificationActionsRepository } from "@sproot/common/dist/database/automations/actions/INotificationActionsRepository";
-import { SDBOutputAction } from "@sproot/common/dist/database/SDBOutputAction";
-import { SDBNotificationAction } from "@sproot/common/dist/database/SDBNotificationAction";
+import { IActionsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
+import { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import { INotificationActionsRepository } from "@sproot/common/database/automations/actions/INotificationActionsRepository";
+import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
+import { SDBNotificationAction } from "@sproot/common/database/SDBNotificationAction";
 
 class OutputActionsRepository implements IOutputActionsRepository {
   #connection: Knex;

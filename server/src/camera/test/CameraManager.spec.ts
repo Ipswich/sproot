@@ -8,8 +8,8 @@ import { CameraManager } from "../CameraManager";
 import ImageCapture from "../ImageCapture";
 import StreamProxy from "../StreamProxy";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
-import { TIMELAPSE_DIRECTORY } from "@sproot/common/dist/utility/Constants";
-import { ICameraRepository } from "@sproot/common/dist/database/camera/ICameraRepository";
+import { TIMELAPSE_DIRECTORY } from "@sproot/common/utility/Constants";
+import { ICameraRepository } from "@sproot/common/database/camera/ICameraRepository";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 describe("CameraManager", () => {

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
-import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalEntryTagHandlers";
-import { ErrorResponse, SuccessResponse } from "@sproot/common/dist/api/v2/Responses";
-import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
+import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
+import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
 
 const createMockJournalsRepo = (): IJournalsRepository => ({
   getAllAsync: async () => [],

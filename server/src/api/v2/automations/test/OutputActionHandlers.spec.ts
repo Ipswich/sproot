@@ -1,7 +1,7 @@
 import { ErrorResponse, SuccessResponse } from "@sproot/api/v2/Responses";
 import { Request, Response } from "express";
 import { addAsync, deleteAsync, getAsync, getByIdAsync } from "../handlers/OutputActionHandlers";
-import { SDBOutputAction } from "@sproot/common/dist/database/SDBOutputAction";
+import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 
 import { assert } from "chai";
 import sinon from "sinon";

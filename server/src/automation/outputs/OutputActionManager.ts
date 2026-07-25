@@ -1,4 +1,4 @@
-import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
 import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
 import { OutputAction } from "./OutputAction";
 import winston from "winston";

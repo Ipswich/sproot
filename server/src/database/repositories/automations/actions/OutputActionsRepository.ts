@@ -1,5 +1,5 @@
-import { IOutputActionsRepository } from "@sproot/common/dist/database/ISprootDB";
-import { SDBOutputAction } from "@sproot/common/dist/database/SDBOutputAction";
+import type { IOutputActionsRepository } from "@sproot/common/database/automations/actions/IOutputActionsRepository";
+import { SDBOutputAction } from "@sproot/common/database/SDBOutputAction";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../../utils/BaseKnexRepository";
 

@@ -1,10 +1,7 @@
-import { SDBSensorCondition } from "@sproot/common/dist/database/SDBSensorCondition";
-import {
-  ConditionGroupType,
-  ConditionOperator,
-} from "@sproot/common/dist/automation/ConditionTypes";
-import { ISensorCondition } from "@sproot/common/dist/automation/ISensorCondition";
-import { ISensorConditionsRepository } from "@sproot/common/dist/database/automations/conditions/ISensorConditionsRepository";
+import { SDBSensorCondition } from "@sproot/common/database/SDBSensorCondition";
+import { ConditionGroupType, ConditionOperator } from "@sproot/common/automation/ConditionTypes";
+import { ISensorCondition } from "@sproot/common/automation/ISensorCondition";
+import { ISensorConditionsRepository } from "@sproot/common/database/automations/conditions/ISensorConditionsRepository";
 import { Knex } from "knex";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 

@@ -16,9 +16,9 @@ import { IEventBus } from "../eventbus/IEventBus";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
 import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/NotificationActionsModifiedEvent";
-import type { IAutomationsRepository } from "@sproot/common/dist/database/automations/IAutomationsRepository";
-import type { IConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IConditionsRepository";
-import type { IActionsRepository } from "@sproot/common/dist/database/automations/IAutomationsRepository";
+import type { IAutomationsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
+import type { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
+import type { IActionsRepository } from "@sproot/common/database/automations/IAutomationsRepository";
 
 /**
  * Central automation evaluator and event emitter.

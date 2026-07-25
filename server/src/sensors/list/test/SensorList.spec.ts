@@ -1,10 +1,8 @@
 import { DS18B20 } from "../../DS18B20";
-import {
-  ISensorsRepository,
-  ISubcontrollersRepository,
-} from "@sproot/common/dist/database/ISprootDB";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
+import type { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import { SensorList } from "../SensorList";
 
 import { assert } from "chai";

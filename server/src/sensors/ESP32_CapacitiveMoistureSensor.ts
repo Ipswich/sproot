@@ -1,9 +1,9 @@
-import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { ReadingType } from "@sproot/common/sensors/ReadingType";
 import { ESP32_ADS1115, ESP32_Ads1115Device } from "./ESP32_ADS1115";
-import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
+import { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
 import { MdnsService } from "../system/MdnsService";
-import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
+import { SDBSensor } from "@sproot/common/database/SDBSensor";
+import { SDBSubcontroller } from "@sproot/common/database/SDBSubcontroller";
 import winston from "winston";
 import { SensorBase } from "./base/SensorBase";
 
