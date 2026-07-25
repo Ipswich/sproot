@@ -4,12 +4,7 @@ import { SDBOutputActionView } from "@sproot/common/src/database/SDBOutputAction
 import { AutomationOperator } from "@sproot/common/src/automation/IAutomation";
 import { IOutputActionsRepository } from "./actions/IOutputActionsRepository";
 import { INotificationActionsRepository } from "./actions/INotificationActionsRepository";
-import { ISensorConditionsRepository } from "./conditions/ISensorConditionsRepository";
-import { IOutputConditionsRepository } from "./conditions/IOutputConditionsRepository";
-import { ITimeConditionsRepository } from "./conditions/ITimeConditionsRepository";
-import { IWeekdayConditionsRepository } from "./conditions/IWeekdayConditionsRepository";
-import { IMonthConditionsRepository } from "./conditions/IMonthConditionsRepository";
-import { IDateRangeConditionsRepository } from "./conditions/IDateRangeConditionsRepository";
+import type { IConditionsRepository } from "./conditions/IConditionsRepository";
 import { MockOutputActionsRepository } from "./actions/IOutputActionsRepository";
 import { MockNotificationActionsRepository } from "./actions/INotificationActionsRepository";
 import { MockSensorConditionsRepository } from "./conditions/ISensorConditionsRepository";
@@ -43,15 +38,6 @@ export interface IAutomationsRepository {
 export type IActionsRepository = {
   output: IOutputActionsRepository;
   notification: INotificationActionsRepository;
-};
-
-export type IConditionsRepository = {
-  sensor: ISensorConditionsRepository;
-  output: IOutputConditionsRepository;
-  time: ITimeConditionsRepository;
-  weekday: IWeekdayConditionsRepository;
-  month: IMonthConditionsRepository;
-  dateRange: IDateRangeConditionsRepository;
 };
 
 export class MockAutomationsRepository implements IAutomationsRepository {
