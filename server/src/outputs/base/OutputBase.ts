@@ -1,4 +1,5 @@
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import { IOutputBase, ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
@@ -25,7 +26,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   color: string;
   automationTimeout: number;
   readonly eventBus: IEventBus;
-  readonly sprootDB: ISprootDB;
+  readonly outputsRepository: IOutputsRepository;
+  readonly outputActionsRepository: IOutputActionsRepository;
   readonly logger: winston.Logger;
   #cache: OutputCache;
   #initialCacheLookback: number;
@@ -36,7 +38,8 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
   constructor(
     sdbOutput: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -52,13 +55,14 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
     this.name = sdbOutput.name;
     this.isPwm = sdbOutput.isPwm ? true : false;
     this.isInvertedPwm = sdbOutput.isPwm && sdbOutput.isInvertedPwm ? true : false;
-    this.state = new OutputState(sdbOutput.id, sprootDB);
+    this.state = new OutputState(sdbOutput.id, outputsRepository);
     this.color = sdbOutput.color;
     this.automationTimeout = sdbOutput.automationTimeout;
     this.eventBus = eventBus;
-    this.sprootDB = sprootDB;
+    this.outputsRepository = outputsRepository;
+    this.outputActionsRepository = outputActionsRepository;
     this.logger = logger;
-    this.#cache = new OutputCache(maxCacheSize, sprootDB, logger);
+    this.#cache = new OutputCache(maxCacheSize, outputsRepository, logger);
     this.#initialCacheLookback = initialCacheLookback;
     this.#cacheBucketMinutes = cacheBucketMinutes;
   }
@@ -132,7 +136,7 @@ export abstract class OutputBase implements IOutputBase, AsyncDisposable {
       this.parentOutputId ?? this.id,
       this.#actionFunctionWrapperAsync.bind(this),
       this.eventBus,
-      this.sprootDB,
+      this.outputActionsRepository,
       this.logger,
       this.automationTimeout,
     );

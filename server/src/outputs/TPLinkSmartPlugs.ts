@@ -2,6 +2,8 @@ import { Client, Plug } from "tplink-smarthome-api";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/common/dist/outputs/AvailableDevice";
@@ -121,7 +123,8 @@ class TPLinkSmartPlugs extends MultiOutputBase {
         this.plugRegistry,
         output,
         this.eventBus,
-        this.sprootDB,
+        this.sprootDB.outputs,
+        this.sprootDB.automations.actions.output,
         this.maxCacheSize,
         this.initialCacheLookback,
         this.cacheBucketMinutes,
@@ -161,7 +164,8 @@ class TPLinkPlug extends OutputBase {
     plugRegistry: PlugRegistry,
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -171,7 +175,8 @@ class TPLinkPlug extends OutputBase {
       plugRegistry,
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -184,7 +189,8 @@ class TPLinkPlug extends OutputBase {
     plugRegistry: PlugRegistry,
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -193,7 +199,8 @@ class TPLinkPlug extends OutputBase {
     super(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

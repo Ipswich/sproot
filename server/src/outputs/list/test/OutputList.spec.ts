@@ -223,7 +223,7 @@ describe("OutputList.ts tests", function () {
       assert.equal(outputData["1"]!["pin"], "0");
       assert.equal(outputData["1"]!["isPwm"], true);
       assert.equal(outputData["1"]!["isInvertedPwm"], false);
-      assert.exists(outputList.outputs["1"]!["sprootDB"]);
+      assert.exists(outputList.outputs["1"]!["outputsRepository"]);
     });
   });
 

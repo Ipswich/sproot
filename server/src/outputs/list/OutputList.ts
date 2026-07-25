@@ -401,7 +401,8 @@ class OutputList implements AsyncDisposable {
         newOutput = await OutputGroup.createInstanceAsync(
           output,
           this.#eventBus,
-          this.#sprootDB,
+          this.#sprootDB.outputs,
+          this.#sprootDB.automations.actions.output,
           this.maxCacheSize,
           this.initialCacheLookback,
           this.cacheBucketMinutes,

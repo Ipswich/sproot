@@ -1,5 +1,5 @@
 import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
-import { ControlMode, IOutputBase } from "@sproot/outputs/IOutputBase";
+import { ControlMode, IOutputBase } from "@sproot/common/dist/outputs/IOutputBase";
 
 import winston from "winston";
 import { SDBOutputState } from "@sproot/database/SDBOutputState";

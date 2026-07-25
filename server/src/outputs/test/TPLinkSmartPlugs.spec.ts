@@ -265,7 +265,7 @@ describe("tplinkPlug.ts tests", async function () {
     assert.equal(outputData["1"]!["isPwm"], false);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.notExists((tplinkSmartPlugs.outputs["1"]! as TPLinkPlug).tplinkPlug);
-    assert.exists(tplinkSmartPlugs.outputs["1"]!["sprootDB"]);
+    assert.exists(tplinkSmartPlugs.outputs["1"]!["outputsRepository"]);
 
     // This here verifies that we're handling events properly (since we've got a fancy registry to make these grab plugs
     // and update their state on the fly). It takes a hot minute for the client to start lookin', so give it a few seconds

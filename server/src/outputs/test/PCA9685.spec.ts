@@ -123,7 +123,7 @@ describe("PCA9685.ts tests", function () {
     assert.equal(outputData["1"]!["isPwm"], true);
     assert.equal(outputData["1"]!["isInvertedPwm"], false);
     assert.exists((pca9685.outputs["1"]! as PCA9685Output)["pca9685"]);
-    assert.exists(pca9685.outputs["1"]!["sprootDB"]);
+    assert.exists(pca9685.outputs["1"]!["outputsRepository"]);
   });
 
   it("should update and apply states with respect to control mode", async function () {

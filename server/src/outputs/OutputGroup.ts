@@ -1,5 +1,6 @@
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
@@ -12,7 +13,8 @@ export class OutputGroup extends OutputBase {
   static async createInstanceAsync(
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -21,7 +23,8 @@ export class OutputGroup extends OutputBase {
     const outputGroup = new OutputGroup(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -36,7 +39,8 @@ export class OutputGroup extends OutputBase {
   private constructor(
     output: SDBOutput,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -45,7 +49,8 @@ export class OutputGroup extends OutputBase {
     super(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

@@ -2,6 +2,8 @@ import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
 import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
 import { AvailableDevice } from "@sproot/common/dist/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
@@ -60,7 +62,8 @@ class ESP32_PCA9685 extends MultiOutputBase {
       output,
       subcontroller,
       this.eventBus,
-      this.sprootDB,
+      this.sprootDB.outputs,
+      this.sprootDB.automations.actions.output,
       this.#mdnsService,
       this.maxCacheSize,
       this.initialCacheLookback,
@@ -95,7 +98,8 @@ class ESP32_PCA9685Output extends OutputBase {
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -106,7 +110,8 @@ class ESP32_PCA9685Output extends OutputBase {
       output,
       subcontroller,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -120,7 +125,8 @@ class ESP32_PCA9685Output extends OutputBase {
     output: SDBOutput,
     subcontroller: SDBSubcontroller,
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -130,7 +136,8 @@ class ESP32_PCA9685Output extends OutputBase {
     super(
       output,
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
