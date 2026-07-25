@@ -1,7 +1,7 @@
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { generateInterserviceAuthenticationToken } from "@sproot/common/dist/utility/InterserviceAuthentication";
 import { CRON, TIMELAPSE_DIRECTORY } from "@sproot/common/dist/utility/Constants";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ICameraRepository } from "@sproot/common/dist/database/camera/ICameraRepository";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { CronJob } from "cron";
 
@@ -14,7 +14,7 @@ import { Events } from "../eventbus/events/Events";
 
 class CameraManager {
   #eventBus: IEventBus;
-  #sprootDB: ISprootDB;
+  #cameraRepository: ICameraRepository;
   #interserviceAuthenticationKey: string;
   #logger: winston.Logger;
 
@@ -32,13 +32,13 @@ class CameraManager {
 
   static createInstanceAsync(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    cameraRepository: ICameraRepository,
     interserviceAuthenticationKey: string,
     logger: winston.Logger,
   ): Promise<CameraManager> {
     const cameraManager = new CameraManager(
       eventBus,
-      sprootDB,
+      cameraRepository,
       interserviceAuthenticationKey,
       logger,
     );
@@ -47,12 +47,12 @@ class CameraManager {
 
   private constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    cameraRepository: ICameraRepository,
     interserviceAuthenticationKey: string,
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
-    this.#sprootDB = sprootDB;
+    this.#cameraRepository = cameraRepository;
     this.#interserviceAuthenticationKey = interserviceAuthenticationKey;
     this.#logger = logger;
     this.#imageCapture = new ImageCapture(logger);
@@ -173,7 +173,7 @@ class CameraManager {
   }
 
   async updateCameraSettingsAsync(newSettings: SDBCameraSettings): Promise<void> {
-    await this.#sprootDB.camera.updateAsync(newSettings);
+    await this.#cameraRepository.updateAsync(newSettings);
     await this.#eventBus.publishAsync(new CameraSettingsModifiedEvent({}));
   }
 
@@ -187,7 +187,7 @@ class CameraManager {
     }
     this.#isUpdating = true;
     try {
-      const settings = await this.#sprootDB.camera.getAllAsync();
+      const settings = await this.#cameraRepository.getAllAsync();
 
       if (settings[0] != undefined) {
         this.#currentSettings = settings[0];

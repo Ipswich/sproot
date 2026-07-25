@@ -1,7 +1,9 @@
 import { PCA9685 } from "../PCA9685";
 import { ESP32_PCA9685, ESP32_PCA9685Output } from "../ESP32_PCA9685";
 import { TPLinkSmartPlugs } from "../TPLinkSmartPlugs";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/dist/database/subcontrollers/ISubcontrollersRepository";
 import { IOutputBase, ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 import { OutputBase } from "../base/OutputBase";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
@@ -16,7 +18,9 @@ import { OutputModifiedEvent } from "../../eventbus/events/outputs/OutputModifie
 
 class OutputList implements AsyncDisposable {
   #eventBus: IEventBus;
-  #sprootDB: ISprootDB;
+  #outputsRepository: IOutputsRepository;
+  #outputActionsRepository: IOutputActionsRepository;
+  #subcontrollersRepository: ISubcontrollersRepository;
   #PCA9685: PCA9685;
   #ESP32_PCA9685: ESP32_PCA9685;
   #TPLinkSmartPlugs: TPLinkSmartPlugs;
@@ -30,7 +34,9 @@ class OutputList implements AsyncDisposable {
 
   static createInstanceAsync(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -39,7 +45,9 @@ class OutputList implements AsyncDisposable {
   ): Promise<OutputList> {
     const outputList = new OutputList(
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
+      subcontrollersRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -51,7 +59,9 @@ class OutputList implements AsyncDisposable {
 
   private constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -59,11 +69,15 @@ class OutputList implements AsyncDisposable {
     logger: winston.Logger,
   ) {
     this.#eventBus = eventBus;
-    this.#sprootDB = sprootDB;
+    this.#outputsRepository = outputsRepository;
+    this.#outputActionsRepository = outputActionsRepository;
+    this.#subcontrollersRepository = subcontrollersRepository;
     this.#logger = logger;
     this.#PCA9685 = new PCA9685(
       this.#eventBus,
-      this.#sprootDB,
+      this.#outputsRepository,
+      this.#outputActionsRepository,
+      this.#subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -72,7 +86,9 @@ class OutputList implements AsyncDisposable {
     );
     this.#ESP32_PCA9685 = new ESP32_PCA9685(
       this.#eventBus,
-      this.#sprootDB,
+      this.#outputsRepository,
+      this.#outputActionsRepository,
+      this.#subcontrollersRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -82,7 +98,9 @@ class OutputList implements AsyncDisposable {
     );
     this.#TPLinkSmartPlugs = new TPLinkSmartPlugs(
       this.#eventBus,
-      this.#sprootDB,
+      this.#outputsRepository,
+      this.#outputActionsRepository,
+      this.#subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -187,8 +205,8 @@ class OutputList implements AsyncDisposable {
     try {
       let outputListChanges = false;
       const profiler = this.#logger.startTimer();
-      const outputsFromDatabase = await this.#sprootDB.outputs.getAllAsync();
-      const subcontrollersFromDatabase = await this.#sprootDB.subcontrollers.getAllAsync();
+      const outputsFromDatabase = await this.#outputsRepository.getAllAsync();
+      const subcontrollersFromDatabase = await this.#subcontrollersRepository.getAllAsync();
 
       const promises = [];
       for (const output of outputsFromDatabase) {
@@ -354,18 +372,18 @@ class OutputList implements AsyncDisposable {
   }
 
   async addOutputAsync(output: SDBOutput): Promise<number> {
-    const newOutputId = await this.#sprootDB.outputs.addAsync(output);
+    const newOutputId = await this.#outputsRepository.addAsync(output);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
     return newOutputId;
   }
 
   async updateOutputAsync(output: SDBOutput): Promise<void> {
-    await this.#sprootDB.outputs.updateAsync(output);
+    await this.#outputsRepository.updateAsync(output);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
   async deleteOutputAsync(outputId: number): Promise<void> {
-    await this.#sprootDB.outputs.deleteAsync(outputId);
+    await this.#outputsRepository.deleteAsync(outputId);
     await this.#eventBus.publishAsync(new OutputModifiedEvent({}));
   }
 
@@ -401,8 +419,8 @@ class OutputList implements AsyncDisposable {
         newOutput = await OutputGroup.createInstanceAsync(
           output,
           this.#eventBus,
-          this.#sprootDB.outputs,
-          this.#sprootDB.automations.actions.output,
+          this.#outputsRepository,
+          this.#outputActionsRepository,
           this.maxCacheSize,
           this.initialCacheLookback,
           this.cacheBucketMinutes,

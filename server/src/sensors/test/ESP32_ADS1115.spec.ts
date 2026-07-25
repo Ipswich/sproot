@@ -1,10 +1,6 @@
-import {
-  ESP32_ADS1115,
-  ESP32_Ads1115Device,
-  ESP32_ADS1115Response,
-} from "../ESP32_ADS1115";
+import { ESP32_ADS1115, ESP32_Ads1115Device, ESP32_ADS1115Response } from "../ESP32_ADS1115";
 
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
 import { SDBReading } from "@sproot/common/dist/database/SDBReading";
@@ -15,7 +11,24 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
 import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
-const mockSprootDB = new MockSprootDB();
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("ESP32_ADS1115.ts tests", function () {
   afterEach(() => {
@@ -35,7 +48,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       address: "0x48",
       pin: "0",
     } as SDBSensor;
-    sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
+    sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1.23",
         metric: ReadingType.voltage,
@@ -65,7 +78,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       mockSubcontroller,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -124,7 +137,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       mockSubcontroller,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -146,7 +159,7 @@ describe("ESP32_ADS1115.ts tests", function () {
       mockSubcontroller,
       ReadingType.voltage,
       "2/3",
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,

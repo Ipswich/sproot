@@ -1,6 +1,6 @@
 import os from "os";
 import { statfs } from "fs";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISystemRepository } from "@sproot/common/dist/database/system/ISystemRepository";
 import { promisify } from "util";
 import { SystemStatus } from "@sproot/common/dist/system/SystemStatus";
 import { CameraManager } from "../camera/CameraManager";
@@ -11,12 +11,16 @@ const statfsAsync = promisify(statfs);
 export class SystemStatusMonitor implements Disposable {
   #cpuMonitor: CpuMonitor = new CpuMonitor(1000, 5);
   #cameraManager: CameraManager;
-  #sprootDB: ISprootDB;
+  #systemRepository: ISystemRepository;
   #knexConnection: Knex;
 
-  constructor(cameraManager: CameraManager, sprootDB: ISprootDB, knexConnection: Knex) {
+  constructor(
+    cameraManager: CameraManager,
+    systemRepository: ISystemRepository,
+    knexConnection: Knex,
+  ) {
     this.#cameraManager = cameraManager;
-    this.#sprootDB = sprootDB;
+    this.#systemRepository = systemRepository;
     this.#knexConnection = knexConnection;
   }
 
@@ -35,7 +39,7 @@ export class SystemStatusMonitor implements Disposable {
         cpuUsage: this.#cpuMonitor.getAverageUsage(),
       },
       database: {
-        size: await this.#sprootDB.system.getDatabaseSizeAsync(),
+        size: await this.#systemRepository.getDatabaseSizeAsync(),
         connectionsUsed: pool.numUsed(),
         connectionsFree: pool.numFree(),
         pendingAcquires: pool.numPendingAcquires(),

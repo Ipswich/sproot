@@ -1,4 +1,9 @@
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import {
+  IOutputsRepository,
+  IOutputActionsRepository,
+  ISubcontrollersRepository,
+} from "@sproot/common/dist/database/ISprootDB";
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
 import { ESP32_PCA9685 } from "../ESP32_PCA9685";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { OutputBase } from "../base/OutputBase";
@@ -12,11 +17,48 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
-const mockSprootDB = new MockSprootDB();
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: null as unknown as DeviceDataQueryRow,
+  }),
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSubcontrollersRepo = (): ISubcontrollersRepository => ({
+  getAllAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => 0,
+  deleteAsync: async () => 0,
+});
+
+const mockOutputsRepo = createMockOutputsRepo();
+const mockOutputActionsRepo = createMockOutputActionsRepo();
+const mockSubcontrollersRepo = createMockSubcontrollersRepo();
 
 describe("ESP32_PCA9685.ts tests", function () {
   this.beforeEach(() => {
-    sinon.stub(mockSprootDB.subcontrollers, "getAllAsync").resolves([
+    sinon.stub(mockSubcontrollersRepo, "getAllAsync").resolves([
       {
         id: 1,
         type: "ESP32",
@@ -46,7 +88,9 @@ describe("ESP32_PCA9685.ts tests", function () {
 
     const pca9685 = new ESP32_PCA9685(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       mockMdnsService,
       5,
       5,
@@ -130,7 +174,9 @@ describe("ESP32_PCA9685.ts tests", function () {
 
     const pca9685 = new ESP32_PCA9685(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       mockMdnsService,
       5,
       5,
@@ -191,7 +237,9 @@ describe("ESP32_PCA9685.ts tests", function () {
 
     const pca9685 = new ESP32_PCA9685(
       eventBus,
-      mockSprootDB,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
       mockMdnsService,
       5,
       5,

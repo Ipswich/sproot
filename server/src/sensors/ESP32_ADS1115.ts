@@ -1,5 +1,5 @@
 import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import { MdnsService } from "../system/MdnsService";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
@@ -17,7 +17,7 @@ export class ESP32_ADS1115 extends SensorBase {
     subcontroller: SDBSubcontroller,
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -29,7 +29,7 @@ export class ESP32_ADS1115 extends SensorBase {
       subcontroller,
       readingType,
       gain,
-      sprootDB,
+      sensorsRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -44,7 +44,7 @@ export class ESP32_ADS1115 extends SensorBase {
     subcontroller: SDBSubcontroller,
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -53,7 +53,7 @@ export class ESP32_ADS1115 extends SensorBase {
   ) {
     super(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

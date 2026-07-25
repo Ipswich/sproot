@@ -11,43 +11,57 @@ import { Conditions } from "../Conditions";
 
 import { assert } from "chai";
 import sinon from "sinon";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 
-const createStubSprootDB = () => {
-  const sprootDB = new MockSprootDB() as any;
-  sprootDB.automations = {
-    conditions: {
-      sensor: {
-        getAsync: sinon.stub().resolves([]),
-      },
-      output: {
-        getAsync: sinon.stub().resolves([]),
-      },
-      time: {
-        getAsync: sinon.stub().resolves([]),
-      },
-      weekday: {
-        getAsync: sinon.stub().resolves([]),
-      },
-      month: {
-        getAsync: sinon.stub().resolves([]),
-      },
-      dateRange: {
-        getAsync: sinon.stub().resolves([]),
-      },
+const stub = () => sinon.stub().resolves();
+const createStubConditionsRepository = () => {
+  return {
+    sensor: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
     },
-  } as any;
-  return sprootDB;
+    output: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    time: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    weekday: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    month: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+    dateRange: {
+      getAsync: sinon.stub().resolves([]),
+      addAsync: stub(),
+      updateAsync: stub(),
+      deleteAsync: stub(),
+    },
+  };
 };
 
 describe("Conditions.ts tests", () => {
   describe("evaluate", () => {
     it("should return true or false, depending on the condition and comparator", async () => {
-      const sprootDB = createStubSprootDB();
-      const conditions = new Conditions(1, sprootDB);
+      const conditionsRepo = createStubConditionsRepository();
+      const conditions = new Conditions(1, conditionsRepo);
       // Sensor stubs
       const sensor = sinon.createStubInstance(SensorBase);
       sensor.lastReading = {
@@ -79,13 +93,13 @@ describe("Conditions.ts tests", () => {
       const monthConditions = [] as SDBMonthCondition[];
       const dateRangeConditions = [] as SDBDateRangeCondition[];
 
-      sprootDB.automations.conditions.sensor.getAsync.resolves(sensorConditions);
-      sprootDB.automations.conditions.output.getAsync.resolves(outputConditions);
-      sprootDB.automations.conditions.time.getAsync.resolves(timeConditions);
-      sprootDB.automations.conditions.weekday.getAsync.resolves(weekdayConditions);
-      sprootDB.automations.conditions.weekday.getAsync.resolves(weekdayConditions);
-      sprootDB.automations.conditions.month.getAsync.resolves(monthConditions);
-      sprootDB.automations.conditions.dateRange.getAsync.resolves(dateRangeConditions);
+      conditionsRepo.sensor.getAsync.resolves(sensorConditions);
+      conditionsRepo.output.getAsync.resolves(outputConditions);
+      conditionsRepo.time.getAsync.resolves(timeConditions);
+      conditionsRepo.weekday.getAsync.resolves(weekdayConditions);
+      conditionsRepo.weekday.getAsync.resolves(weekdayConditions);
+      conditionsRepo.month.getAsync.resolves(monthConditions);
+      conditionsRepo.dateRange.getAsync.resolves(dateRangeConditions);
 
       // Add some sensor Conditions
       sensorConditions.push({
@@ -567,8 +581,8 @@ describe("Conditions.ts tests", () => {
 
   describe("loadAsync", () => {
     it("should load all conditions from the database", async () => {
-      const sprootDB = createStubSprootDB();
-      sprootDB.automations.conditions.sensor.getAsync.resolves([
+      const conditionsRepo = createStubConditionsRepository();
+      conditionsRepo.sensor.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -578,7 +592,7 @@ describe("Conditions.ts tests", () => {
           comparisonValue: 50,
         } as SDBSensorCondition,
       ]);
-      sprootDB.automations.conditions.output.getAsync.resolves([
+      conditionsRepo.output.getAsync.resolves([
         {
           id: 1,
           groupType: "anyOf",
@@ -587,23 +601,23 @@ describe("Conditions.ts tests", () => {
           comparisonValue: 50,
         } as SDBOutputCondition,
       ]);
-      sprootDB.automations.conditions.time.getAsync.resolves([
+      conditionsRepo.time.getAsync.resolves([
         { id: 1, groupType: "oneOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
         { id: 2, groupType: "anyOf", startTime: "00:00", endTime: "01:00" } as SDBTimeCondition,
       ]);
-      sprootDB.automations.conditions.weekday.getAsync.resolves([
+      conditionsRepo.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 5 } as SDBWeekdayCondition,
         { id: 2, groupType: "anyOf", weekdays: 2 } as SDBWeekdayCondition,
       ]);
-      sprootDB.automations.conditions.weekday.getAsync.resolves([
+      conditionsRepo.weekday.getAsync.resolves([
         { id: 1, groupType: "allOf", weekdays: 5 } as SDBWeekdayCondition,
         { id: 2, groupType: "anyOf", weekdays: 2 } as SDBWeekdayCondition,
       ]);
-      sprootDB.automations.conditions.month.getAsync.resolves([
+      conditionsRepo.month.getAsync.resolves([
         { id: 1, groupType: "allOf", months: 3 } as SDBMonthCondition,
         { id: 2, groupType: "anyOf", months: 6 } as SDBMonthCondition,
       ]);
-      sprootDB.automations.conditions.dateRange.getAsync.resolves([
+      conditionsRepo.dateRange.getAsync.resolves([
         {
           id: 1,
           groupType: "allOf",
@@ -622,7 +636,7 @@ describe("Conditions.ts tests", () => {
         } as SDBDateRangeCondition,
       ]);
 
-      const conditions = new Conditions(1, sprootDB);
+      const conditions = new Conditions(1, conditionsRepo);
       await conditions.loadAsync();
 
       assert.equal(conditions.groupedConditions.sensor.allOf.length, 1);

@@ -1,6 +1,6 @@
 import bme280, { Bme280 } from "bme280";
 import { BME280 } from "../BME280";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
 import { SDBReading } from "@sproot/common/dist/database/SDBReading";
@@ -8,7 +8,24 @@ import { SDBReading } from "@sproot/common/dist/database/SDBReading";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import winston from "winston";
-const mockSprootDB = new MockSprootDB();
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("BME280.ts tests", function () {
   afterEach(() => {
@@ -21,7 +38,7 @@ describe("BME280.ts tests", function () {
       model: "BME280",
       address: "0x76",
     } as SDBSensor;
-    sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
+    sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,
@@ -73,7 +90,7 @@ describe("BME280.ts tests", function () {
 
     await using bme280Sensor = await BME280.createInstanceAsync(
       mockBME280Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -122,7 +139,7 @@ describe("BME280.ts tests", function () {
 
     await using bme280Sensor = await BME280.createInstanceAsync(
       mockBME280Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,
@@ -142,7 +159,7 @@ describe("BME280.ts tests", function () {
     // GetReading throws an errror
     await using bme280Sensor2 = await BME280.createInstanceAsync(
       mockBME280Data,
-      mockSprootDB,
+      mockSensorsRepo,
       5,
       5,
       5,

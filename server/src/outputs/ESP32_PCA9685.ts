@@ -1,9 +1,9 @@
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
 import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/dist/database/ISprootDB";
 import { AvailableDevice } from "@sproot/common/dist/outputs/AvailableDevice";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
@@ -15,7 +15,9 @@ class ESP32_PCA9685 extends MultiOutputBase {
 
   constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -25,7 +27,9 @@ class ESP32_PCA9685 extends MultiOutputBase {
   ) {
     super(
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
+      subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -40,7 +44,7 @@ class ESP32_PCA9685 extends MultiOutputBase {
       this.logger.error(`ESP32_PCA9685 Output ${output.id} is missing subcontrollerId.`);
       return undefined;
     }
-    const subcontroller = (await this.sprootDB.subcontrollers.getAllAsync()).find(
+    const subcontroller = (await this.subcontrollersRepository.getAllAsync()).find(
       (device) => device.id == output.subcontrollerId,
     );
     if (subcontroller == null) {
@@ -62,8 +66,8 @@ class ESP32_PCA9685 extends MultiOutputBase {
       output,
       subcontroller,
       this.eventBus,
-      this.sprootDB.outputs,
-      this.sprootDB.automations.actions.output,
+      this.outputsRepository,
+      this.outputActionsRepository,
       this.#mdnsService,
       this.maxCacheSize,
       this.initialCacheLookback,

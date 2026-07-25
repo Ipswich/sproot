@@ -14,63 +14,175 @@ import sinon from "sinon";
 import { AutomationService } from "../../../../automation/AutomationService";
 import winston from "winston";
 import { MemoryEventBus } from "../../../../eventbus/MemoryEventBus";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import {
+  IAutomationsRepository,
+  IOutputActionsRepository,
+  INotificationActionsRepository,
+  ISensorConditionsRepository,
+  IOutputConditionsRepository,
+  ITimeConditionsRepository,
+  IWeekdayConditionsRepository,
+  IMonthConditionsRepository,
+  IDateRangeConditionsRepository,
+} from "@sproot/common/dist/database/ISprootDB";
 
-const createStubSprootDB = () => {
-  const sprootDB = new MockSprootDB() as any;
-  sprootDB.automations = {
-    getAllAsync: sinon.stub(),
-    getByIdAsync: sinon.stub(),
-    addAsync: sinon.stub(),
-    updateAsync: sinon.stub(),
-    deleteAsync: sinon.stub(),
+const createMockAutomationsRepo = (): IAutomationsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSensorConditionsRepo = (): ISensorConditionsRepository => ({
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockOutputConditionsRepo = (): IOutputConditionsRepository => ({
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockTimeConditionsRepo = (): ITimeConditionsRepository => ({
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockWeekdayConditionsRepo = (): IWeekdayConditionsRepository => ({
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockMonthConditionsRepo = (): IMonthConditionsRepository => ({
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockDateRangeConditionsRepo = (): IDateRangeConditionsRepository => ({
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockNotificationActionsRepo = (): INotificationActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getNotificationActionByIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createStubSprootDB = (): any => {
+  const automations = createMockAutomationsRepo();
+  const sensorConditions = createMockSensorConditionsRepo();
+  const outputConditions = createMockOutputConditionsRepo();
+  const timeConditions = createMockTimeConditionsRepo();
+  const weekdayConditions = createMockWeekdayConditionsRepo();
+  const monthConditions = createMockMonthConditionsRepo();
+  const dateRangeConditions = createMockDateRangeConditionsRepo();
+  const outputActions = createMockOutputActionsRepo();
+  const notificationActions = createMockNotificationActionsRepo();
+
+  sinon.stub(automations, "getAllAsync");
+  sinon.stub(automations, "getByIdAsync");
+  sinon.stub(automations, "addAsync");
+  sinon.stub(automations, "updateAsync");
+  sinon.stub(automations, "deleteAsync");
+
+  sinon.stub(sensorConditions, "getAsync").resolves([]);
+  sinon.stub(sensorConditions, "addAsync");
+  sinon.stub(sensorConditions, "updateAsync");
+  sinon.stub(sensorConditions, "deleteAsync");
+
+  sinon.stub(outputConditions, "getAsync").resolves([]);
+  sinon.stub(outputConditions, "addAsync");
+  sinon.stub(outputConditions, "updateAsync");
+  sinon.stub(outputConditions, "deleteAsync");
+
+  sinon.stub(timeConditions, "getAsync").resolves([]);
+  sinon.stub(timeConditions, "addAsync");
+  sinon.stub(timeConditions, "updateAsync");
+  sinon.stub(timeConditions, "deleteAsync");
+
+  sinon.stub(weekdayConditions, "getAsync").resolves([]);
+  sinon.stub(weekdayConditions, "addAsync");
+  sinon.stub(weekdayConditions, "updateAsync");
+  sinon.stub(weekdayConditions, "deleteAsync");
+
+  sinon.stub(monthConditions, "getAsync").resolves([]);
+  sinon.stub(monthConditions, "addAsync");
+  sinon.stub(monthConditions, "updateAsync");
+  sinon.stub(monthConditions, "deleteAsync");
+
+  sinon.stub(dateRangeConditions, "getAsync").resolves([]);
+  sinon.stub(dateRangeConditions, "addAsync");
+  sinon.stub(dateRangeConditions, "updateAsync");
+  sinon.stub(dateRangeConditions, "deleteAsync");
+
+  sinon.stub(outputActions, "getAllAsync");
+  sinon.stub(outputActions, "getAsync");
+  sinon.stub(outputActions, "getOutputActionAsync");
+  sinon.stub(outputActions, "addAsync");
+  sinon.stub(outputActions, "deleteAsync");
+
+  sinon.stub(notificationActions, "getAllAsync");
+  sinon.stub(notificationActions, "getAsync");
+  sinon.stub(notificationActions, "getNotificationActionByIdAsync");
+  sinon.stub(notificationActions, "addAsync");
+  sinon.stub(notificationActions, "deleteAsync");
+
+  const sprootDB = {
+    automations,
     conditions: {
-      sensor: {
-        getAsync: sinon.stub().resolves([]),
-        addAsync: sinon.stub(),
-        updateAsync: sinon.stub(),
-        deleteAsync: sinon.stub(),
-      },
-      output: {
-        getAsync: sinon.stub().resolves([]),
-        addAsync: sinon.stub(),
-        updateAsync: sinon.stub(),
-        deleteAsync: sinon.stub(),
-      },
-      time: {
-        getAsync: sinon.stub().resolves([]),
-        addAsync: sinon.stub(),
-        updateAsync: sinon.stub(),
-        deleteAsync: sinon.stub(),
-      },
-      weekday: {
-        getAsync: sinon.stub().resolves([]),
-        addAsync: sinon.stub(),
-        updateAsync: sinon.stub(),
-        deleteAsync: sinon.stub(),
-      },
-      month: {
-        getAsync: sinon.stub().resolves([]),
-        addAsync: sinon.stub(),
-        updateAsync: sinon.stub(),
-        deleteAsync: sinon.stub(),
-      },
-      dateRange: {
-        getAsync: sinon.stub().resolves([]),
-        addAsync: sinon.stub(),
-        updateAsync: sinon.stub(),
-        deleteAsync: sinon.stub(),
-      },
+      sensor: sensorConditions,
+      output: outputConditions,
+      time: timeConditions,
+      weekday: weekdayConditions,
+      month: monthConditions,
+      dateRange: dateRangeConditions,
     },
-  } as any;
+    actions: {
+      output: outputActions,
+      notification: notificationActions,
+    },
+  };
   return sprootDB;
 };
 
 describe("AutomationHandlers", () => {
   let mockLogger: winston.Logger;
 
-  const createAutomationServiceAsync = (sprootDB: MockSprootDB) =>
-    AutomationService.createInstanceAsync(sprootDB, new MemoryEventBus(mockLogger), mockLogger);
+  const createAutomationServiceAsync = (sprootDB: any) =>
+    AutomationService.createInstanceAsync(
+      sprootDB.automations,
+      sprootDB.conditions,
+      sprootDB.actions,
+      new MemoryEventBus(mockLogger),
+      mockLogger,
+    );
 
   before(() => {
     sinon.stub(winston, "createLogger").callsFake(

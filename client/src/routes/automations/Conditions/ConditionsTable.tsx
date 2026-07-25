@@ -17,10 +17,7 @@ import { SDBWeekdayCondition } from "@sproot/database/SDBWeekdayCondition";
 import { SDBMonthCondition } from "@sproot/database/SDBMonthCondition";
 import { SDBDateRangeCondition } from "@sproot/database/SDBDateRangeCondition";
 import { ConditionOperator } from "@sproot/automation/ConditionTypes";
-import {
-  ReadingType,
-  Units,
-} from "@sproot/common/src/sensors/ReadingType";
+import { ReadingType, Units } from "@sproot/common/src/sensors/ReadingType";
 import { ReactNode, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import DeletablesTable from "../../common/DeletablesTable";

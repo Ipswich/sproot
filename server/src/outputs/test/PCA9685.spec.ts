@@ -1,5 +1,10 @@
 import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import {
+  IOutputsRepository,
+  IOutputActionsRepository,
+  ISubcontrollersRepository,
+} from "@sproot/common/dist/database/ISprootDB";
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
 import { PCA9685, PCA9685Output } from "../PCA9685";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
@@ -11,7 +16,44 @@ import winston from "winston";
 import { OutputBase } from "../base/OutputBase";
 import { Models } from "@sproot/common/dist/outputs/Models";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
-const mockSprootDB = new MockSprootDB();
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: null as unknown as DeviceDataQueryRow,
+  }),
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSubcontrollersRepo = (): ISubcontrollersRepository => ({
+  getAllAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => 0,
+  deleteAsync: async () => 0,
+});
+
+const mockOutputsRepo = createMockOutputsRepo();
+const mockOutputActionsRepo = createMockOutputActionsRepo();
+const mockSubcontrollersRepo = createMockSubcontrollersRepo();
 
 function stubPca9685DutyCycle() {
   return sinon.stub(Pca9685Driver.prototype, "setDutyCycle").callsFake((...args) => {
@@ -35,7 +77,17 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     // disposing with nothing shouldn't cause issues
     await pca9685.disposeOutputAsync({} as OutputBase);
 
@@ -106,7 +158,17 @@ describe("PCA9685.ts tests", function () {
     const logger = winston.createLogger();
     const eventBus = new MemoryEventBus(logger);
 
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,
@@ -140,7 +202,17 @@ describe("PCA9685.ts tests", function () {
     sinon.createStubInstance(Pca9685Driver);
     const setDutyCycleStub = stubPca9685DutyCycle();
     const eventBus = new MemoryEventBus(logger);
-    const pca9685 = new PCA9685(eventBus, mockSprootDB, 5, 5, 5, undefined, logger);
+    const pca9685 = new PCA9685(
+      eventBus,
+      mockOutputsRepo,
+      mockOutputActionsRepo,
+      mockSubcontrollersRepo,
+      5,
+      5,
+      5,
+      undefined,
+      logger,
+    );
     await pca9685.createOutputAsync({
       id: 1,
       model: Models.PCA9685,

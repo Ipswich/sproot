@@ -6,14 +6,25 @@ import winston from "winston";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
 import { AutomationsTriggeredEvent } from "../../../eventbus/events/automations/AutomationsTriggeredEvent";
 import { OutputActionsModifiedEvent } from "../../../eventbus/events/actions/OutputActionsModifiedEvent";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { IOutputActionsRepository } from "@sproot/common/dist/database/ISprootDB";
+
+const mockOutputActionsRepo: IOutputActionsRepository = {
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  getAllAsync: async () => [],
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+};
 
 const createStubSprootDB = () => {
-  const sprootDB = new MockSprootDB() as any;
-  sprootDB.automations = {
-    actions: {
-      output: {
-        getActionsByOutputIdAsync: sinon.stub(),
+  const outputActionsRepo = mockOutputActionsRepo;
+  outputActionsRepo.getActionsByOutputIdAsync = sinon.stub();
+  const sprootDB = {
+    automations: {
+      actions: {
+        output: outputActionsRepo,
       },
     },
   } as any;
@@ -68,7 +79,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         60, // 60 second timeout
       );
@@ -102,7 +113,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         60,
       );
@@ -136,7 +147,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         60,
       );
@@ -182,7 +193,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         60,
       );
@@ -221,7 +232,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         60, // 60 second timeout
       );
@@ -268,7 +279,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         0,
       );
@@ -301,7 +312,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         0,
       );
@@ -360,7 +371,7 @@ describe("OutputActionManager.ts tests", () => {
         1,
         async () => {},
         eventBus,
-        sprootDB,
+        sprootDB.automations.actions.output,
         mockLogger,
         60,
       );

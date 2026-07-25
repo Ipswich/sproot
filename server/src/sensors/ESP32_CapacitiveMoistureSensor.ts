@@ -1,6 +1,6 @@
 import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { ESP32_ADS1115, ESP32_Ads1115Device } from "./ESP32_ADS1115";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import { MdnsService } from "../system/MdnsService";
 import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
 import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
@@ -23,7 +23,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
   static createInstanceAsync(
     sdbSensor: SDBSensor,
     subcontroller: SDBSubcontroller,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -33,7 +33,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
     const sensor = new ESP32_CapacitiveMoistureSensor(
       sdbSensor,
       subcontroller,
-      sprootDB,
+      sensorsRepository,
       mdnsService,
       maxCacheSize,
       initialCacheLookback,
@@ -46,7 +46,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
   private constructor(
     sdbSensor: SDBSensor,
     subcontroller: SDBSubcontroller,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     mdnsService: MdnsService,
     maxCacheSize: number,
     initialCacheLookback: number,
@@ -55,7 +55,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
   ) {
     super(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -154,7 +154,7 @@ export class ESP32_CapacitiveMoistureSensor extends SensorBase {
       this.logger.info(
         `${this.model} { id: ${this.id} } recalibrated. New low: ${this.lowCalibrationPoint}, new high: ${this.highCalibrationPoint}`,
       );
-      await this.sprootDB.sensors.updateSensorCalibrationAsync(
+      await this.sensorsRepository.updateSensorCalibrationAsync(
         this.id,
         this.lowCalibrationPoint,
         this.highCalibrationPoint,

@@ -1,15 +1,15 @@
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
 import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import { QueueCache } from "@sproot/common/dist/utility/QueueCache";
 import winston from "winston";
 
 export class OutputCache {
   queueCache: QueueCache<SDBOutputState>;
-  sprootDB: ISprootDB;
+  #outputsRepository: IOutputsRepository;
   logger: winston.Logger;
-  constructor(maxSize: number, sprootDB: ISprootDB, logger: winston.Logger) {
+  constructor(maxSize: number, outputsRepository: IOutputsRepository, logger: winston.Logger) {
     this.queueCache = new QueueCache(maxSize);
-    this.sprootDB = sprootDB;
+    this.#outputsRepository = outputsRepository;
     this.logger = logger;
   }
 
@@ -23,7 +23,7 @@ export class OutputCache {
     bucketMinutes: number = 5,
   ): Promise<void> {
     this.queueCache.clear();
-    const states = await this.sprootDB.outputs.getBucketedOutputStatesAsync(
+    const states = await this.#outputsRepository.getBucketedOutputStatesAsync(
       { id: outputId },
       new Date(),
       minutes,
@@ -32,7 +32,7 @@ export class OutputCache {
     );
     const sdbStates =
       states ??
-      (await this.sprootDB.outputs.getOutputStatesAsync(
+      (await this.#outputsRepository.getOutputStatesAsync(
         { id: outputId },
         new Date(),
         minutes,

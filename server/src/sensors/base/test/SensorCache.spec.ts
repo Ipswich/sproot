@@ -1,4 +1,4 @@
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import winston from "winston";
 
 import { assert } from "chai";
@@ -6,9 +6,26 @@ import * as sinon from "sinon";
 import { SDBReading } from "@sproot/common/dist/database/SDBReading";
 import { SensorCache } from "../SensorCache";
 import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("SensorCache.ts tests", function () {
-  const mockSprootDB = new MockSprootDB();
   let logger: winston.Logger;
 
   beforeEach(() => {
@@ -29,7 +46,7 @@ describe("SensorCache.ts tests", function () {
 
   describe("loadCacheFromDatabaseAsync", function () {
     it("should load the cache from the database", async function () {
-      sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
+      sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
         {
           data: "100",
           units: "°C",
@@ -55,7 +72,7 @@ describe("SensorCache.ts tests", function () {
           logTime: "2024-03-03T03:29:01Z",
         } as SDBReading,
       ]);
-      const sensorCache = new SensorCache(2, mockSprootDB, logger);
+      const sensorCache = new SensorCache(2, mockSensorsRepo, logger);
       await sensorCache.loadFromDatabaseAsync(1, 9000);
 
       assert.equal(sensorCache.get(ReadingType.temperature).length, 2);
@@ -77,7 +94,7 @@ describe("SensorCache.ts tests", function () {
 
   describe("addData", function () {
     it("should add data to the cache", function () {
-      const sensorCache = new SensorCache(2, mockSprootDB, logger);
+      const sensorCache = new SensorCache(2, mockSensorsRepo, logger);
       const data = {
         data: "100",
         units: "°C",
@@ -98,7 +115,7 @@ describe("SensorCache.ts tests", function () {
     });
 
     it("should remove the oldest data if the cache is full", function () {
-      const outputCache = new SensorCache(2, mockSprootDB, logger);
+      const outputCache = new SensorCache(2, mockSensorsRepo, logger);
       const temperatureData = {
         data: "100",
         units: "°C",
@@ -126,7 +143,7 @@ describe("SensorCache.ts tests", function () {
 
   describe("clear", function () {
     it("should clear the cache", function () {
-      const outputCache = new SensorCache(2, mockSprootDB, logger);
+      const outputCache = new SensorCache(2, mockSensorsRepo, logger);
       const temperatureData = {
         data: "100",
         units: "°C",

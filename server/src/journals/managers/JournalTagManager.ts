@@ -1,25 +1,25 @@
 import { SDBJournalTag } from "@sproot/common/dist/database/SDBJournalTag";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
 
 export default class JournalTagManager {
-  #sprootDB: ISprootDB;
-  constructor(sprootDB: ISprootDB) {
-    this.#sprootDB = sprootDB;
+  #journalsRepository: IJournalsRepository;
+  constructor(journalsRepository: IJournalsRepository) {
+    this.#journalsRepository = journalsRepository;
   }
 
   getTagsAsync(): Promise<SDBJournalTag[]> {
-    return this.#sprootDB.journals.getJournalTagsAsync();
+    return this.#journalsRepository.getJournalTagsAsync();
   }
 
   createTagAsync(name: string, color: string | null = null): Promise<number> {
-    return this.#sprootDB.journals.addJournalTagAsync(name, color);
+    return this.#journalsRepository.addJournalTagAsync(name, color);
   }
 
   updateTagAsync(tag: SDBJournalTag): Promise<void> {
-    return this.#sprootDB.journals.updateJournalTagAsync(tag);
+    return this.#journalsRepository.updateJournalTagAsync(tag);
   }
 
   deleteTagAsync(tagId: number): Promise<void> {
-    return this.#sprootDB.journals.deleteJournalTagAsync(tagId);
+    return this.#journalsRepository.deleteJournalTagAsync(tagId);
   }
 }

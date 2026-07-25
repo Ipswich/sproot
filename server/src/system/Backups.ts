@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISystemRepository } from "@sproot/common/dist/database/system/ISystemRepository";
 import { BACKUP_DIRECTORY } from "@sproot/common/dist/utility/Constants";
 import {
   createTimeStampSuffix,
@@ -16,14 +16,17 @@ export class Backups {
     return this.#generationStartTime !== null;
   }
 
-  static async createAsync(sprootDB: ISprootDB, logger: winston.Logger): Promise<void> {
+  static async createAsync(
+    systemRepository: ISystemRepository,
+    logger: winston.Logger,
+  ): Promise<void> {
     try {
       if (!this.#generationStartTime) {
         const backupFilePath = `${BACKUP_DIRECTORY}/sproot-backup-${createTimeStampSuffix(new Date())}.sproot`;
         this.#generationStartTime = Date.now();
         logger.info(`Creating backup at ${backupFilePath}...`);
         await fsPromises.mkdir(BACKUP_DIRECTORY, { recursive: true });
-        await sprootDB.system.backupDatabaseAsync(
+        await systemRepository.backupDatabaseAsync(
           process.env["DATABASE_HOST"]!,
           parseInt(process.env["DATABASE_PORT"]!),
           process.env["DATABASE_USER"]!,
@@ -42,11 +45,11 @@ export class Backups {
 
   static async restoreAsync(
     backupPath: string,
-    sprootDB: ISprootDB,
+    systemRepository: ISystemRepository,
     logger: winston.Logger,
   ): Promise<boolean> {
     try {
-      await sprootDB.system.swapRestoreDatabaseAsync(
+      await systemRepository.swapRestoreDatabaseAsync(
         process.env["DATABASE_HOST"]!,
         parseInt(process.env["DATABASE_PORT"]!),
         process.env["DATABASE_USER"]!,

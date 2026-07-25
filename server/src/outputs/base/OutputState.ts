@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
 import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import { IOutputState, ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 
@@ -8,9 +8,9 @@ export class OutputState implements IOutputState {
   automatic: SDBOutputState;
   controlMode: ControlMode;
   #outputId: number;
-  #sprootDB: ISprootDB;
+  #outputsRepository: IOutputsRepository;
 
-  constructor(outputId: number, sprootDB: ISprootDB) {
+  constructor(outputId: number, outputsRepository: IOutputsRepository) {
     this.manual = {
       controlMode: ControlMode.manual,
       value: 0,
@@ -23,12 +23,12 @@ export class OutputState implements IOutputState {
     } as SDBOutputState;
     this.controlMode = ControlMode.automatic;
     this.lastValue = 0;
-    this.#sprootDB = sprootDB;
+    this.#outputsRepository = outputsRepository;
     this.#outputId = outputId;
   }
 
   async loadAsync() {
-    const lastState = await this.#sprootDB.outputs.getLastOutputStateAsync(this.#outputId);
+    const lastState = await this.#outputsRepository.getLastOutputStateAsync(this.#outputId);
     if (lastState[0]?.controlMode == ControlMode.manual) {
       this.controlMode = ControlMode.manual;
       await this.setNewStateAsync(lastState[0]);
@@ -105,7 +105,7 @@ export class OutputState implements IOutputState {
    * This is used for second granularity, as opposed to minute granularity.
    */
   async updateDatabaseStateAsync(): Promise<void> {
-    await this.#sprootDB.outputs.updateLastOutputStateAsync({
+    await this.#outputsRepository.updateLastOutputStateAsync({
       id: this.#outputId,
       value: this.value,
       controlMode: this.controlMode,
@@ -116,7 +116,7 @@ export class OutputState implements IOutputState {
    * Adds the current state of the output to the database.
    */
   async addCurrentStateToDatabaseAsync(): Promise<void> {
-    await this.#sprootDB.outputs.addOutputStateAsync({
+    await this.#outputsRepository.addOutputStateAsync({
       id: this.#outputId,
       value: this.value,
       controlMode: this.controlMode,

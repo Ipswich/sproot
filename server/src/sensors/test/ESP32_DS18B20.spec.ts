@@ -1,5 +1,5 @@
 import { ESP32_DS18B20 } from "../ESP32_DS18B20";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { SDBReading } from "@sproot/common/dist/database/SDBReading";
 import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
@@ -10,7 +10,24 @@ import * as sinon from "sinon";
 import winston from "winston";
 import { MdnsService } from "../../system/MdnsService";
 import { SDBSubcontroller } from "@sproot/common/dist/database/SDBSubcontroller";
-const mockSprootDB = new MockSprootDB();
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+
+const mockSensorsRepo: ISensorsRepository = {
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+};
 
 describe("ESP32_DS18B20.ts tests", function () {
   afterEach(() => {
@@ -44,7 +61,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     await using ds18b20Sensor = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -94,7 +111,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     await using ds18b20Sensor = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -113,7 +130,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     await using ds18b20Sensor2 = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -131,7 +148,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     await using ds18b20Sensor4 = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,
@@ -175,7 +192,7 @@ describe("ESP32_DS18B20.ts tests", function () {
       subcontrollerId: 1,
     } as SDBSensor;
     const recordsToLoad = 2;
-    sinon.stub(mockSprootDB.sensors, "getBucketedSensorReadingsAsync").resolves([
+    sinon.stub(mockSensorsRepo, "getBucketedSensorReadingsAsync").resolves([
       {
         data: "1",
         metric: ReadingType.temperature,
@@ -203,7 +220,7 @@ describe("ESP32_DS18B20.ts tests", function () {
     await using ds18b20Sensor = await ESP32_DS18B20.createInstanceAsync(
       mockDS18B20Data,
       mockSubcontroller,
-      mockSprootDB,
+      mockSensorsRepo,
       mockMdnsService,
       5,
       5,

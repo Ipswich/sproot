@@ -10,7 +10,11 @@ import {
   SensorDataQueryRequest,
   SensorDataQueryResponse,
 } from "@sproot/common/dist/api/v2/QueryTypes";
-import { getLookbackDate, getRecentTailStart, normalizeBucketMinutes } from "../../databaseQueryUtils";
+import {
+  getLookbackDate,
+  getRecentTailStart,
+  normalizeBucketMinutes,
+} from "../../databaseQueryUtils";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 
 export class SensorsRepository extends BaseKnexRepository implements ISensorsRepository {

@@ -1,5 +1,4 @@
 // import { OutputState } from "@sproot/sproot-server/src/outputs/base/OutputState";
-// import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
 // import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 // import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 
@@ -10,7 +9,6 @@
 //   afterEach(() => {
 //     sinon.restore();
 //   });
-//   const mockSprootDB = new MockSprootDB();
 
 //   describe("constructor", function () {
 //     it("should create a new OutputState object with default values", function () {

@@ -10,6 +10,7 @@ describe("ServerStatsManager", () => {
     winston.createLogger({ transports: [new winston.transports.Console({ silent: true })] }),
   );
   let sprootDBMock: any;
+  let systemRepoMock: any;
   let knexConnectionMock: any;
 
   beforeEach(() => {
@@ -21,6 +22,9 @@ describe("ServerStatsManager", () => {
         getAllAsync: sinon.stub().resolves([]),
         updateAsync: sinon.stub().resolves(),
       },
+    };
+    systemRepoMock = {
+      getDatabaseSizeAsync: sinon.stub().resolves(12345),
     };
     knexConnectionMock = {
       client: {
@@ -37,14 +41,14 @@ describe("ServerStatsManager", () => {
   it("should return stats with correct properties", async () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDBMock,
+      sprootDBMock.camera,
       "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
     );
     await manager.regenerateAsync();
-    using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
+    using monitor = new SystemStatusMonitor(manager, systemRepoMock, knexConnectionMock);
     const stats = await monitor.getStatusAsync();
 
     assert.strictEqual(typeof stats.process.uptime, "number");
@@ -66,15 +70,15 @@ describe("ServerStatsManager", () => {
   it("should call getDatabaseSizeAsync", async () => {
     await using manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDBMock,
+      sprootDBMock.camera,
       "test_key",
       winston.createLogger({
         transports: [new winston.transports.Console({ silent: true })],
       }),
     );
     await manager.regenerateAsync();
-    using monitor = new SystemStatusMonitor(manager, sprootDBMock, knexConnectionMock);
+    using monitor = new SystemStatusMonitor(manager, systemRepoMock, knexConnectionMock);
     await monitor.getStatusAsync();
-    assert.strictEqual(sprootDBMock.system.getDatabaseSizeAsync.calledOnce, true);
+    assert.strictEqual(systemRepoMock.getDatabaseSizeAsync.calledOnce, true);
   });
 });

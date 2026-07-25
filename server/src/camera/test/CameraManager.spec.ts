@@ -9,6 +9,7 @@ import ImageCapture from "../ImageCapture";
 import StreamProxy from "../StreamProxy";
 import { SDBCameraSettings } from "@sproot/database/SDBCameraSettings";
 import { TIMELAPSE_DIRECTORY } from "@sproot/common/dist/utility/Constants";
+import { ICameraRepository } from "@sproot/common/dist/database/camera/ICameraRepository";
 import { MemoryEventBus } from "../../eventbus/MemoryEventBus";
 
 describe("CameraManager", () => {
@@ -45,24 +46,21 @@ describe("CameraManager", () => {
     const cameraOverrides = overrides?.camera;
     const rootOverrides = { ...overrides };
     delete rootOverrides.camera;
-    const sprootDB = {
-      camera: {
-        getAllAsync: sandbox.stub().resolves(settings),
-        updateAsync: sandbox.stub().resolves(),
-        ...(cameraOverrides ?? {}),
-      },
-      ...rootOverrides,
+    const cameraRepository: ICameraRepository = {
+      getAllAsync: sandbox.stub().resolves(settings),
+      updateAsync: sandbox.stub().resolves(),
+      ...(cameraOverrides ?? {}),
     };
 
     const eventBus = new MemoryEventBus(logger);
     const manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDB as any,
+      cameraRepository,
       "test-key",
       logger,
     );
     createdManagers.push(manager);
-    return { manager, sprootDB };
+    return { manager, cameraRepository };
   };
 
   const disposeManager = async (manager: CameraManager) => {
@@ -281,18 +279,19 @@ describe("CameraManager", () => {
   it("stops the existing stream proxy when the camera is disabled", async () => {
     const startAsyncStub = sandbox.stub(StreamProxy.prototype, "startAsync").resolves(true);
     const stopAsyncStub = sandbox.stub(StreamProxy.prototype, "stopAsync").resolves();
-    const sprootDB = {
-      camera: {
-        getAllAsync: sandbox.stub(),
-      },
+    const getAllAsyncStub = sandbox.stub();
+    getAllAsyncStub.onFirstCall().resolves([cameraSettings]);
+    getAllAsyncStub.onSecondCall().resolves([{ ...cameraSettings, enabled: false }]);
+
+    const cameraRepository: ICameraRepository = {
+      getAllAsync: getAllAsyncStub,
+      updateAsync: sandbox.stub().resolves(),
     };
-    sprootDB.camera.getAllAsync.onFirstCall().resolves([cameraSettings]);
-    sprootDB.camera.getAllAsync.onSecondCall().resolves([{ ...cameraSettings, enabled: false }]);
 
     const eventBus = new MemoryEventBus(logger);
     const manager = await CameraManager.createInstanceAsync(
       eventBus,
-      sprootDB as any,
+      cameraRepository,
       "test-key",
       logger,
     );

@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
 import { SuccessResponse, ErrorResponse } from "@sproot/api/v2/Responses";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository, IOutputsRepository } from "@sproot/common/dist/database/ISprootDB";
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
 
 interface DataQueryHandlerTestConfig<RequestType, ResponseType> {
   handlerName: string;
@@ -18,34 +19,67 @@ interface DataQueryHandlerTestConfig<RequestType, ResponseType> {
   }>;
 }
 
+const createMockSensorsRepo = (): ISensorsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  getDS18B20AddressesAsync: async () => [],
+  addAsync: async () => {},
+  updateAsync: async () => {},
+  updateSensorCalibrationAsync: async () => {},
+  deleteAsync: async () => {},
+  addSensorReadingAsync: async () => {},
+  getSensorReadingsAsync: async () => [],
+  getBucketedSensorReadingsAsync: async () => [],
+  getDataAsync: async () => ({ xAxis: { field: "time", values: [] }, data: null }),
+});
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+});
+
 export function testDataQueryHandlerTests<RequestType, ResponseType>(
   config: DataQueryHandlerTestConfig<RequestType, ResponseType>,
 ) {
   describe(`${config.handlerName} tests`, () => {
     let mockResponse: Response;
-    let sprootDBStub: MockSprootDB;
+    let sprootDBStub: { sensors: ISensorsRepository; outputs: IOutputsRepository };
 
     function getQueryStub(): sinon.SinonStub {
       if (config.entityType === "sensor") {
-        return (sprootDBStub as any).sensors.getDataAsync;
+        return (sprootDBStub.sensors as any).getDataAsync;
       }
-      return (sprootDBStub as any).outputs.getDataAsync;
+      return (sprootDBStub.outputs as any).getDataAsync;
     }
 
     beforeEach(() => {
-      sprootDBStub = new MockSprootDB();
+      const sensorsRepo = createMockSensorsRepo();
+      const outputsRepo = createMockOutputsRepo();
       const sensorStub = sinon.stub();
       const outputStub = sinon.stub();
-      Object.defineProperty(sprootDBStub, "sensors", {
-        value: { getDataAsync: sensorStub },
+      Object.defineProperty(sensorsRepo, "getDataAsync", {
+        value: sensorStub,
         writable: true,
         configurable: true,
       });
-      Object.defineProperty(sprootDBStub, "outputs", {
-        value: { getDataAsync: outputStub },
+      Object.defineProperty(outputsRepo, "getDataAsync", {
+        value: outputStub,
         writable: true,
         configurable: true,
       });
+      sprootDBStub = { sensors: sensorsRepo, outputs: outputsRepo };
       mockResponse = {
         locals: {
           defaultProperties: {

@@ -1,4 +1,6 @@
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
+import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/dist/database/subcontrollers/ISubcontrollersRepository";
 import { ControlMode, IOutputBase } from "@sproot/common/dist/outputs/IOutputBase";
 
 import winston from "winston";
@@ -13,7 +15,9 @@ export abstract class MultiOutputBase implements AsyncDisposable {
   readonly outputs: Record<string, OutputBase> = {};
   readonly usedPins: Record<string, string[] | Record<string, string[]>> = {};
   protected eventBus: IEventBus;
-  protected sprootDB: ISprootDB;
+  protected outputsRepository: IOutputsRepository;
+  protected outputActionsRepository: IOutputActionsRepository;
+  protected subcontrollersRepository: ISubcontrollersRepository;
   protected frequency: number;
   protected maxCacheSize: number;
   protected initialCacheLookback: number;
@@ -22,7 +26,9 @@ export abstract class MultiOutputBase implements AsyncDisposable {
 
   constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -30,7 +36,9 @@ export abstract class MultiOutputBase implements AsyncDisposable {
     logger: winston.Logger,
   ) {
     this.eventBus = eventBus;
-    this.sprootDB = sprootDB;
+    this.outputsRepository = outputsRepository;
+    this.outputActionsRepository = outputActionsRepository;
+    this.subcontrollersRepository = subcontrollersRepository;
     this.maxCacheSize = maxCacheSize;
     this.initialCacheLookback = initialCacheLookback;
     this.cacheBucketMinutes = cacheBucketMinutes;

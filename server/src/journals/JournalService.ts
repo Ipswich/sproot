@@ -1,4 +1,4 @@
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
 import JournalManager from "./managers/JournalManager";
 import JournalTagManager from "./managers/JournalTagManager";
 import EntryManager from "./managers/EntryManager";
@@ -10,11 +10,11 @@ export class JournalService {
   entryManager: EntryManager;
   entryTagManager: EntryTagManager;
 
-  constructor(sprootDB: ISprootDB) {
-    this.journalManager = new JournalManager(sprootDB);
-    this.journalTagManager = new JournalTagManager(sprootDB);
-    this.entryManager = new EntryManager(sprootDB);
-    this.entryTagManager = new EntryTagManager(sprootDB);
+  constructor(journalsRepository: IJournalsRepository) {
+    this.journalManager = new JournalManager(journalsRepository);
+    this.journalTagManager = new JournalTagManager(journalsRepository);
+    this.entryManager = new EntryManager(journalsRepository);
+    this.entryTagManager = new EntryTagManager(journalsRepository);
   }
 }
 

@@ -1,6 +1,6 @@
 import { openPromisified, PromisifiedBus } from "i2c-bus";
 import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import { SensorBase } from "./base/SensorBase";
 import winston from "winston";
 import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
@@ -13,7 +13,7 @@ export class ADS1115 extends SensorBase {
     sdbSensor: SDBSensor,
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -23,7 +23,7 @@ export class ADS1115 extends SensorBase {
       sdbSensor,
       readingType,
       gain,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -36,7 +36,7 @@ export class ADS1115 extends SensorBase {
     sdbSensor: SDBSensor,
     readingType: ReadingType,
     gain: "2/3" | "1" | "2" | "4" | "8" | "16",
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -44,7 +44,7 @@ export class ADS1115 extends SensorBase {
   ) {
     super(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,

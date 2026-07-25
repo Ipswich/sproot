@@ -9,7 +9,11 @@ import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
 import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import { ControlMode, IOutputBase } from "@sproot/common/dist/outputs/IOutputBase";
 import { Knex } from "knex";
-import { getLookbackDate, getRecentTailStart, normalizeBucketMinutes } from "../../databaseQueryUtils";
+import {
+  getLookbackDate,
+  getRecentTailStart,
+  normalizeBucketMinutes,
+} from "../../databaseQueryUtils";
 import { BaseKnexRepository } from "../utils/BaseKnexRepository";
 
 export class OutputsRepository extends BaseKnexRepository implements IOutputsRepository {

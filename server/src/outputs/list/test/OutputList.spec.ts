@@ -1,6 +1,11 @@
 import { OutputList } from "../OutputList";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import {
+  IOutputsRepository,
+  IOutputActionsRepository,
+  ISubcontrollersRepository,
+} from "@sproot/common/dist/database/ISprootDB";
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
 import Pca9685Driver from "pca9685";
 
 import { assert } from "chai";
@@ -10,7 +15,44 @@ import { Models } from "@sproot/common/dist/outputs/Models";
 import { MdnsService } from "../../../system/MdnsService";
 import { OutputGroup } from "../../OutputGroup";
 import { MemoryEventBus } from "../../../eventbus/MemoryEventBus";
-const mockSprootDB = new MockSprootDB();
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: async () => [],
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: null as unknown as DeviceDataQueryRow,
+  }),
+});
+
+const createMockOutputActionsRepo = (): IOutputActionsRepository => ({
+  getAllAsync: async () => [],
+  getAsync: async () => [],
+  addAsync: async () => 0,
+  getOutputActionAsync: async () => [],
+  getActionsByOutputIdAsync: async () => [],
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+});
+
+const createMockSubcontrollersRepo = (): ISubcontrollersRepository => ({
+  getAllAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => 0,
+  deleteAsync: async () => 0,
+});
+
+const mockOutputsRepo = createMockOutputsRepo();
+const mockOutputActionsRepo = createMockOutputActionsRepo();
+const mockSubcontrollersRepo = createMockSubcontrollersRepo();
 
 describe("OutputList.ts tests", function () {
   afterEach(() => {
@@ -21,7 +63,7 @@ describe("OutputList.ts tests", function () {
       const mockMdnsService = sinon.createStubInstance(MdnsService);
       sinon.createStubInstance(Pca9685Driver);
 
-      const getAllAsyncStub = sinon.stub(mockSprootDB.outputs, "getAllAsync").resolves([
+      const getAllAsyncStub = sinon.stub(mockOutputsRepo, "getAllAsync").resolves([
         {
           id: 1,
           model: Models.PCA9685,
@@ -110,7 +152,9 @@ describe("OutputList.ts tests", function () {
       // Create
       await using outputList = await OutputList.createInstanceAsync(
         eventBus,
-        mockSprootDB,
+        mockOutputsRepo,
+        mockOutputActionsRepo,
+        mockSubcontrollersRepo,
         mockMdnsService,
         5,
         5,
@@ -184,7 +228,7 @@ describe("OutputList.ts tests", function () {
       const mockMdnsService = sinon.createStubInstance(MdnsService);
       sinon.createStubInstance(Pca9685Driver);
 
-      sinon.stub(mockSprootDB.outputs, "getAllAsync").resolves([
+      sinon.stub(mockOutputsRepo, "getAllAsync").resolves([
         {
           id: 1,
           model: Models.PCA9685,
@@ -209,7 +253,9 @@ describe("OutputList.ts tests", function () {
 
       await using outputList = await OutputList.createInstanceAsync(
         eventBus,
-        mockSprootDB,
+        mockOutputsRepo,
+        mockOutputActionsRepo,
+        mockSubcontrollersRepo,
         mockMdnsService,
         5,
         5,
@@ -233,7 +279,7 @@ describe("OutputList.ts tests", function () {
       sinon.createStubInstance(Pca9685Driver);
 
       sinon.stub(Pca9685Driver.prototype, "dispose").callsFake(() => {});
-      sinon.stub(mockSprootDB.outputs, "getAllAsync").resolves([
+      sinon.stub(mockOutputsRepo, "getAllAsync").resolves([
         {
           id: 1,
           model: Models.PCA9685,
@@ -286,7 +332,9 @@ describe("OutputList.ts tests", function () {
       const eventBus = new MemoryEventBus(logger);
       await using outputList = await OutputList.createInstanceAsync(
         eventBus,
-        mockSprootDB,
+        mockOutputsRepo,
+        mockOutputActionsRepo,
+        mockSubcontrollersRepo,
         mockMdnsService,
         5,
         5,

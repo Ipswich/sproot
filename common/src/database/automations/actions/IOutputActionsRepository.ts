@@ -10,27 +10,3 @@ export interface IOutputActionsRepository extends IActionBaseRepository<SDBOutpu
   getActionsByOutputIdAsync(outputId: number): Promise<SDBOutputAction[]>;
   updateAsync(automationId: number, action: SDBOutputAction): Promise<void>;
 }
-
-export class MockOutputActionsRepository implements IOutputActionsRepository {
-  async getAllAsync(): Promise<SDBOutputAction[]> {
-    return [];
-  }
-  async getAsync(_automationId: number): Promise<SDBOutputAction[]> {
-    return [];
-  }
-  async addAsync(_automationId: number, _outputId: number, _value: number): Promise<number> {
-    return 0;
-  }
-  async getOutputActionAsync(_actionId: number): Promise<SDBOutputAction[]> {
-    return [];
-  }
-  async getActionsByOutputIdAsync(_outputId: number): Promise<SDBOutputAction[]> {
-    return [];
-  }
-  async updateAsync(_automationId: number, _action: SDBOutputAction): Promise<void> {
-    return;
-  }
-  async deleteAsync(_actionId: number): Promise<void> {
-    return;
-  }
-}

@@ -1,9 +1,9 @@
 import { Client, Plug } from "tplink-smarthome-api";
 import { OutputBase } from "./base/OutputBase";
 import { SDBOutput } from "@sproot/common/dist/database/SDBOutput";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import type { IOutputsRepository } from "@sproot/common/dist/database/outputs/IOutputsRepository";
 import type { IOutputActionsRepository } from "@sproot/common/dist/database/automations/actions/IOutputActionsRepository";
+import type { ISubcontrollersRepository } from "@sproot/common/dist/database/ISprootDB";
 import winston from "winston";
 import { MultiOutputBase } from "./base/MultiOutputBase";
 import { AvailableDevice } from "@sproot/common/dist/outputs/AvailableDevice";
@@ -20,7 +20,9 @@ class TPLinkSmartPlugs extends MultiOutputBase {
 
   constructor(
     eventBus: IEventBus,
-    sprootDB: ISprootDB,
+    outputsRepository: IOutputsRepository,
+    outputActionsRepository: IOutputActionsRepository,
+    subcontrollersRepository: ISubcontrollersRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -30,7 +32,9 @@ class TPLinkSmartPlugs extends MultiOutputBase {
   ) {
     super(
       eventBus,
-      sprootDB,
+      outputsRepository,
+      outputActionsRepository,
+      subcontrollersRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -123,8 +127,8 @@ class TPLinkSmartPlugs extends MultiOutputBase {
         this.plugRegistry,
         output,
         this.eventBus,
-        this.sprootDB.outputs,
-        this.sprootDB.automations.actions.output,
+        this.outputsRepository,
+        this.outputActionsRepository,
         this.maxCacheSize,
         this.initialCacheLookback,
         this.cacheBucketMinutes,

@@ -15,6 +15,7 @@ import { DI_KEYS } from "./utils/DependencyInjectionConstants";
 import setupLogger from "./logger";
 import ApiRootV2 from "./api/v2/ApiRootV2";
 import { AutomationService } from "./automation/AutomationService";
+
 import { CameraManager } from "./camera/CameraManager";
 import { JournalService } from "./journals/JournalService";
 import { SystemStatusMonitor } from "./system/StatusMonitor";
@@ -48,14 +49,20 @@ export default async function setupAsync(): Promise<Express> {
   const mdnsService = new MdnsService(logger);
   app.set(DI_KEYS.MdnsService, mdnsService);
 
-  const journalService = new JournalService(sprootDB);
+  const journalService = new JournalService(sprootDB.journals);
   app.set(DI_KEYS.JournalService, journalService);
 
-  const automationService = await AutomationService.createInstanceAsync(sprootDB, eventBus, logger);
+  const automationService = await AutomationService.createInstanceAsync(
+    sprootDB.automations,
+    sprootDB.conditions,
+    sprootDB.actions,
+    eventBus,
+    logger,
+  );
   app.set(DI_KEYS.AutomationService, automationService);
 
   const notificationActionManager = await NotificationActionManager.createInstanceAsync(
-    sprootDB,
+    sprootDB.actions.notification,
     eventBus,
     logger,
   );
@@ -64,7 +71,7 @@ export default async function setupAsync(): Promise<Express> {
   logger.info("Creating camera manager. . .");
   const cameraManager = await CameraManager.createInstanceAsync(
     eventBus,
-    sprootDB,
+    sprootDB.camera,
     process.env["INTERSERVICE_AUTHENTICATION_KEY"]!,
     logger,
   );
@@ -73,7 +80,8 @@ export default async function setupAsync(): Promise<Express> {
   logger.info("Creating sensor and output lists. . .");
   const sensorList = await SensorList.createInstanceAsync(
     eventBus,
-    sprootDB,
+    sprootDB.sensors,
+    sprootDB.subcontrollers,
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
@@ -83,7 +91,9 @@ export default async function setupAsync(): Promise<Express> {
   app.set(DI_KEYS.SensorList, sensorList);
   const outputList = await OutputList.createInstanceAsync(
     eventBus,
-    sprootDB,
+    sprootDB.outputs,
+    sprootDB.actions.output,
+    sprootDB.subcontrollers,
     mdnsService,
     Constants.MAX_CACHE_SIZE,
     Constants.INITIAL_CACHE_LOOKBACK,
@@ -92,7 +102,11 @@ export default async function setupAsync(): Promise<Express> {
   );
   app.set(DI_KEYS.OutputList, outputList);
 
-  const systemStatusMonitor = new SystemStatusMonitor(cameraManager, sprootDB, knexConnection);
+  const systemStatusMonitor = new SystemStatusMonitor(
+    cameraManager,
+    sprootDB.system,
+    knexConnection,
+  );
   app.set(DI_KEYS.SystemStatusMonitor, systemStatusMonitor);
 
   const automationsCronJob = createAutomationsCronJob(
@@ -106,7 +120,7 @@ export default async function setupAsync(): Promise<Express> {
   const updateDatabaseCronJob = createDatabaseUpdateCronJob(sensorList, outputList, logger);
   app.set(DI_KEYS.DatabaseUpdateCronJob, updateDatabaseCronJob);
 
-  const backupCronJob = createBackupCronJob(sprootDB, logger);
+  const backupCronJob = createBackupCronJob(sprootDB.system, logger);
   app.set(DI_KEYS.BackupCronJob, backupCronJob);
 
   app.use(cors());

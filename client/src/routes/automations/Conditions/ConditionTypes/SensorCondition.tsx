@@ -17,10 +17,7 @@ import {
   ConditionGroupType,
   ConditionOperator,
 } from "@sproot/common/src/automation/ConditionTypes";
-import {
-  ReadingType,
-  Units,
-} from "@sproot/common/src/sensors/ReadingType";
+import { ReadingType, Units } from "@sproot/common/src/sensors/ReadingType";
 import { convertFahrenheitToCelsius } from "@sproot/common/src/utility/DisplayFormats";
 
 export interface SensorConditionProps {

@@ -7,12 +7,3 @@ export interface ICameraRepository {
   updateAsync(SDBCameraSettings: SDBCameraSettings): Promise<void>;
   // deleteCameraSettingsAsync(cameraId: number): Promise<void>;
 }
-
-export class MockCameraRepository implements ICameraRepository {
-  async getAllAsync(): Promise<SDBCameraSettings[]> {
-    return [];
-  }
-  async updateAsync(_cameraSettings: SDBCameraSettings): Promise<void> {
-    return;
-  }
-}

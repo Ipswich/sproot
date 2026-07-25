@@ -1,7 +1,6 @@
 import { IAutomationEventPayload } from "@sproot/automation/IAutomationEventPayload";
 import { Automation } from "./Automation";
 import { OutputList } from "../outputs/list/OutputList";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { ConditionGroupType, ConditionOperator } from "@sproot/automation/ConditionTypes";
 import { TimeCondition } from "./conditions/TimeCondition";
@@ -17,6 +16,9 @@ import { IEventBus } from "../eventbus/IEventBus";
 import { AutomationsTriggeredEvent } from "../eventbus/events/automations/AutomationsTriggeredEvent";
 import { OutputActionsModifiedEvent } from "../eventbus/events/actions/OutputActionsModifiedEvent";
 import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/NotificationActionsModifiedEvent";
+import type { IAutomationsRepository } from "@sproot/common/dist/database/automations/IAutomationsRepository";
+import type { IConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IConditionsRepository";
+import type { IActionsRepository } from "@sproot/common/dist/database/automations/IAutomationsRepository";
 
 /**
  * Central automation evaluator and event emitter.
@@ -24,22 +26,40 @@ import { NotificationActionsModifiedEvent } from "../eventbus/events/actions/Not
  */
 class AutomationService {
   #automations: Map<number, Automation>; // Key: automationId
-  #sprootDB: ISprootDB;
+  #automationsRepository: IAutomationsRepository;
+  #conditionsRepository: IConditionsRepository;
+  #actionsRepository: IActionsRepository;
   #eventBus: IEventBus;
   #logger: winston.Logger;
 
   static async createInstanceAsync(
-    sprootDB: ISprootDB,
+    automationsRepository: IAutomationsRepository,
+    conditionsRepository: IConditionsRepository,
+    actionsRepository: IActionsRepository,
     eventBus: IEventBus,
     logger: winston.Logger,
   ): Promise<AutomationService> {
-    const service = new AutomationService(sprootDB, eventBus, logger);
+    const service = new AutomationService(
+      automationsRepository,
+      conditionsRepository,
+      actionsRepository,
+      eventBus,
+      logger,
+    );
     await service.loadAllAutomationsAsync();
     return service;
   }
 
-  private constructor(sprootDB: ISprootDB, eventBus: IEventBus, logger: winston.Logger) {
-    this.#sprootDB = sprootDB;
+  private constructor(
+    automationsRepository: IAutomationsRepository,
+    conditionsRepository: IConditionsRepository,
+    actionsRepository: IActionsRepository,
+    eventBus: IEventBus,
+    logger: winston.Logger,
+  ) {
+    this.#automationsRepository = automationsRepository;
+    this.#conditionsRepository = conditionsRepository;
+    this.#actionsRepository = actionsRepository;
     this.#eventBus = eventBus;
     this.#automations = new Map();
     this.#logger = logger;
@@ -50,7 +70,7 @@ class AutomationService {
    */
   async loadAllAutomationsAsync(): Promise<void> {
     try {
-      const rawAutomations = await this.#sprootDB.automations.getAllAsync();
+      const rawAutomations = await this.#automationsRepository.getAllAsync();
       this.#automations = new Map();
 
       const promises = rawAutomations.map(async (automation) => {
@@ -59,7 +79,7 @@ class AutomationService {
           automation.name,
           automation.operator,
           automation.enabled,
-          this.#sprootDB,
+          this.#conditionsRepository,
         );
         return [automation.id, automationInstance] as [number, Automation];
       });
@@ -112,13 +132,13 @@ class AutomationService {
 
   // CRUD methods
   async addAutomationAsync(name: string, operator: AutomationOperator): Promise<number> {
-    const resultId = await this.#sprootDB.automations.addAsync(name, operator);
+    const resultId = await this.#automationsRepository.addAsync(name, operator);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
 
   async deleteAutomationAsync(id: number) {
-    await this.#sprootDB.automations.deleteAsync(id);
+    await this.#automationsRepository.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -128,7 +148,7 @@ class AutomationService {
     operator: AutomationOperator,
     enabled: boolean,
   ) {
-    await this.#sprootDB.automations.updateAsync(name, operator, id, enabled);
+    await this.#automationsRepository.updateAsync(name, operator, id, enabled);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -141,7 +161,7 @@ class AutomationService {
     sensorId: number,
     readingType: ReadingType,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.automations.conditions.sensor.addAsync(
+    const resultId = await this.#conditionsRepository.sensor.addAsync(
       automationId,
       type,
       operator,
@@ -162,7 +182,7 @@ class AutomationService {
     comparisonLookback: number | null,
     outputId: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.automations.conditions.output.addAsync(
+    const resultId = await this.#conditionsRepository.output.addAsync(
       automationId,
       type,
       operator,
@@ -180,7 +200,7 @@ class AutomationService {
     startTime: string | null | undefined,
     endTime: string | null | undefined,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.automations.conditions.time.addAsync(
+    const resultId = await this.#conditionsRepository.time.addAsync(
       automationId,
       type,
       startTime,
@@ -195,7 +215,7 @@ class AutomationService {
     type: ConditionGroupType,
     weekdays: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.automations.conditions.weekday.addAsync(
+    const resultId = await this.#conditionsRepository.weekday.addAsync(
       automationId,
       type,
       weekdays,
@@ -209,11 +229,7 @@ class AutomationService {
     type: ConditionGroupType,
     months: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.automations.conditions.month.addAsync(
-      automationId,
-      type,
-      months,
-    );
+    const resultId = await this.#conditionsRepository.month.addAsync(automationId, type, months);
     await this.#postAutomationChangeFunctionAsync();
     return resultId;
   }
@@ -226,7 +242,7 @@ class AutomationService {
     endMonth: number,
     endDate: number,
   ): Promise<number> {
-    const resultId = await this.#sprootDB.automations.conditions.dateRange.addAsync(
+    const resultId = await this.#conditionsRepository.dateRange.addAsync(
       automationId,
       type,
       startMonth,
@@ -249,17 +265,17 @@ class AutomationService {
       | DateRangeCondition,
   ) {
     if (condition instanceof SensorCondition) {
-      await this.#sprootDB.automations.conditions.sensor.updateAsync(automationId, condition);
+      await this.#conditionsRepository.sensor.updateAsync(automationId, condition);
     } else if (condition instanceof OutputCondition) {
-      await this.#sprootDB.automations.conditions.output.updateAsync(automationId, condition);
+      await this.#conditionsRepository.output.updateAsync(automationId, condition);
     } else if (condition instanceof TimeCondition) {
-      await this.#sprootDB.automations.conditions.time.updateAsync(automationId, condition);
+      await this.#conditionsRepository.time.updateAsync(automationId, condition);
     } else if (condition instanceof WeekdayCondition) {
-      await this.#sprootDB.automations.conditions.weekday.updateAsync(automationId, condition);
+      await this.#conditionsRepository.weekday.updateAsync(automationId, condition);
     } else if (condition instanceof MonthCondition) {
-      await this.#sprootDB.automations.conditions.month.updateAsync(automationId, condition);
+      await this.#conditionsRepository.month.updateAsync(automationId, condition);
     } else if (condition instanceof DateRangeCondition) {
-      await this.#sprootDB.automations.conditions.dateRange.updateAsync(automationId, condition);
+      await this.#conditionsRepository.dateRange.updateAsync(automationId, condition);
     } else {
       return;
     }
@@ -267,32 +283,32 @@ class AutomationService {
   }
 
   async deleteSensorConditionAsync(id: number) {
-    await this.#sprootDB.automations.conditions.sensor.deleteAsync(id);
+    await this.#conditionsRepository.sensor.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteOutputConditionAsync(id: number) {
-    await this.#sprootDB.automations.conditions.output.deleteAsync(id);
+    await this.#conditionsRepository.output.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteTimeConditionAsync(id: number) {
-    await this.#sprootDB.automations.conditions.time.deleteAsync(id);
+    await this.#conditionsRepository.time.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteWeekdayConditionAsync(id: number) {
-    await this.#sprootDB.automations.conditions.weekday.deleteAsync(id);
+    await this.#conditionsRepository.weekday.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteMonthConditionAsync(id: number) {
-    await this.#sprootDB.automations.conditions.month.deleteAsync(id);
+    await this.#conditionsRepository.month.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
   async deleteDateRangeConditionAsync(id: number) {
-    await this.#sprootDB.automations.conditions.dateRange.deleteAsync(id);
+    await this.#conditionsRepository.dateRange.deleteAsync(id);
     await this.#postAutomationChangeFunctionAsync();
   }
 
@@ -302,7 +318,7 @@ class AutomationService {
     subject: string,
     content: string,
   ): Promise<number> {
-    const result = await this.#sprootDB.automations.actions.notification.addAsync(
+    const result = await this.#actionsRepository.notification.addAsync(
       automationId,
       subject,
       content,
@@ -312,7 +328,7 @@ class AutomationService {
   }
 
   async deleteNotificationActionAsync(notificationActionId: number) {
-    await this.#sprootDB.automations.actions.notification.deleteAsync(notificationActionId);
+    await this.#actionsRepository.notification.deleteAsync(notificationActionId);
     await this.#eventBus.publishAsync(new NotificationActionsModifiedEvent({}));
   }
 
@@ -322,17 +338,13 @@ class AutomationService {
     outputId: number,
     value: number,
   ): Promise<number> {
-    const result = await this.#sprootDB.automations.actions.output.addAsync(
-      automationId,
-      outputId,
-      value,
-    );
+    const result = await this.#actionsRepository.output.addAsync(automationId, outputId, value);
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
     return result;
   }
 
   async deleteOutputActionAsync(outputActionId: number) {
-    await this.#sprootDB.automations.actions.output.deleteAsync(outputActionId);
+    await this.#actionsRepository.output.deleteAsync(outputActionId);
     await this.#eventBus.publishAsync(new OutputActionsModifiedEvent({}));
   }
 

@@ -1,23 +1,21 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { ISprootDB, IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
 import JournalManager from "../JournalManager";
 
 describe("JournalManager.ts tests", () => {
-  let sprootDB: Partial<ISprootDB>;
+  let journalsRepo: IJournalsRepository;
   let journalManager: JournalManager;
 
   beforeEach(function () {
-    sprootDB = {
-      journals: {
-        getAllAsync: sinon.stub(),
-        getByIdAsync: sinon.stub(),
-        getJournalTagsAsync: sinon.stub(),
-        getJournalTagLookupsAsync: sinon.stub(),
-      } as unknown as IJournalsRepository,
-    };
+    journalsRepo = {
+      getAllAsync: sinon.stub(),
+      getByIdAsync: sinon.stub(),
+      getJournalTagsAsync: sinon.stub(),
+      getJournalTagLookupsAsync: sinon.stub(),
+    } as unknown as IJournalsRepository;
 
-    journalManager = new JournalManager(sprootDB as ISprootDB);
+    journalManager = new JournalManager(journalsRepo);
   });
 
   afterEach(function () {
@@ -40,9 +38,9 @@ describe("JournalManager.ts tests", () => {
         { journalId: 2, tagId: 12 },
       ];
 
-      (sprootDB.journals!.getAllAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.journals!.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
-      (sprootDB.journals!.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
+      (journalsRepo.getAllAsync as sinon.SinonStub).resolves(journals);
+      (journalsRepo.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
+      (journalsRepo.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
 
       const res = await journalManager.getJournalsAsync();
       assert.strictEqual(res.length, 2);
@@ -77,9 +75,9 @@ describe("JournalManager.ts tests", () => {
       const tags = [{ id: 10, name: "T1" }];
       const lookups = [{ journalId: 1, tagId: 10 }];
 
-      (sprootDB.journals!.getByIdAsync as sinon.SinonStub).resolves(journals);
-      (sprootDB.journals!.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
-      (sprootDB.journals!.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
+      (journalsRepo.getByIdAsync as sinon.SinonStub).resolves(journals);
+      (journalsRepo.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
+      (journalsRepo.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
 
       const res = await journalManager.getJournalsAsync(1);
       assert.strictEqual(res.length, 1);
@@ -94,14 +92,14 @@ describe("JournalManager.ts tests", () => {
     });
 
     it("should return empty array if no journals found", async () => {
-      (sprootDB.journals!.getAllAsync as sinon.SinonStub).resolves([]);
+      (journalsRepo.getAllAsync as sinon.SinonStub).resolves([]);
       const res = await journalManager.getJournalsAsync();
       assert.isArray(res);
       assert.strictEqual(res.length, 0);
     });
 
     it("should return empty array if no journal found for id", async () => {
-      (sprootDB.journals!.getByIdAsync as sinon.SinonStub).resolves([]);
+      (journalsRepo.getByIdAsync as sinon.SinonStub).resolves([]);
       const res = await journalManager.getJournalsAsync(999);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);

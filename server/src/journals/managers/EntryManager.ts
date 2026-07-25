@@ -1,12 +1,12 @@
 import { SDBJournalEntry } from "@sproot/common/dist/database/SDBJournalEntry";
 import { SDBJournalEntryTag } from "@sproot/common/dist/database/SDBJournalEntryTag";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
 import { toDbDate } from "../../utils/dateUtils";
 
 export default class EntryManager {
-  #sprootDB: ISprootDB;
-  constructor(sprootDB: ISprootDB) {
-    this.#sprootDB = sprootDB;
+  #journalsRepository: IJournalsRepository;
+  constructor(journalsRepository: IJournalsRepository) {
+    this.#journalsRepository = journalsRepository;
   }
 
   async getAsync(
@@ -16,12 +16,12 @@ export default class EntryManager {
   ): Promise<Array<{ entry: SDBJournalEntry; tags: SDBJournalEntryTag[] }>> {
     let entries: SDBJournalEntry[] = [];
     if (journalId != null) {
-      entries = await this.#sprootDB.journals.getJournalEntriesAsync(
+      entries = await this.#journalsRepository.getJournalEntriesAsync(
         journalId,
         withContent ?? true,
       );
     } else if (entryId != null) {
-      entries = await this.#sprootDB.journals.getJournalEntryAsync(entryId, withContent ?? true);
+      entries = await this.#journalsRepository.getJournalEntryAsync(entryId, withContent ?? true);
     } else {
       return [];
     }
@@ -30,8 +30,8 @@ export default class EntryManager {
       return [];
     }
 
-    const entryTagLookups = await this.#sprootDB.journals.getJournalEntryTagLookupsAsync();
-    const allEntryTags = await this.#sprootDB.journals.getJournalEntryTagsAsync();
+    const entryTagLookups = await this.#journalsRepository.getJournalEntryTagLookupsAsync();
+    const allEntryTags = await this.#journalsRepository.getJournalEntryTagsAsync();
 
     const tagById = new Map<number, SDBJournalEntryTag>(
       (allEntryTags as SDBJournalEntryTag[]).map((t) => [t.id, t]),
@@ -61,7 +61,7 @@ export default class EntryManager {
     name?: string | null,
     createdAt?: Date | null,
   ): Promise<number> {
-    return this.#sprootDB.journals.addJournalEntryAsync(
+    return this.#journalsRepository.addJournalEntryAsync(
       journalId,
       name ?? null,
       text,
@@ -70,18 +70,18 @@ export default class EntryManager {
   }
 
   updateAsync(entry: SDBJournalEntry): Promise<void> {
-    return this.#sprootDB.journals.updateJournalEntryAsync(entry);
+    return this.#journalsRepository.updateJournalEntryAsync(entry);
   }
 
   deleteAsync(entryId: number) {
-    return this.#sprootDB.journals.deleteJournalEntryAsync(entryId);
+    return this.#journalsRepository.deleteJournalEntryAsync(entryId);
   }
 
   addTagAsync(entryId: number, tagId: number): Promise<number> {
-    return this.#sprootDB.journals.addJournalEntryTagLookupAsync(entryId, tagId);
+    return this.#journalsRepository.addJournalEntryTagLookupAsync(entryId, tagId);
   }
 
   removeTagAsync(entryId: number, tagId: number): Promise<void> {
-    return this.#sprootDB.journals.deleteJournalEntryTagLookupAsync(entryId, tagId);
+    return this.#journalsRepository.deleteJournalEntryTagLookupAsync(entryId, tagId);
   }
 }

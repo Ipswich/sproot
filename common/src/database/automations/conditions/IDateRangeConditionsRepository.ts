@@ -15,25 +15,3 @@ export interface IDateRangeConditionsRepository extends IBaseConditionsRepositor
   ): Promise<number>;
   updateAsync(automationId: number, condition: IDateRangeCondition): Promise<void>;
 }
-
-export class MockDateRangeConditionsRepository implements IDateRangeConditionsRepository {
-  async getAsync(_automationId: number): Promise<SDBDateRangeCondition[]> {
-    return [];
-  }
-  async addAsync(
-    _automationId: number,
-    _groupType: ConditionGroupType,
-    _startMonth: number,
-    _startDate: number,
-    _endMonth: number,
-    _endDate: number,
-  ): Promise<number> {
-    return 0;
-  }
-  async updateAsync(_automationId: number, _condition: IDateRangeCondition): Promise<void> {
-    return;
-  }
-  async deleteAsync(_conditionId: number): Promise<void> {
-    return;
-  }
-}

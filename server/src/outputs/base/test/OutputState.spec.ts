@@ -1,28 +1,33 @@
 import { OutputState } from "../OutputState";
-import { MockSprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { IOutputsRepository } from "@sproot/common/dist/database/ISprootDB";
 import { SDBOutputState } from "@sproot/common/dist/database/SDBOutputState";
 import { ControlMode } from "@sproot/common/dist/outputs/IOutputBase";
 
 import { assert } from "chai";
 import sinon from "sinon";
+import { DeviceDataQueryRow } from "@sproot/common/dist/api/v2/QueryTypes";
+
+const createMockOutputsRepo = (): IOutputsRepository => ({
+  getAllAsync: async () => [],
+  getByIdAsync: async () => [],
+  addAsync: async () => 0,
+  updateAsync: async () => {},
+  deleteAsync: async () => {},
+  updateLastOutputStateAsync: async () => {},
+  getLastOutputStateAsync: sinon.stub().resolves([]),
+  addOutputStateAsync: async () => {},
+  getOutputStatesAsync: async () => [],
+  getBucketedOutputStatesAsync: async () => [],
+  getDataAsync: async () => ({
+    xAxis: { field: "time", values: [] },
+    data: {} as DeviceDataQueryRow,
+  }),
+});
 
 describe("OutputState.ts tests", () => {
   describe("updateControlMode", () => {
-    const sprootDB = new MockSprootDB();
-    const outputsStub = {
-      getLastOutputStateAsync: sinon.stub<[number], Promise<SDBOutputState[]>>(),
-      updateLastOutputStateAsync: sinon.stub(),
-      addOutputStateAsync: sinon.stub(),
-      getOutputStatesAsync: sinon.stub(),
-      getBucketedOutputStatesAsync: sinon.stub(),
-      getAllAsync: sinon.stub(),
-      getByIdAsync: sinon.stub(),
-      addOutputAsync: sinon.stub(),
-      updateOutputAsync: sinon.stub(),
-      deleteOutputAsync: sinon.stub(),
-    };
-    Object.defineProperty(sprootDB, "outputs", { value: outputsStub, writable: true });
-    const outputState = new OutputState(1, sprootDB);
+    const mockOutputsRepo = createMockOutputsRepo();
+    const outputState = new OutputState(1, mockOutputsRepo);
     it("should update control mode", () => {
       outputState.updateControlMode(ControlMode.automatic);
       assert.equal(0, outputState.lastValue);
@@ -35,32 +40,19 @@ describe("OutputState.ts tests", () => {
 
   describe("loadAsync", function () {
     it("should set current state based on the last output state in the database", async () => {
-      const sprootDB = new MockSprootDB();
-      const outputsStub = {
-        getLastOutputStateAsync: sinon.stub<[number], Promise<SDBOutputState[]>>(),
-        updateLastOutputStateAsync: sinon.stub(),
-        addOutputStateAsync: sinon.stub(),
-        getOutputStatesAsync: sinon.stub(),
-        getBucketedOutputStatesAsync: sinon.stub(),
-        getAllAsync: sinon.stub(),
-        getByIdAsync: sinon.stub(),
-        addOutputAsync: sinon.stub(),
-        updateOutputAsync: sinon.stub(),
-        deleteOutputAsync: sinon.stub(),
-      };
-      Object.defineProperty(sprootDB, "outputs", { value: outputsStub, writable: true });
-      outputsStub.getLastOutputStateAsync.resolves([
+      const mockOutputsRepo = createMockOutputsRepo();
+      (mockOutputsRepo.getLastOutputStateAsync as sinon.SinonStub).resolves([
         { controlMode: ControlMode.manual, value: 100 } as SDBOutputState,
       ]);
-      let outputState = new OutputState(1, sprootDB);
+      let outputState = new OutputState(1, mockOutputsRepo);
 
       assert.equal(outputState.controlMode, ControlMode.automatic);
       assert.equal(outputState.value, 0);
       await outputState.loadAsync();
       assert.equal(outputState.controlMode, ControlMode.manual);
 
-      outputState = new OutputState(1, sprootDB);
-      outputsStub.getLastOutputStateAsync.resolves([
+      outputState = new OutputState(1, mockOutputsRepo);
+      (mockOutputsRepo.getLastOutputStateAsync as sinon.SinonStub).resolves([
         { controlMode: ControlMode.automatic, value: 0 } as SDBOutputState,
       ]);
       await outputState.loadAsync();
@@ -70,21 +62,8 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("setNewState", () => {
-    const sprootDB = new MockSprootDB();
-    const outputsStub = {
-      getLastOutputStateAsync: sinon.stub<[number], Promise<SDBOutputState[]>>(),
-      updateLastOutputStateAsync: sinon.stub(),
-      addOutputStateAsync: sinon.stub(),
-      getOutputStatesAsync: sinon.stub(),
-      getBucketedOutputStatesAsync: sinon.stub(),
-      getAllAsync: sinon.stub(),
-      getByIdAsync: sinon.stub(),
-      addOutputAsync: sinon.stub(),
-      updateOutputAsync: sinon.stub(),
-      deleteOutputAsync: sinon.stub(),
-    };
-    Object.defineProperty(sprootDB, "outputs", { value: outputsStub, writable: true });
-    const outputState = new OutputState(1, sprootDB);
+    const mockOutputsRepo = createMockOutputsRepo();
+    const outputState = new OutputState(1, mockOutputsRepo);
     it("should set new states", async () => {
       const automaticState = {
         controlMode: ControlMode.automatic,
@@ -115,21 +94,8 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("get", () => {
-    const sprootDB = new MockSprootDB();
-    const outputsStub = {
-      getLastOutputStateAsync: sinon.stub<[number], Promise<SDBOutputState[]>>(),
-      updateLastOutputStateAsync: sinon.stub(),
-      addOutputStateAsync: sinon.stub(),
-      getOutputStatesAsync: sinon.stub(),
-      getBucketedOutputStatesAsync: sinon.stub(),
-      getAllAsync: sinon.stub(),
-      getByIdAsync: sinon.stub(),
-      addOutputAsync: sinon.stub(),
-      updateOutputAsync: sinon.stub(),
-      deleteOutputAsync: sinon.stub(),
-    };
-    Object.defineProperty(sprootDB, "outputs", { value: outputsStub, writable: true });
-    const outputState = new OutputState(1, sprootDB);
+    const mockOutputsRepo = createMockOutputsRepo();
+    const outputState = new OutputState(1, mockOutputsRepo);
     it("should return the correct states", async () => {
       const automaticState = {
         controlMode: ControlMode.automatic,
@@ -151,21 +117,8 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("value", () => {
-    const sprootDB = new MockSprootDB();
-    const outputsStub = {
-      getLastOutputStateAsync: sinon.stub<[number], Promise<SDBOutputState[]>>(),
-      updateLastOutputStateAsync: sinon.stub(),
-      addOutputStateAsync: sinon.stub(),
-      getOutputStatesAsync: sinon.stub(),
-      getBucketedOutputStatesAsync: sinon.stub(),
-      getAllAsync: sinon.stub(),
-      getByIdAsync: sinon.stub(),
-      addOutputAsync: sinon.stub(),
-      updateOutputAsync: sinon.stub(),
-      deleteOutputAsync: sinon.stub(),
-    };
-    Object.defineProperty(sprootDB, "outputs", { value: outputsStub, writable: true });
-    const outputState = new OutputState(1, sprootDB);
+    const mockOutputsRepo = createMockOutputsRepo();
+    const outputState = new OutputState(1, mockOutputsRepo);
     it("should return the correct values", async () => {
       const automaticState = {
         controlMode: ControlMode.automatic,
@@ -187,21 +140,8 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("logTime", () => {
-    const sprootDB = new MockSprootDB();
-    const outputsStub = {
-      getLastOutputStateAsync: sinon.stub<[number], Promise<SDBOutputState[]>>(),
-      updateLastOutputStateAsync: sinon.stub(),
-      addOutputStateAsync: sinon.stub(),
-      getOutputStatesAsync: sinon.stub(),
-      getBucketedOutputStatesAsync: sinon.stub(),
-      getAllAsync: sinon.stub(),
-      getByIdAsync: sinon.stub(),
-      addOutputAsync: sinon.stub(),
-      updateOutputAsync: sinon.stub(),
-      deleteOutputAsync: sinon.stub(),
-    };
-    Object.defineProperty(sprootDB, "outputs", { value: outputsStub, writable: true });
-    const outputState = new OutputState(1, sprootDB);
+    const mockOutputsRepo = createMockOutputsRepo();
+    const outputState = new OutputState(1, mockOutputsRepo);
     it("should return the correct logTimes", async () => {
       const automaticState = {
         controlMode: ControlMode.automatic,
@@ -223,21 +163,13 @@ describe("OutputState.ts tests", () => {
   });
 
   describe("addCurrentStateToDatabaseAsync", () => {
-    const localSprootDB = new MockSprootDB();
-    const outputsStub = {
-      getLastOutputStateAsync: sinon.stub<[number], Promise<SDBOutputState[]>>(),
-      updateLastOutputStateAsync: sinon.stub(),
-      addOutputStateAsync: sinon.stub(),
-      getOutputStatesAsync: sinon.stub(),
-      getBucketedOutputStatesAsync: sinon.stub(),
-      getAllAsync: sinon.stub(),
-      getByIdAsync: sinon.stub(),
-      addOutputAsync: sinon.stub(),
-      updateOutputAsync: sinon.stub(),
-      deleteOutputAsync: sinon.stub(),
-    };
-    Object.defineProperty(localSprootDB, "outputs", { value: outputsStub, writable: true });
-    const localOutputState = new OutputState(1, localSprootDB);
+    const mockOutputsRepo = createMockOutputsRepo();
+    const addOutputStateAsyncStub = sinon.stub();
+    Object.defineProperty(mockOutputsRepo, "addOutputStateAsync", {
+      value: addOutputStateAsyncStub,
+      writable: true,
+    });
+    const localOutputState = new OutputState(1, mockOutputsRepo);
     it("should call addOutputStateAsync with the correct parameters", async () => {
       const automaticState = {
         controlMode: ControlMode.automatic,
@@ -247,7 +179,7 @@ describe("OutputState.ts tests", () => {
       localOutputState.setNewStateAsync(automaticState);
 
       await localOutputState.addCurrentStateToDatabaseAsync();
-      sinon.assert.calledWith(outputsStub.addOutputStateAsync, {
+      sinon.assert.calledWith(addOutputStateAsyncStub, {
         id: 1,
         controlMode: ControlMode.automatic,
         value: 50,

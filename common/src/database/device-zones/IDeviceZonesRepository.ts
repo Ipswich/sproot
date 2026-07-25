@@ -7,18 +7,3 @@ export interface IDeviceZonesRepository {
   updateAsync(deviceZone: SDBDeviceZone): Promise<void>;
   deleteAsync(id: number): Promise<void>;
 }
-
-export class MockDeviceZonesRepository implements IDeviceZonesRepository {
-  async getAllAsync(): Promise<SDBDeviceZone[]> {
-    return [];
-  }
-  async addAsync(_name: string): Promise<number> {
-    return 0;
-  }
-  async updateAsync(_deviceZone: SDBDeviceZone): Promise<void> {
-    return;
-  }
-  async deleteAsync(_id: number): Promise<void> {
-    return;
-  }
-}

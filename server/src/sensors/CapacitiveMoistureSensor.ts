@@ -1,6 +1,6 @@
 import { ReadingType } from "@sproot/common/dist/sensors/ReadingType";
 import { ADS1115, Ads1115Device } from "./ADS1115";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { ISensorsRepository } from "@sproot/common/dist/database/sensors/ISensorsRepository";
 import { SDBSensor } from "@sproot/common/dist/database/SDBSensor";
 import winston from "winston";
 import { SensorBase } from "./base/SensorBase";
@@ -17,7 +17,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
 
   static async createInstanceAsync(
     sdbSensor: SDBSensor,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -25,7 +25,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
   ): Promise<CapacitiveMoistureSensor | null> {
     const sensor = new CapacitiveMoistureSensor(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -36,7 +36,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
 
   private constructor(
     sdbSensor: SDBSensor,
-    sprootDB: ISprootDB,
+    sensorsRepository: ISensorsRepository,
     maxCacheSize: number,
     initialCacheLookback: number,
     cacheBucketMinutes: number,
@@ -44,7 +44,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
   ) {
     super(
       sdbSensor,
-      sprootDB,
+      sensorsRepository,
       maxCacheSize,
       initialCacheLookback,
       cacheBucketMinutes,
@@ -140,7 +140,7 @@ export class CapacitiveMoistureSensor extends SensorBase {
       this.logger.info(
         `${this.model} { id: ${this.id} } recalibrated. New low: ${this.lowCalibrationPoint}, new high: ${this.highCalibrationPoint}`,
       );
-      await this.sprootDB.sensors.updateSensorCalibrationAsync(
+      await this.sensorsRepository.updateSensorCalibrationAsync(
         this.id,
         this.lowCalibrationPoint,
         this.highCalibrationPoint,

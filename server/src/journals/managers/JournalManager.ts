@@ -1,13 +1,13 @@
 import { SDBJournal } from "@sproot/common/dist/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/common/dist/database/SDBJournalTag";
 import { SDBJournalTagLookup } from "@sproot/common/dist/database/SDBJournalTagLookup";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
+import { IJournalsRepository } from "@sproot/common/dist/database/ISprootDB";
 import { toDbDate } from "../../utils/dateUtils";
 
 export default class JournalManager {
-  #sprootDB: ISprootDB;
-  constructor(sprootDB: ISprootDB) {
-    this.#sprootDB = sprootDB;
+  #journalsRepository: IJournalsRepository;
+  constructor(journalsRepository: IJournalsRepository) {
+    this.#journalsRepository = journalsRepository;
   }
 
   async createJournalAsync(
@@ -17,27 +17,27 @@ export default class JournalManager {
     color: string | null = null,
     startDate: Date | null = null,
   ): Promise<number> {
-    return this.#sprootDB.journals.addAsync(name, description, icon, color, toDbDate(startDate));
+    return this.#journalsRepository.addAsync(name, description, icon, color, toDbDate(startDate));
   }
 
   async updateJournalAsync(journal: SDBJournal): Promise<void> {
-    return this.#sprootDB.journals.updateAsync(journal);
+    return this.#journalsRepository.updateAsync(journal);
   }
 
   async deleteJournalAsync(id: number): Promise<void> {
-    return this.#sprootDB.journals.deleteAsync(id);
+    return this.#journalsRepository.deleteAsync(id);
   }
 
   async createJournalTagAsync(name: string, color: string | null = null): Promise<number> {
-    return this.#sprootDB.journals.addJournalTagAsync(name, color);
+    return this.#journalsRepository.addJournalTagAsync(name, color);
   }
 
   async addTagAsync(journalId: number, tagId: number): Promise<number> {
-    return this.#sprootDB.journals.addJournalTagLookupAsync(journalId, tagId);
+    return this.#journalsRepository.addJournalTagLookupAsync(journalId, tagId);
   }
 
   async removeTagAsync(journalId: number, tagId: number): Promise<void> {
-    return this.#sprootDB.journals.deleteJournalTagLookupAsync(journalId, tagId);
+    return this.#journalsRepository.deleteJournalTagLookupAsync(journalId, tagId);
   }
 
   async getJournalsAsync(
@@ -45,15 +45,15 @@ export default class JournalManager {
   ): Promise<Array<{ journal: SDBJournal; tags: SDBJournalTag[] }>> {
     let journals: SDBJournal[] = [];
     if (journalId != null) {
-      journals = await this.#sprootDB.journals.getByIdAsync(journalId);
+      journals = await this.#journalsRepository.getByIdAsync(journalId);
     } else {
-      journals = await this.#sprootDB.journals.getAllAsync();
+      journals = await this.#journalsRepository.getAllAsync();
     }
     if (!journals || journals.length === 0) return [];
 
     const [allTags, tagLookups] = await Promise.all([
-      this.#sprootDB.journals.getJournalTagsAsync(),
-      this.#sprootDB.journals.getJournalTagLookupsAsync(),
+      this.#journalsRepository.getJournalTagsAsync(),
+      this.#journalsRepository.getJournalTagLookupsAsync(),
     ]);
 
     const tagById = new Map<number, SDBJournalTag>(

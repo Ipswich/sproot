@@ -1,9 +1,9 @@
 import { AutomationOperator } from "@sproot/automation/IAutomation";
 import { IConditionProperties } from "@sproot/automation/IConditionProperties";
-import { ISprootDB } from "@sproot/common/dist/database/ISprootDB";
 import { OutputList } from "../outputs/list/OutputList";
 import { SensorList } from "../sensors/list/SensorList";
 import { Conditions } from "./conditions/Conditions";
+import type { IConditionsRepository } from "@sproot/common/dist/database/automations/conditions/IConditionsRepository";
 
 export class Automation {
   id: number;
@@ -17,13 +17,13 @@ export class Automation {
     name: string,
     operator: AutomationOperator,
     enabled: boolean,
-    sprootDB: ISprootDB,
+    conditionsRepository: IConditionsRepository,
   ) {
     this.id = id;
     this.name = name;
     this.operator = operator;
     this.enabled = enabled;
-    this.conditions = new Conditions(this.id, sprootDB);
+    this.conditions = new Conditions(this.id, conditionsRepository);
   }
 
   static async createInstanceAsync(
@@ -31,9 +31,9 @@ export class Automation {
     name: string,
     operator: AutomationOperator,
     enabled: boolean,
-    sprootDB: ISprootDB,
+    conditionsRepository: IConditionsRepository,
   ): Promise<Automation> {
-    const automation = new Automation(id, name, operator, enabled, sprootDB);
+    const automation = new Automation(id, name, operator, enabled, conditionsRepository);
     await automation.conditions.loadAsync();
     return automation;
   }
