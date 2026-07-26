@@ -5,7 +5,7 @@ import type {
 import type { ICameraRepository } from "@sproot/common/database/camera/ICameraRepository";
 import type { IConditionsRepository } from "@sproot/common/database/automations/conditions/IConditionsRepository";
 import type { IDeviceZonesRepository } from "@sproot/common/database/device-zones/IDeviceZonesRepository";
-import type { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
+import type { IJournalRepository } from "@sproot/common/database/journals/IJournalRepository";
 import type { IOutputsRepository } from "@sproot/common/database/outputs/IOutputsRepository";
 import type { ISensorsRepository } from "@sproot/common/database/sensors/ISensorsRepository";
 import type { ISubcontrollersRepository } from "@sproot/common/database/subcontrollers/ISubcontrollersRepository";
@@ -36,7 +36,7 @@ export class SprootDB {
   readonly camera: ICameraRepository;
   readonly users: IUsersRepository;
   readonly deviceZones: IDeviceZonesRepository;
-  readonly journals: IJournalsRepository;
+  readonly journals: IJournalRepository;
   readonly system: ISystemRepository;
 
   #connection: Knex;

@@ -1,12 +1,11 @@
 import { SDBJournal } from "@sproot/common/database/SDBJournal";
 import { SDBJournalTag } from "@sproot/common/database/SDBJournalTag";
-import { SDBJournalTagLookup } from "@sproot/common/database/SDBJournalTagLookup";
-import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
+import { IJournalRepository } from "@sproot/common/database/journals/IJournalRepository";
 import { toDbDate } from "../../utils/dateUtils";
 
 export default class JournalManager {
-  #journalsRepository: IJournalsRepository;
-  constructor(journalsRepository: IJournalsRepository) {
+  #journalsRepository: IJournalRepository;
+  constructor(journalsRepository: IJournalRepository) {
     this.#journalsRepository = journalsRepository;
   }
 
@@ -28,16 +27,12 @@ export default class JournalManager {
     return this.#journalsRepository.deleteAsync(id);
   }
 
-  async createJournalTagAsync(name: string, color: string | null = null): Promise<number> {
-    return this.#journalsRepository.addJournalTagAsync(name, color);
-  }
-
   async addTagAsync(journalId: number, tagId: number): Promise<number> {
-    return this.#journalsRepository.addJournalTagLookupAsync(journalId, tagId);
+    return this.#journalsRepository.tags.addLookupAsync(journalId, tagId);
   }
 
   async removeTagAsync(journalId: number, tagId: number): Promise<void> {
-    return this.#journalsRepository.deleteJournalTagLookupAsync(journalId, tagId);
+    return this.#journalsRepository.tags.deleteLookupAsync(journalId, tagId);
   }
 
   async getJournalsAsync(
@@ -49,18 +44,21 @@ export default class JournalManager {
     } else {
       journals = await this.#journalsRepository.getAllAsync();
     }
-    if (!journals || journals.length === 0) return [];
 
-    const [allTags, tagLookups] = await Promise.all([
-      this.#journalsRepository.getJournalTagsAsync(),
-      this.#journalsRepository.getJournalTagLookupsAsync(),
+    if (!journals.length) {
+      return [];
+    }
+
+    const [allJournalTags, journalTagLookups] = await Promise.all([
+      this.#journalsRepository.tags.getTagsAsync(),
+      this.#journalsRepository.tags.getLookupsAsync(),
     ]);
 
     const tagById = new Map<number, SDBJournalTag>(
-      (allTags as SDBJournalTag[]).map((t) => [t.id, t]),
+      (allJournalTags as SDBJournalTag[]).map((t) => [t.id, t]),
     );
-    const lookupsByJournalId = new Map<number, SDBJournalTagLookup[]>();
-    for (const l of tagLookups as SDBJournalTagLookup[]) {
+    const lookupsByJournalId = new Map<number, { journalId: number; tagId: number }[]>();
+    for (const l of journalTagLookups as { journalId: number; tagId: number }[]) {
       const arr = lookupsByJournalId.get(l.journalId) ?? [];
       arr.push(l);
       lookupsByJournalId.set(l.journalId, arr);
@@ -71,7 +69,6 @@ export default class JournalManager {
       const tags: SDBJournalTag[] = (lookupsByJournalId.get(j.id) ?? [])
         .map((l) => tagById.get(l.tagId))
         .filter(Boolean) as SDBJournalTag[];
-
       results.push({ journal: j, tags });
     }
 

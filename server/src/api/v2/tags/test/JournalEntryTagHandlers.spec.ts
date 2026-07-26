@@ -1,68 +1,22 @@
 import { Request, Response } from "express";
 import { assert } from "chai";
 import sinon from "sinon";
-import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
+import { IEntryTagsRepository } from "@sproot/common/database/journals/tags/IEntryTagsRepository";
+import EntryTagManager from "../../../../journals/managers/EntryTagManager";
 import { getAsync, addAsync, updateAsync, deleteAsync } from "../handlers/JournalEntryTagHandlers";
 import { ErrorResponse, SuccessResponse } from "@sproot/common/api/v2/Responses";
-import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
 
-const createMockJournalsRepo = (): IJournalsRepository => ({
-  getAllAsync: async () => [],
-  getByIdAsync: async () => [],
-  addAsync: async () => 0,
-  updateAsync: async () => {},
-  deleteAsync: async () => {},
-  getJournalTagsAsync: async () => [],
-  addJournalTagAsync: async () => 0,
-  updateJournalTagAsync: async () => {},
-  deleteJournalTagAsync: async () => {},
-  getJournalTagLookupsAsync: async () => [],
-  addJournalTagLookupAsync: async () => 0,
-  deleteJournalTagLookupAsync: async () => {},
-  getJournalEntriesAsync: async () => [],
-  getJournalEntryAsync: async () => [],
-  addJournalEntryAsync: async () => 0,
-  updateJournalEntryAsync: async () => {},
-  deleteJournalEntryAsync: async () => {},
-  getJournalEntryTagsAsync: async () => [],
-  addJournalEntryTagAsync: async () => 0,
-  updateJournalEntryTagAsync: async () => {},
-  deleteJournalEntryTagAsync: async () => {},
-  getJournalEntryTagLookupsAsync: async () => [],
-  addJournalEntryTagLookupAsync: async () => 0,
-  deleteJournalEntryTagLookupAsync: async () => {},
-});
-
-function stubJournals(journals: IJournalsRepository) {
-  const methodNames = [
-    "getAllAsync",
-    "getByIdAsync",
-    "addAsync",
-    "updateAsync",
-    "deleteAsync",
-    "getJournalTagsAsync",
-    "addJournalTagAsync",
-    "updateJournalTagAsync",
-    "deleteJournalTagAsync",
-    "getJournalTagLookupsAsync",
-    "addJournalTagLookupAsync",
-    "deleteJournalTagLookupAsync",
-    "getJournalEntriesAsync",
-    "getJournalEntryAsync",
-    "addJournalEntryAsync",
-    "updateJournalEntryAsync",
-    "deleteJournalEntryAsync",
-    "getJournalEntryTagsAsync",
-    "addJournalEntryTagAsync",
-    "updateJournalEntryTagAsync",
-    "deleteJournalEntryTagAsync",
-    "getJournalEntryTagLookupsAsync",
-    "addJournalEntryTagLookupAsync",
-    "deleteJournalEntryTagLookupAsync",
-  ];
-  for (const name of methodNames) {
-    sinon.stub(journals, name as any);
-  }
+function createMockEntryTagsRepo(): IEntryTagsRepository {
+  const stub = () => sinon.stub();
+  return {
+    getTagsAsync: stub(),
+    addTagAsync: stub(),
+    updateTagAsync: stub(),
+    deleteTagAsync: stub(),
+    getLookupsAsync: stub(),
+    addLookupAsync: stub(),
+    deleteLookupAsync: stub(),
+  };
 }
 
 describe("JournalEntryTagHandlers.ts tests", () => {
@@ -71,22 +25,15 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er1" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).resolves([
         { id: 1, name: "et", color: null },
       ]);
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
         },
       } as unknown as Request;
 
@@ -101,20 +48,13 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er1" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).rejects(new Error("boom2"));
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).rejects(new Error("boom2"));
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
           originalUrl: "/api/v2/journal/entries/tags",
         },
       } as unknown as Request;
@@ -133,21 +73,13 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er2" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.addJournalEntryTagAsync as sinon.SinonStub).resolves(7);
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.addTagAsync as sinon.SinonStub).resolves(7);
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    createTagAsync: (n: string, c: string | null) =>
-                      journals.addJournalEntryTagAsync(n, c),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
         },
         body: { name: "etag", color: null },
       } as unknown as Request;
@@ -176,21 +108,13 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er3" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.addJournalEntryTagAsync as sinon.SinonStub).rejects(new Error("addFail2"));
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.addTagAsync as sinon.SinonStub).rejects(new Error("addFail2"));
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    createTagAsync: (n: string, c: string | null) =>
-                      journals.addJournalEntryTagAsync(n, c),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
           originalUrl: "/api/v2/journal/entries/tags",
         },
         body: { name: "n" },
@@ -223,20 +147,13 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er4" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([]);
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).resolves([]);
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
         },
         params: { tagId: "2" },
         body: {},
@@ -251,25 +168,16 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er5" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).resolves([
         { id: 3, name: "old", color: null },
       ]);
-      (journals.updateJournalEntryTagAsync as sinon.SinonStub).resolves();
+      (mockEntryTagsRepo.updateTagAsync as sinon.SinonStub).resolves();
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                    updateTagAsync: (t: SDBJournalEntryTag) =>
-                      journals.updateJournalEntryTagAsync(t),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
         },
         params: { tagId: "3" },
         body: { name: "n", color: "#111" },
@@ -286,25 +194,16 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er6" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).resolves([
         { id: 4, name: "a", color: null },
       ]);
-      (journals.updateJournalEntryTagAsync as sinon.SinonStub).rejects(new Error("updFail"));
+      (mockEntryTagsRepo.updateTagAsync as sinon.SinonStub).rejects(new Error("updFail"));
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                    updateTagAsync: (t: SDBJournalEntryTag) =>
-                      journals.updateJournalEntryTagAsync(t),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
           originalUrl: "/api/v2/journal/entries/tags",
         },
         params: { tagId: "4" },
@@ -338,20 +237,13 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er7" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([]);
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).resolves([]);
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
         },
         params: { tagId: "9" },
         originalUrl: "/api/v2/journal/entries/tags",
@@ -365,24 +257,16 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er8" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).resolves([
         { id: 10, name: "t", color: null },
       ]);
-      (journals.deleteJournalEntryTagAsync as sinon.SinonStub).resolves();
+      (mockEntryTagsRepo.deleteTagAsync as sinon.SinonStub).resolves();
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                    deleteTagAsync: (id: number) => journals.deleteJournalEntryTagAsync(id),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
         },
         params: { tagId: "10" },
       } as unknown as Request;
@@ -395,24 +279,16 @@ describe("JournalEntryTagHandlers.ts tests", () => {
       const mockResponse = {
         locals: { defaultProperties: { timestamp: new Date().toISOString(), requestId: "er9" } },
       } as unknown as Response;
-      const journals = createMockJournalsRepo();
-      stubJournals(journals);
-      (journals.getJournalEntryTagsAsync as sinon.SinonStub).resolves([
+      const mockEntryTagsRepo = createMockEntryTagsRepo();
+      const entryTagManager = new EntryTagManager(mockEntryTagsRepo);
+      (mockEntryTagsRepo.getTagsAsync as sinon.SinonStub).resolves([
         { id: 11, name: "t", color: null },
       ]);
-      (journals.deleteJournalEntryTagAsync as sinon.SinonStub).rejects(new Error("delFail2"));
+      (mockEntryTagsRepo.deleteTagAsync as sinon.SinonStub).rejects(new Error("delFail2"));
 
       const mockRequest = {
         app: {
-          get: (k: string) =>
-            k === "journalService"
-              ? {
-                  entryTagManager: {
-                    getTagsAsync: () => journals.getJournalEntryTagsAsync(),
-                    deleteTagAsync: (id: number) => journals.deleteJournalEntryTagAsync(id),
-                  },
-                }
-              : undefined,
+          get: (k: string) => (k === "journalService" ? { entryTagManager } : undefined),
           originalUrl: "/api/v2/journal/entries/tags",
         },
         params: { tagId: "11" },

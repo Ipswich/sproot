@@ -8,7 +8,7 @@ import { ICameraRepository } from "./camera/ICameraRepository";
 import { IUsersRepository } from "./users/IUsersRepository";
 import { IDeviceZonesRepository } from "./device-zones/IDeviceZonesRepository";
 import { ISystemRepository } from "./system/ISystemRepository";
-import { IJournalsRepository } from "./journals/IJournalsRepository";
+import { IJournalRepository } from "./journals/IJournalRepository";
 import { IActionsRepository } from "./automations/IAutomationsRepository";
 import { IConditionsRepository } from "./automations/conditions/IConditionsRepository";
 
@@ -23,6 +23,6 @@ export interface ISprootDB {
   users: IUsersRepository;
   deviceZones: IDeviceZonesRepository;
   system: ISystemRepository;
-  journals: IJournalsRepository;
+  journals: IJournalRepository;
   [Symbol.asyncDispose](): Promise<void>;
 }

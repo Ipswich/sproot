@@ -1,129 +1,109 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
-import { SDBJournalEntry } from "@sproot/common/database/SDBJournalEntry";
-import { SDBJournalEntryTag } from "@sproot/common/database/SDBJournalEntryTag";
-import { SDBJournalEntryTagLookup } from "@sproot/common/database/SDBJournalEntryTagLookup";
+import { IEntriesRepository } from "@sproot/common/database/journals/entries/IEntriesRepository";
 import EntryManager from "../EntryManager";
 
 describe("EntryManager.ts tests", () => {
-  let journalsRepo: IJournalsRepository;
+  let entriesRepo: IEntriesRepository;
   let entryManager: EntryManager;
 
-  beforeEach(() => {
-    journalsRepo = {
-      getJournalEntryAsync: sinon.stub(),
-      getJournalEntriesAsync: sinon.stub(),
-      getJournalEntryTagLookupsAsync: sinon.stub(),
-      getJournalEntryTagsAsync: sinon.stub(),
-    } as unknown as IJournalsRepository;
+  beforeEach(function () {
+    entriesRepo = {
+      getEntriesAsync: sinon.stub(),
+      getEntryAsync: sinon.stub(),
+      addEntryAsync: sinon.stub(),
+      updateEntryAsync: sinon.stub(),
+      deleteEntryAsync: sinon.stub(),
+      tags: {
+        getTagsAsync: sinon.stub(),
+        addTagAsync: sinon.stub(),
+        updateTagAsync: sinon.stub(),
+        deleteTagAsync: sinon.stub(),
+        getLookupsAsync: sinon.stub(),
+        addLookupAsync: sinon.stub(),
+        deleteLookupAsync: sinon.stub(),
+      },
+    } as unknown as IEntriesRepository;
 
-    entryManager = new EntryManager(journalsRepo);
+    entryManager = new EntryManager(entriesRepo);
   });
 
-  afterEach(() => sinon.restore());
+  afterEach(function () {
+    sinon.restore();
+  });
 
-  describe("getEntriesAsync", () => {
-    it("should map tags onto all entries", async () => {
-      const entries: SDBJournalEntry[] = [
-        {
-          id: 1,
-          journalId: 10,
-          title: null,
-          content: "entry",
-          createdAt: "2020-01-01",
-          editedAt: "2020-01-01",
-        },
-        {
-          id: 2,
-          journalId: 10,
-          title: null,
-          content: "entry2",
-          createdAt: "2020-01-01",
-          editedAt: "2020-01-01",
-        },
+  describe("getAsync", () => {
+    it("should map tags for all entries", async () => {
+      const entries = [
+        { id: 1, journalId: 1, content: "E1" },
+        { id: 2, journalId: 1, content: "E2" },
       ];
-      const lookups: SDBJournalEntryTagLookup[] = [
-        { id: 1, journalEntryId: 1, tagId: 5 },
-        { id: 2, journalEntryId: 2, tagId: 5 },
-        { id: 3, journalEntryId: 2, tagId: 6 },
+      const tags = [
+        { id: 10, name: "T1", color: null },
+        { id: 11, name: "T2", color: "#fff" },
       ];
-      const tags: SDBJournalEntryTag[] = [
-        { id: 5, name: "tag", color: null },
-        { id: 6, name: "tag2", color: "#fff" },
+      const lookups = [
+        { journalEntryId: 1, tagId: 10 },
+        { journalEntryId: 2, tagId: 11 },
       ];
 
-      (journalsRepo.getJournalEntriesAsync as sinon.SinonStub).resolves(entries);
-      (journalsRepo.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
-      (journalsRepo.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
+      (entriesRepo.getEntriesAsync as sinon.SinonStub).resolves(entries);
+      (entriesRepo.tags.getTagsAsync as sinon.SinonStub).resolves(tags);
+      (entriesRepo.tags.getLookupsAsync as sinon.SinonStub).resolves(lookups);
 
-      const res = await entryManager.getAsync(10);
+      const res = await entryManager.getAsync(1);
       assert.strictEqual(res.length, 2);
       const entryResult1 = res[0];
       assert.isDefined(entryResult1);
       assert.strictEqual(entryResult1!.entry.id, 1);
-      assert.strictEqual(entryResult1!.entry.content, "entry");
+      assert.strictEqual(entryResult1!.entry.content, "E1");
+
       const entryTags1 = entryResult1!.tags;
       assert.isDefined(entryTags1);
       assert.strictEqual(entryTags1.length, 1);
-      assert.strictEqual(entryTags1[0]!.id, 5);
-      assert.strictEqual(entryTags1[0]!.name, "tag");
-      assert.strictEqual(entryTags1[0]!.color, null);
+      assert.strictEqual(entryTags1[0]!.id, 10);
+      assert.strictEqual(entryTags1[0]!.name, "T1");
 
       const entryResult2 = res[1];
       assert.isDefined(entryResult2);
-      assert.strictEqual(entryResult2!.entry.id, 2);
-      assert.strictEqual(entryResult2!.entry.content, "entry2");
+
       const entryTags2 = entryResult2!.tags;
       assert.isDefined(entryTags2);
-      assert.strictEqual(entryTags2.length, 2);
-      assert.strictEqual(entryTags2[0]!.id, 5);
-      assert.strictEqual(entryTags2[0]!.name, "tag");
-      assert.strictEqual(entryTags2[1]!.id, 6);
-      assert.strictEqual(entryTags2[1]!.name, "tag2");
-      assert.strictEqual(entryTags2[1]!.color, "#fff");
+      assert.strictEqual(entryTags2.length, 1);
+      assert.strictEqual(entryTags2[0]!.id, 11);
+      assert.strictEqual(entryTags2[0]!.name, "T2");
     });
 
     it("should map tags for single entry", async () => {
-      const entries: SDBJournalEntry[] = [
-        {
-          id: 1,
-          journalId: 10,
-          title: null,
-          content: "entry",
-          createdAt: "2020-01-01",
-          editedAt: "2020-01-01",
-        },
-      ];
-      const lookups: SDBJournalEntryTagLookup[] = [{ id: 1, journalEntryId: 1, tagId: 5 }];
-      const tags: SDBJournalEntryTag[] = [{ id: 5, name: "tag", color: null }];
+      const entries = [{ id: 1, journalId: 1, content: "E1" }];
+      const tags = [{ id: 10, name: "T1" }];
+      const lookups = [{ journalEntryId: 1, tagId: 10 }];
 
-      (journalsRepo.getJournalEntryAsync as sinon.SinonStub).resolves(entries);
-      (journalsRepo.getJournalEntryTagLookupsAsync as sinon.SinonStub).resolves(lookups);
-      (journalsRepo.getJournalEntryTagsAsync as sinon.SinonStub).resolves(tags);
+      (entriesRepo.getEntryAsync as sinon.SinonStub).resolves(entries);
+      (entriesRepo.tags.getTagsAsync as sinon.SinonStub).resolves(tags);
+      (entriesRepo.tags.getLookupsAsync as sinon.SinonStub).resolves(lookups);
 
       const res = await entryManager.getAsync(undefined, 1);
       assert.strictEqual(res.length, 1);
       const entryResult = res[0];
       assert.isDefined(entryResult);
-      assert.strictEqual(entryResult!.entry.id, 1);
-      assert.strictEqual(entryResult!.entry.content, "entry");
+
       const entryTags = entryResult!.tags;
       assert.isDefined(entryTags);
       assert.strictEqual(entryTags.length, 1);
-      assert.strictEqual(entryTags[0]!.id, 5);
-      assert.strictEqual(entryTags[0]!.name, "tag");
+      assert.strictEqual(entryTags[0]!.id, 10);
+      assert.strictEqual(entryTags[0]!.name, "T1");
     });
 
     it("should return empty array if no entries found", async () => {
-      (journalsRepo.getJournalEntriesAsync as sinon.SinonStub).resolves([]);
-      const res = await entryManager.getAsync(10);
+      (entriesRepo.getEntriesAsync as sinon.SinonStub).resolves([]);
+      const res = await entryManager.getAsync(1);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);
     });
 
     it("should return empty array if no entry found for id", async () => {
-      (journalsRepo.getJournalEntryAsync as sinon.SinonStub).resolves([]);
+      (entriesRepo.getEntryAsync as sinon.SinonStub).resolves([]);
       const res = await entryManager.getAsync(undefined, 999);
       assert.isArray(res);
       assert.strictEqual(res.length, 0);

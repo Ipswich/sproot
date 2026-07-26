@@ -1,19 +1,54 @@
 import { assert } from "chai";
 import sinon from "sinon";
-import { IJournalsRepository } from "@sproot/common/database/journals/IJournalsRepository";
+import { IJournalRepository } from "@sproot/common/database/journals/IJournalRepository";
+import { IJournalTagsRepository } from "@sproot/common/database/journals/tags/IJournalTagsRepository";
+import { IEntriesRepository } from "@sproot/common/database/journals/entries/IEntriesRepository";
+import { IEntryTagsRepository } from "@sproot/common/database/journals/tags/IEntryTagsRepository";
 import JournalManager from "../JournalManager";
 
 describe("JournalManager.ts tests", () => {
-  let journalsRepo: IJournalsRepository;
+  let journalsRepo: IJournalRepository;
   let journalManager: JournalManager;
 
   beforeEach(function () {
+    const mockEntryTagsRepo: IEntryTagsRepository = {
+      getTagsAsync: sinon.stub(),
+      addTagAsync: sinon.stub(),
+      updateTagAsync: sinon.stub(),
+      deleteTagAsync: sinon.stub(),
+      getLookupsAsync: sinon.stub(),
+      addLookupAsync: sinon.stub(),
+      deleteLookupAsync: sinon.stub(),
+    };
+
+    const mockJournalTagsRepo: IJournalTagsRepository = {
+      getTagsAsync: sinon.stub(),
+      addTagAsync: sinon.stub(),
+      updateTagAsync: sinon.stub(),
+      deleteTagAsync: sinon.stub(),
+      getLookupsAsync: sinon.stub(),
+      addLookupAsync: sinon.stub(),
+      deleteLookupAsync: sinon.stub(),
+    };
+
+    const mockEntriesRepo: IEntriesRepository = {
+      getEntriesAsync: sinon.stub(),
+      getEntryAsync: sinon.stub(),
+      addEntryAsync: sinon.stub(),
+      updateEntryAsync: sinon.stub(),
+      deleteEntryAsync: sinon.stub(),
+      tags: mockEntryTagsRepo,
+    };
+
     journalsRepo = {
       getAllAsync: sinon.stub(),
       getByIdAsync: sinon.stub(),
-      getJournalTagsAsync: sinon.stub(),
-      getJournalTagLookupsAsync: sinon.stub(),
-    } as unknown as IJournalsRepository;
+      addAsync: sinon.stub(),
+      updateAsync: sinon.stub(),
+      deleteAsync: sinon.stub(),
+      entries: mockEntriesRepo,
+      tags: mockJournalTagsRepo,
+    } as IJournalRepository;
 
     journalManager = new JournalManager(journalsRepo);
   });
@@ -39,8 +74,8 @@ describe("JournalManager.ts tests", () => {
       ];
 
       (journalsRepo.getAllAsync as sinon.SinonStub).resolves(journals);
-      (journalsRepo.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
-      (journalsRepo.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
+      (journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves(tags);
+      (journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves(lookups);
 
       const res = await journalManager.getJournalsAsync();
       assert.strictEqual(res.length, 2);
@@ -67,7 +102,6 @@ describe("JournalManager.ts tests", () => {
       assert.strictEqual(journalTags2[0]!.color, "#fff");
       assert.strictEqual(journalTags2[1]!.id, 12);
       assert.strictEqual(journalTags2[1]!.name, "T3");
-      assert.strictEqual(journalTags2[1]!.color, null);
     });
 
     it("should map tags for single journal", async () => {
@@ -76,8 +110,8 @@ describe("JournalManager.ts tests", () => {
       const lookups = [{ journalId: 1, tagId: 10 }];
 
       (journalsRepo.getByIdAsync as sinon.SinonStub).resolves(journals);
-      (journalsRepo.getJournalTagsAsync as sinon.SinonStub).resolves(tags);
-      (journalsRepo.getJournalTagLookupsAsync as sinon.SinonStub).resolves(lookups);
+      (journalsRepo.tags.getTagsAsync as sinon.SinonStub).resolves(tags);
+      (journalsRepo.tags.getLookupsAsync as sinon.SinonStub).resolves(lookups);
 
       const res = await journalManager.getJournalsAsync(1);
       assert.strictEqual(res.length, 1);

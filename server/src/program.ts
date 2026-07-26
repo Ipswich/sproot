@@ -7,6 +7,7 @@ import * as winston from "winston";
 
 import * as Constants from "@sproot/common/utility/Constants";
 import { ISprootDB } from "@sproot/common/database/ISprootDB";
+import type { IJournalRepository } from "@sproot/common/database/journals/IJournalRepository";
 import { SprootDB } from "./database/SprootDB";
 import { SDBUser } from "@sproot/common/database/SDBUser";
 import { SensorList } from "./sensors/list/SensorList";
@@ -49,7 +50,7 @@ export default async function setupAsync(): Promise<Express> {
   const mdnsService = new MdnsService(logger);
   app.set(DI_KEYS.MdnsService, mdnsService);
 
-  const journalService = new JournalService(sprootDB.journals);
+  const journalService = new JournalService(sprootDB.journals as IJournalRepository);
   app.set(DI_KEYS.JournalService, journalService);
 
   const automationService = await AutomationService.createInstanceAsync(
