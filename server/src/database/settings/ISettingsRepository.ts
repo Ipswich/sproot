@@ -15,7 +15,9 @@ export interface ISettingsRepository {
    * Get multiple settings by keys.
    * Returns a map with values for existing keys; undefined for missing keys.
    */
-  getMany(keys: SettingsKey[]): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>>;
+  getMany(
+    keys: SettingsKey[],
+  ): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>>;
 
   /**
    * Get all known settings.

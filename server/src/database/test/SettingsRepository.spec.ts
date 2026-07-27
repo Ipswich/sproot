@@ -177,7 +177,11 @@ describe("SettingsRepository", () => {
       // Guard: ensures emptySettingsMap covers all SettingsSchema keys.
       // If a new key is added to SettingsSchema but SETTINGS isn't updated,
       // this assertion fails, surfacing the mismatch early.
-      assert.equal(Object.keys(result).length, 4, "getAll must return exactly all known setting keys");
+      assert.equal(
+        Object.keys(result).length,
+        4,
+        "getAll must return exactly all known setting keys",
+      );
     });
   });
 

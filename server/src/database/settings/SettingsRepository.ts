@@ -46,8 +46,7 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
   }
 
   async getAll(): Promise<Record<SettingsKey, SettingsSchema[SettingsKey] | undefined>> {
-    const result = await this.connection<SettingsRow[]>("settings")
-      .select("key", "value");
+    const result = await this.connection<SettingsRow[]>("settings").select("key", "value");
 
     const map = this.emptySettingsMap();
     for (const row of result) {
@@ -61,17 +60,11 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
   }
 
   async set<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
-    await this.connection("settings")
-      .insert({ key, value })
-      .onConflict("key")
-      .merge();
+    await this.connection("settings").insert({ key, value }).onConflict("key").merge();
   }
 
   async exists(key: string): Promise<boolean> {
-    const result = await this.connection("settings")
-      .where("key", key)
-      .count("* as count")
-      .first();
+    const result = await this.connection("settings").where("key", key).count("* as count").first();
 
     return ((result as { count: number })?.count ?? 0) > 0;
   }

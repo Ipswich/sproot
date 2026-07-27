@@ -1133,18 +1133,28 @@ describe("SettingsRepository composition", () => {
     function createMinimalKnexStub(): any {
       const builder: any = {};
       builder.then = (fn: (v: unknown) => unknown) => Promise.resolve([]).then(fn);
-      return function(_table?: string) { return builder; };
+      return function (_table?: string) {
+        return builder;
+      };
     }
 
     const knex = createMinimalKnexStub();
     // Lazy imports to avoid SprootDB constructor running during module load
     // (which would call all repository constructors, including the Knex stub).
-    const { SprootDB } = require("../SprootDB") as { SprootDB: typeof import("../SprootDB").SprootDB };
-    const { SettingsRepository } = require("../settings/SettingsRepository") as { SettingsRepository: typeof import("../settings/SettingsRepository").SettingsRepository };
+    const { SprootDB } = require("../SprootDB") as {
+      SprootDB: typeof import("../SprootDB").SprootDB;
+    };
+    const { SettingsRepository } = require("../settings/SettingsRepository") as {
+      SettingsRepository: typeof import("../settings/SettingsRepository").SettingsRepository;
+    };
 
     const db = new SprootDB(knex as any);
 
     assert.isDefined(db.settings, "db.settings should be defined");
-    assert.instanceOf(db.settings, SettingsRepository, "db.settings should be a SettingsRepository instance");
+    assert.instanceOf(
+      db.settings,
+      SettingsRepository,
+      "db.settings should be a SettingsRepository instance",
+    );
   });
 });
