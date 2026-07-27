@@ -67,12 +67,17 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
       .merge();
   }
 
-  async exists(_key: string): Promise<boolean> {
-    throw new Error("Not implemented");
+  async exists(key: string): Promise<boolean> {
+    const result = await this.connection("settings")
+      .where("key", key)
+      .count("* as count")
+      .first();
+
+    return ((result as { count: number })?.count ?? 0) > 0;
   }
 
-  async delete(_key: string): Promise<void> {
-    throw new Error("Not implemented");
+  async delete(key: string): Promise<void> {
+    await this.connection("settings").where("key", key).del();
   }
 
   private emptySettingsMap(): Record<SettingsKey, SettingsSchema[SettingsKey] | undefined> {

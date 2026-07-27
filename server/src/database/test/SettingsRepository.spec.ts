@@ -225,4 +225,38 @@ describe("SettingsRepository", () => {
       assert.isTrue(builder.merge.calledOnce);
     });
   });
+
+  describe("exists", () => {
+    it("should return true for an existing key", async () => {
+      const rows = [{ count: 1 }];
+      const knex = createKnexStub(rows);
+      const repo = new SettingsRepository(knex as any);
+
+      const result = await repo.exists(SETTINGS.sensors.raw_retention);
+
+      assert.isTrue(result);
+    });
+
+    it("should return false for a non-existent key", async () => {
+      const rows = [{ count: 0 }];
+      const knex = createKnexStub(rows);
+      const repo = new SettingsRepository(knex as any);
+
+      const result = await repo.exists("nonexistent.key");
+
+      assert.isFalse(result);
+    });
+  });
+
+  describe("delete", () => {
+    it("should delete a setting by key", async () => {
+      const knex = createKnexStub([]);
+      const repo = new SettingsRepository(knex as any);
+
+      await repo.delete(SETTINGS.sensors.raw_retention);
+
+      const builder = (knex as any)("settings");
+      assert.isTrue(builder.del.calledOnce);
+    });
+  });
 });
