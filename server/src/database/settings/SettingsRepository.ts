@@ -60,8 +60,11 @@ export class SettingsRepository extends BaseKnexRepository implements ISettingsR
     return map;
   }
 
-  async set<K extends SettingsKey>(_key: K, _value: SettingsSchema[K]): Promise<void> {
-    throw new Error("Not implemented");
+  async set<K extends SettingsKey>(key: K, value: SettingsSchema[K]): Promise<void> {
+    await this.connection("settings")
+      .insert({ key, value })
+      .onConflict("key")
+      .merge();
   }
 
   async exists(_key: string): Promise<boolean> {

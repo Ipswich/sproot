@@ -180,4 +180,49 @@ describe("SettingsRepository", () => {
       assert.equal(Object.keys(result).length, 4, "getAll must return exactly all known setting keys");
     });
   });
+
+  describe("set", () => {
+    it("should serialize and store a string value", async () => {
+      const knex = createKnexStub([]);
+      const repo = new SettingsRepository(knex as any);
+
+      await repo.set(SETTINGS.sensors.raw_retention, "45 days");
+
+      const builder = (knex as any)("settings");
+      assert.isTrue(builder.insert.calledOnce);
+      const insertArgs = builder.insert.firstCall.args[0];
+      assert.equal(insertArgs.key, SETTINGS.sensors.raw_retention);
+      assert.deepEqual(insertArgs.value, "45 days");
+    });
+
+    it("should serialize and store an object value", async () => {
+      const knex = createKnexStub([]);
+      const repo = new SettingsRepository(knex as any);
+      const objValue = { enabled: true, threshold: 75 };
+
+      await repo.set(SETTINGS.sensors.raw_retention, objValue as any);
+
+      const builder = (knex as any)("settings");
+      assert.isTrue(builder.insert.calledOnce);
+      const insertArgs = builder.insert.firstCall.args[0];
+      assert.equal(insertArgs.key, SETTINGS.sensors.raw_retention);
+      assert.deepEqual(insertArgs.value, { enabled: true, threshold: 75 });
+    });
+
+    it("should upsert — call onConflict().merge() for existing key", async () => {
+      const knex = createKnexStub([]);
+      const repo = new SettingsRepository(knex as any);
+
+      await repo.set(SETTINGS.sensors.raw_retention, "45 days");
+
+      const builder = (knex as any)("settings");
+      assert.isTrue(builder.insert.calledOnce);
+      const insertArgs = builder.insert.firstCall.args[0];
+      assert.equal(insertArgs.key, SETTINGS.sensors.raw_retention);
+      assert.equal(insertArgs.value, "45 days");
+      assert.isTrue(builder.onConflict.calledOnce);
+      assert.equal(builder.onConflict.firstCall.args[0], "key");
+      assert.isTrue(builder.merge.calledOnce);
+    });
+  });
 });
